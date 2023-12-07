@@ -208,6 +208,29 @@ def test_metadata_call_if_none(quantum_task):
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
 
 
+def test_has_reservation_arn_from_metadata(quantum_task):
+    metadata_true = {
+        "associations": [
+            {
+                "arn": "123",
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ]
+    }
+    assert quantum_task._has_reservation_arn_from_metadata(metadata_true)
+
+    metadata_false = {
+        "status": "RUNNING",
+        "associations": [
+            {
+                "arn": "123",
+                "type": "other",
+            }
+        ],
+    }
+    assert not quantum_task._has_reservation_arn_from_metadata(metadata_false)
+
+
 def test_queue_position(quantum_task):
     state_1 = "QUEUED"
     _mock_metadata(quantum_task._aws_session, state_1)
@@ -616,6 +639,31 @@ def test_create_ahs_problem(aws_session, arn, ahs_problem):
         ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
+    )
+
+
+def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    reservation_arn = (
+        "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+    )
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
     )
 
 
@@ -1157,6 +1205,7 @@ def _assert_create_quantum_task_called_with(
     shots,
     device_parameters=None,
     tags=None,
+    reservation_arn=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1170,6 +1219,17 @@ def _assert_create_quantum_task_called_with(
         test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
     if tags is not None:
         test_kwargs.update({"tags": tags})
+    if reservation_arn:
+        test_kwargs.update(
+            {
+                "associations": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
+            }
+        )
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

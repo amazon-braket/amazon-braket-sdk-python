@@ -64,6 +64,7 @@ def hybrid_job(
     tags: dict[str, str] | None = None,
     logger: Logger = getLogger(__name__),
     quiet: bool | None = None,
+    reservation_arn: str | None = None,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.
@@ -156,6 +157,10 @@ def hybrid_job(
         quiet (bool | None): Sets the verbosity of the logger to low and does not report queue
             position. Default is `False`.
 
+        reservation_arn (str | None): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
+
     Returns:
         Callable: the callable for creating a Hybrid Job.
     """
@@ -210,6 +215,7 @@ def hybrid_job(
                     "aws_session": aws_session,
                     "tags": tags,
                     "quiet": quiet,
+                    "reservation_arn": reservation_arn,
                 }
                 for key, value in optional_args.items():
                     if value is not None:

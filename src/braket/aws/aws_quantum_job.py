@@ -82,6 +82,7 @@ class AwsQuantumJob(QuantumJob):
         tags: dict[str, str] | None = None,
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
+        reservation_arn: str | None = None,
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
 
@@ -178,6 +179,10 @@ class AwsQuantumJob(QuantumJob):
 
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
                 position. Default is `False`.
+                
+            reservation_arn (str | None): the reservation window arn provided by Braket
+                Direct to reserve exclusive usage for the device to run the hybrid job on.
+                Default: None.
 
         Returns:
             AwsQuantumJob: Hybrid job tracking the execution on Amazon Braket.
@@ -205,6 +210,7 @@ class AwsQuantumJob(QuantumJob):
             checkpoint_config=checkpoint_config,
             aws_session=aws_session,
             tags=tags,
+            reservation_arn=reservation_arn,
         )
 
         job_arn = aws_session.create_job(**create_job_kwargs)
