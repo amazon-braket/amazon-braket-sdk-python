@@ -39,14 +39,12 @@ class SerializableProgram(ABC):
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
-        highlight: bool = False,
     ) -> str:
         """Serializes the program into an intermediate representation.
 
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
-            highlight (bool): Whether to highlight the IR. Default False.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.

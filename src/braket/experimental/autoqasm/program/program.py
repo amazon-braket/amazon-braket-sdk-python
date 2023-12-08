@@ -162,7 +162,6 @@ class Program(SerializableProgram):
         self,
         ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
-        highlight: bool = False,
     ) -> str:
         """Serializes the program into an intermediate representation.
 
@@ -171,7 +170,6 @@ class Program(SerializableProgram):
                 IR representation. Defaults to IRType.OPENQASM.
             serialization_properties (SerializationProperties): IR serialization configuration.
                 Default to OpenQASMSerializationProperties().
-            highlight (bool): Whether to highlight the IR. Default False.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
@@ -188,11 +186,20 @@ class Program(SerializableProgram):
             if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
 
-            if highlight:
-                return pygments.highlight(openqasm_ir, OpenQASM3Lexer(), TerminalFormatter())
             return openqasm_ir
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    def display(self, ir_type: IRType = IRType.OPENQASM) -> None:
+        """
+        Print the Program with syntax highlighting. Returns `None` to avoid
+        duplicate printing when used with `print(program.display())`.
+
+        Args:
+            ir_type (IRType): The IRType to use for displaying the program.
+                Defaults to IRType.OPENQASM.
+        """
+        print(pygments.highlight(self.to_ir(ir_type), OpenQASM3Lexer(), TerminalFormatter()))
 
 
 class GateArgs:

@@ -15,6 +15,7 @@
 
 import itertools
 from multiprocessing.pool import ThreadPool
+from unittest.mock import patch
 
 import oqpy.base
 import pytest
@@ -125,7 +126,8 @@ __bit_0__ = measure __qubits__[1];"""
         assert programs[i].to_ir() == expected(scale, angle)
 
 
-def test_to_ir_highlighted():
+@patch("builtins.print")
+def test_to_ir_highlighted(mock_print):
     @aq.subroutine
     def sub(q0: int):
         if aq.instructions.measure(q0):
@@ -156,4 +158,5 @@ def test_to_ir_highlighted():
         b"\x1b[39;49;00m(theta)\x1b[37m \x1b[39;49;00m__qubits__[\x1b[34m1\x1b[39;49;00m];"
         b"\x1b[37m\x1b[39;49;00m\n"
     ).decode("utf-8")
-    assert teleportation.to_ir(highlight=True) == expected
+    teleportation.display()
+    mock_print.assert_called_with(expected)
