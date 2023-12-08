@@ -185,7 +185,6 @@ class Program(SerializableProgram):
             openqasm_ir = ast_to_qasm(openqasm_ast)
             if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
-
             return openqasm_ir
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
