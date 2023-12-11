@@ -43,10 +43,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: ASCII string circuit diagram.
         """
 
-        if not circuit.instructions or all(
-            m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments
-        ):
+        if not circuit.instructions:
             return ""
+
+        if all(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
+            return f"Global phase: {circuit.global_phase}"
 
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
@@ -60,7 +61,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         # Moment columns
         for time, instructions in time_slices.items():
-            moment_str, global_phase = AsciiCircuitDiagram._ascii_diagram_column_set(
+            global_phase = AsciiCircuitDiagram._compute_moment_global_phase(
+                global_phase, instructions
+            )
+            moment_str = AsciiCircuitDiagram._ascii_diagram_column_set(
                 str(time), circuit_qubits, instructions, global_phase
             )
             column_strs.append(moment_str)
@@ -70,10 +74,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
             circuit.result_types
         )
         if target_result_types:
-            result_type_col_str, global_phase = AsciiCircuitDiagram._ascii_diagram_column_set(
-                "Result Types", circuit_qubits, target_result_types, global_phase
+            column_strs.append(
+                AsciiCircuitDiagram._ascii_diagram_column_set(
+                    "Result Types", circuit_qubits, target_result_types, global_phase
+                )
             )
-            column_strs.append(result_type_col_str)
 
         # Unite strings
         lines = y_axis_str.split("\n")
@@ -120,6 +125,30 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return y_axis_str, global_phase
 
     @staticmethod
+    def _compute_moment_global_phase(
+        global_phase: float | None, items: list[Instruction]
+    ) -> float | None:
+        """
+        Compute the integrated phase at a certain moment.
+
+        Args:
+            global_phase (float|None): The integrated phase up to the computed moment
+            items (list[Instruction]): list of instructions
+
+        Returns:
+            float|None: The updated integrated phase.
+        """
+        moment_phase = 0
+        for item in items:
+            if (
+                isinstance(item, Instruction)
+                and isinstance(item.operator, Gate)
+                and item.operator.name == "GPhase"
+            ):
+                moment_phase += item.operator.angle
+        return global_phase + moment_phase if global_phase is not None else None
+
+    @staticmethod
     def _ascii_group_items(
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
@@ -137,8 +166,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         groupings = []
         for item in items:
             # Can only print Gate and Noise operators for instructions at the moment
-            if isinstance(item, Instruction) and (
-                not isinstance(item.operator, (Gate, Noise, CompilerDirective))
+            if isinstance(item, Instruction) and not isinstance(
+                item.operator, (Gate, Noise, CompilerDirective)
             ):
                 continue
 
@@ -210,8 +239,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         col_title: str,
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
-        global_phase: float | None = None,
-    ) -> tuple[str, float | None]:
+        global_phase: float | None,
+    ) -> str:
         """
         Return a set of columns in the ASCII string diagram of the circuit for a list of items.
 
@@ -222,25 +251,16 @@ class AsciiCircuitDiagram(CircuitDiagram):
             global_phase (float | None): the integrated global phase up to this set
 
         Returns:
-            tuple[str, float | None]: A tuple of the ASCII string diagram for the column set
-            and the integrated global phase.
+            str: An ASCII string diagram for the column set.
         """
 
         # Group items to separate out overlapping multi-qubit items
         groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
-        column_strs, global_phases = list(
-            zip(
-                *[
-                    AsciiCircuitDiagram._ascii_diagram_column(
-                        circuit_qubits, grouping[1], global_phase
-                    )
-                    for grouping in groupings
-                ]
-            )
-        )
-        if global_phase is not None:
-            global_phase = sum(global_phases)
+        column_strs = [
+            AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
+            for grouping in groupings
+        ]
 
         # Unite column strings
         lines = column_strs[0].split("\n")
@@ -261,14 +281,14 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         first_line = "{:^{width}}|\n".format(col_title, width=len(lines[0]) - 1)
 
-        return first_line + "\n".join(lines), global_phase
+        return first_line + "\n".join(lines)
 
     @staticmethod
     def _ascii_diagram_column(
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
         global_phase: float | None = None,
-    ) -> tuple[str, float | None]:
+    ) -> str:
         """
         Return a column in the ASCII string diagram of the circuit for a given list of items.
 
@@ -278,8 +298,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             global_phase (float | None): the integrated global phase up to this column
 
         Returns:
-            tuple[str, float | None]: A tuple of the ASCII string diagram for the specified moment
-            in time for a column and the integrated global phase.
+            str: an ASCII string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: "-" for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
@@ -311,7 +330,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
                 ascii_symbols = "-" * len(circuit_qubits)
-                global_phase += item.operator.angle
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -361,7 +379,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     margins[qubit] = "|"
 
         output = AsciiCircuitDiagram._create_output(symbols, margins, circuit_qubits, global_phase)
-        return output, global_phase
+        return output
 
     @staticmethod
     def _create_output(

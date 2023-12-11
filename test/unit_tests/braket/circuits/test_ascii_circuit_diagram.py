@@ -30,7 +30,7 @@ def test_empty_circuit():
 
 
 def test_only_gphase_circuit():
-    assert AsciiCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == ""
+    assert AsciiCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
 
 
 def test_one_gate_one_qubit():
