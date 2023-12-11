@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Union
+from typing import Any
 
 from braket.circuits.gate import Gate
 from braket.circuits.serialization import (
@@ -93,14 +93,14 @@ class GateCalibrations:
     def filter(
         self,
         gates: list[Gate] | None = None,
-        qubits: Union[QubitSet, list[QubitSet]] | None = None,
+        qubits: QubitSet | list[QubitSet] | None = None,
     ) -> GateCalibrations:
         """
         Filters the data based on optional lists of gates and QubitSets.
 
         Args:
             gates (list[Gate] | None): An optional list of gates to filter on.
-            qubits (Union[QubitSet, list[QubitSet]] | None): An optional `QubitSet` or
+            qubits (QubitSet | list[QubitSet] | None): An optional `QubitSet` or
                 list of `QubitSet` to filter on.
 
         Returns:
