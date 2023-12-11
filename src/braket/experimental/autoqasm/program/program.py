@@ -23,6 +23,9 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
+import pygments
+from openqasm_pygments import OpenQASM3Lexer
+from pygments.formatters.terminal import TerminalFormatter
 from sympy import Symbol
 
 import braket.experimental.autoqasm.types as aq_types
@@ -185,6 +188,17 @@ class Program(SerializableProgram):
             return openqasm_ir
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    def display(self, ir_type: IRType = IRType.OPENQASM) -> None:
+        """
+        Print the Program with syntax highlighting. Returns `None` to avoid
+        duplicate printing when used with `print(program.display())`.
+
+        Args:
+            ir_type (IRType): The IRType to use for displaying the program.
+                Defaults to IRType.OPENQASM.
+        """
+        print(pygments.highlight(self.to_ir(ir_type), OpenQASM3Lexer(), TerminalFormatter()))
 
 
 class GateArgs:

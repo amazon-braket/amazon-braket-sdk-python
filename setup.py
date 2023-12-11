@@ -48,6 +48,7 @@ setup(
         "astunparse",
         "gast",
         "termcolor",
+        "openqasm_pygments",
     ],
     extras_require={
         "test": [
