@@ -80,6 +80,9 @@ def test_filter(pulse_sequence):
     assert expected_calibration_3 == calibration.filter(gates=[Gate.H()], qubits=QubitSet(1))
     assert expected_calibration_4 == calibration.filter(gates=[Gate.Z()], qubits=QubitSet(1))
     assert expected_calibration_5 == calibration.filter(qubits=[QubitSet(0), QubitSet(1)])
+    cal_q0 = calibration.filter(qubits=QubitSet(0))
+    cal_q1 = calibration.filter(qubits=QubitSet(1))
+    assert expected_calibration_5 == cal_q0.union(cal_q1)
     assert expected_calibration_6 == calibration.filter(qubits=QubitSet([0, 1]))
 
 
