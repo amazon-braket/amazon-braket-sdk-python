@@ -14,6 +14,7 @@
 """Tests for the types module."""
 
 from typing import Any
+
 import oqpy
 import pytest
 
@@ -693,9 +694,12 @@ def test_variable_annotations(
     def main():
         a = var_type(var_value, annotations=["foo", ("bar", "baz")])  # noqa: F841
 
-    expected = """OPENQASM 3.0;
+    expected = (
+        """OPENQASM 3.0;
 @foo
 @bar baz
-""" + f"{qasm_type} a = {qasm_value};"
+"""
+        + f"{qasm_type} a = {qasm_value};"
+    )
 
     assert main.to_ir() == expected
