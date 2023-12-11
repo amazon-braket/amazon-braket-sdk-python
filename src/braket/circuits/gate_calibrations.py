@@ -118,6 +118,18 @@ class GateCalibrations:
         return GateCalibrations(
             {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
         )
+    
+    def union(self, other: GateCalibrations) -> GateCalibrations:
+        """
+        Returns the union of two GateCalibrations objects.
+
+        Args:
+            other (GateCalibrations): The other GateCalibrations object to union with.
+
+        Returns:
+            GateCalibrations: The union of the two GateCalibrations objects.
+        """
+        return GateCalibrations({**self.pulse_sequences, **other.pulse_sequences})
 
     def to_ir(self, calibration_key: tuple[Gate, QubitSet] | None = None) -> str:
         """
