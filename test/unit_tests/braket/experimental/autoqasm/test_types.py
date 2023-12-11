@@ -13,6 +13,7 @@
 
 """Tests for the types module."""
 
+from typing import Any
 import oqpy
 import pytest
 
@@ -673,3 +674,28 @@ def test_param_array_list_missing_arg():
         @aq.main(num_qubits=4)
         def main():
             param_test()
+
+
+@pytest.mark.parametrize(
+    "var_type, var_value, qasm_type, qasm_value",
+    [
+        (aq.IntVar, 0, "int[32]", "0"),
+        (aq.FloatVar, 0.0, "float[64]", "0.0"),
+        (aq.BoolVar, False, "bool", "false"),
+    ],
+)
+def test_variable_annotations(
+    var_type: type, var_value: Any, qasm_type: str, qasm_value: str
+) -> None:
+    """Test annotations on variable declarations."""
+
+    @aq.main
+    def main():
+        a = var_type(var_value, annotations=["foo", ("bar", "baz")])  # noqa: F841
+
+    expected = """OPENQASM 3.0;
+@foo
+@bar baz
+""" + f"{qasm_type} a = {qasm_value};"
+
+    assert main.to_ir() == expected
