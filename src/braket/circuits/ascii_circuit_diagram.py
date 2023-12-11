@@ -171,6 +171,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
             ):
                 continue
 
+            # As a zero-qubit gate, GPhase can be grouped with anything. We set qubit_range
+            # to an empty list and we just add it to the first group below.
             if (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -195,11 +197,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 qubits_added = group[0]
                 instr_group = group[1]
                 # Take into account overlapping multi-qubit gates
-                if not qubits_added.intersection(set(qubit_range)) or (
-                    isinstance(item, Instruction)
-                    and isinstance(item.operator, Gate)
-                    and item.operator.name == "GPhase"
-                ):
+                if not qubits_added.intersection(set(qubit_range)):
                     instr_group.append(item)
                     qubits_added.update(qubit_range)
                     found_grouping = True
