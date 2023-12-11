@@ -298,11 +298,10 @@ class GPhase(AngledGate):
         if control is not None:
             control_qubits = QubitSet(control)
 
-            control_basis_state = (
-                BasisState(control_state, len(control_qubits))
-                if control_state is not None
-                else BasisState((1,) * len(control_qubits), len(control_qubits))
+            control_state = (
+                control_state if control_state is not None else (1,) * len(control_qubits)
             )
+            control_basis_state = BasisState(control_state, len(control_qubits))
 
             phaseshift_target = control_qubits[-1]
             phaseshift_instruction = PhaseShift.phaseshift(
