@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.64.0 (2023-12-07)
+
+### Features
+
+ * add str, repr and getitem to BasisState
+
+### Bug Fixes and Other Changes
+
+ * update: adding a test to check for circular imports
+
+## v1.63.0 (2023-12-05)
+
+### Features
+
+ * Allow reservation ARN in task and job creation
+
+### Bug Fixes and Other Changes
+
+ * Add Forte 1 device
+
 ## v1.62.1 (2023-11-17)
 
 ### Bug Fixes and Other Changes

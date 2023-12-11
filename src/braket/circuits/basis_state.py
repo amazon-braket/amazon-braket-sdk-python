@@ -33,6 +33,9 @@ class BasisState:
     def __eq__(self, other):
         return self.state == other.state
 
+    def __bool__(self):
+        return any(self.state)
+
     def __str__(self):
         return self.as_string
 
@@ -41,9 +44,6 @@ class BasisState:
 
     def __getitem__(self, item):
         return BasisState(self.state[item])
-
-    def __bool__(self):
-        return any(self.state)
 
 
 BasisStateInput = Union[int, list[int], str, BasisState]
