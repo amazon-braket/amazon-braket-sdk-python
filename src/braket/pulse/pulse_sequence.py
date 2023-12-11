@@ -231,12 +231,20 @@ class PulseSequence:
         """
         _validate_uniqueness(self._frames, frame)
         _validate_uniqueness(self._waveforms, waveform)
-        self._program.play(frame=frame, waveform=waveform)
         if isinstance(waveform, Parameterizable):
             for param in waveform.parameters:
                 if isinstance(param, FreeParameterExpression):
                     for p in param.expression.free_symbols:
+                        self._program._add_var(
+                            FloatVar(
+                                name=p.name,
+                                size=None,
+                                init_expression="input",
+                                needs_declaration=True,
+                            )
+                        )
                         self._free_parameters.add(FreeParameter(p.name))
+        self._program.play(frame=frame, waveform=waveform)
         self._frames[frame.id] = frame
         self._waveforms[waveform.id] = waveform
         return self
@@ -283,6 +291,8 @@ class PulseSequence:
 
         new_pulse_sequence = PulseSequence()
         new_pulse_sequence._program = new_program
+        for param_name in param_values:
+            new_pulse_sequence._program.undeclared_vars.pop(param_name, None)
         new_pulse_sequence._frames = deepcopy(self._frames)
         new_pulse_sequence._waveforms = {
             wf.id: wf.bind_values(**param_values) if isinstance(wf, Parameterizable) else wf
@@ -310,8 +320,6 @@ class PulseSequence:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
         program = deepcopy(self._program)
-        for param in self.parameters:
-            program.declare(FloatVar(name=param.name, size=None, init_expression="input"), to_beginning=True)
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
@@ -330,6 +338,11 @@ class PulseSequence:
     ) -> Union[float, _FreeParameterExpressionIdentifier]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
+                self._program._add_var(
+                    FloatVar(
+                        name=p.name, size=None, init_expression="input", needs_declaration=True
+                    )
+                )
                 self._free_parameters.add(FreeParameter(p.name))
             return (
                 FreeParameterExpression(parameter, _type)
