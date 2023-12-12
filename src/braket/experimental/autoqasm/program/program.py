@@ -597,6 +597,15 @@ class ProgramConversionContext:
         finally:
             self.at_function_root_scope = original
 
+    def _add_annotations(
+        self, annotations: Optional[Iterable[str | tuple[str, str]]] = None
+    ) -> None:
+        oqpy_program = self.get_oqpy_program()
+        for annotation in annotations:
+            if isinstance(annotation, str):
+                annotation = (annotation, None)
+            oqpy_program.annotate(*annotation)
+
     def if_block(self, condition: Any) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into an if block context.
 
@@ -632,10 +641,7 @@ class ProgramConversionContext:
             _GeneratorContextManager: The context manager of the oqpy.ForIn block.
         """
         oqpy_program = self.get_oqpy_program()
-        for annotation in iterator.annotations:
-            if isinstance(annotation, str):
-                annotation = (annotation, None)
-            oqpy_program.annotate(*annotation)
+        self._add_annotations(iterator.annotations)
         return self._control_flow_block(oqpy.ForIn(oqpy_program, iterator, iterator_name))
 
     def while_loop(self, condition: Any) -> contextlib._GeneratorContextManager:
@@ -698,15 +704,24 @@ class ProgramConversionContext:
             self._calibration_definitions_processing.pop()
 
     @contextlib.contextmanager
-    def box(self, pragma: Optional[str] = None) -> None:
+    def box(
+        self,
+        pragma: Optional[str] = None,
+        annotations: Optional[Iterable[str | tuple[str, str]]] = None,
+    ) -> None:
         """Sets the program conversion context into a box context.
 
         Args:
             pragma (Optional[str]): Pragma to include before the box. Defaults to None.
+            annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations for the box.
+                The annotations can be either a string or a tuple of the form
+                (annotation_name, annotation_value).
         """
         oqpy_program = self.get_oqpy_program()
         if pragma:
             oqpy_program.pragma(pragma)
+        if annotations:
+            self._add_annotations(annotations)
         with oqpy.Box(oqpy_program):
             yield
 

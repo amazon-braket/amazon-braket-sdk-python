@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.instructions import h
+from braket.experimental.autoqasm.instructions import cnot, h
 
 
 @pytest.mark.parametrize(
@@ -84,6 +84,24 @@ qubit[5] __qubits__;
 @bar baz
 for int i in [0:5 - 1] {
     h __qubits__[i];
+}"""
+
+    assert main.to_ir() == expected
+
+
+def test_verbatim_box_annotations():
+    """Test annotations on verbatim boxes."""
+
+    @aq.main
+    def main():
+        with aq.verbatim(annotations=["box_annotation"]):
+            cnot("$0", "$1")
+
+    expected = """OPENQASM 3.0;
+pragma braket verbatim
+@box_annotation
+box {
+    cnot $0, $1;
 }"""
 
     assert main.to_ir() == expected

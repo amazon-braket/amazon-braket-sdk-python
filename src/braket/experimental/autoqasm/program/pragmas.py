@@ -28,9 +28,11 @@ Pragmas specify how a program should be compiled or executed. In AutoQASM, we su
 The verbatim pragma would then apply to the `h` and `cnot`, but not the `x`.
 """
 
+from __future__ import annotations
 
 import contextlib
 from enum import Enum
+from typing import Iterable, Optional
 
 from braket.device_schema import DeviceActionType
 from braket.experimental.autoqasm import errors, program
@@ -44,12 +46,17 @@ class PragmaType(str, Enum):
 
 
 @contextlib.contextmanager
-def verbatim() -> None:
+def verbatim(annotations: Optional[Iterable[str | tuple[str, str]]] = None) -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
     in a verbatim block.
 
     A verbatim block specifies that operations contained within the block are to be executed as
     programmed without compilation or modification of any sort.
+
+    Args:
+        annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations for the box.
+            The annotations can be either a string or a tuple of the form
+            (annotation_name, annotation_value).
 
     Raises:
         errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
@@ -69,7 +76,9 @@ def verbatim() -> None:
             )
 
     try:
-        with program.get_program_conversion_context().box(pragma=PragmaType.VERBATIM):
+        with program.get_program_conversion_context().box(
+            pragma=PragmaType.VERBATIM, annotations=annotations
+        ):
             program_conversion_context.in_verbatim_block = True
             yield
     finally:
