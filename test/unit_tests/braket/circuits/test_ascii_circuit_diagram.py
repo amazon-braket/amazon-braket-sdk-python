@@ -62,6 +62,7 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.parametrize("target", [0, 1])
 def test_one_gate_with_global_phase(target):
     circ = Circuit().x(target=target).gphase(0.15)
