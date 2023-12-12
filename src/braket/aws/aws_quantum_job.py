@@ -179,7 +179,7 @@ class AwsQuantumJob(QuantumJob):
 
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
                 position. Default is `False`.
-                
+
             reservation_arn (str | None): the reservation window arn provided by Braket
                 Direct to reserve exclusive usage for the device to run the hybrid job on.
                 Default: None.
