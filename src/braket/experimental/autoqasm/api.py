@@ -50,7 +50,7 @@ def main(
     *,
     num_qubits: Optional[int] = None,
     device: Optional[Union[Device, str]] = None,
-) -> aq_program.Program | functools.partial:
+) -> aq_program.Program | Callable[..., aq_program.Program]:
     """Decorator that converts a function into a Program object containing the quantum program.
 
     The decorator re-converts the target function whenever the decorated
@@ -65,8 +65,8 @@ def main(
             program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
-        Program | partial: The Program object containing the converted quantum program, or a
-        partial function of the `main` decorator.
+        Program | Callable[..., Program]: The Program object containing the converted quantum
+        program, or a partial function of the `main` decorator.
     """
     if isinstance(device, str):
         device = AwsDevice(device)
