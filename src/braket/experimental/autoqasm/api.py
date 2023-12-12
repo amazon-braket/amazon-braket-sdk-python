@@ -20,7 +20,7 @@ import functools
 import inspect
 from collections.abc import Callable
 from types import FunctionType
-from typing import Any, Optional, Union, get_args
+from typing import Any, Iterable, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -94,19 +94,30 @@ def main(
     return program_builder()
 
 
-def subroutine(func: Optional[Callable] = None) -> Callable[..., aq_program.Program]:
+def subroutine(
+    func: Optional[Callable] = None, annotations: Optional[Iterable[str | tuple[str, str]]] = None
+) -> Callable[..., aq_program.Program]:
     """Decorator that converts a function into a callable that will insert a subroutine into
     the quantum program.
 
     Args:
         func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
+        annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations to be added to
+            the subroutine. The annotations can be either a string or a tuple of the form
+            (annotation_name, annotation_value).
 
     Returns:
         Callable[..., Program]: A callable which returns the converted
         quantum program when called.
     """
-    return _function_wrapper(func, converter_callback=_convert_subroutine)
+    return _function_wrapper(
+        func,
+        converter_callback=_convert_subroutine,
+        converter_args={
+            "annotations": annotations or [],
+        },
+    )
 
 
 def gate(func: Optional[Callable] = None) -> Callable[..., None]:
@@ -305,6 +316,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
 def _convert_subroutine(
     f: Callable,
     options: converter.ConversionOptions,
+    annotations: Iterable[str | tuple[str, str]],
     args: list[Any],
     kwargs: dict[str, Any],
 ) -> None:
@@ -317,6 +329,9 @@ def _convert_subroutine(
     Args:
         f (Callable): The function to be converted.
         options (converter.ConversionOptions): Converter options.
+        annotations (Iterable[str | tuple[str, str]]): Annotations to be added to
+            the subroutine. The annotations can be either a string or a tuple of the form
+            (annotation_name, annotation_value).
         args (list[Any]): Arguments passed to the program when called.
         kwargs (dict[str, Any]): Keyword arguments passed to the program when called.
     """
@@ -336,7 +351,9 @@ def _convert_subroutine(
 
             # Convert the function via autograph into an oqpy subroutine
             # NOTE: Process a clone of the function so that we don't modify the original object
-            oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_clone_function(f), options))
+            oqpy_sub = oqpy.subroutine(annotations=annotations)(
+                _wrap_for_oqpy_subroutine(_clone_function(f), options)
+            )
 
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
@@ -347,7 +364,9 @@ def _convert_subroutine(
         else:
             # Convert the function via autograph into an oqpy subroutine
             # NOTE: Recursive call; process a dummy version of the function instead
-            oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_dummy_function(f), options))
+            oqpy_sub = oqpy.subroutine(annotations=annotations)(
+                _wrap_for_oqpy_subroutine(_dummy_function(f), options)
+            )
 
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
