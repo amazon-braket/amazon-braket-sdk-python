@@ -94,12 +94,13 @@ def test_verbatim_box_annotations():
 
     @aq.main
     def main():
-        with aq.verbatim(annotations=["box_annotation"]):
+        with aq.verbatim(annotations=["foo", ("bar", "baz")]):
             cnot("$0", "$1")
 
     expected = """OPENQASM 3.0;
 pragma braket verbatim
-@box_annotation
+@foo
+@bar baz
 box {
     cnot $0, $1;
 }"""
