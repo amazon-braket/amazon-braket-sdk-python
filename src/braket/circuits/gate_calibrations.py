@@ -129,6 +129,8 @@ class GateCalibrations:
         Returns:
             GateCalibrations: The union of the two GateCalibrations objects.
         """
+        #  TODO: if 2 keys differ by a FreeParameter name only, then the keys should equal
+        # Currently, hash(Gate(FreeParameter(str1))) != hash(Gate(FreeParameter(str2))) 
         return GateCalibrations({**self.pulse_sequences, **other.pulse_sequences})
 
     def intersection(self, other: GateCalibrations) -> GateCalibrations:
@@ -142,7 +144,11 @@ class GateCalibrations:
             GateCalibrations: The intersection of the two GateCalibrations objects.
         """
         return GateCalibrations(
-            {k: v for (k, v) in self.pulse_sequences.items() if k in other.pulse_sequences}
+            {
+                k: v
+                for (k, v) in self.pulse_sequences.items()
+                if k in other.pulse_sequences and other.pulse_sequences[k] == v
+            }
         )
 
     def to_ir(self, calibration_key: tuple[Gate, QubitSet] | None = None) -> str:

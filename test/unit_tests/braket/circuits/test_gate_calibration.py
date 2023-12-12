@@ -15,6 +15,7 @@ import pytest
 
 from braket.circuits import Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.parametric.free_parameter import FreeParameter
 from braket.pulse import Frame, Port, PulseSequence
 
 
@@ -84,6 +85,63 @@ def test_filter(pulse_sequence):
     cal_q1 = calibration.filter(qubits=QubitSet(1))
     assert expected_calibration_5 == cal_q0.union(cal_q1)
     assert expected_calibration_6 == calibration.filter(qubits=QubitSet([0, 1]))
+
+
+def test_union(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([0]))
+    calibration_key_2 = (Gate.H(), QubitSet([1]))
+    calibration_key_3 = (Gate.CZ(), QubitSet([0, 1]))
+    calibration = GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+            calibration_key_2: pulse_sequence,
+            calibration_key_3: pulse_sequence,
+        }
+    )
+    cal_q0 = calibration.filter(qubits=QubitSet(0))
+    cal_q1 = calibration.filter(qubits=QubitSet(1))
+    assert cal_q0.union(cal_q1) == calibration
+
+
+def test_union_with_different_FreeParameter(pulse_sequence):
+    calibration_key_1 = (Gate.Rx(FreeParameter("alpha")), QubitSet([0]))
+    calibration_1 = GateCalibrations(
+        {
+            calibration_key_1: pulse_sequence,
+        }
+    )
+
+    calibration_key_2 = (Gate.Rx(FreeParameter("beta")), QubitSet([0]))
+    calibration_2 = GateCalibrations(
+        {
+            calibration_key_2: pulse_sequence,
+        }
+    )
+
+    expected_calibration = GateCalibrations(
+        {
+            calibration_key_1: pulse_sequence,
+        }
+    )
+
+    assert calibration_1.union(calibration_2) == expected_calibration
+
+
+def test_intersection(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([0]))
+    calibration_key_2 = (Gate.H(), QubitSet([1]))
+    calibration_key_3 = (Gate.CZ(), QubitSet([0, 1]))
+    calibration = GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+            calibration_key_2: pulse_sequence,
+            calibration_key_3: pulse_sequence,
+        }
+    )
+    cal_q0 = calibration.filter(qubits=QubitSet(0))
+    cal_q1 = calibration.filter(qubits=QubitSet(1))
+    expected_calibration = GateCalibrations({calibration_key_3: pulse_sequence})
+    assert cal_q0.intersection(cal_q1) == expected_calibration
 
 
 def test_to_ir(pulse_sequence):
