@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
+import pytest
 
 from braket.circuits import (
     AsciiCircuitDiagram,
@@ -61,29 +62,14 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     )
     _assert_correct_diagram(circ, expected)
 
-
-def test_one_gate_with_global_phase():
-    circ = Circuit().x(target=0).gphase(0.15)
+@pytest.mark.parametrize("target", [0, 1])
+def test_one_gate_with_global_phase(target):
+    circ = Circuit().x(target=target).gphase(0.15)
     expected = (
         "T  : |0| 1  |",
         "GP : |0|0.15|",
         "             ",
-        "q0 : -X------",
-        "",
-        "T  : |0| 1  |",
-        "",
-        "Global phase: 0.15",
-    )
-    _assert_correct_diagram(circ, expected)
-
-
-def test_one_gate_other_qubit_with_global_phase():
-    circ = Circuit().x(target=1).gphase(0.15)
-    expected = (
-        "T  : |0| 1  |",
-        "GP : |0|0.15|",
-        "             ",
-        "q1 : -X------",
+        f"q{target} : -X------",
         "",
         "T  : |0| 1  |",
         "",
