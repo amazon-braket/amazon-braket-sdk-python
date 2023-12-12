@@ -390,12 +390,15 @@ class AsciiCircuitDiagram(CircuitDiagram):
         output = ""
 
         if global_phase is not None:
-            global_phase = (
-                round(global_phase, 2) if isinstance(global_phase, float) else global_phase
+            global_phase_str = (
+                f"{global_phase:.2f}" if isinstance(global_phase, float) else str(global_phase)
             )
-            symbols_width = max([symbols_width, len(str(global_phase))])
+            symbols_width = max([symbols_width, len(global_phase_str)])
             output += "{0:{fill}{align}{width}}|\n".format(
-                str(global_phase), fill=" ", align="^", width=symbols_width
+                global_phase_str,
+                fill=" ",
+                align="^",
+                width=symbols_width,
             )
 
         for qubit in qubits:

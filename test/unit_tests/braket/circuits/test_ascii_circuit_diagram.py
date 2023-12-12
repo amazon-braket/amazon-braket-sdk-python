@@ -82,12 +82,12 @@ def test_one_gate_with_global_phase(target):
 def test_one_gate_with_zero_global_phase():
     circ = Circuit().gphase(-0.15).x(target=0).gphase(0.15)
     expected = (
-        "T  : |  0  | 1 |",
-        "GP : |-0.15|0.0|",
-        "                ",
-        "q0 : -X---------",
+        "T  : |  0  | 1  |",
+        "GP : |-0.15|0.00|",
+        "                 ",
+        "q0 : -X----------",
         "",
-        "T  : |  0  | 1 |",
+        "T  : |  0  | 1  |",
     )
     _assert_correct_diagram(circ, expected)
 
