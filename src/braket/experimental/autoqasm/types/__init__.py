@@ -22,6 +22,6 @@ from .types import (  # noqa: F401
     BoolVar,
     FloatVar,
     IntVar,
+    QasmRange,
     is_qasm_type,
-    qasm_range,
 )

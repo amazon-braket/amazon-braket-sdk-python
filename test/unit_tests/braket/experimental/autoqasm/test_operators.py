@@ -180,7 +180,7 @@ def test_control_flow_for_loop_qasm() -> None:
     """Tests aq.operators.for_stmt with a QASM iterable."""
     with aq.build_program(aq.program.UserConfig(num_qubits=10)) as program_conversion_context:
         aq.operators.for_stmt(
-            iter=aq.types.qasm_range(3),
+            iter=aq.types.QasmRange(3),
             extra_test=None,
             body=for_body,
             get_state=None,

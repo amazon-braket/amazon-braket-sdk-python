@@ -13,7 +13,9 @@
 
 """AutoQASM types and type utilities."""
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any, Iterable, Optional
 
 import oqpy
 import oqpy.base
@@ -41,21 +43,29 @@ def is_qasm_type(val: Any) -> bool:
     return isinstance(val, qasm_types)
 
 
-def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) -> oqpy.Range:
-    """Range definition.
+class QasmRange(oqpy.Range):
+    def __init__(
+        self,
+        start: int,
+        stop: Optional[int] = None,
+        step: Optional[int] = 1,
+        annotations: Optional[Iterable[str | tuple[str, str]]] = None,
+    ):
+        """Creates a range definition.
 
-    Args:
-        start (int): Start of the range
-        stop (Optional[int]): End of the range. Defaults to None.
-        step (Optional[int]): Step of the range. Defaults to 1.
-
-    Returns:
-        oqpy.Range: oqpy range definition.
-    """
-    if stop is None:
-        stop = start
-        start = 0
-    return oqpy.Range(start, stop, step)
+        Args:
+            start (int): Start of the range.
+            stop (Optional[int]): End of the range. Defaults to None.
+            step (Optional[int]): Step of the range. Defaults to 1.
+            annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations for the range.
+                The annotations can be either a string or a tuple of the form
+                (annotation_name, annotation_value).
+        """
+        if stop is None:
+            stop = start
+            start = 0
+        super(QasmRange, self).__init__(start, stop, step)
+        self.annotations = annotations or []
 
 
 class ArrayVar(oqpy.ArrayVar):

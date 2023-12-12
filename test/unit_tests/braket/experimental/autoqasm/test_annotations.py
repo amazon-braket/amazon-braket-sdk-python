@@ -18,6 +18,7 @@ from typing import Any
 import pytest
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm.instructions import h
 
 
 @pytest.mark.parametrize(
@@ -65,5 +66,24 @@ def test_subroutine_annotations():
 def subroutine_test() {
 }
 subroutine_test();"""
+
+    assert main.to_ir() == expected
+
+
+def test_range_annotations():
+    """Test annotations on ranges."""
+
+    @aq.main(num_qubits=5)
+    def main():
+        for i in aq.range(5, annotations=["foo", ("bar", "baz")]):
+            h(i)
+
+    expected = """OPENQASM 3.0;
+qubit[5] __qubits__;
+@foo
+@bar baz
+for int i in [0:5 - 1] {
+    h __qubits__[i];
+}"""
 
     assert main.to_ir() == expected

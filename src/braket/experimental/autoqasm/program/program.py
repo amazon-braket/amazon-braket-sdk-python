@@ -620,18 +620,22 @@ class ProgramConversionContext:
         return self._control_flow_block(oqpy.Else(oqpy_program))
 
     def for_in(
-        self, iterator: oqpy.Range, iterator_name: Optional[str]
+        self, iterator: aq_types.QasmRange, iterator_name: Optional[str]
     ) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into a for loop context.
 
         Args:
-            iterator (oqpy.Range): The iterator of the for loop.
+            iterator (QasmRange): The iterator of the for loop.
             iterator_name (Optional[str]): The symbol to use as the name of the iterator.
 
         Yields:
             _GeneratorContextManager: The context manager of the oqpy.ForIn block.
         """
         oqpy_program = self.get_oqpy_program()
+        for annotation in iterator.annotations:
+            if isinstance(annotation, str):
+                annotation = (annotation, None)
+            oqpy_program.annotate(*annotation)
         return self._control_flow_block(oqpy.ForIn(oqpy_program, iterator, iterator_name))
 
     def while_loop(self, condition: Any) -> contextlib._GeneratorContextManager:

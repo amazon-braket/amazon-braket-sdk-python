@@ -45,4 +45,4 @@ from .instructions import QubitIdentifierType as Qubit  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
 from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
-from .types import qasm_range as range  # noqa: F401
+from .types import QasmRange as range  # noqa: F401
