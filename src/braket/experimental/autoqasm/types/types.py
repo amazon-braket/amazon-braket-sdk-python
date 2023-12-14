@@ -43,7 +43,7 @@ def is_qasm_type(val: Any) -> bool:
     return isinstance(val, qasm_types)
 
 
-class QasmRange(oqpy.Range):
+class Range(oqpy.Range):
     def __init__(
         self,
         start: int,
@@ -64,7 +64,7 @@ class QasmRange(oqpy.Range):
         if stop is None:
             stop = start
             start = 0
-        super(QasmRange, self).__init__(start, stop, step)
+        super(Range, self).__init__(start, stop, step)
         self.annotations = annotations or []
 
 

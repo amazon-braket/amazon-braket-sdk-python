@@ -629,12 +629,12 @@ class ProgramConversionContext:
         return self._control_flow_block(oqpy.Else(oqpy_program))
 
     def for_in(
-        self, iterator: aq_types.QasmRange, iterator_name: Optional[str]
+        self, iterator: aq_types.Range, iterator_name: Optional[str]
     ) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into a for loop context.
 
         Args:
-            iterator (QasmRange): The iterator of the for loop.
+            iterator (Range): The iterator of the for loop.
             iterator_name (Optional[str]): The symbol to use as the name of the iterator.
 
         Yields:

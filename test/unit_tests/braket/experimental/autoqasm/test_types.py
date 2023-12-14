@@ -17,7 +17,7 @@ import oqpy
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.types import QasmRange
+from braket.experimental.autoqasm.types import Range
 
 
 @pytest.mark.parametrize(
@@ -30,14 +30,14 @@ from braket.experimental.autoqasm.types import QasmRange
 def test_range(
     range_params: tuple[int, int, int], expected_range_params: tuple[int, int, int]
 ) -> None:
-    """Test `QasmRange()` returning correct `QasmRange` object.
+    """Test `Range()` returning correct `Range` object.
 
     Args:
-        range_params (tuple[int, int, int]): Range parameters to instantiate `QasmRange`
+        range_params (tuple[int, int, int]): Range parameters to instantiate `Range`
         expected_range_params (tuple[int, int, int]): Expected range parameters
     """
     start, stop, step = range_params
-    qrange = QasmRange(start, stop, step)
+    qrange = Range(start, stop, step)
     assert isinstance(qrange, oqpy.Range)
     assert (qrange.start, qrange.stop, qrange.step) == expected_range_params
 

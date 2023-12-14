@@ -16,12 +16,4 @@ for type handling.
 """
 
 from .conversions import map_parameter_type, var_type_from_oqpy, wrap_value  # noqa: F401
-from .types import (  # noqa: F401
-    ArrayVar,
-    BitVar,
-    BoolVar,
-    FloatVar,
-    IntVar,
-    QasmRange,
-    is_qasm_type,
-)
+from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar, Range, is_qasm_type  # noqa: F401
