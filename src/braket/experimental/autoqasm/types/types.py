@@ -15,8 +15,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, List
-from typing import Any, Optional
+from collections.abc import Iterable
+from typing import Any, List, Optional
 
 import oqpy
 import oqpy.base
