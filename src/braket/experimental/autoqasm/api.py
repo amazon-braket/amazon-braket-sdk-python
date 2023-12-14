@@ -95,7 +95,7 @@ def main(
 
 
 def subroutine(
-    func: Optional[Callable] = None, annotations: Optional[Iterable[str | tuple[str, str]]] = None
+    func: Optional[Callable] = None, annotations: Optional[str | Iterable[str]] = None
 ) -> Callable[..., aq_program.Program]:
     """Decorator that converts a function into a callable that will insert a subroutine into
     the quantum program.
@@ -103,9 +103,7 @@ def subroutine(
     Args:
         func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
-        annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations to be added to
-            the subroutine. The annotations can be either a string or a tuple of the form
-            (annotation_name, annotation_value).
+        annotations (Optional[str | Iterable[str]]): Annotations to be added to the subroutine.
 
     Returns:
         Callable[..., Program]: A callable which returns the converted
@@ -115,7 +113,7 @@ def subroutine(
         func,
         converter_callback=_convert_subroutine,
         converter_args={
-            "annotations": annotations or [],
+            "annotations": aq_types.make_annotations_list(annotations),
         },
     )
 
@@ -316,7 +314,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
 def _convert_subroutine(
     f: Callable,
     options: converter.ConversionOptions,
-    annotations: Iterable[str | tuple[str, str]],
+    annotations: Iterable[str],
     args: list[Any],
     kwargs: dict[str, Any],
 ) -> None:
@@ -329,9 +327,7 @@ def _convert_subroutine(
     Args:
         f (Callable): The function to be converted.
         options (converter.ConversionOptions): Converter options.
-        annotations (Iterable[str | tuple[str, str]]): Annotations to be added to
-            the subroutine. The annotations can be either a string or a tuple of the form
-            (annotation_name, annotation_value).
+        annotations (Iterable[str]): Annotations to be added to the subroutine.
         args (list[Any]): Arguments passed to the program when called.
         kwargs (dict[str, Any]): Keyword arguments passed to the program when called.
     """

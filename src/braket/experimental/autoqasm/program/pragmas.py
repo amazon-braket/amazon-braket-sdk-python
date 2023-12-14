@@ -46,7 +46,7 @@ class PragmaType(str, Enum):
 
 
 @contextlib.contextmanager
-def verbatim(annotations: Optional[Iterable[str | tuple[str, str]]] = None) -> None:
+def verbatim(annotations: Optional[str | Iterable[str]] = None) -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
     in a verbatim block.
 
@@ -54,9 +54,7 @@ def verbatim(annotations: Optional[Iterable[str | tuple[str, str]]] = None) -> N
     programmed without compilation or modification of any sort.
 
     Args:
-        annotations (Optional[Iterable[str | tuple[str, str]]]): Annotations for the box.
-            The annotations can be either a string or a tuple of the form
-            (annotation_name, annotation_value).
+        annotations (Optional[str | Iterable[str]]): Annotations for the box.
 
     Raises:
         errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in

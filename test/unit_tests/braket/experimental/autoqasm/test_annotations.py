@@ -13,7 +13,10 @@
 
 """Tests for annotations."""
 
-from typing import Any
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any, Optional
 
 import pytest
 
@@ -36,23 +39,39 @@ def test_variable_annotations(
 
     @aq.main
     def main():
-        a = var_type(var_value, annotations=["foo", ("bar", "baz")])  # noqa: F841
+        a = var_type(var_value, annotations="foo")  # noqa: F841
+        b = var_type(var_value, annotations=["foo", "bar baz"])  # noqa: F841
 
     expected = (
         """OPENQASM 3.0;
 @foo
-@bar baz
 """
         + f"{qasm_type} a = {qasm_value};"
+        + """
+@foo
+@bar baz
+"""
+        + f"{qasm_type} b = {qasm_value};"
     )
-
     assert main.to_ir() == expected
 
 
-def test_subroutine_annotations():
+@pytest.mark.parametrize(
+    "annotations, output_annotations",
+    [
+        (None, ""),
+        ([], ""),
+        ("foo", "@foo\n"),
+        (["foo"], "@foo\n"),
+        (["foo", "bar baz"], "@foo\n@bar baz\n"),
+    ],
+)
+def test_subroutine_annotations(
+    annotations: Optional[str | Iterable[str]], output_annotations: str
+):
     """Test annotations on subroutine declarations."""
 
-    @aq.subroutine(annotations=["foo", ("bar", "baz")])
+    @aq.subroutine(annotations=annotations)
     def subroutine_test():
         pass
 
@@ -60,12 +79,13 @@ def test_subroutine_annotations():
     def main():
         subroutine_test()
 
-    expected = """OPENQASM 3.0;
-@foo
-@bar baz
-def subroutine_test() {
+    expected = (
+        """OPENQASM 3.0;\n"""
+        + output_annotations
+        + """def subroutine_test() {
 }
 subroutine_test();"""
+    )
 
     assert main.to_ir() == expected
 
@@ -75,11 +95,17 @@ def test_range_annotations():
 
     @aq.main(num_qubits=5)
     def main():
-        for i in aq.range(5, annotations=["foo", ("bar", "baz")]):
+        for i in aq.range(5, annotations="foo"):
+            h(i)
+        for i in aq.range(5, annotations=["foo", "bar baz"]):
             h(i)
 
     expected = """OPENQASM 3.0;
 qubit[5] __qubits__;
+@foo
+for int i in [0:5 - 1] {
+    h __qubits__[i];
+}
 @foo
 @bar baz
 for int i in [0:5 - 1] {
@@ -94,10 +120,17 @@ def test_verbatim_box_annotations():
 
     @aq.main
     def main():
-        with aq.verbatim(annotations=["foo", ("bar", "baz")]):
+        with aq.verbatim(annotations="foo"):
+            h("$0")
+        with aq.verbatim(annotations=["foo", "bar baz"]):
             cnot("$0", "$1")
 
     expected = """OPENQASM 3.0;
+pragma braket verbatim
+@foo
+box {
+    h $0;
+}
 pragma braket verbatim
 @foo
 @bar baz
