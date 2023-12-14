@@ -107,7 +107,7 @@ class FreeParameterExpression:
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():
-            if issubclass(type(key), FreeParameterExpression):
+            if isinstance(key, FreeParameterExpression):
                 new_parameter_values[key.expression] = val
             else:
                 new_parameter_values[key] = val
@@ -147,7 +147,7 @@ class FreeParameterExpression:
             raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other):
-        if issubclass(type(other), FreeParameterExpression):
+        if isinstance(other, FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
@@ -156,7 +156,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other + self.expression)
 
     def __sub__(self, other):
-        if issubclass(type(other), FreeParameterExpression):
+        if isinstance(other, FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
@@ -165,7 +165,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other - self.expression)
 
     def __mul__(self, other):
-        if issubclass(type(other), FreeParameterExpression):
+        if isinstance(other, FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
@@ -174,7 +174,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other * self.expression)
 
     def __pow__(self, other, modulo=None):
-        if issubclass(type(other), FreeParameterExpression):
+        if isinstance(other, FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
@@ -208,21 +208,11 @@ class FreeParameterExpression:
         Returns:
             Expression: The AST node.
         """
+        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
+        identifier = Identifier(name=self)
         if isinstance(self._type, DurationType):
-            return DurationLiteral(_FreeParameterExpressionIdentifier(self), TimeUnit.s)
-        return _FreeParameterExpressionIdentifier(self)
-
-
-class _FreeParameterExpressionIdentifier(Identifier):
-    """Dummy AST node with FreeParameterExpression instance attached"""
-
-    def __init__(self, expression: FreeParameterExpression):
-        super().__init__(name=f"FreeParameterExpression({expression})")
-        self._expression = expression
-
-    @property
-    def expression(self) -> FreeParameterExpression:
-        return self._expression
+            return DurationLiteral(identifier, TimeUnit.s)
+        return identifier
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
