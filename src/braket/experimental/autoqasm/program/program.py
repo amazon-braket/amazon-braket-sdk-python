@@ -597,6 +597,11 @@ class ProgramConversionContext:
         finally:
             self.at_function_root_scope = original
 
+    def _add_annotations(self, annotations: Optional[str | Iterable[str]] = None) -> None:
+        oqpy_program = self.get_oqpy_program()
+        for annotation in aq_types.make_annotations_list(annotations):
+            oqpy_program.annotate(annotation)
+
     def if_block(self, condition: Any) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into an if block context.
 
@@ -620,18 +625,19 @@ class ProgramConversionContext:
         return self._control_flow_block(oqpy.Else(oqpy_program))
 
     def for_in(
-        self, iterator: oqpy.Range, iterator_name: Optional[str]
+        self, iterator: aq_types.Range, iterator_name: Optional[str]
     ) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into a for loop context.
 
         Args:
-            iterator (oqpy.Range): The iterator of the for loop.
+            iterator (Range): The iterator of the for loop.
             iterator_name (Optional[str]): The symbol to use as the name of the iterator.
 
         Yields:
             _GeneratorContextManager: The context manager of the oqpy.ForIn block.
         """
         oqpy_program = self.get_oqpy_program()
+        self._add_annotations(iterator.annotations)
         return self._control_flow_block(oqpy.ForIn(oqpy_program, iterator, iterator_name))
 
     def while_loop(self, condition: Any) -> contextlib._GeneratorContextManager:
@@ -694,15 +700,21 @@ class ProgramConversionContext:
             self._calibration_definitions_processing.pop()
 
     @contextlib.contextmanager
-    def box(self, pragma: Optional[str] = None) -> None:
+    def box(
+        self,
+        pragma: Optional[str] = None,
+        annotations: Optional[str | Iterable[str]] = None,
+    ) -> None:
         """Sets the program conversion context into a box context.
 
         Args:
             pragma (Optional[str]): Pragma to include before the box. Defaults to None.
+            annotations (Optional[str | Iterable[str]]): Annotations for the box.
         """
         oqpy_program = self.get_oqpy_program()
         if pragma:
             oqpy_program.pragma(pragma)
+        self._add_annotations(annotations)
         with oqpy.Box(oqpy_program):
             yield
 
