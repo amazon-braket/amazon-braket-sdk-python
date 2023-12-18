@@ -26,10 +26,7 @@ from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.approximation_parser import _ApproximationParser
-from braket.pulse.ast.free_parameters import (
-    _FreeParameterExpressionIdentifier,
-    _FreeParameterTransformer,
-)
+from braket.pulse.ast.free_parameters import _FreeParameterTransformer
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
@@ -325,7 +322,7 @@ class PulseSequence:
         self,
         parameter: Union[float, FreeParameterExpression],
         _type: ast.ClassicalType = ast.FloatType(),
-    ) -> Union[float, _FreeParameterExpressionIdentifier]:
+    ) -> Union[float, FreeParameterExpression]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))

@@ -55,6 +55,7 @@ def prepare_quantum_job(
     checkpoint_config: CheckpointConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
+    reservation_arn: str | None = None,
 ) -> dict:
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
@@ -140,6 +141,10 @@ def prepare_quantum_job(
             hybrid job.
             Default: {}.
 
+        reservation_arn (str | None): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
+
     Returns:
         dict: Hybrid job tracking the execution on Amazon Braket.
 
@@ -174,6 +179,7 @@ def prepare_quantum_job(
         job_name,
         "script",
     )
+
     if AwsSession.is_s3_uri(source_module):
         _process_s3_source_module(source_module, entry_point, aws_session, code_location)
     else:
@@ -229,6 +235,18 @@ def prepare_quantum_job(
         "stoppingCondition": asdict(stopping_condition),
         "tags": tags,
     }
+
+    if reservation_arn:
+        create_job_kwargs.update(
+            {
+                "associations": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
+            }
+        )
 
     return create_job_kwargs
 

@@ -39,10 +39,10 @@ The Python code above outputs the following OpenQASM program:
     result[0] = measure __qubits__[0];
     result[1] = measure __qubits__[1];
 """
-
+from . import errors, operators  # noqa: F401
 from .api import gate, gate_calibration, main, subroutine  # noqa: F401
 from .instructions import QubitIdentifierType as Qubit  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
 from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
-from .types import qasm_range as range  # noqa: F401
+from .types import Range as range  # noqa: F401

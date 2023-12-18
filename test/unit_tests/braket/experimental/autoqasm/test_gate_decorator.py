@@ -39,10 +39,9 @@ gate empty_gate q {
 qubit[1] __qubits__;
 empty_gate __qubits__[0];"""
 
-    program = my_program()
-    assert program.to_ir() == expected
+    assert my_program.to_ir() == expected
 
-    _test_on_local_sim(program)
+    _test_on_local_sim(my_program)
 
 
 def test_double_gate_decorator() -> None:
@@ -58,8 +57,7 @@ gate empty_gate q {
 qubit[1] __qubits__;
 empty_gate __qubits__[0];"""
 
-    program = my_program()
-    assert program.to_ir() == expected
+    assert my_program.to_ir() == expected
 
 
 def test_gate_class() -> None:
@@ -70,12 +68,11 @@ def test_gate_class() -> None:
         def __init__(self, q: aq.Qubit):
             h(q)
 
-    @aq.main
-    def main():
-        MyGate(0)
-
     with pytest.raises(ValueError):
-        main()
+
+        @aq.main
+        def main():
+            MyGate(0)
 
 
 def test_invalid_symbol() -> None:
@@ -84,12 +81,11 @@ def test_invalid_symbol() -> None:
         h(q)
         not_a_symbol()  # noqa: F821 # type: ignore
 
-    @aq.main
-    def main():
-        my_gate(0)
-
     with pytest.raises(NameError):
-        main()
+
+        @aq.main
+        def main():
+            my_gate(0)
 
 
 def test_duplicate_gate_names() -> None:
@@ -112,8 +108,7 @@ gate my_gate(angle) q {
 qubit[1] __qubits__;
 my_gate(0.7853981633974483) __qubits__[0];"""
 
-    program = main()
-    assert program.to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_duplicate_gate_names_in_subroutine() -> None:
@@ -147,8 +142,7 @@ qubit[2] __qubits__;
 my_gate(0.7853981633974483) __qubits__[0];
 define_gate_in_subroutine();"""
 
-    program = main()
-    assert program.to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_incorrect_arg_count() -> None:
@@ -157,15 +151,14 @@ def test_incorrect_arg_count() -> None:
         h(q0)
         x(q1)
 
-    @aq.main
-    def incorrect_arg_count():
-        my_gate(0)
-
     with pytest.raises(
         errors.ParameterTypeError,
         match='Incorrect number of arguments passed to gate "my_gate". Expected 2, got 1.',
     ):
-        incorrect_arg_count()
+
+        @aq.main
+        def incorrect_arg_count():
+            my_gate(0)
 
 
 def test_incorrect_arg_types() -> None:
@@ -174,12 +167,11 @@ def test_incorrect_arg_types() -> None:
         h(q)
         rx(q, theta)
 
-    @aq.main
-    def incorrect_arg_types():
-        my_gate(0.25, 0)
-
     with pytest.raises(TypeError):
-        incorrect_arg_types()
+
+        @aq.main
+        def incorrect_arg_types():
+            my_gate(0.25, 0)
 
 
 def test_missing_annotation() -> None:
@@ -187,12 +179,11 @@ def test_missing_annotation() -> None:
     def my_gate(a):
         pass
 
-    @aq.main
-    def my_program():
-        my_gate("test")
-
     with pytest.raises(errors.MissingParameterTypeError):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate("test")
 
 
 def test_incorrect_annotation() -> None:
@@ -200,12 +191,11 @@ def test_incorrect_annotation() -> None:
     def my_gate(a: str):
         pass
 
-    @aq.main
-    def my_program():
-        my_gate("test")
-
     with pytest.raises(errors.ParameterTypeError):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate("test")
 
 
 def test_no_qubit_args() -> None:
@@ -213,15 +203,14 @@ def test_no_qubit_args() -> None:
     def not_a_gate(angle: float):
         pass
 
-    @aq.main
-    def my_program():
-        not_a_gate(np.pi)
-
     with pytest.raises(
         errors.ParameterTypeError,
         match='Gate definition "not_a_gate" has no arguments of type aq.Qubit.',
     ):
-        my_program()
+
+        @aq.main
+        def my_program():
+            not_a_gate(np.pi)
 
 
 def test_invalid_qubit_used() -> None:
@@ -230,15 +219,14 @@ def test_invalid_qubit_used() -> None:
         h(q)
         x(1)  # invalid
 
-    @aq.main
-    def my_program():
-        my_gate(0)
-
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
     ):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate(0)
 
 
 def test_invalid_angle_used() -> None:
@@ -250,15 +238,14 @@ def test_invalid_angle_used() -> None:
         rx(q, theta)
         rx(q, beta)  # invalid
 
-    @aq.main
-    def my_program():
-        my_gate(0, np.pi / 2)
-
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses angle (.*) which is not an argument to the gate.',
     ):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate(0, np.pi / 2)
 
 
 def test_invalid_instruction() -> None:
@@ -267,15 +254,14 @@ def test_invalid_instruction() -> None:
         h(q)
         reset(q)  # invalid
 
-    @aq.main
-    def my_program():
-        my_gate(0)
-
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate(0)
 
 
 def test_invalid_control_flow() -> None:
@@ -285,15 +271,14 @@ def test_invalid_control_flow() -> None:
         if measure(q):
             x(q)
 
-    @aq.main
-    def my_program():
-        my_gate(0)
-
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-        my_program()
+
+        @aq.main
+        def my_program():
+            my_gate(0)
 
 
 def test_nested_gates() -> None:
@@ -329,10 +314,9 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];"""
 
-    program = my_program()
-    assert program.to_ir() == expected
+    assert my_program.to_ir() == expected
 
-    _test_on_local_sim(program)
+    _test_on_local_sim(my_program)
 
 
 def test_gate_called_from_subroutine() -> None:
@@ -362,5 +346,4 @@ qubit[4] __qubits__;
 subroutine(0, 1);
 subroutine(2, 3);"""
 
-    program = main()
-    assert program.to_ir() == expected
+    assert main.to_ir() == expected

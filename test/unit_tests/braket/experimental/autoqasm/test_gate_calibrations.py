@@ -51,7 +51,7 @@ def test_gate_calibrations_fixed_args():
         rx(1.0) $1;
         """
     ).strip()
-    qasm = my_program().with_calibrations([cal_1, cal_2]).to_ir()
+    qasm = my_program.with_calibrations([cal_1, cal_2]).to_ir()
     assert qasm == expected
 
 
@@ -75,7 +75,7 @@ def test_gate_calibrations_variable_args():
         rx(1.0) $1;
         """
     ).strip()
-    qasm = my_program().with_calibrations(cal_1).to_ir()
+    qasm = my_program.with_calibrations(cal_1).to_ir()
     assert qasm == expected
 
 
@@ -91,7 +91,7 @@ def test_gate_calibrations_invalid_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().with_calibrations(cal_1)
+        my_program.with_calibrations(cal_1)
 
 
 def test_gate_calibrations_invalid_type():
@@ -123,7 +123,7 @@ def test_gate_calibrations_invalid_type():
 
     for cal in [cal_1, cal_2, cal_3, cal_4, cal_5]:
         with pytest.raises(errors.ParameterTypeError):
-            _ = my_program().with_calibrations(cal)
+            my_program.with_calibrations(cal)
 
 
 def test_gate_calibrations_insufficient_args():
@@ -142,10 +142,10 @@ def test_gate_calibrations_insufficient_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().with_calibrations(cal_1)
+        my_program.with_calibrations(cal_1)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().with_calibrations(cal_2)
+        my_program.with_calibrations(cal_2)
 
 
 def test_gate_calibrations_duplicated_args():
@@ -160,7 +160,7 @@ def test_gate_calibrations_duplicated_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().with_calibrations(cal_1)
+        my_program.with_calibrations(cal_1)
 
 
 def test_gate_calibrations_invalid_instructions():
@@ -176,7 +176,7 @@ def test_gate_calibrations_invalid_instructions():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().with_calibrations(cal_1)
+        my_program.with_calibrations(cal_1)
 
 
 def test_gate_calibrations_bind_calibrations_not_inplace():
@@ -190,12 +190,11 @@ def test_gate_calibrations_bind_calibrations_not_inplace():
     def my_program():
         rx("$1", 1.0)
 
-    program_1 = my_program()
-    _ = program_1.with_calibrations(cal_1)
+    program_1 = my_program
+    program_2 = my_program.with_calibrations(cal_1)
+    program_3 = my_program
 
-    program_2 = my_program()
-
-    assert program_1.to_ir() == program_2.to_ir()
+    assert program_1.to_ir() == program_3.to_ir() != program_2.to_ir()
 
 
 def test_gate_calibrations_with_gate_definition():
@@ -228,5 +227,5 @@ def test_gate_calibrations_with_gate_definition():
         my_gate(0.123) __qubits__[2];
         """
     ).strip()
-    qasm = my_program().with_calibrations(cal_1).to_ir()
+    qasm = my_program.with_calibrations(cal_1).to_ir()
     assert qasm == expected

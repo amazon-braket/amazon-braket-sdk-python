@@ -48,6 +48,7 @@ setup(
         "astunparse",
         "gast",
         "termcolor",
+        "openqasm_pygments",
     ],
     extras_require={
         "test": [
@@ -62,7 +63,7 @@ setup(
             "pytest",
             "pytest-cov",
             "pytest-rerunfailures",
-            "pytest-xdist",
+            "pytest-xdist[psutil]",
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",

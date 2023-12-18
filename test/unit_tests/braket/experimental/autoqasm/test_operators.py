@@ -106,7 +106,7 @@ if (__bool_0__) {
 }
 a = __int_3__;"""
 
-    assert cond_exp_assignment().to_ir() == expected
+    assert cond_exp_assignment.to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -120,12 +120,11 @@ a = __int_3__;"""
 def test_unsupported_inline_conditional_assignment(else_value) -> None:
     """Tests conditional expression where the if and else clauses return different types."""
 
-    @aq.main
-    def cond_exp_assignment_different_types():
-        a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
-
     with pytest.raises(UnsupportedConditionalExpressionError):
-        cond_exp_assignment_different_types()
+
+        @aq.main
+        def cond_exp_assignment_different_types():
+            a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
 
 
 def test_branch_assignment_undeclared() -> None:
@@ -147,7 +146,7 @@ if (__bool_0__) {
     a = 2;
 }"""
 
-    assert branch_assignment_undeclared().to_ir() == expected
+    assert branch_assignment_undeclared.to_ir() == expected
 
 
 def test_branch_assignment_declared() -> None:
@@ -170,7 +169,7 @@ if (__bool_1__) {
     a = 7;
 }"""
 
-    assert branch_assignment_declared().to_ir() == expected
+    assert branch_assignment_declared.to_ir() == expected
 
 
 def for_body(i: aq.Qubit) -> None:
@@ -181,7 +180,7 @@ def test_control_flow_for_loop_qasm() -> None:
     """Tests aq.operators.for_stmt with a QASM iterable."""
     with aq.build_program(aq.program.UserConfig(num_qubits=10)) as program_conversion_context:
         aq.operators.for_stmt(
-            iter=aq.types.qasm_range(3),
+            iter=aq.types.Range(3),
             extra_test=None,
             body=for_body,
             get_state=None,
@@ -381,7 +380,7 @@ def do_and(bool a, bool b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_and(true, false);"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_logical_op_or() -> None:
@@ -402,7 +401,7 @@ def do_or(bool a, bool b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_or(true, false);"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_logical_op_not() -> None:
@@ -423,7 +422,7 @@ def do_not(bool a) -> bool {
 bool __bool_1__;
 __bool_1__ = do_not(true);"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_logical_op_eq() -> None:
@@ -444,7 +443,7 @@ def do_eq(int[32] a, int[32] b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_eq(1, 2);"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_logical_op_not_eq() -> None:
@@ -465,7 +464,7 @@ def do_not_eq(int[32] a, int[32] b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_not_eq(1, 2);"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_logical_ops_py() -> None:
@@ -484,7 +483,7 @@ def test_logical_ops_py() -> None:
 
     expected = """OPENQASM 3.0;"""
 
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 def test_comparison_lt() -> None:
@@ -507,8 +506,7 @@ __bool_1__ = a < 1;
 if (__bool_1__) {
     h __qubits__[0];
 }"""
-    qasm = prog().to_ir()
-    assert qasm == expected
+    assert prog.to_ir() == expected
 
 
 def test_comparison_gt() -> None:
@@ -531,8 +529,7 @@ __bool_1__ = a > 1;
 if (__bool_1__) {
     h __qubits__[0];
 }"""
-    qasm = prog().to_ir()
-    assert qasm == expected
+    assert prog.to_ir() == expected
 
 
 def test_comparison_ops_py() -> None:
@@ -551,7 +548,7 @@ def test_comparison_ops_py() -> None:
         assert all([c, d, not e, not f, h])
 
     expected = """OPENQASM 3.0;"""
-    assert prog().to_ir() == expected
+    assert prog.to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -644,7 +641,7 @@ bit[6] a = "000000";
 bit b = 1;
 a[3] = b;"""
 
-    assert slice().to_ir() == expected
+    assert slice.to_ir() == expected
 
 
 def test_slice_bits_w_measure() -> None:
@@ -665,7 +662,7 @@ __bit_1__ = measure __qubits__[0];
 c = __bit_1__;
 b0[3] = c;"""
 
-    assert measure_to_slice().to_ir() == expected
+    assert measure_to_slice.to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -794,10 +791,11 @@ def test_assignment_py(value: Any) -> None:
 @pytest.mark.parametrize("value", [0, 1])
 def test_py_if_stmt(value: int) -> None:
     """Test Python if branches on true and false conditions."""
+    a = value
 
     @aq.main
-    def test_control_flow(a: int):
-        "Quick if statement test"
+    def test_control_flow():
+        """Quick if statement test"""
         if a:
             h(0)
         else:
@@ -808,7 +806,7 @@ qubit[1] __qubits__;
 {} __qubits__[0];""".format(
         "h" if value else "x"
     )
-    assert test_control_flow(value).to_ir() == expected
+    assert test_control_flow.to_ir() == expected
 
 
 def test_py_while() -> None:
@@ -816,7 +814,7 @@ def test_py_while() -> None:
 
     @aq.main
     def test_control_flow():
-        "Quick while loop test"
+        """Quick while loop test"""
         a = 3
         while a >= 2:
             a -= 1
@@ -827,30 +825,44 @@ qubit[1] __qubits__;
 h __qubits__[0];
 h __qubits__[0];"""
 
-    assert test_control_flow().to_ir() == expected
+    assert test_control_flow.to_ir() == expected
 
 
 def test_py_assert() -> None:
     """Test Python assertions inside an AutoQASM program."""
 
-    @aq.main
-    def test_assert(value: bool):
-        assert value
+    not_supported = (
+        "Assertions are not supported for values that depend on "
+        "measurement results or AutoQASM variables."
+    )
+    with pytest.raises(NotImplementedError, match=not_supported):
 
-    test_assert(True)
+        @aq.main
+        def test_input_assert(value: bool):
+            assert value
+
+    true_var = 1
+    false_var = False
+
+    @aq.main
+    def test_assert():
+        assert true_var
+
     with pytest.raises(AssertionError):
-        test_assert(False)
+
+        @aq.main
+        def test_assert_false():
+            assert false_var
 
 
 def test_measurement_assert() -> None:
     """Test assertions on measurement results inside an AutoQASM program."""
 
-    @aq.main
-    def test_assert():
-        assert measure(0)
-
     with pytest.raises(NotImplementedError):
-        test_assert()
+
+        @aq.main
+        def test_assert():
+            assert measure(0)
 
 
 def test_py_list_ops() -> None:
@@ -864,5 +876,3 @@ def test_py_list_ops() -> None:
         assert b == 1
         c = np.stack([a, a])
         assert np.array_equal(c, [[2, 3, 4], [2, 3, 4]])
-
-    test_list_ops()

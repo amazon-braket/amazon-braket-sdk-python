@@ -22,6 +22,7 @@ from .types import (  # noqa: F401
     BoolVar,
     FloatVar,
     IntVar,
+    Range,
     is_qasm_type,
-    qasm_range,
+    make_annotations_list,
 )
