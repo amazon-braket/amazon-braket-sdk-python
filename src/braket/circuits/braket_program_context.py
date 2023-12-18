@@ -14,7 +14,7 @@
 from typing import Optional, Union
 
 import numpy as np
-from sympy import Expr
+from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
@@ -154,5 +154,8 @@ class BraketProgramContext(AbstractProgramContext):
             otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
-            return FreeParameterExpression(value)
+            evaluated_value = value.evalf()
+            if isinstance(evaluated_value, Number):
+                return evaluated_value
+            return FreeParameterExpression(evaluated_value)
         return value
