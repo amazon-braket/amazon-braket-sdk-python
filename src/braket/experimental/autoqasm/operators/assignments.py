@@ -143,7 +143,7 @@ def _validate_assignment_types(var1: oqpy.base.Var, var2: oqpy.base.Var) -> None
             raise errors.InvalidAssignmentStatement(
                 "Arrays in assignment statements must have the same dimensions"
             )
-    else:
+    elif isinstance(var1, oqpy.classical_types._SizedVar):
         var1_size = var1.size or 1
         var2_size = var2.size or 1
         if var1_size != var2_size:
