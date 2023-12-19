@@ -617,7 +617,7 @@ def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
             "}",
         ]
     )
-    expected_program = OpenQASMProgram(source=expected_openqasm)
+    expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
     AwsQuantumTask.create(aws_session, SIMULATOR_ARN, pulse_sequence, S3_TARGET, 10)

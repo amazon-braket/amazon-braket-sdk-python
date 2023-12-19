@@ -571,7 +571,7 @@ def _(
 ) -> AwsQuantumTask:
     openqasm_program = OpenQASMProgram(
         source=pulse_sequence.to_ir(),
-        inputs=inputs if inputs else None,
+        inputs=inputs if inputs else {},
     )
 
     create_task_kwargs.update({"action": openqasm_program.json()})
