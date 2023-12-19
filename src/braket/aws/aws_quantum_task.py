@@ -569,7 +569,12 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
+    openqasm_program = OpenQASMProgram(
+        source=pulse_sequence.to_ir(),
+        inputs=inputs if inputs else None,
+    )
+
+    create_task_kwargs.update({"action": openqasm_program.json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
