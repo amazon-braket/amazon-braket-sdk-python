@@ -58,6 +58,14 @@ class _IRQASMTransformer(QASMTransformer):
         else:
             return expression_statement
 
+
+class _InputVarSplitter(QASMTransformer):
+    """
+    QASMTransformer which walks the AST and makes the necessary modifications needed
+    for IR generation. Currently, it performs the following operations:
+      * Bubbles up input variables to the top of the CalibrationStatement block.
+    """
+
     def visit_Program(self, program: ast.Program) -> ast.Program:
         """Visit a Program.
         Args:
@@ -68,9 +76,8 @@ class _IRQASMTransformer(QASMTransformer):
         new_statement_list = []
         for statement in program.statements:
             if isinstance(statement, ast.CalibrationStatement):
-                input_vars, body = self.split_input_vars(statement.body)
-                new_statement_list.extend(input_vars)
-                new_statement_list.append(ast.CalibrationStatement(body))
+                reordered_cal_block_statements = self.split_input_vars(statement)
+                new_statement_list.extend(reordered_cal_block_statements)
             else:
                 new_statement_list.append(statement)
 
@@ -79,21 +86,20 @@ class _IRQASMTransformer(QASMTransformer):
 
     def split_input_vars(
         self,
-        body: list[ast.Statement],
-    ) -> tuple[list[ast.IODeclaration], list[ast.Statement]]:
-        """Split input vars out of the calibrationStatement block
+        node: ast.CalibrationStatement,
+    ) -> list[ast.Statement]:
+        """Split input variables out of the calibrationStatement block.
 
         Args:
-            body (list[Statement]): The list of statement in the CalibrationStatement block
+            node (CalibrationStatement): The CalibrationStatement block.
         Returns:
-            tuple[list[IODeclaration], list[Statement]]: A tuple of input vars and the list
-            of remaining statements.
+            list[Statement]: The list of statements with input variables outside and in front.
         """
         input_vars = []
         new_body = []
-        for child in body:
+        for child in node.body:
             if isinstance(child, ast.IODeclaration) and child.io_identifier is ast.IOKeyword.input:
                 input_vars.append(child)
             else:
                 new_body.append(child)
-        return input_vars, new_body
+        return input_vars + [ast.CalibrationStatement(new_body)]

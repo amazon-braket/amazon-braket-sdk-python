@@ -28,7 +28,7 @@ from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.approximation_parser import _ApproximationParser
 from braket.pulse.ast.free_parameters import _FreeParameterTransformer
 from braket.pulse.ast.qasm_parser import ast_to_qasm
-from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
+from braket.pulse.ast.qasm_transformer import _InputVarSplitter, _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
@@ -326,6 +326,7 @@ class PulseSequence:
             tree = _IRQASMTransformer(register_identifier).visit(tree)
         else:
             tree = program.to_ast(encal=True, include_externs=False)
+        tree = _InputVarSplitter().visit(tree)
         return ast_to_qasm(tree)
 
     def _format_parameter_ast(
