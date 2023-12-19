@@ -91,7 +91,7 @@ def main(
         },
     )
 
-    return program_builder()
+    return aq_program.MainProgram(program_builder)
 
 
 def subroutine(

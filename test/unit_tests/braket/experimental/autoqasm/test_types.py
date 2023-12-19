@@ -194,65 +194,72 @@ b = a;"""
 
 def test_invalid_array_assignment():
     """Test invalid array assignment."""
-    with pytest.raises(aq.errors.InvalidAssignmentStatement):
 
-        @aq.main
-        def invalid():
-            a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
-            b = aq.ArrayVar([4, 5], base_type=aq.IntVar, dimensions=[2])
-            a = b  # noqa: F841
+    @aq.main
+    def invalid():
+        a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+        b = aq.ArrayVar([4, 5], base_type=aq.IntVar, dimensions=[2])
+        a = b  # noqa: F841
+
+    with pytest.raises(aq.errors.InvalidAssignmentStatement):
+        invalid.to_ir()
 
 
 def test_declare_array_in_local_scope():
     """Test declaring an array inside a local scope."""
-    with pytest.raises(aq.errors.InvalidArrayDeclaration):
 
-        @aq.main
-        def declare_array():
-            if aq.BoolVar(True):
-                _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+    @aq.main
+    def declare_array():
+        if aq.BoolVar(True):
+            _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+
+    with pytest.raises(aq.errors.InvalidArrayDeclaration):
+        declare_array.to_ir()
 
 
 def test_declare_array_in_subroutine():
     """Test declaring an array inside a subroutine."""
+
+    @aq.main
+    def main() -> list[int]:
+        return declare_array()
 
     @aq.subroutine
     def declare_array():
         _ = aq.ArrayVar([1, 2, 3], dimensions=[3])
 
     with pytest.raises(aq.errors.InvalidArrayDeclaration):
-
-        @aq.main
-        def main() -> list[int]:
-            return declare_array()
+        main.to_ir()
 
 
 def test_return_python_array():
     """Test returning a python array of ints."""
+
+    @aq.main(num_qubits=4)
+    def main():
+        tester()
 
     @aq.subroutine
     def tester() -> list[int]:
         return [1, 2, 3]
 
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-
-        @aq.main(num_qubits=4)
-        def main():
-            tester()
+        main.to_ir()
 
 
 def test_return_array_unsupported():
     """Test unsupported array type."""
+
+    @aq.main(num_qubits=4)
+    def main():
+        tester([3.3])
 
     @aq.subroutine
     def tester(arr: list[float]) -> list[float]:
         return [1.2, 2.1]
 
     with pytest.raises(aq.errors.ParameterTypeError):
-
-        @aq.main(num_qubits=4)
-        def main():
-            tester([3.3])
+        main.to_ir()
 
 
 def test_return_func_call():
@@ -342,12 +349,13 @@ def test_map_array():
     def annotation_test(input: list[int]):
         pass
 
-    with pytest.raises(aq.errors.ParameterTypeError):
+    @aq.main
+    def main():
+        a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
+        annotation_test(a)
 
-        @aq.main
-        def main():
-            a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
-            annotation_test(a)
+    with pytest.raises(aq.errors.ParameterTypeError):
+        main.to_ir()
 
 
 def test_map_other():
@@ -567,11 +575,12 @@ def test_error_for_tuple_param() -> None:
     def param_test(input: tuple):
         pass
 
-    with pytest.raises(aq.errors.ParameterTypeError):
+    @aq.main
+    def main():
+        param_test(aq.BitVar(1))
 
-        @aq.main
-        def main():
-            param_test(aq.BitVar(1))
+    with pytest.raises(aq.errors.ParameterTypeError):
+        main.to_ir()
 
 
 def test_error_for_missing_param_type() -> None:
@@ -581,11 +590,12 @@ def test_error_for_missing_param_type() -> None:
     def param_test(input):
         pass
 
-    with pytest.raises(aq.errors.MissingParameterTypeError):
+    @aq.main
+    def main():
+        param_test(aq.BitVar(1))
 
-        @aq.main
-        def main():
-            param_test(aq.BitVar(1))
+    with pytest.raises(aq.errors.MissingParameterTypeError):
+        main.to_ir()
 
 
 def test_ignore_ret_typehint_bool():
@@ -617,11 +627,12 @@ def test_ignore_ret_typehint_list():
     def ret_test() -> int:
         return [1, 2, 3]
 
-    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+    @aq.main(num_qubits=4)
+    def main() -> float:
+        ret_test()
 
-        @aq.main(num_qubits=4)
-        def main() -> float:
-            ret_test()
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main.to_ir()
 
 
 def test_ignore_missing_ret_typehint_list():
@@ -631,11 +642,12 @@ def test_ignore_missing_ret_typehint_list():
     def ret_test():
         return [1, 2, 3]
 
-    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+    @aq.main(num_qubits=4)
+    def main():
+        ret_test()
 
-        @aq.main(num_qubits=4)
-        def main():
-            ret_test()
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main.to_ir()
 
 
 def test_ignore_missing_ret_typehint_float():
@@ -668,8 +680,9 @@ def test_param_array_list_missing_arg():
     def param_test(arr: list) -> int:
         return 1
 
-    with pytest.raises(aq.errors.ParameterTypeError):
+    @aq.main(num_qubits=4)
+    def main():
+        param_test()
 
-        @aq.main(num_qubits=4)
-        def main():
-            param_test()
+    with pytest.raises(aq.errors.ParameterTypeError):
+        main.to_ir()

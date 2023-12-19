@@ -17,6 +17,7 @@ from __future__ import annotations
 import contextlib
 import copy
 import threading
+from abc import abstractmethod
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
@@ -89,6 +90,129 @@ class ProgramMode(Enum):
 
 
 class Program(SerializableProgram):
+    @abstractmethod
+    def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
+        """Add the gate calibrations to the program. The calibration added program is returned
+        as a new object. The original program is not modified.
+
+        Args:
+            gate_calibrations (Union[Callable, list[Callable]]): The gate calibrations to add to
+                the main program. Calibration are passed as callable without evaluation.
+
+        Returns:
+            Program: The program with gate calibrations added.
+        """
+
+    @abstractmethod
+    def make_bound_program(self, param_values: dict[str, float], strict: bool = False) -> Program:
+        """Binds FreeParameters based upon their name and values passed in.
+
+        Args:
+            param_values (dict[str, float]): A mapping of FreeParameter names
+                to a value to assign to them.
+            strict (bool): If True, raises a ParameterNotFoundError if any of the FreeParameters
+                in param_values do not appear in the program. False by default.
+
+        Raises:
+            ParameterNotFoundError: If a parameter name is given which does not appear in
+                the program.
+
+        Returns:
+            Program: Returns a program with all present parameters fixed to their respective
+            values.
+        """
+
+    @abstractmethod
+    def display(self, ir_type: IRType = IRType.OPENQASM) -> None:
+        """
+        Print the Program with syntax highlighting. Returns `None` to avoid
+        duplicate printing when used with `print(program.display())`.
+
+        Args:
+            ir_type (IRType): The IRType to use for displaying the program.
+                Defaults to IRType.OPENQASM.
+        """
+
+
+class MainProgram(Program):
+    def __init__(self, program_generator: Callable[[None], Program]):
+        self._program_generator = program_generator
+        self._program = None
+
+    def _ensure_initialized(self) -> None:
+        if not self._program:
+            self._program = self._program_generator()
+
+    def to_ir(
+        self,
+        ir_type: IRType = IRType.OPENQASM,
+        serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
+    ) -> str:
+        """Serializes the program into an intermediate representation.
+
+        Args:
+            ir_type (IRType): The IRType to use for converting the program to its
+                IR representation. Defaults to IRType.OPENQASM.
+            serialization_properties (SerializationProperties): IR serialization configuration.
+                Default to OpenQASMSerializationProperties().
+
+        Raises:
+            ValueError: If the supplied `ir_type` is not supported.
+
+        Returns:
+            str: A representation of the program in the `ir_type` format.
+        """
+        self._ensure_initialized()
+        return self._program.to_ir(ir_type, serialization_properties)
+
+    def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
+        """Add the gate calibrations to the program. The calibration added program is returned
+        as a new object. The original program is not modified.
+
+        Args:
+            gate_calibrations (Union[Callable, list[Callable]]): The gate calibrations to add to
+                the main program. Calibration are passed as callable without evaluation.
+
+        Returns:
+            Program: The program with gate calibrations added.
+        """
+        self._ensure_initialized()
+        return self._program.with_calibrations(gate_calibrations)
+
+    def make_bound_program(self, param_values: dict[str, float], strict: bool = False) -> Program:
+        """Binds FreeParameters based upon their name and values passed in.
+
+        Args:
+            param_values (dict[str, float]): A mapping of FreeParameter names
+                to a value to assign to them.
+            strict (bool): If True, raises a ParameterNotFoundError if any of the FreeParameters
+                in param_values do not appear in the program. False by default.
+
+        Raises:
+            ParameterNotFoundError: If a parameter name is given which does not appear in
+                the program.
+
+        Returns:
+            Program: Returns a program with all present parameters fixed to their respective
+            values.
+        """
+        self._ensure_initialized()
+        return self._program.make_bound_program(param_values, strict)
+
+    def display(self, ir_type: IRType = IRType.OPENQASM) -> None:
+        """
+        Print the Program with syntax highlighting. Returns `None` to avoid
+        duplicate printing when used with `print(program.display())`.
+
+        Args:
+            ir_type (IRType): The IRType to use for displaying the program.
+                Defaults to IRType.OPENQASM.
+        """
+        self._ensure_initialized()
+        self._program.display(ir_type)
+
+
+class GeneratedProgram(Program):
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 
@@ -127,7 +251,7 @@ class Program(SerializableProgram):
         for gc in gate_calibrations:
             combined_oqpy_program += gc().program._oqpy_program
         combined_oqpy_program += self._oqpy_program
-        return Program(combined_oqpy_program, has_pulse_control=True)
+        return GeneratedProgram(combined_oqpy_program, has_pulse_control=True)
 
     def make_bound_program(self, param_values: dict[str, float], strict: bool = False) -> Program:
         """Binds FreeParameters based upon their name and values passed in.
@@ -156,7 +280,7 @@ class Program(SerializableProgram):
             elif strict:
                 raise errors.ParameterNotFoundError(f"No parameter in the program named: {name}")
 
-        return Program(bound_oqpy_program, self._has_pulse_control)
+        return GeneratedProgram(bound_oqpy_program, self._has_pulse_control)
 
     def to_ir(
         self,
@@ -281,7 +405,7 @@ class ProgramConversionContext:
                     f'The target device "{device.name}" does not support '
                     f"the following gates used in the program: {invalid_gates_used}"
                 )
-        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
+        return GeneratedProgram(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
     def qubits(self) -> list[int]:

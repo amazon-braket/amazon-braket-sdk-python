@@ -518,19 +518,21 @@ def test_strict_parameter_bind_failure():
 def test_duplicate_variable_name_fails():
     """Test using a variable and FreeParameter with the same name."""
 
-    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
-
-        @aq.main
-        def parametric_explicit():
-            alpha = aq.FloatVar(1.2)  # noqa: F841
-            rx(0, FreeParameter("alpha"))
+    @aq.main
+    def parametric_explicit():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, FreeParameter("alpha"))
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric_explicit.to_ir()
 
-        @aq.main
-        def parametric(alpha):
-            alpha = aq.FloatVar(1.2)  # noqa: F841
-            rx(0, alpha)
+    @aq.main
+    def parametric(alpha):
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, alpha)
+
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric.to_ir()
 
 
 def test_binding_variable_fails():

@@ -292,37 +292,41 @@ c = __bit_0__;"""
 
 def test_bell_measurement_invalid_declared_type() -> None:
     """Test measurement with result stored in a variable with invalid type."""
-    expected_error_message = "Variables in assignment statements must have the same type"
+
+    @aq.main
+    def bell_measurement_invalid_declared_type() -> None:
+        """A function that generates and measures a two-qubit Bell state. But stores
+        result in a variable with invalid type.
+        """
+        c = aq.IntVar(0)
+        h(0)
+        cnot(0, 1)
+        c = measure(1)  # noqa: F841
+
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
+        bell_measurement_invalid_declared_type.to_ir()
 
-        @aq.main
-        def bell_measurement_invalid_declared_type() -> None:
-            """A function that generates and measures a two-qubit Bell state. But stores
-            result in a variable with invalid type.
-            """
-            c = aq.IntVar(0)
-            h(0)
-            cnot(0, 1)
-            c = measure(1)  # noqa: F841
-
+    expected_error_message = "Variables in assignment statements must have the same type"
     assert expected_error_message in str(exc_info.value)
 
 
 def test_bell_measurement_invalid_declared_size() -> None:
     """Test measurement with result stored in a variable with invalid size."""
-    expected_error_message = "Variables in assignment statements must have the same size"
+
+    @aq.main
+    def bell_measurement_invalid_declared_size() -> None:
+        """A function that generates and measures a two-qubit Bell state. But stores
+        result in a variable with invalid size.
+        """
+        c = aq.BitVar([0, 0], size=2)
+        h(0)
+        cnot(0, 1)
+        c = measure(1)  # noqa: F841
+
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
+        bell_measurement_invalid_declared_size.to_ir()
 
-        @aq.main
-        def bell_measurement_invalid_declared_size() -> None:
-            """A function that generates and measures a two-qubit Bell state. But stores
-            result in a variable with invalid size.
-            """
-            c = aq.BitVar([0, 0], size=2)
-            h(0)
-            cnot(0, 1)
-            c = measure(1)  # noqa: F841
-
+    expected_error_message = "Variables in assignment statements must have the same size"
     assert expected_error_message in str(exc_info.value)
 
 
@@ -623,53 +627,63 @@ def test_physical_qubit_decl(physical_bell_subroutine) -> None:
 
 def test_invalid_physical_qubit_fails() -> None:
     """Tests invalid physical qubit formatting."""
-    with pytest.raises(ValueError):
 
-        @aq.main
-        def broken() -> None:
-            """Uses invalid string for qubit index"""
-            cnot("$0l", "$O1")
+    @aq.main
+    def broken() -> None:
+        """Uses invalid string for qubit index"""
+        cnot("$0l", "$O1")
+
+    with pytest.raises(ValueError):
+        broken.to_ir()
 
 
 def test_invalid_qubit_label_fails() -> None:
     """Tests random string fails for qubit label."""
-    with pytest.raises(ValueError):
 
-        @aq.main
-        def broken() -> None:
-            """Uses invalid string for qubit index"""
-            h("nope")
+    @aq.main
+    def broken() -> None:
+        """Uses invalid string for qubit index"""
+        h("nope")
+
+    with pytest.raises(ValueError):
+        broken.to_ir()
 
 
 def test_float_qubit_index_fails() -> None:
     """Tests floats fails for qubit label."""
-    with pytest.raises(TypeError):
 
-        @aq.main
-        def broken() -> None:
-            """Uses float for qubit index"""
-            i = 1
-            h(i / 2)
+    @aq.main
+    def broken() -> None:
+        """Uses float for qubit index"""
+        i = 1
+        h(i / 2)
+
+    with pytest.raises(TypeError):
+        broken.to_ir()
 
 
 def test_bool_qubit_index_fails() -> None:
     """Tests that an error is raised for boolean qubit type."""
-    with pytest.raises(ValueError):
 
-        @aq.main
-        def broken() -> None:
-            """Uses invalid type for qubit index"""
-            h(True)
+    @aq.main
+    def broken() -> None:
+        """Uses invalid type for qubit index"""
+        h(True)
+
+    with pytest.raises(ValueError):
+        broken.to_ir()
 
 
 def test_invalid_qubit_type_fails() -> None:
     """Tests that an error is raised for other unusual qubit types."""
-    with pytest.raises(ValueError):
 
-        @aq.main
-        def broken() -> None:
-            """Uses invalid type for qubit index"""
-            h(h)
+    @aq.main
+    def broken() -> None:
+        """Uses invalid type for qubit index"""
+        h(h)
+
+    with pytest.raises(ValueError):
+        broken.to_ir()
 
 
 def test_bit_array_name() -> None:
@@ -733,26 +747,30 @@ def test_program_simple_expr() -> None:
     """Test that a program with simple expressions for the qubit index raises
     an error if the user doesn't specify the number of qubits.
     """
-    with pytest.raises(errors.UnknownQubitCountError):
 
-        @aq.main
-        def simple_range() -> None:
-            "Uses aq.range iterator for qubit index."
-            for i in aq.range(5):
-                h(i)
+    @aq.main
+    def simple_range() -> None:
+        "Uses aq.range iterator for qubit index."
+        for i in aq.range(5):
+            h(i)
+
+    with pytest.raises(errors.UnknownQubitCountError):
+        simple_range.to_ir()
 
 
 def test_program_with_expr() -> None:
     """Test that a program with expressions for the qubit index raises
     an error if the user doesn't specify the number of qubits.
     """
-    with pytest.raises(errors.UnknownQubitCountError):
 
-        @aq.main
-        def qubit_expr() -> None:
-            "Uses aq.range iterator for qubit index."
-            for i in aq.range(5):
-                h(i + 3)
+    @aq.main
+    def qubit_expr() -> None:
+        "Uses aq.range iterator for qubit index."
+        for i in aq.range(5):
+            h(i + 3)
+
+    with pytest.raises(errors.UnknownQubitCountError):
+        qubit_expr.to_ir()
 
 
 def test_multi_for_loop() -> None:
@@ -920,11 +938,12 @@ def test_double_decorated_function():
 
 
 def test_main_return():
-    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
+    @aq.main
+    def main() -> int:
+        return 1
 
-        @aq.main
-        def main() -> int:
-            return 1
+    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
+        main.to_ir()
 
 
 def test_main_no_return():
@@ -936,6 +955,29 @@ def test_main_no_return():
     def main():
         x = 3
         tester(x)
+
+
+def test_subroutine_declared_after_main():
+    """Test that subroutines can be declared after the main function."""
+
+    @aq.main
+    def main() -> None:
+        bell_2_3()
+
+    @aq.subroutine
+    def bell_2_3() -> None:
+        h(2)
+        cnot(2, 3)
+
+    expected = """OPENQASM 3.0;
+def bell_2_3() {
+    h __qubits__[2];
+    cnot __qubits__[2], __qubits__[3];
+}
+qubit[4] __qubits__;
+bell_2_3();"""
+
+    assert main.to_ir() == expected
 
 
 def test_subroutine_args():
@@ -981,11 +1023,12 @@ def test_main_from_main():
         h(q0)
         cnot(q0, q1)
 
-    with pytest.raises(errors.AutoQasmTypeError):
+    @aq.main
+    def main():
+        bell(0, 1)
 
-        @aq.main
-        def main():
-            bell(0, 1)
+    with pytest.raises(errors.AutoQasmTypeError):
+        main.to_ir()
 
 
 def test_empty_decorator_parentheses():
@@ -1054,8 +1097,9 @@ h __qubits__[2*q + r];"""
 
 
 def test_input_qubit_indices_needs_num_qubits():
-    with pytest.raises(errors.UnknownQubitCountError):
+    @aq.main
+    def circ(q: int, r: int):
+        h(2 * q + r)
 
-        @aq.main
-        def circ(q: int, r: int):
-            h(2 * q + r)
+    with pytest.raises(errors.UnknownQubitCountError):
+        circ.to_ir()

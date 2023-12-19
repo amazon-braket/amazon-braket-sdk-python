@@ -27,11 +27,12 @@ from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 def test_convert_invalid_main_object() -> None:
     """Tests the aq.main decorator on something that is not a function."""
 
-    with pytest.raises(ValueError):
+    @aq.main
+    class MyClass:
+        pass
 
-        @aq.main
-        class MyClass:
-            pass
+    with pytest.raises(ValueError):
+        MyClass.to_ir()
 
 
 def test_convert_invalid_subroutine_object() -> None:
@@ -41,11 +42,12 @@ def test_convert_invalid_subroutine_object() -> None:
     class MyClass:
         pass
 
-    with pytest.raises(ValueError):
+    @aq.main
+    def main():
+        MyClass()
 
-        @aq.main
-        def main():
-            MyClass()
+    with pytest.raises(ValueError):
+        main.to_ir()
 
 
 def test_autograph_disabled() -> None:
@@ -53,13 +55,15 @@ def test_autograph_disabled() -> None:
     and verifies that the function is not converted."""
 
     with ControlStatusCtx(Status.DISABLED):
-        with pytest.raises(RuntimeError):
 
-            @aq.main
-            def my_program():
-                h(0)
-                if measure(0):
-                    x(0)
+        @aq.main
+        def my_program():
+            h(0)
+            if measure(0):
+                x(0)
+
+        with pytest.raises(RuntimeError):
+            my_program.to_ir()
 
 
 def test_partial_function() -> None:
@@ -80,8 +84,10 @@ qubit[4] __qubits__;
 h __qubits__[1];
 cnot __qubits__[1], __qubits__[3];"""
 
+    bell_partial_no_num_qubits = aq.main(functools.partial(bell, 1))
     with pytest.raises(UnknownQubitCountError):
-        aq.main(functools.partial(bell, 1))
+        bell_partial_no_num_qubits.to_ir()
+
     bell_partial = aq.main(num_qubits=4)(functools.partial(bell, 1))
     assert bell_partial.to_ir() == expected_partial
 

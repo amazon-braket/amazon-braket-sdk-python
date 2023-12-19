@@ -120,11 +120,12 @@ a = __int_3__;"""
 def test_unsupported_inline_conditional_assignment(else_value) -> None:
     """Tests conditional expression where the if and else clauses return different types."""
 
-    with pytest.raises(UnsupportedConditionalExpressionError):
+    @aq.main
+    def cond_exp_assignment_different_types():
+        a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
 
-        @aq.main
-        def cond_exp_assignment_different_types():
-            a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
+    with pytest.raises(UnsupportedConditionalExpressionError):
+        cond_exp_assignment_different_types.to_ir()
 
 
 def test_branch_assignment_undeclared() -> None:
@@ -831,15 +832,16 @@ h __qubits__[0];"""
 def test_py_assert() -> None:
     """Test Python assertions inside an AutoQASM program."""
 
+    @aq.main
+    def test_input_assert(value: bool):
+        assert value
+
     not_supported = (
         "Assertions are not supported for values that depend on "
         "measurement results or AutoQASM variables."
     )
     with pytest.raises(NotImplementedError, match=not_supported):
-
-        @aq.main
-        def test_input_assert(value: bool):
-            assert value
+        test_input_assert.to_ir()
 
     true_var = 1
     false_var = False
@@ -848,21 +850,25 @@ def test_py_assert() -> None:
     def test_assert():
         assert true_var
 
-    with pytest.raises(AssertionError):
+    test_assert.to_ir()  # does not raise an exception
 
-        @aq.main
-        def test_assert_false():
-            assert false_var
+    @aq.main
+    def test_assert_false():
+        assert false_var
+
+    with pytest.raises(AssertionError):
+        test_assert_false.to_ir()
 
 
 def test_measurement_assert() -> None:
     """Test assertions on measurement results inside an AutoQASM program."""
 
-    with pytest.raises(NotImplementedError):
+    @aq.main
+    def test_assert():
+        assert measure(0)
 
-        @aq.main
-        def test_assert():
-            assert measure(0)
+    with pytest.raises(NotImplementedError):
+        test_assert.to_ir()
 
 
 def test_py_list_ops() -> None:
@@ -876,3 +882,5 @@ def test_py_list_ops() -> None:
         assert b == 1
         c = np.stack([a, a])
         assert np.array_equal(c, [[2, 3, 4], [2, 3, 4]])
+
+    assert test_list_ops.to_ir()

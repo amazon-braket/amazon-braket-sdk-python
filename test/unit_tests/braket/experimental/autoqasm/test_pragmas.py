@@ -56,19 +56,21 @@ box {
 
 
 def test_nested_verbatim_box() -> None:
-    with pytest.raises(errors.VerbatimBlockNotAllowed):
-
-        @aq.main
-        def program_func() -> None:
+    @aq.main
+    def program_func() -> None:
+        with aq.verbatim():
             with aq.verbatim():
-                with aq.verbatim():
-                    h(0)
+                h(0)
+
+    with pytest.raises(errors.VerbatimBlockNotAllowed):
+        program_func.to_ir()
 
 
 def test_verbatim_box_invalid_target_qubit() -> None:
-    with pytest.raises(errors.InvalidTargetQubit):
+    @aq.main
+    def program_func() -> None:
+        with aq.verbatim():
+            h(0)
 
-        @aq.main
-        def program_func() -> None:
-            with aq.verbatim():
-                h(0)
+    with pytest.raises(errors.InvalidTargetQubit):
+        program_func.to_ir()

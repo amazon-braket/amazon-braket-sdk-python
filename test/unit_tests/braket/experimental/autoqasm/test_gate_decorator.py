@@ -68,11 +68,12 @@ def test_gate_class() -> None:
         def __init__(self, q: aq.Qubit):
             h(q)
 
-    with pytest.raises(ValueError):
+    @aq.main
+    def main():
+        MyGate(0)
 
-        @aq.main
-        def main():
-            MyGate(0)
+    with pytest.raises(ValueError):
+        main.to_ir()
 
 
 def test_invalid_symbol() -> None:
@@ -81,11 +82,12 @@ def test_invalid_symbol() -> None:
         h(q)
         not_a_symbol()  # noqa: F821 # type: ignore
 
-    with pytest.raises(NameError):
+    @aq.main
+    def main():
+        my_gate(0)
 
-        @aq.main
-        def main():
-            my_gate(0)
+    with pytest.raises(NameError):
+        main.to_ir()
 
 
 def test_duplicate_gate_names() -> None:
@@ -151,14 +153,15 @@ def test_incorrect_arg_count() -> None:
         h(q0)
         x(q1)
 
+    @aq.main
+    def incorrect_arg_count():
+        my_gate(0)
+
     with pytest.raises(
         errors.ParameterTypeError,
         match='Incorrect number of arguments passed to gate "my_gate". Expected 2, got 1.',
     ):
-
-        @aq.main
-        def incorrect_arg_count():
-            my_gate(0)
+        incorrect_arg_count.to_ir()
 
 
 def test_incorrect_arg_types() -> None:
@@ -167,11 +170,12 @@ def test_incorrect_arg_types() -> None:
         h(q)
         rx(q, theta)
 
-    with pytest.raises(TypeError):
+    @aq.main
+    def incorrect_arg_types():
+        my_gate(0.25, 0)
 
-        @aq.main
-        def incorrect_arg_types():
-            my_gate(0.25, 0)
+    with pytest.raises(TypeError):
+        incorrect_arg_types.to_ir()
 
 
 def test_missing_annotation() -> None:
@@ -179,11 +183,12 @@ def test_missing_annotation() -> None:
     def my_gate(a):
         pass
 
-    with pytest.raises(errors.MissingParameterTypeError):
+    @aq.main
+    def my_program():
+        my_gate("test")
 
-        @aq.main
-        def my_program():
-            my_gate("test")
+    with pytest.raises(errors.MissingParameterTypeError):
+        my_program.to_ir()
 
 
 def test_incorrect_annotation() -> None:
@@ -191,11 +196,12 @@ def test_incorrect_annotation() -> None:
     def my_gate(a: str):
         pass
 
-    with pytest.raises(errors.ParameterTypeError):
+    @aq.main
+    def my_program():
+        my_gate("test")
 
-        @aq.main
-        def my_program():
-            my_gate("test")
+    with pytest.raises(errors.ParameterTypeError):
+        my_program.to_ir()
 
 
 def test_no_qubit_args() -> None:
@@ -203,14 +209,15 @@ def test_no_qubit_args() -> None:
     def not_a_gate(angle: float):
         pass
 
+    @aq.main
+    def my_program():
+        not_a_gate(np.pi)
+
     with pytest.raises(
         errors.ParameterTypeError,
         match='Gate definition "not_a_gate" has no arguments of type aq.Qubit.',
     ):
-
-        @aq.main
-        def my_program():
-            not_a_gate(np.pi)
+        my_program.to_ir()
 
 
 def test_invalid_qubit_used() -> None:
@@ -219,14 +226,15 @@ def test_invalid_qubit_used() -> None:
         h(q)
         x(1)  # invalid
 
+    @aq.main
+    def my_program():
+        my_gate(0)
+
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
     ):
-
-        @aq.main
-        def my_program():
-            my_gate(0)
+        my_program.to_ir()
 
 
 def test_invalid_angle_used() -> None:
@@ -238,14 +246,15 @@ def test_invalid_angle_used() -> None:
         rx(q, theta)
         rx(q, beta)  # invalid
 
+    @aq.main
+    def my_program():
+        my_gate(0, np.pi / 2)
+
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses angle (.*) which is not an argument to the gate.',
     ):
-
-        @aq.main
-        def my_program():
-            my_gate(0, np.pi / 2)
+        my_program.to_ir()
 
 
 def test_invalid_instruction() -> None:
@@ -254,14 +263,15 @@ def test_invalid_instruction() -> None:
         h(q)
         reset(q)  # invalid
 
+    @aq.main
+    def my_program():
+        my_gate(0)
+
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-
-        @aq.main
-        def my_program():
-            my_gate(0)
+        my_program.to_ir()
 
 
 def test_invalid_control_flow() -> None:
@@ -271,14 +281,15 @@ def test_invalid_control_flow() -> None:
         if measure(q):
             x(q)
 
+    @aq.main
+    def my_program():
+        my_gate(0)
+
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-
-        @aq.main
-        def my_program():
-            my_gate(0)
+        my_program.to_ir()
 
 
 def test_nested_gates() -> None:
