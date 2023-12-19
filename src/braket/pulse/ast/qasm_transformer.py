@@ -57,3 +57,43 @@ class _IRQASMTransformer(QASMTransformer):
             return new_val
         else:
             return expression_statement
+
+    def visit_Program(self, program: ast.Program) -> ast.Program:
+        """Visit a Program.
+        Args:
+            program (Program): The program.
+        Returns:
+            Program: the modified program.
+        """
+        new_statement_list = []
+        for statement in program.statements:
+            if isinstance(statement, ast.CalibrationStatement):
+                input_vars, body = self.split_input_vars(statement.body)
+                new_statement_list.extend(input_vars)
+                new_statement_list.append(ast.CalibrationStatement(body))
+            else:
+                new_statement_list.append(statement)
+
+        program.statements = new_statement_list
+        return self.generic_visit(program)
+
+    def split_input_vars(
+        self,
+        body: list[ast.Statement],
+    ) -> tuple[list[ast.IODeclaration], list[ast.Statement]]:
+        """Split input vars out of the calibrationStatement block
+
+        Args:
+            body (list[Statement]): The list of statement in the CalibrationStatement block
+        Returns:
+            tuple[list[IODeclaration], list[Statement]]: A tuple of input vars and the list
+            of remaining statements.
+        """
+        input_vars = []
+        new_body = []
+        for child in body:
+            if isinstance(child, ast.IODeclaration) and child.io_identifier is ast.IOKeyword.input:
+                input_vars.append(child)
+            else:
+                new_body.append(child)
+        return input_vars, new_body
