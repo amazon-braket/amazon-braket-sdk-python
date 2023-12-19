@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.64.2 (2023-12-19)
+
+### Bug Fixes and Other Changes
+
+ * treating OpenQASM builtin types as constants
+
 ## v1.64.1 (2023-12-12)
 
 ### Bug Fixes and Other Changes
