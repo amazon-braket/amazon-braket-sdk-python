@@ -78,8 +78,6 @@ class _InputVarSplitter(QASMTransformer):
             if isinstance(statement, ast.CalibrationStatement):
                 reordered_cal_block_statements = self.split_input_vars(statement)
                 new_statement_list.extend(reordered_cal_block_statements)
-            else:
-                new_statement_list.append(statement)
 
         program.statements = new_statement_list
         return self.generic_visit(program)
