@@ -73,13 +73,10 @@ class _InputVarSplitter(QASMTransformer):
         Returns:
             Program: the modified program.
         """
-        new_statement_list = []
-        for statement in program.statements:
-            if isinstance(statement, ast.CalibrationStatement):
-                reordered_cal_block_statements = self.split_input_vars(statement)
-                new_statement_list.extend(reordered_cal_block_statements)
-
-        program.statements = new_statement_list
+        assert len(program.statements) == 1 and isinstance(
+            program.statements[0], ast.CalibrationStatement
+        )
+        program.statements = self.split_input_vars(program.statements[0])
         return self.generic_visit(program)
 
     def split_input_vars(
