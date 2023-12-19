@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
+from oqpy import FloatVar
 
 from braket.circuits import FreeParameter, QubitSet
 from braket.pulse import (
@@ -124,13 +125,11 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_unbound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float a;",
-            "input float b;",
-            "input float length_g;",
-            "input float sigma_g;",
-            "input float length_dg;",
-            "input float sigma_dg;",
-            "input float length_c;",
+            *[
+                f"input float {var.name};"
+                for var in pulse_sequence._program.undeclared_vars.values()
+                if isinstance(var, FloatVar)
+            ],
             "cal {",
             "    waveform gauss_wf = gaussian((length_g) * 1s, (sigma_g) * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian((length_dg) * 1s,"
