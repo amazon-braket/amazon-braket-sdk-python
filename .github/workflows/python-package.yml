@@ -26,13 +26,12 @@ jobs:
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4.7.1
+      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install --upgrade pip
-        pip install -e .[test]
+        pip install tox
     - name: Run unit tests
       run: |
         tox -e unit-tests
@@ -40,10 +39,12 @@ jobs:
       # NOTE: Do not merge this part to main. The AutoQASM example notebooks should be moved
       # to the example notebooks repo rather than living in the Braket SDK repo.
       run: |
+        pip install -e .
         pip install notebook matplotlib
         jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=python3 ./examples/autoqasm/1_Getting_started_with_AutoQASM.ipynb
         jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=python3 ./examples/autoqasm/2_Expressing_classical_control_flow.ipynb
-        jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=python3 ./examples/autoqasm/3_Iterative_phase_estimation.ipynb
+        jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=python3 ./examples/autoqasm/3_1_Iterative_phase_estimation.ipynb
+        jupyter nbconvert --to html --execute --ExecutePreprocessor.kernel_name=python3 ./examples/autoqasm/3_2_magic_state_distillation.ipynb
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
       if: ${{ strategy.job-index }} == 0
