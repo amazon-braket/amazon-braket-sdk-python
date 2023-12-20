@@ -1748,6 +1748,22 @@ def test_circuit_user_gate(pulse_sequence_2):
                 inputs={},
             ),
         ),
+        (
+            Circuit().gphase(0.15).x(0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "gphase(0.15);",
+                        "x q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_from_ir(expected_circuit, ir):
@@ -2027,6 +2043,14 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
     )
 
 
+def test_to_unitary_with_global_phase():
+    circuit = Circuit().x(0)
+    circuit_unitary = np.array([[0, 1], [1, 0]])
+    assert np.allclose(circuit.to_unitary(), circuit_unitary)
+    circuit = circuit.gphase(np.pi / 2)
+    assert np.allclose(circuit.to_unitary(), 1j * circuit_unitary)
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [
@@ -2046,6 +2070,8 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
         (Circuit().rx(0, 0.15), gates.Rx(0.15).to_matrix()),
         (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
         (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
+        (Circuit().u(0, 0.15, 0.16, 0.17), gates.U(0.15, 0.16, 0.17).to_matrix()),
+        (Circuit().gphase(0.15), gates.GPhase(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
         (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
@@ -3134,3 +3160,23 @@ def test_parametrized_pulse_circuit(user_defined_frame):
 
 def test_free_param_float_mix():
     Circuit().ms(0, 1, 0.1, FreeParameter("theta"))
+
+
+def test_circuit_with_global_phase():
+    circuit = Circuit().gphase(0.15).x(0)
+    assert circuit.global_phase == 0.15
+
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[1] b;",
+            "gphase(0.15);",
+            "x $0;",
+            "b[0] = measure $0;",
+        ]
+    )

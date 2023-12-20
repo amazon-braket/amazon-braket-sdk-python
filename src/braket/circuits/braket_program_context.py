@@ -56,8 +56,15 @@ class BraketProgramContext(AbstractProgramContext):
         user_defined_gate = self.is_user_defined_gate(name)
         return name in BRAKET_GATES and not user_defined_gate
 
-    def add_phase_instruction(self, target: tuple[int], phase_value: int) -> None:
-        raise NotImplementedError
+    def add_phase_instruction(self, target: tuple[int], phase_value: float) -> None:
+        """Add a global phase to the circuit.
+
+        Args:
+            target (tuple[int]): Unused
+            phase_value (float): The phase value to be applied
+        """
+        instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
+        self._circuit.add_instruction(instruction)
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
