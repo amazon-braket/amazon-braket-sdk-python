@@ -132,11 +132,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Compute the integrated phase at a certain moment.
 
         Args:
-            global_phase (float|None): The integrated phase up to the computed moment
+            global_phase (float | None): The integrated phase up to the computed moment
             items (list[Instruction]): list of instructions
 
         Returns:
-            float|None: The updated integrated phase.
+            float | None: The updated integrated phase.
         """
         moment_phase = 0
         for item in items:
