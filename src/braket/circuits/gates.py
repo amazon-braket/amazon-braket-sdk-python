@@ -30,7 +30,7 @@ from braket.circuits.angled_gate import (
     angled_ascii_characters,
     get_angle,
 )
-from braket.circuits.basis_state import BasisStateInput
+from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -213,6 +213,118 @@ class I(Gate):  # noqa: E742, E261
 
 
 Gate.register_gate(I)
+
+
+class GPhase(AngledGate):
+    r"""Global phase gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+
+    Args:
+        angle (Union[FreeParameterExpression, float]): angle in radians.
+    """
+
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
+        # Avoid parent constructor because _qubit_count must be zero
+        self._qubit_count = self.fixed_qubit_count()
+        self._ascii_symbols = []
+
+        if angle is None:
+            raise ValueError("angle must not be None")
+        if isinstance(angle, FreeParameterExpression):
+            self._parameters = [angle]
+        else:
+            self._parameters = [float(angle)]  # explicit casting in case angle is e.g. np.float32
+
+    @property
+    def _qasm_name(self) -> str:
+        return "gphase"
+
+    def adjoint(self) -> list[Gate]:
+        return [GPhase(-self.angle)]
+
+    def to_matrix(self) -> np.ndarray:
+        return np.exp(1j * self.angle) * np.eye(1, dtype=complex)
+
+    def bind_values(self, **kwargs) -> AngledGate:
+        return get_angle(self, **kwargs)
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 0
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def gphase(
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Instruction | Iterable[Instruction]:
+        r"""Global phase gate.
+
+        If the gate is applied with control/negative control modifiers, it is translated in an
+        equivalent gate using the following definition: `phaseshift(λ) = ctrl @ gphase(λ)`.
+        The rightmost control qubit is used for the translation. If the polarity of the rightmost
+        control modifier is negative, the following identity is used:
+        `negctrl @ gphase(λ) q = x q; ctrl @ gphase(λ) q; x q`.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+
+        Args:
+            angle (Union[FreeParameterExpression, float]): Phase in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
+
+        Returns:
+            Instruction | Iterable[Instruction]: GPhase instruction.
+
+        Examples:
+            >>> circ = Circuit().gphase(0.45)
+        """
+        if control is not None:
+            control_qubits = QubitSet(control)
+
+            control_state = (
+                control_state if control_state is not None else (1,) * len(control_qubits)
+            )
+            control_basis_state = BasisState(control_state, len(control_qubits))
+
+            phaseshift_target = control_qubits[-1]
+            phaseshift_instruction = PhaseShift.phaseshift(
+                phaseshift_target,
+                angle,
+                control=control_qubits[:-1],
+                control_state=control_basis_state[:-1],
+                power=power,
+            )
+            return (
+                phaseshift_instruction
+                if control_basis_state[-1]
+                else [
+                    X.x(phaseshift_target),
+                    phaseshift_instruction,
+                    X.x(phaseshift_target),
+                ]
+            )
+
+        return Instruction(GPhase(angle), power=power)
+
+
+Gate.register_gate(GPhase)
 
 
 class X(Gate):
@@ -1285,6 +1397,129 @@ class PhaseShift(AngledGate):
 
 
 Gate.register_gate(PhaseShift)
+
+
+class U(TripleAngledGate):
+    r"""Generalized single-qubit rotation gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
+                \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
+                e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                \end{bmatrix}.
+
+    Args:
+        angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
+        angle_2 (Union[FreeParameterExpression, float]): phi angle in radians.
+        angle_3 (Union[FreeParameterExpression, float]): lambda angle in radians.
+    """
+
+    def __init__(
+        self,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float],
+    ):
+        super().__init__(
+            angle_1=angle_1,
+            angle_2=angle_2,
+            angle_3=angle_3,
+            qubit_count=None,
+            ascii_symbols=[_multi_angled_ascii_characters("U", angle_1, angle_2, angle_3)],
+        )
+
+    @property
+    def _qasm_name(self) -> str:
+        return "U"
+
+    def to_matrix(self) -> np.ndarray:
+        r"""Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
+        _theta = self.angle_1
+        _phi = self.angle_2
+        _lambda = self.angle_3
+        return np.array(
+            [
+                [
+                    np.cos(_theta / 2),
+                    -np.exp(1j * _lambda) * np.sin(_theta / 2),
+                ],
+                [
+                    np.exp(1j * _phi) * np.sin(_theta / 2),
+                    np.exp(1j * (_phi + _lambda)) * np.cos(_theta / 2),
+                ],
+            ]
+        )
+
+    def adjoint(self) -> list[Gate]:
+        return [U(-self.angle_1, -self.angle_3, -self.angle_2)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs) -> TripleAngledGate:
+        return _get_angles(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def u(
+        target: QubitSetInput,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
+        r"""Generalized single-qubit rotation gate.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
+                    \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
+                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                    \end{bmatrix}.
+
+        Args:
+            target (QubitSetInput): Target qubit(s)
+            angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
+            angle_2 (Union[FreeParameterExpression, float]): phi angle in radians.
+            angle_3 (Union[FreeParameterExpression, float]): lambda angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
+
+        Returns:
+            Iterable[Instruction]: U instruction.
+
+        Examples:
+            >>> circ = Circuit().u(0, 0.15, 0.34, 0.52)
+        """
+        return [
+            Instruction(
+                U(angle_1, angle_2, angle_3),
+                target=qubit,
+                control=control,
+                control_state=control_state,
+                power=power,
+            )
+            for qubit in QubitSet(target)
+        ]
+
+
+Gate.register_gate(U)
 
 
 # Two qubit gates #
