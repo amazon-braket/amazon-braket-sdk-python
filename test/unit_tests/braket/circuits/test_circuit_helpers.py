@@ -18,17 +18,24 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
 def test_validate_circuit_and_shots_no_instructions():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Circuit must have instructions to run on a device"):
         validate_circuit_and_shots(Circuit(), 100)
 
 
+def test_validate_circuit_and_shots_only_gphase():
+    with pytest.raises(
+        ValueError, match="Circuit must have at least one non-GPhase gate to run on a device"
+    ):
+        validate_circuit_and_shots(Circuit().gphase(0.15), 100)
+
+
 def test_validate_circuit_and_shots_0_no_instructions():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Circuit must have instructions to run on a device"):
         validate_circuit_and_shots(Circuit(), 0)
 
 
 def test_validate_circuit_and_shots_0_no_results():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No result types specified for circuit and shots=0."):
         validate_circuit_and_shots(Circuit().h(0), 0)
 
 
@@ -54,12 +61,16 @@ def test_validate_circuit_and_shots_100_results_mixed_result():
 
 
 def test_validate_circuit_and_shots_100_result_state_vector():
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="StateVector or Amplitude cannot be specified when shots>0"
+    ):
         validate_circuit_and_shots(Circuit().h(0).state_vector(), 100)
 
 
 def test_validate_circuit_and_shots_100_result_amplitude():
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="StateVector or Amplitude cannot be specified when shots>0"
+    ):
         validate_circuit_and_shots(Circuit().h(0).amplitude(state=["0"]), 100)
 
 
@@ -74,7 +85,7 @@ def test_validate_circuit_and_shots_0_noncommuting():
 
 
 def test_validate_circuit_and_shots_100_noncommuting():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Observables cannot be sampled simultaneously"):
         validate_circuit_and_shots(
             Circuit()
             .h(0)
