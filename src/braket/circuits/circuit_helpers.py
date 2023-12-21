@@ -31,7 +31,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
     """
     if not circuit.instructions:
         raise ValueError("Circuit must have instructions to run on a device")
-    if all(isinstance(inst.operator, GPhase) for inst in circuit.instructions):
+    if all(isinstance(inst.operator, GPhase) and not inst.control for inst in circuit.instructions):
         raise ValueError("Circuit must have at least one non-GPhase gate to run on a device")
     if not shots and not circuit.result_types:
         raise ValueError(
