@@ -35,12 +35,21 @@ from braket.ir.jaqcd.shared_models import (
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 
+class NoTarget:
+    pass
+
+
 class TripleAngle:
+    pass
+
+
+class SingleNegControlModifier:
     pass
 
 
 testdata = [
     (Gate.H, "h", ir.H, [SingleTarget], {}),
+    (Gate.GPhase, "gphase", None, [NoTarget, Angle], {}),
     (Gate.I, "i", ir.I, [SingleTarget], {}),
     (Gate.X, "x", ir.X, [SingleTarget], {}),
     (Gate.Y, "y", ir.Y, [SingleTarget], {}),
@@ -54,6 +63,7 @@ testdata = [
     (Gate.Rx, "rx", ir.Rx, [SingleTarget, Angle], {}),
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
+    (Gate.U, "u", None, [SingleTarget, TripleAngle], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
     (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
     (Gate.CCNot, "ccnot", ir.CCNot, [SingleTarget, DoubleControl], {}),
@@ -118,9 +128,11 @@ testdata = [
 ]
 
 parameterizable_gates = [
+    Gate.GPhase,
     Gate.Rx,
     Gate.Ry,
     Gate.Rz,
+    Gate.U,
     Gate.PhaseShift,
     Gate.PSwap,
     Gate.XX,
@@ -147,6 +159,10 @@ invalid_unitary_matrices = [
 ]
 
 
+def no_target_valid_input(**kwargs):
+    return {}
+
+
 def single_target_valid_input(**kwargs):
     return {"target": 2}
 
@@ -171,6 +187,10 @@ def single_control_valid_input(**kwargs):
     return {"control": 0}
 
 
+def single_neg_control_valid_input(**kwargs):
+    return {"control": [0], "control_state": [0]}
+
+
 def double_control_valid_ir_input(**kwargs):
     return {"controls": [0, 1]}
 
@@ -193,11 +213,13 @@ def two_dimensional_matrix_valid_input(**kwargs):
 
 
 valid_ir_switcher = {
+    "NoTarget": no_target_valid_input,
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
     "TripleAngle": triple_angle_valid_input,
     "SingleControl": single_control_valid_input,
+    "SingleNegControlModifier": single_neg_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
@@ -232,9 +254,13 @@ def create_valid_subroutine_input(irsubclasses, **kwargs):
 def create_valid_target_input(irsubclasses):
     input = {}
     qubit_set = []
+    control_qubit_set = []
+    control_state = None
     # based on the concept that control goes first in target input
     for subclass in irsubclasses:
-        if subclass == SingleTarget:
+        if subclass == NoTarget:
+            qubit_set.extend(list(no_target_valid_input().values()))
+        elif subclass == SingleTarget:
             qubit_set.extend(list(single_target_valid_input().values()))
         elif subclass == DoubleTarget:
             qubit_set.extend(list(double_target_valid_ir_input().values()))
@@ -242,6 +268,9 @@ def create_valid_target_input(irsubclasses):
             qubit_set.extend(list(multi_target_valid_input().values()))
         elif subclass == SingleControl:
             qubit_set = list(single_control_valid_input().values()) + qubit_set
+        elif subclass == SingleNegControlModifier:
+            control_qubit_set = list(single_neg_control_valid_input()["control"])
+            control_state = list(single_neg_control_valid_input()["control_state"])
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
         elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
@@ -249,6 +278,8 @@ def create_valid_target_input(irsubclasses):
         else:
             raise ValueError("Invalid subclass")
     input["target"] = QubitSet(qubit_set)
+    input["control"] = QubitSet(control_qubit_set)
+    input["control_state"] = control_state
     return input
 
 
@@ -282,7 +313,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
+        elif subclass in (NoTarget, Angle, TwoDimensionalMatrix, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -433,6 +464,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rz(0.17) $4;",
+        ),
+        (
+            Gate.U(angle_1=0.17, angle_2=3.45, angle_3=5.21),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "U(0.17, 3.45, 5.21) q[4];",
+        ),
+        (
+            Gate.U(angle_1=0.17, angle_2=3.45, angle_3=5.21),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "U(0.17, 3.45, 5.21) $4;",
         ),
         (
             Gate.XX(angle=0.17),
@@ -859,7 +902,51 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         subroutine_input = {"target": multi_targets}
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
+        if TripleAngle in irsubclasses:
+            subroutine_input.update(triple_angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
+
+
+@pytest.mark.parametrize(
+    "control, control_state, instruction_set",
+    [
+        (
+            2,
+            None,
+            Instruction(**create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle])),
+        ),
+        (
+            2,
+            [0],
+            [
+                Instruction(operator=Gate.X(), target=2),
+                Instruction(
+                    **create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle])
+                ),
+                Instruction(operator=Gate.X(), target=2),
+            ],
+        ),
+        (
+            [0, 2],
+            [0, 1],
+            Instruction(
+                **create_valid_instruction_input(
+                    Gate.PhaseShift, [SingleTarget, SingleNegControlModifier, Angle]
+                )
+            ),
+        ),
+    ],
+)
+def test_control_gphase_subroutine(control, control_state, instruction_set):
+    subroutine = getattr(Circuit(), "gphase")
+    assert subroutine(angle=0.123, control=control, control_state=control_state) == Circuit(
+        instruction_set
+    )
+
+
+def test_angle_gphase_is_none():
+    with pytest.raises(ValueError, match="angle must not be None"):
+        Gate.GPhase(angle=None)
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
@@ -925,7 +1012,7 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
-    triple_angled = gate.__name__ in ("MS",)
+    triple_angled = gate.__name__ in ("MS", "U")
     num_params = 3 if triple_angled else 1
     thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
     mapping = {f"theta_{i}": i for i in range(num_params)}
@@ -1069,6 +1156,13 @@ def test_pulse_gate_to_matrix():
             QubitSet([1, 2, 3]),
             "10",
             "negctrl @ ctrl @ negctrl @ z q[1], q[2], q[3], q[0];",
+        ),
+        (
+            Gate.GPhase(0.3),
+            QubitSet([]),
+            QubitSet([1]),
+            "1",
+            "ctrl @ gphase(0.3) q[1];",
         ),
     ),
 )
