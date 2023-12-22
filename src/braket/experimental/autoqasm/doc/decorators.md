@@ -11,20 +11,20 @@ This decorator marks the entry point to a quantum program.
 You can include gates, pulse control, classical control and subroutine calls. The function wrapped by `@aq.main` is converted into a `Program` object. The `Program` object can be executed on [devices available through Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html), including local simulators. The code snippet below creates a quantum program with `@aq.main` and runs it on the `Device` instantiated as `device`.
 
 ```
-num_qubits = 5
+size = 5
 
-@aq.main(num_qubits=num_qubits)
+@aq.main(num_qubits=size)
 def ghz_state():
-    """Create a GHZ state of size num_qubits."""
+    """Create a GHZ state of the specified size."""
     h(0)
-    for i in aq.range(1, num_qubits):
+    for i in aq.range(1, size):
         cnot(0, i)
-    measure(list(range(num_qubits))) 
+    measure(range(size))
 
 device.run(ghz_state)
 ```
 
-When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `to_ir()` on the `Program` object.
+When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `display()` on the `Program` object.
 
 ```
 ghz_state.display()
@@ -45,7 +45,6 @@ def bell(q0: int, q1: int) -> None:
     h(q0)
     cnot(q0, q1)
 
-    
 @aq.main(num_qubits=4)
 def two_bell() -> None:
     bell(0, 1)
@@ -82,7 +81,7 @@ def ch(q0: aq.Qubit, q1: aq.Qubit):
     ry(q1, math.pi / 4)
     
 @aq.main(num_qubits=2)
-def main():
+def my_program():
     h(0)
     ch(0, 1)
 ```
