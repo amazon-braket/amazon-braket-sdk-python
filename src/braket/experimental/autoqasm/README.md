@@ -11,7 +11,7 @@ also subject to change.
 
 For a fully supported quantum developer experience,
 please continue to use the rest of the Amazon Braket Python SDK by following
-[these instructions](https://github.com/aws/amazon-braket-sdk-python#installing-the-amazon-braket-python-sdk).
+[these instructions](https://github.com/amazon-braket/amazon-braket-sdk-python#installing-the-amazon-braket-python-sdk).
 If you are interested in our active development efforts, and you are not
 afraid of a few bugs, please keep on reading!
 
@@ -37,7 +37,7 @@ See the [Quick Start](#quick-start) section below, as well as the AutoQASM [exam
 AutoQASM is an experimental module and is not yet part of the released Amazon Braket SDK.
 To use AutoQASM, you'll need to install directly from the `feature/autoqasm` branch:
 ```
-git clone https://github.com/aws/amazon-braket-sdk-python.git
+git clone https://github.com/amazon-braket/amazon-braket-sdk-python.git
 cd amazon-braket-sdk-python
 git checkout feature/autoqasm
 pip install -e .
@@ -68,7 +68,7 @@ def bell_state() -> None:
     cnot(0, 1)
 ```
 
-You can view the output format, which is OpenQASM, by running `bell_state().to_ir()`.
+You can view the output format, which is OpenQASM, by running `bell_state.to_ir()`.
 
 AutoQASM enables users to use more complicated program constructs with a compact and readable
 structure. We can demonstrate this with a program that conditionally prepares multiple Bell states
@@ -84,23 +84,20 @@ def conditional_multi_bell_states() -> None:
             cnot(qubit, qubit+1)
 
     measure([0,1,2,3,4])
-
-my_bell_program = conditional_multi_bell_states()
 ```
 
 AutoQASM can support subroutines and complex control flow. You can use the Python runtime
-and quantum runtime side-by-side. For the moment, we support only a few quantum operations such as
-`h`, `x`, `cnot`, and `measure`. There are rough edges at the moment, but we're actively smoothing
+and quantum runtime side-by-side. There are rough edges at the moment, but we're actively smoothing
 them out!
 
 The Amazon Braket local simulator supports AutoQASM programs as input.
-Let's simulate the `my_bell_program`:
+Let's simulate the `conditional_multi_bell_states` program:
 
 ```
 from braket.devices.local_simulator import LocalSimulator
 
 device = LocalSimulator()
-task = device.run(my_bell_program, shots=100)
+task = device.run(conditional_multi_bell_states, shots=100)
 result = task.result()
 ```
 
@@ -131,10 +128,10 @@ the [AutoQASM GitHub project](https://github.com/orgs/amazon-braket/projects/2/)
 
 We welcome feature requests, bug reports, or
 general feedback, which you can share with us by
-[opening up an issue](https://github.com/aws/amazon-braket-sdk-python/issues/new/choose). We also
+[opening up an issue](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/new/choose). We also
 welcome pull requests, examples, and documentation -- please open an issue describing your work
 when you get started, or comment on an existing issue with your intentions. Pull requests should be
-targeted to the feature/autoqasm branch of the https://github.com/aws/amazon-braket-sdk-python
+targeted to the `feature/autoqasm` branch of the https://github.com/amazon-braket/amazon-braket-sdk-python
 repository. For more details on contributing to the Amazon Braket SDK, please read the
 [contributing guidelines](../../../../CONTRIBUTING.md).
 
