@@ -262,22 +262,6 @@ def test_only_neg_control_qubits():
         "        ",
         "q0 : ─○─",
         "      │ ",
-        "q1 : ─⏺─",
-        "      │ ",
-        "q2 : ─X─",
-        "",
-        "T  : │0│",
-    )
-    _assert_correct_diagram(circ, expected)
-
-
-def test_only_neg_control_qubits():
-    circ = Circuit().x(2, control=[0, 1], control_state=0)
-    expected = (
-        "T  : │0│",
-        "        ",
-        "q0 : ─○─",
-        "      │ ",
         "q1 : ─○─",
         "      │ ",
         "q2 : ─X─",
