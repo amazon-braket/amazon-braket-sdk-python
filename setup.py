@@ -32,7 +32,7 @@ setup(
         # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
         # simulation of mid-circuit measurement, which AutoQASM requires.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@e11063f2cc626bbb94ee0a3eb9690dd5ff491308#egg=amazon-braket-default-simulator",  # noqa E501
+        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@da5f1d4b6c3b7dfb279e053e114d699243319ae7#egg=amazon-braket-default-simulator",  # noqa E501
         "oqpy~=0.3.3",
         "setuptools",
         "backoff",
