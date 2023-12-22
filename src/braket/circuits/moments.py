@@ -19,6 +19,7 @@ from enum import Enum
 from typing import Any, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
+from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
 from braket.registers.qubit import Qubit
@@ -42,6 +43,7 @@ class MomentType(str, Enum):
     INITIALIZATION_NOISE = "initialization_noise"
     READOUT_NOISE = "readout_noise"
     COMPILER_DIRECTIVE = "compiler_directive"
+    GLOBAL_PHASE = "global_phase"
 
 
 class MomentsKey(NamedTuple):
@@ -59,6 +61,7 @@ class MomentsKey(NamedTuple):
     qubits: QubitSet
     moment_type: MomentType
     noise_index: int
+    subindex: int = 0
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
@@ -106,6 +109,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._qubits = QubitSet()
         self._depth = 0
         self._time_all_qubits = -1
+        self._number_gphase_in_current_moment = 0
 
         self.add(instructions or [])
 
@@ -181,6 +185,17 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._time_all_qubits = time
         elif isinstance(operator, Noise):
             self.add_noise(instruction)
+        elif isinstance(operator, Gate) and operator.name == "GPhase":
+            time = self._get_qubit_times(self._max_times.keys()) + 1
+            self._number_gphase_in_current_moment += 1
+            key = MomentsKey(
+                time,
+                QubitSet([]),
+                MomentType.GLOBAL_PHASE,
+                0,
+                self._number_gphase_in_current_moment,
+            )
+            self._moments[key] = instruction
         else:
             qubit_range = instruction.target.union(instruction.control)
             time = self._update_qubit_times(qubit_range)
@@ -188,14 +203,15 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._qubits.update(qubit_range)
             self._depth = max(self._depth, time + 1)
 
+    def _get_qubit_times(self, qubits: QubitSet) -> int:
+        return max([self._max_time_for_qubit(qubit) for qubit in qubits] + [self._time_all_qubits])
+
     def _update_qubit_times(self, qubits: QubitSet) -> int:
-        qubit_max_times = [self._max_time_for_qubit(qubit) for qubit in qubits] + [
-            self._time_all_qubits
-        ]
-        time = max(qubit_max_times) + 1
+        time = self._get_qubit_times(qubits) + 1
         # Update time for all specified qubits
         for qubit in qubits:
             self._max_times[qubit] = time
+        self._number_gphase_in_current_moment = 0
         return time
 
     def add_noise(

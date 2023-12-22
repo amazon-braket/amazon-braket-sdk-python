@@ -14,7 +14,7 @@
 from typing import Optional, Union
 
 import numpy as np
-from sympy import Expr
+from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
@@ -56,8 +56,15 @@ class BraketProgramContext(AbstractProgramContext):
         user_defined_gate = self.is_user_defined_gate(name)
         return name in BRAKET_GATES and not user_defined_gate
 
-    def add_phase_instruction(self, target: tuple[int], phase_value: int) -> None:
-        raise NotImplementedError
+    def add_phase_instruction(self, target: tuple[int], phase_value: float) -> None:
+        """Add a global phase to the circuit.
+
+        Args:
+            target (tuple[int]): Unused
+            phase_value (float): The phase value to be applied
+        """
+        instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
+        self._circuit.add_instruction(instruction)
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
@@ -147,5 +154,8 @@ class BraketProgramContext(AbstractProgramContext):
             otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
-            return FreeParameterExpression(value)
+            evaluated_value = value.evalf()
+            if isinstance(evaluated_value, Number):
+                return evaluated_value
+            return FreeParameterExpression(evaluated_value)
         return value
