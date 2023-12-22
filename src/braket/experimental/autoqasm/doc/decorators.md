@@ -27,7 +27,7 @@ device.run(ghz_state)
 When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `to_ir()` on the `Program` object.
 
 ```
-print(ghz_state.to_ir())
+ghz_state.display()
 ```
 
 ## `@aq.subroutine`
