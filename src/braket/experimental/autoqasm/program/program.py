@@ -137,11 +137,10 @@ class Program(SerializableProgram):
 class MainProgram(Program):
     def __init__(self, program_generator: Callable[[None], Program]):
         self._program_generator = program_generator
-        self._program = None
 
-    def _ensure_initialized(self) -> None:
-        if not self._program:
-            self._program = self._program_generator()
+    @property
+    def _program(self) -> Program:
+        return self._program_generator()
 
     def to_ir(
         self,
@@ -162,7 +161,6 @@ class MainProgram(Program):
         Returns:
             str: A representation of the program in the `ir_type` format.
         """
-        self._ensure_initialized()
         return self._program.to_ir(ir_type, serialization_properties)
 
     def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
@@ -176,7 +174,6 @@ class MainProgram(Program):
         Returns:
             Program: The program with gate calibrations added.
         """
-        self._ensure_initialized()
         return self._program.with_calibrations(gate_calibrations)
 
     def make_bound_program(self, param_values: dict[str, float], strict: bool = False) -> Program:
@@ -196,7 +193,6 @@ class MainProgram(Program):
             Program: Returns a program with all present parameters fixed to their respective
             values.
         """
-        self._ensure_initialized()
         return self._program.make_bound_program(param_values, strict)
 
     def display(self, ir_type: IRType = IRType.OPENQASM) -> None:
@@ -208,7 +204,6 @@ class MainProgram(Program):
             ir_type (IRType): The IRType to use for displaying the program.
                 Defaults to IRType.OPENQASM.
         """
-        self._ensure_initialized()
         self._program.display(ir_type)
 
 

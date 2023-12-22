@@ -958,24 +958,40 @@ def test_main_no_return():
 
 
 def test_subroutine_declared_after_main():
-    """Test that subroutines can be declared after the main function."""
+    """Test that subroutines can be declared after the main function
+    and redeclared after initial serialization."""
 
     @aq.main
     def main() -> None:
-        bell_2_3()
+        my_subroutine()
 
     @aq.subroutine
-    def bell_2_3() -> None:
+    def my_subroutine() -> None:
+        h(0)
+        cnot(0, 1)
+
+    expected = """OPENQASM 3.0;
+def my_subroutine() {
+    h __qubits__[0];
+    cnot __qubits__[0], __qubits__[1];
+}
+qubit[2] __qubits__;
+my_subroutine();"""
+
+    assert main.to_ir() == expected
+
+    @aq.subroutine
+    def my_subroutine() -> None:  # noqa: F811
         h(2)
         cnot(2, 3)
 
     expected = """OPENQASM 3.0;
-def bell_2_3() {
+def my_subroutine() {
     h __qubits__[2];
     cnot __qubits__[2], __qubits__[3];
 }
 qubit[4] __qubits__;
-bell_2_3();"""
+my_subroutine();"""
 
     assert main.to_ir() == expected
 
