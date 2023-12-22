@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from braket.circuits import Circuit, ResultType
-from braket.circuits.gates import GPhase
 
 
 def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
@@ -29,10 +28,10 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
             if circuit has observables that cannot be simultaneously measured and `shots>0`;
             or, if `StateVector` or `Amplitude` are specified as result types when `shots>0`.
     """
-    if not circuit.instructions:
-        raise ValueError("Circuit must have instructions to run on a device")
-    if all(isinstance(inst.operator, GPhase) and not inst.control for inst in circuit.instructions):
-        raise ValueError("Circuit must have at least one non-GPhase gate to run on a device")
+    if not circuit.instructions or all(
+        not (inst.target or inst.control) for inst in circuit.instructions
+    ):
+        raise ValueError("Circuit must have at least one non-zero-qubit gate to run on a device")
     if not shots and not circuit.result_types:
         raise ValueError(
             "No result types specified for circuit and shots=0. See `braket.circuits.result_types`"

@@ -18,13 +18,15 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
 def test_validate_circuit_and_shots_no_instructions():
-    with pytest.raises(ValueError, match="Circuit must have instructions to run on a device"):
+    with pytest.raises(
+        ValueError, match="Circuit must have at least one non-zero-qubit gate to run on a device"
+    ):
         validate_circuit_and_shots(Circuit(), 100)
 
 
 def test_validate_circuit_and_shots_only_gphase():
     with pytest.raises(
-        ValueError, match="Circuit must have at least one non-GPhase gate to run on a device"
+        ValueError, match="Circuit must have at least one non-zero-qubit gate to run on a device"
     ):
         validate_circuit_and_shots(Circuit().gphase(0.15), 100)
 
@@ -34,7 +36,9 @@ def test_validate_circuit_and_shots_ctrl_gphase():
 
 
 def test_validate_circuit_and_shots_0_no_instructions():
-    with pytest.raises(ValueError, match="Circuit must have instructions to run on a device"):
+    with pytest.raises(
+        ValueError, match="Circuit must have at least one non-zero-qubit gate to run on a device"
+    ):
         validate_circuit_and_shots(Circuit(), 0)
 
 
