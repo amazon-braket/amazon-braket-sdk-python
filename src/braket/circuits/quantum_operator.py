@@ -39,7 +39,7 @@ class QuantumOperator(Operator):
                 Length must be the same as `qubit_count`, and index ordering is expected
                 to correlate with target ordering on the instruction.
                 For instance, if CNOT instruction has the control qubit on the first index and
-                target qubit on the second index. Then ASCII symbols would have ["⏺", "X"] to
+                target qubit on the second index. Then ASCII symbols would have ["●", "X"] to
                 correlate a symbol with that index.
 
         Raises:

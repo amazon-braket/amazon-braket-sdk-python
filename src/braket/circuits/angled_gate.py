@@ -46,7 +46,7 @@ class AngledGate(Gate, Parameterizable):
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
                 For instance, if a CNOT instruction has the control qubit on the first index and
-                target qubit on the second index, the ASCII symbols should have `["⏺", "X"]` to
+                target qubit on the second index, the ASCII symbols should have `["●", "X"]` to
                 correlate a symbol with that index.
 
         Raises:
@@ -147,7 +147,7 @@ class DoubleAngledGate(Gate, Parameterizable):
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
                 For instance, if a CNOT instruction has the control qubit on the first index and
-                target qubit on the second index, the ASCII symbols should have `["⏺", "X"]` to
+                target qubit on the second index, the ASCII symbols should have `["●", "X"]` to
                 correlate a symbol with that index.
 
         Raises:
@@ -265,7 +265,7 @@ class TripleAngledGate(Gate, Parameterizable):
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
                 For instance, if a CNOT instruction has the control qubit on the first index and
-                target qubit on the second index, the ASCII symbols should have `["⏺", "X"]` to
+                target qubit on the second index, the ASCII symbols should have `["●", "X"]` to
                 correlate a symbol with that index.
 
         Raises:
