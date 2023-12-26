@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Union
+from typing import Literal, Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
@@ -121,6 +121,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         for qubit in circuit_qubits:
             y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
             y_axis_str += "q{0:{width}} : ─\n".format(str(int(qubit)), width=y_axis_width)
+            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
 
         return y_axis_str, global_phase
 
@@ -367,6 +368,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         if power_string
                         else ascii_symbols[item_qubit_index]
                     )
+                    if symbols[qubit] in ["●", "◯", "─"]:
+                        continue
+                    symbols[qubit] = f"┤ {symbols[qubit]} ├"
                 elif qubit in control_qubits:
                     symbols[qubit] = "●" if map_control_qubit_states[qubit] else "◯"
                 else:
@@ -386,7 +390,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        symbols_width = max([len(symbol) for symbol in symbols.values()])
+        symbols_width = max([len(symbol) for symbol in symbols.values()]) + 2
         output = ""
 
         if global_phase is not None:
@@ -401,11 +405,42 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 width=symbols_width,
             )
 
-        for qubit in qubits:
-            output += "{0:{width}}\n".format(margins[qubit], width=symbols_width + 1)
-            output += "{0:{fill}{align}{width}}\n".format(
-                symbols[qubit], fill="─", align="<", width=symbols_width + 1
-            )
+        output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[0]], symbols_width, "first")
+        for qubit in qubits[1:-1]:
+            output += AsciiCircuitDiagram._draw_symbol(symbols[qubit], symbols_width)
+        output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[-1]], symbols_width, "last")
+        return output
+
+    @staticmethod
+    def _draw_symbol(
+        symbol: str, symbols_width: int, position: Literal["first, middle, last"] = "middle"
+    ) -> str:
+        if symbol in ["●", "◯"]:
+            top = "│"
+            bottom = "│"
+            if position == "first":
+                top = ""
+            elif position == "last":
+                bottom = ""
+        elif symbol == "┼":
+            top = "│"
+            bottom = "│"
+        elif symbol == "─":
+            top = ""
+            bottom = ""
+        else:
+            top = "┌" + "─" * (len(symbol) - 2) + "┐"
+            bottom = "└" + "─" * (len(symbol) - 2) + "┘"
+
+        output = "{0:{fill}{align}{width}}\n".format(
+            top, fill=" ", align="^", width=symbols_width + 1
+        )
+        output += "{0:{fill}{align}{width}}\n".format(
+            symbol, fill="─", align="^", width=symbols_width + 1
+        )
+        output += "{0:{fill}{align}{width}}\n".format(
+            bottom, fill=" ", align="^", width=symbols_width + 1
+        )
         return output
 
     @staticmethod
