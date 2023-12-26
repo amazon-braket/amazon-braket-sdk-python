@@ -86,8 +86,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
             for i, line_in_col in enumerate(col_str.split("\n")):
                 lines[i] += line_in_col
 
-        # Time on top and bottom
-        lines.append(lines[0])
+        # Replace the last (empty) line with time
+        lines[-1] = lines[0]
 
         if global_phase:
             lines.append(f"\nGlobal phase: {global_phase}")
@@ -364,7 +364,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         else ""
                     )
                     symbols[qubit] = (
-                        f"({ascii_symbols[item_qubit_index]}{power_string})"
+                        f"{ascii_symbols[item_qubit_index]}{power_string}"
                         if power_string
                         else ascii_symbols[item_qubit_index]
                     )
@@ -408,7 +408,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[0]], symbols_width, "first")
         for qubit in qubits[1:-1]:
             output += AsciiCircuitDiagram._draw_symbol(symbols[qubit], symbols_width)
-        output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[-1]], symbols_width, "last")
+        if len(qubits) > 1:
+            output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[-1]], symbols_width, "last")
         return output
 
     @staticmethod
