@@ -301,6 +301,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """
         symbols = {qubit: "─" for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
+        connections = {qubit: "none" for qubit in circuit_qubits}
 
         for item in items:
             if isinstance(item, ResultType) and not item.target:
@@ -315,10 +316,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
                 ascii_symbol = item.ascii_symbols[0]
-                marker = "*" * len(ascii_symbol)
-                num_after = len(circuit_qubits) - 1
-                after = ["┼"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol] + after
+                ascii_symbols = [ascii_symbol] * len(circuit_qubits)
+                connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
+                connections[circuit_qubits[-1]] = "above"
+                connections[circuit_qubits[0]] = "below"
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -368,11 +369,23 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         if power_string
                         else ascii_symbols[item_qubit_index]
                     )
-                    if symbols[qubit] in ["●", "◯", "─"]:
+                    if symbols[qubit] in ["●", "◯"]:
+                        if min(target_qubits) < qubit < max(target_qubits):
+                            connections[qubit] = "below"
+                        elif qubit < max(target_qubits):
+                            connections[qubit] = "below"
+                        elif min(target_qubits) < qubit:
+                            connections[qubit] = "above"
                         continue
-                    symbols[qubit] = f"┤ {symbols[qubit]} ├"
+
                 elif qubit in control_qubits:
                     symbols[qubit] = "●" if map_control_qubit_states[qubit] else "◯"
+                    if min(target_qubits) < qubit < max(target_qubits):
+                        connections[qubit] = "below"
+                    elif qubit < max(target_qubits):
+                        connections[qubit] = "below"
+                    elif min(target_qubits) < qubit:
+                        connections[qubit] = "above"
                 else:
                     symbols[qubit] = "┼"
 
@@ -380,17 +393,17 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "│"
 
-        output = AsciiCircuitDiagram._create_output(symbols, margins, circuit_qubits, global_phase)
+        output = AsciiCircuitDiagram._create_output(symbols, connections, circuit_qubits, global_phase)
         return output
 
     @staticmethod
     def _create_output(
         symbols: dict[Qubit, str],
-        margins: dict[Qubit, str],
+        connections: dict[Qubit, str],
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + 2
+        symbols_width = max([len(symbol) for symbol in symbols.values()]) + 4
         output = ""
 
         if global_phase is not None:
@@ -405,31 +418,41 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 width=symbols_width,
             )
 
-        output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[0]], symbols_width, "first")
-        for qubit in qubits[1:-1]:
-            output += AsciiCircuitDiagram._draw_symbol(symbols[qubit], symbols_width)
-        if len(qubits) > 1:
-            output += AsciiCircuitDiagram._draw_symbol(symbols[qubits[-1]], symbols_width, "last")
+        for qubit in qubits:
+            output += AsciiCircuitDiagram._draw_symbol(symbols[qubit], symbols_width, connections[qubit])
         return output
 
     @staticmethod
     def _draw_symbol(
-        symbol: str, symbols_width: int, position: Literal["first, middle, last"] = "middle"
+        symbol: str, symbols_width: int, connection: Literal["above, below, both, none"] = "none"
     ) -> str:
+        top = ""
+        bottom = ""
         if symbol in ["●", "◯"]:
-            top = "│"
-            bottom = "│"
-            if position == "first":
-                top = ""
-            elif position == "last":
-                bottom = ""
+            if connection == "above" or connection == "both":
+                top = "│"
+            if connection == "below" or connection == "both":
+                bottom = "│"
+        elif symbol in ["StartVerbatim", "EndVerbatim"]:
+            if connection == "below":
+                top = "┌─" + "─" * len(symbol) + "─┐"
+                bottom = "│ " + " " * len(symbol) + " │"
+                symbol = f"┤ {symbol} ├"
+            elif connection == "both":
+                top = bottom = "│ " + " " * len(symbol) + " │"
+                symbol = "┤ " + " " * len(symbol) + " ├"
+            elif connection == "above":
+                top = "│ " + " " * len(symbol) + " │"
+                bottom = "└─" + "─" * len(symbol) + "─┘"
+                symbol = "┤ " + " " * len(symbol) + " ├"
         elif symbol == "┼":
             top = "│"
             bottom = "│"
         elif symbol == "─":
-            top = ""
-            bottom = ""
+            # We do not box when no gate is applied.
+            pass
         else:
+            symbol = f"┤ {symbol} ├"
             top = "┌" + "─" * (len(symbol) - 2) + "┐"
             bottom = "└" + "─" * (len(symbol) - 2) + "┘"
 
