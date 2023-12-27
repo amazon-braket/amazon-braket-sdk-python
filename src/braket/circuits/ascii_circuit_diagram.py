@@ -404,6 +404,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
+        # We add 4 because of the edges of the box, i.e. "┤ " and " ├"
         symbols_width = max([len(symbol) for symbol in symbols.values()]) + 4
         output = ""
 
