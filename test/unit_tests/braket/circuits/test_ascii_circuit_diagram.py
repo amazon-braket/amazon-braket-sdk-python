@@ -958,3 +958,29 @@ def test_power():
         "T  : │     0     │    1     │    2    │    3    │    4    │",
     )
     _assert_correct_diagram(circ, expected)
+
+
+@pytest.mark.xfail
+def test_unbalanced_ascii_symbols():
+    class FooFoo(Gate):
+        def __init__(self):
+            super().__init__(qubit_count=2, ascii_symbols=["FOOO", "FOO"])
+
+    circ = Circuit().add_instruction(Instruction(FooFoo(), (1, 3), control=[0, 2], power=4))
+    expected = (
+        "T  : │    0     │",
+        "                 ",
+        "q0 : ─────●──────",
+        "          │      ",
+        "      ┌───┴────┐ ",
+        "q1 : ─┤ FOOO^4 ├─",
+        "      └───┬────┘ ",
+        "          │      ",
+        "q2 : ─────●──────",
+        "          │      ",
+        "      ┌───┴───┐  ",
+        "q3 : ─┤ FOO^4 ├──",
+        "      └───────┘  ",
+        "T  : │    0     │",
+    )
+    _assert_correct_diagram(circ, expected)
