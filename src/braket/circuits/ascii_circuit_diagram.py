@@ -300,7 +300,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: an ASCII string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: "─" for qubit in circuit_qubits}
-        margins = {qubit: " " for qubit in circuit_qubits}
         connections = {qubit: "none" for qubit in circuit_qubits}
 
         for item in items:
@@ -389,10 +388,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         connections[qubit] = "above"
                 else:
                     symbols[qubit] = "┼"
-
-                # Set the margin to be a connector if not on the first qubit
-                if target_and_control and qubit != min(target_and_control):
-                    margins[qubit] = "│"
 
         output = AsciiCircuitDiagram._create_output(
             symbols, connections, circuit_qubits, global_phase
