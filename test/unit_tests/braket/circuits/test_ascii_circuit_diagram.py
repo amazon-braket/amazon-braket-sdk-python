@@ -248,6 +248,7 @@ def test_connector_across_two_qubits():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_neg_control_qubits():
     circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
@@ -264,6 +265,7 @@ def test_neg_control_qubits():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_only_neg_control_qubits():
     circ = Circuit().x(2, control=[0, 1], control_state=0)
@@ -279,6 +281,7 @@ def test_only_neg_control_qubits():
         "T  : │0│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_connector_across_three_qubits():
@@ -298,6 +301,7 @@ def test_connector_across_three_qubits():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_overlapping_qubits():
     circ = Circuit().cnot(0, 2).x(control=1, target=3).h(0)
@@ -315,6 +319,7 @@ def test_overlapping_qubits():
         "T  : │ 0 │1│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_overlapping_qubits_angled_gates():
@@ -334,6 +339,7 @@ def test_overlapping_qubits_angled_gates():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_connector_across_gt_two_qubits():
     circ = Circuit().h(4).x(control=3, target=5).h(4).h(2)
@@ -351,6 +357,7 @@ def test_connector_across_gt_two_qubits():
         "T  : │ 0 │1│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_connector_across_non_used_qubits():
@@ -406,6 +413,7 @@ def test_verbatim_1q_following():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_verbatim_2q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1))
@@ -419,6 +427,7 @@ def test_verbatim_2q_no_preceding():
         "T  : │      0      │1│2│     3     │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_verbatim_2q_preceding():
@@ -434,6 +443,7 @@ def test_verbatim_2q_preceding():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_verbatim_2q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1)).h(0)
@@ -447,6 +457,7 @@ def test_verbatim_2q_following():
         "T  : │      0      │1│2│     3     │4│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_verbatim_3q_no_preceding():
@@ -464,6 +475,7 @@ def test_verbatim_3q_no_preceding():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_verbatim_3q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
@@ -480,6 +492,7 @@ def test_verbatim_3q_preceding():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_verbatim_3q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)
@@ -495,6 +508,7 @@ def test_verbatim_3q_following():
         "T  : │      0      │1│2│3│     4     │5│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_verbatim_different_qubits():
@@ -514,6 +528,7 @@ def test_verbatim_different_qubits():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_verbatim_qubset_qubits():
     circ = Circuit().h(1).cnot(0, 1).cnot(1, 2).add_verbatim_box(Circuit().h(1)).cnot(2, 3)
@@ -531,6 +546,7 @@ def test_verbatim_qubset_qubits():
         "T  : │0│1│2│      3      │4│     5     │6│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_ignore_non_gates():
@@ -556,6 +572,7 @@ def test_ignore_non_gates():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_result_types_target_none():
     circ = Circuit().h(0).h(100).probability()
@@ -569,6 +586,7 @@ def test_result_types_target_none():
         "T    : │0│Result Types│",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_result_types_target_some():
@@ -592,6 +610,7 @@ def test_result_types_target_some():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_additional_result_types():
     circ = Circuit().h(0).h(1).h(100).state_vector().amplitude(["110", "001"])
@@ -609,6 +628,7 @@ def test_additional_result_types():
         "Additional result types: StateVector, Amplitude(110,001)",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_multiple_result_types():
@@ -635,6 +655,7 @@ def test_multiple_result_types():
         "T  : │ 0 │1│      Result Types      │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_multiple_result_types_with_state_vector_amplitude():
@@ -665,6 +686,7 @@ def test_multiple_result_types_with_state_vector_amplitude():
         "Additional result types: Amplitude(0001), StateVector",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
@@ -699,6 +721,7 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_noise_1qubit():
     circ = Circuit().h(0).x(1).bit_flip(1, 0.1)
@@ -712,6 +735,7 @@ def test_noise_1qubit():
         "T  : │    0    │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_noise_2qubit():
@@ -729,6 +753,7 @@ def test_noise_2qubit():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_noise_multi_probabilities():
     circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
@@ -742,6 +767,7 @@ def test_noise_multi_probabilities():
         "T  : │        0        │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_noise_multi_probabilities_with_parameter():
@@ -762,6 +788,7 @@ def test_noise_multi_probabilities_with_parameter():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def test_pulse_gate_1_qubit_circuit():
     circ = (
@@ -777,6 +804,7 @@ def test_pulse_gate_1_qubit_circuit():
         "T  : │0│1 │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_pulse_gate_multi_qubit_circuit():
@@ -796,9 +824,11 @@ def test_pulse_gate_multi_qubit_circuit():
     )
     _assert_correct_diagram(circ, expected)
 
+
 @pytest.mark.skip
 def _assert_correct_diagram(circ, expected):
     assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
+
 
 @pytest.mark.skip
 def test_circuit_with_nested_target_list():
@@ -823,6 +853,7 @@ def test_circuit_with_nested_target_list():
         "T  : │0│      Result Types      │",
     )
     _assert_correct_diagram(circ, expected)
+
 
 @pytest.mark.skip
 def test_hamiltonian():

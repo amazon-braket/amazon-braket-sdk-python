@@ -394,7 +394,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "│"
 
-        output = AsciiCircuitDiagram._create_output(symbols, connections, circuit_qubits, global_phase)
+        output = AsciiCircuitDiagram._create_output(
+            symbols, connections, circuit_qubits, global_phase
+        )
         return output
 
     @staticmethod
@@ -421,7 +423,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
             )
 
         for qubit in qubits:
-            output += AsciiCircuitDiagram._draw_symbol(symbols[qubit], symbols_width, connections[qubit])
+            output += AsciiCircuitDiagram._draw_symbol(
+                symbols[qubit], symbols_width, connections[qubit]
+            )
         return output
 
     @staticmethod
