@@ -229,18 +229,18 @@ def test_time_width():
 
 
 def test_connector_across_two_qubits():
-    circ = Circuit().cnot(3, 4).h(range(2, 6))
+    circ = Circuit().cnot(4, 3).h(range(2, 6))
     expected = (
         "T  : │  0  │  1  │",
         "      ┌───┐       ",
         "q2 : ─┤ H ├───────",
         "      └───┘       ",
-        "            ┌───┐ ",
-        "q3 : ───●───┤ H ├─",
-        "        │   └───┘ ",
-        "      ┌─┴─┐ ┌───┐ ",
-        "q4 : ─┤ X ├─┤ H ├─",
-        "      └───┘ └───┘ ",
+        "      ┌───┐ ┌───┐ ",
+        "q3 : ─┤ X ├─┤ H ├─",
+        "      └─┬─┘ └───┘ ",
+        "        │   ┌───┐ ",
+        "q4 : ───●───┤ H ├─",
+        "            └───┘ ",
         "      ┌───┐       ",
         "q5 : ─┤ H ├───────",
         "      └───┘       ",
@@ -250,18 +250,18 @@ def test_connector_across_two_qubits():
 
 
 def test_neg_control_qubits():
-    circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
+    circ = Circuit().x(1, control=[0, 2], control_state=[0, 1])
     expected = (
         "T  : │  0  │",
         "            ",
         "q0 : ───◯───",
         "        │   ",
-        "        │   ",
-        "q1 : ───●───",
-        "        │   ",
         "      ┌─┴─┐ ",
-        "q2 : ─┤ X ├─",
-        "      └───┘ ",
+        "q1 : ─┤ X ├─",
+        "      └─┬─┘ ",
+        "        │   ",
+        "q2 : ───●───",
+        "            ",
         "T  : │  0  │",
     )
     _assert_correct_diagram(circ, expected)
@@ -589,6 +589,18 @@ def test_ignore_non_gates():
         "q2 : ───────┤ X ├─",
         "            └───┘ ",
         "T  : │  0  │  1  │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_single_qubit_result_types_target_none():
+    circ = Circuit().h(0).probability()
+    expected = (
+        "T  : │  0  │ Result Types  │",
+        "      ┌───┐ ┌─────────────┐ ",
+        "q0 : ─┤ H ├─┤ Probability ├─",
+        "      └───┘ └─────────────┘ ",
+        "T  : │  0  │ Result Types  │",
     )
     _assert_correct_diagram(circ, expected)
 

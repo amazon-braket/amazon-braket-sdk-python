@@ -267,17 +267,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
             for i, moment_line in enumerate(column_str.split("\n")):
                 lines[i] += moment_line
 
-        # Adjust for column title width
-        col_title_width = len(col_title)
-        symbols_width = len(lines[0]) - 1
-        if symbols_width < col_title_width:
-            diff = col_title_width - symbols_width
-            for i in range(len(lines) - 1):
-                if lines[i].endswith("─"):
-                    lines[i] += "─" * diff
-                else:
-                    lines[i] += " "
-
         first_line = "{:^{width}}│\n".format(col_title, width=len(lines[0]) - 1)
 
         return first_line + "\n".join(lines)
@@ -384,7 +373,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
                             connections[qubit] = "below"
                         elif min(target_and_control) < qubit:
                             connections[qubit] = "above"
-                        continue
 
                 elif qubit in control_qubits:
                     symbols[qubit] = "●" if map_control_qubit_states[qubit] else "◯"
