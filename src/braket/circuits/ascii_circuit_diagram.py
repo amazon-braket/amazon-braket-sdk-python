@@ -371,21 +371,21 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         else ascii_symbols[item_qubit_index]
                     )
                     if symbols[qubit] in ["●", "◯"]:
-                        if min(target_qubits) < qubit < max(target_qubits):
+                        if min(target_and_control) < qubit < max(target_and_control):
+                            connections[qubit] = "both"
+                        elif qubit < max(target_and_control):
                             connections[qubit] = "below"
-                        elif qubit < max(target_qubits):
-                            connections[qubit] = "below"
-                        elif min(target_qubits) < qubit:
+                        elif min(target_and_control) < qubit:
                             connections[qubit] = "above"
                         continue
 
                 elif qubit in control_qubits:
                     symbols[qubit] = "●" if map_control_qubit_states[qubit] else "◯"
-                    if min(target_qubits) < qubit < max(target_qubits):
+                    if min(target_and_control) < qubit < max(target_and_control):
+                        connections[qubit] = "both"
+                    elif qubit < max(target_and_control):
                         connections[qubit] = "below"
-                    elif qubit < max(target_qubits):
-                        connections[qubit] = "below"
-                    elif min(target_qubits) < qubit:
+                    elif min(target_and_control) < qubit:
                         connections[qubit] = "above"
                 else:
                     symbols[qubit] = "┼"
