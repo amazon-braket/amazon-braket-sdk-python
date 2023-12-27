@@ -317,9 +317,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 qubits = circuit_qubits
                 ascii_symbol = item.ascii_symbols[0]
                 ascii_symbols = [ascii_symbol] * len(circuit_qubits)
-                connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
-                connections[circuit_qubits[-1]] = "above"
-                connections[circuit_qubits[0]] = "below"
+                if len(circuit_qubits) > 1:
+                    connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
+                    connections[circuit_qubits[-1]] = "above"
+                    connections[circuit_qubits[0]] = "below"
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -435,16 +436,13 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 bottom = "│"
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
             if connection == "below":
-                top = "┌─" + "─" * len(symbol) + "─┐"
-                bottom = "│ " + " " * len(symbol) + " │"
-                symbol = f"┤ {symbol} ├"
+                bottom = "║"
             elif connection == "both":
-                top = bottom = "│ " + " " * len(symbol) + " │"
-                symbol = "┤ " + " " * len(symbol) + " ├"
+                top = bottom = symbol = "║"
             elif connection == "above":
-                top = "│ " + " " * len(symbol) + " │"
-                bottom = "└─" + "─" * len(symbol) + "─┘"
-                symbol = "┤ " + " " * len(symbol) + " ├"
+                top = "║"
+                symbol = "╨"
+                bottom = ""
         elif symbol == "┼":
             top = "│"
             bottom = "│"
@@ -452,9 +450,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
             # We do not box when no gate is applied.
             pass
         else:
+            top = f"┌─{'─' * len(symbol)}─┐"
+            bottom = f"└─{'─' * len(symbol)}─┘"
             symbol = f"┤ {symbol} ├"
-            top = "┌" + "─" * (len(symbol) - 2) + "┐"
-            bottom = "└" + "─" * (len(symbol) - 2) + "┘"
 
         output = "{0:{fill}{align}{width}}\n".format(
             top, fill=" ", align="^", width=symbols_width + 1
