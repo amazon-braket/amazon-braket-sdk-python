@@ -16,7 +16,7 @@
 
 import re
 from functools import singledispatch
-from typing import Any, Union
+from typing import Any, Union, get_args
 
 import oqpy.base
 from openpulse.printer import dumps
@@ -39,7 +39,7 @@ def is_qubit_identifier_type(qubit: Any) -> bool:
     Returns:
         bool: True if the object is a qubit identifier type, False otherwise.
     """
-    return isinstance(qubit, QubitIdentifierType.__args__)
+    return isinstance(qubit, get_args(QubitIdentifierType))
 
 
 def _get_physical_qubit_indices(qids: list[str]) -> list[int]:

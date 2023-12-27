@@ -351,6 +351,20 @@ def _convert_subroutine(
                 _wrap_for_oqpy_subroutine(_clone_function(f), options)
             )
 
+            # todo: need to validate in other codepaths too?
+            # Validate and declare used qubits
+            quantum_indices = {
+                i
+                # todo: is there a better way to access argument types?
+                for i, arg in enumerate(oqpy_sub.subroutine_declaration[1].arguments)
+                if isinstance(arg, qasm_ast.QuantumArgument)
+            }
+            args = [
+                (aq_instructions.qubits._qubit(arg) if i in quantum_indices else arg)
+                for i, arg in enumerate(args)
+            ]
+            # todo: validate targets with program_conversion_context.validate_gate_targets?
+
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
             program_conversion_context.register_args(args)
