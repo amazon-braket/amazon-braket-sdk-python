@@ -930,7 +930,7 @@ def test_power():
 
     class CFoo(Gate):
         def __init__(self):
-            super().__init__(qubit_count=2, ascii_symbols=["●", "FOO"])
+            super().__init__(qubit_count=2, ascii_symbols=["C", "FOO"])
 
     class FooFoo(Gate):
         def __init__(self):

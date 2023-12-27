@@ -1539,7 +1539,7 @@ class CNot(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "X"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
 
     @property
     def _qasm_name(self) -> str:
@@ -2023,7 +2023,7 @@ class CPhaseShift(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["●", angled_ascii_characters("PHASE", angle)],
+            ascii_symbols=["C", angled_ascii_characters("PHASE", angle)],
         )
 
     @property
@@ -2108,7 +2108,7 @@ class CPhaseShift00(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["●", angled_ascii_characters("PHASE00", angle)],
+            ascii_symbols=["C", angled_ascii_characters("PHASE00", angle)],
         )
 
     @property
@@ -2193,7 +2193,7 @@ class CPhaseShift01(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["●", angled_ascii_characters("PHASE01", angle)],
+            ascii_symbols=["C", angled_ascii_characters("PHASE01", angle)],
         )
 
     @property
@@ -2278,7 +2278,7 @@ class CPhaseShift10(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["●", angled_ascii_characters("PHASE10", angle)],
+            ascii_symbols=["C", angled_ascii_characters("PHASE10", angle)],
         )
 
     @property
@@ -2357,7 +2357,7 @@ class CV(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "V"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
 
     @property
     def _qasm_name(self) -> str:
@@ -2434,7 +2434,7 @@ class CY(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "Y"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
 
     @property
     def _qasm_name(self) -> str:
@@ -2511,7 +2511,7 @@ class CZ(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "Z"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
 
     @property
     def _qasm_name(self) -> str:
@@ -3008,7 +3008,7 @@ class CCNot(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "●", "X"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
 
     @property
     def _qasm_name(self) -> str:
@@ -3116,7 +3116,7 @@ class CSwap(Gate):
     """
 
     def __init__(self):
-        super().__init__(qubit_count=None, ascii_symbols=["●", "SWAP", "SWAP"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
 
     @property
     def _qasm_name(self) -> str:

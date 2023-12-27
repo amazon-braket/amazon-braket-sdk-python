@@ -382,7 +382,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
                             # when a user has a gate genuinely named C, but
                             # is necessary to enable proper printing of custom
                             # gates with built-in control qubits
-                            and ascii_symbols[item_qubit_index] != "●"
+                            and ascii_symbols[item_qubit_index] != "C"
                         )
                         else ""
                     )
@@ -391,7 +391,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
                         if power_string
                         else ascii_symbols[item_qubit_index]
                     )
-                    if symbols[qubit] in ["●", "◯"]:
+                    if symbols[qubit] in ["C", "N"]:
                         if min(target_and_control) < qubit < max(target_and_control):
                             connections[qubit] = "both"
                         elif qubit == max(target_and_control):
@@ -400,7 +400,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
                             connections[qubit] = "below"
 
                 elif qubit in control_qubits:
-                    symbols[qubit] = "●" if map_control_qubit_states[qubit] else "◯"
+                    symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
                     if min(target_and_control) < qubit < max(target_and_control):
                         connections[qubit] = "both"
                     elif qubit == max(target_and_control):
@@ -461,12 +461,12 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
 
         top = ""
         bottom = ""
-        if symbol in ["●", "◯"]:
+        if symbol in ["C", "N"]:
             if connection in ["above", "both"]:
                 top = fill_symbol("│", " ")
             if connection in ["below", "both"]:
                 bottom = fill_symbol("│", " ")
-            symbol = fill_symbol(f"{symbol}", "─")
+            symbol = fill_symbol("●" if symbol == "C" else "◯", "─")
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
             top, symbol, bottom = BoxDrawingCircuitDiagram._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
