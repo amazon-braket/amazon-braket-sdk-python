@@ -31,6 +31,8 @@ from braket.registers.qubit_set import QubitSet
 class AsciiCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
+    vdelim = "|"
+
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
         """
@@ -105,24 +107,39 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         return "\n".join(lines)
 
-    @staticmethod
+    @classmethod
     def _prepare_diagram_vars(
-        circuit: cir.Circuit, circuit_qubits: QubitSet
+        cls, circuit: cir.Circuit, circuit_qubits: QubitSet
     ) -> tuple[str, float | None]:
         # Y Axis Column
         y_axis_width = len(str(int(max(circuit_qubits))))
-        y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
+        y_axis_str = "{0:{width}} : {vdelim}\n".format(
+            "T", width=y_axis_width + 1, vdelim=cls.vdelim
+        )
 
         global_phase = None
         if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
-            y_axis_str += "{0:{width}} : |\n".format("GP", width=y_axis_width)
+            y_axis_str += "{0:{width}} : {vdelim}\n".format(
+                "GP", width=y_axis_width, vdelim=cls.vdelim
+            )
             global_phase = 0
 
         for qubit in circuit_qubits:
-            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-            y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
-
+            y_axis_str += cls._create_qubit_layout(qubit, y_axis_width)
         return y_axis_str, global_phase
+
+    @staticmethod
+    def _create_qubit_layout(qubit: Qubit, y_axis_width: int) -> None:
+        """
+        Create the layout of the qubit.
+
+        Args:
+            qubit (Qubit): Qubit to create the layout for.
+            y_axis_width (int): Width of the y axis.
+        """
+        y_axis_str = "{0:{width}}\n".format(" ", width=y_axis_width + 5)
+        y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
+        return y_axis_str
 
     @staticmethod
     def _compute_moment_global_phase(
@@ -232,8 +249,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 additional_result_types.extend(result_type.ascii_symbols)
         return additional_result_types, target_result_types
 
-    @staticmethod
+    @classmethod
     def _ascii_diagram_column_set(
+        cls,
         col_title: str,
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
@@ -256,7 +274,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
         column_strs = [
-            AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
+            cls._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
             for grouping in groupings
         ]
 
@@ -277,7 +295,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 else:
                     lines[i] += " "
 
-        first_line = "{:^{width}}|\n".format(col_title, width=len(lines[0]) - 1)
+        first_line = "{:^{width}}{vdelim}\n".format(
+            col_title, width=len(lines[0]) - 1, vdelim=cls.vdelim
+        )
 
         return first_line + "\n".join(lines)
 

@@ -14,27 +14,28 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Literal, Union
+from typing import Literal
 
 import braket.circuits.circuit as cir
-from braket.circuits.circuit_diagram import CircuitDiagram
+from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import MomentType
-from braket.circuits.noise import Noise
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class BoxDrawingCircuitDiagram(CircuitDiagram):
-    """Builds ASCII string circuit diagrams."""
+class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
+    """Builds ASCII string circuit diagrams using box-drawing characters."""
+
+    vdelim = "│"
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
         """
-        Build an ASCII string circuit diagram.
+        Build an ASCII string circuit diagram using box-drawing characters.
 
         Args:
             circuit (Circuit): Circuit for which to build a diagram.
@@ -61,7 +62,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
 
         # Moment columns
         for time, instructions in time_slices.items():
-            global_phase = BoxDrawingCircuitDiagram._compute_moment_global_phase(
+            global_phase = AsciiCircuitDiagram._compute_moment_global_phase(
                 global_phase, instructions
             )
             moment_str = BoxDrawingCircuitDiagram._ascii_diagram_column_set(
@@ -73,7 +74,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
         (
             additional_result_types,
             target_result_types,
-        ) = BoxDrawingCircuitDiagram._categorize_result_types(circuit.result_types)
+        ) = AsciiCircuitDiagram._categorize_result_types(circuit.result_types)
         if target_result_types:
             column_strs.append(
                 BoxDrawingCircuitDiagram._ascii_diagram_column_set(
@@ -107,172 +108,18 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
         return "\n".join(lines)
 
     @staticmethod
-    def _prepare_diagram_vars(
-        circuit: cir.Circuit, circuit_qubits: QubitSet
-    ) -> tuple[str, float | None]:
-        # Y Axis Column
-        y_axis_width = len(str(int(max(circuit_qubits))))
-        y_axis_str = "{0:{width}} : │\n".format("T", width=y_axis_width + 1)
-
-        global_phase = None
-        if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
-            y_axis_str += "{0:{width}} : │\n".format("GP", width=y_axis_width)
-            global_phase = 0
-
-        for qubit in circuit_qubits:
-            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-            y_axis_str += "q{0:{width}} : ─\n".format(str(int(qubit)), width=y_axis_width)
-            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-
-        return y_axis_str, global_phase
-
-    @staticmethod
-    def _compute_moment_global_phase(
-        global_phase: float | None, items: list[Instruction]
-    ) -> float | None:
+    def _create_qubit_layout(qubit: Qubit, y_axis_width: int) -> None:
         """
-        Compute the integrated phase at a certain moment.
+        Create the layout of the qubit.
 
         Args:
-            global_phase (float | None): The integrated phase up to the computed moment
-            items (list[Instruction]): list of instructions
-
-        Returns:
-            float | None: The updated integrated phase.
+            qubit (Qubit): Qubit to create the layout for.
+            y_axis_width (int): Width of the y axis.
         """
-        moment_phase = 0
-        for item in items:
-            if (
-                isinstance(item, Instruction)
-                and isinstance(item.operator, Gate)
-                and item.operator.name == "GPhase"
-            ):
-                moment_phase += item.operator.angle
-        return global_phase + moment_phase if global_phase is not None else None
-
-    @staticmethod
-    def _ascii_group_items(
-        circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
-    ) -> list[tuple[QubitSet, list[Instruction]]]:
-        """
-        Group instructions in a moment for ASCII diagram
-
-        Args:
-            circuit_qubits (QubitSet): set of qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
-
-        Returns:
-            list[tuple[QubitSet, list[Instruction]]]: list of grouped instructions or result types.
-        """
-        groupings = []
-        for item in items:
-            # Can only print Gate and Noise operators for instructions at the moment
-            if isinstance(item, Instruction) and not isinstance(
-                item.operator, (Gate, Noise, CompilerDirective)
-            ):
-                continue
-
-            # As a zero-qubit gate, GPhase can be grouped with anything. We set qubit_range
-            # to an empty list and we just add it to the first group below.
-            if (
-                isinstance(item, Instruction)
-                and isinstance(item.operator, Gate)
-                and item.operator.name == "GPhase"
-            ):
-                qubit_range = QubitSet()
-            elif (isinstance(item, ResultType) and not item.target) or (
-                isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
-            ):
-                qubit_range = circuit_qubits
-            else:
-                if isinstance(item.target, list):
-                    target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
-                else:
-                    target = item.target
-                control = getattr(item, "control", QubitSet())
-                target_and_control = target.union(control)
-                qubit_range = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
-
-            found_grouping = False
-            for group in groupings:
-                qubits_added = group[0]
-                instr_group = group[1]
-                # Take into account overlapping multi-qubit gates
-                if not qubits_added.intersection(set(qubit_range)):
-                    instr_group.append(item)
-                    qubits_added.update(qubit_range)
-                    found_grouping = True
-                    break
-
-            if not found_grouping:
-                groupings.append((qubit_range, [item]))
-
-        return groupings
-
-    @staticmethod
-    def _categorize_result_types(
-        result_types: list[ResultType],
-    ) -> tuple[list[str], list[ResultType]]:
-        """
-        Categorize result types into result types with target and those without.
-
-        Args:
-            result_types (list[ResultType]): list of result types
-
-        Returns:
-            tuple[list[str], list[ResultType]]: first element is a list of result types
-            without `target` attribute; second element is a list of result types with
-            `target` attribute
-        """
-        additional_result_types = []
-        target_result_types = []
-        for result_type in result_types:
-            if hasattr(result_type, "target"):
-                target_result_types.append(result_type)
-            else:
-                additional_result_types.extend(result_type.ascii_symbols)
-        return additional_result_types, target_result_types
-
-    @staticmethod
-    def _ascii_diagram_column_set(
-        col_title: str,
-        circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
-        global_phase: float | None,
-    ) -> str:
-        """
-        Return a set of columns in the ASCII string diagram of the circuit for a list of items.
-
-        Args:
-            col_title (str): title of column set
-            circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
-            global_phase (float | None): the integrated global phase up to this set
-
-        Returns:
-            str: An ASCII string diagram for the column set.
-        """
-
-        # Group items to separate out overlapping multi-qubit items
-        groupings = BoxDrawingCircuitDiagram._ascii_group_items(circuit_qubits, items)
-
-        column_strs = [
-            BoxDrawingCircuitDiagram._ascii_diagram_column(
-                circuit_qubits, grouping[1], global_phase
-            )
-            for grouping in groupings
-        ]
-
-        # Unite column strings
-        lines = column_strs[0].split("\n")
-        for column_str in column_strs[1:]:
-            for i, moment_line in enumerate(column_str.split("\n")):
-                lines[i] += moment_line
-
-        first_line = "{:^{width}}│\n".format(col_title, width=len(lines[0]) - 1)
-
-        return first_line + "\n".join(lines)
+        y_axis_str = "{0:{width}}\n".format(" ", width=y_axis_width + 5)
+        y_axis_str += "q{0:{width}} : ─\n".format(str(int(qubit)), width=y_axis_width)
+        y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
+        return y_axis_str
 
     @staticmethod
     def _build_parameters(
@@ -510,15 +357,3 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
         symbol = BoxDrawingCircuitDiagram._fill_symbol(symbol, "─")
 
         return top, symbol, bottom
-
-    @staticmethod
-    def _build_map_control_qubits(item: Instruction, control_qubits: QubitSet) -> dict(Qubit, int):
-        control_state = getattr(item, "control_state", None)
-        if control_state is not None:
-            map_control_qubit_states = {
-                qubit: state for qubit, state in zip(control_qubits, control_state)
-            }
-        else:
-            map_control_qubit_states = {qubit: 1 for qubit in control_qubits}
-
-        return map_control_qubit_states
