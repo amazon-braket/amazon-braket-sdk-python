@@ -869,16 +869,18 @@ def test_power():
     circ.add_instruction(Instruction(Foo(), 0, power=-1))
     circ.add_instruction(Instruction(CFoo(), (0, 1), power=2))
     circ.add_instruction(Instruction(CFoo(), (1, 2), control=0, power=3))
-    circ.add_instruction(Instruction(FooFoo(), (1, 2), control=0, power=4))
+    circ.add_instruction(Instruction(FooFoo(), (1, 3), control=[0, 2], power=4))
     expected = (
-        "T  : │    0    │   1    │   2   │   3   │   4   │",
+        "T  : |    0    |   1    |   2   |   3   |   4   |",
         "                                                 ",
-        "q0 : ─H─────────(FOO^-1)─●───────●───────●───────",
-        "                         │       │       │       ",
-        "q1 : ─(H^0)──────────────(FOO^2)─●───────(FOO^4)─",
-        "                                 │       │       ",
-        "q2 : ─(H^-3.14)──────────────────(FOO^3)─(FOO^4)─",
+        "q0 : -H---------(FOO^-1)-C-------C-------C-------",
+        "                         |       |       |       ",
+        "q1 : -(H^0)--------------(FOO^2)-C-------(FOO^4)-",
+        "                                 |       |       ",
+        "q2 : -(H^-3.14)------------------(FOO^3)-C-------",
+        "                                         |       ",
+        "q3 : ------------------------------------(FOO^4)-",
         "",
-        "T  : │    0    │   1    │   2   │   3   │   4   │",
+        "T  : |    0    |   1    |   2   |   3   |   4   |",
     )
     _assert_correct_diagram(circ, expected)
