@@ -249,131 +249,143 @@ def test_connector_across_two_qubits():
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_neg_control_qubits():
     circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
     expected = (
-        "T  : │0│",
-        "        ",
-        "q0 : ─◯─",
-        "      │ ",
-        "q1 : ─●─",
-        "      │ ",
-        "q2 : ─X─",
-        "",
-        "T  : │0│",
+        "T  : │  0  │",
+        "            ",
+        "q0 : ───◯───",
+        "        │   ",
+        "        │   ",
+        "q1 : ───●───",
+        "        │   ",
+        "      ┌───┐ ",
+        "q2 : ─┤ X ├─",
+        "      └───┘ ",
+        "T  : │  0  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_only_neg_control_qubits():
     circ = Circuit().x(2, control=[0, 1], control_state=0)
     expected = (
-        "T  : │0│",
-        "        ",
-        "q0 : ─◯─",
-        "      │ ",
-        "q1 : ─◯─",
-        "      │ ",
-        "q2 : ─X─",
-        "",
-        "T  : │0│",
+        "T  : │  0  │",
+        "            ",
+        "q0 : ───◯───",
+        "        │   ",
+        "        │   ",
+        "q1 : ───◯───",
+        "        │   ",
+        "      ┌───┐ ",
+        "q2 : ─┤ X ├─",
+        "      └───┘ ",
+        "T  : │  0  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_connector_across_three_qubits():
     circ = Circuit().x(control=(3, 4), target=5).h(range(2, 6))
     expected = (
-        "T  : │0│1│",
-        "          ",
-        "q2 : ─H───",
-        "          ",
-        "q3 : ─●─H─",
-        "      │   ",
-        "q4 : ─●─H─",
-        "      │   ",
-        "q5 : ─X─H─",
-        "",
-        "T  : │0│1│",
+        "T  : │  0  │  1  │",
+        "      ┌───┐       ",
+        "q2 : ─┤ H ├───────",
+        "      └───┘       ",
+        "            ┌───┐ ",
+        "q3 : ───●───┤ H ├─",
+        "        │   └───┘ ",
+        "        │   ┌───┐ ",
+        "q4 : ───●───┤ H ├─",
+        "        │   └───┘ ",
+        "      ┌───┐ ┌───┐ ",
+        "q5 : ─┤ X ├─┤ H ├─",
+        "      └───┘ └───┘ ",
+        "T  : │  0  │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_overlapping_qubits():
     circ = Circuit().cnot(0, 2).x(control=1, target=3).h(0)
     expected = (
-        "T  : │ 0 │1│",
-        "            ",
-        "q0 : ─●───H─",
-        "      │     ",
-        "q1 : ─┼─●───",
-        "      │ │   ",
-        "q2 : ─X─┼───",
-        "        │   ",
-        "q3 : ───X───",
-        "",
-        "T  : │ 0 │1│",
+        "T  : │     0     │  1  │",
+        "                  ┌───┐ ",
+        "q0 : ───●─────────┤ H ├─",
+        "        │         └───┘ ",
+        "        │               ",
+        "q1 : ───┼─────●─────────",
+        "        │     │         ",
+        "      ┌───┐   │         ",
+        "q2 : ─┤ X ├───┼─────────",
+        "      └───┘   │         ",
+        "            ┌───┐       ",
+        "q3 : ───────┤ X ├───────",
+        "            └───┘       ",
+        "T  : │     0     │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_overlapping_qubits_angled_gates():
     circ = Circuit().zz(0, 2, 0.15).x(control=1, target=3).h(0)
     expected = (
-        "T  : │    0     │1│",
-        "                   ",
-        "q0 : ─ZZ(0.15)───H─",
-        "      │            ",
-        "q1 : ─┼────────●───",
-        "      │        │   ",
-        "q2 : ─ZZ(0.15)─┼───",
-        "               │   ",
-        "q3 : ──────────X───",
-        "",
-        "T  : │    0     │1│",
+        "T  : │        0         │  1  │",
+        "      ┌──────────┐       ┌───┐ ",
+        "q0 : ─┤ ZZ(0.15) ├───────┤ H ├─",
+        "      └──────────┘       └───┘ ",
+        "            │                  ",
+        "q1 : ───────┼────────●─────────",
+        "            │        │         ",
+        "      ┌──────────┐   │         ",
+        "q2 : ─┤ ZZ(0.15) ├───┼─────────",
+        "      └──────────┘   │         ",
+        "                   ┌───┐       ",
+        "q3 : ──────────────┤ X ├───────",
+        "                   └───┘       ",
+        "T  : │        0         │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_connector_across_gt_two_qubits():
     circ = Circuit().h(4).x(control=3, target=5).h(4).h(2)
     expected = (
-        "T  : │ 0 │1│",
-        "            ",
-        "q2 : ─H─────",
-        "            ",
-        "q3 : ───●───",
-        "        │   ",
-        "q4 : ─H─┼─H─",
-        "        │   ",
-        "q5 : ───X───",
-        "",
-        "T  : │ 0 │1│",
+        "T  : │     0     │  1  │",
+        "      ┌───┐             ",
+        "q2 : ─┤ H ├─────────────",
+        "      └───┘             ",
+        "                        ",
+        "q3 : ─────────●─────────",
+        "              │         ",
+        "      ┌───┐   │   ┌───┐ ",
+        "q4 : ─┤ H ├───┼───┤ H ├─",
+        "      └───┘   │   └───┘ ",
+        "            ┌───┐       ",
+        "q5 : ───────┤ X ├───────",
+        "            └───┘       ",
+        "T  : │     0     │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_connector_across_non_used_qubits():
     circ = Circuit().h(4).cnot(3, 100).h(4).h(101)
     expected = (
-        "T    : │ 0 │1│",
-        "              ",
-        "q3   : ───●───",
-        "          │   ",
-        "q4   : ─H─┼─H─",
-        "          │   ",
-        "q100 : ───X───",
-        "              ",
-        "q101 : ─H─────",
-        "",
-        "T    : │ 0 │1│",
+        "T    : │     0     │  1  │",
+        "                          ",
+        "q3   : ─────────●─────────",
+        "                │         ",
+        "        ┌───┐   │   ┌───┐ ",
+        "q4   : ─┤ H ├───┼───┤ H ├─",
+        "        └───┘   │   └───┘ ",
+        "              ┌───┐       ",
+        "q100 : ───────┤ X ├───────",
+        "              └───┘       ",
+        "        ┌───┐             ",
+        "q101 : ─┤ H ├─────────────",
+        "        └───┘             ",
+        "T    : │     0     │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
