@@ -272,9 +272,71 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return first_line + "\n".join(lines)
 
     @staticmethod
+    def _build_parameters(
+        circuit_qubits: QubitSet, item: ResultType | Instruction, connections: dict[Qubit, str]
+    ) -> tuple:
+        map_control_qubit_states = {}
+
+        if isinstance(item, ResultType) and not item.target:
+            target_qubits = circuit_qubits
+            control_qubits = QubitSet()
+            qubits = circuit_qubits
+            if len(qubits) > 1:
+                connections |= {qubit: "both" for qubit in qubits[1:-1]}
+                connections[qubits[-1]] = "above"
+                connections[qubits[0]] = "below"
+            ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+        elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+            target_qubits = circuit_qubits
+            control_qubits = QubitSet()
+            qubits = circuit_qubits
+            ascii_symbol = item.ascii_symbols[0]
+            ascii_symbols = [ascii_symbol] * len(circuit_qubits)
+            if len(circuit_qubits) > 1:
+                connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
+                connections[circuit_qubits[-1]] = "above"
+                connections[circuit_qubits[0]] = "below"
+        elif (
+            isinstance(item, Instruction)
+            and isinstance(item.operator, Gate)
+            and item.operator.name == "GPhase"
+        ):
+            target_qubits = circuit_qubits
+            control_qubits = QubitSet()
+            qubits = circuit_qubits
+            ascii_symbols = "─" * len(circuit_qubits)
+        else:
+            if isinstance(item.target, list):
+                target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+            else:
+                target_qubits = item.target
+            control_qubits = getattr(item, "control", QubitSet())
+            map_control_qubit_states = AsciiCircuitDiagram._build_map_control_qubits(
+                item, control_qubits
+            )
+
+            target_and_control = target_qubits.union(control_qubits)
+            qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+            if len(qubits) > 1:
+                connections |= {qubit: "both" for qubit in qubits[1:-1]}
+                connections[qubits[-1]] = "above"
+                connections[qubits[0]] = "below"
+
+            ascii_symbols = item.ascii_symbols
+
+        return (
+            target_qubits,
+            control_qubits,
+            qubits,
+            connections,
+            ascii_symbols,
+            map_control_qubit_states,
+        )
+
+    @staticmethod
     def _ascii_diagram_column(
         circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
+        items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
         """
@@ -282,7 +344,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Instruction | ResultType]): list of instructions or result types
             global_phase (float | None): the integrated global phase up to this column
 
         Returns:
@@ -292,55 +354,15 @@ class AsciiCircuitDiagram(CircuitDiagram):
         connections = {qubit: "none" for qubit in circuit_qubits}
 
         for item in items:
-            if isinstance(item, ResultType) and not item.target:
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = circuit_qubits
-                if len(qubits) > 1:
-                    connections |= {qubit: "both" for qubit in qubits[1:-1]}
-                    connections[qubits[-1]] = "above"
-                    connections[qubits[0]] = "below"
-                ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
-            elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = circuit_qubits
-                ascii_symbol = item.ascii_symbols[0]
-                ascii_symbols = [ascii_symbol] * len(circuit_qubits)
-                if len(circuit_qubits) > 1:
-                    connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
-                    connections[circuit_qubits[-1]] = "above"
-                    connections[circuit_qubits[0]] = "below"
-            elif (
-                isinstance(item, Instruction)
-                and isinstance(item.operator, Gate)
-                and item.operator.name == "GPhase"
-            ):
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = QubitSet()
-                qubits = circuit_qubits
-                ascii_symbols = "─" * len(circuit_qubits)
-            else:
-                if isinstance(item.target, list):
-                    target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
-                else:
-                    target_qubits = item.target
-                control_qubits = getattr(item, "control", QubitSet())
-                map_control_qubit_states = AsciiCircuitDiagram._build_map_control_qubits(
-                    item, control_qubits
-                )
-
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
-                if len(qubits) > 1:
-                    connections |= {qubit: "both" for qubit in qubits[1:-1]}
-                    connections[qubits[-1]] = "above"
-                    connections[qubits[0]] = "below"
-
-                ascii_symbols = item.ascii_symbols
+            (
+                target_qubits,
+                control_qubits,
+                qubits,
+                connections,
+                ascii_symbols,
+                map_control_qubit_states,
+            ) = AsciiCircuitDiagram._build_parameters(circuit_qubits, item, connections)
+            target_and_control = target_qubits.union(control_qubits)
 
             for qubit in qubits:
                 # Determine if the qubit is part of the item or in the middle of a
@@ -420,16 +442,19 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return output
 
     @staticmethod
+    def _fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
+        return "{0:{fill}{align}{width}}".format(
+            symbol,
+            fill=filler,
+            align="^",
+            width=width if width is not None else len(symbol) + 1,
+        )
+
+    @staticmethod
     def _draw_symbol(
         symbol: str, symbols_width: int, connection: Literal["above, below, both, none"] = "none"
     ) -> str:
-        def fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
-            return "{0:{fill}{align}{width}}".format(
-                symbol,
-                fill=filler,
-                align="^",
-                width=width if width is not None else len(symbol) + 1,
-            )
+        fill_symbol = AsciiCircuitDiagram._fill_symbol
 
         top = ""
         bottom = ""
@@ -440,18 +465,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 bottom = fill_symbol("│", " ")
             symbol = fill_symbol(f"{symbol}", "─")
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
-            if connection == "below":
-                bottom = "║"
-            elif connection == "both":
-                top = bottom = "║"
-                symbol = "║"
-            elif connection == "above":
-                top = "║"
-                symbol = "╨"
-                bottom = ""
-            top = fill_symbol(top, " ")
-            bottom = fill_symbol(bottom, " ")
-            symbol = fill_symbol(symbol, "─")
+            top, symbol, bottom = AsciiCircuitDiagram._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
             top = fill_symbol("│", " ")
             bottom = fill_symbol("│", " ")
@@ -472,6 +486,27 @@ class AsciiCircuitDiagram(CircuitDiagram):
         output += fill_symbol(symbol, "─", symbols_width + 1) + "\n"
         output += fill_symbol(bottom, " ", symbols_width + 1) + "\n"
         return output
+
+    @staticmethod
+    def _build_verbatim_box(
+        symbol: Literal["StartVerbatim", "EndVerbatim"],
+        connection: Literal["above, below, both, none"] = "none",
+    ) -> str:
+        top = ""
+        bottom = ""
+        if connection == "below":
+            bottom = "║"
+        elif connection == "both":
+            top = bottom = "║"
+            symbol = "║"
+        elif connection == "above":
+            top = "║"
+            symbol = "╨"
+        top = AsciiCircuitDiagram._fill_symbol(top, " ")
+        bottom = AsciiCircuitDiagram._fill_symbol(bottom, " ")
+        symbol = AsciiCircuitDiagram._fill_symbol(symbol, "─")
+
+        return top, symbol, bottom
 
     @staticmethod
     def _build_map_control_qubits(item: Instruction, control_qubits: QubitSet) -> dict(Qubit, int):
