@@ -593,22 +593,22 @@ def test_ignore_non_gates():
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_result_types_target_none():
     circ = Circuit().h(0).h(100).probability()
     expected = (
-        "T    : │0│Result Types│",
-        "                       ",
-        "q0   : ─H─Probability──",
-        "          │            ",
-        "q100 : ─H─Probability──",
-        "",
-        "T    : │0│Result Types│",
+        "T    : │  0  │ Result Types  │",
+        "        ┌───┐ ┌─────────────┐ ",
+        "q0   : ─┤ H ├─┤ Probability ├─",
+        "        └───┘ └──────┬──────┘ ",
+        "        ┌───┐ ┌──────┴──────┐ ",
+        "q100 : ─┤ H ├─┤ Probability ├─",
+        "        └───┘ └─────────────┘ ",
+        "T    : │  0  │ Result Types  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_result_types_target_some():
     circ = (
         Circuit()
@@ -618,39 +618,42 @@ def test_result_types_target_some():
         .expectation(observable=Observable.Y() @ Observable.Z(), target=[0, 100])
     )
     expected = (
-        "T    : │0│  Result Types  │",
-        "                           ",
-        "q0   : ─H─Expectation(Y@Z)─",
-        "          │                ",
-        "q1   : ─H─┼────────────────",
-        "          │                ",
-        "q100 : ─H─Expectation(Y@Z)─",
-        "",
-        "T    : │0│  Result Types  │",
+        "T    : │  0  │    Result Types    │",
+        "        ┌───┐ ┌──────────────────┐ ",
+        "q0   : ─┤ H ├─┤ Expectation(Y@Z) ├─",
+        "        └───┘ └──────────────────┘ ",
+        "        ┌───┐           │          ",
+        "q1   : ─┤ H ├───────────┼──────────",
+        "        └───┘           │          ",
+        "        ┌───┐ ┌──────────────────┐ ",
+        "q100 : ─┤ H ├─┤ Expectation(Y@Z) ├─",
+        "        └───┘ └──────────────────┘ ",
+        "T    : │  0  │    Result Types    │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_additional_result_types():
     circ = Circuit().h(0).h(1).h(100).state_vector().amplitude(["110", "001"])
     expected = (
-        "T    : │0│",
-        "          ",
-        "q0   : ─H─",
-        "          ",
-        "q1   : ─H─",
-        "          ",
-        "q100 : ─H─",
-        "",
-        "T    : │0│",
+        "T    : │  0  │",
+        "        ┌───┐ ",
+        "q0   : ─┤ H ├─",
+        "        └───┘ ",
+        "        ┌───┐ ",
+        "q1   : ─┤ H ├─",
+        "        └───┘ ",
+        "        ┌───┐ ",
+        "q100 : ─┤ H ├─",
+        "        └───┘ ",
+        "T    : │  0  │",
         "",
         "Additional result types: StateVector, Amplitude(110,001)",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_multiple_result_types():
     circ = (
         Circuit()
@@ -662,22 +665,24 @@ def test_multiple_result_types():
         .sample(observable=Observable.Y())
     )
     expected = (
-        "T  : │ 0 │1│      Result Types      │",
-        "                                     ",
-        "q0 : ─●───H─Variance(Y)────Sample(Y)─",
-        "      │                    │         ",
-        "q1 : ─┼─●──────────────────Sample(Y)─",
-        "      │ │                  │         ",
-        "q2 : ─X─┼───Expectation(Y)─Sample(Y)─",
-        "        │                  │         ",
-        "q3 : ───X──────────────────Sample(Y)─",
-        "",
-        "T  : │ 0 │1│      Result Types      │",
+        "T  : │     0     │  1  │          Result Types          │",
+        "                  ┌───┐   ┌─────────────┐  ┌───────────┐ ",
+        "q0 : ───●─────────┤ H ├───┤ Variance(Y) ├──┤ Sample(Y) ├─",
+        "        │         └───┘   └─────────────┘  └─────┬─────┘ ",
+        "        │                                  ┌─────┴─────┐ ",
+        "q1 : ───┼─────●────────────────────────────┤ Sample(Y) ├─",
+        "        │     │                            └─────┬─────┘ ",
+        "      ┌───┐   │         ┌────────────────┐ ┌─────┴─────┐ ",
+        "q2 : ─┤ X ├───┼─────────┤ Expectation(Y) ├─┤ Sample(Y) ├─",
+        "      └───┘   │         └────────────────┘ └─────┬─────┘ ",
+        "            ┌───┐                          ┌─────┴─────┐ ",
+        "q3 : ───────┤ X ├──────────────────────────┤ Sample(Y) ├─",
+        "            └───┘                          └───────────┘ ",
+        "T  : │     0     │  1  │          Result Types          │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_multiple_result_types_with_state_vector_amplitude():
     circ = (
         Circuit()
@@ -691,24 +696,27 @@ def test_multiple_result_types_with_state_vector_amplitude():
         .state_vector()
     )
     expected = (
-        "T  : │ 0 │1│     Result Types     │",
-        "                                   ",
-        "q0 : ─●───H─Variance(Y)────────────",
-        "      │                            ",
-        "q1 : ─┼─●───Expectation(Hermitian)─",
-        "      │ │                          ",
-        "q2 : ─X─┼──────────────────────────",
-        "        │                          ",
-        "q3 : ───X───Expectation(Y)─────────",
-        "",
-        "T  : │ 0 │1│     Result Types     │",
+        "T  : │     0     │  1  │       Result Types       │",
+        "                  ┌───┐       ┌─────────────┐      ",
+        "q0 : ───●─────────┤ H ├───────┤ Variance(Y) ├──────",
+        "        │         └───┘       └─────────────┘      ",
+        "        │               ┌────────────────────────┐ ",
+        "q1 : ───┼─────●─────────┤ Expectation(Hermitian) ├─",
+        "        │     │         └────────────────────────┘ ",
+        "      ┌───┐   │                                    ",
+        "q2 : ─┤ X ├───┼────────────────────────────────────",
+        "      └───┘   │                                    ",
+        "            ┌───┐           ┌────────────────┐     ",
+        "q3 : ───────┤ X ├───────────┤ Expectation(Y) ├─────",
+        "            └───┘           └────────────────┘     ",
+        "T  : │     0     │  1  │       Result Types       │",
         "",
         "Additional result types: Amplitude(0001), StateVector",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
     herm_matrix = (Observable.Y() @ Observable.Z()).to_matrix()
     circ = (
@@ -727,89 +735,92 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
         )
     )
     expected = (
-        "T  : │ 0 │1│   Result Types    │",
-        "                                ",
-        "q0 : ─●───H─Variance(Y)─────────",
-        "      │                         ",
-        "q1 : ─┼─●───Expectation(MyHerm)─",
-        "      │ │   │                   ",
-        "q2 : ─X─┼───Expectation(MyHerm)─",
-        "        │                       ",
-        "q3 : ───X───Expectation(Y)──────",
-        "",
-        "T  : │ 0 │1│   Result Types    │",
+        "T  : │     0     │  1  │     Result Types      │",
+        "                  ┌───┐     ┌─────────────┐     ",
+        "q0 : ───●─────────┤ H ├─────┤ Variance(Y) ├─────",
+        "        │         └───┘     └─────────────┘     ",
+        "        │               ┌─────────────────────┐ ",
+        "q1 : ───┼─────●─────────┤ Expectation(MyHerm) ├─",
+        "        │     │         └──────────┬──────────┘ ",
+        "      ┌───┐   │         ┌──────────┴──────────┐ ",
+        "q2 : ─┤ X ├───┼─────────┤ Expectation(MyHerm) ├─",
+        "      └───┘   │         └─────────────────────┘ ",
+        "            ┌───┐          ┌────────────────┐   ",
+        "q3 : ───────┤ X ├──────────┤ Expectation(Y) ├───",
+        "            └───┘          └────────────────┘   ",
+        "T  : │     0     │  1  │     Result Types      │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_noise_1qubit():
     circ = Circuit().h(0).x(1).bit_flip(1, 0.1)
     expected = (
-        "T  : │    0    │",
-        "                ",
-        "q0 : ─H─────────",
-        "                ",
-        "q1 : ─X─BF(0.1)─",
-        "",
-        "T  : │    0    │",
+        "T  : │        0        │",
+        "      ┌───┐             ",
+        "q0 : ─┤ H ├─────────────",
+        "      └───┘             ",
+        "      ┌───┐ ┌─────────┐ ",
+        "q1 : ─┤ X ├─┤ BF(0.1) ├─",
+        "      └───┘ └─────────┘ ",
+        "T  : │        0        │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_noise_2qubit():
     circ = Circuit().h(1).kraus((0, 2), [np.eye(4)])
     expected = (
-        "T  : │ 0  │",
-        "           ",
-        "q0 : ───KR─",
-        "        │  ",
-        "q1 : ─H─┼──",
-        "        │  ",
-        "q2 : ───KR─",
-        "",
-        "T  : │ 0  │",
+        "T  : │     0      │",
+        "            ┌────┐ ",
+        "q0 : ───────┤ KR ├─",
+        "            └────┘ ",
+        "      ┌───┐    │   ",
+        "q1 : ─┤ H ├────┼───",
+        "      └───┘    │   ",
+        "            ┌────┐ ",
+        "q2 : ───────┤ KR ├─",
+        "            └────┘ ",
+        "T  : │     0      │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_noise_multi_probabilities():
     circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
     expected = (
-        "T  : │        0        │",
-        "                        ",
-        "q0 : ─H─────────────────",
-        "                        ",
-        "q1 : ─X─PC(0.1,0.2,0.3)─",
-        "",
-        "T  : │        0        │",
+        "T  : │            0            │",
+        "      ┌───┐                     ",
+        "q0 : ─┤ H ├─────────────────────",
+        "      └───┘                     ",
+        "      ┌───┐ ┌─────────────────┐ ",
+        "q1 : ─┤ X ├─┤ PC(0.1,0.2,0.3) ├─",
+        "      └───┘ └─────────────────┘ ",
+        "T  : │            0            │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_noise_multi_probabilities_with_parameter():
     a = FreeParameter("a")
     b = FreeParameter("b")
     c = FreeParameter("c")
     circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
     expected = (
-        "T  : │     0     │",
-        "                  ",
-        "q0 : ─H───────────",
-        "                  ",
-        "q1 : ─X─PC(a,b,c)─",
-        "",
-        "T  : │     0     │",
+        "T  : │         0         │",
+        "      ┌───┐               ",
+        "q0 : ─┤ H ├───────────────",
+        "      └───┘               ",
+        "      ┌───┐ ┌───────────┐ ",
+        "q1 : ─┤ X ├─┤ PC(a,b,c) ├─",
+        "      └───┘ └───────────┘ ",
+        "T  : │         0         │",
         "",
         "Unassigned parameters: [a, b, c].",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_pulse_gate_1_qubit_circuit():
     circ = (
         Circuit()
@@ -817,16 +828,16 @@ def test_pulse_gate_1_qubit_circuit():
         .pulse_gate(0, PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
     )
     expected = (
-        "T  : │0│1 │",
-        "           ",
-        "q0 : ─H─PG─",
-        "",
-        "T  : │0│1 │",
+        "T  : │  0  │  1   │",
+        "      ┌───┐ ┌────┐ ",
+        "q0 : ─┤ H ├─┤ PG ├─",
+        "      └───┘ └────┘ ",
+        "T  : │  0  │  1   │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_pulse_gate_multi_qubit_circuit():
     circ = (
         Circuit()
@@ -834,23 +845,23 @@ def test_pulse_gate_multi_qubit_circuit():
         .pulse_gate([0, 1], PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
     )
     expected = (
-        "T  : │0│1 │",
-        "           ",
-        "q0 : ─H─PG─",
-        "        │  ",
-        "q1 : ───PG─",
-        "",
-        "T  : │0│1 │",
+        "T  : │  0  │  1   │",
+        "      ┌───┐ ┌────┐ ",
+        "q0 : ─┤ H ├─┤ PG ├─",
+        "      └───┘ └─┬──┘ ",
+        "            ┌─┴──┐ ",
+        "q1 : ───────┤ PG ├─",
+        "            └────┘ ",
+        "T  : │  0  │  1   │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def _assert_correct_diagram(circ, expected):
     assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_circuit_with_nested_target_list():
     circ = (
         Circuit()
@@ -864,18 +875,19 @@ def test_circuit_with_nested_target_list():
     )
 
     expected = (
-        "T  : │0│      Result Types      │",
-        "                                 ",
-        "q0 : ─H─Expectation(Hamiltonian)─",
-        "        │                        ",
-        "q1 : ─H─Expectation(Hamiltonian)─",
-        "",
-        "T  : │0│      Result Types      │",
+        "T  : │  0  │        Result Types        │",
+        "      ┌───┐ ┌──────────────────────────┐ ",
+        "q0 : ─┤ H ├─┤ Expectation(Hamiltonian) ├─",
+        "      └───┘ └─────────────┬────────────┘ ",
+        "      ┌───┐ ┌─────────────┴────────────┐ ",
+        "q1 : ─┤ H ├─┤ Expectation(Hamiltonian) ├─",
+        "      └───┘ └──────────────────────────┘ ",
+        "T  : │  0  │        Result Types        │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
+@pytest.mark.xfail
 def test_hamiltonian():
     circ = (
         Circuit()
@@ -888,15 +900,17 @@ def test_hamiltonian():
         )
     )
     expected = (
-        "T  : │0│1│    2    │        Result Types        │",
-        "                                                 ",
-        "q0 : ─H─●─Rx(theta)─AdjointGradient(Hamiltonian)─",
-        "        │           │                            ",
-        "q1 : ───X───────────AdjointGradient(Hamiltonian)─",
-        "                    │                            ",
-        "q2 : ───────────────AdjointGradient(Hamiltonian)─",
-        "",
-        "T  : │0│1│    2    │        Result Types        │",
+        "T  : │  0  │  1  │      2      │          Result Types          │",
+        "      ┌───┐       ┌───────────┐ ┌──────────────────────────────┐ ",
+        "q0 : ─┤ H ├───●───┤ Rx(theta) ├─┤ AdjointGradient(Hamiltonian) ├─",
+        "      └───┘   │   └───────────┘ └───────────────┬──────────────┘ ",
+        "            ┌───┐               ┌───────────────┴──────────────┐ ",
+        "q1 : ───────┤ X ├───────────────┤ AdjointGradient(Hamiltonian) ├─",
+        "            └───┘               └───────────────┬──────────────┘ ",
+        "                                ┌───────────────┴──────────────┐ ",
+        "q2 : ───────────────────────────┤ AdjointGradient(Hamiltonian) ├─",
+        "                                └──────────────────────────────┘ ",
+        "T  : │  0  │  1  │      2      │          Result Types          │",
         "",
         "Unassigned parameters: [theta].",
     )
