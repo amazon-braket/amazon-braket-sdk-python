@@ -712,7 +712,7 @@ class Circuit:
             >>> print(circ)
             T  : |0|1|2|
 
-            q0 : -X-Z-C-
+            q0 : -X-Z-●-
                       |
             q1 : -Y-X-X-
 
@@ -723,7 +723,7 @@ class Circuit:
             >>> print(circ.apply_gate_noise(noise, target_gates = Gate.X))
             T  : |     0     |     1     |2|
 
-            q0 : -X-DEPO(0.1)-Z-----------C-
+            q0 : -X-DEPO(0.1)-Z-----------●-
                                           |
             q1 : -Y-----------X-DEPO(0.1)-X-
 
@@ -733,7 +733,7 @@ class Circuit:
             >>> print(circ.apply_gate_noise(noise, target_qubits = 1))
             T  : |     0     |     1     |     2     |
 
-            q0 : -X-----------Z-----------C-----------
+            q0 : -X-----------Z-----------●-----------
                                           |
             q1 : -Y-DEPO(0.1)-X-DEPO(0.1)-X-DEPO(0.1)-
 
@@ -746,7 +746,7 @@ class Circuit:
             ... )
             T  : |     0     |     1     |2|
 
-            q0 : -X-DEPO(0.1)-Z-----------C-
+            q0 : -X-DEPO(0.1)-Z-----------●-
                                           |
             q1 : -Y-DEPO(0.1)-X-DEPO(0.1)-X-
 
