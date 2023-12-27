@@ -426,141 +426,147 @@ def test_verbatim_1q_following():
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_2q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1))
     expected = (
-        "T  : │      0      │1│2│     3     │",
-        "                                    ",
-        "q0 : ─StartVerbatim─H─●─EndVerbatim─",
-        "      │               │ │           ",
-        "q1 : ─*************───X─***********─",
-        "",
-        "T  : │      0      │1│2│     3     │",
+        "T  : │        0        │  1  │  2  │       3       │",
+        "                        ┌───┐                       ",
+        "q0 : ───StartVerbatim───┤ H ├───●─────EndVerbatim───",
+        "              ║         └───┘   │          ║        ",
+        "              ║               ┌───┐        ║        ",
+        "q1 : ─────────╨───────────────┤ X ├────────╨────────",
+        "                              └───┘                 ",
+        "T  : │        0        │  1  │  2  │       3       │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_2q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1))
     expected = (
-        "T  : │0│      1      │2│3│     4     │",
-        "                                      ",
-        "q0 : ─H─StartVerbatim─H─●─EndVerbatim─",
-        "        │               │ │           ",
-        "q1 : ───*************───X─***********─",
-        "",
-        "T  : │0│      1      │2│3│     4     │",
+        "T  : │  0  │        1        │  2  │  3  │       4       │",
+        "      ┌───┐                   ┌───┐                       ",
+        "q0 : ─┤ H ├───StartVerbatim───┤ H ├───●─────EndVerbatim───",
+        "      └───┘         ║         └───┘   │          ║        ",
+        "                    ║               ┌───┐        ║        ",
+        "q1 : ───────────────╨───────────────┤ X ├────────╨────────",
+        "                                    └───┘                 ",
+        "T  : │  0  │        1        │  2  │  3  │       4       │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_2q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1)).h(0)
     expected = (
-        "T  : │      0      │1│2│     3     │4│",
-        "                                      ",
-        "q0 : ─StartVerbatim─H─●─EndVerbatim─H─",
-        "      │               │ │             ",
-        "q1 : ─*************───X─***********───",
-        "",
-        "T  : │      0      │1│2│     3     │4│",
+        "T  : │        0        │  1  │  2  │       3       │  4  │",
+        "                        ┌───┐                       ┌───┐ ",
+        "q0 : ───StartVerbatim───┤ H ├───●─────EndVerbatim───┤ H ├─",
+        "              ║         └───┘   │          ║        └───┘ ",
+        "              ║               ┌───┐        ║              ",
+        "q1 : ─────────╨───────────────┤ X ├────────╨──────────────",
+        "                              └───┘                       ",
+        "T  : │        0        │  1  │  2  │       3       │  4  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_3q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
     expected = (
-        "T  : │      0      │1│2│3│     4     │",
-        "                                      ",
-        "q0 : ─StartVerbatim─H─●───EndVerbatim─",
-        "      │               │   │           ",
-        "q1 : ─┼───────────────X─●─┼───────────",
-        "      │                 │ │           ",
-        "q2 : ─*************─────X─***********─",
-        "",
-        "T  : │      0      │1│2│3│     4     │",
+        "T  : │        0        │  1  │  2  │  3  │       4       │",
+        "                        ┌───┐                             ",
+        "q0 : ───StartVerbatim───┤ H ├───●───────────EndVerbatim───",
+        "              ║         └───┘   │                ║        ",
+        "              ║               ┌───┐              ║        ",
+        "q1 : ─────────║───────────────┤ X ├───●──────────║────────",
+        "              ║               └───┘   │          ║        ",
+        "              ║                     ┌───┐        ║        ",
+        "q2 : ─────────╨─────────────────────┤ X ├────────╨────────",
+        "                                    └───┘                 ",
+        "T  : │        0        │  1  │  2  │  3  │       4       │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_3q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
     expected = (
-        "T  : │0│      1      │2│3│4│     5     │",
-        "                                        ",
-        "q0 : ─H─StartVerbatim─H─●───EndVerbatim─",
-        "        │               │   │           ",
-        "q1 : ───┼───────────────X─●─┼───────────",
-        "        │                 │ │           ",
-        "q2 : ───*************─────X─***********─",
-        "",
-        "T  : │0│      1      │2│3│4│     5     │",
+        "T  : │  0  │        1        │  2  │  3  │  4  │       5       │",
+        "      ┌───┐                   ┌───┐                             ",
+        "q0 : ─┤ H ├───StartVerbatim───┤ H ├───●───────────EndVerbatim───",
+        "      └───┘         ║         └───┘   │                ║        ",
+        "                    ║               ┌───┐              ║        ",
+        "q1 : ───────────────║───────────────┤ X ├───●──────────║────────",
+        "                    ║               └───┘   │          ║        ",
+        "                    ║                     ┌───┐        ║        ",
+        "q2 : ───────────────╨─────────────────────┤ X ├────────╨────────",
+        "                                          └───┘                 ",
+        "T  : │  0  │        1        │  2  │  3  │  4  │       5       │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_3q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)
     expected = (
-        "T  : │      0      │1│2│3│     4     │5│",
-        "                                        ",
-        "q0 : ─StartVerbatim─H─●───EndVerbatim─H─",
-        "      │               │   │             ",
-        "q1 : ─┼───────────────X─●─┼─────────────",
-        "      │                 │ │             ",
-        "q2 : ─*************─────X─***********───",
-        "",
-        "T  : │      0      │1│2│3│     4     │5│",
+        "T  : │        0        │  1  │  2  │  3  │       4       │  5  │",
+        "                        ┌───┐                             ┌───┐ ",
+        "q0 : ───StartVerbatim───┤ H ├───●───────────EndVerbatim───┤ H ├─",
+        "              ║         └───┘   │                ║        └───┘ ",
+        "              ║               ┌───┐              ║              ",
+        "q1 : ─────────║───────────────┤ X ├───●──────────║──────────────",
+        "              ║               └───┘   │          ║              ",
+        "              ║                     ┌───┐        ║              ",
+        "q2 : ─────────╨─────────────────────┤ X ├────────╨──────────────",
+        "                                    └───┘                       ",
+        "T  : │        0        │  1  │  2  │  3  │       4       │  5  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_different_qubits():
     circ = Circuit().h(1).add_verbatim_box(Circuit().h(0)).cnot(3, 4)
     expected = (
-        "T  : │0│      1      │2│     3     │4│",
-        "                                      ",
-        "q0 : ───StartVerbatim─H─EndVerbatim───",
-        "        │               │             ",
-        "q1 : ─H─┼───────────────┼─────────────",
-        "        │               │             ",
-        "q3 : ───┼───────────────┼───────────●─",
-        "        │               │           │ ",
-        "q4 : ───*************───***********─X─",
-        "",
-        "T  : │0│      1      │2│     3     │4│",
+        "T  : │  0  │        1        │  2  │       3       │  4  │",
+        "                              ┌───┐                       ",
+        "q0 : ─────────StartVerbatim───┤ H ├───EndVerbatim─────────",
+        "                    ║         └───┘        ║              ",
+        "      ┌───┐         ║                      ║              ",
+        "q1 : ─┤ H ├─────────║──────────────────────║──────────────",
+        "      └───┘         ║                      ║              ",
+        "                    ║                      ║              ",
+        "q3 : ───────────────║──────────────────────║──────────●───",
+        "                    ║                      ║          │   ",
+        "                    ║                      ║        ┌───┐ ",
+        "q4 : ───────────────╨──────────────────────╨────────┤ X ├─",
+        "                                                    └───┘ ",
+        "T  : │  0  │        1        │  2  │       3       │  4  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_verbatim_qubset_qubits():
     circ = Circuit().h(1).cnot(0, 1).cnot(1, 2).add_verbatim_box(Circuit().h(1)).cnot(2, 3)
     expected = (
-        "T  : │0│1│2│      3      │4│     5     │6│",
-        "                                          ",
-        "q0 : ───●───StartVerbatim───EndVerbatim───",
-        "        │   │               │             ",
-        "q1 : ─H─X─●─┼─────────────H─┼─────────────",
-        "          │ │               │             ",
-        "q2 : ─────X─┼───────────────┼───────────●─",
-        "            │               │           │ ",
-        "q3 : ───────*************───***********─X─",
-        "",
-        "T  : │0│1│2│      3      │4│     5     │6│",
+        "T  : │  0  │  1  │  2  │        3        │  4  │       5       │  6  │",
+        "                                                                      ",
+        "q0 : ─────────●───────────StartVerbatim───────────EndVerbatim─────────",
+        "              │                 ║                      ║              ",
+        "      ┌───┐ ┌───┐               ║         ┌───┐        ║              ",
+        "q1 : ─┤ H ├─┤ X ├───●───────────║─────────┤ H ├────────║──────────────",
+        "      └───┘ └───┘   │           ║         └───┘        ║              ",
+        "                  ┌───┐         ║                      ║              ",
+        "q2 : ─────────────┤ X ├─────────║──────────────────────║──────────●───",
+        "                  └───┘         ║                      ║          │   ",
+        "                                ║                      ║        ┌───┐ ",
+        "q3 : ───────────────────────────╨──────────────────────╨────────┤ X ├─",
+        "                                                                └───┘ ",
+        "T  : │  0  │  1  │  2  │        3        │  4  │       5       │  6  │",
     )
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.skip
 def test_ignore_non_gates():
     class Foo(Operator):
         @property
@@ -572,15 +578,17 @@ def test_ignore_non_gates():
 
     circ = Circuit().h(0).h(1).cnot(1, 2).add_instruction(Instruction(Foo(), 0))
     expected = (
-        "T  : │0│1│",
-        "          ",
-        "q0 : ─H───",
-        "          ",
-        "q1 : ─H─●─",
-        "        │ ",
-        "q2 : ───X─",
-        "",
-        "T  : │0│1│",
+        "T  : │  0  │  1  │",
+        "      ┌───┐       ",
+        "q0 : ─┤ H ├───────",
+        "      └───┘       ",
+        "      ┌───┐       ",
+        "q1 : ─┤ H ├───●───",
+        "      └───┘   │   ",
+        "            ┌───┐ ",
+        "q2 : ───────┤ X ├─",
+        "            └───┘ ",
+        "T  : │  0  │  1  │",
     )
     _assert_correct_diagram(circ, expected)
 
