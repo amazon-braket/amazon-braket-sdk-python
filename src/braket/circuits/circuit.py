@@ -82,6 +82,7 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
+    default_diagram_builder = BoxDrawingCircuitDiagram
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -1493,7 +1494,7 @@ class Circuit:
             )
 
     def __str__(self):
-        return self.diagram(BoxDrawingCircuitDiagram)
+        return self.diagram(self.default_diagram_builder)
 
     def __eq__(self, other):
         if isinstance(other, Circuit):
