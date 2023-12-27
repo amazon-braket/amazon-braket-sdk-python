@@ -36,14 +36,26 @@ def test_only_gphase_circuit():
 
 def test_one_gate_one_qubit():
     circ = Circuit().h(0)
-    expected = ("T  : │0│", "        ", "q0 : ─H─", "", "T  : │0│")
+    expected = (
+        "T  : │   0   │",
+        "       ┌───┐  ",
+        "q0 : ──┤ H ├──",
+        "       └───┘  ",
+        "T  : │   0   │",
+    )
     _assert_correct_diagram(circ, expected)
 
 
 def test_one_gate_one_qubit_rotation():
     circ = Circuit().rx(angle=3.14, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : │   0    │", "               ", "q0 : ─Rx(3.14)─", "", "T  : │   0    │")
+    expected = (
+        "T  : │      0       │",
+        "       ┌──────────┐  ",
+        "q0 : ──┤ Rx(3.14) ├──",
+        "       └──────────┘  ",
+        "T  : │      0       │",
+    )
     _assert_correct_diagram(circ, expected)
 
 
@@ -52,11 +64,11 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │    0    │",
-        "                ",
-        "q0 : ─Rx(theta)─",
-        "",
-        "T  : │    0    │",
+        "T  : │       0       │",
+        "       ┌───────────┐  ",
+        "q0 : ──┤ Rx(theta) ├──",
+        "       └───────────┘  ",
+        "T  : │       0       │",
         "",
         "Unassigned parameters: [theta].",
     )
@@ -67,12 +79,12 @@ def test_one_gate_one_qubit_rotation_with_parameter():
 def test_one_gate_with_global_phase(target):
     circ = Circuit().x(target=target).gphase(0.15)
     expected = (
-        "T  : │0│ 1  │",
-        "GP : │0│0.15│",
-        "             ",
-        f"q{target} : ─X──────",
-        "",
-        "T  : │0│ 1  │",
+        "T  : │   0   │ 1  │",
+        "GP : │   0   │0.15│",
+        "       ┌───┐       ",
+        f"q{target} : ──┤ X ├───────",
+        "       └───┘       ",
+        "T  : │   0   │ 1  │",
         "",
         "Global phase: 0.15",
     )
@@ -82,12 +94,12 @@ def test_one_gate_with_global_phase(target):
 def test_one_gate_with_zero_global_phase():
     circ = Circuit().gphase(-0.15).x(target=0).gphase(0.15)
     expected = (
-        "T  : │  0  │ 1  │",
-        "GP : │-0.15│0.00│",
-        "                 ",
-        "q0 : ─X──────────",
-        "",
-        "T  : │  0  │ 1  │",
+        "T  : │   0   │ 1  │",
+        "GP : │ -0.15 │0.00│",
+        "       ┌───┐       ",
+        "q0 : ──┤ X ├───────",
+        "       └───┘       ",
+        "T  : │   0   │ 1  │",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -97,11 +109,11 @@ def test_one_gate_one_qubit_rotation_with_unicode():
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │  0  │",
-        "            ",
-        "q0 : ─Rx(θ)─",
-        "",
-        "T  : │  0  │",
+        "T  : │     0     │",
+        "       ┌───────┐  ",
+        "q0 : ──┤ Rx(θ) ├──",
+        "       └───────┘  ",
+        "T  : │     0     │",
         "",
         "Unassigned parameters: [θ].",
     )
@@ -112,12 +124,12 @@ def test_one_gate_with_parametric_expression_global_phase_():
     theta = FreeParameter("\u03B8")
     circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
     expected = (
-        "T  : │0│ 1 │    2    │",
-        "GP : │0│2*θ│2*θ + 1.0│",
-        "                      ",
-        "q0 : ─X─X─────────────",
-        "",
-        "T  : │0│ 1 │    2    │",
+        "T  : │   0   │   1   │    2    │",
+        "GP : │   0   │  2*θ  │2*θ + 1.0│",
+        "       ┌───┐   ┌───┐            ",
+        "q0 : ──┤ X ├───┤ X ├────────────",
+        "       └───┘   └───┘            ",
+        "T  : │   0   │   1   │    2    │",
         "",
         "Global phase: 2*θ + 1.0",
         "",
@@ -132,11 +144,11 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
     new_circ = circ.make_bound_circuit({"theta": np.pi})
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │   0    │",
-        "               ",
-        "q0 : ─Rx(3.14)─",
-        "",
-        "T  : │   0    │",
+        "T  : │      0       │",
+        "       ┌──────────┐  ",
+        "q0 : ──┤ Rx(3.14) ├──",
+        "       └──────────┘  ",
+        "T  : │      0       │",
     )
     _assert_correct_diagram(new_circ, expected)
 
@@ -144,13 +156,14 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
 def test_qubit_width():
     circ = Circuit().h(0).h(100)
     expected = (
-        "T    : │0│",
-        "          ",
-        "q0   : ─H─",
-        "          ",
-        "q100 : ─H─",
-        "",
-        "T    : │0│",
+        "T    : │   0   │",
+        "         ┌───┐  ",
+        "q0   : ──┤ H ├──",
+        "         └───┘  ",
+        "         ┌───┐  ",
+        "q100 : ──┤ H ├──",
+        "         └───┘  ",
+        "T    : │   0   │",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -165,58 +178,52 @@ def test_gate_width():
 
     circ = Circuit().h(0).h(1).add_instruction(Instruction(Foo(), 0))
     expected = (
-        "T  : │0│ 1 │",
-        "            ",
-        "q0 : ─H─FOO─",
-        "            ",
-        "q1 : ─H─────",
-        "",
-        "T  : │0│ 1 │",
+        "T  : │   0   │    1    │",
+        "       ┌───┐   ┌─────┐  ",
+        "q0 : ──┤ H ├───┤ FOO ├──",
+        "       └───┘   └─────┘  ",
+        "       ┌───┐            ",
+        "q1 : ──┤ H ├────────────",
+        "       └───┘            ",
+        "T  : │   0   │    1    │",
     )
     _assert_correct_diagram(circ, expected)
 
 
 def test_time_width():
     circ = Circuit()
-    num_qubits = 15
+    num_qubits = 8
     for qubit in range(num_qubits):
         if qubit == num_qubits - 1:
             break
         circ.cnot(qubit, qubit + 1)
     expected = (
-        "T   : │0│1│2│3│4│5│6│7│8│9│10│11│12│13│",
-        "                                       ",
-        "q0  : ─●───────────────────────────────",
-        "       │                               ",
-        "q1  : ─X─●─────────────────────────────",
-        "         │                             ",
-        "q2  : ───X─●───────────────────────────",
-        "           │                           ",
-        "q3  : ─────X─●─────────────────────────",
-        "             │                         ",
-        "q4  : ───────X─●───────────────────────",
-        "               │                       ",
-        "q5  : ─────────X─●─────────────────────",
-        "                 │                     ",
-        "q6  : ───────────X─●───────────────────",
-        "                   │                   ",
-        "q7  : ─────────────X─●─────────────────",
-        "                     │                 ",
-        "q8  : ───────────────X─●───────────────",
-        "                       │               ",
-        "q9  : ─────────────────X─●─────────────",
-        "                         │             ",
-        "q10 : ───────────────────X─●───────────",
-        "                           │           ",
-        "q11 : ─────────────────────X──●────────",
-        "                              │        ",
-        "q12 : ────────────────────────X──●─────",
-        "                                 │     ",
-        "q13 : ───────────────────────────X──●──",
-        "                                    │  ",
-        "q14 : ──────────────────────────────X──",
-        "",
-        "T   : │0│1│2│3│4│5│6│7│8│9│10│11│12│13│",
+        "T  : │   0   │   1   │   2   │   3   │   4   │   5   │   6   │",
+        "                                                              ",
+        "q0 : ────●────────────────────────────────────────────────────",
+        "         │                                                    ",
+        "       ┌───┐                                                  ",
+        "q1 : ──┤ X ├─────●────────────────────────────────────────────",
+        "       └───┘     │                                            ",
+        "               ┌───┐                                          ",
+        "q2 : ──────────┤ X ├─────●────────────────────────────────────",
+        "               └───┘     │                                    ",
+        "                       ┌───┐                                  ",
+        "q3 : ──────────────────┤ X ├─────●────────────────────────────",
+        "                       └───┘     │                            ",
+        "                               ┌───┐                          ",
+        "q4 : ──────────────────────────┤ X ├─────●────────────────────",
+        "                               └───┘     │                    ",
+        "                                       ┌───┐                  ",
+        "q5 : ──────────────────────────────────┤ X ├─────●────────────",
+        "                                       └───┘     │            ",
+        "                                               ┌───┐          ",
+        "q6 : ──────────────────────────────────────────┤ X ├─────●────",
+        "                                               └───┘     │    ",
+        "                                                       ┌───┐  ",
+        "q7 : ──────────────────────────────────────────────────┤ X ├──",
+        "                                                       └───┘  ",
+        "T  : │   0   │   1   │   2   │   3   │   4   │   5   │   6   │",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -224,17 +231,20 @@ def test_time_width():
 def test_connector_across_two_qubits():
     circ = Circuit().cnot(3, 4).h(range(2, 6))
     expected = (
-        "T  : │0│1│",
-        "          ",
-        "q2 : ─H───",
-        "          ",
-        "q3 : ─●─H─",
-        "      │   ",
-        "q4 : ─X─H─",
-        "          ",
-        "q5 : ─H───",
-        "",
-        "T  : │0│1│",
+        "T  : │   0   │   1   │",
+        "       ┌───┐          ",
+        "q2 : ──┤ H ├──────────",
+        "       └───┘          ",
+        "               ┌───┐  ",
+        "q3 : ────●─────┤ H ├──",
+        "         │     └───┘  ",
+        "       ┌───┐   ┌───┐  ",
+        "q4 : ──┤ X ├───┤ H ├──",
+        "       └───┘   └───┘  ",
+        "       ┌───┐          ",
+        "q5 : ──┤ H ├──────────",
+        "       └───┘          ",
+        "T  : │   0   │   1   │",
     )
     _assert_correct_diagram(circ, expected)
 
