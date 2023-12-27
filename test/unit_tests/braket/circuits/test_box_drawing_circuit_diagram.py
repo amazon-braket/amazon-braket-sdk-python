@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import (
-    AsciiCircuitDiagram,
+    BoxDrawingCircuitDiagram,
     Circuit,
     FreeParameter,
     Gate,
@@ -27,11 +27,11 @@ from braket.pulse import Frame, Port, PulseSequence
 
 
 def test_empty_circuit():
-    assert AsciiCircuitDiagram.build_diagram(Circuit()) == ""
+    assert BoxDrawingCircuitDiagram.build_diagram(Circuit()) == ""
 
 
 def test_only_gphase_circuit():
-    assert AsciiCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
+    assert BoxDrawingCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
 
 
 def test_one_gate_one_qubit():
@@ -866,7 +866,7 @@ def test_pulse_gate_multi_qubit_circuit():
 
 
 def _assert_correct_diagram(circ, expected):
-    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
+    assert BoxDrawingCircuitDiagram.build_diagram(circ) == "\n".join(expected)
 
 
 def test_circuit_with_nested_target_list():

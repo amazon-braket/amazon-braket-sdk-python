@@ -20,7 +20,7 @@ from braket.circuits import (  # noqa: F401
     result_types,
 )
 from braket.circuits.angled_gate import AngledGate, DoubleAngledGate  # noqa: F401
-from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
+from braket.circuits.box_drawing_circuit_diagram import BoxDrawingCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401

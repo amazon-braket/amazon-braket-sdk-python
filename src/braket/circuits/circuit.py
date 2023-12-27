@@ -21,7 +21,7 @@ import numpy as np
 import oqpy
 
 from braket.circuits import compiler_directives
-from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.box_drawing_circuit_diagram import BoxDrawingCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -1092,13 +1092,13 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class: type = AsciiCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: type = BoxDrawingCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
 
         Args:
             circuit_diagram_class (type): A `CircuitDiagram` class that builds the
-                diagram for this circuit. Default = `AsciiCircuitDiagram`.
+                diagram for this circuit. Default = `BoxDrawingCircuitDiagram`.
 
         Returns:
             str: An ASCII string circuit diagram.
@@ -1493,7 +1493,7 @@ class Circuit:
             )
 
     def __str__(self):
-        return self.diagram(AsciiCircuitDiagram)
+        return self.diagram(BoxDrawingCircuitDiagram)
 
     def __eq__(self, other):
         if isinstance(other, Circuit):

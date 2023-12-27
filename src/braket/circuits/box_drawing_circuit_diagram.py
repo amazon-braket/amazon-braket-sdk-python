@@ -28,7 +28,7 @@ from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class AsciiCircuitDiagram(CircuitDiagram):
+class BoxDrawingCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
     @staticmethod
@@ -52,7 +52,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        y_axis_str, global_phase = AsciiCircuitDiagram._prepare_diagram_vars(
+        y_axis_str, global_phase = BoxDrawingCircuitDiagram._prepare_diagram_vars(
             circuit, circuit_qubits
         )
 
@@ -61,21 +61,22 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         # Moment columns
         for time, instructions in time_slices.items():
-            global_phase = AsciiCircuitDiagram._compute_moment_global_phase(
+            global_phase = BoxDrawingCircuitDiagram._compute_moment_global_phase(
                 global_phase, instructions
             )
-            moment_str = AsciiCircuitDiagram._ascii_diagram_column_set(
+            moment_str = BoxDrawingCircuitDiagram._ascii_diagram_column_set(
                 str(time), circuit_qubits, instructions, global_phase
             )
             column_strs.append(moment_str)
 
         # Result type columns
-        additional_result_types, target_result_types = AsciiCircuitDiagram._categorize_result_types(
-            circuit.result_types
-        )
+        (
+            additional_result_types,
+            target_result_types,
+        ) = BoxDrawingCircuitDiagram._categorize_result_types(circuit.result_types)
         if target_result_types:
             column_strs.append(
-                AsciiCircuitDiagram._ascii_diagram_column_set(
+                BoxDrawingCircuitDiagram._ascii_diagram_column_set(
                     "Result Types", circuit_qubits, target_result_types, global_phase
                 )
             )
@@ -254,10 +255,12 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """
 
         # Group items to separate out overlapping multi-qubit items
-        groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
+        groupings = BoxDrawingCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
         column_strs = [
-            AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
+            BoxDrawingCircuitDiagram._ascii_diagram_column(
+                circuit_qubits, grouping[1], global_phase
+            )
             for grouping in groupings
         ]
 
@@ -311,7 +314,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             else:
                 target_qubits = item.target
             control_qubits = getattr(item, "control", QubitSet())
-            map_control_qubit_states = AsciiCircuitDiagram._build_map_control_qubits(
+            map_control_qubit_states = BoxDrawingCircuitDiagram._build_map_control_qubits(
                 item, control_qubits
             )
 
@@ -361,7 +364,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 connections,
                 ascii_symbols,
                 map_control_qubit_states,
-            ) = AsciiCircuitDiagram._build_parameters(circuit_qubits, item, connections)
+            ) = BoxDrawingCircuitDiagram._build_parameters(circuit_qubits, item, connections)
             target_and_control = target_qubits.union(control_qubits)
 
             for qubit in qubits:
@@ -407,7 +410,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = AsciiCircuitDiagram._create_output(
+        output = BoxDrawingCircuitDiagram._create_output(
             symbols, connections, circuit_qubits, global_phase
         )
         return output
@@ -436,7 +439,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             )
 
         for qubit in qubits:
-            output += AsciiCircuitDiagram._draw_symbol(
+            output += BoxDrawingCircuitDiagram._draw_symbol(
                 symbols[qubit], symbols_width, connections[qubit]
             )
         return output
@@ -454,7 +457,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _draw_symbol(
         symbol: str, symbols_width: int, connection: Literal["above, below, both, none"] = "none"
     ) -> str:
-        fill_symbol = AsciiCircuitDiagram._fill_symbol
+        fill_symbol = BoxDrawingCircuitDiagram._fill_symbol
 
         top = ""
         bottom = ""
@@ -465,7 +468,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 bottom = fill_symbol("│", " ")
             symbol = fill_symbol(f"{symbol}", "─")
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
-            top, symbol, bottom = AsciiCircuitDiagram._build_verbatim_box(symbol, connection)
+            top, symbol, bottom = BoxDrawingCircuitDiagram._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
             top = fill_symbol("│", " ")
             bottom = fill_symbol("│", " ")
@@ -502,9 +505,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         elif connection == "above":
             top = "║"
             symbol = "╨"
-        top = AsciiCircuitDiagram._fill_symbol(top, " ")
-        bottom = AsciiCircuitDiagram._fill_symbol(bottom, " ")
-        symbol = AsciiCircuitDiagram._fill_symbol(symbol, "─")
+        top = BoxDrawingCircuitDiagram._fill_symbol(top, " ")
+        bottom = BoxDrawingCircuitDiagram._fill_symbol(bottom, " ")
+        symbol = BoxDrawingCircuitDiagram._fill_symbol(symbol, "─")
 
         return top, symbol, bottom
 
