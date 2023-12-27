@@ -308,6 +308,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
+                if len(qubits) > 1:
+                    connections |= {qubit: "both" for qubit in qubits[1:-1]}
+                    connections[qubits[-1]] = "above"
+                    connections[qubits[0]] = "below"
                 ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
             elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
                 target_qubits = circuit_qubits
@@ -342,6 +346,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+                if len(qubits) > 1:
+                    connections |= {qubit: "both" for qubit in qubits[1:-1]}
+                    connections[qubits[-1]] = "above"
+                    connections[qubits[0]] = "below"
 
                 ascii_symbols = item.ascii_symbols
 
@@ -427,42 +435,54 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _draw_symbol(
         symbol: str, symbols_width: int, connection: Literal["above, below, both, none"] = "none"
     ) -> str:
+        def fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
+            return "{0:{fill}{align}{width}}".format(
+                symbol,
+                fill=filler,
+                align="^",
+                width=width if width is not None else len(symbol) + 1,
+            )
+
         top = ""
         bottom = ""
         if symbol in ["●", "◯"]:
-            if connection == "above" or connection == "both":
-                top = "│"
-            if connection == "below" or connection == "both":
-                bottom = "│"
+            if connection in ["above", "both"]:
+                top = fill_symbol("│", " ")
+            if connection in ["below", "both"]:
+                bottom = fill_symbol("│", " ")
+            symbol = fill_symbol(f"{symbol}", "─")
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
             if connection == "below":
                 bottom = "║"
             elif connection == "both":
-                top = bottom = symbol = "║"
+                top = bottom = "║"
+                symbol = "║"
             elif connection == "above":
                 top = "║"
                 symbol = "╨"
                 bottom = ""
+            top = fill_symbol(top, " ")
+            bottom = fill_symbol(bottom, " ")
+            symbol = fill_symbol(symbol, "─")
         elif symbol == "┼":
-            top = "│"
-            bottom = "│"
+            top = fill_symbol("│", " ")
+            bottom = fill_symbol("│", " ")
+            symbol = fill_symbol(f"{symbol}", "─")
         elif symbol == "─":
             # We do not box when no gate is applied.
             pass
         else:
-            top = f"┌─{'─' * len(symbol)}─┐"
-            bottom = f"└─{'─' * len(symbol)}─┘"
+            top_edge_symbol = "┴" if connection == "above" or connection == "both" else "─"
+            top = f"┌─{fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
+
+            bottom_edge_symbol = "┬" if connection == "below" or connection == "both" else "─"
+            bottom = f"└─{fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
+
             symbol = f"┤ {symbol} ├"
 
-        output = "{0:{fill}{align}{width}}\n".format(
-            top, fill=" ", align="^", width=symbols_width + 1
-        )
-        output += "{0:{fill}{align}{width}}\n".format(
-            symbol, fill="─", align="^", width=symbols_width + 1
-        )
-        output += "{0:{fill}{align}{width}}\n".format(
-            bottom, fill=" ", align="^", width=symbols_width + 1
-        )
+        output = fill_symbol(top, " ", symbols_width + 1) + "\n"
+        output += fill_symbol(symbol, "─", symbols_width + 1) + "\n"
+        output += fill_symbol(bottom, " ", symbols_width + 1) + "\n"
         return output
 
     @staticmethod
