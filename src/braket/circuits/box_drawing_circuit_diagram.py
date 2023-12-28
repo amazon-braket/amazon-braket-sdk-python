@@ -16,12 +16,10 @@ from __future__ import annotations
 from functools import reduce
 from typing import Literal
 
-import braket.circuits.circuit as cir
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
-from braket.circuits.moments import MomentType
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
@@ -31,81 +29,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
     """Builds ASCII string circuit diagrams using box-drawing characters."""
 
     vdelim = "│"
-
-    @staticmethod
-    def build_diagram(circuit: cir.Circuit) -> str:
-        """
-        Build an ASCII string circuit diagram using box-drawing characters.
-
-        Args:
-            circuit (Circuit): Circuit for which to build a diagram.
-
-        Returns:
-            str: ASCII string circuit diagram.
-        """
-
-        if not circuit.instructions:
-            return ""
-
-        if all(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
-            return f"Global phase: {circuit.global_phase}"
-
-        circuit_qubits = circuit.qubits
-        circuit_qubits.sort()
-
-        y_axis_str, global_phase = BoxDrawingCircuitDiagram._prepare_diagram_vars(
-            circuit, circuit_qubits
-        )
-
-        time_slices = circuit.moments.time_slices()
-        column_strs = []
-
-        # Moment columns
-        for time, instructions in time_slices.items():
-            global_phase = AsciiCircuitDiagram._compute_moment_global_phase(
-                global_phase, instructions
-            )
-            moment_str = BoxDrawingCircuitDiagram._ascii_diagram_column_set(
-                str(time), circuit_qubits, instructions, global_phase
-            )
-            column_strs.append(moment_str)
-
-        # Result type columns
-        (
-            additional_result_types,
-            target_result_types,
-        ) = AsciiCircuitDiagram._categorize_result_types(circuit.result_types)
-        if target_result_types:
-            column_strs.append(
-                BoxDrawingCircuitDiagram._ascii_diagram_column_set(
-                    "Result Types", circuit_qubits, target_result_types, global_phase
-                )
-            )
-
-        # Unite strings
-        lines = y_axis_str.split("\n")
-        for col_str in column_strs:
-            for i, line_in_col in enumerate(col_str.split("\n")):
-                lines[i] += line_in_col
-
-        # Replace the last (empty) line with time
-        lines[-1] = lines[0]
-
-        if global_phase:
-            lines.append(f"\nGlobal phase: {global_phase}")
-
-        # Additional result types line on bottom
-        if additional_result_types:
-            lines.append(f"\nAdditional result types: {', '.join(additional_result_types)}")
-
-        # A list of parameters in the circuit to the currently assigned values.
-        if circuit.parameters:
-            lines.append(
-                "\nUnassigned parameters: "
-                f"{sorted(circuit.parameters, key=lambda param: param.name)}."
-            )
-
-        return "\n".join(lines)
+    _add_empty_line = False
 
     @staticmethod
     def _create_qubit_layout(qubit: Qubit, y_axis_width: int) -> None:

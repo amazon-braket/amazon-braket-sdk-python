@@ -32,9 +32,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
     vdelim = "|"
+    _add_empty_line = True
 
-    @staticmethod
-    def build_diagram(circuit: cir.Circuit) -> str:
+    @classmethod
+    def build_diagram(cls, circuit: cir.Circuit) -> str:
         """
         Build an ASCII string circuit diagram.
 
@@ -54,9 +55,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        y_axis_str, global_phase = AsciiCircuitDiagram._prepare_diagram_vars(
-            circuit, circuit_qubits
-        )
+        y_axis_str, global_phase = cls._prepare_diagram_vars(circuit, circuit_qubits)
 
         time_slices = circuit.moments.time_slices()
         column_strs = []
@@ -66,7 +65,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             global_phase = AsciiCircuitDiagram._compute_moment_global_phase(
                 global_phase, instructions
             )
-            moment_str = AsciiCircuitDiagram._ascii_diagram_column_set(
+            moment_str = cls._ascii_diagram_column_set(
                 str(time), circuit_qubits, instructions, global_phase
             )
             column_strs.append(moment_str)
@@ -77,19 +76,19 @@ class AsciiCircuitDiagram(CircuitDiagram):
         )
         if target_result_types:
             column_strs.append(
-                AsciiCircuitDiagram._ascii_diagram_column_set(
+                cls._ascii_diagram_column_set(
                     "Result Types", circuit_qubits, target_result_types, global_phase
                 )
             )
 
         # Unite strings
-        lines = y_axis_str.split("\n")
-        for col_str in column_strs:
-            for i, line_in_col in enumerate(col_str.split("\n")):
-                lines[i] += line_in_col
+        lines = AsciiCircuitDiagram._unite_strings(y_axis_str, column_strs)
 
         # Time on top and bottom
-        lines.append(lines[0])
+        if cls._add_empty_line:
+            lines.append(lines[0])
+        else:
+            lines[-1] = lines[0]
 
         if global_phase:
             lines.append(f"\nGlobal phase: {global_phase}")
@@ -106,6 +105,14 @@ class AsciiCircuitDiagram(CircuitDiagram):
             )
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _unite_strings(first_column: str, column_strs: list[str]) -> str:
+        lines = first_column.split("\n")
+        for col_str in column_strs:
+            for i, line_in_col in enumerate(col_str.split("\n")):
+                lines[i] += line_in_col
+        return lines
 
     @classmethod
     def _prepare_diagram_vars(
@@ -279,10 +286,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         ]
 
         # Unite column strings
-        lines = column_strs[0].split("\n")
-        for column_str in column_strs[1:]:
-            for i, moment_line in enumerate(column_str.split("\n")):
-                lines[i] += moment_line
+        lines = AsciiCircuitDiagram._unite_strings(column_strs[0], column_strs[1:])
 
         # Adjust for column title width
         col_title_width = len(col_title)
