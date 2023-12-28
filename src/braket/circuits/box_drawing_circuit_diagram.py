@@ -65,25 +65,14 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
     ) -> tuple:
         map_control_qubit_states = {}
 
-        if isinstance(item, ResultType) and not item.target:
+        if (isinstance(item, ResultType) and not item.target) or (
+            isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
+        ):
             target_qubits = circuit_qubits
             control_qubits = QubitSet()
             qubits = circuit_qubits
-            if len(qubits) > 1:
-                connections |= {qubit: "both" for qubit in qubits[1:-1]}
-                connections[qubits[-1]] = "above"
-                connections[qubits[0]] = "below"
-            ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
-        elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-            target_qubits = circuit_qubits
-            control_qubits = QubitSet()
-            qubits = circuit_qubits
-            ascii_symbol = item.ascii_symbols[0]
-            ascii_symbols = [ascii_symbol] * len(circuit_qubits)
-            if len(circuit_qubits) > 1:
-                connections = {qubit: "both" for qubit in circuit_qubits[1:-1]}
-                connections[circuit_qubits[-1]] = "above"
-                connections[circuit_qubits[0]] = "below"
+            ascii_symbols = [item.ascii_symbols[0]] * len(qubits)
+            BoxDrawingCircuitDiagram._update_connections(qubits, connections)
         elif (
             isinstance(item, Instruction)
             and isinstance(item.operator, Gate)
@@ -105,12 +94,8 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
 
             target_and_control = target_qubits.union(control_qubits)
             qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
-            if len(qubits) > 1:
-                connections |= {qubit: "both" for qubit in qubits[1:-1]}
-                connections[qubits[-1]] = "above"
-                connections[qubits[0]] = "below"
-
             ascii_symbols = item.ascii_symbols
+            BoxDrawingCircuitDiagram._update_connections(qubits, connections)
 
         return (
             target_qubits,
@@ -120,6 +105,13 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             ascii_symbols,
             map_control_qubit_states,
         )
+
+    @staticmethod
+    def _update_connections(qubits: QubitSet, connections: dict[Qubit, str]) -> None:
+        if len(qubits) > 1:
+            connections |= {qubit: "both" for qubit in qubits[1:-1]}
+            connections[qubits[-1]] = "above"
+            connections[qubits[0]] = "below"
 
     @staticmethod
     def _ascii_diagram_column(
