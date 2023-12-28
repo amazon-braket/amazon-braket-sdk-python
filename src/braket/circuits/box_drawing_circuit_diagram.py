@@ -262,13 +262,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             # We do not box when no gate is applied.
             pass
         else:
-            top_edge_symbol = "┴" if connection == "above" or connection == "both" else "─"
-            top = f"┌─{fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
-
-            bottom_edge_symbol = "┬" if connection == "below" or connection == "both" else "─"
-            bottom = f"└─{fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
-
-            symbol = f"┤ {symbol} ├"
+            top, symbol, bottom = BoxDrawingCircuitDiagram._build_box(symbol, connection)
 
         output = fill_symbol(top, " ", symbols_width + 1) + "\n"
         output += fill_symbol(symbol, "─", symbols_width + 1) + "\n"
@@ -276,9 +270,24 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         return output
 
     @staticmethod
+    def _build_box(
+        symbol: str, connection: Literal["above, below, both, none"]
+    ) -> tuple[str, str, str]:
+        fill_symbol = BoxDrawingCircuitDiagram._fill_symbol
+
+        top_edge_symbol = "┴" if connection == "above" or connection == "both" else "─"
+        top = f"┌─{fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
+
+        bottom_edge_symbol = "┬" if connection == "below" or connection == "both" else "─"
+        bottom = f"└─{fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
+
+        symbol = f"┤ {symbol} ├"
+        return top, symbol, bottom
+
+    @staticmethod
     def _build_verbatim_box(
         symbol: Literal["StartVerbatim", "EndVerbatim"],
-        connection: Literal["above, below, both, none"] = "none",
+        connection: Literal["above, below, both, none"],
     ) -> str:
         top = ""
         bottom = ""
