@@ -16,6 +16,7 @@ from __future__ import annotations
 from functools import reduce
 from typing import Literal
 
+import braket.circuits.circuit as cir
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -30,6 +31,19 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
 
     vdelim = "│"
     _add_empty_line = False
+
+    @staticmethod
+    def build_diagram(circuit: cir.Circuit) -> str:
+        """
+        Build an ASCII string circuit diagram using box-drawing characters.
+
+        Args:
+            circuit (Circuit): Circuit for which to build a diagram.
+
+        Returns:
+            str: ASCII string circuit diagram.
+        """
+        return super(BoxDrawingCircuitDiagram, BoxDrawingCircuitDiagram).build_diagram(circuit)
 
     @staticmethod
     def _create_qubit_layout(qubit: Qubit, y_axis_width: int) -> None:
