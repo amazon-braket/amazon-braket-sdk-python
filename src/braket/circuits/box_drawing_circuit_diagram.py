@@ -180,9 +180,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = cls._create_output(
-            symbols, connections, circuit_qubits, global_phase
-        )
+        output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
         return output
 
     @staticmethod
