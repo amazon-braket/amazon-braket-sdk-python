@@ -183,15 +183,6 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
         return output
 
-    @staticmethod
-    def _fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
-        return "{0:{fill}{align}{width}}".format(
-            symbol,
-            fill=filler,
-            align="^",
-            width=width if width is not None else len(symbol),
-        )
-
     @classmethod
     def _draw_symbol(
         cls,
@@ -199,45 +190,41 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         symbols_width: int,
         connection: Literal["above, below, both, none"],
     ) -> str:
-        fill_symbol = cls._fill_symbol
-
         top = ""
         bottom = ""
         if symbol in ["C", "N"]:
             if connection in ["above", "both"]:
-                top = fill_symbol("│", " ")
+                top = _fill_symbol("│", " ")
             if connection in ["below", "both"]:
-                bottom = fill_symbol("│", " ")
-            symbol = fill_symbol("●" if symbol == "C" else "◯", cls._qubit_line_char)
+                bottom = _fill_symbol("│", " ")
+            symbol = _fill_symbol("●" if symbol == "C" else "◯", cls._qubit_line_char)
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
             top, symbol, bottom = cls._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
-            top = bottom = fill_symbol("│", " ")
-            symbol = fill_symbol(f"{symbol}", cls._qubit_line_char)
+            top = bottom = _fill_symbol("│", " ")
+            symbol = _fill_symbol(f"{symbol}", cls._qubit_line_char)
         elif symbol == cls._qubit_line_char:
             # We do not box when no gate is applied.
             pass
         else:
             top, symbol, bottom = cls._build_box(symbol, connection)
 
-        output = f"{fill_symbol(top, ' ', symbols_width)} \n"
+        output = f"{_fill_symbol(top, ' ', symbols_width)} \n"
         output += (
-            f"{fill_symbol(symbol, cls._qubit_line_char, symbols_width)}{cls._qubit_line_char}\n"
+            f"{_fill_symbol(symbol, cls._qubit_line_char, symbols_width)}{cls._qubit_line_char}\n"
         )
-        output += f"{fill_symbol(bottom, ' ', symbols_width)} \n"
+        output += f"{_fill_symbol(bottom, ' ', symbols_width)} \n"
         return output
 
     @staticmethod
     def _build_box(
         symbol: str, connection: Literal["above, below, both, none"]
     ) -> tuple[str, str, str]:
-        fill_symbol = BoxDrawingCircuitDiagram._fill_symbol
-
         top_edge_symbol = "┴" if connection == "above" or connection == "both" else "─"
-        top = f"┌─{fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
+        top = f"┌─{_fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
 
         bottom_edge_symbol = "┬" if connection == "below" or connection == "both" else "─"
-        bottom = f"└─{fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
+        bottom = f"└─{_fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
 
         symbol = f"┤ {symbol} ├"
         return top, symbol, bottom
@@ -257,10 +244,17 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         elif connection == "above":
             top = "║"
             symbol = "╨"
-        top = BoxDrawingCircuitDiagram._fill_symbol(top, " ")
-        symbol = BoxDrawingCircuitDiagram._fill_symbol(
-            symbol, BoxDrawingCircuitDiagram._qubit_line_char
-        )
-        bottom = BoxDrawingCircuitDiagram._fill_symbol(bottom, " ")
+        top = _fill_symbol(top, " ")
+        symbol = _fill_symbol(symbol, BoxDrawingCircuitDiagram._qubit_line_char)
+        bottom = _fill_symbol(bottom, " ")
 
         return top, symbol, bottom
+
+
+def _fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
+    return "{0:{fill}{align}{width}}".format(
+        symbol,
+        fill=filler,
+        align="^",
+        width=width if width is not None else len(symbol),
+    )
