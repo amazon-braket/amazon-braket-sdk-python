@@ -172,6 +172,25 @@ def test_qubit_width():
     _assert_correct_diagram(circ, expected)
 
 
+@pytest.mark.xfail
+def test_different_size_boxes():
+    circ = Circuit().cnot(0,1).rx(2, 0.3)
+    expected = (
+        "T  : │     0      │",
+        "                   ",
+        "q0 : ──────●───────",
+        "           │       ",
+        "         ┌─┴─┐     ",
+        "q1 : ────┤ X ├─────",
+        "         └───┘     ",
+        "      ┌──────────┐ ",
+        "q2 : ─┤ Rx(0.30) ├─",
+        "      └──────────┘ ",
+        "T  : │     0      │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_gate_width():
     class Foo(Gate):
         def __init__(self):
