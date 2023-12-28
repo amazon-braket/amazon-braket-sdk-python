@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, get_args
 
 import oqpy
 import oqpy.base
@@ -52,6 +52,18 @@ def make_annotations_list(annotations: Optional[str | Iterable[str]]) -> List[st
 QubitIdentifierType = Union[
     int, str, Qubit, oqpy._ClassicalVar, oqpy.base.OQPyExpression, oqpy.Qubit
 ]
+
+
+def is_qubit_identifier_type(qubit: Any) -> bool:
+    """Checks if a given object is a qubit identifier type.
+
+    Args:
+        qubit (Any): The object to check.
+
+    Returns:
+        bool: True if the object is a qubit identifier type, False otherwise.
+    """
+    return isinstance(qubit, get_args(QubitIdentifierType))
 
 
 class Range(oqpy.Range):

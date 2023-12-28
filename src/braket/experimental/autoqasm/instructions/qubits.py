@@ -16,26 +16,13 @@
 
 import re
 from functools import singledispatch
-from typing import Any, Union, get_args
+from typing import Any, Union
 
 import oqpy.base
 from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
-from braket.experimental.autoqasm.types.types import QubitIdentifierType
 from braket.parametric import FreeParameterExpression
-
-
-def is_qubit_identifier_type(qubit: Any) -> bool:
-    """Checks if a given object is a qubit identifier type.
-
-    Args:
-        qubit (Any): The object to check.
-
-    Returns:
-        bool: True if the object is a qubit identifier type, False otherwise.
-    """
-    return isinstance(qubit, get_args(QubitIdentifierType))
 
 
 def _get_physical_qubit_indices(qids: list[str]) -> list[int]:

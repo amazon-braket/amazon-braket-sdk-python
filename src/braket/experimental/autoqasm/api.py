@@ -39,9 +39,8 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     is_autograph_artifact,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
-from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
+from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 from braket.parametric import FreeParameter
 
 
@@ -649,7 +648,7 @@ def _convert_calibration(
         value = union_deco_func_args[name]
         is_qubit = i in gate_args.qubit_indices
 
-        if is_qubit and not is_qubit_identifier_type(value):
+        if is_qubit and not aq_types.is_qubit_identifier_type(value):
             raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of aq.Qubit.')
 
         if not is_qubit and not isinstance(value, (float, oqpy.AngleVar)):

@@ -20,8 +20,8 @@ import oqpy
 
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 
+from ..types import QubitIdentifierType
 from .instructions import _qubit_instruction
-from .qubits import QubitIdentifierType
 
 GateParameterType = Union[float, FreeParameterExpression, oqpy._ClassicalVar]
 
