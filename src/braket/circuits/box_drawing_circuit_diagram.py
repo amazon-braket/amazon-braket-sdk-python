@@ -142,7 +142,6 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                 ascii_symbols,
                 map_control_qubit_states,
             ) = BoxDrawingCircuitDiagram._build_parameters(circuit_qubits, item, connections)
-            target_and_control = target_qubits.union(control_qubits)
 
             for qubit in qubits:
                 # Determine if the qubit is part of the item or in the middle of a
@@ -168,22 +167,9 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                         if power_string
                         else ascii_symbols[item_qubit_index]
                     )
-                    if symbols[qubit] in ["C", "N"]:
-                        if min(target_and_control) < qubit < max(target_and_control):
-                            connections[qubit] = "both"
-                        elif qubit == max(target_and_control):
-                            connections[qubit] = "above"
-                        else:
-                            connections[qubit] = "below"
 
                 elif qubit in control_qubits:
                     symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
-                    if min(target_and_control) < qubit < max(target_and_control):
-                        connections[qubit] = "both"
-                    elif qubit == max(target_and_control):
-                        connections[qubit] = "above"
-                    else:
-                        connections[qubit] = "below"
                 else:
                     symbols[qubit] = "┼"
 
