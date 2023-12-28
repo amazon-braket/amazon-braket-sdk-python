@@ -23,7 +23,6 @@ from openpulse import ast
 
 from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm import types as aq_types
-from braket.registers import Qubit
 
 
 def map_parameter_type(python_type: type) -> type:
@@ -38,9 +37,7 @@ def map_parameter_type(python_type: type) -> type:
     """
     origin_type = typing.get_origin(python_type) or python_type
 
-    # todo see if we can reuse `is_qubit_identifier_type` or at least
-    # QubitIdentifierType if we can get around the circular import
-    if origin_type == typing.Union and Qubit in typing.get_args(python_type):
+    if python_type is aq_types.QubitIdentifierType:
         return oqpy.Qubit
     if issubclass(origin_type, bool):
         return oqpy.BoolVar

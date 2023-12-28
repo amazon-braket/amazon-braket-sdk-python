@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import oqpy
 import oqpy.base
@@ -24,6 +24,7 @@ from openpulse import ast
 
 from braket.circuits import FreeParameterExpression
 from braket.experimental.autoqasm import errors, program
+from braket.registers import Qubit
 
 
 def is_qasm_type(val: Any) -> bool:
@@ -46,6 +47,11 @@ def is_qasm_type(val: Any) -> bool:
 
 def make_annotations_list(annotations: Optional[str | Iterable[str]]) -> List[str]:
     return [annotations] if isinstance(annotations, str) else annotations or []
+
+
+QubitIdentifierType = Union[
+    int, str, Qubit, oqpy._ClassicalVar, oqpy.base.OQPyExpression, oqpy.Qubit
+]
 
 
 class Range(oqpy.Range):

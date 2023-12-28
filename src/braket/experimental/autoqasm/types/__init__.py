@@ -22,6 +22,7 @@ from .types import (  # noqa: F401
     BoolVar,
     FloatVar,
     IntVar,
+    QubitIdentifierType,
     Range,
     is_qasm_type,
     make_annotations_list,
