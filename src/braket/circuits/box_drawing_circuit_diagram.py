@@ -31,6 +31,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
 
     vdelim = "│"
     _add_empty_line = False
+    _buffer_size = 4
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
@@ -179,35 +180,6 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         return output
 
     @staticmethod
-    def _create_output(
-        symbols: dict[Qubit, str],
-        connections: dict[Qubit, str],
-        qubits: QubitSet,
-        global_phase: float | None,
-    ) -> str:
-        # We add 4 because of the edges of the box, i.e. "┤ " and " ├"
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + 4
-        output = ""
-
-        if global_phase is not None:
-            global_phase_str = (
-                f"{global_phase:.2f}" if isinstance(global_phase, float) else str(global_phase)
-            )
-            symbols_width = max([symbols_width, len(global_phase_str)])
-            output += "{0:{fill}{align}{width}}│\n".format(
-                global_phase_str,
-                fill=" ",
-                align="^",
-                width=symbols_width,
-            )
-
-        for qubit in qubits:
-            output += BoxDrawingCircuitDiagram._draw_symbol(
-                symbols[qubit], symbols_width, connections[qubit]
-            )
-        return output
-
-    @staticmethod
     def _fill_symbol(symbol: str, filler: str, width: int | None = None) -> str:
         return "{0:{fill}{align}{width}}".format(
             symbol,
@@ -216,9 +188,12 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             width=width if width is not None else len(symbol) + 1,
         )
 
-    @staticmethod
+    @classmethod
     def _draw_symbol(
-        symbol: str, symbols_width: int, connection: Literal["above, below, both, none"] = "none"
+        cls,
+        symbol: str,
+        symbols_width: int,
+        connection: Literal["above, below, both, none"],
     ) -> str:
         fill_symbol = BoxDrawingCircuitDiagram._fill_symbol
 

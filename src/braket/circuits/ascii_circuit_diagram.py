@@ -33,6 +33,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     vdelim = "|"
     _add_empty_line = True
+    _buffer_size = 0
 
     @classmethod
     def build_diagram(cls, circuit: cir.Circuit) -> str:
@@ -404,14 +405,15 @@ class AsciiCircuitDiagram(CircuitDiagram):
         output = AsciiCircuitDiagram._create_output(symbols, margins, circuit_qubits, global_phase)
         return output
 
-    @staticmethod
+    @classmethod
     def _create_output(
+        cls,
         symbols: dict[Qubit, str],
         margins: dict[Qubit, str],
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        symbols_width = max([len(symbol) for symbol in symbols.values()])
+        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._buffer_size
         output = ""
 
         if global_phase is not None:
@@ -419,18 +421,20 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 f"{global_phase:.2f}" if isinstance(global_phase, float) else str(global_phase)
             )
             symbols_width = max([symbols_width, len(global_phase_str)])
-            output += "{0:{fill}{align}{width}}|\n".format(
-                global_phase_str,
-                fill=" ",
-                align="^",
-                width=symbols_width,
+            output += "{0:{fill}{align}{width}}{vdelim}\n".format(
+                global_phase_str, fill=" ", align="^", width=symbols_width, vdelim=cls.vdelim
             )
 
         for qubit in qubits:
-            output += "{0:{width}}\n".format(margins[qubit], width=symbols_width + 1)
-            output += "{0:{fill}{align}{width}}\n".format(
-                symbols[qubit], fill="-", align="<", width=symbols_width + 1
-            )
+            output += cls._draw_symbol(symbols[qubit], symbols_width, margins[qubit])
+        return output
+
+    @classmethod
+    def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
+        output = "{0:{width}}\n".format(connection, width=symbols_width + 1)
+        output += "{0:{fill}{align}{width}}\n".format(
+            symbol, fill="-", align="<", width=symbols_width + 1
+        )
         return output
 
     @staticmethod
