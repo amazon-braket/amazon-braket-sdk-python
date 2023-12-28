@@ -85,6 +85,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         lines = AsciiCircuitDiagram._unite_strings(y_axis_str, column_strs)
 
         # Time on top and bottom
+        # We only add an empty line for AsciiCircuitDiagram
         if cls._add_empty_line:
             lines.append(lines[0])
         else:
