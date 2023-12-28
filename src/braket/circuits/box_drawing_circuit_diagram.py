@@ -220,10 +220,10 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
     def _build_box(
         symbol: str, connection: Literal["above, below, both, none"]
     ) -> tuple[str, str, str]:
-        top_edge_symbol = "┴" if connection == "above" or connection == "both" else "─"
+        top_edge_symbol = "┴" if connection in ["above", "both"] else "─"
         top = f"┌─{_fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
 
-        bottom_edge_symbol = "┬" if connection == "below" or connection == "both" else "─"
+        bottom_edge_symbol = "┬" if connection in ["below", "both"] else "─"
         bottom = f"└─{_fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
 
         symbol = f"┤ {symbol} ├"
