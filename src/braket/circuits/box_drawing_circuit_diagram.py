@@ -199,7 +199,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         symbols_width: int,
         connection: Literal["above, below, both, none"],
     ) -> str:
-        fill_symbol = BoxDrawingCircuitDiagram._fill_symbol
+        fill_symbol = cls._fill_symbol
 
         top = ""
         bottom = ""
@@ -208,18 +208,17 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                 top = fill_symbol("│", " ")
             if connection in ["below", "both"]:
                 bottom = fill_symbol("│", " ")
-            symbol = fill_symbol("●" if symbol == "C" else "◯", "─")
+            symbol = fill_symbol("●" if symbol == "C" else "◯", cls._qubit_line_char)
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
-            top, symbol, bottom = BoxDrawingCircuitDiagram._build_verbatim_box(symbol, connection)
+            top, symbol, bottom = cls._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
-            top = fill_symbol("│", " ")
-            bottom = fill_symbol("│", " ")
-            symbol = fill_symbol(f"{symbol}", "─")
-        elif symbol == "─":
+            top = bottom = fill_symbol("│", " ")
+            symbol = fill_symbol(f"{symbol}", cls._qubit_line_char)
+        elif symbol == cls._qubit_line_char:
             # We do not box when no gate is applied.
             pass
         else:
-            top, symbol, bottom = BoxDrawingCircuitDiagram._build_box(symbol, connection)
+            top, symbol, bottom = cls._build_box(symbol, connection)
 
         output = f"{fill_symbol(top, ' ', symbols_width)} \n"
         output += (
