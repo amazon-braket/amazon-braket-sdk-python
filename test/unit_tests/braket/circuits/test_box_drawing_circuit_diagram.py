@@ -174,7 +174,7 @@ def test_qubit_width():
 
 @pytest.mark.xfail
 def test_different_size_boxes():
-    circ = Circuit().cnot(0,1).rx(2, 0.3)
+    circ = Circuit().cnot(0, 1).rx(2, 0.3)
     expected = (
         "T  : │     0      │",
         "                   ",
