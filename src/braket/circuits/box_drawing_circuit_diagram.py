@@ -29,7 +29,8 @@ from braket.registers.qubit_set import QubitSet
 class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
     """Builds ASCII string circuit diagrams using box-drawing characters."""
 
-    vdelim = "│"
+    _vdelim = "│"
+    _qubit_line_char = "─"
     _add_empty_line = False
     _buffer_size = 4
 
@@ -56,7 +57,11 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             y_axis_width (int): Width of the y axis.
         """
         y_axis_str = "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-        y_axis_str += "q{0:{width}} : ─\n".format(str(int(qubit)), width=y_axis_width)
+        y_axis_str += "q{0:{width}} : {qubit_line_char}\n".format(
+            str(int(qubit)),
+            width=y_axis_width,
+            qubit_line_char=BoxDrawingCircuitDiagram._qubit_line_char,
+        )
         y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
         return y_axis_str
 
@@ -82,7 +87,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             target_qubits = circuit_qubits
             control_qubits = QubitSet()
             qubits = circuit_qubits
-            ascii_symbols = "─" * len(circuit_qubits)
+            ascii_symbols = BoxDrawingCircuitDiagram._qubit_line_char * len(circuit_qubits)
         else:
             if isinstance(item.target, list):
                 target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -114,8 +119,9 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             connections[qubits[-1]] = "above"
             connections[qubits[0]] = "below"
 
-    @staticmethod
+    @classmethod
     def _ascii_diagram_column(
+        cls,
         circuit_qubits: QubitSet,
         items: list[Instruction | ResultType],
         global_phase: float | None = None,
@@ -131,7 +137,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         Returns:
             str: an ASCII string diagram for the specified moment in time for a column.
         """
-        symbols = {qubit: "─" for qubit in circuit_qubits}
+        symbols = {qubit: cls._qubit_line_char for qubit in circuit_qubits}
         connections = {qubit: "none" for qubit in circuit_qubits}
 
         for item in items:
@@ -142,7 +148,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                 connections,
                 ascii_symbols,
                 map_control_qubit_states,
-            ) = BoxDrawingCircuitDiagram._build_parameters(circuit_qubits, item, connections)
+            ) = cls._build_parameters(circuit_qubits, item, connections)
 
             for qubit in qubits:
                 # Determine if the qubit is part of the item or in the middle of a
@@ -174,7 +180,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = BoxDrawingCircuitDiagram._create_output(
+        output = cls._create_output(
             symbols, connections, circuit_qubits, global_phase
         )
         return output
@@ -185,7 +191,7 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             symbol,
             fill=filler,
             align="^",
-            width=width if width is not None else len(symbol) + 1,
+            width=width if width is not None else len(symbol),
         )
 
     @classmethod
@@ -217,9 +223,11 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         else:
             top, symbol, bottom = BoxDrawingCircuitDiagram._build_box(symbol, connection)
 
-        output = fill_symbol(top, " ", symbols_width + 1) + "\n"
-        output += fill_symbol(symbol, "─", symbols_width + 1) + "\n"
-        output += fill_symbol(bottom, " ", symbols_width + 1) + "\n"
+        output = f"{fill_symbol(top, ' ', symbols_width)} \n"
+        output += (
+            f"{fill_symbol(symbol, cls._qubit_line_char, symbols_width)}{cls._qubit_line_char}\n"
+        )
+        output += f"{fill_symbol(bottom, ' ', symbols_width)} \n"
         return output
 
     @staticmethod
@@ -253,7 +261,9 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
             top = "║"
             symbol = "╨"
         top = BoxDrawingCircuitDiagram._fill_symbol(top, " ")
+        symbol = BoxDrawingCircuitDiagram._fill_symbol(
+            symbol, BoxDrawingCircuitDiagram._qubit_line_char
+        )
         bottom = BoxDrawingCircuitDiagram._fill_symbol(bottom, " ")
-        symbol = BoxDrawingCircuitDiagram._fill_symbol(symbol, "─")
 
         return top, symbol, bottom

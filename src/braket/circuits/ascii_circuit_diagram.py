@@ -31,7 +31,8 @@ from braket.registers.qubit_set import QubitSet
 class AsciiCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
-    vdelim = "|"
+    _vdelim = "|"
+    _qubit_line_char = "-"
     _add_empty_line = True
     _buffer_size = 0
 
@@ -123,13 +124,13 @@ class AsciiCircuitDiagram(CircuitDiagram):
         # Y Axis Column
         y_axis_width = len(str(int(max(circuit_qubits))))
         y_axis_str = "{0:{width}} : {vdelim}\n".format(
-            "T", width=y_axis_width + 1, vdelim=cls.vdelim
+            "T", width=y_axis_width + 1, vdelim=cls._vdelim
         )
 
         global_phase = None
         if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
             y_axis_str += "{0:{width}} : {vdelim}\n".format(
-                "GP", width=y_axis_width, vdelim=cls.vdelim
+                "GP", width=y_axis_width, vdelim=cls._vdelim
             )
             global_phase = 0
 
@@ -296,19 +297,20 @@ class AsciiCircuitDiagram(CircuitDiagram):
         if symbols_width < col_title_width:
             diff = col_title_width - symbols_width
             for i in range(len(lines) - 1):
-                if lines[i].endswith("-"):
-                    lines[i] += "-" * diff
+                if lines[i].endswith(cls._qubit_line_char):
+                    lines[i] += cls._qubit_line_char * diff
                 else:
                     lines[i] += " "
 
         first_line = "{:^{width}}{vdelim}\n".format(
-            col_title, width=len(lines[0]) - 1, vdelim=cls.vdelim
+            col_title, width=len(lines[0]) - 1, vdelim=cls._vdelim
         )
 
         return first_line + "\n".join(lines)
 
-    @staticmethod
+    @classmethod
     def _ascii_diagram_column(
+        cls,
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
         global_phase: float | None = None,
@@ -324,7 +326,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: an ASCII string diagram for the specified moment in time for a column.
         """
-        symbols = {qubit: "-" for qubit in circuit_qubits}
+        symbols = {qubit: cls._qubit_line_char for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
 
         for item in items:
@@ -353,7 +355,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
-                ascii_symbols = "-" * len(circuit_qubits)
+                ascii_symbols = cls._qubit_line_char * len(circuit_qubits)
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -422,7 +424,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             )
             symbols_width = max([symbols_width, len(global_phase_str)])
             output += "{0:{fill}{align}{width}}{vdelim}\n".format(
-                global_phase_str, fill=" ", align="^", width=symbols_width, vdelim=cls.vdelim
+                global_phase_str, fill=" ", align="^", width=symbols_width, vdelim=cls._vdelim
             )
 
         for qubit in qubits:
@@ -433,7 +435,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
         output = "{0:{width}}\n".format(connection, width=symbols_width + 1)
         output += "{0:{fill}{align}{width}}\n".format(
-            symbol, fill="-", align="<", width=symbols_width + 1
+            symbol, fill=cls._qubit_line_char, align="<", width=symbols_width + 1
         )
         return output
 

@@ -172,7 +172,6 @@ def test_qubit_width():
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.xfail
 def test_different_size_boxes():
     circ = Circuit().cnot(0, 1).rx(2, 0.3)
     expected = (
@@ -699,9 +698,9 @@ def test_multiple_result_types():
     )
     expected = (
         "T  : │     0     │  1  │          Result Types          │",
-        "                  ┌───┐   ┌─────────────┐  ┌───────────┐ ",
-        "q0 : ───●─────────┤ H ├───┤ Variance(Y) ├──┤ Sample(Y) ├─",
-        "        │         └───┘   └─────────────┘  └─────┬─────┘ ",
+        "                  ┌───┐  ┌─────────────┐   ┌───────────┐ ",
+        "q0 : ───●─────────┤ H ├──┤ Variance(Y) ├───┤ Sample(Y) ├─",
+        "        │         └───┘  └─────────────┘   └─────┬─────┘ ",
         "        │                                  ┌─────┴─────┐ ",
         "q1 : ───┼─────●────────────────────────────┤ Sample(Y) ├─",
         "        │     │                            └─────┬─────┘ ",
@@ -730,9 +729,9 @@ def test_multiple_result_types_with_state_vector_amplitude():
     )
     expected = (
         "T  : │     0     │  1  │       Result Types       │",
-        "                  ┌───┐       ┌─────────────┐      ",
-        "q0 : ───●─────────┤ H ├───────┤ Variance(Y) ├──────",
-        "        │         └───┘       └─────────────┘      ",
+        "                  ┌───┐      ┌─────────────┐       ",
+        "q0 : ───●─────────┤ H ├──────┤ Variance(Y) ├───────",
+        "        │         └───┘      └─────────────┘       ",
         "        │               ┌────────────────────────┐ ",
         "q1 : ───┼─────●─────────┤ Expectation(Hermitian) ├─",
         "        │     │         └────────────────────────┘ ",
@@ -777,9 +776,9 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
         "      ┌─┴─┐   │         ┌──────────┴──────────┐ ",
         "q2 : ─┤ X ├───┼─────────┤ Expectation(MyHerm) ├─",
         "      └───┘   │         └─────────────────────┘ ",
-        "            ┌─┴─┐          ┌────────────────┐   ",
-        "q3 : ───────┤ X ├──────────┤ Expectation(Y) ├───",
-        "            └───┘          └────────────────┘   ",
+        "            ┌─┴─┐         ┌────────────────┐    ",
+        "q3 : ───────┤ X ├─────────┤ Expectation(Y) ├────",
+        "            └───┘         └────────────────┘    ",
         "T  : │     0     │  1  │     Result Types      │",
     )
     _assert_correct_diagram(circ, expected)
@@ -979,7 +978,6 @@ def test_power():
     _assert_correct_diagram(circ, expected)
 
 
-@pytest.mark.xfail
 def test_unbalanced_ascii_symbols():
     class FooFoo(Gate):
         def __init__(self):
