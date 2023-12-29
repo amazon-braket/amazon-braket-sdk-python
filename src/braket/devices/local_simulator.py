@@ -61,8 +61,8 @@ class LocalSimulator(Device):
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
-            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit before
-                execution.
+            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
+                before execution.
         """
         delegate = self._get_simulator(backend)
         super().__init__(
@@ -342,14 +342,11 @@ class LocalSimulator(Device):
         results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
 
-    def _validate_noise_model_support(self):
-        try:
-            supported_pragmas = [
-                ops.lower().replace("_", "")
-                for ops in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
-            ]
-        except:
-            raise ValueError(f"No supportedPragmas defined for the device {self.name}")
+    def _validate_noise_model_support(self) -> None:
+        supported_pragmas = [
+            ops.lower().replace("_", "")
+            for ops in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
+        ]
 
         noise_pragmas = [
             ("braket_noise_" + noise_instr.noise.name).lower().replace("_", "")
