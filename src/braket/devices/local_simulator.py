@@ -25,6 +25,7 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.circuits.noise_model import NoiseModel
 from braket.circuits.serialization import IRType
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
@@ -50,12 +51,18 @@ class LocalSimulator(Device):
     results using constructs from the SDK rather than Braket IR.
     """
 
-    def __init__(self, backend: Union[str, BraketSimulator] = "default"):
+    def __init__(
+        self,
+        backend: Union[str, BraketSimulator] = "default",
+        noise_model: Optional[NoiseModel] = None,
+    ):
         """
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
+            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit before
+                execution.
         """
         delegate = self._get_simulator(backend)
         super().__init__(
@@ -63,6 +70,10 @@ class LocalSimulator(Device):
             status="AVAILABLE",
         )
         self._delegate = delegate
+        self._noise_model = noise_model
+
+        if noise_model:
+            self._validate_noise_model_support()
 
     def run(
         self,
@@ -248,6 +259,10 @@ class LocalSimulator(Device):
         **kwargs,
     ):
         simulator = self._delegate
+
+        if self._noise_model:
+            circuit = self._noise_model.apply(circuit)
+
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
             program = circuit.to_ir(ir_type=IRType.OPENQASM)
@@ -326,3 +341,22 @@ class LocalSimulator(Device):
             )
         results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+
+    def _validate_noise_model_support(self):
+        try:
+            supported_pragmas = [
+                ops.lower().replace("_", "")
+                for ops in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
+            ]
+        except:
+            raise ValueError(f"No supportedPragmas defined for the device {self.name}")
+
+        noise_pragmas = [
+            ("braket_noise_" + noise_instr.noise.name).lower().replace("_", "")
+            for noise_instr in self._noise_model._instructions
+        ]
+        if not all([noise in supported_pragmas for noise in noise_pragmas]):
+            raise ValueError(
+                f"{self.name} does not support noise or the noise model includes noise "
+                + f"that is not supported by {self.name}."
+            )
