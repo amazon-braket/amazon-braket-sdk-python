@@ -1318,8 +1318,7 @@ def test_get_log_events(aws_session, next_token):
 
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
-    boto_session_init.return_value = Mock()
-    boto_session_init.return_value.region_name = "us-west-2"
+    boto_session_init.return_value = Mock(region_name="us-west-2")
     aws_session._braket_user_agents = "foo/bar"
     aws_session.braket_client = Mock(meta=Mock(region_name="us-test-2"))
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
@@ -1376,11 +1375,11 @@ def test_copy_session_endpoint_same_region(boto_session_init, aws_session):
 @patch.dict("os.environ", {"BRAKET_ENDPOINT": "new-endpoint"})
 @patch("boto3.Session")
 def test_copy_session_endpoint_different_region(boto_session_init, aws_session):
-    boto_session_init.return_value = Mock(region_name="new-region")
+    boto_session_init.return_value = Mock(region_name="old-region")
     aws_session.braket_client = Mock(
         meta=Mock(region_name="old-region", _endpoint_url="old-endpoint")
     )
-    copied_session = AwsSession.copy_session(aws_session)
+    copied_session = AwsSession.copy_session(aws_session, "new-region")
     copied_session.braket_client.meta._endpoint_url == "new-endpoint"
 
 
