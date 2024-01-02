@@ -47,6 +47,7 @@ def boto_session():
 def braket_client():
     _braket_client = Mock()
     _braket_client.meta.region_name = "us-west-2"
+    _braket_client.meta._endpoint_url = "test-endpoint"
     return _braket_client
 
 
@@ -1320,7 +1321,8 @@ def test_get_log_events(aws_session, next_token):
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock(region_name="us-west-2")
     aws_session._braket_user_agents = "foo/bar"
-    aws_session.braket_client = Mock(meta=Mock(region_name="us-test-2"))
+    mock_client = Mock(meta=Mock(region_name="us-west-2"))
+    boto_session_init.return_value.client.return_value = mock_client
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
     boto_session_init.assert_called_with(
         region_name="us-west-2",
@@ -1363,24 +1365,23 @@ def test_copy_session_custom_default_bucket(mock_boto, aws_session):
 
 
 @patch("boto3.Session")
-def test_copy_session_endpoint_same_region(boto_session_init, aws_session):
-    boto_session_init.return_value = Mock(region_name="some-region")
-    aws_session.braket_client = Mock(
-        meta=Mock(region_name="some-region", _endpoint_url="some-endpoint")
+def test_copy_session_endpoint_same_region(mock_boto_session, aws_session):
+    mock_boto_session.return_value = Mock(region_name="us-west-2")
+    mock_client = Mock(meta=Mock(region_name="us-west-2"))
+    mock_boto_session.return_value.client.return_value = mock_client
+    _ = AwsSession.copy_session(aws_session)
+    mock_boto_session.return_value.client.assert_called_with(
+        "braket", region_name="us-west-2", endpoint_url="test-endpoint"
     )
-    copied_session = AwsSession.copy_session(aws_session)
-    copied_session.braket_client.meta._endpoint_url == "some-endpoint"
 
 
-@patch.dict("os.environ", {"BRAKET_ENDPOINT": "new-endpoint"})
 @patch("boto3.Session")
-def test_copy_session_endpoint_different_region(boto_session_init, aws_session):
-    boto_session_init.return_value = Mock(region_name="old-region")
-    aws_session.braket_client = Mock(
-        meta=Mock(region_name="old-region", _endpoint_url="old-endpoint")
+def test_copy_session_endpoint_different_region(mock_boto_session, aws_session):
+    mock_boto_session.return_value = Mock(region_name="us-west-2")
+    _ = AwsSession.copy_session(aws_session, "new-region")
+    mock_boto_session.return_value.client.assert_called_with(
+        "braket", config=None, endpoint_url=None
     )
-    copied_session = AwsSession.copy_session(aws_session, "new-region")
-    copied_session.braket_client.meta._endpoint_url == "new-endpoint"
 
 
 def test_add_braket_user_agent(aws_session):
