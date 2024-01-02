@@ -805,9 +805,6 @@ class AwsSession(object):
         config = Config(max_pool_connections=max_connections) if max_connections else None
         session_region = self.boto_session.region_name
         new_region = region or session_region
-        new_braket_client = (
-            self.braket_client if new_region == self.braket_client.meta.region_name else None
-        )
         creds = self.boto_session.get_credentials()
         default_bucket = self._default_bucket if self._custom_default_bucket else None
         profile_name = self.boto_session.profile_name
@@ -827,6 +824,13 @@ class AwsSession(object):
                 region_name=new_region,
                 profile_name=profile_name,
             )
+        new_braket_client = (
+            boto_session.client(
+                "braket", region_name=new_region, endpoint_url=self.braket_client.meta._endpoint_url
+            )
+            if new_region == self.braket_client.meta.region_name
+            else None
+        )
         copied_session = AwsSession(
             boto_session=boto_session,
             braket_client=new_braket_client,

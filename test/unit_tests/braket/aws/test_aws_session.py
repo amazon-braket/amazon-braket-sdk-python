@@ -1321,6 +1321,7 @@ def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
     boto_session_init.return_value.region_name = "us-west-2"
     aws_session._braket_user_agents = "foo/bar"
+    aws_session.braket_client = Mock(meta=Mock(region_name="us-test-2"))
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
     boto_session_init.assert_called_with(
         region_name="us-west-2",
