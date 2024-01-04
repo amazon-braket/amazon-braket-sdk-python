@@ -48,7 +48,7 @@ from braket.jobs.quantum_job_creation import prepare_quantum_job
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES: ClassVar = {"CANCELLED", "COMPLETED", "FAILED"}
+    TERMINAL_STATES: ClassVar[set[str]] = {"CANCELLED", "COMPLETED", "FAILED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
@@ -220,7 +220,7 @@ class AwsQuantumJob(QuantumJob):
         return job
 
     def __init__(self, arn: str, aws_session: AwsSession | None = None):
-        """Inits an `AwsQuantumJob`.
+        """Initializes an `AwsQuantumJob`.
 
         Args:
             arn (str): The ARN of the hybrid job.
@@ -469,7 +469,7 @@ class AwsQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using `save_job_result` function.
+        """Retrieves the hybrid job result persisted using the `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.

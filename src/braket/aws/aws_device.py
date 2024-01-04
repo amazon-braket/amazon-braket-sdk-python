@@ -70,7 +70,7 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET: ClassVar = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar[dict[str, str | None]] = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -79,7 +79,9 @@ class AwsDevice(Device):
     }
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
-        """Args:
+        """Initializes an `AwsDevice`.
+
+        Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
 
@@ -602,9 +604,7 @@ class AwsDevice(Device):
             raise ValueError(
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
             )
-        types = (
-            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})  # noqa C416
-        )
+        types = frozenset(types or AwsDeviceType)
         aws_session = aws_session if aws_session else AwsSession()
         device_map = {}
         session_region = aws_session.boto_session.region_name
