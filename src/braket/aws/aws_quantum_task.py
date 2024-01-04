@@ -812,7 +812,7 @@ def _create_common_params(
 
 @singledispatch
 def _format_result(
-    result: Union[GateModelTaskResult, AnnealingTaskResult, PhotonicModelTaskResult]
+    result: Union[GateModelTaskResult, AnnealingTaskResult, PhotonicModelTaskResult],
 ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
     raise TypeError("Invalid result specification type")
 

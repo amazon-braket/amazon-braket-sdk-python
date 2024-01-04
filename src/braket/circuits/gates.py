@@ -136,7 +136,7 @@ class H(Gate):
 Gate.register_gate(H)
 
 
-class I(Gate):  # noqa: E742, E261
+class I(Gate):  # noqa: E742
     r"""Identity gate.
 
     Unitary matrix:
@@ -223,6 +223,9 @@ class GPhase(AngledGate):
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
+
+    Raises:
+        ValueError: raised when the angel is not present.
     """
 
     def __init__(self, angle: Union[FreeParameterExpression, float]):
@@ -1436,8 +1439,9 @@ class U(TripleAngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         _theta = self.angle_1
         _phi = self.angle_2
@@ -3402,7 +3406,7 @@ class MS(TripleAngledGate):
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
         angle_3 (Union[FreeParameterExpression, float]): angle in radians.
-        Default value is angle_3=pi/2.
+            Default value is angle_3=pi/2.
     """
 
     def __init__(

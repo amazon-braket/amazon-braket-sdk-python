@@ -14,8 +14,6 @@
 from typing import Optional, Union
 
 import numpy as np
-from sympy import Expr, Number
-
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
 from braket.circuits.noises import Kraus
@@ -27,7 +25,7 @@ from braket.circuits.translations import (
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 from braket.parametric import FreeParameterExpression
-from sympy import Expr
+from sympy import Expr, Number
 
 
 class BraketProgramContext(AbstractProgramContext):

@@ -19,7 +19,7 @@ from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(
-    operators: Union[QuantumOperator, Iterable[QuantumOperator]]
+    operators: Union[QuantumOperator, Iterable[QuantumOperator]],
 ) -> Optional[set[QuantumOperator]]:
     """Processes the quantum operator input to __init__ to validate and return a set of
     QuantumOperators.

@@ -92,8 +92,7 @@ class GateCalibrations:
         gates: list[Gate] | None = None,
         qubits: QubitSet | list[QubitSet] | None = None,
     ) -> GateCalibrations:
-        """
-        Filters the data based on optional lists of gates and QubitSets.
+        """Filters the data based on optional lists of gates and QubitSets.
 
         Args:
             gates (list[Gate] | None): An optional list of gates to filter on.
@@ -102,7 +101,7 @@ class GateCalibrations:
 
         Returns:
             GateCalibrations: A filtered GateCalibrations object.
-        """  # noqa: E501
+        """
         keys = self.pulse_sequences.keys()
         if isinstance(qubits, QubitSet):
             qubits = [qubits]
@@ -115,10 +114,9 @@ class GateCalibrations:
         return GateCalibrations(
             {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
         )
-      
+
     def to_ir(self, calibration_key: tuple[Gate, QubitSet] | None = None) -> str:
-        """
-        Returns the defcal representation for the `GateCalibrations` object.
+        """Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
             calibration_key (tuple[Gate, QubitSet] | None): An optional key to get a specific defcal.

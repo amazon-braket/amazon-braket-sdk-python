@@ -64,7 +64,6 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
-
     ):
         """Creates a batch of quantum tasks.
 

@@ -126,8 +126,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _compute_moment_global_phase(
         global_phase: float | None, items: list[Instruction]
     ) -> float | None:
-        """
-        Compute the integrated phase at a certain moment.
+        """Compute the integrated phase at a certain moment.
 
         Args:
             global_phase (float | None): The integrated phase up to the computed moment
@@ -310,7 +309,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 marker = "*" * len(ascii_symbol)
                 num_after = len(circuit_qubits) - 1
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol] + after
+                ascii_symbols = [ascii_symbol, *after]
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -405,9 +404,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _build_map_control_qubits(item: Instruction, control_qubits: QubitSet) -> dict(Qubit, int):
         control_state = getattr(item, "control_state", None)
         if control_state is not None:
-            map_control_qubit_states = {
-                qubit: state for qubit, state in zip(control_qubits, control_state)
-            }
+            map_control_qubit_states = dict(zip(control_qubits, control_state))
         else:
             map_control_qubit_states = {qubit: 1 for qubit in control_qubits}
 

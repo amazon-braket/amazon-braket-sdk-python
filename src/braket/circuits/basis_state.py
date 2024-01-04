@@ -44,7 +44,7 @@ class BasisState:
     def __repr__(self):
         return f'BasisState("{self.as_string}")'
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int):
         return BasisState(self.state[item])
 
 

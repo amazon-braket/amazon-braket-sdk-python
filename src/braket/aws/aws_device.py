@@ -120,8 +120,6 @@ class AwsDevice(Device):
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        *aws_quantum_task_args: Any,
-        **aws_quantum_task_kwargs: Any,
         reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
