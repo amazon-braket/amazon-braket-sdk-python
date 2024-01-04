@@ -61,7 +61,8 @@ def hybrid_job(
     output_data_config: OutputDataConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
-    logger: Logger = getLogger(__name__),  # B008
+    logger: Logger = getLogger(__name__),  # B008 
+    reservation_arn: str | None = None,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.
@@ -151,6 +152,10 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default: `getLogger(__name__)`
 
+        reservation_arn (str | None): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
+
     Returns:
         Callable: the callable for creating a Hybrid Job.
     """
@@ -208,6 +213,7 @@ def hybrid_job(
                     "output_data_config": output_data_config,
                     "aws_session": aws_session,
                     "tags": tags,
+                    "reservation_arn": reservation_arn,
                 }
                 for key, value in optional_args.items():
                     if value is not None:

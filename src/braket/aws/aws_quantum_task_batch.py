@@ -61,8 +61,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
+
     ):
         """Creates a batch of quantum tasks.
 
@@ -91,6 +93,11 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
+                Default: None.
             *aws_quantum_task_args (Any): Arbitrary args for `QuantumTask`.
             **aws_quantum_task_kwargs (Any): Arbitrary kwargs for `QuantumTask`.,
         """  # noqa E501
@@ -105,6 +112,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             poll_timeout_seconds,
             poll_interval_seconds,
             inputs,
+            reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -122,6 +130,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
         self._inputs = inputs
+        self._reservation_arn = reservation_arn
         self._aws_quantum_task_args = aws_quantum_task_args
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
@@ -197,6 +206,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -217,6 +227,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         poll_timeout_seconds=poll_timeout_seconds,
                         poll_interval_seconds=poll_interval_seconds,
                         inputs=input_map,
+                        reservation_arn=reservation_arn,
                         *args,
                         **kwargs,
                     )
@@ -248,6 +259,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: dict[str, float] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -259,6 +271,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             shots,
             poll_interval_seconds=poll_interval_seconds,
             inputs=inputs,
+            reservation_arn=reservation_arn,
             *args,
             **kwargs,
         )
@@ -347,6 +360,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             self._max_workers,
             self._poll_timeout_seconds,
             self._poll_interval_seconds,
+            self._reservation_arn,
             *self._aws_quantum_task_args,
             **self._aws_quantum_task_kwargs,
         )

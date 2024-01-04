@@ -195,7 +195,7 @@ class Gate(QuantumOperator):
 
         return (
             f"{inv_prefix}{power_prefix}{control_prefix}"
-            f"{self._qasm_name}{param_string} {', '.join(qubits)};"
+            f"{self._qasm_name}{param_string}{','.join([f' {qubit}' for qubit in qubits])};"
         )
 
     @property

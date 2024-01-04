@@ -51,7 +51,7 @@ setup(
             "pytest",
             "pytest-cov",
             "pytest-rerunfailures",
-            "pytest-xdist",
+            "pytest-xdist[psutil]",
             "ruff",
             "sphinx",
             "sphinx-rtd-theme",

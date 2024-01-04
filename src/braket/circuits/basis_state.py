@@ -35,6 +35,18 @@ class BasisState:
     def __eq__(self, other: BasisState):
         return self.state == other.state
 
+    def __bool__(self):
+        return any(self.state)
+
+    def __str__(self):
+        return self.as_string
+
+    def __repr__(self):
+        return f'BasisState("{self.as_string}")'
+
+    def __getitem__(self, item):
+        return BasisState(self.state[item])
+
 
 BasisStateInput = Union[int, list[int], str, BasisState]
 

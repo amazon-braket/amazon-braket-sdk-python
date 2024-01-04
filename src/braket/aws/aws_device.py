@@ -122,6 +122,9 @@ class AwsDevice(Device):
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
+        reservation_arn: str | None = None,
+        *aws_quantum_task_args: Any,
+        **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
         """Run a quantum task specification on this device. A quantum task can be a circuit or an
         annealing problem.
@@ -147,6 +150,11 @@ class AwsDevice(Device):
                 `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
+                Default: None.
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
                 Default: None.
             *aws_quantum_task_args (Any): Arbitrary arguments.
             **aws_quantum_task_kwargs (Any): Arbitrary keyword arguments.
@@ -199,6 +207,7 @@ class AwsDevice(Device):
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             gate_definitions=gate_definitions,
+            reservation_arn=reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -233,6 +242,7 @@ class AwsDevice(Device):
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -263,7 +273,11 @@ class AwsDevice(Device):
             gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
                 `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
-                and is represented by a `PulseSequence`.
+                and is represented by a `PulseSequence`. Default: None.
+            reservation_arn (Optional[str]): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
         Returns:
@@ -290,6 +304,7 @@ class AwsDevice(Device):
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             gate_definitions=gate_definitions,
+            reservation_arn=reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )

@@ -25,7 +25,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
-from braket.circuits.moments import Moments
+from braket.circuits.moments import Moments, MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import (
     apply_noise_to_gates,
@@ -153,6 +153,17 @@ class Circuit:
     def depth(self) -> int:
         """int: Get the circuit depth."""
         return self._moments.depth
+
+    @property
+    def global_phase(self) -> float:
+        """float: Get the global phase of the circuit."""
+        return sum(
+            [
+                instr.operator.angle
+                for moment, instr in self._moments.items()
+                if moment.moment_type == MomentType.GLOBAL_PHASE
+            ]
+        )
 
     @property
     def instructions(self) -> list[Instruction]:
