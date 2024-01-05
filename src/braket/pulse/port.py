@@ -25,7 +25,7 @@ class Port:
     """
 
     def __init__(self, port_id: str, dt: float, properties: Optional[dict[str, Any]] = None):
-        """Inits a Port.
+        """Initializes a Port.
 
         Args:
             port_id (str): str identifying a unique port on the device.

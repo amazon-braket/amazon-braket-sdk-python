@@ -48,7 +48,7 @@ class AwsSession:
         config: Config | None = None,
         default_bucket: str | None = None,
     ):
-        """Inits an `AwsSession`.
+        """Initializes an `AwsSession`.
 
         Args:
             boto_session (boto3.Session | None): A boto3 session object.

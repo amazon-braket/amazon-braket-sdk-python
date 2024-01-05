@@ -50,7 +50,7 @@ class LocalSimulator(Device):
     """
 
     def __init__(self, backend: Union[str, BraketSimulator] = "default"):
-        """Inits a `LocalSimulator`.
+        """Initializes a `LocalSimulator`.
 
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or

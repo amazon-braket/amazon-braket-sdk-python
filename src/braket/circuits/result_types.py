@@ -275,7 +275,9 @@ class Amplitude(ResultType):
     """
 
     def __init__(self, state: list[str]):
-        """Args:
+        """Initializes an `Amplitude`.
+
+        Args:
             state (list[str]): list of quantum states as strings with "0" and "1"
 
         Raises:

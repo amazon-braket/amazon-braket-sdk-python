@@ -36,7 +36,7 @@ class Frame:
         is_predefined: bool = False,
         properties: Optional[dict[str, Any]] = None,
     ):
-        """Inits a Frame.
+        """Initializes a Frame.
 
         Args:
             frame_id (str): str identifying a unique frame.

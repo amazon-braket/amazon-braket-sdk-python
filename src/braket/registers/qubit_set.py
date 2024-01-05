@@ -39,7 +39,7 @@ class QubitSet(IndexedSet):
     """
 
     def __init__(self, qubits: QubitSetInput | None = None):
-        """Inits a `QubitSet`.
+        """Initializes a `QubitSet`.
 
         Args:
             qubits (QubitSetInput | None): Qubits to be included in the `QubitSet`.

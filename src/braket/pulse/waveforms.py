@@ -74,7 +74,7 @@ class ArbitraryWaveform(Waveform):
     """
 
     def __init__(self, amplitudes: list[complex], id: Optional[str] = None):
-        """Inits an ArbitraryWaveform.
+        """Initializes an `ArbitraryWaveform`.
 
         Args:
             amplitudes (list[complex]): Array of complex values specifying the
@@ -129,7 +129,7 @@ class ConstantWaveform(Waveform, Parameterizable):
     def __init__(
         self, length: Union[float, FreeParameterExpression], iq: complex, id: Optional[str] = None
     ):
-        """Inits a ConstantWaveform.
+        """Initializes a `ConstantWaveform`.
 
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
@@ -236,7 +236,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
-        """Inits a DragGaussianWaveform
+        """Initializes a `DragGaussianWaveform`.
 
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
@@ -370,7 +370,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
-        """Inits a GaussianWaveform.
+        """Initializes a `GaussianWaveform`.
 
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds) specifying the

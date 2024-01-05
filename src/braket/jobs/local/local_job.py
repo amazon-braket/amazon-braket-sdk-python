@@ -169,7 +169,7 @@ class LocalQuantumJob(QuantumJob):
         return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
     def __init__(self, arn: str, run_log: str | None = None):
-        """Inits a `LocalQuantumJob`.
+        """Initializes a `LocalQuantumJob`.
 
         Args:
             arn (str): The ARN of the hybrid job.

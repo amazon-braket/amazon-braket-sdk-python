@@ -29,7 +29,7 @@ class CwlMetricsFetcher:
         poll_timeout_seconds: float = 10,
         logger: Logger = getLogger(__name__),
     ):
-        """Inits a `CwlMetricsFetcher`.
+        """Initializes a `CwlMetricsFetcher`.
 
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.

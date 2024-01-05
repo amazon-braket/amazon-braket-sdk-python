@@ -240,7 +240,9 @@ class TensorProduct(Observable):
     """Tensor product of observables"""
 
     def __init__(self, observables: list[Observable]):
-        """Args:
+        """Initializes a `TensorProduct`.
+
+        Args:
             observables (list[Observable]): List of observables for tensor product
 
         Examples:
