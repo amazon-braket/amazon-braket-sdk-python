@@ -34,7 +34,7 @@ class AngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Inits an `AngledGate`.
+        """Initializes an `AngledGate`.
 
         Args:
             angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
@@ -72,7 +72,7 @@ class AngledGate(Gate, Parameterizable):
 
     @property
     def angle(self) -> Union[FreeParameterExpression, float]:
-        """Returns the angle for the gate
+        """Returns the angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The angle of the gate in radians
@@ -176,7 +176,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_1(self) -> Union[FreeParameterExpression, float]:
-        """Returns the first angle for the gate
+        """Returns the first angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The first angle of the gate in radians
@@ -185,7 +185,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_2(self) -> Union[FreeParameterExpression, float]:
-        """Returns the second angle for the gate
+        """Returns the second angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The second angle of the gate in radians
@@ -292,7 +292,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_1(self) -> Union[FreeParameterExpression, float]:
-        """Returns the first angle for the gate
+        """Returns the first angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The first angle of the gate in radians
@@ -301,7 +301,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_2(self) -> Union[FreeParameterExpression, float]:
-        """Returns the second angle for the gate
+        """Returns the second angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The second angle of the gate in radians
@@ -310,7 +310,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_3(self) -> Union[FreeParameterExpression, float]:
-        """Returns the second angle for the gate
+        """Returns the third angle of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The third angle of the gate in radians

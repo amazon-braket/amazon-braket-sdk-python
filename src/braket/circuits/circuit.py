@@ -500,7 +500,7 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """Add a `circuit` to self, returns self for chaining ability.
+        """Add a `Circuit` to `self`, returning `self` for chaining ability.
 
         Args:
             circuit (Circuit): Circuit to add into self.
@@ -575,7 +575,7 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in
+        """Add a verbatim `Circuit` to `self`, ensuring that the circuit is not modified in
         any way by the compiler.
 
         Args:
@@ -853,7 +853,7 @@ class Circuit:
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
     def make_bound_circuit(self, param_values: dict[str, Number], strict: bool = False) -> Circuit:
-        """Binds FreeParameters based upon their name and values passed in. If parameters
+        """Binds `FreeParameter`s based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
@@ -871,7 +871,7 @@ class Circuit:
         return self._use_parameter_value(param_values)
 
     def _validate_parameters(self, parameter_values: dict[str, Number]) -> None:
-        """This runs a check to see that the parameters are in the Circuit.
+        """Checks that the parameters are in the `Circuit`.
 
         Args:
             parameter_values (dict[str, Number]):  A mapping of FreeParameter names
@@ -894,7 +894,7 @@ class Circuit:
                 raise ValueError(f"No parameter in the circuit named: {param}")
 
     def _use_parameter_value(self, param_values: dict[str, Number]) -> Circuit:
-        """Creates a Circuit that uses the parameter values passed in.
+        """Creates a `Circuit` that uses the parameter values passed in.
 
         Args:
             param_values (dict[str, Number]): A mapping of FreeParameter names
@@ -922,7 +922,7 @@ class Circuit:
 
     @staticmethod
     def _validate_parameter_value(val: Any) -> None:
-        """Validates the value being used is a Number.
+        """Validates the value being used is a `Number`.
 
         Args:
             val (Any): The value be verified.

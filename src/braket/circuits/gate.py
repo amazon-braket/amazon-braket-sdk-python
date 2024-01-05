@@ -146,7 +146,7 @@ class Gate(QuantumOperator):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> str:
-        """Returns the openqasm string representation of the gate.
+        """Returns the OpenQASM string representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).

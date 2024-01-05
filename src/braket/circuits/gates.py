@@ -225,7 +225,7 @@ class GPhase(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
 
     Raises:
-        ValueError: raised when the angel is not present.
+        ValueError: If `angle` is not present
     """
 
     def __init__(self, angle: Union[FreeParameterExpression, float]):

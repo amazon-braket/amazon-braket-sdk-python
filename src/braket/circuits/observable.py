@@ -106,7 +106,7 @@ class Observable(QuantumOperator):
 
     @property
     def coefficient(self) -> int:
-        """The coefficient for an observable.
+        """The coefficient of the observable.
 
         Returns:
             int: coefficient value of the observable.
