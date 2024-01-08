@@ -124,13 +124,13 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     @property
     def qubits(self) -> QubitSet:
-        """QubitSet: Get the qubits used across all of the instructions. The order of qubits is based
-        on the order in which the instructions were added.
+        """QubitSet: Get the qubits used across all of the instructions. The order of qubits is
+        based on the order in which the instructions were added.
 
         Note:
             Don't mutate this object, any changes may impact the behavior of this class and / or
             consumers. If you need to mutate this, then copy it via `QubitSet(moments.qubits())`.
-        """  # noqa E501
+        """
         return self._qubits
 
     def time_slices(self) -> dict[int, list[Instruction]]:
