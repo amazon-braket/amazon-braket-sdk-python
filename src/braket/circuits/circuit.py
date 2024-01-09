@@ -1290,7 +1290,12 @@ class Circuit:
                     gate, qubits = key
                     gate_name = gate._qasm_name
                     arguments = (
-                        [calibration._format_parameter_ast(value) for value in gate.parameters]
+                        [
+                            oqpy.FloatVar(name=value.name)
+                            if isinstance(value, FreeParameter)
+                            else value
+                            for value in gate.parameters
+                        ]
                         if isinstance(gate, Parameterizable)
                         else None
                     )

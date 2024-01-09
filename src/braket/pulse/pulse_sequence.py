@@ -317,6 +317,12 @@ class PulseSequence:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
         program = deepcopy(self._program)
+        for param in self._free_parameters:
+            program._add_var(
+                FloatVar(
+                    name=param.name, size=None, init_expression="input", needs_declaration=True
+                )
+            )
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
@@ -336,11 +342,6 @@ class PulseSequence:
     ) -> Union[float, FreeParameterExpression]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
-                self._program._add_var(
-                    FloatVar(
-                        name=p.name, size=None, init_expression="input", needs_declaration=True
-                    )
-                )
                 self._free_parameters.add(FreeParameter(p.name))
             return (
                 FreeParameterExpression(parameter, _type)
