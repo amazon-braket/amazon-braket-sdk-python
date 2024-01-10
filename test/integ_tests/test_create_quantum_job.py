@@ -52,15 +52,15 @@ def test_failed_quantum_job(aws_session, capsys):
         hyperparameters={"test_case": "failed"},
     )
 
-    job_name = job.name
-    pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
-    re.match(pattern=pattern, string=job.arn)
+    pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
+    assert re.match(pattern=pattern, string=job.arn)
 
     # Check job is in failed state.
     assert job.state() == "FAILED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
+    job_name = job.name
     keys = aws_session.list_keys(
         bucket=f"amazon-braket-{aws_session.region}-{aws_session.account_id}",
         prefix=f"jobs/{job_name}",
@@ -108,15 +108,15 @@ def test_completed_quantum_job(aws_session, capsys):
         hyperparameters={"test_case": "completed"},
     )
 
-    job_name = job.name
-    pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
-    re.match(pattern=pattern, string=job.arn)
+    pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
+    assert re.match(pattern=pattern, string=job.arn)
 
     # check job is in completed state.
     assert job.state() == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
+    job_name = job.name
     s3_bucket = f"amazon-braket-{aws_session.region}-{aws_session.account_id}"
     keys = aws_session.list_keys(
         bucket=s3_bucket,
