@@ -276,7 +276,7 @@ class AwsQuantumJob(QuantumJob):
     @property
     def name(self) -> str:
         """str: The name of the quantum job."""
-        return self._arn.partition("job/")[-1]
+        return self.metadata(use_cached_value=True).get("jobName")
 
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum hybrid job.
