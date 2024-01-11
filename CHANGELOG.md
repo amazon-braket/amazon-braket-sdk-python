@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.66.0 (2024-01-11)
+
+### Features
+
+ * update job name to use metadata
+
 ## v1.65.1 (2023-12-25)
 
 ### Bug Fixes and Other Changes
