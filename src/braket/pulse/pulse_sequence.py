@@ -352,7 +352,7 @@ class PulseSequence:
 
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
-        """  # E501
+        """  # noqa: E501
         calibration_sequence = cls()
         for instr in calibration:
             if hasattr(PulseSequence, f"{instr['name']}"):
