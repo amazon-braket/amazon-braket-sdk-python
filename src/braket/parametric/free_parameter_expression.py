@@ -96,16 +96,16 @@ class FreeParameterExpression:
         if isinstance(subbed_expr, Number):
             return subbed_expr
         else:
-            return FreeParameterExpression(subbed_expr)
+            return self.__class__(subbed_expr)
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Num):
-            return FreeParameterExpression(node.n)
+            return self.__class__(node.n)
         elif isinstance(node, ast.Name):
-            return FreeParameterExpression(Symbol(node.id))
+            return self.__class__(Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -243,36 +243,6 @@ class FreeDurationParameterExpression(FreeParameterExpression):
         """
         # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
         return DurationLiteral(Identifier(name=self), TimeUnit.s)
-
-    def subs(
-        self, parameter_values: dict[str, Number]
-    ) -> Union[FreeDurationParameterExpression, Number, Expr]:
-        """
-        Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
-        expressions from the dictionary.
-
-        Args:
-            parameter_values (dict[str, Number]): A mapping of parameters to their corresponding
-                values to be assigned.
-
-        Returns:
-            Union[FreeDurationParameterExpression, Number, Expr]: A numerical value if there are no
-            symbols left in the expression otherwise returns a new FreeDurationParameterExpression.
-        """
-        fdpe = super().subs(parameter_values)
-        return (
-            FreeDurationParameterExpression(fdpe)
-            if isinstance(fdpe, FreeParameterExpression)
-            else fdpe
-        )
-
-    def _eval_operation(self, node: Any) -> FreeDurationParameterExpression:
-        result = super()._eval_operation(node)
-        return (
-            FreeDurationParameterExpression(result)
-            if isinstance(result, FreeParameterExpression)
-            else result
-        )
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
