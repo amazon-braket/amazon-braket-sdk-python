@@ -15,11 +15,14 @@ from __future__ import annotations
 
 import ast
 from numbers import Number
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Union
 
-from openpulse.ast import DurationLiteral, Expression, Identifier, TimeUnit
-from oqpy import Program
+from openpulse.ast import DurationLiteral, Identifier, TimeUnit
 from sympy import Expr, Float, Symbol, sympify
+
+if TYPE_CHECKING:
+    from openpulse.ast import Expression
+    from oqpy import Program
 
 
 class FreeParameterExpression:
