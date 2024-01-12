@@ -37,7 +37,9 @@ class PauliString:
     """A lightweight representation of a Pauli string with its phase."""
 
     def __init__(self, pauli_string: Union[str, PauliString]):
-        """Args:
+        """Initializes a `PauliString`.
+
+        Args:
             pauli_string (Union[str, PauliString]): The representation of the pauli word, either a
                 string or another PauliString object. A valid string consists of an optional phase,
                 specified by an optional sign +/- followed by an uppercase string in {I, X, Y, Z}.

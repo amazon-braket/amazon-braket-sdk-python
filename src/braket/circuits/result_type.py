@@ -34,7 +34,9 @@ class ResultType:
     """
 
     def __init__(self, ascii_symbols: list[str]):
-        """Args:
+        """Initializes a `ResultType`.
+
+        Args:
             ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
 

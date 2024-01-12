@@ -38,7 +38,9 @@ class Noise(QuantumOperator):
     """
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """Args:
+        """Initializes a `Noise` object.
+
+        Args:
             qubit_count (Optional[int]): Number of qubits this noise channel interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These
                 are used when printing a diagram of circuits. Length must be the same as
@@ -180,7 +182,9 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         ascii_symbols: Sequence[str],
         max_probability: float = 0.5,
     ):
-        """Args:
+        """Initializes a `SingleProbabilisticNoise`.
+
+        Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -269,7 +273,9 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Initializes a `SingleProbabilisticNoise_34`.
+
+        Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -301,7 +307,9 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Initializes a `SingleProbabilisticNoise_1516`.
+
+        Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -483,7 +491,9 @@ class PauliNoise(Noise, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Initializes a `PauliNoise`.
+
+        Args:
             probX (Union[FreeParameterExpression, float]): The X coefficient of the Kraus operators
                 in the channel.
             probY (Union[FreeParameterExpression, float]): The Y coefficient of the Kraus operators
@@ -622,7 +632,9 @@ class DampingNoise(Noise, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Initalizes a `DampingNoise`.
+
+        Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
             qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when

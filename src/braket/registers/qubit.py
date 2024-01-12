@@ -25,7 +25,9 @@ class Qubit(int):
     """
 
     def __new__(cls, index: int) -> Qubit:
-        """Args:
+        """Creates a new `Qubit`.
+
+        Args:
             index (int): Index of the qubit.
 
         Raises:
