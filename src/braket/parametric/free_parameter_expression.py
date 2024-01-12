@@ -19,7 +19,9 @@ from typing import Any, Union
 
 from openpulse.ast import Expression, Identifier
 from oqpy import Program
-from sympy import Expr, Float, Symbol, sympify
+from sympy import Expr
+from sympy import Number as sympy_Number
+from sympy import Symbol, sympify
 
 
 class FreeParameterExpression:
@@ -196,7 +198,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
     """
     if isinstance(parameter, FreeParameterExpression):
         substituted = parameter.subs(kwargs)
-        if isinstance(substituted, Float):
+        if isinstance(substituted, sympy_Number):
             substituted = float(substituted)
         return substituted
     return parameter

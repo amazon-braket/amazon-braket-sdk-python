@@ -162,6 +162,7 @@ def test_sub_return_expression():
         (FreeParameter("a") + 2 * FreeParameter("b"), {"a": 0.1, "b": 0.3}, 0.7, float),
         (FreeParameter("x"), {"y": 1}, FreeParameter("x"), FreeParameter),
         (FreeParameter("y"), {"y": -0.1}, -0.1, float),
+        (2 * FreeParameter("i"), {"i": 1}, 2.0, float),
         (
             FreeParameter("a") + 2 * FreeParameter("x"),
             {"a": 0.4, "b": 0.4},
