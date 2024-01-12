@@ -18,7 +18,10 @@ from openqasm3.visitor import QASMTransformer
 from oqpy.program import Program
 from oqpy.timing import OQDurationLiteral
 
-from braket.parametric.free_parameter_expression import FreeParameterExpression
+from braket.parametric.free_parameter_expression import (
+    FreeDurationParameterExpression,
+    FreeParameterExpression,
+)
 
 
 class _FreeParameterTransformer(QASMTransformer):
@@ -63,7 +66,7 @@ class _FreeParameterTransformer(QASMTransformer):
         duration = duration_literal.value
         if not isinstance(duration, ast.Identifier):
             return duration_literal
-        new_duration = FreeParameterExpression(duration.name).subs(self.param_values)
-        if isinstance(new_duration, FreeParameterExpression):
+        new_duration = FreeDurationParameterExpression(duration.name).subs(self.param_values)
+        if isinstance(new_duration, FreeDurationParameterExpression):
             return ast.DurationLiteral(ast.Identifier(str(new_duration)), duration_literal.unit)
         return OQDurationLiteral(new_duration).to_ast(self.program)

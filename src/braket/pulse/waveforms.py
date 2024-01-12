@@ -24,6 +24,7 @@ from oqpy.base import OQPyExpression
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
+    FreeDurationParameterExpression,
     FreeParameterExpression,
     subs_if_free_parameter,
 )
@@ -473,7 +474,7 @@ def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
 ) -> Union[FreeParameterExpression, OQPyExpression]:
     return (
-        FreeParameterExpression(parameter, duration)
+        FreeDurationParameterExpression(parameter)
         if isinstance(parameter, FreeParameterExpression) and is_duration_type
         else parameter
     )

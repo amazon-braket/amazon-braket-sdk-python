@@ -17,15 +17,7 @@ import ast
 from numbers import Number
 from typing import Any, Union
 
-from openpulse.ast import (
-    ClassicalType,
-    DurationLiteral,
-    DurationType,
-    Expression,
-    FloatType,
-    Identifier,
-    TimeUnit,
-)
+from openpulse.ast import DurationLiteral, Expression, Identifier, TimeUnit
 from oqpy import Program
 from sympy import Expr, Float, Symbol, sympify
 
@@ -40,11 +32,7 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(
-        self,
-        expression: Union[FreeParameterExpression, Number, Expr, str],
-        _type: ClassicalType | None = None,
-    ):
+    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -53,10 +41,6 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (ClassicalType | None): The OpenQASM3 type associated with the expression.
-                Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
-                expression in the OpenQASM3 IR. Any type other than DurationType is considered
-                as FloatType.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -69,18 +53,14 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
-        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-            if _type is None:
-                self._type = expression._type
         elif isinstance(expression, (Number, Expr)):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression
         else:
             raise NotImplementedError
-        self._validate_type()
 
     @property
     def expression(self) -> Union[Number, Expr]:
@@ -117,13 +97,6 @@ class FreeParameterExpression:
             return subbed_expr
         else:
             return FreeParameterExpression(subbed_expr)
-
-    def _validate_type(self) -> None:
-        if not isinstance(self._type, (FloatType, DurationType)):
-            raise TypeError(
-                "FreeParameterExpression must be of type openqasm3.ast.FloatType "
-                "or openqasm3.ast.DurationType"
-            )
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
@@ -209,10 +182,97 @@ class FreeParameterExpression:
             Expression: The AST node.
         """
         # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
-        identifier = Identifier(name=self)
-        if isinstance(self._type, DurationType):
-            return DurationLiteral(identifier, TimeUnit.s)
-        return identifier
+        return Identifier(name=self)
+
+
+class FreeDurationParameterExpression(FreeParameterExpression):
+    def __add__(self, other):
+        if isinstance(other, FreeDurationParameterExpression):
+            return FreeDurationParameterExpression(self.expression + other.expression)
+        if isinstance(other, FreeParameterExpression):
+            raise TypeError(
+                "Cannot add a FreeParameterExpression to a FreeDurationParameterExpression"
+            )
+        else:
+            return FreeDurationParameterExpression(self.expression + other)
+
+    def __radd__(self, other):
+        return FreeDurationParameterExpression(other + self.expression)
+
+    def __sub__(self, other):
+        if isinstance(other, FreeDurationParameterExpression):
+            return FreeDurationParameterExpression(self.expression - other.expression)
+        elif isinstance(other, FreeParameterExpression):
+            raise TypeError(
+                "Cannot substract a FreeParameterExpression to a FreeDurationParameterExpression"
+            )
+        else:
+            return FreeDurationParameterExpression(self.expression - other)
+
+    def __rsub__(self, other):
+        return FreeDurationParameterExpression(other - self.expression)
+
+    def __mul__(self, other):
+        if isinstance(other, FreeDurationParameterExpression):
+            raise TypeError("Cannot multiply two FreeDurationParameterExpression")
+        elif isinstance(other, FreeParameterExpression):
+            return FreeDurationParameterExpression(self.expression * other.expression)
+        else:
+            return FreeParameterExpression(self.expression * other)
+
+    def __rmul__(self, other):
+        return FreeDurationParameterExpression(other * self.expression)
+
+    def __pow__(self, other, modulo=None):
+        raise TypeError("Cannot exponentiate a FreeDurationParameterExpression")
+
+    def __rpow__(self, other):
+        raise TypeError("Cannot exponentiate a FreeDurationParameterExpression")
+
+    def __neg__(self):
+        return FreeDurationParameterExpression(-1 * self.expression)
+
+    def to_ast(self, program: Program) -> Expression:
+        """Creates an AST node for the :class:'FreeParameterExpression'.
+
+        Args:
+            program (Program): Unused.
+
+        Returns:
+            Expression: The AST node.
+        """
+        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
+        return DurationLiteral(Identifier(name=self), TimeUnit.s)
+
+    def subs(
+        self, parameter_values: dict[str, Number]
+    ) -> Union[FreeDurationParameterExpression, Number, Expr]:
+        """
+        Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
+        expressions from the dictionary.
+
+        Args:
+            parameter_values (dict[str, Number]): A mapping of parameters to their corresponding
+                values to be assigned.
+
+        Returns:
+            Union[FreeDurationParameterExpression, Number, Expr]: A numerical value if there are no
+            symbols left in the expression otherwise returns a new FreeDurationParameterExpression.
+        """
+        fdpe = super().subs(parameter_values)
+        return (
+            FreeDurationParameterExpression(fdpe)
+            if isinstance(fdpe, FreeParameterExpression)
+            else fdpe
+        )
+
+    def _eval_operation(self, node: Any) -> FreeDurationParameterExpression:
+        result = super()._eval_operation(node)
+        return (
+            FreeDurationParameterExpression(result)
+            if isinstance(result, FreeParameterExpression)
+            else result
+        )
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
