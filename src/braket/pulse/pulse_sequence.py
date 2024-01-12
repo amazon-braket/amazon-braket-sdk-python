@@ -23,13 +23,13 @@ from oqpy import BitVar, FloatVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
-from braket.parametric.free_parameter_expression import (
-    FreeDurationParameterExpression,
-    FreeParameterExpression,
-)
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.approximation_parser import _ApproximationParser
-from braket.pulse.ast.free_parameters import _FreeParameterTransformer
+from braket.pulse.ast.free_parameters import (
+    _FreeDurationParameterExpression,
+    _FreeParameterTransformer,
+)
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _InputVarSplitter, _IRQASMTransformer
 from braket.pulse.frame import Frame
@@ -333,7 +333,7 @@ class PulseSequence:
             for p in parameter.expression.free_symbols:
                 self._register_free_parameter(p)
             return (
-                FreeDurationParameterExpression(parameter)
+                _FreeDurationParameterExpression(parameter)
                 if isinstance(_type, ast.DurationType)
                 else parameter
             )

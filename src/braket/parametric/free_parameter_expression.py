@@ -17,11 +17,10 @@ import ast
 from numbers import Number
 from typing import TYPE_CHECKING, Any, Union
 
-from openpulse.ast import DurationLiteral, Identifier, TimeUnit
+from openpulse.ast import Expression, Identifier
 from sympy import Expr, Float, Symbol, sympify
 
 if TYPE_CHECKING:
-    from openpulse.ast import Expression
     from oqpy import Program
 
 
@@ -186,66 +185,6 @@ class FreeParameterExpression:
         """
         # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
         return Identifier(name=self)
-
-
-class FreeDurationParameterExpression(FreeParameterExpression):
-    def __add__(self, other):
-        if isinstance(other, FreeDurationParameterExpression):
-            return FreeDurationParameterExpression(self.expression + other.expression)
-        if isinstance(other, FreeParameterExpression):
-            raise TypeError(
-                "Cannot add a FreeParameterExpression to a FreeDurationParameterExpression"
-            )
-        else:
-            return FreeDurationParameterExpression(self.expression + other)
-
-    def __radd__(self, other):
-        return FreeDurationParameterExpression(other + self.expression)
-
-    def __sub__(self, other):
-        if isinstance(other, FreeDurationParameterExpression):
-            return FreeDurationParameterExpression(self.expression - other.expression)
-        elif isinstance(other, FreeParameterExpression):
-            raise TypeError(
-                "Cannot substract a FreeParameterExpression to a FreeDurationParameterExpression"
-            )
-        else:
-            return FreeDurationParameterExpression(self.expression - other)
-
-    def __rsub__(self, other):
-        return FreeDurationParameterExpression(other - self.expression)
-
-    def __mul__(self, other):
-        if isinstance(other, FreeDurationParameterExpression):
-            raise TypeError("Cannot multiply two FreeDurationParameterExpression")
-        elif isinstance(other, FreeParameterExpression):
-            return FreeDurationParameterExpression(self.expression * other.expression)
-        else:
-            return FreeParameterExpression(self.expression * other)
-
-    def __rmul__(self, other):
-        return FreeDurationParameterExpression(other * self.expression)
-
-    def __pow__(self, other, modulo=None):
-        raise TypeError("Cannot exponentiate a FreeDurationParameterExpression")
-
-    def __rpow__(self, other):
-        raise TypeError("Cannot exponentiate a FreeDurationParameterExpression")
-
-    def __neg__(self):
-        return FreeDurationParameterExpression(-1 * self.expression)
-
-    def to_ast(self, program: Program) -> Expression:
-        """Creates an AST node for the :class:'FreeParameterExpression'.
-
-        Args:
-            program (Program): Unused.
-
-        Returns:
-            Expression: The AST node.
-        """
-        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
-        return DurationLiteral(Identifier(name=self), TimeUnit.s)
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:

@@ -18,10 +18,67 @@ from openqasm3.visitor import QASMTransformer
 from oqpy.program import Program
 from oqpy.timing import OQDurationLiteral
 
-from braket.parametric.free_parameter_expression import (
-    FreeDurationParameterExpression,
-    FreeParameterExpression,
-)
+from braket.parametric.free_parameter_expression import FreeParameterExpression
+
+
+class _FreeDurationParameterExpression(FreeParameterExpression):
+    def __add__(self, other):
+        if isinstance(other, _FreeDurationParameterExpression):
+            return _FreeDurationParameterExpression(self.expression + other.expression)
+        if isinstance(other, FreeParameterExpression):
+            raise TypeError(
+                "Cannot add a FreeParameterExpression to a _FreeDurationParameterExpression"
+            )
+        else:
+            return _FreeDurationParameterExpression(self.expression + other)
+
+    def __radd__(self, other):
+        return _FreeDurationParameterExpression(other + self.expression)
+
+    def __sub__(self, other):
+        if isinstance(other, _FreeDurationParameterExpression):
+            return _FreeDurationParameterExpression(self.expression - other.expression)
+        elif isinstance(other, FreeParameterExpression):
+            raise TypeError(
+                "Cannot substract a FreeParameterExpression to a _FreeDurationParameterExpression"
+            )
+        else:
+            return _FreeDurationParameterExpression(self.expression - other)
+
+    def __rsub__(self, other):
+        return _FreeDurationParameterExpression(other - self.expression)
+
+    def __mul__(self, other):
+        if isinstance(other, _FreeDurationParameterExpression):
+            raise TypeError("Cannot multiply two _FreeDurationParameterExpression")
+        elif isinstance(other, FreeParameterExpression):
+            return _FreeDurationParameterExpression(self.expression * other.expression)
+        else:
+            return FreeParameterExpression(self.expression * other)
+
+    def __rmul__(self, other):
+        return _FreeDurationParameterExpression(other * self.expression)
+
+    def __pow__(self, other, modulo=None):
+        raise TypeError("Cannot exponentiate a _FreeDurationParameterExpression")
+
+    def __rpow__(self, other):
+        raise TypeError("Cannot exponentiate a _FreeDurationParameterExpression")
+
+    def __neg__(self):
+        return _FreeDurationParameterExpression(-1 * self.expression)
+
+    def to_ast(self, program: Program) -> ast.Expression:
+        """Creates an AST node for the :class:'FreeParameterExpression'.
+
+        Args:
+            program (Program): Unused.
+
+        Returns:
+            Expression: The AST node.
+        """
+        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
+        return ast.DurationLiteral(ast.Identifier(name=self), ast.TimeUnit.s)
 
 
 class _FreeParameterTransformer(QASMTransformer):
@@ -66,7 +123,7 @@ class _FreeParameterTransformer(QASMTransformer):
         duration = duration_literal.value
         if not isinstance(duration, ast.Identifier):
             return duration_literal
-        new_duration = FreeDurationParameterExpression(duration.name).subs(self.param_values)
-        if isinstance(new_duration, FreeDurationParameterExpression):
+        new_duration = _FreeDurationParameterExpression(duration.name).subs(self.param_values)
+        if isinstance(new_duration, _FreeDurationParameterExpression):
             return ast.DurationLiteral(ast.Identifier(str(new_duration)), duration_literal.unit)
         return OQDurationLiteral(new_duration).to_ast(self.program)
