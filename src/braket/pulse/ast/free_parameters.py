@@ -22,52 +22,6 @@ from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class _FreeDurationParameterExpression(FreeParameterExpression):
-    def __add__(self, other):
-        if isinstance(other, _FreeDurationParameterExpression):
-            return _FreeDurationParameterExpression(self.expression + other.expression)
-        if isinstance(other, FreeParameterExpression):
-            raise TypeError(
-                "Cannot add a FreeParameterExpression to a _FreeDurationParameterExpression"
-            )
-        else:
-            return _FreeDurationParameterExpression(self.expression + other)
-
-    def __radd__(self, other):
-        return _FreeDurationParameterExpression(other + self.expression)
-
-    def __sub__(self, other):
-        if isinstance(other, _FreeDurationParameterExpression):
-            return _FreeDurationParameterExpression(self.expression - other.expression)
-        elif isinstance(other, FreeParameterExpression):
-            raise TypeError(
-                "Cannot substract a FreeParameterExpression to a _FreeDurationParameterExpression"
-            )
-        else:
-            return _FreeDurationParameterExpression(self.expression - other)
-
-    def __rsub__(self, other):
-        return _FreeDurationParameterExpression(other - self.expression)
-
-    def __mul__(self, other):
-        if isinstance(other, _FreeDurationParameterExpression):
-            raise TypeError("Cannot multiply two _FreeDurationParameterExpression")
-        elif isinstance(other, FreeParameterExpression):
-            return _FreeDurationParameterExpression(self.expression * other.expression)
-        else:
-            return FreeParameterExpression(self.expression * other)
-
-    def __rmul__(self, other):
-        return _FreeDurationParameterExpression(other * self.expression)
-
-    def __pow__(self, other, modulo=None):
-        raise TypeError("Cannot exponentiate a _FreeDurationParameterExpression")
-
-    def __rpow__(self, other):
-        raise TypeError("Cannot exponentiate a _FreeDurationParameterExpression")
-
-    def __neg__(self):
-        return _FreeDurationParameterExpression(-1 * self.expression)
-
     def to_ast(self, program: Program) -> ast.Expression:
         """Creates an AST node for the :class:'FreeParameterExpression'.
 
