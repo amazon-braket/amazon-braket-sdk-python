@@ -8,7 +8,7 @@ Learn more about hybrid jobs on Amazon Braket.
     :maxdepth: 2
 
 ************************************************************************************************************************************************************************************************
-`Creating your first Hybrid Job <https://github.com/amazon-braket/amazon-braket-examples/blob/main/examples/hybrid_jobs/0_Creating_your_first_Hybrid_Job/Creating_your_first_Hybrid_Job.ipynb>`_
+`Creating your first Hybrid Job <https://github.com/amazon-braket/amazon-braket-examples/blob/main/examples/hybrid_jobs/0_Creating_your_first_Hybrid_Job/0_Creating_your_first_Hybrid_Job.ipynb>`_
 ************************************************************************************************************************************************************************************************
 
 This tutorial shows how to run your first Amazon Braket Hybrid Job.

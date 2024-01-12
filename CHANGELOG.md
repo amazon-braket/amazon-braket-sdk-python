@@ -1,5 +1,66 @@
 # Changelog
 
+## v1.66.0 (2024-01-11)
+
+### Features
+
+ * update job name to use metadata
+
+## v1.65.1 (2023-12-25)
+
+### Bug Fixes and Other Changes
+
+ * validate out circuits that contain only non-zero-qubit gates
+
+## v1.65.0 (2023-12-21)
+
+### Features
+
+ * add U and GPhase gates
+
+## v1.64.2 (2023-12-19)
+
+### Bug Fixes and Other Changes
+
+ * treating OpenQASM builtin types as constants
+
+## v1.64.1 (2023-12-12)
+
+### Bug Fixes and Other Changes
+
+ * make filter more convenient
+
+## v1.64.0 (2023-12-07)
+
+### Features
+
+ * add str, repr and getitem to BasisState
+
+### Bug Fixes and Other Changes
+
+ * update: adding a test to check for circular imports
+
+## v1.63.0 (2023-12-05)
+
+### Features
+
+ * Allow reservation ARN in task and job creation
+
+### Bug Fixes and Other Changes
+
+ * Add Forte 1 device
+
+## v1.62.1 (2023-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken link to example notebook
+ * update: default no longer returning RETIRED devices from get_devices
+
+### Documentation Changes
+
+ * Add matrix expressions to docstrings
+
 ## v1.62.0 (2023-11-09)
 
 ### Features

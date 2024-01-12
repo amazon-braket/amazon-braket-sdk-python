@@ -516,7 +516,12 @@ def device_arn(request):
 
 
 @pytest.fixture
-def prepare_job_args(aws_session, device_arn):
+def reservation_arn():
+    return "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+
+
+@pytest.fixture
+def prepare_job_args(aws_session, device_arn, reservation_arn):
     return {
         "device": device_arn,
         "source_module": Mock(),
@@ -535,6 +540,7 @@ def prepare_job_args(aws_session, device_arn):
         "checkpoint_config": Mock(),
         "aws_session": aws_session,
         "tags": Mock(),
+        "reservation_arn": reservation_arn,
     }
 
 
@@ -548,8 +554,9 @@ def test_arn(quantum_job_arn, aws_session):
     assert quantum_job.arn == quantum_job_arn
 
 
-def test_name(quantum_job_arn, quantum_job_name, aws_session):
+def test_name(quantum_job_arn, quantum_job_name, aws_session, generate_get_job_response):
     quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
     assert quantum_job.name == quantum_job_name
 
 
@@ -1027,7 +1034,7 @@ def test_initialize_session_local_device(mock_new_session, aws_session):
     assert AwsQuantumJob._initialize_session(None, device, logger) == mock_new_session()
 
 
-def test_bad_arn_format(aws_session):
+def test_bad_device_arn_format(aws_session):
     logger = logging.getLogger(__name__)
     device_not_found = (
         "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "
