@@ -15,13 +15,11 @@ from __future__ import annotations
 
 import ast
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Union
+from typing import Any, Union
 
 from openpulse.ast import Expression, Identifier
+from oqpy import Program
 from sympy import Expr, Float, Symbol, sympify
-
-if TYPE_CHECKING:
-    from oqpy import Program
 
 
 class FreeParameterExpression:
