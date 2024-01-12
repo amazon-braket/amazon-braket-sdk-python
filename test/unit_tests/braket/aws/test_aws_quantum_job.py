@@ -555,8 +555,9 @@ def test_arn(quantum_job_arn, aws_session):
     assert quantum_job.arn == quantum_job_arn
 
 
-def test_name(quantum_job_arn, quantum_job_name, aws_session):
+def test_name(quantum_job_arn, quantum_job_name, aws_session, generate_get_job_response):
     quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
     assert quantum_job.name == quantum_job_name
 
 
