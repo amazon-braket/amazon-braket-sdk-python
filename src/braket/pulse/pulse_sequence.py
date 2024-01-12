@@ -232,15 +232,7 @@ class PulseSequence:
             for param in waveform.parameters:
                 if isinstance(param, FreeParameterExpression):
                     for p in param.expression.free_symbols:
-                        self._program._add_var(
-                            FloatVar(
-                                name=p.name,
-                                size=None,
-                                init_expression="input",
-                                needs_declaration=True,
-                            )
-                        )
-                        self._free_parameters.add(FreeParameter(p.name))
+                        self._register_free_parameter(p)
         self._program.play(frame=frame, waveform=waveform)
         self._frames[frame.id] = frame
         self._waveforms[waveform.id] = waveform
@@ -336,18 +328,20 @@ class PulseSequence:
     ) -> Union[float, FreeParameterExpression]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
-                self._program._add_var(
-                    FloatVar(
-                        name=p.name, size=None, init_expression="input", needs_declaration=True
-                    )
-                )
-                self._free_parameters.add(FreeParameter(p.name))
+                self._register_free_parameter(p)
             return (
                 FreeParameterExpression(parameter, _type)
                 if isinstance(_type, ast.DurationType)
                 else parameter
             )
         return OQDurationLiteral(parameter) if isinstance(_type, ast.DurationType) else parameter
+
+    def _register_free_parameter(self, parameter: FreeParameterExpression) -> None:
+        fvar = FloatVar(name=parameter.name, init_expression="input", needs_declaration=True)
+        fvar.size = None
+        fvar.type.size = None
+        self._program._add_var(fvar)
+        self._free_parameters.add(FreeParameter(parameter.name))
 
     def _parse_arg_from_calibration_schema(
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]
