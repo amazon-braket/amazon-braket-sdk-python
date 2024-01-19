@@ -19,17 +19,14 @@ from inspect import signature
 from typing import Any, Union
 
 from openpulse import ast
-from oqpy import BitVar, FloatVar, PhysicalQubits, Program
-from oqpy.timing import OQDurationLiteral
+from oqpy import BitVar, PhysicalQubits, Program
+from oqpy.timing import convert_float_to_duration
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.approximation_parser import _ApproximationParser
-from braket.pulse.ast.free_parameters import (
-    _FreeDurationParameterExpression,
-    _FreeParameterTransformer,
-)
+from braket.pulse.ast.free_parameters import _FreeParameterTransformer
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _InputVarSplitter, _IRQASMTransformer
 from braket.pulse.frame import Frame
@@ -183,7 +180,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        duration = self._format_parameter_ast(duration, _type=ast.DurationType())
+        duration = convert_float_to_duration(duration)
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -235,7 +232,7 @@ class PulseSequence:
             for param in waveform.parameters:
                 if isinstance(param, FreeParameterExpression):
                     for p in param.expression.free_symbols:
-                        self._register_free_parameter(p)
+                        self._free_parameters.add(FreeParameter(p.name))
         self._program.play(frame=frame, waveform=waveform)
         self._frames[frame.id] = frame
         self._waveforms[waveform.id] = waveform
@@ -327,24 +324,11 @@ class PulseSequence:
     def _format_parameter_ast(
         self,
         parameter: Union[float, FreeParameterExpression],
-        _type: ast.ClassicalType = ast.FloatType(),
     ) -> Union[float, FreeParameterExpression]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
-                self._register_free_parameter(p)
-            return (
-                _FreeDurationParameterExpression(parameter)
-                if isinstance(_type, ast.DurationType)
-                else parameter
-            )
-        return OQDurationLiteral(parameter) if isinstance(_type, ast.DurationType) else parameter
-
-    def _register_free_parameter(self, parameter: FreeParameterExpression) -> None:
-        fvar = FloatVar(name=parameter.name, init_expression="input", needs_declaration=True)
-        fvar.size = None
-        fvar.type.size = None
-        self._program._add_var(fvar)
-        self._free_parameters.add(FreeParameter(parameter.name))
+                self._free_parameters.add(FreeParameter(p.name))
+        return parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]

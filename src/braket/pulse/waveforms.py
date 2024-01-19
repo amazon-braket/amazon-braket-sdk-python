@@ -21,6 +21,7 @@ from typing import Optional, Union
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
+from oqpy.timing import convert_float_to_duration
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -28,7 +29,6 @@ from braket.parametric.free_parameter_expression import (
     subs_if_free_parameter,
 )
 from braket.parametric.parameterizable import Parameterizable
-from braket.pulse.ast.free_parameters import _FreeDurationParameterExpression
 
 
 class Waveform(ABC):
@@ -174,7 +174,7 @@ class ConstantWaveform(Waveform, Parameterizable):
             "constant", [("length", duration), ("iq", complex128)]
         )
         return WaveformVar(
-            init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
+            init_expression=constant_generator(convert_float_to_duration(self.length), self.iq),
             name=self.id,
         )
 
@@ -300,10 +300,10 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.beta),
-                _map_to_oqpy_type(self.amplitude),
+                convert_float_to_duration(self.length),
+                convert_float_to_duration(self.sigma),
+                self.beta,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -427,9 +427,9 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.amplitude),
+                convert_float_to_duration(self.length),
+                convert_float_to_duration(self.sigma),
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -468,16 +468,6 @@ class GaussianWaveform(Waveform, Parameterizable):
 
 def _make_identifier_name() -> str:
     return "".join([random.choice(string.ascii_letters) for _ in range(10)])
-
-
-def _map_to_oqpy_type(
-    parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[FreeParameterExpression, OQPyExpression]:
-    return (
-        _FreeDurationParameterExpression(parameter)
-        if isinstance(parameter, FreeParameterExpression) and is_duration_type
-        else parameter
-    )
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:

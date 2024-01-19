@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-from oqpy import FloatVar
 
 from braket.circuits import FreeParameter, QubitSet
 from braket.pulse import (
@@ -125,26 +124,28 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_unbound = "\n".join(
         [
             "OPENQASM 3.0;",
-            *[
-                f"input float {var.name};"
-                for var in pulse_sequence._program.undeclared_vars.values()
-                if isinstance(var, FloatVar)
-            ],
+            "input float length_c;",
+            "input float length_dg;",
+            "input float sigma_dg;",
+            "input float length_g;",
+            "input float sigma_g;",
+            "input float a;",
+            "input float b;",
             "cal {",
-            "    waveform gauss_wf = gaussian((length_g) * 1s, (sigma_g) * 1s, 1, false);",
-            "    waveform drag_gauss_wf = drag_gaussian((length_dg) * 1s,"
-            " (sigma_dg) * 1s, 0.2, 1, false);",
-            "    waveform constant_wf = constant((length_c) * 1s, 2.0 + 0.3im);",
+            "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s,"
+            " sigma_dg * 1s, 0.2, 1, false);",
+            "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
-            "    set_frequency(predefined_frame_1, a + 2*b);",
-            "    shift_frequency(predefined_frame_1, a + 2*b);",
-            "    set_phase(predefined_frame_1, a + 2*b);",
-            "    shift_phase(predefined_frame_1, a + 2*b);",
-            "    set_scale(predefined_frame_1, a + 2*b);",
+            "    set_frequency(predefined_frame_1, a + 2.0 * b);",
+            "    shift_frequency(predefined_frame_1, a + 2.0 * b);",
+            "    set_phase(predefined_frame_1, a + 2.0 * b);",
+            "    shift_phase(predefined_frame_1, a + 2.0 * b);",
+            "    set_scale(predefined_frame_1, a + 2.0 * b);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[(a + 2*b) * 1s] predefined_frame_1, predefined_frame_2;",
-            "    delay[(a + 2*b) * 1s] predefined_frame_1;",
+            "    delay[(a + 2.0 * b) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 2.0 * b) * 1s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
@@ -174,22 +175,22 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float a;",
             "input float sigma_g;",
+            "input float a;",
             "cal {",
-            "    waveform gauss_wf = gaussian(1.0ms, (sigma_g) * 1s, 1, false);",
+            "    waveform gauss_wf = gaussian(1.0ms, sigma_g * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
-            "    set_frequency(predefined_frame_1, a + 4);",
-            "    shift_frequency(predefined_frame_1, a + 4);",
-            "    set_phase(predefined_frame_1, a + 4);",
-            "    shift_phase(predefined_frame_1, a + 4);",
-            "    set_scale(predefined_frame_1, a + 4);",
+            "    set_frequency(predefined_frame_1, a + 4.0);",
+            "    shift_frequency(predefined_frame_1, a + 4.0);",
+            "    set_phase(predefined_frame_1, a + 4.0);",
+            "    shift_phase(predefined_frame_1, a + 4.0);",
+            "    set_scale(predefined_frame_1, a + 4.0);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[(a + 4) * 1s] predefined_frame_1, predefined_frame_2;",
-            "    delay[(a + 4) * 1s] predefined_frame_1;",
+            "    delay[(a + 4.0) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 4.0) * 1s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
@@ -220,8 +221,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    shift_phase(predefined_frame_1, 5.0);",
             "    set_scale(predefined_frame_1, 5.0);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[5s] predefined_frame_1, predefined_frame_2;",
-            "    delay[5s] predefined_frame_1;",
+            "    delay[5.0s] predefined_frame_1, predefined_frame_2;",
+            "    delay[5.0s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",

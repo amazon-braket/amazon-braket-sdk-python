@@ -14,14 +14,16 @@
 from __future__ import annotations
 
 import ast
+import operator
+from functools import reduce
 from numbers import Number
 from typing import Any, Union
 
-from openpulse.ast import Expression, Identifier
-from oqpy import Program
-from sympy import Expr
+from oqpy.base import OQPyExpression
+from oqpy.classical_types import FloatVar
+from sympy import Add, Expr, Mul
 from sympy import Number as sympy_Number
-from sympy import Symbol, sympify
+from sympy import Pow, Symbol, sympify
 
 
 class FreeParameterExpression:
@@ -98,16 +100,16 @@ class FreeParameterExpression:
         if isinstance(subbed_expr, Number):
             return subbed_expr
         else:
-            return self.__class__(subbed_expr)
+            return FreeParameterExpression(subbed_expr)
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Num):
-            return self.__class__(node.n)
+            return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
-            return self.__class__(Symbol(node.id))
+            return FreeParameterExpression(Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -174,17 +176,29 @@ class FreeParameterExpression:
         """
         return repr(self.expression)
 
-    def to_ast(self, program: Program) -> Expression:
-        """Creates an AST node for the :class:'FreeParameterExpression'.
-
-        Args:
-            program (Program): Unused.
+    def _to_oqpy_expression(self) -> OQPyExpression:
+        """Transforms into an OQPyExpression.
 
         Returns:
-            Expression: The AST node.
+            OQPyExpression: The AST node.
         """
-        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
-        return Identifier(name=self)
+        ops = {Add: operator.add, Mul: operator.mul, Pow: operator.pow}
+        if isinstance(self.expression, tuple(ops)):
+            return reduce(
+                ops[type(self.expression)],
+                map(
+                    lambda x: FreeParameterExpression(x)._to_oqpy_expression(), self.expression.args
+                ),
+            )
+        elif isinstance(self.expression, sympy_Number):
+            return float(self.expression)
+        elif isinstance(self.expression, Symbol):
+            fvar = FloatVar(name=self.expression.name, init_expression="input")
+            fvar.size = None
+            fvar.type.size = None
+            return fvar
+        else:
+            raise TypeError(f"Cannot process {type(self.expression)}.")
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
