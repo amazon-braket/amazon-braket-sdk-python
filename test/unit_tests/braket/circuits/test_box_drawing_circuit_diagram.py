@@ -190,6 +190,24 @@ def test_different_size_boxes():
     _assert_correct_diagram(circ, expected)
 
 
+def test_swap():
+    circ = Circuit().swap(0, 2).x(1)
+    expected = (
+        "T  : │      0       │",
+        "                     ",
+        "q0 : ────x───────────",
+        "         │           ",
+        "         │     ┌───┐ ",
+        "q1 : ────┼─────┤ X ├─",
+        "         │     └───┘ ",
+        "         │           ",
+        "q2 : ────x───────────",
+        "                     ",
+        "T  : │      0       │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_gate_width():
     class Foo(Gate):
         def __init__(self):
@@ -939,6 +957,30 @@ def test_hamiltonian():
         "Unassigned parameters: [theta].",
     )
     _assert_correct_diagram(circ, expected)
+
+
+# def test_multi_qubit_Foo():
+#     class Foo(Gate):
+#         def __init__(self):
+#             super().__init__(qubit_count=2, ascii_symbols=["FOO"])
+
+#     circ = Circuit()
+#     circ.add_instruction(Instruction(Foo(), (0, 1)))
+#     circ.add_instruction(Instruction(Foo(), (0, 2)))
+#     expected = (
+#         "T  : │   0   │   1   │",
+#         "      ┌─────┐ ┌─────┐ ",
+#         "q0 : ─┤     ├─┤     ├─",
+#         "      │ FOO │ │     │ ",
+#         "      │     │ │     │ ",
+#         "q1 : ─┤     ├─│ FOO │─",
+#         "      └─────┘ │     │ ",
+#         "              │     │ ",
+#         "q2 : ─────────┤     ├─",
+#         "              └─────┘ ",
+#         "T  : │   0   │   1   │",
+#     )
+#     _assert_correct_diagram(circ, expected)
 
 
 def test_power():

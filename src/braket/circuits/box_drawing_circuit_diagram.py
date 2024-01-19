@@ -203,6 +203,14 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
         elif symbol == "┼":
             top = bottom = _fill_symbol("│", " ")
             symbol = _fill_symbol(f"{symbol}", cls._qubit_line_char)
+        elif symbol == "SWAP":
+            if connection in ["above", "both"]:
+                top = _fill_symbol("│", " ")
+            if connection in ["below", "both"]:
+                bottom = _fill_symbol("│", " ")
+            # replace SWAP by x
+            # the size of the moment remains as if there was a box with 4 characters inside
+            symbol = _fill_symbol("x", cls._qubit_line_char)
         elif symbol == cls._qubit_line_char:
             # We do not box when no gate is applied.
             pass
