@@ -84,7 +84,8 @@ class PulseSequence:
         """
 
         _validate_uniqueness(self._frames, frame)
-        self._program.set_frequency(frame=frame, freq=self._format_parameter_ast(frequency))
+        self._register_free_parameters(frequency)
+        self._program.set_frequency(frame=frame, freq=frequency)
         self._frames[frame.id] = frame
         return self
 
@@ -103,7 +104,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.shift_frequency(frame=frame, freq=self._format_parameter_ast(frequency))
+        self._register_free_parameters(frequency)
+        self._program.shift_frequency(frame=frame, freq=frequency)
         self._frames[frame.id] = frame
         return self
 
@@ -122,7 +124,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.set_phase(frame=frame, phase=self._format_parameter_ast(phase))
+        self._register_free_parameters(phase)
+        self._program.set_phase(frame=frame, phase=phase)
         self._frames[frame.id] = frame
         return self
 
@@ -141,7 +144,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.shift_phase(frame=frame, phase=self._format_parameter_ast(phase))
+        self._register_free_parameters(phase)
+        self._program.shift_phase(frame=frame, phase=phase)
         self._frames[frame.id] = frame
         return self
 
@@ -160,7 +164,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.set_scale(frame=frame, scale=self._format_parameter_ast(scale))
+        self._register_free_parameters(scale)
+        self._program.set_scale(frame=frame, scale=scale)
         self._frames[frame.id] = frame
         return self
 
@@ -180,7 +185,8 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        duration = convert_float_to_duration(self._format_parameter_ast(duration))
+        self._register_free_parameters(duration)
+        duration = convert_float_to_duration(duration)
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -230,9 +236,7 @@ class PulseSequence:
         _validate_uniqueness(self._waveforms, waveform)
         if isinstance(waveform, Parameterizable):
             for param in waveform.parameters:
-                if isinstance(param, FreeParameterExpression):
-                    for p in param.expression.free_symbols:
-                        self._free_parameters.add(FreeParameter(p.name))
+                self._register_free_parameters(param)
         self._program.play(frame=frame, waveform=waveform)
         self._frames[frame.id] = frame
         self._waveforms[waveform.id] = waveform
@@ -321,14 +325,13 @@ class PulseSequence:
         tree = _InputVarSplitter().visit(tree)
         return ast_to_qasm(tree)
 
-    def _format_parameter_ast(
+    def _register_free_parameters(
         self,
         parameter: Union[float, FreeParameterExpression],
-    ) -> Union[float, FreeParameterExpression]:
+    ) -> None:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-        return parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]

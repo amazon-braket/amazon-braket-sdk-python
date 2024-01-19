@@ -1299,11 +1299,7 @@ class Circuit:
                         continue
 
                     gate_name = gate._qasm_name
-                    arguments = (
-                        [calibration._format_parameter_ast(value) for value in gate.parameters]
-                        if isinstance(gate, Parameterizable)
-                        else None
-                    )
+                    arguments = gate.parameters if isinstance(gate, Parameterizable) else None
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
