@@ -25,6 +25,8 @@ import re
 import sys
 import textwrap
 import tokenize
+import json
+import os
 
 import astunparse
 import gast
