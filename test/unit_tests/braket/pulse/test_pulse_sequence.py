@@ -87,7 +87,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         .set_frequency(predefined_frame_1, param)
         .shift_frequency(predefined_frame_1, param)
         .set_phase(predefined_frame_1, param)
-        .shift_phase(predefined_frame_1, param)
+        .shift_phase(predefined_frame_1, -param)
         .set_scale(predefined_frame_1, param)
         .capture_v0(predefined_frame_1)
         .delay([predefined_frame_1, predefined_frame_2], param)
@@ -141,7 +141,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    set_frequency(predefined_frame_1, a + 2.0 * b);",
             "    shift_frequency(predefined_frame_1, a + 2.0 * b);",
             "    set_phase(predefined_frame_1, a + 2.0 * b);",
-            "    shift_phase(predefined_frame_1, a + 2.0 * b);",
+            "    shift_phase(predefined_frame_1, -1.0 * a + -2.0 * b);",
             "    set_scale(predefined_frame_1, a + 2.0 * b);",
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[(a + 2.0 * b) * 1s] predefined_frame_1, predefined_frame_2;",
@@ -186,7 +186,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    set_frequency(predefined_frame_1, a + 4.0);",
             "    shift_frequency(predefined_frame_1, a + 4.0);",
             "    set_phase(predefined_frame_1, a + 4.0);",
-            "    shift_phase(predefined_frame_1, a + 4.0);",
+            "    shift_phase(predefined_frame_1, -1.0 * a + -4.0);",
             "    set_scale(predefined_frame_1, a + 4.0);",
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[(a + 4.0) * 1s] predefined_frame_1, predefined_frame_2;",
@@ -218,7 +218,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    set_frequency(predefined_frame_1, 5.0);",
             "    shift_frequency(predefined_frame_1, 5.0);",
             "    set_phase(predefined_frame_1, 5.0);",
-            "    shift_phase(predefined_frame_1, 5.0);",
+            "    shift_phase(predefined_frame_1, -5.0);",
             "    set_scale(predefined_frame_1, 5.0);",
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[5.0s] predefined_frame_1, predefined_frame_2;",

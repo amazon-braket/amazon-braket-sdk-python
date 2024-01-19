@@ -192,13 +192,11 @@ class FreeParameterExpression:
             )
         elif isinstance(self.expression, sympy_Number):
             return float(self.expression)
-        elif isinstance(self.expression, Symbol):
+        else:
             fvar = FloatVar(name=self.expression.name, init_expression="input")
             fvar.size = None
             fvar.type.size = None
             return fvar
-        else:
-            raise TypeError(f"Cannot process {type(self.expression)}.")
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:

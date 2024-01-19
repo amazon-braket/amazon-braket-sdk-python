@@ -69,9 +69,8 @@ class _FreeParameterTransformer(QASMTransformer):
         if isinstance(lhs, ast.FloatLiteral):
             if isinstance(rhs, ast.FloatLiteral):
                 return ast.FloatLiteral(ops[node.op](lhs.value, rhs.value))
-            elif isinstance(rhs, ast.DurationLiteral):
-                if node.op == ast.BinaryOperator["*"]:
-                    return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
+            elif isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
+                return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
         return ast.BinaryExpression(op=node.op, lhs=lhs, rhs=rhs)
 
     def visit_UnaryExpression(
@@ -88,7 +87,9 @@ class _FreeParameterTransformer(QASMTransformer):
             Union[UnaryExpression, FloatLiteral]: The transformed identifier.
         """
         expression = self.visit(node.expression)
-        if node.op == ast.UnaryOperator["-"]:
-            if isinstance(expression, [ast.FloatLiteral, ast.DurationLiteral]):
-                return type(expression)(-expression.value)
-        return ast.UnaryExpression(op=node.op, expression=node.expression)
+        if (
+            isinstance(expression, (ast.FloatLiteral, ast.DurationLiteral))
+            and node.op == ast.UnaryOperator["-"]
+        ):
+            return type(expression)(-expression.value)
+        return ast.UnaryExpression(op=node.op, expression=node.expression)  # pragma: no cover
