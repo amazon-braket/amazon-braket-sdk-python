@@ -174,27 +174,17 @@ def hybrid_job(
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """
+            inner_source_temp_dir, inner_source_file_path = persist_inner_function_source(entry_point)
+
             with _IncludeModules(include_modules), tempfile.TemporaryDirectory(
                 dir="", prefix="decorator_job_"
             ) as temp_dir:
                 temp_dir_path = Path(temp_dir)
-
-                # persist source code of inner functions
-                inner_source = get_inner_function_source(entry_point)
-                # serialized_inner_source = serialize_inner_function_source(inner_source)
-                inner_source_file_path = os.path.join(temp_dir_path, "inner_function_source.json")
-                # inner_source_file_path = "inner_function_source.py"
-                # inner_source_file_path = "inner_function_source.json"
-                with open(inner_source_file_path, "w") as inner_source_file:
-                    # inner_source_file.write(serialized_inner_source)
-                    json.dump(inner_source, inner_source_file)
-
-                # persist entry point
                 entry_point_file_path = Path("entry_point.py")
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
                     template = "\n".join(
                         [
-                            _process_input_data(input_data, inner_source_file_path),
+                            _process_input_data(input_data),
                             _serialize_entry_point(entry_point, args, kwargs),
                         ]
                     )
@@ -234,6 +224,7 @@ def hybrid_job(
                         job_args[key] = value
 
                 job = _create_job(job_args, local)
+                shutil.rmtree(inner_source_temp_dir)
             return job
 
         return job_wrapper
@@ -241,23 +232,27 @@ def hybrid_job(
     return _hybrid_job
 
 
-def get_inner_function_source(outer_function):
+def persist_inner_function_source(entry_point) -> tuple[str, str]:
+    """Save the mapping between inner function name and source code for all inner functions
+    inside the entry point, as a json file.
+    """
+    inner_source = _get_inner_function_source(entry_point)
+    temp_dir = tempfile.mkdtemp()
+    inner_source_file_path = f'{temp_dir}/inner_function_source.json'
+    with open(inner_source_file_path, "w") as inner_source_file:
+        json.dump(inner_source, inner_source_file)
+    return temp_dir, inner_source_file_path
+
+
+def _get_inner_function_source(outer_function: callable) -> dict[str, str]:
+    """Create a dictionary that maps the function name to source code for all inner functions
+    inside the job decorated function.
+    """
     inner_function_source = {}
     for const in outer_function.__code__.co_consts:
         if inspect.iscode(const):
             inner_function_source[const.co_name] = inspect.getsource(const)
     return inner_function_source
-
-
-def serialize_inner_function_source(inner_function_source):
-    template = """
-    import pickle
-    def get_inner_function_source():
-        return pickle.loads({inner_function_source})
-    """.format(
-        inner_function_source = pickle.dumps(inner_function_source)
-    )
-    return textwrap.dedent(template)
 
 
 def _validate_python_version(image_uri: str | None, aws_session: AwsSession | None = None) -> None:
@@ -381,7 +376,7 @@ def _sanitize(hyperparameter: Any) -> str:
     return sanitized
 
 
-def _process_input_data(input_data: dict, inner_source_file_path: str) -> list[str]:
+def _process_input_data(input_data: dict) -> list[str]:
     """
     Create symlinks to data
 
@@ -393,9 +388,7 @@ def _process_input_data(input_data: dict, inner_source_file_path: str) -> list[s
     """
     input_data = input_data or {}
     if not isinstance(input_data, dict):
-        input_data = {"input": input_data, "inner_source": inner_source_file_path}
-    else:
-        input_data["inner_source"] = inner_source_file_path
+        input_data = {"input": input_data}
 
     def matches(prefix: str) -> list[str]:
         return [
