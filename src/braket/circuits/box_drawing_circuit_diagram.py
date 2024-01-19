@@ -192,25 +192,20 @@ class BoxDrawingCircuitDiagram(AsciiCircuitDiagram):
     ) -> str:
         top = ""
         bottom = ""
-        if symbol in ["C", "N"]:
+        if symbol in ["C", "N", "SWAP"]:
             if connection in ["above", "both"]:
-                top = _fill_symbol("│", " ")
+                top = _fill_symbol(cls._vdelim, " ")
             if connection in ["below", "both"]:
-                bottom = _fill_symbol("│", " ")
-            symbol = _fill_symbol("●" if symbol == "C" else "◯", cls._qubit_line_char)
+                bottom = _fill_symbol(cls._vdelim, " ")
+            new_symbol = {"C": "●", "N": "◯", "SWAP": "x"}
+            # replace SWAP by x
+            # the size of the moment remains as if there was a box with 4 characters inside
+            symbol = _fill_symbol(new_symbol[symbol], cls._qubit_line_char)
         elif symbol in ["StartVerbatim", "EndVerbatim"]:
             top, symbol, bottom = cls._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
-            top = bottom = _fill_symbol("│", " ")
+            top = bottom = _fill_symbol(cls._vdelim, " ")
             symbol = _fill_symbol(f"{symbol}", cls._qubit_line_char)
-        elif symbol == "SWAP":
-            if connection in ["above", "both"]:
-                top = _fill_symbol("│", " ")
-            if connection in ["below", "both"]:
-                bottom = _fill_symbol("│", " ")
-            # replace SWAP by x
-            # the size of the moment remains as if there was a box with 4 characters inside
-            symbol = _fill_symbol("x", cls._qubit_line_char)
         elif symbol == cls._qubit_line_char:
             # We do not box when no gate is applied.
             pass
