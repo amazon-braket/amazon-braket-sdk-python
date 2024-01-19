@@ -229,9 +229,15 @@ def hybrid_job(
     return _hybrid_job
 
 
-def persist_inner_function_source(entry_point) -> tuple[str, str]:
-    """Save the mapping between inner function name and source code for all inner functions
-    inside the entry point, as a json file.
+def persist_inner_function_source(entry_point: callable) -> tuple[str, str]:
+    """Persist the mapping between the name and the source code for each inner function inside the
+    entry point, as a dictionary in a json file.
+
+    Args:
+        entry_point (callable): The job decorated function.
+
+    Returns:
+        tuple[str, str]: Temporary directory and path of the json file.
     """
     inner_source = _get_inner_function_source(entry_point)
     temp_dir = tempfile.mkdtemp()
@@ -242,8 +248,14 @@ def persist_inner_function_source(entry_point) -> tuple[str, str]:
 
 
 def _get_inner_function_source(outer_function: callable) -> dict[str, str]:
-    """Create a dictionary that maps the function name to source code for all inner functions
+    """Returns a dictionary that maps the function name to source code for all inner functions
     inside the job decorated function.
+
+    Args:
+        outer_function (callable): The outer function.
+
+    Returns:
+        dict[str, str]: Mapping between name and source code of each inner functions.
     """
     inner_function_source = {}
     for const in outer_function.__code__.co_consts:
