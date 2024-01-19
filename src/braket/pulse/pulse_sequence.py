@@ -180,7 +180,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        duration = convert_float_to_duration(duration)
+        duration = convert_float_to_duration(self._format_parameter_ast(duration))
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
