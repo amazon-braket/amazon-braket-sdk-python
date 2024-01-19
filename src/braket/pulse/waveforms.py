@@ -21,7 +21,6 @@ from typing import Optional, Union
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
-from oqpy.timing import convert_float_to_duration
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -174,7 +173,7 @@ class ConstantWaveform(Waveform, Parameterizable):
             "constant", [("length", duration), ("iq", complex128)]
         )
         return WaveformVar(
-            init_expression=constant_generator(convert_float_to_duration(self.length), self.iq),
+            init_expression=constant_generator(self.length, self.iq),
             name=self.id,
         )
 
@@ -300,8 +299,8 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
-                convert_float_to_duration(self.length),
-                convert_float_to_duration(self.sigma),
+                self.length,
+                self.sigma,
                 self.beta,
                 self.amplitude,
                 self.zero_at_edges,
@@ -427,8 +426,8 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=gaussian_generator(
-                convert_float_to_duration(self.length),
-                convert_float_to_duration(self.sigma),
+                self.length,
+                self.sigma,
                 self.amplitude,
                 self.zero_at_edges,
             ),

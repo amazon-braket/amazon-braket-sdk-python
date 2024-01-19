@@ -20,7 +20,6 @@ from typing import Any, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
-from oqpy.timing import convert_float_to_duration
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -186,7 +185,6 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         self._register_free_parameters(duration)
-        duration = convert_float_to_duration(duration)
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
