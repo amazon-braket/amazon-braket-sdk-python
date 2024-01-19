@@ -26,6 +26,10 @@ from logging import Logger, getLogger
 from pathlib import Path
 from types import ModuleType
 from typing import Any
+import pickle
+import textwrap
+import json
+import os
 
 import cloudpickle
 
@@ -174,11 +178,23 @@ def hybrid_job(
                 dir="", prefix="decorator_job_"
             ) as temp_dir:
                 temp_dir_path = Path(temp_dir)
+
+                # persist source code of inner functions
+                inner_source = get_inner_function_source(entry_point)
+                # serialized_inner_source = serialize_inner_function_source(inner_source)
+                inner_source_file_path = os.path.join(temp_dir_path, "inner_function_source.json")
+                # inner_source_file_path = "inner_function_source.py"
+                # inner_source_file_path = "inner_function_source.json"
+                with open(inner_source_file_path, "w") as inner_source_file:
+                    # inner_source_file.write(serialized_inner_source)
+                    json.dump(inner_source, inner_source_file)
+
+                # persist entry point
                 entry_point_file_path = Path("entry_point.py")
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
                     template = "\n".join(
                         [
-                            _process_input_data(input_data),
+                            _process_input_data(input_data, inner_source_file_path),
                             _serialize_entry_point(entry_point, args, kwargs),
                         ]
                     )
@@ -193,6 +209,7 @@ def hybrid_job(
                     "entry_point": (
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
+                    "input_data": {"inner_function_source": inner_source_file_path},
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
@@ -222,6 +239,25 @@ def hybrid_job(
         return job_wrapper
 
     return _hybrid_job
+
+
+def get_inner_function_source(outer_function):
+    inner_function_source = {}
+    for const in outer_function.__code__.co_consts:
+        if inspect.iscode(const):
+            inner_function_source[const.co_name] = inspect.getsource(const)
+    return inner_function_source
+
+
+def serialize_inner_function_source(inner_function_source):
+    template = """
+    import pickle
+    def get_inner_function_source():
+        return pickle.loads({inner_function_source})
+    """.format(
+        inner_function_source = pickle.dumps(inner_function_source)
+    )
+    return textwrap.dedent(template)
 
 
 def _validate_python_version(image_uri: str | None, aws_session: AwsSession | None = None) -> None:
@@ -345,7 +381,7 @@ def _sanitize(hyperparameter: Any) -> str:
     return sanitized
 
 
-def _process_input_data(input_data: dict) -> list[str]:
+def _process_input_data(input_data: dict, inner_source_file_path: str) -> list[str]:
     """
     Create symlinks to data
 
@@ -357,7 +393,9 @@ def _process_input_data(input_data: dict) -> list[str]:
     """
     input_data = input_data or {}
     if not isinstance(input_data, dict):
-        input_data = {"input": input_data}
+        input_data = {"input": input_data, "inner_source": inner_source_file_path}
+    else:
+        input_data["inner_source"] = inner_source_file_path
 
     def matches(prefix: str) -> list[str]:
         return [
