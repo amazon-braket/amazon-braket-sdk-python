@@ -46,7 +46,6 @@ def test_result():
     assert TASK.result() == RESULT
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_cancel():
     TASK.cancel()
 

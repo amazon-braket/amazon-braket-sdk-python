@@ -25,7 +25,7 @@ from braket.tasks import (
 class LocalQuantumTask(QuantumTask):
     """A quantum task containing the results of a local simulation.
 
-    Since this class is instantiated with the results, cancel() and run_async() are unsupported.
+    Since this class is instantiated with the results, run_async() is unsupported.
     """
 
     def __init__(
@@ -43,7 +43,8 @@ class LocalQuantumTask(QuantumTask):
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
-        raise NotImplementedError("Cannot cancel completed local task")
+        # A LocalQuantumTask is already completed, so there is nothing to cancel
+        pass
 
     def state(self) -> str:
         return "COMPLETED"
