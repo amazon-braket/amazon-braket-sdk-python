@@ -27,6 +27,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 import json
+from contextlib import contextmanager
 
 import cloudpickle
 
@@ -171,11 +172,11 @@ def hybrid_job(
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """
-            inner_source_temp_dir, inner_source_file_path = persist_inner_function_source(entry_point)
-
-            with _IncludeModules(include_modules), tempfile.TemporaryDirectory(
-                dir="", prefix="decorator_job_"
-            ) as temp_dir:
+            with (
+                _IncludeModules(include_modules), 
+                tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
+                persist_inner_function_source(entry_point) as inner_source_file_path
+            ):  
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
@@ -221,7 +222,6 @@ def hybrid_job(
                         job_args[key] = value
 
                 job = _create_job(job_args, local)
-                shutil.rmtree(inner_source_temp_dir)
             return job
 
         return job_wrapper
@@ -229,22 +229,20 @@ def hybrid_job(
     return _hybrid_job
 
 
-def persist_inner_function_source(entry_point: callable) -> tuple[str, str]:
+@contextmanager
+def persist_inner_function_source(entry_point: callable) -> None:
     """Persist the mapping between the name and the source code for each inner function inside the
     entry point, as a dictionary in a json file.
 
     Args:
         entry_point (callable): The job decorated function.
-
-    Returns:
-        tuple[str, str]: Temporary directory and path of the json file.
     """
     inner_source = _get_inner_function_source(entry_point)
-    temp_dir = tempfile.mkdtemp()
-    inner_source_file_path = f'{temp_dir}/inner_function_source.json'
-    with open(inner_source_file_path, "w") as inner_source_file:
-        json.dump(inner_source, inner_source_file)
-    return temp_dir, inner_source_file_path
+    with tempfile.TemporaryDirectory() as temp_dir:
+        inner_source_file_path = f'{temp_dir}/inner_function_source.json'
+        with open(inner_source_file_path, "w") as inner_source_file:
+            json.dump(inner_source, inner_source_file)
+        yield inner_source_file_path
 
 
 def _get_inner_function_source(outer_function: callable) -> dict[str, str]:
