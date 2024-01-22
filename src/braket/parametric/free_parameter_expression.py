@@ -19,11 +19,9 @@ from functools import reduce
 from numbers import Number
 from typing import Any, Union
 
+import sympy
 from oqpy.base import OQPyExpression
 from oqpy.classical_types import FloatVar
-from sympy import Add, Expr, Mul
-from sympy import Number as sympy_Number
-from sympy import Pow, Symbol, sympify
 
 
 class FreeParameterExpression:
@@ -36,7 +34,7 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
+    def __init__(self, expression: Union[FreeParameterExpression, Number, sympy.Expr, str]):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -59,7 +57,7 @@ class FreeParameterExpression:
         }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-        elif isinstance(expression, (Number, Expr)):
+        elif isinstance(expression, (Number, sympy.Expr)):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression
@@ -67,7 +65,7 @@ class FreeParameterExpression:
             raise NotImplementedError
 
     @property
-    def expression(self) -> Union[Number, Expr]:
+    def expression(self) -> Union[Number, sympy.Expr]:
         """Gets the expression.
         Returns:
             Union[Number, Expr]: The expression for the FreeParameterExpression.
@@ -76,7 +74,7 @@ class FreeParameterExpression:
 
     def subs(
         self, parameter_values: dict[str, Number]
-    ) -> Union[FreeParameterExpression, Number, Expr]:
+    ) -> Union[FreeParameterExpression, Number, sympy.Expr]:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
@@ -109,7 +107,7 @@ class FreeParameterExpression:
         if isinstance(node, ast.Num):
             return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
-            return FreeParameterExpression(Symbol(node.id))
+            return FreeParameterExpression(sympy.Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -164,7 +162,7 @@ class FreeParameterExpression:
 
     def __eq__(self, other):
         if isinstance(other, FreeParameterExpression):
-            return sympify(self.expression).equals(sympify(other.expression))
+            return sympy.sympify(self.expression).equals(sympy.sympify(other.expression))
         return False
 
     def __repr__(self) -> str:
@@ -182,7 +180,7 @@ class FreeParameterExpression:
         Returns:
             OQPyExpression: The AST node.
         """
-        ops = {Add: operator.add, Mul: operator.mul, Pow: operator.pow}
+        ops = {sympy.Add: operator.add, sympy.Mul: operator.mul, sympy.Pow: operator.pow}
         if isinstance(self.expression, tuple(ops)):
             return reduce(
                 ops[type(self.expression)],
@@ -190,7 +188,7 @@ class FreeParameterExpression:
                     lambda x: FreeParameterExpression(x)._to_oqpy_expression(), self.expression.args
                 ),
             )
-        elif isinstance(self.expression, sympy_Number):
+        elif isinstance(self.expression, sympy.Number):
             return float(self.expression)
         else:
             fvar = FloatVar(name=self.expression.name, init_expression="input")
@@ -210,7 +208,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
     """
     if isinstance(parameter, FreeParameterExpression):
         substituted = parameter.subs(kwargs)
-        if isinstance(substituted, sympy_Number):
+        if isinstance(substituted, sympy.Number):
             substituted = float(substituted)
         return substituted
     return parameter
