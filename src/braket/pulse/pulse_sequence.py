@@ -277,13 +277,13 @@ class PulseSequence:
         new_program = Program(simplify_constants=False)
         new_program.declared_vars = program.declared_vars
         new_program.undeclared_vars = program.undeclared_vars
+        for param_name in param_values:
+            new_program.undeclared_vars.pop(param_name, None)
         for x in new_tree.statements:
             new_program._add_statement(x)
 
         new_pulse_sequence = PulseSequence()
         new_pulse_sequence._program = new_program
-        for param_name in param_values:
-            new_pulse_sequence._program.undeclared_vars.pop(param_name, None)
         new_pulse_sequence._frames = deepcopy(self._frames)
         new_pulse_sequence._waveforms = {
             wf.id: wf.bind_values(**param_values) if isinstance(wf, Parameterizable) else wf

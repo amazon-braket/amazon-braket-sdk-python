@@ -91,7 +91,7 @@ class FreeParameterExpression:
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():
-            if isinstance(key, FreeParameterExpression):
+            if issubclass(type(key), FreeParameterExpression):
                 new_parameter_values[key.expression] = val
             else:
                 new_parameter_values[key] = val
@@ -124,7 +124,7 @@ class FreeParameterExpression:
             raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
@@ -133,7 +133,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other + self.expression)
 
     def __sub__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
@@ -142,7 +142,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other - self.expression)
 
     def __mul__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
@@ -151,7 +151,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other * self.expression)
 
     def __pow__(self, other, modulo=None):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
