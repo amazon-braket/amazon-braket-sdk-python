@@ -142,7 +142,7 @@ def get_source_from_job(entity):
   inner_source_file_path = f"{input_dir}/inner_function_source/inner_function_source.json"
   with open(inner_source_file_path, "r") as f:
       inner_source = json.load(f)
-  return inner_source[entity.__name__]
+  return inner_source[entity.__qualname__]
 
 
 def parse_entity(entity, future_features):

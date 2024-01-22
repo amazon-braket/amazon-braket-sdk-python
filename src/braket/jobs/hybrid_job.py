@@ -237,7 +237,7 @@ def persist_inner_function_source(entry_point: callable) -> None:
     Args:
         entry_point (callable): The job decorated function.
     """
-    inner_source = _get_inner_function_source(entry_point)
+    inner_source = _get_inner_function_source(entry_point.__code__)
     with tempfile.TemporaryDirectory() as temp_dir:
         inner_source_file_path = f'{temp_dir}/inner_function_source.json'
         with open(inner_source_file_path, "w") as inner_source_file:
@@ -245,7 +245,7 @@ def persist_inner_function_source(entry_point: callable) -> None:
         yield inner_source_file_path
 
 
-def _get_inner_function_source(outer_function: callable) -> dict[str, str]:
+def _get_inner_function_source(cob_object: callable) -> dict[str, str]:
     """Returns a dictionary that maps the function name to source code for all inner functions
     inside the job decorated function.
 
@@ -255,11 +255,21 @@ def _get_inner_function_source(outer_function: callable) -> dict[str, str]:
     Returns:
         dict[str, str]: Mapping between name and source code of each inner functions.
     """
-    inner_function_source = {}
-    for const in outer_function.__code__.co_consts:
+    inner_source = {}
+
+    idx = 0
+    while idx < len(cob_object.co_consts):
+        const = cob_object.co_consts[idx]
+        
         if inspect.iscode(const):
-            inner_function_source[const.co_name] = inspect.getsource(const)
-    return inner_function_source
+            qual_name = cob_object.co_consts[idx+1]
+            inner_source.update({qual_name: inspect.getsource(const)})
+            inner_source.update(_get_inner_function_source(const))
+            idx += 2
+        else:
+            idx += 1
+
+    return inner_source
 
 
 def _validate_python_version(image_uri: str | None, aws_session: AwsSession | None = None) -> None:
