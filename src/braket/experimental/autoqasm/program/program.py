@@ -356,7 +356,10 @@ class ProgramConversionContext:
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(
-        self, parameter_name: str, parameter_type: Union[float, int, bool] = float
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool] = float,
+        io_type: str = "input",
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
@@ -364,10 +367,13 @@ class ProgramConversionContext:
             parameter_name (str): The name of the parameter to register with the program.
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
+            io_type (str): Whether the parameter is an "input" or an "output". Default: "input".
         """
         # TODO (#814): add type validation against existing inputs
         if parameter_name not in self._free_parameters:
-            if parameter_type == float:
+            if issubclass(parameter_type, oqpy._ClassicalVar):
+                var_class = parameter_type
+            elif parameter_type == float:
                 var_class = oqpy.FloatVar
             elif parameter_type == int:
                 var_class = oqpy.IntVar
@@ -375,7 +381,7 @@ class ProgramConversionContext:
                 var_class = oqpy.BoolVar
             else:
                 raise NotImplementedError(parameter_type)
-            self._free_parameters[parameter_name] = var_class("input", name=parameter_name)
+            self._free_parameters[parameter_name] = var_class(io_type, name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.

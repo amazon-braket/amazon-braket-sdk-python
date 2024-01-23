@@ -919,14 +919,6 @@ def test_double_decorated_function():
     assert empty_program.to_ir() == expected
 
 
-def test_main_return():
-    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
-
-        @aq.main
-        def main() -> int:
-            return 1
-
-
 def test_main_no_return():
     @aq.subroutine
     def tester(x: int) -> int:
