@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from copy import copy
 from functools import singledispatchmethod
 from itertools import repeat
 from multiprocessing import Pool
@@ -23,10 +24,11 @@ import pkg_resources
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.circuits import Circuit
+from braket.circuits import Circuit, Noise
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.serialization import IRType
+from braket.circuits.translations import one_prob_noise_map
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.ir.ahs import Program as AHSProgram
@@ -343,17 +345,18 @@ class LocalSimulator(Device):
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
 
     def _validate_noise_model_support(self) -> None:
-        supported_pragmas = [
-            ops.lower().replace("_", "")
-            for ops in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
+        noise_pragma_name_to_class = copy(one_prob_noise_map)
+        noise_pragma_name_to_class.update({"kraus": Noise.Kraus})
+
+        supported_noises = [
+            noise_pragma_name_to_class[pragma.split("braket_noise_")[-1]]
+            for pragma in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
+            if "braket_noise_" in pragma
         ]
 
-        noise_pragmas = [
-            ("braket_noise_" + noise_instr.noise.name).lower().replace("_", "")
-            for noise_instr in self._noise_model._instructions
-        ]
-        if not all([noise in supported_pragmas for noise in noise_pragmas]):
+        noise_operators = [noise_instr.noise for noise_instr in self._noise_model._instructions]
+        if not all([isinstance(noise, tuple(supported_noises)) for noise in noise_operators]):
             raise ValueError(
-                f"{self.name} does not support noise or the noise model includes noise "
+                f"{self.name} does not support noise simulation or the noise model includes noise "
                 + f"that is not supported by {self.name}."
             )
