@@ -405,7 +405,7 @@ def _process_input_data(
     input_data: str | dict | S3DataSourceConfig,
     job_name: str,
     aws_session: AwsSession,
-    timestamp: str,
+    subdirectory: str,
 ) -> list[dict[str, Any]]:
     """
     Convert input data into a list of dicts compatible with the Braket API.
@@ -415,7 +415,7 @@ def _process_input_data(
             can be an S3DataSourceConfig or a str corresponding to a local prefix or S3 prefix.
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession for possibly uploading local data.
-        timestamp (str): Timestamp for job.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         list[dict[str, Any]]: A list of channel configs.
@@ -425,7 +425,7 @@ def _process_input_data(
     for channel_name, data in input_data.items():
         if not isinstance(data, S3DataSourceConfig):
             input_data[channel_name] = _process_channel(
-                data, job_name, aws_session, channel_name, timestamp
+                data, job_name, aws_session, channel_name, subdirectory
             )
     return _convert_input_to_config(input_data)
 
@@ -435,7 +435,7 @@ def _process_channel(
     job_name: str,
     aws_session: AwsSession,
     channel_name: str,
-    timestamp: str,
+    subdirectory: str,
 ) -> S3DataSourceConfig:
     """
     Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
@@ -444,7 +444,7 @@ def _process_channel(
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession to be used for uploading local data.
         channel_name (str): Name of the channel.
-        timestamp (str): Timestamp for job.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         S3DataSourceConfig: S3DataSourceConfig for the channel.
@@ -459,7 +459,7 @@ def _process_channel(
             aws_session.default_bucket(),
             "jobs",
             job_name,
-            timestamp,
+            subdirectory,
             "data",
             channel_name,
             location_name,
