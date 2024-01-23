@@ -323,8 +323,9 @@ def _translate_creation_args(create_job_args):
     image_uri = create_job_args["image_uri"]
     job_name = create_job_args["job_name"] or _generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
+    timestamp = str(int(time.time() * 1000))
     code_location = create_job_args["code_location"] or AwsSession.construct_s3_uri(
-        default_bucket, "jobs", job_name, "script"
+        default_bucket, "jobs", job_name, timestamp, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_default_jobs_role()
     device = create_job_args["device"]
@@ -340,11 +341,11 @@ def _translate_creation_args(create_job_args):
         }
         hyperparameters.update(distributed_hyperparams)
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
-        s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "data")
+        s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, timestamp, "data")
     )
     stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
-        s3Uri=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
+        s3Uri=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, timestamp, "checkpoints")
     )
     entry_point = create_job_args["entry_point"]
     source_module = create_job_args["source_module"]
@@ -365,7 +366,7 @@ def _translate_creation_args(create_job_args):
         "jobName": job_name,
         "roleArn": role_arn,
         "algorithmSpecification": algorithm_specification,
-        "inputDataConfig": _process_input_data(input_data, job_name, aws_session),
+        "inputDataConfig": _process_input_data(input_data, job_name, aws_session, timestamp),
         "instanceConfig": asdict(instance_config),
         "outputDataConfig": asdict(output_data_config, dict_factory=_exclude_nones_factory),
         "checkpointConfig": asdict(checkpoint_config),
@@ -403,6 +404,7 @@ def test_generate_default_job_name(mock_time, image_uri):
     mock_time.return_value = datetime.datetime.now().timestamp()
     timestamp = str(int(time.time() * 1000))
     assert _generate_default_job_name(image_uri) == f"braket-job{job_type}-{timestamp}"
+    assert _generate_default_job_name(image_uri, timestamp="ts") == f"braket-job{job_type}-ts"
 
 
 @pytest.mark.parametrize(
@@ -602,7 +604,7 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
+                            "s3Uri": "s3://default-bucket-name/jobs/job-name/ts/data/input/prefix",
                         },
                     },
                 }
@@ -651,7 +653,7 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "local-input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3Uri": "s3://default-bucket-name/jobs/job-name/"
+                            "s3Uri": "s3://default-bucket-name/jobs/job-name/ts/"
                             "data/local-input/prefix",
                         },
                     },
@@ -678,4 +680,4 @@ def test_invalid_input_parameters(entry_point, aws_session):
 )
 def test_process_input_data(aws_session, input_data, input_data_configs):
     job_name = "job-name"
-    assert _process_input_data(input_data, job_name, aws_session) == input_data_configs
+    assert _process_input_data(input_data, job_name, aws_session, "ts") == input_data_configs
