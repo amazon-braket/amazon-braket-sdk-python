@@ -345,7 +345,9 @@ def _translate_creation_args(create_job_args):
     )
     stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
-        s3Uri=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, timestamp, "checkpoints")
+        s3Uri=AwsSession.construct_s3_uri(
+            default_bucket, "jobs", job_name, timestamp, "checkpoints"
+        )
     )
     entry_point = create_job_args["entry_point"]
     source_module = create_job_args["source_module"]
