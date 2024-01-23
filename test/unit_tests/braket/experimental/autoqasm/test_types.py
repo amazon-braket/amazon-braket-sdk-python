@@ -59,8 +59,10 @@ def ret_test() -> bit {
     bit res = 1;
     return res;
 }
+output bit retval_;
 bit __bit_1__;
-__bit_1__ = ret_test();"""
+__bit_1__ = ret_test();
+retval_ = __bit_1__;"""
 
     assert main.to_ir() == expected
 
@@ -82,8 +84,10 @@ def ret_test() -> int[32] {
     int[32] res = 1;
     return res;
 }
+output int[32] retval_;
 int[32] __int_1__;
-__int_1__ = ret_test();"""
+__int_1__ = ret_test();
+retval_ = __int_1__;"""
 
     assert main.to_ir() == expected
 
@@ -105,8 +109,10 @@ def ret_test() -> float[64] {
     float[64] res = 1.0;
     return res;
 }
+output float[64] retval_;
 float[64] __float_1__;
-__float_1__ = ret_test();"""
+__float_1__ = ret_test();
+retval_ = __float_1__;"""
 
     assert main.to_ir() == expected
 
@@ -128,8 +134,10 @@ def ret_test() -> bool {
     bool res = true;
     return res;
 }
+output bool retval_;
 bool __bool_1__;
-__bool_1__ = ret_test();"""
+__bool_1__ = ret_test();
+retval_ = __bool_1__;"""
 
     assert main.to_ir() == expected
 
@@ -151,10 +159,12 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
+output int[32] retval_;
 int[32] a = 5;
 int[32] b = 6;
 int[32] __int_2__;
-__int_2__ = add(a, b);"""
+__int_2__ = add(a, b);
+retval_ = __int_2__;"""
 
     assert ret_test.to_ir() == expected
 
@@ -272,8 +282,10 @@ def helper() -> int[32] {
     int[32] res = 1;
     return res;
 }
+output int[32] retval_;
 int[32] __int_1__;
-__int_1__ = helper();"""
+__int_1__ = helper();
+retval_ = __int_1__;"""
 
     assert ret_test.to_ir() == expected
 
@@ -431,8 +443,10 @@ def retval_test() -> int[32] {
     int[32] retval_ = 1;
     return retval_;
 }
+output int[32] retval_;
 int[32] __int_1__;
-__int_1__ = retval_test();"""
+__int_1__ = retval_test();
+retval_ = __int_1__;"""
 
     assert caller.to_ir() == expected_qasm
 
@@ -453,8 +467,10 @@ def retval_test() -> bit {
     bit retval_ = 1;
     return retval_;
 }
+output bit retval_;
 bit __bit_1__;
-__bit_1__ = retval_test();"""
+__bit_1__ = retval_test();
+retval_ = __bit_1__;"""
 
     assert caller.to_ir() == expected_qasm
 
@@ -539,8 +555,10 @@ def retval_constant() -> int[32] {
     int[32] retval_ = 3;
     return retval_;
 }
+output float[64] retval_;
 float[64] __float_4__;
-__float_4__ = retval_recursive();"""
+__float_4__ = retval_recursive();
+retval_ = __float_4__;"""
 
     assert caller.to_ir() == expected_qasm
 

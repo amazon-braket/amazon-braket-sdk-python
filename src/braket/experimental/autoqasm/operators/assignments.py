@@ -59,7 +59,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         # The special logic here is to handle this case properly and avoid
         # declaring a new variable unless it is necessary.
 
-        if is_value_name_used:
+        if program_conversion_context.subroutines_processing and is_value_name_used:
             # This is a value which already exists as a variable in the program.
             # Return it directly without wrapping it or declaring a new variable.
             return value
@@ -81,6 +81,10 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         target = copy.copy(value)
         target.init_expression = None
         target.name = target_name
+
+    if hasattr(value, "name") and target_name == value.name:
+        # Avoid statements like `a = a;`
+        return value
 
     oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
