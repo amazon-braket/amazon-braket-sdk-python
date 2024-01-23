@@ -34,7 +34,7 @@ class CwlInsightsMetricsFetcher:
         poll_interval_seconds: float = 1,
         logger: Logger = getLogger(__name__),  # B008
     ):
-        """Inits a `CwlInsightsMetricsFetcher`.
+        """Initializes a `CwlInsightsMetricsFetcher`.
 
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.

@@ -295,7 +295,7 @@ def _process_s3_source_module(
             copied to.
 
     Raises:
-        ValueError: The entry point is None or does not end with .tar.gz
+        ValueError: The entry point is None or does not end with .tar.gz.
     """
     if entry_point is None:
         raise ValueError("If source_module is an S3 URI, entry_point must be provided.")

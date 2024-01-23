@@ -183,7 +183,7 @@ def flush_log_streams(
             from different streams.
 
     Raises:
-        Exception: Any exception found besides a ResourceNotFoundException
+        Exception: Any exception found besides a ResourceNotFoundException.
 
     Returns:
         bool: Returns 'True' if any streams have been flushed.

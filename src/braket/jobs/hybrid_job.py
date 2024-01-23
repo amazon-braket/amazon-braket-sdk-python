@@ -167,7 +167,7 @@ def hybrid_job(
             """The job wrapper.
 
             Args:
-                *args (Any):  Arbitrary arguments.
+                *args (Any): Arbitrary arguments.
                 **kwargs (Any): Arbitrary keyword arguments.
 
             Returns:
@@ -350,7 +350,7 @@ def _sanitize(hyperparameter: Any) -> str:
 
 
 def _process_input_data(input_data: dict) -> list[str]:
-    """Create symlinks to data
+    """Create symlinks to data.
 
     Logic chart for how the service moves files into the data directory on the instance:
         input data matches exactly one file: cwd/filename -> channel/filename

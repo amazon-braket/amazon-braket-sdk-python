@@ -80,7 +80,7 @@ class AwsQuantumTask(QuantumTask):
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES: ClassVar[set[str]] = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES: ClassVar[set[str]] = {"COMPLETED"}
-    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
+    TERMINAL_STATES: ClassVar[set[str]] = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
     DEFAULT_RESULTS_POLL_INTERVAL = 1
