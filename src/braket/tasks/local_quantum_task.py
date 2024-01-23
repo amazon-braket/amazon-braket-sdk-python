@@ -42,8 +42,11 @@ class LocalQuantumTask(QuantumTask):
         return str(self._id)
 
     def cancel(self) -> None:
-        """Cancel the quantum task."""
-        # A LocalQuantumTask is already completed, so there is nothing to cancel
+        """Attempt to cancel the quantum task.
+
+        Since this class is instantiated with the results, there is nothing to cancel. Attempting
+        to cancel an already completed task is not an error.
+        """
         pass
 
     def state(self) -> str:
