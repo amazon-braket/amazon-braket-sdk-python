@@ -93,6 +93,7 @@ def generate_get_job_response():
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
             "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/data"},
+            "queueInfo": {"position": "1", "queue": "JOBS_QUEUE"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},
@@ -720,6 +721,14 @@ def test_logs(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
@@ -731,6 +740,48 @@ def test_logs(
     assert captured.out == "\n".join(
         (
             "..",
+            "hi there #1",
+            "hi there #2",
+            "hi there #2a",
+            "hi there #3",
+            "",
+        )
+    )
+
+
+def test_logs_queue_progress(
+    quantum_job,
+    generate_get_job_response,
+    log_events_responses,
+    log_stream_responses,
+    capsys,
+):
+    queue_info = {"queue": "JOBS_QUEUE", "position": "1"}
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+    )
+    quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
+    quantum_job._aws_session.get_log_events.side_effect = log_events_responses
+
+    quantum_job.logs(wait=True, poll_interval_seconds=0)
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n".join(
+        (
+            f"Job queue position: {queue_info['position']}",
+            "Running:",
+            "",
             "hi there #1",
             "hi there #2",
             "hi there #2a",
@@ -753,6 +804,15 @@ def test_logs_multiple_instances(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     log_stream_responses[-1]["logStreams"].append({"logStreamName": "stream-2"})
@@ -818,6 +878,7 @@ def test_logs_multiple_instances(
 
 def test_logs_error(quantum_job, generate_get_job_response, capsys):
     quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="COMPLETED"),

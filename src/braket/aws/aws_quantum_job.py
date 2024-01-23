@@ -82,6 +82,7 @@ class AwsQuantumJob(QuantumJob):
         aws_session: AwsSession | None = None,
         tags: dict[str, str] | None = None,
         logger: Logger = getLogger(__name__),
+        quiet: bool = False,
         reservation_arn: str | None = None,
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
@@ -177,6 +178,9 @@ class AwsQuantumJob(QuantumJob):
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
 
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
+
             reservation_arn (str | None): the reservation window arn provided by Braket
                 Direct to reserve exclusive usage for the device to run the hybrid job on.
                 Default: None.
@@ -211,7 +215,7 @@ class AwsQuantumJob(QuantumJob):
         )
 
         job_arn = aws_session.create_job(**create_job_kwargs)
-        job = AwsQuantumJob(job_arn, aws_session)
+        job = AwsQuantumJob(job_arn, aws_session, quiet)
 
         if wait_until_complete:
             print(f"Initializing Braket Job: {job_arn}")
@@ -219,7 +223,7 @@ class AwsQuantumJob(QuantumJob):
 
         return job
 
-    def __init__(self, arn: str, aws_session: AwsSession | None = None):
+    def __init__(self, arn: str, aws_session: AwsSession | None = None, quiet: bool = False):
         """Initializes an `AwsQuantumJob`.
 
         Args:
@@ -227,11 +231,14 @@ class AwsQuantumJob(QuantumJob):
             aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the hybrid job.
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
 
         Raises:
             ValueError: Supplied region and session region do not match.
         """
         self._arn: str = arn
+        self._quiet = quiet
         if aws_session:
             if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
                 raise ValueError(
@@ -379,10 +386,11 @@ class AwsQuantumJob(QuantumJob):
         instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
         has_streams = False
         color_wrap = logs.ColorWrap()
+        previous_state = self.state()
 
         while True:
             time.sleep(poll_interval_seconds)
-
+            current_state = self.state()
             has_streams = logs.flush_log_streams(
                 self._aws_session,
                 log_group,
@@ -392,14 +400,17 @@ class AwsQuantumJob(QuantumJob):
                 instance_count,
                 has_streams,
                 color_wrap,
+                [previous_state, current_state],
+                self.queue_position().queue_position if not self._quiet else None,
             )
+            previous_state = current_state
 
             if log_state == AwsQuantumJob.LogState.COMPLETE:
                 break
 
             if log_state == AwsQuantumJob.LogState.JOB_COMPLETE:
                 log_state = AwsQuantumJob.LogState.COMPLETE
-            elif self.state() in AwsQuantumJob.TERMINAL_STATES:
+            elif current_state in AwsQuantumJob.TERMINAL_STATES:
                 log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
