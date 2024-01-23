@@ -36,7 +36,7 @@ def setup_container(
 
     Returns:
         dict[str, str]: A dictionary of environment variables that reflect Braket Hybrid Jobs
-            options requested by the customer.
+        options requested by the customer.
     """
     logger = getLogger(__name__)
     _create_expected_paths(container, **creation_kwargs)
