@@ -68,7 +68,7 @@ def test_failed_quantum_job(aws_session, capsys):
     ).group(1)
     keys = aws_session.list_keys(
         bucket=s3_bucket,
-        prefix=f"jobs/{job_name}/",
+        prefix=f"jobs/{job_name}/{subdirectory}/",
     )
     assert keys == [f"jobs/{job_name}/{subdirectory}/script/source.tar.gz"]
 
@@ -129,7 +129,7 @@ def test_completed_quantum_job(aws_session, capsys):
     ).group(1)
     keys = aws_session.list_keys(
         bucket=s3_bucket,
-        prefix=f"jobs/{job_name}/",
+        prefix=f"jobs/{job_name}/{subdirectory}/",
     )
     for expected_key in [
         f"jobs/{job_name}/{subdirectory}/script/source.tar.gz",
