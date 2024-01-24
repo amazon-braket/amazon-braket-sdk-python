@@ -453,7 +453,7 @@ def _process_channel(
         return S3DataSourceConfig(location)
     else:
         # local prefix "path/to/prefix" will be mapped to
-        # s3://bucket/jobs/job-name/timestamp/data/input/prefix
+        # s3://bucket/jobs/job-name/subdirectory/data/input/prefix
         location_name = Path(location).name
         s3_prefix = AwsSession.construct_s3_uri(
             aws_session.default_bucket(),

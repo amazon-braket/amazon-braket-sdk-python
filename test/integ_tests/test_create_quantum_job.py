@@ -58,16 +58,19 @@ def test_failed_quantum_job(aws_session, capsys):
     # Check job is in failed state.
     assert job.state() == "FAILED"
 
-    timestamp = job.name.split("-")[-1]
-
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
     job_name = job.name
+    s3_bucket = aws_session.default_bucket()
+    subdirectory = re.match(
+        rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
+        job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
+    ).group(1)
     keys = aws_session.list_keys(
-        bucket=f"amazon-braket-{aws_session.region}-{aws_session.account_id}",
-        prefix=f"jobs/{job_name}/{timestamp}/",
+        bucket=s3_bucket,
+        prefix=f"jobs/{job_name}/",
     )
-    assert keys == [f"jobs/{job_name}/{timestamp}/script/source.tar.gz"]
+    assert keys == [f"jobs/{job_name}/{subdirectory}/script/source.tar.gz"]
 
     # no results saved
     assert job.result() == {}
@@ -116,21 +119,23 @@ def test_completed_quantum_job(aws_session, capsys):
     # check job is in completed state.
     assert job.state() == "COMPLETED"
 
-    timestamp = job.name.split("-")[-1]
-
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
     job_name = job.name
-    s3_bucket = f"amazon-braket-{aws_session.region}-{aws_session.account_id}"
+    s3_bucket = aws_session.default_bucket()
+    subdirectory = re.match(
+        rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
+        job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
+    ).group(1)
     keys = aws_session.list_keys(
         bucket=s3_bucket,
-        prefix=f"jobs/{job_name}/{timestamp}/",
+        prefix=f"jobs/{job_name}/",
     )
     for expected_key in [
-        f"jobs/{job_name}/{timestamp}/script/source.tar.gz",
-        f"jobs/{job_name}/{timestamp}/data/output/model.tar.gz",
-        f"jobs/{job_name}/{timestamp}/checkpoints/{job_name}_plain_data.json",
-        f"jobs/{job_name}/{timestamp}/checkpoints/{job_name}.json",
+        f"jobs/{job_name}/{subdirectory}/script/source.tar.gz",
+        f"jobs/{job_name}/{subdirectory}/data/output/model.tar.gz",
+        f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}_plain_data.json",
+        f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}.json",
     ]:
         assert any(re.match(expected_key, key) for key in keys)
 
@@ -145,7 +150,7 @@ def test_completed_quantum_job(aws_session, capsys):
     # Check if checkpoint is uploaded in requested format.
     for s3_key, expected_data in [
         (
-            f"jobs/{job_name}/{timestamp}/checkpoints/{job_name}_plain_data.json",
+            f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}_plain_data.json",
             {
                 "braketSchemaHeader": {
                     "name": "braket.jobs_data.persisted_job_data",
@@ -156,7 +161,7 @@ def test_completed_quantum_job(aws_session, capsys):
             },
         ),
         (
-            f"jobs/{job_name}/{timestamp}/checkpoints/{job_name}.json",
+            f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}.json",
             {
                 "braketSchemaHeader": {
                     "name": "braket.jobs_data.persisted_job_data",
