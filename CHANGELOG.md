@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.68.0 (2024-01-25)
+
+### Features
+
+ * update S3 locations for jobs
+
 ## v1.67.0 (2024-01-23)
 
 ### Features

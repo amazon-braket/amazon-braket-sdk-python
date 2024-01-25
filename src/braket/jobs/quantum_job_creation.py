@@ -158,14 +158,15 @@ def prepare_quantum_job(
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
-    job_name = job_name or _generate_default_job_name(image_uri=image_uri)
+    timestamp = str(int(time.time() * 1000))
+    job_name = job_name or _generate_default_job_name(image_uri=image_uri, timestamp=timestamp)
     role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = input_data or {}
     tags = tags or {}
     default_bucket = aws_session.default_bucket()
-    input_data_list = _process_input_data(input_data, job_name, aws_session)
+    input_data_list = _process_input_data(input_data, job_name, aws_session, timestamp)
     instance_config = instance_config or InstanceConfig()
     stopping_condition = stopping_condition or StoppingCondition()
     output_data_config = output_data_config or OutputDataConfig()
@@ -174,6 +175,7 @@ def prepare_quantum_job(
         default_bucket,
         "jobs",
         job_name,
+        timestamp,
         "script",
     )
 
@@ -198,6 +200,7 @@ def prepare_quantum_job(
             default_bucket,
             "jobs",
             job_name,
+            timestamp,
             "data",
         )
     if not checkpoint_config.s3Uri:
@@ -205,6 +208,7 @@ def prepare_quantum_job(
             default_bucket,
             "jobs",
             job_name,
+            timestamp,
             "checkpoints",
         )
     if copy_checkpoints_from_job:
@@ -248,18 +252,21 @@ def prepare_quantum_job(
     return create_job_kwargs
 
 
-def _generate_default_job_name(image_uri: str | None = None, func: Callable | None = None) -> str:
+def _generate_default_job_name(
+    image_uri: str | None = None, func: Callable | None = None, timestamp: int | str | None = None
+) -> str:
     """Generate default job name using the image uri and entrypoint function.
 
     Args:
         image_uri (str | None): URI for the image container.
         func (Callable | None): The entry point function.
+        timestamp (int | str | None): Optional timestamp to use instead of generating one.
 
     Returns:
         str: Hybrid job name.
     """
     max_length = 50
-    timestamp = str(int(time.time() * 1000))
+    timestamp = timestamp if timestamp is not None else str(int(time.time() * 1000))
 
     if func:
         name = func.__name__.replace("_", "-")
@@ -401,7 +408,10 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
 
 
 def _process_input_data(
-    input_data: str | dict | S3DataSourceConfig, job_name: str, aws_session: AwsSession
+    input_data: str | dict | S3DataSourceConfig,
+    job_name: str,
+    aws_session: AwsSession,
+    subdirectory: str,
 ) -> list[dict[str, Any]]:
     """Convert input data into a list of dicts compatible with the Braket API.
 
@@ -411,6 +421,7 @@ def _process_input_data(
             can be an S3DataSourceConfig or a str corresponding to a local prefix or S3 prefix.
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession for possibly uploading local data.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         list[dict[str, Any]]: A list of channel configs.
@@ -419,12 +430,18 @@ def _process_input_data(
         input_data = {"input": input_data}
     for channel_name, data in input_data.items():
         if not isinstance(data, S3DataSourceConfig):
-            input_data[channel_name] = _process_channel(data, job_name, aws_session, channel_name)
+            input_data[channel_name] = _process_channel(
+                data, job_name, aws_session, channel_name, subdirectory
+            )
     return _convert_input_to_config(input_data)
 
 
 def _process_channel(
-    location: str, job_name: str, aws_session: AwsSession, channel_name: str
+    location: str,
+    job_name: str,
+    aws_session: AwsSession,
+    channel_name: str,
+    subdirectory: str,
 ) -> S3DataSourceConfig:
     """Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
 
@@ -433,6 +450,7 @@ def _process_channel(
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession to be used for uploading local data.
         channel_name (str): Name of the channel.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         S3DataSourceConfig: S3DataSourceConfig for the channel.
@@ -441,10 +459,16 @@ def _process_channel(
         return S3DataSourceConfig(location)
     else:
         # local prefix "path/to/prefix" will be mapped to
-        # s3://bucket/jobs/job-name/data/input/prefix
+        # s3://bucket/jobs/job-name/subdirectory/data/input/prefix
         location_name = Path(location).name
         s3_prefix = AwsSession.construct_s3_uri(
-            aws_session.default_bucket(), "jobs", job_name, "data", channel_name, location_name
+            aws_session.default_bucket(),
+            "jobs",
+            job_name,
+            subdirectory,
+            "data",
+            channel_name,
+            location_name,
         )
         aws_session.upload_local_data(location, s3_prefix)
         return S3DataSourceConfig(s3_prefix)
