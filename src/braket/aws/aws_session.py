@@ -682,7 +682,6 @@ class AwsSession:
             s3_uri_match = re.match("^https://([^./]+).[sS]3.[^/]+/(.+)$", s3_uri) or re.match(
                 "^[sS]3://([^./]+)/(.+)$", s3_uri
             )
-            print(s3_uri_match)
             if s3_uri_match is None:
                 print("test")
                 raise AssertionError
