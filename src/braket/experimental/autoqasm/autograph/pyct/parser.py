@@ -145,7 +145,7 @@ def parse_entity(entity, future_features):
     return _parse_lambda(entity)
 
   try:
-      original_source = inspect_utils.getimmediatesource(entity)
+    original_source = inspect_utils.getimmediatesource(entity)
   except OSError as e:
     raise errors.InaccessibleSourceCodeError(
         f'Unable to locate the source code of {entity}. Note that functions'
