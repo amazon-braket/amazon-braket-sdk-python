@@ -21,7 +21,7 @@ import numpy as np
 import oqpy
 
 from braket.circuits import compiler_directives
-from braket.circuits.box_drawing_circuit_diagram import BoxDrawingCircuitDiagram
+from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -82,7 +82,7 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
-    default_diagram_builder = BoxDrawingCircuitDiagram
+    default_diagram_builder = AsciiCircuitDiagram
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -1093,13 +1093,13 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class: type = BoxDrawingCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: type = AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
 
         Args:
             circuit_diagram_class (type): A `CircuitDiagram` class that builds the
-                diagram for this circuit. Default = `BoxDrawingCircuitDiagram`.
+                diagram for this circuit. Default = `AsciiCircuitDiagram`.
 
         Returns:
             str: An ASCII string circuit diagram.
