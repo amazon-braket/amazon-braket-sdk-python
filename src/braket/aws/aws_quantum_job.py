@@ -24,6 +24,7 @@ from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
+
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
@@ -255,7 +256,7 @@ class AwsQuantumJob(QuantumJob):
 
         Returns:
             bool: `True` when the aws_session region matches the job_arn region; otherwise
-             `False`.
+            `False`.
         """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region

@@ -19,10 +19,11 @@ from collections.abc import Sequence
 from functools import singledispatch
 from typing import Optional, Union
 
+from sympy import Float
+
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.parameterizable import Parameterizable
-from sympy import Float
 
 
 class AngledGate(Gate, Parameterizable):

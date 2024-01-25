@@ -17,6 +17,7 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
+
 from braket.circuits.operator import Operator
 
 
@@ -24,7 +25,9 @@ class QuantumOperator(Operator):
     """A quantum operator is the definition of a quantum operation for a quantum device."""
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """Args:
+        """Initializes a `QuantumOperator`.
+
+        Args:
             qubit_count (Optional[int]): Number of qubits this quantum operator acts on.
                 If all instances of the operator act on the same number of qubits, this argument
                 should be ``None``, and ``fixed_qubit_count`` should be implemented to return

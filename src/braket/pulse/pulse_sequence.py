@@ -18,6 +18,10 @@ from copy import deepcopy
 from inspect import signature
 from typing import Any, Union
 
+from openpulse import ast
+from oqpy import BitVar, PhysicalQubits, Program
+from oqpy.timing import OQDurationLiteral
+
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
@@ -32,9 +36,6 @@ from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit_set import QubitSet
-from openpulse import ast
-from oqpy import BitVar, PhysicalQubits, Program
-from oqpy.timing import OQDurationLiteral
 
 
 class PulseSequence:
@@ -340,7 +341,7 @@ class PulseSequence:
     def _parse_from_calibration_schema(
         cls, calibration: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> PulseSequence:
-        """Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
+        """Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26. # noqa: E501
 
         Args:
             calibration (dict): The pulse instruction to parse

@@ -28,6 +28,7 @@ from types import ModuleType
 from typing import Any
 
 import cloudpickle
+
 from braket.aws.aws_session import AwsSession
 from braket.jobs._entry_point_template import run_entry_point, symlink_input_data
 from braket.jobs.config import (

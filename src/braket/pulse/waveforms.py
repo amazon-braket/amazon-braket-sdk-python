@@ -19,6 +19,10 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
+from oqpy.base import OQPyExpression
+from oqpy.timing import OQDurationLiteral
+
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
     FreeParameterExpression,
@@ -26,9 +30,6 @@ from braket.parametric.free_parameter_expression import (
 )
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
-from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
-from oqpy.base import OQPyExpression
-from oqpy.timing import OQDurationLiteral
 
 
 class Waveform(ABC):
@@ -58,7 +59,7 @@ class Waveform(ABC):
     @staticmethod
     @abstractmethod
     def _from_calibration_schema(waveform_json: dict) -> Waveform:
-        """Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
+        """Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104 # noqa: E501
 
         Args:
             waveform_json (dict): A JSON object with the needed parameters for making the Waveform.

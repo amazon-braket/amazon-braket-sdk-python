@@ -15,8 +15,9 @@ import itertools
 from collections.abc import Iterable
 from typing import Any, ClassVar, Union
 
-import braket.ir.jaqcd as ir
 import numpy as np
+
+import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -97,7 +98,7 @@ class BitFlip(SingleProbabilisticNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -202,7 +203,7 @@ class PhaseFlip(SingleProbabilisticNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -342,7 +343,7 @@ class PauliChannel(PauliNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probX - self.probY - self.probZ) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probX) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -478,7 +479,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability / 3) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -609,7 +610,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SX = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -734,7 +735,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SZ = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -878,7 +879,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         if self._matrix is not None:
             return self._matrix
@@ -1006,7 +1007,7 @@ class AmplitudeDamping(DampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, np.sqrt(self.gamma)], [0.0, 0.0]], dtype=complex)
@@ -1130,7 +1131,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(self.probability) * np.array(
             [[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex
@@ -1249,7 +1250,7 @@ class PhaseDamping(DampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.gamma)]], dtype=complex)
@@ -1312,7 +1313,7 @@ class Kraus(Noise):
         """Inits `Kraus`.
 
         Args:
-            matrices (Iterable[np.ndarray]): A list of matrices that define a noise
+            matrices (Iterable[ndarray]): A list of matrices that define a noise
                 channel. These matrices need to satisfy the requirement of CPTP map.
             display_name (str): Name to be used for an instance of this general noise
                 channel for circuit diagrams. Defaults to `KR`.
@@ -1347,7 +1348,7 @@ class Kraus(Noise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[np.ndarray]: A list of matrix representations of this noise.
+            Iterable[ndarray]: A list of matrix representations of this noise.
         """
         return self._matrices
 
@@ -1392,7 +1393,7 @@ class Kraus(Noise):
 
         Args:
             targets (QubitSetInput): Target qubit(s)
-            matrices (Iterable[np.array]): Matrices that define a general noise channel.
+            matrices (Iterable[array]): Matrices that define a general noise channel.
             display_name (str): The display name.
 
         Returns:

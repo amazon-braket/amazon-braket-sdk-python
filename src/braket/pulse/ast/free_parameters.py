@@ -13,10 +13,11 @@
 
 from typing import Union
 
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 from openpulse import ast
 from openqasm3.ast import DurationLiteral
 from openqasm3.visitor import QASMTransformer
+
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class _FreeParameterExpressionIdentifier(ast.Identifier):
@@ -44,10 +45,10 @@ class _FreeParameterTransformer(QASMTransformer):
         """Visit a FreeParameterExpressionIdentifier.
 
         Args:
-            identifier (ast.Identifier): The identifier.
+            identifier (Identifier): The identifier.
 
         Returns:
-            Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]: The transformed expression.
+            Union[_FreeParameterExpressionIdentifier, FloatLiteral]: The transformed expression.
         """
         new_value = identifier.expression.subs(self.param_values)
         if isinstance(new_value, FreeParameterExpression):

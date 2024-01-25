@@ -88,7 +88,7 @@ def get_observable(obs: Union[models.Observable, list]) -> Observable:
     """Gets the observable.
 
     Args:
-        obs (Union[models.Observable, list]): The observable(s) to get translated.
+        obs (Union[Observable, list]): The observable(s) to get translated.
 
     Returns:
         Observable: The translated observable.
@@ -115,7 +115,7 @@ def get_tensor_product(observable: Union[models.Observable, list]) -> Observable
     """Generate an braket circuit observable
 
     Args:
-        observable (Union[models.Observable, list]): ir observable or a matrix
+        observable (Union[Observable, list]): ir observable or a matrix
 
     Returns:
         Observable: braket circuit observable

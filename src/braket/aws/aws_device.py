@@ -23,6 +23,8 @@ from enum import Enum
 from typing import Any, ClassVar, Optional, Union
 
 from botocore.errorfactory import ClientError
+from networkx import DiGraph, complete_graph, from_edgelist
+
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -35,9 +37,7 @@ from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuP
 from braket.device_schema.dwave import DwaveProviderProperties
 
 # TODO: Remove device_action module once this is added to init in the schemas repo
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (
-    PulseDeviceActionProperties,
-)
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -46,7 +46,6 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
-from networkx import DiGraph, complete_graph, from_edgelist
 
 
 class AwsDeviceType(str, Enum):
@@ -133,7 +132,7 @@ class AwsDevice(Device):
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]):
                 Specification of quantum task (circuit, OpenQASM program or AHS program)
                 to run on device.
-            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
@@ -252,7 +251,7 @@ class AwsDevice(Device):
             task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], list[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
-            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.

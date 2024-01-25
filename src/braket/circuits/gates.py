@@ -17,8 +17,10 @@ from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any, Optional, Union
 
-import braket.ir.jaqcd as ir
 import numpy as np
+from oqpy import Program
+
+import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
     AngledGate,
@@ -43,7 +45,6 @@ from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
-from oqpy import Program
 
 """
 To add a new gate:

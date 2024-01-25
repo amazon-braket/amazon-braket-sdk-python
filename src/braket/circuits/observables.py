@@ -21,6 +21,7 @@ from copy import deepcopy
 from typing import ClassVar, Union
 
 import numpy as np
+
 from braket.circuits.gate import Gate
 from braket.circuits.observable import Observable, StandardObservable
 from braket.circuits.quantum_operator_helpers import (
@@ -621,10 +622,10 @@ class Hermitian(Observable):
         be recalculated.
 
         Args:
-            matrix (np.ndarray): The Hermitian matrix.
+            matrix (ndarray): The Hermitian matrix.
 
         Returns:
-            dict[str, np.ndarray]: The keys are "eigenvectors_conj_t", mapping to the
+            dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
             conjugate transpose of a matrix whose columns are the eigenvectors of the matrix,
             and "eigenvalues", a list of associated eigenvalues in the order of their
             corresponding eigenvectors in the "eigenvectors" matrix. These cached values

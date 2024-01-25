@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
+
 from braket.annealing import ProblemType
 from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 

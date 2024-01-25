@@ -23,11 +23,12 @@ from typing import Any, NamedTuple, Optional
 
 import backoff
 import boto3
-import braket._schemas as braket_schemas
-import braket._sdk as braket_sdk
 from botocore import awsrequest, client
 from botocore.config import Config
 from botocore.exceptions import ClientError
+
+import braket._schemas as braket_schemas
+import braket._sdk as braket_sdk
 from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
@@ -202,7 +203,9 @@ class AwsSession:
             request.headers.add_header("User-Agent", self._braket_user_agents)
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
+    def _add_cost_tracker_count_handler(
+        request: awsrequest.AWSRequest, **kwargs
+    ) -> None:  # noqa: ARG004
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -288,13 +291,13 @@ class AwsSession:
         return response
 
     def get_default_jobs_role(self) -> str:
-        """Returns the role ARN for the default hybrid jobs role created in the Amazon Braket
+        """This returns the role ARN for the default hybrid jobs role created in the Amazon Braket
         Console. It will pick the first role it finds with the `RoleName` prefix
         `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
         Returns:
             str: The ARN for the default IAM role for jobs execution created in the Amazon
-                Braket console.
+            Braket console.
 
         Raises:
             RuntimeError: If no roles can be found with the prefix

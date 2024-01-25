@@ -16,8 +16,11 @@ from braket.device_schema import error_mitigation
 
 class ErrorMitigation:
     def serialize(self) -> list[error_mitigation.ErrorMitigationScheme]:
-        """Returns:
-            list[error_mitigation.ErrorMitigationScheme]: A list of service-readable error
+        """This returns a list of service-readable error mitigation
+        scheme descriptions.
+
+        Returns:
+            list[ErrorMitigationScheme]: A list of service-readable error
             mitigation scheme descriptions.
 
         Raises:

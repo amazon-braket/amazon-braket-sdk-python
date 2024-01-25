@@ -24,6 +24,7 @@ from collections.abc import Generator
 from typing import ClassVar, Optional
 
 from botocore.exceptions import ClientError
+
 from braket.aws.aws_session import AwsSession
 
 
@@ -153,7 +154,7 @@ def log_stream(
         yield from events
 
 
-def flush_log_streams(  # C901
+def flush_log_streams(  # noqa C901
     aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,

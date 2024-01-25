@@ -17,6 +17,7 @@ from collections.abc import Iterable, Sequence
 from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
+
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
@@ -542,22 +543,28 @@ class PauliNoise(Noise, Parameterizable):
 
     @property
     def probX(self) -> Union[FreeParameterExpression, float]:
-        """Returns:
-        Union[FreeParameterExpression, float]: The probability of a Pauli X error.
+        """The probability of a Pauli X error.
+
+        Returns:
+            Union[FreeParameterExpression, float]: The probability of a Pauli X error.
         """
         return self._parameters[0]
 
     @property
     def probY(self) -> Union[FreeParameterExpression, float]:
-        """Returns:
-        Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
+        """The probability of a Pauli Y error.
+
+        Returns:
+            Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
         """
         return self._parameters[1]
 
     @property
     def probZ(self) -> Union[FreeParameterExpression, float]:
-        """Returns:
-        Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
+        """The probability of a Pauli Z error.
+
+        Returns:
+            Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
         """
         return self._parameters[2]
 

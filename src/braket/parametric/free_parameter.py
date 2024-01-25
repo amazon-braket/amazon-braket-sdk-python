@@ -16,8 +16,9 @@ from __future__ import annotations
 from numbers import Number
 from typing import Union
 
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 from sympy import Symbol
+
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class FreeParameter(FreeParameterExpression):

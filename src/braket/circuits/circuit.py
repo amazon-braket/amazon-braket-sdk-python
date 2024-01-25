@@ -19,6 +19,7 @@ from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
+
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
@@ -1114,7 +1115,7 @@ class Circuit:
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
-                `ir_type` format.
+            `ir_type` format.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization

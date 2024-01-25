@@ -19,6 +19,7 @@ from copy import deepcopy
 from typing import Union
 
 import numpy as np
+
 from braket.circuits.gate import Gate
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.serialization import (
@@ -61,7 +62,7 @@ class Observable(QuantumOperator):
 
         Returns:
             Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
-                the observable.
+            the observable.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization

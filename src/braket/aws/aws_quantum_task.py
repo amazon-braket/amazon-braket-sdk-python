@@ -20,6 +20,7 @@ from logging import Logger, getLogger
 from typing import Any, ClassVar, Optional, Union
 
 import boto3
+
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
@@ -408,8 +409,8 @@ class AwsQuantumTask(QuantumTask):
         Consecutive calls to this method return a cached result from the preceding request.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
-            The result of the quantum task, if the quantum task completed successfully; returns
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: The
+            result of the quantum task, if the quantum task completed successfully; returns
             `None` if the quantum task did not complete successfully or the future timed out.
         """  # noqa E501
         if self._result or (

@@ -53,8 +53,8 @@ class QuantumTask(ABC):
         """Get the quantum task result.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
-            Get the quantum task result. Call async_result if you want the result in an
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: Get
+            the quantum task result. Call async_result if you want the result in an
             asynchronous way.
         """  # noqa E501
 

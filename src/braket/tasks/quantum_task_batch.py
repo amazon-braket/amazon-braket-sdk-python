@@ -33,6 +33,6 @@ class QuantumTaskBatch(ABC):
         """Get the quantum task results.
 
         Returns:
-            list[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]::
-            Get the quantum task results.
-        """  # noqa
+            list[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]: Get
+            the quantum task results.
+        """  # noqa: E501

@@ -20,6 +20,7 @@ from os import cpu_count
 from typing import Any, Optional, Union
 
 import pkg_resources
+
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
