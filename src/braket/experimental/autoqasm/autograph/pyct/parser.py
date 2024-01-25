@@ -25,8 +25,6 @@ import re
 import sys
 import textwrap
 import tokenize
-import json
-import os
 
 import astunparse
 import gast
@@ -130,21 +128,6 @@ def dedent_block(code_string):
   return new_code
 
 
-def in_hybrid_job():
-  if "AMZN_BRAKET_INPUT_DIR" in os.environ:
-    input_dir = os.environ["AMZN_BRAKET_INPUT_DIR"]
-    inner_source_file_path = f"{input_dir}/inner_function_source/inner_function_source.json"
-    return os.path.exists(inner_source_file_path)
-  return False
-
-def get_source_from_job(entity):
-  input_dir = os.environ["AMZN_BRAKET_INPUT_DIR"]
-  inner_source_file_path = f"{input_dir}/inner_function_source/inner_function_source.json"
-  with open(inner_source_file_path, "r") as f:
-      inner_source = json.load(f)
-  return inner_source[entity.__qualname__]
-
-
 def parse_entity(entity, future_features):
   """Returns the AST and source code of given entity.
 
@@ -162,9 +145,6 @@ def parse_entity(entity, future_features):
     return _parse_lambda(entity)
 
   try:
-    if in_hybrid_job():
-      original_source = get_source_from_job(entity)
-    else:  
       original_source = inspect_utils.getimmediatesource(entity)
   except OSError as e:
     raise errors.InaccessibleSourceCodeError(

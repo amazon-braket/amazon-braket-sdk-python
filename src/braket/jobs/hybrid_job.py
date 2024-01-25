@@ -16,18 +16,18 @@ from __future__ import annotations
 import functools
 import importlib.util
 import inspect
+import os
 import re
 import shutil
 import sys
 import tempfile
 import warnings
 from collections.abc import Callable, Iterable
+from contextlib import contextmanager
 from logging import Logger, getLogger
 from pathlib import Path
-from types import ModuleType
+from types import CodeType, ModuleType
 from typing import Any
-import json
-from contextlib import contextmanager
 
 import cloudpickle
 
@@ -41,8 +41,12 @@ from braket.jobs.config import (
     StoppingCondition,
 )
 from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
+from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
+
+INNER_SOURCE_INPUT_CHANNEL = "inner_function_source"
+INNER_SOURCE_INPUT_FOLDER = "inner_function_source_folder"
 
 
 def hybrid_job(
@@ -173,10 +177,10 @@ def hybrid_job(
                 Callable: the callable for creating a Hybrid Job.
             """
             with (
-                _IncludeModules(include_modules), 
+                _IncludeModules(include_modules),
                 tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
-                persist_inner_function_source(entry_point) as inner_source_file_path
-            ):  
+                persist_inner_function_source(entry_point) as inner_source_input,
+            ):
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
@@ -197,7 +201,7 @@ def hybrid_job(
                     "entry_point": (
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
-                    "input_data": {"inner_function_source": inner_source_file_path},
+                    "input_data": inner_source_input,
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
@@ -231,44 +235,92 @@ def hybrid_job(
 
 @contextmanager
 def persist_inner_function_source(entry_point: callable) -> None:
-    """Persist the mapping between the name and the source code for each inner function inside the
-    entry point, as a dictionary in a json file.
+    """Persist the source code of the cloudpickled function by saving its source code as input data
+    and replace the source file path with the saved one.
 
     Args:
         entry_point (callable): The job decorated function.
     """
-    inner_source = _get_inner_function_source(entry_point.__code__)
+    inner_source_mapping = _get_inner_function_source(entry_point.__code__)
+
     with tempfile.TemporaryDirectory() as temp_dir:
-        inner_source_file_path = f'{temp_dir}/inner_function_source.json'
-        with open(inner_source_file_path, "w") as inner_source_file:
-            json.dump(inner_source, inner_source_file)
-        yield inner_source_file_path
+        copy_dir = f"{temp_dir}/{INNER_SOURCE_INPUT_FOLDER}"
+        os.mkdir(copy_dir)
+        path_mapping = _save_inner_source_to_file(inner_source_mapping, copy_dir)
+        entry_point.__code__ = _replace_inner_function_source_path(
+            entry_point.__code__, path_mapping
+        )
+        yield {INNER_SOURCE_INPUT_CHANNEL: copy_dir}
 
 
-def _get_inner_function_source(cob_object: callable) -> dict[str, str]:
-    """Returns a dictionary that maps the function name to source code for all inner functions
-    inside the job decorated function.
+def _replace_inner_function_source_path(
+    code_object: CodeType, path_mapping: dict[str, str]
+) -> CodeType:
+    """Recursively replace source code file path of the code object and of its child node's code
+    objects.
 
     Args:
-        outer_function (callable): The outer function.
+        code_object (CodeType): Code object which source code file path to be replaced.
+        path_mapping (dict[str, str]): Mapping between local file path to path in a job
+            environment.
 
     Returns:
-        dict[str, str]: Mapping between name and source code of each inner functions.
+        CodeType: Code object with the source code file path replaced
+    """
+    new_co_consts = []
+    for const in code_object.co_consts:
+        if inspect.iscode(const):
+            new_path = path_mapping[const.co_filename]
+            const = const.replace(co_filename=new_path)
+            const = _replace_inner_function_source_path(const, path_mapping)
+        new_co_consts.append(const)
+
+    code_object = code_object.replace(co_consts=tuple(new_co_consts))
+    return code_object
+
+
+def _save_inner_source_to_file(inner_source: dict[str, str], input_data_dir: str) -> dict[str, str]:
+    """Saves the source code as input data for a job and returns a dictionary that maps the local
+    source file path of a function to the one to be used in the job environment.
+
+    Args:
+        inner_source (dict[str, str]): Mapping between source file name and source code.
+        input_data_dir (str): The path of the folder to be uploaded to job as input data.
+
+    Returns:
+        dict[str, str]: Mapping between local file path to path in a job environment.
+    """
+
+    # Save local source files to a temporary folder to be uploaded as input data
+    path_mapping = {}
+    for i, (local_path, source_code) in enumerate(inner_source.items()):
+        copy_file_name = f"source_{i}.py"
+        with open(f"{input_data_dir}/{copy_file_name}", "w") as f:
+            f.write(source_code)
+
+        path_mapping[local_path] = os.path.join(
+            _get_env_input_data()["AMZN_BRAKET_INPUT_DIR"],
+            INNER_SOURCE_INPUT_CHANNEL,
+            copy_file_name,
+        )
+    return path_mapping
+
+
+def _get_inner_function_source(code_object: CodeType) -> dict[str, str]:
+    """Returns a dictionary that maps the source file name to source code for all source files
+    used by the inner functions inside the job decorated function.
+    Args:
+        outer_function (callable): The outer function.
+    Returns:
+        dict[str, str]: Mapping between source file name and source code.
     """
     inner_source = {}
-
-    idx = 0
-    while idx < len(cob_object.co_consts):
-        const = cob_object.co_consts[idx]
-        
+    for const in code_object.co_consts:
         if inspect.iscode(const):
-            qual_name = cob_object.co_consts[idx+1]
-            inner_source.update({qual_name: inspect.getsource(const)})
+            source_file_path = inspect.getfile(code_object)
+            lines, _ = inspect.findsource(code_object)
+            inner_source.update({source_file_path: "".join(lines)})
             inner_source.update(_get_inner_function_source(const))
-            idx += 2
-        else:
-            idx += 1
-
     return inner_source
 
 
