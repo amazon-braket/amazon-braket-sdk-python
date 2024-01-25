@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.68.0 (2024-01-25)
+
+### Features
+
+ * update S3 locations for jobs
+
+## v1.67.0 (2024-01-23)
+
+### Features
+
+ * add queue position to the logs for tasks and jobs
+
 ## v1.66.0 (2024-01-11)
 
 ### Features
