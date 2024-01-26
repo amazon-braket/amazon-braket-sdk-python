@@ -205,33 +205,25 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         single_input = isinstance(inputs, dict)
         single_gate_definitions = gate_definitions is None or isinstance(gate_definitions, dict)
 
-        non_zero_lengths = []
+        batch_lengths = []
         if single_task:
             task_specifications = repeat(task_specifications)
         else:
-            non_zero_lengths.append(len(task_specifications))
+            batch_lengths.append(len(task_specifications))
         if single_input:
             inputs = repeat(inputs)
         else:
-            non_zero_lengths.append(len(inputs))
+            batch_lengths.append(len(inputs))
         if single_gate_definitions:
             gate_definitions = repeat(gate_definitions)
         else:
-            non_zero_lengths.append(len(gate_definitions))
+            batch_lengths.append(len(gate_definitions))
 
-        # list all variables that are not singleton
-        non_single_vars = (
-            [(a, b) for i, a in enumerate(non_zero_lengths) for b in non_zero_lengths[i + 1 :]]
-            if len(non_zero_lengths) > 1
-            else []
-        )
-
-        # check size for each couple
-        for c in non_single_vars:
-            if c[0] != c[1]:
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
+        if any(length != batch_lengths[0] for length in batch_lengths[1:]):
+            raise ValueError(
+                "Multiple inputs, task specifications and gate definitions must "
+                "be equal in number."
+            )
 
         tasks_and_inputs = zip(task_specifications, inputs, gate_definitions)
 
