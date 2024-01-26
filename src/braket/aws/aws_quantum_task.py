@@ -189,6 +189,7 @@ class AwsQuantumTask(QuantumTask):
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
         inputs = inputs or {}
+        gate_definitions = gate_definitions or {}
 
         if reservation_arn:
             create_task_kwargs.update(
@@ -563,7 +564,7 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -579,7 +580,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -602,7 +603,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -641,7 +642,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -659,7 +660,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -680,7 +681,7 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
-        or gate_definitions is not None
+        or gate_definitions
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
