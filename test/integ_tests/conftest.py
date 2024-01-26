@@ -28,8 +28,8 @@ DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 SIMULATOR_ARNS = [SV1_ARN, DM1_ARN, TN1_ARN]
 
-job_complete_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
-job_fail_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
+job_complete_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
+job_fail_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
 
 
 def pytest_configure_node(node):
@@ -38,14 +38,16 @@ def pytest_configure_node(node):
     node.workerinput["JOB_FAILED_NAME"] = job_fail_name
 
 
-def pytest_configure():
-    """Commands ran at the start of pytest. Worker nodes have not been started yet."""
+def pytest_xdist_node_collection_finished(ids):
+    """Uses the pytest xdist hook to check whether tests with jobs are to be ran.
+    If they are, the first reporting worker sets a flag that it created the tests
+    to avoid concurrency limits. This is the first time in the pytest setup the
+    controller has all the tests to be ran from the worker nodes.
+    """
+    run_jobs = any("job" in test for test in ids)
     profile_name = os.environ["AWS_PROFILE"]
     aws_session = AwsSession(boto3.session.Session(profile_name=profile_name))
-    # We want to have the controller thread start the jobs. Later the job name is passed to
-    # the nodes.
-    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
-    if worker_id is None:
+    if run_jobs and os.getenv("JOBS_STARTED") is None:
         AwsQuantumJob.create(
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             job_name=job_fail_name,
@@ -64,6 +66,7 @@ def pytest_configure():
             wait_until_complete=False,
             hyperparameters={"test_case": "completed"},
         )
+        os.environ["JOBS_STARTED"] = "True"
 
 
 @pytest.fixture(scope="session")
@@ -139,7 +142,7 @@ def braket_simulators(aws_session):
 
 @pytest.fixture(scope="session")
 def braket_devices():
-    return AwsDevice.get_devices()
+    return AwsDevice.get_devices(statuses=["RETIRED", "ONLINE", "OFFLINE"])
 
 
 @pytest.fixture(scope="session", autouse=True)
