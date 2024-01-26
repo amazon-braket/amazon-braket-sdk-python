@@ -104,7 +104,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         quiet: bool = False,
         reservation_arn: str | None = None,
         *args,
@@ -147,9 +147,9 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None):
-                A `Dict` for user defined gate calibration. The calibration is defined for
-                for a particular `Gate` on a particular `QubitSet` and is represented by
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A `Dict`
+                for user defined gate calibration. The calibration is defined for
+                a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
                 Default: None.
 
