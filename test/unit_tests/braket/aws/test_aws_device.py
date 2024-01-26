@@ -22,6 +22,7 @@ import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
 from common_test_utils import (
+    DM1_ARN,
     DWAVE_ARN,
     IONQ_ARN,
     OQC_ARN,
@@ -362,6 +363,27 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
             "version": ["1"],
             "supportedOperations": ["H"],
         },
+    },
+    "paradigm": {"qubitCount": 30},
+    "deviceParameters": {},
+}
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.simulators.gate_model_simulator_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
         "braket.ir.openqasm.program": {
             "actionType": "braket.ir.openqasm.program",
             "version": ["1"],
@@ -409,6 +431,18 @@ def test_gate_model_sim_schema():
     )
 
 
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON
+)
+
+
+def test_gate_model_sim_schema():
+    validate(
+        MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON,
+        GateModelSimulatorDeviceCapabilities.schema(),
+    )
+
+
 MOCK_GATE_MODEL_SIMULATOR = {
     "deviceName": "SV1",
     "deviceType": "SIMULATOR",
@@ -416,6 +450,16 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceStatus": "ONLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
+
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR = {
+    "deviceName": "DM1",
+    "deviceType": "SIMULATOR",
+    "providerName": "provider1",
+    "deviceStatus": "ONLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES.json(),
+}
+
 
 MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "amazon-braket-us-test-1-00000000",
@@ -2121,9 +2165,9 @@ def noise_model():
 @patch("braket.aws.aws_device.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_noise_model(aws_quantum_task_mock, aws_session_init, aws_session, noise_model):
-    arn = SV1_ARN
+    arn = DM1_ARN
     aws_session_init.return_value = aws_session
-    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
     device = AwsDevice(arn, noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
     _ = device.run(circuit)
