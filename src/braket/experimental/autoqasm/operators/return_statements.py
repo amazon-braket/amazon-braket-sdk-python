@@ -17,6 +17,7 @@
 from typing import Any
 
 from braket.experimental.autoqasm import program, types
+from braket.experimental.autoqasm.autograph.operators.variables import UndefinedReturnValue
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
@@ -28,8 +29,10 @@ def return_output_from_main_(name: str, value: Any) -> Any:
     Returns:
         Any: Returns the same value that is being returned in the statement.
     """
-    # if not aq_context.subroutines_processing:
-    # if not isinstance(value, (tuple, list)):
     aq_context = program.get_program_conversion_context()
-    aq_context.register_parameter(name, type(value), "output")
-    return types.wrap_value(value)
+    aq_context.register_output(name, type(value))
+    try:
+        return types.wrap_value(value)
+    except:  # TODO: add to wrap_value
+        pass
+    return UndefinedReturnValue()

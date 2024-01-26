@@ -356,10 +356,7 @@ class ProgramConversionContext:
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(
-        self,
-        parameter_name: str,
-        parameter_type: Union[float, int, bool] = float,
-        io_type: str = "input",
+        self, parameter_name: str, parameter_type: Union[float, int, bool] = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
@@ -367,13 +364,10 @@ class ProgramConversionContext:
             parameter_name (str): The name of the parameter to register with the program.
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
-            io_type (str): Whether the parameter is an "input" or an "output". Default: "input".
         """
         # TODO (#814): add type validation against existing inputs
         if parameter_name not in self._free_parameters:
-            if issubclass(parameter_type, oqpy._ClassicalVar):
-                var_class = parameter_type
-            elif parameter_type == float:
+            if parameter_type == float:
                 var_class = oqpy.FloatVar
             elif parameter_type == int:
                 var_class = oqpy.IntVar
@@ -381,7 +375,34 @@ class ProgramConversionContext:
                 var_class = oqpy.BoolVar
             else:
                 raise NotImplementedError(parameter_type)
-            self._free_parameters[parameter_name] = var_class(io_type, name=parameter_name)
+            self._free_parameters[parameter_name] = var_class("input", name=parameter_name)
+
+    def register_output(
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool] = float,
+    ) -> None:
+        if parameter_name in self._free_parameters:
+            # TODO laurecap
+            raise errors.AutoQasmError("TODO")
+
+        # TODO laurecap can I use wrap value??
+        if issubclass(parameter_type, oqpy._ClassicalVar):
+            var_class = parameter_type
+        elif issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
+            # TODO laurecap update with support for typed free parameters
+            var_class = oqpy.FloatVar
+        elif parameter_type == float:
+            var_class = oqpy.FloatVar
+        elif parameter_type == int:
+            var_class = oqpy.IntVar
+        elif parameter_type == bool:
+            var_class = oqpy.BoolVar
+        elif parameter_type == None:
+            return  # Don't register a new output
+        else:
+            raise NotImplementedError(parameter_type)
+        self._free_parameters[parameter_name] = var_class("output", name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
@@ -417,7 +438,9 @@ class ProgramConversionContext:
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        for parameter in self.get_free_parameters():
+        for parameter_name, parameter in self._free_parameters.items():
+            # TODO laurecap
+            parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 
     def get_target_device(self) -> Optional[Device]:

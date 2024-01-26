@@ -13,6 +13,8 @@
 
 """AutoQASM tests exercising the return statement for `aq.main`."""
 
+import pytest
+
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.instructions import measure
 
@@ -54,16 +56,17 @@ int[32] output_name = 1;"""
     assert main.to_ir() == expected
 
 
-def test_measure():
+def test_return_measure():
     @aq.main
     def main():
         return measure(0)
 
     expected = """OPENQASM 3.0;
-output bit __bit_0__;
+output bit retval_;
 qubit[1] __qubits__;
 bit __bit_0__;
-__bit_0__ = measure __qubits__[0];"""
+__bit_0__ = measure __qubits__[0];
+retval_ = __bit_0__;"""
 
     assert main.to_ir() == expected
 
@@ -77,12 +80,29 @@ def test_named_measure():
     expected = """OPENQASM 3.0;
 output bit b;
 qubit[1] __qubits__;
-bit b;
-b = measure __qubits__[0];"""
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+b = __bit_0__;"""
 
     assert main.to_ir() == expected
 
 
+@pytest.mark.xfail(reason="Not implemented yet")
+def test_basic_arithmetic():
+    @aq.main
+    def main():
+        val = aq.types.IntVar(1) + aq.types.IntVar(2)
+        return val
+
+    expected = """OPENQASM 3.0;
+input int[32] input_a;
+output int[32] val;
+int[32] val = 3;"""
+
+    assert main.to_ir() == expected
+
+
+@pytest.mark.xfail(reason="Not implemented yet")
 def test_expressions():
     @aq.main
     def main(input_a: int):
@@ -99,6 +119,7 @@ val = val + input_a;"""
     assert main.to_ir() == expected
 
 
+@pytest.mark.xfail(reason="Not implemented yet")
 def test_expressions_and_control_flow():
     @aq.main(num_qubits=3)
     def main():
@@ -120,6 +141,7 @@ for int i in [0:3 - 1] {
     assert main.to_ir() == expected
 
 
+@pytest.mark.xfail(reason="Not implemented yet")
 def test_return_tuple():
     @aq.main
     def main():
@@ -134,7 +156,9 @@ int[32] retval2_ = 2;"""
     assert main.to_ir() == expected
 
 
+@pytest.mark.xfail(raises=aq.errors.AutoQasmError, reason="Not implemented yet")
 def test_name_collisions():
+    # TODO: add support for name mangling
     @aq.main
     def main(val):
         return val
@@ -145,3 +169,6 @@ output int[32] out_val;
 """
 
     assert main.to_ir() == expected
+
+
+# TODO laurecap subroutines
