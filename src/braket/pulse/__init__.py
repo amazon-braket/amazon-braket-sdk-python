@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import oqpy
-
 from braket.pulse.frame import Frame  # noqa: F401
 from braket.pulse.port import Port  # noqa: F401
 from braket.pulse.pulse_sequence import PulseSequence  # noqa: F401
@@ -22,8 +20,3 @@ from braket.pulse.waveforms import (  # noqa: F401
     DragGaussianWaveform,
     GaussianWaveform,
 )
-
-oqpy.AngleVar.default_size = None
-oqpy.FloatVar.default_size = None
-oqpy.IntVar.default_size = None
-oqpy.UintVar.default_size = None

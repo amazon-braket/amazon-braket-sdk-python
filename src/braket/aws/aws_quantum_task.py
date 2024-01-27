@@ -105,6 +105,7 @@ class AwsQuantumTask(QuantumTask):
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
+        quiet: bool = False,
         reservation_arn: str | None = None,
         *args,
         **kwargs,
@@ -151,6 +152,9 @@ class AwsQuantumTask(QuantumTask):
                 for a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
                 Default: None.
+
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
 
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
@@ -215,6 +219,7 @@ class AwsQuantumTask(QuantumTask):
             disable_qubit_rewiring,
             inputs,
             gate_definitions=gate_definitions,
+            quiet=quiet,
             *args,
             **kwargs,
         )
@@ -226,6 +231,7 @@ class AwsQuantumTask(QuantumTask):
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
+        quiet: bool = False,
     ):
         """
         Args:
@@ -238,6 +244,8 @@ class AwsQuantumTask(QuantumTask):
             logger (Logger): Logger object with which to write logs, such as quantum task statuses
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
 
         Examples:
             >>> task = AwsQuantumTask(arn='task_arn')
@@ -259,6 +267,7 @@ class AwsQuantumTask(QuantumTask):
         self._poll_interval_seconds = poll_interval_seconds
 
         self._logger = logger
+        self._quiet = quiet
 
         self._metadata: dict[str, Any] = {}
         self._result: Union[
@@ -477,6 +486,11 @@ class AwsQuantumTask(QuantumTask):
         while (time.time() - start_time) < self._poll_timeout_seconds:
             # Used cached metadata if cached status is terminal
             task_status = self._update_status_if_nonterminal()
+            if not self._quiet and task_status == "QUEUED":
+                queue = self.queue_position()
+                self._logger.debug(
+                    f"Task is in {queue.queue_type} queue position: {queue.queue_position}"
+                )
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 return self._download_result()

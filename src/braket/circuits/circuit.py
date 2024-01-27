@@ -1289,16 +1289,7 @@ class Circuit:
                 for key, calibration in gate_definitions.items():
                     gate, qubits = key
                     gate_name = gate._qasm_name
-                    arguments = (
-                        [
-                            oqpy.FloatVar(name=value.name)
-                            if isinstance(value, FreeParameter)
-                            else value
-                            for value in gate.parameters
-                        ]
-                        if isinstance(gate, Parameterizable)
-                        else None
-                    )
+                    arguments = gate.parameters if isinstance(gate, Parameterizable) else None
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):

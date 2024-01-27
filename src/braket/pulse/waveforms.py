@@ -173,7 +173,7 @@ class ConstantWaveform(Waveform, Parameterizable):
             "constant", [("length", duration), ("iq", complex128)]
         )
         return WaveformVar(
-            init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
+            init_expression=constant_generator(self.length, self.iq),
             name=self.id,
         )
 
@@ -299,10 +299,10 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.beta),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.beta,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -426,9 +426,9 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -467,16 +467,6 @@ class GaussianWaveform(Waveform, Parameterizable):
 
 def _make_identifier_name() -> str:
     return "".join([random.choice(string.ascii_letters) for _ in range(10)])
-
-
-def _map_to_oqpy_type(
-    parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[FreeParameterExpression, OQPyExpression]:
-    return (
-        FreeParameterExpression(parameter, duration)
-        if isinstance(parameter, FreeParameterExpression) and is_duration_type
-        else parameter
-    )
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
