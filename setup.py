@@ -44,7 +44,7 @@ setup(
     ],
     extras_require={
         "test": [
-            "black",
+            "black<24.0.0",
             "botocore",
             "flake8<=5.0.4",
             "isort",
