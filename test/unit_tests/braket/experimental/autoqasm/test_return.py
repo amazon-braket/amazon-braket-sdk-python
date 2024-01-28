@@ -171,4 +171,27 @@ output int[32] out_val;
     assert main.to_ir() == expected
 
 
-# TODO laurecap subroutines
+def test_returns_with_subroutine():
+    """Test returning the result of another function call."""
+
+    @aq.subroutine
+    def helper() -> int:
+        res = aq.IntVar(1)
+        return res
+
+    @aq.main
+    def ret_test() -> int:
+        val = helper()
+        return val
+
+    expected = """OPENQASM 3.0;
+def helper() -> int[32] {
+    int[32] res = 1;
+    return res;
+}
+output int[32] val;
+int[32] __int_1__;
+__int_1__ = helper();
+val = __int_1__;"""
+
+    assert ret_test.to_ir() == expected

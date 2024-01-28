@@ -484,6 +484,7 @@ def test_qasm_inline_var_condition(qasm_inline_var_condition) -> None:
     expected = """OPENQASM 3.0;
 bit __bit_0__ = 1;
 int[32] __int_1__ = 1;
+output bit retval_;
 qubit[2] __qubits__;
 h __qubits__[0];
 if (__bit_0__) {
@@ -495,7 +496,8 @@ if (__int_1__) {
     x __qubits__[1];
 }
 bit __bit_2__;
-__bit_2__ = measure __qubits__[1];"""
+__bit_2__ = measure __qubits__[1];
+retval_ = __bit_2__;"""
     assert qasm_inline_var_condition.to_ir() == expected
 
 
@@ -524,15 +526,18 @@ def test_measurement_qubit_discovery(ground_state_measurements) -> None:
 def test_simple_measurement(ground_state_measurements) -> None:
     """Test that a program with only measurements is generated correctly."""
     expected = """OPENQASM 3.0;
+output bit retval_;
 qubit[6] __qubits__;
 bit[3] __bit_0__ = "000";
 __bit_0__[0] = measure __qubits__[5];
 __bit_0__[1] = measure __qubits__[2];
-__bit_0__[2] = measure __qubits__[1];"""
+__bit_0__[2] = measure __qubits__[1];
+retval_ = __bit_0__;"""
     assert ground_state_measurements.to_ir() == expected
 
 
 def test_sim_simple_measurement(ground_state_measurements) -> None:
+    # TODO laurecap
     _test_on_local_sim(ground_state_measurements)
 
 
@@ -583,6 +588,7 @@ def qasm_measurement_condition():
 
 def test_qasm_measurement_condition(qasm_measurement_condition) -> None:
     expected = """OPENQASM 3.0;
+output bit retval_;
 qubit[2] __qubits__;
 h __qubits__[0];
 bit __bit_0__;
@@ -591,7 +597,8 @@ if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
 bit __bit_1__;
-__bit_1__ = measure __qubits__[1];"""
+__bit_1__ = measure __qubits__[1];
+retval_ = __bit_1__;"""
     assert qasm_measurement_condition.to_ir() == expected
 
 

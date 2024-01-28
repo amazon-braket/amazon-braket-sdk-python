@@ -21,7 +21,8 @@ from braket.experimental.autoqasm.autograph.operators.variables import Undefined
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
-    """TODO
+    """Creates an output variable in the program with the given name that matches the type
+    of the value. The value is assigned to the output variable.
 
     Args:
         name (str): The symbol name for the return variable.
@@ -31,8 +32,4 @@ def return_output_from_main_(name: str, value: Any) -> Any:
     """
     aq_context = program.get_program_conversion_context()
     aq_context.register_output(name, type(value))
-    try:
-        return types.wrap_value(value)
-    except:  # TODO: add to wrap_value
-        pass
-    return UndefinedReturnValue()
+    return types.wrap_value(value)

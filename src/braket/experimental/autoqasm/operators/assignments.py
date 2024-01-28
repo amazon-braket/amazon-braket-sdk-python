@@ -82,6 +82,10 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         target.init_expression = None
         target.name = target_name
 
+    if hasattr(value, "name") and target_name == value.name:
+        # Avoid statements like `a = a;`
+        return value
+
     oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
         # Directly assign the value to the target.

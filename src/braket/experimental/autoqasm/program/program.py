@@ -356,7 +356,9 @@ class ProgramConversionContext:
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(
-        self, parameter_name: str, parameter_type: Union[float, int, bool] = float,
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool] = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
@@ -382,15 +384,22 @@ class ProgramConversionContext:
         parameter_name: str,
         parameter_type: Union[float, int, bool] = float,
     ) -> None:
+        """Register a new output parameter.
+
+        Args:
+            parameter_name (str): The name of the parameter to register with the program.
+            parameter_type (Union[float, int, bool]): The type of the parameter to register
+                with the program. Default: float.
+        """
         if parameter_name in self._free_parameters:
-            # TODO laurecap
+            # TODO laurecap: name mangle?
             raise errors.AutoQasmError("TODO")
 
-        # TODO laurecap can I use wrap value??
+        # TODO laurecap: use wrap value?
         if issubclass(parameter_type, oqpy._ClassicalVar):
             var_class = parameter_type
         elif issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
-            # TODO laurecap update with support for typed free parameters
+            # TODO: update with support for typed free parameters
             var_class = oqpy.FloatVar
         elif parameter_type == float:
             var_class = oqpy.FloatVar
@@ -398,7 +407,7 @@ class ProgramConversionContext:
             var_class = oqpy.IntVar
         elif parameter_type == bool:
             var_class = oqpy.BoolVar
-        elif parameter_type == None:
+        elif parameter_type is type(None):
             return  # Don't register a new output
         else:
             raise NotImplementedError(parameter_type)
@@ -439,7 +448,6 @@ class ProgramConversionContext:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
         for parameter_name, parameter in self._free_parameters.items():
-            # TODO laurecap
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 
