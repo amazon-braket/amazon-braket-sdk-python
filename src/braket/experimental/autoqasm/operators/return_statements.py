@@ -17,7 +17,6 @@
 from typing import Any
 
 from braket.experimental.autoqasm import program, types
-from braket.experimental.autoqasm.autograph.operators.variables import UndefinedReturnValue
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
