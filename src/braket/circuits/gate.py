@@ -180,9 +180,11 @@ class Gate(QuantumOperator):
             for state, group in groupby(control_basis_state.as_tuple):
                 modifier_name = "neg" * (not state) + "ctrl"
                 control_modifiers += [
-                    f"{modifier_name}"
-                    if (num_control := len(list(group))) == 1
-                    else f"{modifier_name}({num_control})"
+                    (
+                        f"{modifier_name}"
+                        if (num_control := len(list(group))) == 1
+                        else f"{modifier_name}({num_control})"
+                    )
                 ]
             control_modifiers.append("")
             qubits = control_qubits + target_qubits
