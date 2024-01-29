@@ -609,9 +609,11 @@ class AwsQuantumJob(QuantumJob):
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
-            raise ValueError(f"'{device}' not found.") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{device}' not found.")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     @staticmethod
     def _initialize_non_regional_device_session(
