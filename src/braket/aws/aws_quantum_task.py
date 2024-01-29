@@ -147,7 +147,7 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A `Dict`
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A `dict`
                 for user defined gate calibration. The calibration is defined for
                 a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.

@@ -110,7 +110,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_definitions (Union[dict[tuple[Gate, QubitSet], PulseSequence], list[dict[tuple[Gate, QubitSet], PulseSequence]]] | None): # noqa
+            gate_definitions (Union[dict[tuple[Gate, QubitSet], PulseSequence], list[dict[tuple[Gate, QubitSet], PulseSequence]]] | None): # noqa: E501
                 User-defined gate calibration. The calibration is defined for a particular `Gate` on a
                 particular `QubitSet` and is represented by a `PulseSequence`. Default: None.
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
@@ -191,6 +191,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         ]
     ]:
         inputs = inputs or {}
+        gate_definitions = gate_definitions or {}
 
         single_task = isinstance(
             task_specifications,
@@ -203,7 +204,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             ),
         )
         single_input = isinstance(inputs, dict)
-        single_gate_definitions = gate_definitions is None or isinstance(gate_definitions, dict)
+        single_gate_definitions = isinstance(gate_definitions, dict)
 
         batch_lengths = []
         if single_task:
@@ -225,14 +226,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 "be equal in number."
             )
 
-        tasks_and_inputs = zip(task_specifications, inputs, gate_definitions)
+        tasks_inputs_definitions = zip(task_specifications, inputs, gate_definitions)
 
         if single_task and single_input and single_gate_definitions:
-            tasks_and_inputs = [next(tasks_and_inputs)]
+            tasks_inputs_definitions = [next(tasks_inputs_definitions)]
 
-        tasks_and_inputs = list(tasks_and_inputs)
+        tasks_inputs_definitions = list(tasks_inputs_definitions)
 
-        for task_specification, input_map, _ in tasks_and_inputs:
+        for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
                 unbounded_parameters = param_names - set(input_map.keys())
@@ -242,7 +243,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         f"{unbounded_parameters}"
                     )
 
-        return tasks_and_inputs
+        return tasks_inputs_definitions
 
     @staticmethod
     def _execute(
