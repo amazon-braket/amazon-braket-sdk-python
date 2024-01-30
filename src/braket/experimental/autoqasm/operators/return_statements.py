@@ -20,7 +20,7 @@ from braket.experimental.autoqasm import program, types
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
-    """Creates an output variable in the program with the given name that matches the type
+    """Registers an output variable in the program with the given name that matches the type
     of the value. The value is assigned to the output variable.
 
     Args:

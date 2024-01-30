@@ -369,15 +369,10 @@ class ProgramConversionContext:
         """
         # TODO (#814): add type validation against existing inputs
         if parameter_name not in self._free_parameters:
-            if parameter_type == float:
-                var_class = oqpy.FloatVar
-            elif parameter_type == int:
-                var_class = oqpy.IntVar
-            elif parameter_type == bool:
-                var_class = oqpy.BoolVar
-            else:
+            aq_type = aq_types.map_parameter_type(parameter_type)
+            if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
                 raise NotImplementedError(parameter_type)
-            self._free_parameters[parameter_name] = var_class("input", name=parameter_name)
+            self._free_parameters[parameter_name] = aq_type("input", name=parameter_name)
 
     def register_output(
         self,
@@ -395,23 +390,13 @@ class ProgramConversionContext:
             # TODO laurecap: name mangle?
             raise errors.AutoQasmError("TODO")
 
-        # TODO laurecap: use wrap value?
-        if issubclass(parameter_type, oqpy._ClassicalVar):
-            var_class = parameter_type
-        elif issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
-            # TODO: update with support for typed free parameters
-            var_class = oqpy.FloatVar
-        elif parameter_type == float:
-            var_class = oqpy.FloatVar
-        elif parameter_type == int:
-            var_class = oqpy.IntVar
-        elif parameter_type == bool:
-            var_class = oqpy.BoolVar
-        elif parameter_type is type(None):
-            return  # Don't register a new output
-        else:
-            raise NotImplementedError(parameter_type)
-        self._free_parameters[parameter_name] = var_class("output", name=parameter_name)
+        if parameter_type is not type(None):
+            aq_type = aq_types.map_parameter_type(parameter_type)
+            # TODO add a test for this!
+            # if issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
+                # TODO: update with support for typed free parameters
+                # aq_type = oqpy.FloatVar
+            self._free_parameters[parameter_name] = aq_type("output", name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.

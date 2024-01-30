@@ -158,7 +158,7 @@ int[32] retval2_ = 2;"""
 
 @pytest.mark.xfail(raises=aq.errors.AutoQasmError, reason="Not implemented yet")
 def test_name_collisions():
-    # TODO: add support for name mangling
+    # TODO laurecap: add support for name mangling
     @aq.main
     def main(val):
         return val
@@ -195,3 +195,36 @@ __int_1__ = helper();
 val = __int_1__;"""
 
     assert ret_test.to_ir() == expected
+
+
+def test_return_measure_range():
+
+    @aq.subroutine
+    def ghz(n: int):
+        aq.instructions.h(0)
+        for i in aq.range(n - 1):
+            aq.instructions.cnot(i, i+1)
+
+    @aq.main(num_qubits=10)
+    def program(n: int):
+        ghz(n)
+        return measure([0, 1, 2])
+
+    expected = """OPENQASM 3.0;
+def ghz(int[32] n) {
+    h __qubits__[0];
+    for int i in [0:n - 1 - 1] {
+        cnot __qubits__[i], __qubits__[i + 1];
+    }
+}
+output bit retval_;
+input int[32] n;
+qubit[10] __qubits__;
+ghz(n);
+bit[3] __bit_0__ = "000";
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
+__bit_0__[2] = measure __qubits__[2];
+retval_ = __bit_0__;"""
+
+    assert program.to_ir() == expected
