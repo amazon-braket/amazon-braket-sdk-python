@@ -532,9 +532,9 @@ class AwsQuantumTask(QuantumTask):
             "has_reservation_arn": self._has_reservation_arn_from_metadata(current_metadata),
         }
         try:
-            task_event[
-                "execution_duration"
-            ] = self._result.additional_metadata.simulatorMetadata.executionDuration
+            task_event["execution_duration"] = (
+                self._result.additional_metadata.simulatorMetadata.executionDuration
+            )
         except AttributeError:
             pass
         broadcast_event(_TaskCompletionEvent(**task_event))

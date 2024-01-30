@@ -103,9 +103,11 @@ class PauliString:
         substrings = []
         for indices in itertools.combinations(self._nontrivial, weight):
             factors = [
-                self._nontrivial[qubit]
-                if qubit in set(indices).intersection(self._nontrivial)
-                else "I"
+                (
+                    self._nontrivial[qubit]
+                    if qubit in set(indices).intersection(self._nontrivial)
+                    else "I"
+                )
                 for qubit in range(self._qubit_count)
             ]
             substrings.append(
