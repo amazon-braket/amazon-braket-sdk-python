@@ -198,12 +198,11 @@ val = __int_1__;"""
 
 
 def test_return_measure_range():
-
     @aq.subroutine
     def ghz(n: int):
         aq.instructions.h(0)
         for i in aq.range(n - 1):
-            aq.instructions.cnot(i, i+1)
+            aq.instructions.cnot(i, i + 1)
 
     @aq.main(num_qubits=10)
     def program(n: int):
