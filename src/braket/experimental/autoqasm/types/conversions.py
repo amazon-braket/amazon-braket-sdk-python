@@ -21,7 +21,8 @@ import numpy as np
 import oqpy
 from openpulse import ast
 
-from braket.experimental.autoqasm import errors
+from braket.circuits.free_parameter_expression import FreeParameterExpression
+from braket.experimental.autoqasm import errors, program
 from braket.experimental.autoqasm import types as aq_types
 
 
@@ -125,6 +126,13 @@ def _(node: Union[int, np.integer]):
 @wrap_value.register(np.floating)
 def _(node: Union[float, np.floating]):
     return aq_types.FloatVar(node)
+
+
+@wrap_value.register(FreeParameterExpression)
+def _(node: FreeParameterExpression):
+    aq_context = program.get_program_conversion_context()
+    # TODO laurecap: handle None case
+    return aq_context.get_free_parameter(node.name)
 
 
 @wrap_value.register

@@ -30,5 +30,17 @@ def return_output_from_main_(name: str, value: Any) -> Any:
         Any: Returns the same value that is being returned in the statement.
     """
     aq_context = program.get_program_conversion_context()
+    # TODO laurecap, should store outputs and inputs separately!
+    input = aq_context.get_free_parameter(name)
+
     aq_context.register_output(name, type(value))
-    return types.wrap_value(value)
+    ret_value = types.wrap_value(value)
+
+    # Handle name collisions with input variables
+    if input is not None:
+        # TODO laurecap FIXME
+        output = aq_context.get_free_parameter(name + "_")
+        oqpy_program = aq_context.get_oqpy_program()
+        oqpy_program.set(output, input)
+
+    return ret_value

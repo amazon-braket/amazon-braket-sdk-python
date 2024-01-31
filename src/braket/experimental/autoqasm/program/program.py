@@ -386,17 +386,20 @@ class ProgramConversionContext:
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
         """
-        if parameter_name in self._free_parameters:
-            # TODO laurecap: name mangle?
-            raise errors.AutoQasmError("TODO")
+        if parameter_type is type(None):
+            return  # Do nothing
 
-        if parameter_type is not type(None):
-            aq_type = aq_types.map_parameter_type(parameter_type)
-            # TODO add a test for this!
-            # if issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
-                # TODO: update with support for typed free parameters
-                # aq_type = oqpy.FloatVar
-            self._free_parameters[parameter_name] = aq_type("output", name=parameter_name)
+        aq_type = aq_types.map_parameter_type(parameter_type)
+        # TODO laurecap add a test for this!
+        # When does oqpy.base.OQPyExpression appear?
+        # should only see free param expressions when returning inputs
+        # if issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
+        if issubclass(parameter_type, FreeParameterExpression):
+            # TODO what if it's input_val1 + input_val2?
+            aq_type = type(self.get_free_parameter(parameter_name))
+            # Mangle name to avoid collisions
+            parameter_name = f"{parameter_name}_"
+        self._free_parameters[parameter_name] = aq_type("output", name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
@@ -425,13 +428,18 @@ class ProgramConversionContext:
         self.get_oqpy_program().declare(var)
         return var
 
-    def get_free_parameters(self) -> list[oqpy.FloatVar]:
+    def get_free_parameters(self) -> list[oqpy.Var]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
         return list(self._free_parameters.values())
+
+    def get_free_parameter(self, name: str) -> oqpy.Var | None:
+        """TODO laurecap"""
+        return self._free_parameters.get(name, None)
 
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
+        # TODO laurecap: put inputs first? process separately?
         for parameter_name, parameter in self._free_parameters.items():
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)

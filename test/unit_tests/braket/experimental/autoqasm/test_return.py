@@ -156,17 +156,15 @@ int[32] retval2_ = 2;"""
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(raises=aq.errors.AutoQasmError, reason="Not implemented yet")
 def test_name_collisions():
-    # TODO laurecap: add support for name mangling
     @aq.main
     def main(val):
         return val
 
     expected = """OPENQASM 3.0;
-input int[32] in_val;
-output int[32] out_val;
-"""
+output float[64] val_;
+input float[64] val;
+val_ = val;"""
 
     assert main.to_ir() == expected
 
