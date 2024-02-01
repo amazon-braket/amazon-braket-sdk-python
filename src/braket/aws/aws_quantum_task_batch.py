@@ -206,29 +206,29 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         single_input_type = dict
         single_gate_definitions_type = dict
 
-        batch_parameters = [task_specifications, inputs, gate_definitions]
-        batch_parameter_types = [single_task_type, single_input_type, single_gate_definitions_type]
+        args = [task_specifications, inputs, gate_definitions]
+        arg_types = [single_task_type, single_input_type, single_gate_definitions_type]
 
         batch_length = 1
-        batch_parameter_lengths = []
-        for batch_param, type_ in zip(batch_parameters, batch_parameter_types):
-            item_length = 1 if isinstance(batch_param, type_) else len(batch_param)
-            batch_parameter_lengths.append(item_length)
+        arg_lengths = []
+        for arg, arg_type in zip(args, arg_types):
+            arg_length = 1 if isinstance(arg, arg_type) else len(arg)
+            arg_lengths.append(arg_length)
 
-            if item_length != 1:
-                if batch_length != 1 and item_length != batch_length:
+            if arg_length != 1:
+                if batch_length != 1 and arg_length != batch_length:
                     raise ValueError(
                         "Multiple inputs, task specifications and gate definitions must "
                         "be equal in length."
                     )
                 else:
-                    batch_length = item_length
+                    batch_length = arg_length
 
-        for i, length in enumerate(batch_parameter_lengths):
-            if length == 1:
-                batch_parameters[i] = repeat(batch_parameters[i], batch_length)
+        for i, arg_length in enumerate(arg_lengths):
+            if arg_length == 1:
+                args[i] = repeat(args[i], batch_length)
 
-        tasks_inputs_definitions = list(zip(*batch_parameters))
+        tasks_inputs_definitions = list(zip(*args))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
