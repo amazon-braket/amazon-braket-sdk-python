@@ -24,8 +24,6 @@ from braket.devices import Devices
 from braket.tracking import Tracker
 from braket.tracking.tracker import MIN_SIMULATOR_DURATION
 
-_RESERVATION_ONLY_DEVICES = {Devices.IonQ.Forte1}
-
 
 @pytest.mark.parametrize(
     "qpu",
@@ -94,7 +92,8 @@ def test_all_devices_price_search():
     tasks = {}
     for region in AwsDevice.REGIONS:
         s = AwsSession(boto3.Session(region_name=region))
-        for device in [device for device in devices if device.arn not in _RESERVATION_ONLY_DEVICES]:
+        # Skip devices with empty execution windows
+        for device in [device for device in devices if len(device.properties.service.executionWindows) > 0]:
             try:
                 s.get_device(device.arn)
 
