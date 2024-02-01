@@ -74,11 +74,13 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
-        gate_definitions: Union[
-            dict[tuple[Gate, QubitSet], PulseSequence],
-            list[dict[tuple[Gate, QubitSet], PulseSequence]],
-        ]
-        | None = None,
+        gate_definitions: (
+            Union[
+                dict[tuple[Gate, QubitSet], PulseSequence],
+                list[dict[tuple[Gate, QubitSet], PulseSequence]],
+            ]
+            | None
+        ) = None,
         reservation_arn: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
@@ -193,7 +195,6 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
 
-        max_inputs_tasks = 1
         single_task = isinstance(
             task_specifications,
             (
@@ -207,32 +208,29 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         single_input = isinstance(inputs, dict)
         single_gate_definitions = isinstance(gate_definitions, dict)
 
-        batch_lengths = []
-        if single_task:
-            task_specifications = repeat(task_specifications)
-        else:
-            batch_lengths.append(len(task_specifications))
-        if single_input:
-            inputs = repeat(inputs)
-        else:
-            batch_lengths.append(len(inputs))
-        if single_gate_definitions:
-            gate_definitions = repeat(gate_definitions)
-        else:
-            batch_lengths.append(len(gate_definitions))
+        batch_parameter_lengths = []
+        if not single_task:
+            batch_parameter_lengths.append(len(task_specifications))
+        if not single_input:
+            batch_parameter_lengths.append(len(inputs))
+        if not single_gate_definitions:
+            batch_parameter_lengths.append(len(gate_definitions))
 
-        if any(length != batch_lengths[0] for length in batch_lengths[1:]):
+        if len(set(batch_parameter_lengths)) > 1:
             raise ValueError(
                 "Multiple inputs, task specifications and gate definitions must "
-                "be equal in number."
+                "be equal in length."
             )
 
-        tasks_inputs_definitions = zip(task_specifications, inputs, gate_definitions)
+        batch_length = batch_parameter_lengths[0] if batch_parameter_lengths else 1
+        if single_task:
+            task_specifications = repeat(task_specifications, batch_length)
+        if single_input:
+            inputs = repeat(inputs, batch_length)
+        if single_gate_definitions:
+            gate_definitions = repeat(gate_definitions, batch_length)
 
-        if single_task and single_input and single_gate_definitions:
-            tasks_inputs_definitions = [next(tasks_inputs_definitions)]
-
-        tasks_inputs_definitions = list(tasks_inputs_definitions)
+        tasks_inputs_definitions = list(zip(task_specifications, inputs, gate_definitions))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
@@ -275,11 +273,13 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] = None,
-        gate_definitions: Union[
-            dict[tuple[Gate, QubitSet], PulseSequence],
-            list[dict[tuple[Gate, QubitSet], PulseSequence]],
-        ]
-        | None = None,
+        gate_definitions: (
+            Union[
+                dict[tuple[Gate, QubitSet], PulseSequence],
+                list[dict[tuple[Gate, QubitSet], PulseSequence]],
+            ]
+            | None
+        ) = None,
         reservation_arn: str | None = None,
         *args,
         **kwargs,

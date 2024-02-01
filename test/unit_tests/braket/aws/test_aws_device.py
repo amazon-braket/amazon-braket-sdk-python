@@ -1227,7 +1227,9 @@ def test_batch_circuit_with_task_and_input_mismatch(
     inputs = [{"beta": 0.2}, {"gamma": 0.1}, {"theta": 0.2}]
     circ_1 = Circuit().ry(angle=3, target=0)
     task_specifications = [[circ_1, single_circuit_input], openqasm_program]
-    wrong_number_of_inputs = "Multiple inputs, task specifications and gate definitions must be equal in number."
+    wrong_number_of_inputs = (
+        "Multiple inputs, task specifications and gate definitions must be equal in length."
+    )
 
     with pytest.raises(ValueError, match=wrong_number_of_inputs):
         _run_batch_and_assert(
