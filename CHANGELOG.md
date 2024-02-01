@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.68.2 (2024-01-31)
+
+### Bug Fixes and Other Changes
+
+ * update S3 uri regex for AWS sessions
+ * update batch circuit to limit repeat calls
+
 ## v1.68.1 (2024-01-29)
 
 ### Bug Fixes and Other Changes
