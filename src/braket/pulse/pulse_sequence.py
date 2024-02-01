@@ -385,10 +385,10 @@ class PulseSequence:
                                 argument_value.update(QubitSet(int(argument["value"])))
                             instr_args["qubits_or_frames"] = argument_value
                         elif argument["name"] in instr_args_keys:
-                            instr_args[
-                                argument["name"]
-                            ] = calibration_sequence._parse_arg_from_calibration_schema(
-                                argument, waveforms, frames
+                            instr_args[argument["name"]] = (
+                                calibration_sequence._parse_arg_from_calibration_schema(
+                                    argument, waveforms, frames
+                                )
                             )
                 else:
                     instr_args["qubits_or_frames"] = []

@@ -193,6 +193,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
 
+        max_inputs_tasks = 1
         single_task = isinstance(
             task_specifications,
             (
