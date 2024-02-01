@@ -156,7 +156,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
     @staticmethod
-    def _tasks_and_inputs(
+    def _tasks_inputs_gatedefs(
         task_specifications: Union[
             Union[
                 Circuit,
@@ -190,47 +190,45 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 AnalogHamiltonianSimulation,
             ],
             dict[str, float],
+            dict[tuple[Gate, QubitSet], PulseSequence],
         ]
     ]:
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
 
-        single_task = isinstance(
-            task_specifications,
-            (
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                AnalogHamiltonianSimulation,
-            ),
+        single_task_type = (
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            AnalogHamiltonianSimulation,
         )
-        single_input = isinstance(inputs, dict)
-        single_gate_definitions = isinstance(gate_definitions, dict)
+        single_input_type = dict
+        single_gate_definitions_type = dict
 
+        batch_parameters = [task_specifications, inputs, gate_definitions]
+        batch_parameter_types = [single_task_type, single_input_type, single_gate_definitions_type]
+
+        batch_length = 1
         batch_parameter_lengths = []
-        if not single_task:
-            batch_parameter_lengths.append(len(task_specifications))
-        if not single_input:
-            batch_parameter_lengths.append(len(inputs))
-        if not single_gate_definitions:
-            batch_parameter_lengths.append(len(gate_definitions))
+        for batch_param, type_ in zip(batch_parameters, batch_parameter_types):
+            item_length = 1 if isinstance(batch_param, type_) else len(batch_param)
+            batch_parameter_lengths.append(item_length)
 
-        if len(set(batch_parameter_lengths)) > 1:
-            raise ValueError(
-                "Multiple inputs, task specifications and gate definitions must "
-                "be equal in length."
-            )
+            if item_length != 1:
+                if batch_length != 1 and item_length != batch_length:
+                    raise ValueError(
+                        "Multiple inputs, task specifications and gate definitions must "
+                        "be equal in length."
+                    )
+                else:
+                    batch_length = item_length
 
-        batch_length = batch_parameter_lengths[0] if batch_parameter_lengths else 1
-        if single_task:
-            task_specifications = repeat(task_specifications, batch_length)
-        if single_input:
-            inputs = repeat(inputs, batch_length)
-        if single_gate_definitions:
-            gate_definitions = repeat(gate_definitions, batch_length)
+        for i, length in enumerate(batch_parameter_lengths):
+            if length == 1:
+                batch_parameters[i] = repeat(batch_parameters[i], batch_length)
 
-        tasks_inputs_definitions = list(zip(task_specifications, inputs, gate_definitions))
+        tasks_inputs_definitions = list(zip(*batch_parameters))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
@@ -284,11 +282,11 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
-        tasks_and_inputs = AwsQuantumTaskBatch._tasks_and_inputs(
+        tasks_inputs_gatedefs = AwsQuantumTaskBatch._tasks_inputs_gatedefs(
             task_specifications, inputs, gate_definitions
         )
         max_threads = min(max_parallel, max_workers)
-        remaining = [0 for _ in tasks_and_inputs]
+        remaining = [0 for _ in tasks_inputs_gatedefs]
         try:
             with ThreadPoolExecutor(max_workers=max_threads) as executor:
                 task_futures = [
@@ -303,12 +301,12 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         poll_timeout_seconds=poll_timeout_seconds,
                         poll_interval_seconds=poll_interval_seconds,
                         inputs=input_map,
-                        gate_definitions=defs,
+                        gate_definitions=gatedefs,
                         reservation_arn=reservation_arn,
                         *args,
                         **kwargs,
                     )
-                    for task, input_map, defs in tasks_and_inputs
+                    for task, input_map, gatedefs in tasks_inputs_gatedefs
                 ]
         except KeyboardInterrupt:
             # If an exception is thrown before the thread pool has finished,
