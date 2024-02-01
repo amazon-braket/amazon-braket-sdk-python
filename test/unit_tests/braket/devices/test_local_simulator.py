@@ -13,6 +13,7 @@
 
 import json
 import textwrap
+import warnings
 from typing import Any, Dict, Optional
 from unittest.mock import Mock, patch
 
@@ -251,16 +252,9 @@ class DummyProgramSimulator(BraketSimulator):
 
 class DummyProgramDensityMatrixSimulator(BraketSimulator):
     def run(
-        self,
-        program: ir.openqasm.Program,
-        qubits: int,
-        shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
-        *args,
-        **kwargs
+        self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
     ) -> Dict[str, Any]:
         self._shots = shots
-        self._qubits = qubits
         return GATE_MODEL_RESULT
 
     @property
@@ -653,7 +647,7 @@ def test_invalide_aws_device_for_noise_model(backend, noise_model):
 
 
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
-def test_execute_with_noise_model(mock_run, noise_model):
+def test_run_with_noise_model(mock_run, noise_model):
     mock_run.return_value = GATE_MODEL_RESULT
     device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
@@ -677,3 +671,62 @@ def test_execute_with_noise_model(mock_run, noise_model):
         Program(source=expected_circuit, inputs={}),
         4,
     )
+
+
+@patch.object(DummyProgramDensityMatrixSimulator, "run")
+def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
+    mock_run.return_value = GATE_MODEL_RESULT
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    circuit = Circuit().h(0).depolarizing(0, 0.1)
+    with warnings.catch_warnings(record=True) as w:
+        _ = device.run(circuit, shots=4)
+
+    expected_warning = (
+        "The noise model of the device is applied to a circuit that already has noise "
+        "instructions."
+    )
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[1] b;
+        qubit[1] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        #pragma braket noise depolarizing(0.1) q[0]
+        b[0] = measure q[0];
+        """
+    ).strip()
+
+    mock_run.assert_called_with(
+        Program(source=expected_circuit, inputs={}),
+        4,
+    )
+    assert w[-1].message.__str__() == expected_warning
+
+
+@patch.object(DummyProgramDensityMatrixSimulator, "run")
+def test_run_openqasm_with_noise_model(mock_run, noise_model):
+    mock_run.return_value = GATE_MODEL_RESULT
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[1] b;
+        qubit[1] q;
+        h q[0];
+        b[0] = measure q[0];
+        """
+    ).strip()
+    expected_warning = (
+        "Noise model is only applicable to circuits. The type of the task specification "
+        "is Program. The noise model of the device does not apply."
+    )
+    circuit = Program(source=expected_circuit)
+    with warnings.catch_warnings(record=True) as w:
+        _ = device.run(circuit, shots=4)
+
+    mock_run.assert_called_with(
+        Program(source=expected_circuit, inputs=None),
+        4,
+    )
+    assert w[-1].message.__str__() == expected_warning

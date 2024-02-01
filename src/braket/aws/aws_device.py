@@ -114,9 +114,8 @@ class AwsDevice(Device):
         self._ports = None
         self._frames = None
         self._noise_model = noise_model
-
         if noise_model:
-            self._validate_noise_model_support()
+            self._validate_device_noise_model_support()
 
     def run(
         self,
@@ -202,8 +201,8 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if isinstance(task_specification, Circuit) and self._noise_model:
-            task_specification = self._noise_model.apply(task_specification)
+        if self._noise_model:
+            task_specification = self._apply_noise_model_to_circuit(task_specification)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -299,6 +298,11 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
+        if self._noise_model:
+            task_specifications = [
+                self._apply_noise_model_to_circuit(task_specification)
+                for task_specification in task_specifications
+            ]
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,

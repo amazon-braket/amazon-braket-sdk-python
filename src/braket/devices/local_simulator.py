@@ -62,7 +62,8 @@ class LocalSimulator(Device):
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
             noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
-                before execution.
+                before execution. Noise model can only be added to the devices that support
+                noise simulation.
         """
         delegate = self._get_simulator(backend)
         super().__init__(
@@ -71,9 +72,8 @@ class LocalSimulator(Device):
         )
         self._delegate = delegate
         self._noise_model = noise_model
-
         if noise_model:
-            self._validate_noise_model_support()
+            self._validate_device_noise_model_support()
 
     def run(
         self,
@@ -109,6 +109,8 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
+        if self._noise_model:
+            task_specification = self._apply_noise_model_to_circuit(task_specification)
         result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
@@ -145,33 +147,16 @@ class LocalSimulator(Device):
         """
         inputs = inputs or {}
 
+        if self._noise_model:
+            task_specifications = [
+                self._apply_noise_model_to_circuit(task_specification)
+                for task_specification in task_specifications
+            ]
+
         if not max_parallel:
             max_parallel = cpu_count()
 
-        single_task = isinstance(
-            task_specifications,
-            (Circuit, Program, Problem, AnalogHamiltonianSimulation),
-        )
-
-        single_input = isinstance(inputs, dict)
-
-        if not single_task and not single_input:
-            if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
-        if single_task:
-            task_specifications = repeat(task_specifications)
-
-        if single_input:
-            inputs = repeat(inputs)
-
-        tasks_and_inputs = zip(task_specifications, inputs)
-
-        if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
-        else:
-            tasks_and_inputs = list(tasks_and_inputs)
+        tasks_and_inputs = self._prepare_batch_tasks_and_inputs(task_specifications, inputs)
 
         for task_specification, input_map in tasks_and_inputs:
             if isinstance(task_specification, Circuit):
@@ -259,10 +244,6 @@ class LocalSimulator(Device):
         **kwargs,
     ):
         simulator = self._delegate
-
-        if self._noise_model:
-            circuit = self._noise_model.apply(circuit)
-
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
             program = circuit.to_ir(ir_type=IRType.OPENQASM)
@@ -341,3 +322,37 @@ class LocalSimulator(Device):
             )
         results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+
+    def _prepare_batch_tasks_and_inputs(
+        self,
+        task_specifications: Union[
+            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+            list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]],
+        ],
+        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
+    ) -> list[tuple]:
+        single_task = isinstance(
+            task_specifications,
+            (Circuit, Program, Problem, AnalogHamiltonianSimulation),
+        )
+
+        single_input = isinstance(inputs, dict)
+
+        if not single_task and not single_input:
+            if len(task_specifications) != len(inputs):
+                raise ValueError(
+                    "Multiple inputs and task specifications must " "be equal in number."
+                )
+        if single_task:
+            task_specifications = repeat(task_specifications)
+
+        if single_input:
+            inputs = repeat(inputs)
+
+        tasks_and_inputs = zip(task_specifications, inputs)
+
+        if single_task and single_input:
+            tasks_and_inputs = [next(tasks_and_inputs)]
+        else:
+            tasks_and_inputs = list(tasks_and_inputs)
+        return tasks_and_inputs

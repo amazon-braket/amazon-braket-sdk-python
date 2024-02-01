@@ -11,14 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import warnings
 from abc import ABC, abstractmethod
 from copy import copy
 from typing import Optional, Union
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit, Noise
 from braket.circuits.translations import one_prob_noise_map
 from braket.device_schema import DeviceActionType
+from braket.ir.openqasm import Program
 from braket.tasks.quantum_task import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -108,7 +111,7 @@ class Device(ABC):
         """
         return self._status
 
-    def _validate_noise_model_support(self) -> None:
+    def _validate_device_noise_model_support(self) -> None:
         noise_pragma_name_to_class = copy(one_prob_noise_map)
         noise_pragma_name_to_class.update({"kraus": Noise.Kraus})
 
@@ -124,3 +127,26 @@ class Device(ABC):
                 f"{self.name} does not support noise simulation or the noise model includes noise "
                 + f"that is not supported by {self.name}."
             )
+
+    def _apply_noise_model_to_circuit(
+        self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
+    ) -> None:
+        if isinstance(task_specification, Circuit):
+            if any(
+                [
+                    isinstance(instruction.operator, Noise)
+                    for instruction in task_specification.instructions
+                ]
+            ):
+                warnings.warn(
+                    "The noise model of the device is applied to a circuit that already has noise"
+                    " instructions."
+                )
+            task_specification = self._noise_model.apply(task_specification)
+        else:
+            warnings.warn(
+                "Noise model is only applicable to circuits. The type of the task specification is"
+                f" {task_specification.__class__.__name__}. The noise model of the device does not"
+                " apply."
+            )
+        return task_specification
