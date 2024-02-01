@@ -347,9 +347,11 @@ class AwsDevice(Device):
             self._populate_properties(region_session)
             return region_session
         except ClientError as e:
-            raise ValueError(f"'{self._arn}' not found") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{self._arn}' not found")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
