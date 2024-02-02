@@ -17,6 +17,7 @@
 from typing import Any
 
 from braket.experimental.autoqasm import program, types
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
@@ -30,17 +31,20 @@ def return_output_from_main_(name: str, value: Any) -> Any:
         Any: Returns the same value that is being returned in the statement.
     """
     aq_context = program.get_program_conversion_context()
-    # TODO laurecap, should store outputs and inputs separately!
     input = aq_context.get_free_parameter(name)
 
-    aq_context.register_output(name, type(value))
-    ret_value = types.wrap_value(value)
-
-    # Handle name collisions with input variables
-    if input is not None:
-        # TODO laurecap FIXME
-        output = aq_context.get_free_parameter(name + "_")
+    if input is None:
+        aq_context.register_output(name, type(value))
+    else:
+        # Handle name collisions with input variables
+        name = name + "_"
+        value_type = type(input)
+        aq_context.register_output(name, value_type)
+        # Add `val_ = val;` at the end of the program to equate these parameters
         oqpy_program = aq_context.get_oqpy_program()
+        output = aq_context.get_output_parameter(name)
         oqpy_program.set(output, input)
+
+    ret_value = types.wrap_value(value)
 
     return ret_value

@@ -261,6 +261,7 @@ class ProgramConversionContext:
         self._var_idx = 0
         self._has_pulse_control = False
         self._free_parameters = {}
+        self._output_parameters = {}
 
     def make_program(self) -> Program:
         """Makes a Program object using the oqpy program from this conversion context.
@@ -390,16 +391,7 @@ class ProgramConversionContext:
             return  # Do nothing
 
         aq_type = aq_types.map_parameter_type(parameter_type)
-        # TODO laurecap add a test for this!
-        # When does oqpy.base.OQPyExpression appear?
-        # should only see free param expressions when returning inputs
-        # if issubclass(parameter_type, (FreeParameterExpression, oqpy.base.OQPyExpression)):
-        if issubclass(parameter_type, FreeParameterExpression):
-            # TODO what if it's input_val1 + input_val2?
-            aq_type = type(self.get_free_parameter(parameter_name))
-            # Mangle name to avoid collisions
-            parameter_name = f"{parameter_name}_"
-        self._free_parameters[parameter_name] = aq_type("output", name=parameter_name)
+        self._output_parameters[parameter_name] = aq_type("output", name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
@@ -433,14 +425,21 @@ class ProgramConversionContext:
         return list(self._free_parameters.values())
 
     def get_free_parameter(self, name: str) -> oqpy.Var | None:
-        """TODO laurecap"""
+        """Return the oqpy.Var associated with the variable name `name` in the program."""
         return self._free_parameters.get(name, None)
+
+    def get_output_parameter(self, name: str) -> oqpy.Var | None:
+        """Return the oqpy.Var associated with the output variable `name` in the program."""
+        return self._output_parameters.get(name, None)
 
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        # TODO laurecap: put inputs first? process separately?
         for parameter_name, parameter in self._free_parameters.items():
+            # Sometimes the names get overwritten -- see aq.types
+            parameter.name = parameter_name
+            root_oqpy_program._add_var(parameter)
+        for parameter_name, parameter in self._output_parameters.items():
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 
