@@ -17,7 +17,7 @@ import itertools
 from typing import Optional, Union
 
 from braket.circuits.circuit import Circuit
-from braket.circuits.observables import TensorProduct, X, Y, Z
+from braket.circuits.observables import I, TensorProduct, X, Y, Z
 
 _IDENTITY = "I"
 _PAULI_X = "X"
@@ -29,6 +29,7 @@ _PRODUCT_MAP = {
     "Y": {"X": ["Z", -1j], "Z": ["X", 1j]},
     "Z": {"X": ["Y", 1j], "Y": ["X", -1j]},
 }
+_ID_OBS = I()
 _PAULI_OBSERVABLES = {_PAULI_X: X(), _PAULI_Y: Y(), _PAULI_Z: Z()}
 _SIGN_MAP = {"+": 1, "-": -1}
 
@@ -74,14 +75,29 @@ class PauliString:
         """int: The number of qubits this Pauli string acts on."""
         return self._qubit_count
 
-    def to_unsigned_observable(self) -> TensorProduct:
+    def to_unsigned_observable(self, include_trivial: bool = False) -> TensorProduct:
         """Returns the observable corresponding to the unsigned part of the Pauli string.
 
         For example, for a Pauli string -XYZ, the corresponding observable is X ⊗ Y ⊗ Z.
 
+        Args:
+            include_trivial (bool): Whether to include explicit identity factors in the observable.
+                Default: False.
+
         Returns:
             TensorProduct: The tensor product of the unsigned factors in the Pauli string.
         """
+        if include_trivial:
+            return TensorProduct(
+                [
+                    (
+                        _PAULI_OBSERVABLES[self._nontrivial[qubit]]
+                        if qubit in self._nontrivial
+                        else _ID_OBS
+                    )
+                    for qubit in range(self._qubit_count)
+                ]
+            )
         return TensorProduct(
             [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
         )
