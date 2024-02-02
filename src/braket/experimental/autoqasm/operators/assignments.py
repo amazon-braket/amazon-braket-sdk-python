@@ -96,6 +96,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
     elif (
         target.name not in oqpy_program.declared_vars
         and program_conversion_context.at_function_root_scope
+        and target.name != constants.RETVAL_VARIABLE_NAME
     ):
         # Explicitly declare and initialize the variable at the root scope.
         # For example:

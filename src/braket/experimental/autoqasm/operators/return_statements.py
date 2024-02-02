@@ -16,7 +16,9 @@
 
 from typing import Any
 
-from braket.experimental.autoqasm import program, types
+from braket.circuits.free_parameter_expression import FreeParameterExpression
+
+from braket.experimental.autoqasm import program, types as aq_types
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
@@ -33,7 +35,10 @@ def return_output_from_main_(name: str, value: Any) -> Any:
     input = aq_context.get_free_parameter(name)
 
     if input is None:
-        aq_context.register_output(name, type(value))
+        if isinstance(value, FreeParameterExpression):
+            aq_context.register_output(name, aq_types.FloatVar)
+        else:
+            aq_context.register_output(name, type(value))
     else:
         # Handle name collisions with input variables
         name = name + "_"
@@ -44,4 +49,4 @@ def return_output_from_main_(name: str, value: Any) -> Any:
         output = aq_context.get_output_parameter(name)
         oqpy_program.set(output, input)
 
-    return types.wrap_value(value)
+    return aq_types.wrap_value(value)
