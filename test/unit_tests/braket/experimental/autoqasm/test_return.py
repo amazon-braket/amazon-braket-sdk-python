@@ -169,6 +169,20 @@ val_ = val;"""
     assert main.to_ir() == expected
 
 
+def test_return_inputs():
+    @aq.main
+    def main(val1, val2):
+        return val1 + val2
+
+    expected = """OPENQASM 3.0;
+input float[64] val1;
+input float[64] val2;
+output float[64] retval_;
+retval_ = val1 + val2;"""
+
+    assert main.to_ir() == expected
+
+
 def test_returns_with_subroutine():
     """Test returning the result of another function call."""
 

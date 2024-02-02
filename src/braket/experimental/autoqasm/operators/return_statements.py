@@ -17,7 +17,6 @@
 from typing import Any
 
 from braket.experimental.autoqasm import program, types
-from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 
 def return_output_from_main_(name: str, value: Any) -> Any:
