@@ -124,14 +124,14 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_unbound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float length_c;",
-            "input float length_dg;",
-            "input float sigma_dg;",
-            "input float length_g;",
-            "input float sigma_g;",
-            "input float a;",
-            "input float b;",
             "cal {",
+            "    input float length_c;",
+            "    input float length_dg;",
+            "    input float sigma_dg;",
+            "    input float length_g;",
+            "    input float sigma_g;",
+            "    input float a;",
+            "    input float b;",
             "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s,"
             " sigma_dg * 1s, 0.2, 1, false);",
@@ -175,9 +175,9 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float sigma_g;",
-            "input float a;",
             "cal {",
+            "    input float sigma_g;",
+            "    input float a;",
             "    waveform gauss_wf = gaussian(1.0ms, sigma_g * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
