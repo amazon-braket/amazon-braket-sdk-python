@@ -40,6 +40,7 @@ SIGN_MAP = {"+": 1, "-": -1}
         ("-ZXY", "-ZXY", -1, Z() @ X() @ Y(), Z() @ X() @ Y()),
         ("YIX", "+YIX", 1, Y() @ X(), Y() @ I() @ X()),
         (PauliString("-ZYXI"), "-ZYXI", -1, Z() @ Y() @ X(), Z() @ Y() @ X() @ I()),
+        ("IIXIIIYI", "+IIXIIIYI", 1, X() @ Y(), I() @ I() @ X() @ I() @ I() @ I() @ Y() @ I()),
     ],
 )
 def test_happy_case(pauli_string, string, phase, observable, obs_with_id):
