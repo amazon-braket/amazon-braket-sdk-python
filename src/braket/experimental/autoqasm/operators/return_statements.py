@@ -44,6 +44,4 @@ def return_output_from_main_(name: str, value: Any) -> Any:
         output = aq_context.get_output_parameter(name)
         oqpy_program.set(output, input)
 
-    ret_value = types.wrap_value(value)
-
-    return ret_value
+    return types.wrap_value(value)
