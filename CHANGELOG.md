@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.68.3 (2024-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Allow identities in PauliString observable
+
 ## v1.68.2 (2024-01-31)
 
 ### Bug Fixes and Other Changes
