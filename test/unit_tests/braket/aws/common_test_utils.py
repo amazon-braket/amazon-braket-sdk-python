@@ -353,12 +353,14 @@ def _create_task_args_and_kwargs(
     create_kwargs = extra_kwargs or {}
     create_kwargs.update(
         {
-            "poll_timeout_seconds": poll_timeout_seconds
-            if poll_timeout_seconds is not None
-            else default_poll_timeout,
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else default_poll_interval,
+            "poll_timeout_seconds": (
+                poll_timeout_seconds if poll_timeout_seconds is not None else default_poll_timeout
+            ),
+            "poll_interval_seconds": (
+                poll_interval_seconds
+                if poll_interval_seconds is not None
+                else default_poll_interval
+            ),
             "inputs": inputs,
             "gate_definitions": gate_definitions,
             "reservation_arn": reservation_arn,
