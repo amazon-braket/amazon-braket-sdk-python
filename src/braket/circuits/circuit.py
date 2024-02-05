@@ -57,9 +57,7 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
-from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
-from braket.pulse.waveforms import Waveform
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
