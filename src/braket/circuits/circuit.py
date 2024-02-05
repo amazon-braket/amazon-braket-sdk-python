@@ -55,9 +55,10 @@ from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
-from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
+from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
@@ -1256,8 +1257,8 @@ class Circuit:
     def _validate_gate_calbrations_uniqueness(
         self,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
-        frames: dict[Frame],
-        waveforms: dict[ArbitraryWaveform],
+        frames: dict[str, Frame],
+        waveforms: dict[str, Waveform],
     ) -> None:
         for key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
@@ -1270,7 +1271,7 @@ class Circuit:
     def _generate_frame_wf_defcal_declarations(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
     ) -> Optional[str]:
-        program = oqpy.Program(None)
+        program = oqpy.Program(None, simplify_constants=False)
 
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions)
 
@@ -1298,11 +1299,7 @@ class Circuit:
                         continue
 
                     gate_name = gate._qasm_name
-                    arguments = (
-                        [calibration._format_parameter_ast(value) for value in gate.parameters]
-                        if isinstance(gate, Parameterizable)
-                        else None
-                    )
+                    arguments = gate.parameters if isinstance(gate, Parameterizable) else None
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
@@ -1315,7 +1312,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> tuple[dict[Frame], dict[ArbitraryWaveform]]:
+    ) -> tuple[dict[str, Frame], dict[str, Waveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}
