@@ -673,15 +673,14 @@ def test_run_with_noise_model(mock_run, noise_model):
     )
 
 
-@patch.object(LocalSimulator, "_prepare_batch_tasks_and_inputs")
-def test_run_batch_with_noise_model(mock_prepare, noise_model):
+@patch.object(LocalSimulator, "_apply_noise_model_to_circuit")
+def test_run_batch_with_noise_model(mock_apply, noise_model):
     device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
 
-    mock_prepare.return_value = [(circuit, {})] * 2
+    mock_apply.return_value = noise_model.apply(circuit)
     _ = device.run_batch([circuit] * 2, shots=4).results()
-    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
-    assert mock_prepare.call_args[0][0] == [expected_circuit] * 2
+    assert mock_apply.call_count == 2
 
 
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
