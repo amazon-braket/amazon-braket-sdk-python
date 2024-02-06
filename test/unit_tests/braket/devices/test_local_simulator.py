@@ -641,7 +641,7 @@ def test_valid_local_device_for_noise_model(backend, noise_model):
 
 
 @pytest.mark.parametrize("backend", ["dummy_oq3"])
-def test_invalide_aws_device_for_noise_model(backend, noise_model):
+def test_invalid_local_device_for_noise_model(backend, noise_model):
     with pytest.raises(ValueError):
         _ = LocalSimulator(backend, noise_model=noise_model)
 
