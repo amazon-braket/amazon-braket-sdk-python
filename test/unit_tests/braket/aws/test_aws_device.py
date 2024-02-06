@@ -2186,8 +2186,6 @@ def test_run_with_noise_model(aws_quantum_task_mock, aws_session_init, aws_sessi
         """
     ).strip()
 
-    print(aws_quantum_task_mock.call_args_list[0][0][2])
-
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
 
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
