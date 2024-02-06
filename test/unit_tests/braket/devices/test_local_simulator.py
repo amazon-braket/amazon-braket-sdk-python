@@ -646,6 +646,12 @@ def test_invalid_local_device_for_noise_model(backend, noise_model):
         _ = LocalSimulator(backend, noise_model=noise_model)
 
 
+@pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
+def test_local_device_with_invalid_noise_model(backend, noise_model):
+    with pytest.raises(TypeError):
+        _ = LocalSimulator(backend, noise_model=Mock())
+
+
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
 def test_run_with_noise_model(mock_run, noise_model):
     mock_run.return_value = GATE_MODEL_RESULT
