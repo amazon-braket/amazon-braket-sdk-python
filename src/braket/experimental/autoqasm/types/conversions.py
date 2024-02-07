@@ -37,7 +37,7 @@ def map_parameter_type(python_type: type) -> type:
     """
     origin_type = typing.get_origin(python_type) or python_type
 
-    if python_type is aq_types.QubitIdentifierType:
+    if python_type == aq_types.QubitIdentifierType:
         return oqpy.Qubit
     if issubclass(origin_type, bool):
         return oqpy.BoolVar
