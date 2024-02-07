@@ -470,7 +470,6 @@ class ProgramConversionContext:
             angles (list[Any]): The list of target angles to validate.
 
         Raises:
-            errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
         if self.in_verbatim_block and not self._gate_definitions_processing:
