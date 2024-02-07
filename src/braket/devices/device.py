@@ -128,16 +128,13 @@ class Device(ABC):
         self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
     ) -> None:
         if isinstance(task_specification, Circuit):
-            if any(
-                [
-                    isinstance(instruction.operator, Noise)
-                    for instruction in task_specification.instructions
-                ]
-            ):
-                warnings.warn(
-                    "The noise model of the device is applied to a circuit that already has noise"
-                    " instructions."
-                )
+            for instruction in task_specification.instructions:
+                if isinstance(instruction.operator, Noise):
+                    warnings.warn(
+                        "The noise model of the device is applied to a circuit that already has"
+                        " noise instructions."
+                    )
+                    break
             task_specification = self._noise_model.apply(task_specification)
         else:
             warnings.warn(
