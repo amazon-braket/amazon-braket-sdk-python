@@ -353,8 +353,8 @@ def _convert_subroutine(
             # Validate and declare used qubits
             quantum_indices = {
                 i
-                for i, arg in enumerate(oqpy_sub.subroutine_declaration[1].arguments)
-                if isinstance(arg, qasm_ast.QuantumArgument)
+                for i, param in enumerate(inspect.signature(f).parameters.values())
+                if param.annotation == aq_types.QubitIdentifierType
             }
             args = [
                 (aq_instructions.qubits._qubit(arg) if i in quantum_indices else arg)

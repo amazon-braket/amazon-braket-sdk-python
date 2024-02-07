@@ -330,11 +330,11 @@ class ProgramConversionContext:
                     f"block. The native gates of the device are: {native_gates}"
                 )
 
-    def register_args(self, args: tuple[Any]) -> None:
+    def register_args(self, args: Iterable[Any]) -> None:
         """Register any FreeParameters in the list of arguments.
 
         Args:
-            args (tuple[Any]): Arguments passed to the main program or a subroutine.
+            args (Iterable[Any]): Arguments passed to the main program or a subroutine.
         """
         for arg in args:
             if isinstance(arg, FreeParameterExpression):
@@ -470,6 +470,7 @@ class ProgramConversionContext:
             angles (list[Any]): The list of target angles to validate.
 
         Raises:
+            errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
         if self.in_verbatim_block and not self._gate_definitions_processing:
