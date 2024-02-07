@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.68.3 (2024-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Allow identities in PauliString observable
+
+## v1.68.2 (2024-01-31)
+
+### Bug Fixes and Other Changes
+
+ * update S3 uri regex for AWS sessions
+ * update batch circuit to limit repeat calls
+
+## v1.68.1 (2024-01-29)
+
+### Bug Fixes and Other Changes
+
+ * add force flag for import testing
+
 ## v1.68.0 (2024-01-25)
 
 ### Features
