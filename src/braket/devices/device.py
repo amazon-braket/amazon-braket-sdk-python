@@ -18,6 +18,7 @@ from typing import Optional, Union
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit, Noise
+from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import supported_noise_pragma_to_noise
 from braket.device_schema import DeviceActionType
 from braket.ir.openqasm import Program
@@ -110,15 +111,13 @@ class Device(ABC):
         """
         return self._status
 
-    def _validate_device_noise_model_support(self) -> None:
+    def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:
         supported_noises = set(
             supported_noise_pragma_to_noise[pragma].__name__
             for pragma in self.properties.action[DeviceActionType.OPENQASM].supportedPragmas
             if pragma in supported_noise_pragma_to_noise
         )
-        noise_operators = set(
-            noise_instr.noise.name for noise_instr in self._noise_model._instructions
-        )
+        noise_operators = set(noise_instr.noise.name for noise_instr in noise_model._instructions)
         if noise_operators > supported_noises:
             raise ValueError(
                 f"{self.name} does not support noise simulation or the noise model includes noise "
