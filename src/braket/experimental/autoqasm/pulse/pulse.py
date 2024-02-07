@@ -20,12 +20,8 @@ from typing import Union
 import oqpy
 
 from braket.experimental.autoqasm import program as aq_program
-from braket.experimental.autoqasm.instructions.qubits import (
-    QubitIdentifierType,
-    _get_physical_qubit_indices,
-    is_qubit_identifier_type,
-)
-from braket.experimental.autoqasm.types import BitVar
+from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices
+from braket.experimental.autoqasm.types import BitVar, QubitIdentifierType, is_qubit_identifier_type
 from braket.parametric import FreeParameterExpression
 from braket.parametric.free_parameter import FreeParameter
 from braket.pulse import PulseSequence

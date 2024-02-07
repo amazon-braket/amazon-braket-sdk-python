@@ -335,6 +335,26 @@ annotation_test(1.0);"""
     assert main.to_ir() == expected
 
 
+def test_map_qubit():
+    """Test qubit input parameter type."""
+
+    @aq.subroutine
+    def annotation_test(input: aq.Qubit):
+        pass
+
+    @aq.main
+    def main():
+        annotation_test(1)
+
+    expected = """OPENQASM 3.0;
+def annotation_test(qubit input) {
+}
+qubit[2] __qubits__;
+annotation_test(__qubits__[1]);"""
+
+    assert main.to_ir() == expected
+
+
 def test_map_array():
     """Test array input parameter type."""
 

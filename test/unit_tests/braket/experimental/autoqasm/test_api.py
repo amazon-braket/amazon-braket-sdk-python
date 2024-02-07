@@ -176,14 +176,14 @@ recursive_h(4);"""
 
 
 @aq.subroutine
-def bell_state_arbitrary_qubits(q0: int, q1: int) -> None:
+def bell_state_arbitrary_qubits(q0: aq.Qubit, q1: aq.Qubit) -> None:
     h(q0)
     cnot(q0, q1)
 
 
 @pytest.fixture
 def double_bell_state():
-    @aq.main(num_qubits=4)
+    @aq.main
     def double_bell_state() -> None:
         bell_state_arbitrary_qubits(0, 1)
         bell_state_arbitrary_qubits(2, 3)
@@ -193,13 +193,13 @@ def double_bell_state():
 
 def test_double_bell_state(double_bell_state) -> None:
     expected = """OPENQASM 3.0;
-def bell_state_arbitrary_qubits(int[32] q0, int[32] q1) {
-    h __qubits__[q0];
-    cnot __qubits__[q0], __qubits__[q1];
+def bell_state_arbitrary_qubits(qubit q0, qubit q1) {
+    h q0;
+    cnot q0, q1;
 }
 qubit[4] __qubits__;
-bell_state_arbitrary_qubits(0, 1);
-bell_state_arbitrary_qubits(2, 3);"""
+bell_state_arbitrary_qubits(__qubits__[0], __qubits__[1]);
+bell_state_arbitrary_qubits(__qubits__[2], __qubits__[3]);"""
     assert double_bell_state.to_ir() == expected
 
 
@@ -780,14 +780,14 @@ for int i in [0:5 - 1] {
 
 
 @aq.subroutine
-def bell(q0: int, q1: int) -> None:
+def bell(q0: aq.Qubit, q1: aq.Qubit) -> None:
     h(q0)
     cnot(q0, q1)
 
 
 @pytest.fixture
 def bell_in_for_loop():
-    @aq.main(num_qubits=5)
+    @aq.main
     def bell_in_for_loop() -> None:
         for i in aq.range(3):
             bell(0, 1)
@@ -798,13 +798,13 @@ def bell_in_for_loop():
 def test_subroutines_in_for_loop(bell_in_for_loop) -> None:
     """Test calling a parameterized subroutine from inside a for loop."""
     expected = """OPENQASM 3.0;
-def bell(int[32] q0, int[32] q1) {
-    h __qubits__[q0];
-    cnot __qubits__[q0], __qubits__[q1];
+def bell(qubit q0, qubit q1) {
+    h q0;
+    cnot q0, q1;
 }
-qubit[5] __qubits__;
+qubit[2] __qubits__;
 for int i in [0:3 - 1] {
-    bell(0, 1);
+    bell(__qubits__[0], __qubits__[1]);
 }"""
 
     assert bell_in_for_loop.to_ir() == expected

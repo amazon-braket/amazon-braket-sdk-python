@@ -23,23 +23,6 @@ from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
 from braket.parametric import FreeParameterExpression
-from braket.registers.qubit import Qubit
-
-QubitIdentifierType = Union[
-    int, str, Qubit, oqpy._ClassicalVar, oqpy.base.OQPyExpression, oqpy.Qubit
-]
-
-
-def is_qubit_identifier_type(qubit: Any) -> bool:
-    """Checks if a given object is a qubit identifier type.
-
-    Args:
-        qubit (Any): The object to check.
-
-    Returns:
-        bool: True if the object is a qubit identifier type, False otherwise.
-    """
-    return isinstance(qubit, QubitIdentifierType.__args__)
 
 
 def _get_physical_qubit_indices(qids: list[str]) -> list[int]:

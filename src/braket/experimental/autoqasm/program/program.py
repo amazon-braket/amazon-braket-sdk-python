@@ -35,12 +35,12 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
-from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
 from braket.experimental.autoqasm.program.serialization_properties import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 
 # Create the thread-local object for the program conversion context.
@@ -330,11 +330,11 @@ class ProgramConversionContext:
                     f"block. The native gates of the device are: {native_gates}"
                 )
 
-    def register_args(self, args: list[Any]) -> None:
+    def register_args(self, args: Iterable[Any]) -> None:
         """Register any FreeParameters in the list of arguments.
 
         Args:
-            args (list[Any]): Arguments passed to the main program or a subroutine.
+            args (Iterable[Any]): Arguments passed to the main program or a subroutine.
         """
         for arg in args:
             if isinstance(arg, FreeParameterExpression):
