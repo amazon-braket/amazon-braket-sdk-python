@@ -124,13 +124,6 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_unbound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float length_c;",
-            "input float length_dg;",
-            "input float sigma_dg;",
-            "input float length_g;",
-            "input float sigma_g;",
-            "input float a;",
-            "input float b;",
             "cal {",
             "    input float length_c;",
             "    input float length_dg;",
@@ -182,8 +175,6 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
-            "input float sigma_g;",
-            "input float a;",
             "cal {",
             "    input float sigma_g;",
             "    input float a;",
