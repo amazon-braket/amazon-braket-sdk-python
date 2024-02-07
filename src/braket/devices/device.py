@@ -13,13 +13,12 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from copy import copy
 from typing import Optional, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit, Noise
-from braket.circuits.translations import one_prob_noise_map
+from braket.circuits.translations import supported_noise_pragma_to_noise
 from braket.device_schema import DeviceActionType
 from braket.ir.openqasm import Program
 from braket.tasks.quantum_task import QuantumTask
@@ -112,17 +111,15 @@ class Device(ABC):
         return self._status
 
     def _validate_device_noise_model_support(self) -> None:
-        noise_pragma_name_to_class = copy(one_prob_noise_map)
-        noise_pragma_name_to_class.update({"kraus": Noise.Kraus})
-
-        supported_noises = [
-            noise_pragma_name_to_class[pragma.split("braket_noise_")[-1]]
-            for pragma in (self.properties.action[DeviceActionType.OPENQASM].supportedPragmas)
-            if "braket_noise_" in pragma
-        ]
-
-        noise_operators = [noise_instr.noise for noise_instr in self._noise_model._instructions]
-        if not all([isinstance(noise, tuple(supported_noises)) for noise in noise_operators]):
+        supported_noises = set(
+            supported_noise_pragma_to_noise[pragma].__name__
+            for pragma in self.properties.action[DeviceActionType.OPENQASM].supportedPragmas
+            if pragma in supported_noise_pragma_to_noise
+        )
+        noise_operators = set(
+            noise_instr.noise.name for noise_instr in self._noise_model._instructions
+        )
+        if noise_operators > supported_noises:
             raise ValueError(
                 f"{self.name} does not support noise simulation or the noise model includes noise "
                 + f"that is not supported by {self.name}."
