@@ -11,60 +11,85 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import operator
 from typing import Union
 
 from openpulse import ast
-from openqasm3.ast import DurationLiteral
 from openqasm3.visitor import QASMTransformer
-
-from braket.parametric.free_parameter_expression import FreeParameterExpression
-
-
-class _FreeParameterExpressionIdentifier(ast.Identifier):
-    """Dummy AST node with FreeParameterExpression instance attached"""
-
-    def __init__(self, expression: FreeParameterExpression):
-        super().__init__(name=f"FreeParameterExpression({expression})")
-        self._expression = expression
-
-    @property
-    def expression(self) -> FreeParameterExpression:
-        return self._expression
+from oqpy.program import Program
+from oqpy.timing import OQDurationLiteral
 
 
 class _FreeParameterTransformer(QASMTransformer):
     """Walk the AST and evaluate FreeParameterExpressions."""
 
-    def __init__(self, param_values: dict[str, float]):
+    def __init__(self, param_values: dict[str, float], program: Program):
         self.param_values = param_values
+        self.program = program
         super().__init__()
 
-    def visit__FreeParameterExpressionIdentifier(
+    def visit_Identifier(
         self, identifier: ast.Identifier
-    ) -> Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]:
-        """Visit a FreeParameterExpressionIdentifier.
+    ) -> Union[ast.Identifier, ast.FloatLiteral]:
+        """Visit an Identifier.
+
+        If the Identifier is used to hold a `FreeParameterExpression`, it will be simplified
+        using the given parameter values.
+
         Args:
             identifier (Identifier): The identifier.
 
         Returns:
-            Union[_FreeParameterExpressionIdentifier, FloatLiteral]: The transformed expression.
+            Union[Identifier, FloatLiteral]: The transformed identifier.
         """
-        new_value = identifier.expression.subs(self.param_values)
-        if isinstance(new_value, FreeParameterExpression):
-            return _FreeParameterExpressionIdentifier(new_value)
-        else:
-            return ast.FloatLiteral(new_value)
+        if identifier.name in self.param_values:
+            return ast.FloatLiteral(float(self.param_values[identifier.name]))
+        return identifier
 
-    def visit_DurationLiteral(self, duration_literal: DurationLiteral) -> DurationLiteral:
-        """Visit Duration Literal.
-            node.value, node.unit (node.unit.name, node.unit.value)
-            1
+    def visit_BinaryExpression(
+        self, node: ast.BinaryExpression
+    ) -> Union[ast.BinaryExpression, ast.FloatLiteral]:
+        """Visit a BinaryExpression.
+
+        Visit the operands and simplify if they are literals.
+
         Args:
-            duration_literal (DurationLiteral): The duration literal.
+            node (BinaryExpression): The node.
+
         Returns:
-            DurationLiteral: The transformed duration literal.
+            Union[BinaryExpression, FloatLiteral]: The transformed identifier.
         """
-        duration = duration_literal.value
-        if not isinstance(duration, FreeParameterExpression):
-            return duration_literal
-        return DurationLiteral(duration.subs(self.param_values), duration_literal.unit)
+        lhs = self.visit(node.lhs)
+        rhs = self.visit(node.rhs)
+        ops = {
+            ast.BinaryOperator["+"]: operator.add,
+            ast.BinaryOperator["*"]: operator.mul,
+            ast.BinaryOperator["**"]: operator.pow,
+        }
+        if isinstance(lhs, ast.FloatLiteral):
+            if isinstance(rhs, ast.FloatLiteral):
+                return ast.FloatLiteral(ops[node.op](lhs.value, rhs.value))
+            elif isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
+                return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
+        return ast.BinaryExpression(op=node.op, lhs=lhs, rhs=rhs)
+
+    def visit_UnaryExpression(
+        self, node: ast.UnaryExpression
+    ) -> Union[ast.UnaryExpression, ast.FloatLiteral]:
+        """Visit an UnaryExpression.
+
+        Visit the operand and simplify if it is a literal.
+
+        Args:
+            node (UnaryExpression): The node.
+
+        Returns:
+            Union[UnaryExpression, FloatLiteral]: The transformed identifier.
+        """
+        expression = self.visit(node.expression)
+        if (
+            isinstance(expression, (ast.FloatLiteral, ast.DurationLiteral))
+            and node.op == ast.UnaryOperator["-"]
+        ):
+            return type(expression)(-expression.value)
+        return ast.UnaryExpression(op=node.op, expression=node.expression)  # pragma: no cover

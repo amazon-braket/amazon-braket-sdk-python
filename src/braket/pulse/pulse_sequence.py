@@ -20,16 +20,12 @@ from typing import Any, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
-from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.approximation_parser import _ApproximationParser
-from braket.pulse.ast.free_parameters import (
-    _FreeParameterExpressionIdentifier,
-    _FreeParameterTransformer,
-)
+from braket.pulse.ast.free_parameters import _FreeParameterTransformer
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
@@ -46,7 +42,7 @@ class PulseSequence:
 
     def __init__(self):
         self._capture_v0_count = 0
-        self._program = Program()
+        self._program = Program(simplify_constants=False)
         self._frames = {}
         self._waveforms = {}
         self._free_parameters = set()
@@ -87,7 +83,8 @@ class PulseSequence:
         """
 
         _validate_uniqueness(self._frames, frame)
-        self._program.set_frequency(frame=frame, freq=self._format_parameter_ast(frequency))
+        self._register_free_parameters(frequency)
+        self._program.set_frequency(frame=frame, freq=frequency)
         self._frames[frame.id] = frame
         return self
 
@@ -106,7 +103,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.shift_frequency(frame=frame, freq=self._format_parameter_ast(frequency))
+        self._register_free_parameters(frequency)
+        self._program.shift_frequency(frame=frame, freq=frequency)
         self._frames[frame.id] = frame
         return self
 
@@ -125,7 +123,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.set_phase(frame=frame, phase=self._format_parameter_ast(phase))
+        self._register_free_parameters(phase)
+        self._program.set_phase(frame=frame, phase=phase)
         self._frames[frame.id] = frame
         return self
 
@@ -144,7 +143,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.shift_phase(frame=frame, phase=self._format_parameter_ast(phase))
+        self._register_free_parameters(phase)
+        self._program.shift_phase(frame=frame, phase=phase)
         self._frames[frame.id] = frame
         return self
 
@@ -163,7 +163,8 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        self._program.set_scale(frame=frame, scale=self._format_parameter_ast(scale))
+        self._register_free_parameters(scale)
+        self._program.set_scale(frame=frame, scale=scale)
         self._frames[frame.id] = frame
         return self
 
@@ -183,10 +184,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if isinstance(duration, FreeParameterExpression):
-            for p in duration.expression.free_symbols:
-                self._free_parameters.add(FreeParameter(p.name))
-            duration = OQDurationLiteral(duration)
+        self._register_free_parameters(duration)
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -234,12 +232,10 @@ class PulseSequence:
         """
         _validate_uniqueness(self._frames, frame)
         _validate_uniqueness(self._waveforms, waveform)
-        self._program.play(frame=frame, waveform=waveform)
         if isinstance(waveform, Parameterizable):
             for param in waveform.parameters:
-                if isinstance(param, FreeParameterExpression):
-                    for p in param.expression.free_symbols:
-                        self._free_parameters.add(FreeParameter(p.name))
+                self._register_free_parameters(param)
+        self._program.play(frame=frame, waveform=waveform)
         self._frames[frame.id] = frame
         self._waveforms[waveform.id] = waveform
         return self
@@ -276,11 +272,13 @@ class PulseSequence:
         """
         program = deepcopy(self._program)
         tree: ast.Program = program.to_ast(include_externs=False, ignore_needs_declaration=True)
-        new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
+        new_tree: ast.Program = _FreeParameterTransformer(param_values, program).visit(tree)
 
-        new_program = Program()
+        new_program = Program(simplify_constants=False)
         new_program.declared_vars = program.declared_vars
         new_program.undeclared_vars = program.undeclared_vars
+        for param_name in param_values:
+            new_program.undeclared_vars.pop(param_name, None)
         for x in new_tree.statements:
             new_program._add_statement(x)
 
@@ -324,14 +322,13 @@ class PulseSequence:
             tree = program.to_ast(encal=True, include_externs=False)
         return ast_to_qasm(tree)
 
-    def _format_parameter_ast(
-        self, parameter: Union[float, FreeParameterExpression]
-    ) -> Union[float, _FreeParameterExpressionIdentifier]:
+    def _register_free_parameters(
+        self,
+        parameter: Union[float, FreeParameterExpression],
+    ) -> None:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            return _FreeParameterExpressionIdentifier(parameter)
-        return parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]
