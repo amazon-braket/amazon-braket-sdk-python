@@ -2187,5 +2187,38 @@ def test_run_with_noise_model(aws_quantum_task_mock, aws_session_init, aws_sessi
     ).strip()
 
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
 
+
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_noise_model(
+    aws_quantum_task_mock, aws_session_init, aws_session, noise_model
+):
+    arn = DM1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
+    device = AwsDevice(arn, noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run_batch([circuit] * 2)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
