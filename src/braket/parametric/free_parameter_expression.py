@@ -17,7 +17,7 @@ import ast
 import operator
 from functools import reduce
 from numbers import Number
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import sympy
 from oqpy.base import OQPyExpression
@@ -43,10 +43,6 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (Optional[ClassicalType]): The OpenQASM3 type associated with the expression.
-                Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
-                expression in the OpenQASM3 IR. Any type other than DurationType is considered
-                as FloatType.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -59,7 +55,6 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
-        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
         elif isinstance(expression, (Number, sympy.Expr)):
@@ -94,7 +89,7 @@ class FreeParameterExpression:
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():
-            if isinstance(key, FreeParameterExpression):
+            if issubclass(type(key), FreeParameterExpression):
                 new_parameter_values[key.expression] = val
             else:
                 new_parameter_values[key] = val
@@ -127,7 +122,7 @@ class FreeParameterExpression:
             raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
@@ -136,7 +131,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other + self.expression)
 
     def __sub__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
@@ -145,7 +140,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other - self.expression)
 
     def __mul__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
@@ -154,7 +149,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other * self.expression)
 
     def __pow__(self, other, modulo=None):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
