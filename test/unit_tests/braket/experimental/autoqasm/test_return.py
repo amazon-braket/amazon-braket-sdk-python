@@ -26,7 +26,7 @@ def test_float_lit():
 
     expected = """OPENQASM 3.0;
 output float[64] retval_;
-float[64] retval_ = 1.5;"""
+retval_ = 1.5;"""
 
     assert main.to_ir() == expected
 
@@ -38,7 +38,7 @@ def test_int_lit():
 
     expected = """OPENQASM 3.0;
 output int[32] retval_;
-int[32] retval_ = 1;"""
+retval_ = 1;"""
 
     assert main.to_ir() == expected
 
@@ -51,7 +51,7 @@ def test_named_value():
 
     expected = """OPENQASM 3.0;
 output int[32] output_name;
-int[32] output_name = 1;"""
+output_name = 1;"""
 
     assert main.to_ir() == expected
 
@@ -97,7 +97,7 @@ def test_basic_arithmetic():
     expected = """OPENQASM 3.0;
 input int[32] input_a;
 output int[32] val;
-int[32] val = 3;"""
+val = 3;"""
 
     assert main.to_ir() == expected
 
@@ -113,7 +113,7 @@ def test_expressions():
     expected = """OPENQASM 3.0;
 input int[32] input_a;
 output int[32] val;
-int[32] val = 1;
+val = 1;
 val = val + input_a;"""
 
     assert main.to_ir() == expected
@@ -129,9 +129,9 @@ def test_expressions_and_control_flow():
         return val
 
     expected = """OPENQASM 3.0;
-output int[32] val;
+output float[64] val;
 qubit[5] __qubits__;
-float[64] val = 0.5;
+val = 0.5;
 for int i in [0:3 - 1] {
     bit __bit_1__;
     __bit_1__ = measure __qubits__[i];
@@ -150,8 +150,8 @@ def test_return_tuple():
     expected = """OPENQASM 3.0;
 output int[32] retval1_;
 output int[32] retval2_;
-int[32] retval1_ = 1;
-int[32] retval2_ = 2;"""
+retval1_ = 1;
+retval2_ = 2;"""
 
     assert main.to_ir() == expected
 
@@ -162,8 +162,8 @@ def test_name_collisions():
         return val
 
     expected = """OPENQASM 3.0;
-output float[64] val_;
 input float[64] val;
+output float[64] val_;
 val_ = val;"""
 
     assert main.to_ir() == expected
@@ -229,8 +229,8 @@ def ghz(int[32] n) {
         cnot __qubits__[i], __qubits__[i + 1];
     }
 }
-output bit retval_;
 input int[32] n;
+output bit retval_;
 qubit[10] __qubits__;
 ghz(n);
 bit[3] __bit_0__ = "000";
