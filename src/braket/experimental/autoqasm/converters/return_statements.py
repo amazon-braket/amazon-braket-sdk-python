@@ -38,7 +38,10 @@ class ReturnTransformer(converter.Base):
         if aq_context.subroutines_processing or node.value is None:
             return node
 
-        template = "name_ = ag__.return_output_from_main_(name_const_, value_)"
+        template = (
+            "name_ = ag__.assign_for_output(name_const_, "
+            "ag__.return_output_from_main_(name_const_, value_))"
+        )
 
         name = "retval_"
         if isinstance(node.value, gast.Name):

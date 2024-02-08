@@ -37,6 +37,14 @@ class AssignTransformer(converter.Base):
         template = """
         tar_ = ag__.assign_stmt(tar_name_, val_)
         """
+        try:
+            # Assignments for main function return statements have already been handled,
+            # so return early
+            if node.value.func.attr == "assign_for_output":
+                return node
+        except AttributeError:
+            pass
+
         node = self.generic_visit(node)
 
         # TODO: implement when target has multiple variable

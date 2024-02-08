@@ -25,6 +25,50 @@ from braket.experimental.autoqasm.autograph.operators.variables import Undefined
 from braket.experimental.autoqasm.types.conversions import var_type_from_oqpy
 
 
+def assign_for_output(target_name: str, value: Any) -> Any:
+    """Operator declares the `oq` variable, or sets variable's value if it's
+    already declared. Runs only for return statements on `main` decorated
+    functions.
+
+    Args:
+        target_name (str): The name of assignment target. It is the variable
+            name on the lhs of an assignment statement.
+        value (Any): The value of assignment. It is the object on the rhs of
+            an assignment statement.
+
+    Returns:
+        Any: Assignment value with updated name attribute if the value is an
+        `oqpy` type. Otherwise, it returns unchanged assignment value.
+    """
+    if isinstance(value, UndefinedReturnValue):
+        return value
+    program_conversion_context = program.get_program_conversion_context()
+
+    is_value_name_used = isinstance(
+        value, oqpy.base.Var
+    ) and program_conversion_context.is_var_name_used(value.name)
+
+    value = types.wrap_value(value)
+    if not isinstance(value, oqpy.base.Var):
+        return value
+
+    target = copy.copy(value)
+    target.init_expression = None
+    target.name = target_name
+
+    if hasattr(value, "name") and target_name == value.name:
+        # Avoid statements like `a = a;`
+        return value
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
+    if is_value_name_used or value.init_expression is None:
+        oqpy_program.set(target, value)
+    else:
+        oqpy_program.set(target, value.init_expression)
+
+    return target
+
+
 def assign_stmt(target_name: str, value: Any) -> Any:
     """Operator declares the `oq` variable, or sets variable's value if it's
     already declared.
@@ -81,10 +125,6 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         target = copy.copy(value)
         target.init_expression = None
         target.name = target_name
-
-    if hasattr(value, "name") and target_name == value.name:
-        # Avoid statements like `a = a;`
-        return value
 
     oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
