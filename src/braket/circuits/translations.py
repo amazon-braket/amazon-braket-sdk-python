@@ -84,7 +84,7 @@ one_prob_noise_map = {
     "phase_damping": noises.PhaseDamping,
 }
 
-supported_noise_pragma_to_noise = {
+SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
     "braket_noise_bit_flip": noises.BitFlip,
     "braket_noise_phase_flip": noises.PhaseFlip,
     "braket_noise_pauli_channel": noises.PauliChannel,
