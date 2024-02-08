@@ -191,7 +191,9 @@ class FreeParameterExpression:
         elif isinstance(self.expression, sympy.Number):
             return float(self.expression)
         else:
-            fvar = FloatVar(name=self.expression.name, init_expression="input")
+            fvar = FloatVar(
+                name=self.expression.name, init_expression="input", needs_declaration=False
+            )
             fvar.size = None
             fvar.type.size = None
             return fvar
