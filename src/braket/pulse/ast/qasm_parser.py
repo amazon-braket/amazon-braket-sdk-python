@@ -15,7 +15,6 @@ import io
 
 from openpulse import ast
 from openpulse.printer import Printer
-from openqasm3.ast import DurationLiteral
 from openqasm3.printer import PrinterState
 
 
@@ -32,20 +31,6 @@ class _PulsePrinter(Printer):
             context (PrinterState): The printer state context.
         """
         self.stream.write(str(node.name))
-
-    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState) -> None:
-        """Visit Duration Literal.
-            node.value, node.unit (node.unit.name, node.unit.value)
-            1
-        Args:
-            node (ast.DurationLiteral): The duration literal.
-            context (PrinterState): The printer state context.
-        """
-        duration = node.value
-        if isinstance(duration, ast.Identifier):
-            self.stream.write(f"({duration.name}) * 1{node.unit.name}")
-        else:
-            super().visit_DurationLiteral(node, context)
 
     def visit_ClassicalDeclaration(
         self, node: ast.ClassicalDeclaration, context: PrinterState

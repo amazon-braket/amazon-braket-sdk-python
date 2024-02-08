@@ -83,6 +83,9 @@ class ArbitraryWaveform(Waveform):
         self.amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return f"ArbitraryWaveform('id': {self.id}, 'amplitudes': {self.amplitudes})"
+
     def __eq__(self, other):
         return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
             other.amplitudes,
@@ -131,6 +134,9 @@ class ConstantWaveform(Waveform, Parameterizable):
         self.iq = iq
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
@@ -167,7 +173,7 @@ class ConstantWaveform(Waveform, Parameterizable):
             "constant", [("length", duration), ("iq", complex128)]
         )
         return WaveformVar(
-            init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
+            init_expression=constant_generator(self.length, self.iq),
             name=self.id,
         )
 
@@ -236,6 +242,13 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return (
+            f"DragGaussianWaveform('id': {self.id}, 'length': {self.length}, "
+            f"'sigma': {self.sigma}, 'beta': {self.beta}, 'amplitude': {self.amplitude}, "
+            f"'zero_at_edges': {self.zero_at_edges})"
+        )
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
@@ -286,10 +299,10 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.beta),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.beta,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -360,6 +373,12 @@ class GaussianWaveform(Waveform, Parameterizable):
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return (
+            f"GaussianWaveform('id': {self.id}, 'length': {self.length}, 'sigma': {self.sigma}, "
+            f"'amplitude': {self.amplitude}, 'zero_at_edges': {self.zero_at_edges})"
+        )
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
@@ -407,9 +426,9 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -448,16 +467,6 @@ class GaussianWaveform(Waveform, Parameterizable):
 
 def _make_identifier_name() -> str:
     return "".join([random.choice(string.ascii_letters) for _ in range(10)])
-
-
-def _map_to_oqpy_type(
-    parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[FreeParameterExpression, OQPyExpression]:
-    return (
-        FreeParameterExpression(parameter, duration)
-        if isinstance(parameter, FreeParameterExpression) and is_duration_type
-        else parameter
-    )
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
