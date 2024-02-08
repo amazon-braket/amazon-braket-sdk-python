@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.69.1 (2024-02-08)
+
+### Bug Fixes and Other Changes
+
+ * let price tracker checks skip over devices without execution win…
+
 ## v1.69.0 (2024-02-06)
 
 ### Features
