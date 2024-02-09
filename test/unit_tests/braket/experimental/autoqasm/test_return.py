@@ -162,14 +162,14 @@ def test_name_collisions():
         return val
 
     expected = """OPENQASM 3.0;
-input float[64] val;
+input float val;
 output float[64] val_;
 val_ = val;"""
 
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(raises=NotImplementedError)  # Needs OQPy 0.3.5
+@pytest.mark.xfail(raises=TypeError)  # Needs OQPy 0.3.5
 def test_return_inputs():
     @aq.main
     def main(val1, val2):

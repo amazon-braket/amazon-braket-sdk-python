@@ -376,10 +376,35 @@ class ProgramConversionContext:
             aq_type = aq_types.map_parameter_type(parameter_type)
             if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
                 raise NotImplementedError(parameter_type)
-            var = var_class("input", name=parameter_name, needs_declaration=False)
-            self._free_parameters[parameter_name] = var
+
+            if aq_type == oqpy.FloatVar:
+                var = aq_type("input", name=parameter_name, needs_declaration=False)
+                var.size = None
+                var.type.size = None
+            else:
+                var = aq_type("input", name=parameter_name)
+            self._input_parameters[parameter_name] = var
             return var
-        
+
+    def register_output_parameter(
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool, None] = float,
+    ) -> None:
+        """Register a new output parameter if it is not None.
+
+        Args:
+            parameter_name (str): The name of the parameter to register with the program.
+            parameter_type (Union[float, int, bool, None]): The type of the parameter to register
+                with the program. Default: float.
+        """
+        if parameter_type is type(None):
+            return  # Do nothing
+
+        aq_type = aq_types.map_parameter_type(parameter_type)
+        self._output_parameters[parameter_name] = aq_type("output", name=parameter_name)
+
+
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
 
