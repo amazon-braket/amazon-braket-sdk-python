@@ -44,7 +44,7 @@ def test_program_conversion_context() -> None:
 def test_get_expression_var_invalid_name():
     """Tests the get_expression_var function."""
     prog = aq.program.ProgramConversionContext()
-    prog.register_parameter("alpha")
+    prog.register_input_parameter("alpha")
     with pytest.raises(aq.errors.ParameterNotFoundError):
         prog.get_expression_var(FreeParameter("not_a_parameter"))
     with pytest.raises(aq.errors.ParameterNotFoundError):
@@ -110,6 +110,7 @@ def circuit(float[64] angle) {
     rx(angle) __qubits__[0];
     cnot __qubits__[0], __qubits__[1];
 }
+output bit retval_;
 qubit[2] __qubits__;
 for int i in [0:"""
             + str(scale)
@@ -119,7 +120,8 @@ for int i in [0:"""
             + """);
 }
 bit __bit_0__;
-__bit_0__ = measure __qubits__[1];"""
+__bit_0__ = measure __qubits__[1];
+retval_ = __bit_0__;"""
         )
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):

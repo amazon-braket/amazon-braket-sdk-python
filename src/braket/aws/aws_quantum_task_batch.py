@@ -150,27 +150,36 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     ]:
         inputs = inputs or {}
 
+        max_inputs_tasks = 1
         single_task = isinstance(
             task_specifications,
             (Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation),
         )
         single_input = isinstance(inputs, dict)
 
+        max_inputs_tasks = (
+            max(max_inputs_tasks, len(task_specifications)) if not single_task else max_inputs_tasks
+        )
+        max_inputs_tasks = (
+            max(max_inputs_tasks, len(inputs)) if not single_input else max_inputs_tasks
+        )
+
         if not single_task and not single_input:
             if len(task_specifications) != len(inputs):
                 raise ValueError(
                     "Multiple inputs and task specifications must " "be equal in number."
                 )
+
         if single_task:
-            task_specifications = repeat(task_specifications)
+            task_specifications = repeat(task_specifications, times=max_inputs_tasks)
 
         if single_input:
-            inputs = repeat(inputs)
+            inputs = repeat(inputs, times=max_inputs_tasks)
 
         tasks_and_inputs = zip(task_specifications, inputs)
 
         if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
+            tasks_and_inputs = list(tasks_and_inputs)
 
         tasks_and_inputs = list(tasks_and_inputs)
 

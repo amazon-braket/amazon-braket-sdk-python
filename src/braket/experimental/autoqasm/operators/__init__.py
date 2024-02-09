@@ -26,7 +26,7 @@ from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa
     ldu,
 )
 
-from .assignments import assign_stmt  # noqa: F401
+from .assignments import assign_for_output, assign_stmt  # noqa: F401
 from .comparisons import gt_, gteq_, lt_, lteq_  # noqa: F401
 from .conditional_expressions import if_exp  # noqa: F401
 from .control_flow import for_stmt, if_stmt, while_stmt  # noqa: F401
@@ -42,4 +42,5 @@ from .logical import eq  # noqa: F401
 from .logical import not_  # noqa: F401
 from .logical import not_eq  # noqa: F401
 from .logical import or_  # noqa: F401
+from .return_statements import return_output_from_main  # noqa: F401
 from .slices import GetItemOpts, get_item, set_item  # noqa: F401

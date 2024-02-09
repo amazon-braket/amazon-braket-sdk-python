@@ -21,7 +21,8 @@ import numpy as np
 import oqpy
 from openpulse import ast
 
-from braket.experimental.autoqasm import errors
+from braket.circuits.free_parameter_expression import FreeParameterExpression
+from braket.experimental.autoqasm import errors, program
 from braket.experimental.autoqasm import types as aq_types
 
 
@@ -37,6 +38,8 @@ def map_parameter_type(python_type: type) -> type:
     """
     origin_type = typing.get_origin(python_type) or python_type
 
+    if python_type == aq_types.QubitIdentifierType:
+        return oqpy.Qubit
     if issubclass(origin_type, bool):
         return oqpy.BoolVar
     if issubclass(origin_type, (int, np.integer)):
@@ -125,6 +128,21 @@ def _(node: Union[int, np.integer]):
 @wrap_value.register(np.floating)
 def _(node: Union[float, np.floating]):
     return aq_types.FloatVar(node)
+
+
+@wrap_value.register(FreeParameterExpression)
+def _(node: FreeParameterExpression):
+    aq_context = program.get_program_conversion_context()
+    if hasattr(node, "name"):
+        existing_param = aq_context.get_input_parameter(node.name)
+        if existing_param is not None:
+            return existing_param
+        else:
+            return aq_types.FloatVar(node.name)
+    else:
+        raise NotImplementedError(
+            "Returning expressions is not implemented yet"
+        )  # Requires oqpy 0.3.5
 
 
 @wrap_value.register

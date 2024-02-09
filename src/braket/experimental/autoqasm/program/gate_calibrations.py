@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.program import Program
+from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 
 
 class GateCalibration:
