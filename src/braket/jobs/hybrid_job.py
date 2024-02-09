@@ -45,8 +45,8 @@ from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
-INNER_SOURCE_INPUT_CHANNEL = "inner_function_source"
-INNER_SOURCE_INPUT_FOLDER = "inner_function_source_folder"
+INNER_SOURCE_INPUT_CHANNEL = "_inner_function_source"
+INNER_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
 
 
 def hybrid_job(
@@ -295,8 +295,6 @@ def _save_inner_source_to_file(inner_source: dict[str, str], input_data_dir: str
     Returns:
         dict[str, str]: Mapping between local file path to path in a job environment.
     """
-
-    # Save local source files to a temporary folder to be uploaded as input data
     path_mapping = {}
     for i, (local_path, source_code) in enumerate(inner_source.items()):
         copy_file_name = f"source_{i}.py"
