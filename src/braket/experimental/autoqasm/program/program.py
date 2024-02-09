@@ -404,7 +404,6 @@ class ProgramConversionContext:
         aq_type = aq_types.map_parameter_type(parameter_type)
         self._output_parameters[parameter_name] = aq_type("output", name=parameter_name)
 
-
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
 
