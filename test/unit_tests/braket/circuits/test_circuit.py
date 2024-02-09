@@ -1063,9 +1063,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
         ),
     ],
 )
-def test_circuit_with_parametric_defcal(
-    circuit, calibration_key, expected_ir, pulse_sequence_3
-):
+def test_circuit_with_parametric_defcal(circuit, calibration_key, expected_ir, pulse_sequence_3):
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     gate_calibrations = GateCalibrations(
         {
@@ -1081,6 +1079,7 @@ def test_circuit_with_parametric_defcal(
         )
         == expected_ir
     )
+
 
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
     circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
