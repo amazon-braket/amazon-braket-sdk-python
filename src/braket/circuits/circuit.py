@@ -1271,9 +1271,9 @@ class Circuit:
     def _generate_frame_wf_defcal_declarations(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
     ) -> Optional[str]:
-        """Generates the header where frame, waveform and defcals are declared.
+        """Generates the header where frames, waveforms and defcals are declared.
 
-        It also adds any FreeParameter that is not gate arguments to the circuit parameter set.
+        It also adds any FreeParameter that is not a gate argument to the circuit parameter set.
 
         Args:
             gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
