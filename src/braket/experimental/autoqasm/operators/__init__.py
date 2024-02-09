@@ -42,5 +42,5 @@ from .logical import eq  # noqa: F401
 from .logical import not_  # noqa: F401
 from .logical import not_eq  # noqa: F401
 from .logical import or_  # noqa: F401
-from .return_statements import return_output_from_main_  # noqa: F401
+from .return_statements import return_output_from_main  # noqa: F401
 from .slices import GetItemOpts, get_item, set_item  # noqa: F401

@@ -44,7 +44,7 @@ def test_program_conversion_context() -> None:
 def test_get_expression_var_invalid_name():
     """Tests the get_expression_var function."""
     prog = aq.program.ProgramConversionContext()
-    prog.register_parameter("alpha")
+    prog.register_input_parameter("alpha")
     with pytest.raises(aq.errors.ParameterNotFoundError):
         prog.get_expression_var(FreeParameter("not_a_parameter"))
     with pytest.raises(aq.errors.ParameterNotFoundError):

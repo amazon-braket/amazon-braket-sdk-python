@@ -56,7 +56,7 @@ def assign_for_output(target_name: str, value: Any) -> Any:
     target.init_expression = None
     target.name = target_name
 
-    if hasattr(value, "name") and target_name == value.name:
+    if target_name == value.name:
         # Avoid statements like `a = a;`
         return value
 

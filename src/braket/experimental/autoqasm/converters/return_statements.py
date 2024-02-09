@@ -40,7 +40,7 @@ class ReturnTransformer(converter.Base):
 
         template = (
             "name_ = ag__.assign_for_output(name_const_, "
-            "ag__.return_output_from_main_(name_const_, value_))"
+            "ag__.return_output_from_main(name_const_, value_))"
         )
 
         name = "retval_"

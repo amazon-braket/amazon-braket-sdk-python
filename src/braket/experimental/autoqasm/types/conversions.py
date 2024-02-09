@@ -132,7 +132,7 @@ def _(node: Union[float, np.floating]):
 def _(node: FreeParameterExpression):
     aq_context = program.get_program_conversion_context()
     if hasattr(node, "name"):
-        existing_param = aq_context.get_free_parameter(node.name)
+        existing_param = aq_context.get_input_parameter(node.name)
         if existing_param is not None:
             return existing_param
         else:
