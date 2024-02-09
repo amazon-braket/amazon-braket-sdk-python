@@ -67,7 +67,7 @@ def test_simple_parametric(simple_parametric):
     """Test a program with a parameter can be serialized."""
 
     expected = """OPENQASM 3.0;
-input float[64] theta;
+input float theta;
 qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
@@ -79,7 +79,7 @@ def test_simple_parametric_fp(simple_parametric_fp):
     """Test a program with an explicit free parameter can be serialized."""
 
     expected = """OPENQASM 3.0;
-input float[64] theta;
+input float theta;
 qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
@@ -116,9 +116,9 @@ def test_multiple_parameters(multi_parametric):
     """Test that multiple free parameters all appear in the processed program."""
 
     expected = """OPENQASM 3.0;
+input float alpha;
+input float theta;
 bit[2] c;
-input float[64] alpha;
-input float[64] theta;
 qubit[2] __qubits__;
 rx(alpha) __qubits__[0];
 rx(theta) __qubits__[1];
@@ -148,8 +148,8 @@ def test_repeat_parameter():
         rx(1, alpha)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
-input float[64] theta;
+input float alpha;
+input float theta;
 qubit[2] __qubits__;
 rx(alpha) __qubits__[0];
 rx(theta) __qubits__[1];
@@ -177,7 +177,7 @@ def test_parameter_in_subroutine():
 def rx_alpha(int[32] qubit) {
     rx(alpha) __qubits__[qubit];
 }
-input float[64] alpha;
+input float alpha;
 qubit[3] __qubits__;
 rx_alpha(2);"""
     assert parametric.to_ir() == expected
@@ -195,7 +195,7 @@ def test_captured_parameter():
         rx(1, alpha)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
+input float alpha;
 qubit[2] __qubits__;
 rz(alpha) __qubits__[0];
 rx(alpha) __qubits__[1];"""
@@ -212,7 +212,7 @@ def test_multi_angle_gates():
         ms(0, qubit_0, phi, phi, theta)
 
     expected = """OPENQASM 3.0;
-input float[64] phi;
+input float phi;
 qubit[5] __qubits__;
 ms(phi, phi, 0.5) __qubits__[0], __qubits__[2];"""
     assert parametric.to_ir() == expected
@@ -239,7 +239,7 @@ def test_parameters_passed_as_main_arg():
         cphaseshift(0, 1, my_phi)
 
     expected = """OPENQASM 3.0;
-input float[64] my_phi;
+input float my_phi;
 qubit[2] __qubits__;
 cphaseshift(my_phi) __qubits__[0], __qubits__[1];"""
     assert parametric.to_ir() == expected
@@ -257,10 +257,10 @@ def test_simple_subroutine_arg():
         silly_rz(alpha)
 
     expected = """OPENQASM 3.0;
-def silly_rz(float[64] theta) {
+def silly_rz(float theta) {
     rz(theta) __qubits__[0];
 }
-input float[64] alpha;
+input float alpha;
 qubit[1] __qubits__;
 silly_rz(alpha);"""
     assert parametric.to_ir() == expected
@@ -279,11 +279,11 @@ def test_parameters_passed_as_subroutine_arg():
         silly_ms(3, 0.5, FreeParameter("beta"))
 
     expected = """OPENQASM 3.0;
-def silly_ms(int[32] qubit_0, float[64] phi, float[64] theta) {
+def silly_ms(int[32] qubit_0, float phi, float theta) {
     ms(phi, phi, theta) __qubits__[0], __qubits__[qubit_0];
 }
-input float[64] alpha;
-input float[64] beta;
+input float alpha;
+input float beta;
 qubit[5] __qubits__;
 silly_ms(1, alpha, 0.707);
 silly_ms(3, 0.5, beta);"""
@@ -319,7 +319,7 @@ def test_parametric_gate_args():
 gate rx_theta(theta) q {
     rx(theta) q;
 }
-input float[64] θ;
+input float θ;
 qubit[3] __qubits__;
 rx_theta(θ) __qubits__[2];"""
     assert parametric.to_ir() == expected
@@ -337,9 +337,9 @@ def test_parametric_pulse_cals():
         rx("$1", theta)
 
     expected = """OPENQASM 3.0;
-input float[64] theta;
+input float theta;
 defcal rx(angle[32] angle) $1 {
-    delay[(angle) * 1s] $1;
+    delay[angle * 1s] $1;
 }
 rx(theta) $1;"""
     qasm = my_program.with_calibrations(cal_1).to_ir()
@@ -355,14 +355,14 @@ def test_bind_parameters():
         measure(0)
 
     unbound_expected = """OPENQASM 3.0;
-input float[64] alpha;
+input float alpha;
 qubit[1] __qubits__;
 rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
     bound_template = """OPENQASM 3.0;
-float[64] alpha = {};
+float alpha = {};
 qubit[1] __qubits__;
 rx(alpha) __qubits__[0];
 bit __bit_0__;
@@ -401,7 +401,7 @@ def test_multi_bind_parameters():
     bound_prog = parametric.make_bound_program({"alpha": 0.5, "beta": 1.5})
 
     expected = """OPENQASM 3.0;
-def sub(float[64] alpha, float[64] theta) {
+def sub(float alpha, float theta) {
     rx(alpha) __qubits__[0];
     rx(theta) __qubits__[1];
     cnot __qubits__[0], __qubits__[1];
@@ -411,8 +411,8 @@ def sub(float[64] alpha, float[64] theta) {
 def rx_alpha(int[32] qubit) {
     rx(alpha) __qubits__[qubit];
 }
-float[64] alpha = 0.5;
-float[64] beta = 1.5;
+float alpha = 0.5;
+float beta = 1.5;
 qubit[3] __qubits__;
 sub(alpha, beta);
 rx_alpha(2);"""
@@ -434,11 +434,11 @@ def test_partial_bind():
     bound_prog = parametric.make_bound_program({"beta": np.pi})
 
     expected = """OPENQASM 3.0;
-def rx_alpha(int[32] qubit, float[64] theta) {
+def rx_alpha(int[32] qubit, float theta) {
     rx(theta) __qubits__[qubit];
 }
-input float[64] alpha;
-float[64] beta = 3.141592653589793;
+input float alpha;
+float beta = 3.141592653589793;
 qubit[3] __qubits__;
 rx_alpha(2, alpha);
 rx_alpha(2, beta);"""
@@ -461,9 +461,9 @@ def test_binding_pulse_parameters():
     assert qasm1 == qasm2
 
     expected = """OPENQASM 3.0;
-float[64] theta = 0.6;
+float theta = 0.6;
 defcal rx(angle[32] angle) $1 {
-    delay[(angle) * 1s] $1;
+    delay[angle * 1s] $1;
 }
 rx(theta) $1;"""
     assert expected == qasm1
@@ -491,7 +491,7 @@ def test_strict_parameter_bind():
         measure(0)
 
     template = """OPENQASM 3.0;
-float[64] alpha = {};
+float alpha = {};
 qubit[1] __qubits__;
 rx(alpha) __qubits__[0];
 bit __bit_0__;
@@ -557,7 +557,7 @@ def test_compound_condition():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] val;
+input float val;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = val > 0.9;
@@ -585,7 +585,7 @@ def test_lt_condition():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] val;
+input float val;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = val < 0.9;
@@ -617,14 +617,14 @@ def test_parameter_in_predicate_in_subroutine():
         measure(0)
 
     expected = """OPENQASM 3.0;
-def sub(float[64] val) {
+def sub(float val) {
     bool __bool_0__;
     __bool_0__ = val > 0.9;
     if (__bool_0__) {
         x __qubits__[0];
     }
 }
-input float[64] val;
+input float val;
 qubit[1] __qubits__;
 sub(val);
 bit __bit_1__;
@@ -725,8 +725,8 @@ def test_param_or():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
-input float[64] beta;
+input float alpha;
+input float beta;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = alpha || beta;
@@ -749,8 +749,8 @@ def test_param_and():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
-input float[64] beta;
+input float alpha;
+input float beta;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = alpha && beta;
@@ -773,7 +773,7 @@ def test_param_and_float():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
+input float alpha;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = alpha && 1.5;
@@ -817,7 +817,7 @@ def test_parameter_binding_conditions():
         measure(0)
 
     template = """OPENQASM 3.0;
-float[64] val = {};
+float val = {};
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = val == 1;
@@ -846,9 +846,9 @@ def test_parameter_expressions():
         gpi(0, expr)
 
     expected = """OPENQASM 3.0;
-input float[64] theta;
+input float theta;
 qubit[1] __qubits__;
-gpi(2*theta) __qubits__[0];"""
+gpi(2.0 * theta) __qubits__[0];"""
     assert parametric.to_ir() == parametric_fp.to_ir() == expected
 
 
@@ -871,10 +871,10 @@ def test_multi_parameter_expressions():
         gpi(0, expr)
 
     expected = """OPENQASM 3.0;
-input float[64] alpha;
-input float[64] theta;
+input float alpha;
+input float theta;
 qubit[1] __qubits__;
-gpi(alpha*theta) __qubits__[0];"""
+gpi(alpha * theta) __qubits__[0];"""
     assert parametric.to_ir() == expected
 
 
@@ -886,9 +886,9 @@ def test_bound_parameter_expressions():
         rx(0, 2 * phi)
 
     expected = """OPENQASM 3.0;
-float[64] phi = 1.5707963267948966;
+float phi = 1.5707963267948966;
 qubit[1] __qubits__;
-rx(2*phi) __qubits__[0];"""
+rx(2.0 * phi) __qubits__[0];"""
     assert parametric.make_bound_program({"phi": np.pi / 2}).to_ir() == expected
 
 
@@ -901,10 +901,10 @@ def test_partially_bound_parameter_expressions():
         gpi(0, expr)
 
     expected = """OPENQASM 3.0;
-float[64] prefactor = 3;
-input float[64] theta;
+float prefactor = 3;
+input float theta;
 qubit[1] __qubits__;
-gpi(prefactor*theta) __qubits__[0];"""
+gpi(prefactor * theta) __qubits__[0];"""
     assert parametric.make_bound_program({"prefactor": 3}).to_ir() == expected
 
 
@@ -920,12 +920,12 @@ def test_subroutine_parameter_expressions():
         rotate(2 * alpha)
 
     expected = """OPENQASM 3.0;
-def rotate(float[64] theta) {
+def rotate(float theta) {
     rx(3 * theta) __qubits__[0];
 }
-input float[64] alpha;
+input float alpha;
 qubit[1] __qubits__;
-rotate(2*alpha);"""
+rotate(2.0 * alpha);"""
     assert parametric.to_ir() == expected
 
 
@@ -944,9 +944,9 @@ def test_gate_parameter_expressions():
 gate rotate(theta) q {
     rx(3 * theta) q;
 }
-input float[64] alpha;
+input float alpha;
 qubit[1] __qubits__;
-rotate(2*alpha) __qubits__[0];"""
+rotate(2.0 * alpha) __qubits__[0];"""
     assert parametric.to_ir() == expected
 
 
@@ -960,9 +960,9 @@ def test_conditional_parameter_expressions():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] phi;
+input float phi;
 qubit[1] __qubits__;
-float[64] __float_0__ = 2*phi;
+float __float_0__ = 2.0 * phi;
 bool __bool_1__;
 __bool_1__ = __float_0__ > 3.141592653589793;
 if (__bool_1__) {

@@ -106,7 +106,7 @@ def test_multiprocessing() -> None:
     def expected(scale, angle):
         return (
             """OPENQASM 3.0;
-def circuit(float[64] angle) {
+def circuit(float angle) {
     rx(angle) __qubits__[0];
     cnot __qubits__[0], __qubits__[1];
 }
@@ -151,7 +151,7 @@ def test_to_ir_highlighted(mock_print):
         b"        \x1b[39;49;00m\x1b[32mx\x1b[39;49;00m\x1b[37m \x1b[39;49;00m__qubits__["
         b"\x1b[34m1\x1b[39;49;00m];\x1b[37m\x1b[39;49;00m\n\x1b[37m    \x1b[39;49;00m}"
         b"\x1b[37m\x1b[39;49;00m\n}\x1b[37m\x1b[39;49;00m\n\x1b[36minput\x1b[39;49;00m\x1b[37m "
-        b"\x1b[39;49;00m\x1b[36mfloat\x1b[39;49;00m[\x1b[34m64\x1b[39;49;00m]\x1b[37m "
+        b"\x1b[39;49;00m\x1b[36mfloat\x1b[39;49;00m\x1b[37m "
         b"\x1b[39;49;00mtheta;\x1b[37m\x1b[39;49;00m\n\x1b[36mqubit\x1b[39;49;00m["
         b"\x1b[34m3\x1b[39;49;00m]\x1b[37m \x1b[39;49;00m__qubits__;\x1b[37m\x1b[39;49;00m\n"
         b"\x1b[32msub\x1b[39;49;00m(\x1b[34m0\x1b[39;49;00m);\x1b[37m\x1b[39;49;00m\n\x1b[32mrx"

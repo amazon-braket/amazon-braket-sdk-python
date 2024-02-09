@@ -195,11 +195,11 @@ def test_pulse_freeparameter() -> None:
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        input float[64] duration;
-        input float[64] duration2;
+        input float duration;
+        input float duration2;
         cal {
-            delay[(duration) * 1s] $3, $4;
-            delay[(duration2) * 1s] $3, $4;
+            delay[duration * 1s] $3, $4;
+            delay[duration2 * 1s] $3, $4;
         }
         """
     ).strip()
@@ -216,9 +216,9 @@ def test_pulse_freeparameter_bound() -> None:
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        float[64] duration = 0.123;
+        float duration = 0.123;
         cal {
-            delay[(duration) * 1s] $3, $4;
+            delay[duration * 1s] $3, $4;
         }
         """
     ).strip()
@@ -238,16 +238,16 @@ def test_pulse_freeparameter_condition() -> None:
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        input float[64] duration;
-        input float[64] duration2;
+        input float duration;
+        input float duration2;
         cal {
-            delay[(duration) * 1s] $3, $4;
+            delay[duration * 1s] $3, $4;
         }
         bool __bool_0__;
         __bool_0__ = duration > duration2;
         if (__bool_0__) {
             cal {
-                delay[(duration2) * 1s] $3, $4;
+                delay[duration2 * 1s] $3, $4;
             }
         }
         """

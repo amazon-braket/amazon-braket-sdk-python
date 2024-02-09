@@ -56,7 +56,7 @@ def test_assignment(program_ctx: ag_ctx.ControlStatusCtx) -> None:
     expected_qasm = """OPENQASM 3.0;
 int[32] e;
 int[32] a = 5;
-float[64] b = 1.2;
+float b = 1.2;
 a = 1;
 e = a;
 bool f = false;

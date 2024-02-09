@@ -101,11 +101,11 @@ def test_return_float():
         return ret_test()
 
     expected = """OPENQASM 3.0;
-def ret_test() -> float[64] {
-    float[64] res = 1.0;
+def ret_test() -> float {
+    float res = 1.0;
     return res;
 }
-float[64] __float_1__;
+float __float_1__;
 __float_1__ = ret_test();"""
 
     assert main.to_ir() == expected
@@ -328,7 +328,7 @@ def test_map_float():
         annotation_test(1.0)
 
     expected = """OPENQASM 3.0;
-def annotation_test(float[64] input) {
+def annotation_test(float input) {
 }
 annotation_test(1.0);"""
 
@@ -548,8 +548,8 @@ def test_recursive_retval_expression_python_type() -> None:
         return retval_recursive()
 
     expected_qasm = """OPENQASM 3.0;
-def retval_recursive() -> float[64] {
-    float[64] __float_1__;
+def retval_recursive() -> float {
+    float __float_1__;
     __float_1__ = retval_recursive();
     int[32] __int_3__;
     __int_3__ = retval_constant();
@@ -559,7 +559,7 @@ def retval_constant() -> int[32] {
     int[32] retval_ = 3;
     return retval_;
 }
-float[64] __float_4__;
+float __float_4__;
 __float_4__ = retval_recursive();"""
 
     assert caller.to_ir() == expected_qasm
@@ -670,12 +670,12 @@ def test_ignore_missing_ret_typehint_float():
         ret_test()
 
     expected = """OPENQASM 3.0;
-def ret_test() -> float[64] {
-    float[64] retval_ = 1.2;
+def ret_test() -> float {
+    float retval_ = 1.2;
     return retval_;
 }
 qubit[4] __qubits__;
-float[64] __float_1__;
+float __float_1__;
 __float_1__ = ret_test();"""
 
     assert main.to_ir() == expected

@@ -369,6 +369,11 @@ class ProgramConversionContext:
         if parameter_name not in self._free_parameters:
             if parameter_type == float:
                 var_class = oqpy.FloatVar
+                var_class.default_size = None
+                self._free_parameters[parameter_name] = var_class(
+                    "input", name=parameter_name, needs_declaration=False
+                )
+                return
             elif parameter_type == int:
                 var_class = oqpy.IntVar
             elif parameter_type == bool:
@@ -412,7 +417,10 @@ class ProgramConversionContext:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
         for parameter in self.get_free_parameters():
-            root_oqpy_program._add_var(parameter)
+            if parameter.name in root_oqpy_program.undeclared_vars:
+                root_oqpy_program.undeclared_vars[parameter.name]._needs_declaration = True
+            else:
+                root_oqpy_program._add_var(parameter)
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
