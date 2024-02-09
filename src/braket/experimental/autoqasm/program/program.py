@@ -443,11 +443,11 @@ class ProgramConversionContext:
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
         for parameter_name, parameter in self._output_parameters.items():
+            # Before adding the output variable to the program, remove any existing reference
+            root_oqpy_program.undeclared_vars.pop(parameter_name, None)
+            root_oqpy_program.declared_vars.pop(parameter_name, None)
+            
             parameter.name = parameter_name
-            if parameter_name in root_oqpy_program.undeclared_vars:
-                del root_oqpy_program.undeclared_vars[parameter_name]
-            if parameter_name in root_oqpy_program.declared_vars:
-                del root_oqpy_program.declared_vars[parameter_name]
             root_oqpy_program._add_var(parameter)
 
     def get_target_device(self) -> Optional[Device]:
