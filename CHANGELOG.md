@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.69.1 (2024-02-08)
+
+### Bug Fixes and Other Changes
+
+ * let price tracker checks skip over devices without execution win…
+
+## v1.69.0 (2024-02-06)
+
+### Features
+
+ * update OQpy to version 0.3.5
+
 ## v1.68.3 (2024-02-05)
 
 ### Bug Fixes and Other Changes
