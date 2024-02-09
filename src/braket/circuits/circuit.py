@@ -1314,8 +1314,7 @@ class Circuit:
                     arguments = gate.parameters if isinstance(gate, Parameterizable) else []
 
                     for param in calibration.parameters:
-                        if param not in arguments:
-                            self._parameters.add(param)
+                        self._parameters.add(param)
                     arguments = [
                         param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
                         for param in arguments
