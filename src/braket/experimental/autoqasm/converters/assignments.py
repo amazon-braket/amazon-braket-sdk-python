@@ -20,6 +20,7 @@ import gast
 
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 from braket.experimental.autoqasm.autograph.pyct import templates
+from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
 class AssignTransformer(converter.Base):
@@ -40,7 +41,7 @@ class AssignTransformer(converter.Base):
         try:
             # Assignments for main function return statements have already been handled,
             # so return early
-            if node.value.func.attr == "assign_for_output":
+            if node.value.func.attr == assign_for_output.__name__:
                 return node
         except AttributeError:
             pass

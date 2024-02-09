@@ -446,7 +446,7 @@ class ProgramConversionContext:
             # Before adding the output variable to the program, remove any existing reference
             root_oqpy_program.undeclared_vars.pop(parameter_name, None)
             root_oqpy_program.declared_vars.pop(parameter_name, None)
-            
+
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 

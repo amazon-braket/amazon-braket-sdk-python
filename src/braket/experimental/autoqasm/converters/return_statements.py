@@ -22,6 +22,7 @@ from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm.autograph.converters import return_statements
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 from braket.experimental.autoqasm.autograph.pyct import templates
+from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
 class ReturnTransformer(converter.Base):
@@ -39,7 +40,7 @@ class ReturnTransformer(converter.Base):
             return node
 
         template = (
-            "name_ = ag__.assign_for_output(name_const_, "
+            f"name_ = ag__.{assign_for_output.__name__}(name_const_, "
             "ag__.return_output_from_main(name_const_, value_))"
         )
 
