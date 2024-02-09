@@ -11,9 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import time
 
-from braket.aws import AwsDevice, AwsQuantumJob
+from braket.aws import AwsDevice
 from braket.aws.queue_information import (
     HybridJobQueueInfo,
     QuantumTaskQueueInfo,

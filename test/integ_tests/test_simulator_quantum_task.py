@@ -52,6 +52,7 @@ DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
 ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0)]
 
+
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_no_result_types_bell_pair(
     simulator_arn, aws_session, s3_destination_folder, braket_simulators
