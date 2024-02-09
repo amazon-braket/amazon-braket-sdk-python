@@ -260,7 +260,7 @@ def test_simple_subroutine_arg():
         silly_rz(alpha)
 
     expected = """OPENQASM 3.0;
-def silly_rz(float theta) {
+def silly_rz(float[64] theta) {
     rz(theta) __qubits__[0];
 }
 input float alpha;
@@ -282,7 +282,7 @@ def test_parameters_passed_as_subroutine_arg():
         silly_ms(3, 0.5, FreeParameter("beta"))
 
     expected = """OPENQASM 3.0;
-def silly_ms(int[32] qubit_0, float phi, float theta) {
+def silly_ms(int[32] qubit_0, float[64] phi, float[64] theta) {
     ms(phi, phi, theta) __qubits__[0], __qubits__[qubit_0];
 }
 input float alpha;
@@ -404,7 +404,7 @@ def test_multi_bind_parameters():
     bound_prog = parametric.make_bound_program({"alpha": 0.5, "beta": 1.5})
 
     expected = """OPENQASM 3.0;
-def sub(float alpha, float theta) {
+def sub(float[64] alpha, float[64] theta) {
     rx(alpha) __qubits__[0];
     rx(theta) __qubits__[1];
     cnot __qubits__[0], __qubits__[1];
@@ -437,7 +437,7 @@ def test_partial_bind():
     bound_prog = parametric.make_bound_program({"beta": np.pi})
 
     expected = """OPENQASM 3.0;
-def rx_alpha(int[32] qubit, float theta) {
+def rx_alpha(int[32] qubit, float[64] theta) {
     rx(theta) __qubits__[qubit];
 }
 input float alpha;
@@ -620,7 +620,7 @@ def test_parameter_in_predicate_in_subroutine():
         measure(0)
 
     expected = """OPENQASM 3.0;
-def sub(float val) {
+def sub(float[64] val) {
     bool __bool_0__;
     __bool_0__ = val > 0.9;
     if (__bool_0__) {
@@ -848,11 +848,17 @@ def test_parameter_expressions():
         expr = 2 * FreeParameter("theta")
         gpi(0, expr)
 
-    expected = """OPENQASM 3.0;
+    expected_1 = """OPENQASM 3.0;
+input float theta;
+qubit[1] __qubits__;
+gpi(2 * theta) __qubits__[0];"""
+
+    expected_2 = """OPENQASM 3.0;
 input float theta;
 qubit[1] __qubits__;
 gpi(2.0 * theta) __qubits__[0];"""
-    assert parametric.to_ir() == parametric_fp.to_ir() == expected
+    assert parametric.to_ir() == expected_1
+    assert parametric_fp.to_ir() == expected_2
 
 
 def test_sim_expressions():
@@ -891,7 +897,7 @@ def test_bound_parameter_expressions():
     expected = """OPENQASM 3.0;
 float phi = 1.5707963267948966;
 qubit[1] __qubits__;
-rx(2.0 * phi) __qubits__[0];"""
+rx(2 * phi) __qubits__[0];"""
     assert parametric.make_bound_program({"phi": np.pi / 2}).to_ir() == expected
 
 
@@ -923,12 +929,12 @@ def test_subroutine_parameter_expressions():
         rotate(2 * alpha)
 
     expected = """OPENQASM 3.0;
-def rotate(float theta) {
+def rotate(float[64] theta) {
     rx(3 * theta) __qubits__[0];
 }
 input float alpha;
 qubit[1] __qubits__;
-rotate(2.0 * alpha);"""
+rotate(2 * alpha);"""
     assert parametric.to_ir() == expected
 
 
@@ -949,7 +955,7 @@ gate rotate(theta) q {
 }
 input float alpha;
 qubit[1] __qubits__;
-rotate(2.0 * alpha) __qubits__[0];"""
+rotate(2 * alpha) __qubits__[0];"""
     assert parametric.to_ir() == expected
 
 
@@ -965,20 +971,16 @@ def test_conditional_parameter_expressions():
     expected = """OPENQASM 3.0;
 input float phi;
 qubit[1] __qubits__;
-float __float_0__ = 2.0 * phi;
-bool __bool_1__;
-__bool_1__ = __float_0__ > 3.141592653589793;
-if (__bool_1__) {
+bool __bool_0__;
+__bool_0__ = 2 * phi > 3.141592653589793;
+if (__bool_0__) {
     h __qubits__[0];
 }
-bit __bit_2__;
-__bit_2__ = measure __qubits__[0];"""
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
     assert parametric.to_ir() == expected
 
 
-@pytest.mark.xfail(
-    reason="Regression: n is constructed as a FreeParameter api.py:L251, which passed as a FloatVar"
-)
 def test_parameter_expressions_range_index():
     """Test expressions of free parameters contained in a range index."""
 

@@ -41,7 +41,6 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
-from braket.parametric import FreeParameter
 
 
 def main(
@@ -248,9 +247,10 @@ def _convert_main(
         # Capture inputs to decorated function as `FreeParameter` inputs for the Program
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
-                kwargs[param.name] = FreeParameter(param.name)
                 param_type = param.annotation if param.annotation is not param.empty else float
-                program_conversion_context.register_parameter(param.name, param_type)
+                kwargs[param.name] = program_conversion_context.register_parameter(
+                    param.name, param_type
+                )
             else:
                 raise NotImplementedError
 

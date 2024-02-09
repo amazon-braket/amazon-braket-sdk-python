@@ -1049,7 +1049,7 @@ def test_input_qubit_indices():
 input int[32] q;
 input int[32] r;
 qubit[8] __qubits__;
-h __qubits__[2*q + r];"""
+h __qubits__[2 * q + r];"""
     assert circ.to_ir() == expected_ir
 
 

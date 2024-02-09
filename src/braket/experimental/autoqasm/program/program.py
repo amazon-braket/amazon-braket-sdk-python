@@ -369,18 +369,20 @@ class ProgramConversionContext:
         if parameter_name not in self._free_parameters:
             if parameter_type == float:
                 var_class = oqpy.FloatVar
-                var_class.default_size = None
-                self._free_parameters[parameter_name] = var_class(
-                    "input", name=parameter_name, needs_declaration=False
-                )
-                return
+                var = var_class("input", name=parameter_name, needs_declaration=False)
+                var.type.size = None
+                var.size = None
+                self._free_parameters[parameter_name] = var
+                return var
             elif parameter_type == int:
                 var_class = oqpy.IntVar
             elif parameter_type == bool:
                 var_class = oqpy.BoolVar
             else:
                 raise NotImplementedError(parameter_type)
-            self._free_parameters[parameter_name] = var_class("input", name=parameter_name)
+            var = var_class("input", name=parameter_name)
+            self._free_parameters[parameter_name] = var
+            return var
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
