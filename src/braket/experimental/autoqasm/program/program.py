@@ -260,7 +260,8 @@ class ProgramConversionContext:
         self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
-        self._free_parameters = {}
+        self._input_parameters = {}
+        self._output_parameters = {}
 
     def make_program(self) -> Program:
         """Makes a Program object using the oqpy program from this conversion context.
@@ -339,7 +340,7 @@ class ProgramConversionContext:
         for arg in args:
             if isinstance(arg, FreeParameterExpression):
                 for free_symbol_name in self._free_symbol_names(arg):
-                    self.register_parameter(free_symbol_name)
+                    self.register_input_parameter(free_symbol_name)
 
     @staticmethod
     def _free_symbol_names(expr: FreeParameterExpression) -> Iterable[str]:
@@ -355,8 +356,10 @@ class ProgramConversionContext:
         """
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
-    def register_parameter(
-        self, parameter_name: str, parameter_type: Union[float, int, bool] = float
+    def register_input_parameter(
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool] = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
@@ -364,18 +367,34 @@ class ProgramConversionContext:
             parameter_name (str): The name of the parameter to register with the program.
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
+
+        Raises:
+            NotImplementedError: If the parameter type is not supported.
         """
         # TODO (#814): add type validation against existing inputs
-        if parameter_name not in self._free_parameters:
-            if parameter_type == float:
-                var_class = oqpy.FloatVar
-            elif parameter_type == int:
-                var_class = oqpy.IntVar
-            elif parameter_type == bool:
-                var_class = oqpy.BoolVar
-            else:
+        if parameter_name not in self._input_parameters:
+            aq_type = aq_types.map_parameter_type(parameter_type)
+            if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
                 raise NotImplementedError(parameter_type)
-            self._free_parameters[parameter_name] = var_class("input", name=parameter_name)
+            self._input_parameters[parameter_name] = aq_type("input", name=parameter_name)
+
+    def register_output_parameter(
+        self,
+        parameter_name: str,
+        parameter_type: Union[float, int, bool, None] = float,
+    ) -> None:
+        """Register a new output parameter if it is not None.
+
+        Args:
+            parameter_name (str): The name of the parameter to register with the program.
+            parameter_type (Union[float, int, bool, None]): The type of the parameter to register
+                with the program. Default: float.
+        """
+        if parameter_type is type(None):
+            return  # Do nothing
+
+        aq_type = aq_types.map_parameter_type(parameter_type)
+        self._output_parameters[parameter_name] = aq_type("output", name=parameter_name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
@@ -392,26 +411,43 @@ class ProgramConversionContext:
         """
         # Validate that all of the free symbols are registered as free parameters.
         for name in self._free_symbol_names(expression):
-            if name not in self._free_parameters:
+            if name not in self._input_parameters:
                 raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
 
         # If the expression is just a standalone parameter, return the registered variable.
         if isinstance(expression, FreeParameter):
-            return self._free_parameters[expression.name]
+            return self._input_parameters[expression.name]
 
         # Otherwise, create a new variable and declare it here
         var = aq_types.FloatVar(init_expression=expression)
         self.get_oqpy_program().declare(var)
         return var
 
-    def get_free_parameters(self) -> list[oqpy.FloatVar]:
+    def get_input_parameters(self) -> list[oqpy.Var]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
-        return list(self._free_parameters.values())
+        return list(self._input_parameters.values())
+
+    def get_input_parameter(self, name: str) -> oqpy.Var | None:
+        """Return the oqpy.Var associated with the variable name `name` in the program."""
+        return self._input_parameters.get(name, None)
+
+    def get_output_parameter(self, name: str) -> oqpy.Var | None:
+        """Return the oqpy.Var associated with the output variable `name` in the program."""
+        return self._output_parameters.get(name, None)
 
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        for parameter in self.get_free_parameters():
+        for parameter_name, parameter in self._input_parameters.items():
+            # The variable names sometimes get overwritten by the initializer
+            parameter.name = parameter_name
+            root_oqpy_program._add_var(parameter)
+        for parameter_name, parameter in self._output_parameters.items():
+            # Before adding the output variable to the program, remove any existing reference
+            root_oqpy_program.undeclared_vars.pop(parameter_name, None)
+            root_oqpy_program.declared_vars.pop(parameter_name, None)
+
+            parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 
     def get_target_device(self) -> Optional[Device]:

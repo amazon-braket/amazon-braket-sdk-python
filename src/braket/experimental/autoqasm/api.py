@@ -250,7 +250,7 @@ def _convert_main(
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 kwargs[param.name] = FreeParameter(param.name)
                 param_type = param.annotation if param.annotation is not param.empty else float
-                program_conversion_context.register_parameter(param.name, param_type)
+                program_conversion_context.register_input_parameter(param.name, param_type)
             else:
                 raise NotImplementedError
 
