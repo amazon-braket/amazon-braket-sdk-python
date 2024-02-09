@@ -248,7 +248,7 @@ def _convert_main(
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 param_type = param.annotation if param.annotation is not param.empty else float
-                kwargs[param.name] = program_conversion_context.register_parameter(
+                kwargs[param.name] = program_conversion_context.register_input_parameter(
                     param.name, param_type
                 )
             else:

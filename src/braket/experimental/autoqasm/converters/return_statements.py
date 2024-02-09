@@ -15,16 +15,19 @@
 """Converters for return statement nodes."""
 
 import ast
-import warnings
+
+import gast
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm.autograph.converters import return_statements
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
+from braket.experimental.autoqasm.autograph.pyct import templates
+from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
-class ReturnValidator(converter.Base):
+class ReturnTransformer(converter.Base):
     def visit_Return(self, node: ast.stmt) -> ast.stmt:
-        """AutoQASM-specific return statement validation.
+        """AutoQASM-specific return statement transformations.
 
         Args:
             node (ast.stmt): Return statement node to transform.
@@ -33,8 +36,25 @@ class ReturnValidator(converter.Base):
             ast.stmt: Transformed return statement node.
         """
         aq_context = program.get_program_conversion_context()
-        if not aq_context.subroutines_processing and node.value is not None:
-            warnings.warn("Return value from top level function is ignored.")
+        if aq_context.subroutines_processing or node.value is None:
+            return node
+
+        template = (
+            f"name_ = ag__.{assign_for_output.__name__}(name_const_, "
+            "ag__.return_output_from_main(name_const_, value_))"
+        )
+
+        name = "retval_"
+        if isinstance(node.value, gast.Name):
+            name = node.value.id
+
+        node = templates.replace(
+            template,
+            name_=name,
+            name_const_=gast.Constant(name, None),
+            value_=node.value,
+            original=node,
+        )
         return node
 
 
@@ -43,6 +63,14 @@ def transform(
 ) -> ast.stmt:
     """Handle AutoQASM-specific return statement functionality before
     passing control to AutoGraph.
+
+    Args:
+        node (ast.stmt): AST node to transform.
+        ctx (ag_ctx.ControlStatusCtx): Transformer context.
+        default_to_null_return (bool): Configuration option.
+
+    Returns:
+        ast.stmt: Transformed node.
     """
-    ReturnValidator(ctx).visit(node)
+    node = ReturnTransformer(ctx).visit(node)
     return return_statements.transform(node, ctx)

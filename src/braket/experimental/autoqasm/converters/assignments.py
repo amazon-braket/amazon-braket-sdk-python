@@ -20,6 +20,7 @@ import gast
 
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 from braket.experimental.autoqasm.autograph.pyct import templates
+from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
 class AssignTransformer(converter.Base):
@@ -37,6 +38,14 @@ class AssignTransformer(converter.Base):
         template = """
         tar_ = ag__.assign_stmt(tar_name_, val_)
         """
+        try:
+            # Assignments for main function return statements have already been handled,
+            # so return early
+            if node.value.func.attr == assign_for_output.__name__:
+                return node
+        except AttributeError:
+            pass
+
         node = self.generic_visit(node)
 
         # TODO: implement when target has multiple variable
