@@ -107,11 +107,9 @@ def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
     assert re.match(pattern=pattern, string=job.arn)
 
-    # check job is in completed state.
-    while True:
-        time.sleep(5)
-        if job.state() in AwsQuantumJob.TERMINAL_STATES:
-            break
+    # Check the job has completed
+    job.result()
+
     assert job.state(use_cached_value=True) == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,

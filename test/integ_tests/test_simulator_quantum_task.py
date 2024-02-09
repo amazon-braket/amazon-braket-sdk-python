@@ -46,12 +46,11 @@ from braket.aws import AwsDevice
 
 # shots-based tests in this file have the capacity to fail rarely due to probabilistic checks.
 # this parameter can be adjusted if we find tests regularly failing.
-SHOTS = 2000
+SHOTS = 4500
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
-SIMULATOR_ARNS = [SV1_ARN]
-ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0)]
-
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
+ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0)]
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_no_result_types_bell_pair(

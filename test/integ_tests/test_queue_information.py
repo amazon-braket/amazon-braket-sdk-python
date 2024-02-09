@@ -52,12 +52,8 @@ def test_task_queue_position():
 def test_job_queue_position(aws_session, completed_quantum_job):
     job = completed_quantum_job
 
-    # Check job is in failed state.
-    while True:
-        time.sleep(5)
-        print("Check")
-        if job.state() in AwsQuantumJob.TERMINAL_STATES:
-            break
+    # Check the job is complete
+    job.result()
 
     # call the queue_position method.
     queue_information = job.queue_position()
