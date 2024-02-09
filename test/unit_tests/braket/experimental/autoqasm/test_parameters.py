@@ -180,7 +180,7 @@ def test_parameter_in_subroutine():
 def rx_alpha(int[32] qubit) {
     rx(alpha) __qubits__[qubit];
 }
-input float alpha;
+input float[64] alpha;
 qubit[3] __qubits__;
 rx_alpha(2);"""
     assert parametric.to_ir() == expected
