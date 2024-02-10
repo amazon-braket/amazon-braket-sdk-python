@@ -50,20 +50,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         aws_session: AwsSession,
         device_arn: str,
         task_specifications: Union[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                AnalogHamiltonianSimulation,
-            ],
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             list[
                 Union[
-                    Circuit,
-                    Problem,
-                    OpenQasmProgram,
-                    BlackbirdProgram,
-                    AnalogHamiltonianSimulation,
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
             ],
         ],
@@ -158,20 +148,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     @staticmethod
     def _tasks_inputs_gatedefs(
         task_specifications: Union[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                AnalogHamiltonianSimulation,
-            ],
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             list[
                 Union[
-                    Circuit,
-                    Problem,
-                    OpenQasmProgram,
-                    BlackbirdProgram,
-                    AnalogHamiltonianSimulation,
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
             ],
         ],
@@ -182,13 +162,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         ] = None,
     ) -> list[
         tuple[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                AnalogHamiltonianSimulation,
-            ],
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             dict[str, float],
             dict[tuple[Gate, QubitSet], PulseSequence],
         ]
@@ -247,20 +221,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         aws_session: AwsSession,
         device_arn: str,
         task_specifications: Union[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                AnalogHamiltonianSimulation,
-            ],
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             list[
                 Union[
-                    Circuit,
-                    Problem,
-                    OpenQasmProgram,
-                    BlackbirdProgram,
-                    AnalogHamiltonianSimulation,
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
             ],
         ],
@@ -328,11 +292,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            AnalogHamiltonianSimulation,
+            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
         ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
