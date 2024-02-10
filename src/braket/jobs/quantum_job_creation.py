@@ -37,6 +37,9 @@ from braket.jobs.config import (
 from braket.jobs.image_uris import Framework, retrieve_image
 
 
+DEFAULT_INPUT_CHANNEL = "input"
+
+
 def prepare_quantum_job(
     device: str,
     source_module: str,
@@ -421,7 +424,7 @@ def _process_input_data(
         list[dict[str, Any]]: A list of channel configs.
     """
     if not isinstance(input_data, dict):
-        input_data = {"input": input_data}
+        input_data = {DEFAULT_INPUT_CHANNEL: input_data}
     for channel_name, data in input_data.items():
         if not isinstance(data, S3DataSourceConfig):
             input_data[channel_name] = _process_channel(

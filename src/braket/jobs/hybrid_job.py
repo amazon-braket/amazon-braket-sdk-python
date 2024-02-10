@@ -40,12 +40,13 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
+from braket.jobs.quantum_job_creation import DEFAULT_INPUT_CHANNEL
 from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
 from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
-INNER_SOURCE_INPUT_CHANNEL = "_inner_function_source"
+INNER_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
 INNER_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
 
 
@@ -185,6 +186,18 @@ def hybrid_job(
                 tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
                 persist_inner_function_source(entry_point) as inner_source_input,
             ):
+                if input_data is None:
+                    job_input_data = inner_source_input
+                elif isinstance(input_data, dict):
+                    if INNER_SOURCE_INPUT_CHANNEL in input_data:
+                        raise ValueError(f"input channel cannot be {INNER_SOURCE_INPUT_CHANNEL}")
+                    job_input_data = {**input_data, **inner_source_input}
+                else:
+                    job_input_data = {
+                        DEFAULT_INPUT_CHANNEL: input_data,
+                        **inner_source_input
+                    }
+
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
@@ -205,7 +218,7 @@ def hybrid_job(
                     "entry_point": (
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
-                    "input_data": inner_source_input,
+                    # "input_data": inner_source_input,
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
@@ -213,7 +226,7 @@ def hybrid_job(
                 }
                 optional_args = {
                     "image_uri": image_uri,
-                    "input_data": input_data,
+                    "input_data": job_input_data,
                     "instance_config": instance_config,
                     "distribution": distribution,
                     "checkpoint_config": checkpoint_config,
