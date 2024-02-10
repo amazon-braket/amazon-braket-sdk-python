@@ -28,3 +28,4 @@ __pycache__/
 /build
 /venv
 /dist
+/model.tar.gz
