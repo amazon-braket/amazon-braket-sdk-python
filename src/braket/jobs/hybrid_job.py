@@ -40,11 +40,10 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
-from braket.jobs.quantum_job_creation import DEFAULT_INPUT_CHANNEL
 from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
 from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
-from braket.jobs.quantum_job_creation import _generate_default_job_name
+from braket.jobs.quantum_job_creation import DEFAULT_INPUT_CHANNEL, _generate_default_job_name
 
 INNER_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
 INNER_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
@@ -193,10 +192,7 @@ def hybrid_job(
                         raise ValueError(f"input channel cannot be {INNER_SOURCE_INPUT_CHANNEL}")
                     job_input_data = {**input_data, **inner_source_input}
                 else:
-                    job_input_data = {
-                        DEFAULT_INPUT_CHANNEL: input_data,
-                        **inner_source_input
-                    }
+                    job_input_data = {DEFAULT_INPUT_CHANNEL: input_data, **inner_source_input}
 
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
@@ -326,7 +322,7 @@ def _get_inner_function_source(code_object: CodeType) -> dict[str, str]:
     """Returns a dictionary that maps the source file name to source code for all source files
     used by the inner functions inside the job decorated function.
     Args:
-        outer_function (callable): The outer function.
+        code_object (CodeType): Code object of a inner function.
     Returns:
         dict[str, str]: Mapping between source file name and source code.
     """

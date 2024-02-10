@@ -36,7 +36,6 @@ from braket.jobs.config import (
 )
 from braket.jobs.image_uris import Framework, retrieve_image
 
-
 DEFAULT_INPUT_CHANNEL = "input"
 
 
