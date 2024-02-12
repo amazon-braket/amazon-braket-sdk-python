@@ -153,13 +153,13 @@ class GateModelQuantumTaskResult:
 
     def partial_measurements(self, qubits: Iterable[int]) -> np.ndarray:
         """
-        Gets the partial measurements from the qubits given
+        Gets a filtered list of partial measurements over the qubits provided.
 
         Args:
             qubits (Iterable [int]): an array of qubits
 
         Returns:
-            ndarray: an array of the measurements of the given qubits
+            ndarray: a list of the measurements of the given qubits
         """
         return GateModelQuantumTaskResult._selected_measurements(
             self.measurements, range(len(self.measurements)), qubits
@@ -167,13 +167,13 @@ class GateModelQuantumTaskResult:
 
     def partial_measurement_counts(self, qubits: Iterable[int]) -> np.ndarray:
         """
-        Gets the counts of the partial measurements from the qubits given
+        Gets the counts of the filtered list of measurements over the qubits provided.
 
         Args:
             qubits (Iterable [int]): an array of qubits
 
         Returns:
-            ndarray: an array of the measurement counts of the given qubits
+            ndarray: a list of the measurement counts of the given qubits
         """
         return GateModelQuantumTaskResult.measurement_counts_from_measurements(
             GateModelQuantumTaskResult._selected_measurements(
@@ -452,7 +452,7 @@ class GateModelQuantumTaskResult:
     def _selected_measurements(
         measurements: np.ndarray, measured_qubits: list[int], targets: Optional[list[int]]
     ) -> np.ndarray:
-        if targets is not None and targets != measured_qubits:
+        if targets is not None and not np.array_equal(targets, measured_qubits):
             # Only some qubits targeted
             columns = [measured_qubits.index(t) for t in targets]
             measurements = measurements[:, columns]

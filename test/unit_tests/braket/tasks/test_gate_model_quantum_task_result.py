@@ -346,6 +346,21 @@ def test_get_compiled_circuit_no_metadata(result_obj_1):
     assert result.get_compiled_circuit() is None
 
 
+def test_partial_measurements(result_oqc):
+    qubits: np.ndarray = np.array([0])
+    expected_partial_measurements: np.ndarray = [[0], [0], [0], [0]]
+    partial_measurements = result_oqc.partial_measurements(qubits)
+    assert np.array_equal(expected_partial_measurements, partial_measurements)
+
+
+def test_partial_measurement_counts(result_oqc):
+    [[0, 0], [0, 1], [0, 1], [0, 1]]
+    qubits: np.ndarray = np.array([1])
+    expected_partial_measurement_counts: Counter = {"0": 1, "1": 3}
+    partial_measurement_counts = result_oqc.partial_measurement_counts(qubits)
+    assert expected_partial_measurement_counts == partial_measurement_counts
+
+
 def test_measurement_counts_from_measurements():
     measurements: np.ndarray = np.array(
         [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
