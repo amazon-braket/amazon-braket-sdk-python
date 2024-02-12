@@ -1273,7 +1273,7 @@ class Circuit:
     ) -> Optional[str]:
         """Generates the header where frames, waveforms and defcals are declared.
 
-        It also adds any FreeParameter that is not a gate argument to the circuit parameter set.
+        It also adds any FreeParameter of the calibrations to the circuit parameter set.
 
         Args:
             gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
