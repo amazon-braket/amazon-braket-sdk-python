@@ -312,8 +312,7 @@ class PulseSequence:
         """
         program = deepcopy(self._program)
         program.autodeclare(encal=False)
-        sorted_parameters = sorted(self.parameters, key=lambda p: p.name, reverse=True)
-        for param in sorted_parameters:
+        for param in self.parameters:
             program.declare(param._to_oqpy_expression(), to_beginning=True)
 
         if self._capture_v0_count:

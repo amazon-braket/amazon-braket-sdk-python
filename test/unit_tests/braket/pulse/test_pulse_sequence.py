@@ -126,13 +126,10 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "OPENQASM 3.0;",
             "cal {",
             "    bit[2] psb;",
-            "    input float a;",
-            "    input float b;",
-            "    input float length_c;",
-            "    input float length_dg;",
-            "    input float length_g;",
-            "    input float sigma_dg;",
-            "    input float sigma_g;",
+            *[
+                f"    input float {parameter};"
+                for parameter in reversed(list(pulse_sequence.parameters))
+            ],
             "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s,"
             " sigma_dg * 1s, 0.2, 1, false);",
@@ -157,17 +154,15 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         ]
     )
     assert pulse_sequence.to_ir() == expected_str_unbound
-    assert pulse_sequence.parameters == set(
-        [
-            FreeParameter("a"),
-            FreeParameter("b"),
-            FreeParameter("length_g"),
-            FreeParameter("length_dg"),
-            FreeParameter("sigma_g"),
-            FreeParameter("sigma_dg"),
-            FreeParameter("length_c"),
-        ]
-    )
+    assert pulse_sequence.parameters == {
+        FreeParameter("a"),
+        FreeParameter("b"),
+        FreeParameter("length_g"),
+        FreeParameter("length_dg"),
+        FreeParameter("sigma_g"),
+        FreeParameter("sigma_dg"),
+        FreeParameter("length_c"),
+    }
     b_bound = pulse_sequence.make_bound_pulse_sequence(
         {"b": 2, "length_g": 1e-3, "length_dg": 3e-3, "sigma_dg": 0.4, "length_c": 4e-3}
     )
@@ -177,8 +172,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "OPENQASM 3.0;",
             "cal {",
             "    bit[2] psb;",
-            "    input float a;",
-            "    input float sigma_g;",
+            *[f"    input float {parameter};" for parameter in reversed(list(b_bound.parameters))],
             "    waveform gauss_wf = gaussian(1.0ms, sigma_g * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
