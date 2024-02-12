@@ -17,7 +17,7 @@ import json
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 
@@ -150,6 +150,36 @@ class GateModelQuantumTaskResult:
             return metadata.oqcMetadata.compiledProgram
         else:
             return None
+
+    def partial_measurements(self, qubits: Iterable[int]) -> np.ndarray:
+        """
+        Gets the partial measurements from the qubits given
+
+        Args:
+            qubits (Iterable [int]): an array of qubits
+
+        Returns:
+            ndarray: an array of the measurements of the given qubits
+        """
+        return GateModelQuantumTaskResult._selected_measurements(
+            self.measurements, range(len(self.measurements)), qubits
+        )
+
+    def partial_measurement_counts(self, qubits: Iterable[int]) -> np.ndarray:
+        """
+        Gets the counts of the partial measurements from the qubits given
+
+        Args:
+            qubits (Iterable [int]): an array of qubits
+
+        Returns:
+            ndarray: an array of the measurement counts of the given qubits
+        """
+        return GateModelQuantumTaskResult.measurement_counts_from_measurements(
+            GateModelQuantumTaskResult._selected_measurements(
+                self.measurements, range(len(self.measurements)), qubits
+            )
+        )
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
