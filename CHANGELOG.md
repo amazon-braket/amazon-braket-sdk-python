@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.70.0 (2024-02-12)
+
+### Features
+
+ * Support noise models in DM simulators
+
 ## v1.69.1 (2024-02-08)
 
 ### Bug Fixes and Other Changes
