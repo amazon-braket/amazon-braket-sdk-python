@@ -311,6 +311,10 @@ class PulseSequence:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
         program = deepcopy(self._program)
+        program.autodeclare(encal=False)
+        for param in self.parameters:
+            program.declare(param._to_oqpy_expression(), to_beginning=True)
+
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
