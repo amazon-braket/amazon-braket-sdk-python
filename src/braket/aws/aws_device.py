@@ -33,6 +33,7 @@ from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.noise_model import NoiseModel
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -78,11 +79,19 @@ class AwsDevice(Device):
         "Xy": "XY",
     }
 
-    def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
+    def __init__(
+        self,
+        arn: str,
+        aws_session: Optional[AwsSession] = None,
+        noise_model: Optional[NoiseModel] = None,
+    ):
         """
         Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
+            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
+                before execution. Noise model can only be added to the devices that support
+                noise simulation.
 
         Note:
             Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
@@ -104,6 +113,9 @@ class AwsDevice(Device):
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
         self._ports = None
         self._frames = None
+        if noise_model:
+            self._validate_device_noise_model_support(noise_model)
+        self._noise_model = noise_model
 
     def run(
         self,
@@ -189,6 +201,8 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
+        if self._noise_model:
+            task_specification = self._apply_noise_model_to_circuit(task_specification)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -284,6 +298,11 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
+        if self._noise_model:
+            task_specifications = [
+                self._apply_noise_model_to_circuit(task_specification)
+                for task_specification in task_specifications
+            ]
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,
