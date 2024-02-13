@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.70.1 (2024-02-13)
+
+### Bug Fixes and Other Changes
+
+ * Do not autodeclare FreeParameter in OQpy
+
 ## v1.70.0 (2024-02-12)
 
 ### Features
