@@ -176,14 +176,14 @@ recursive_h(4);"""
 
 
 @aq.subroutine
-def bell_state_arbitrary_qubits(q0: int, q1: int) -> None:
+def bell_state_arbitrary_qubits(q0: aq.Qubit, q1: aq.Qubit) -> None:
     h(q0)
     cnot(q0, q1)
 
 
 @pytest.fixture
 def double_bell_state():
-    @aq.main(num_qubits=4)
+    @aq.main
     def double_bell_state() -> None:
         bell_state_arbitrary_qubits(0, 1)
         bell_state_arbitrary_qubits(2, 3)
@@ -193,13 +193,13 @@ def double_bell_state():
 
 def test_double_bell_state(double_bell_state) -> None:
     expected = """OPENQASM 3.0;
-def bell_state_arbitrary_qubits(int[32] q0, int[32] q1) {
-    h __qubits__[q0];
-    cnot __qubits__[q0], __qubits__[q1];
+def bell_state_arbitrary_qubits(qubit q0, qubit q1) {
+    h q0;
+    cnot q0, q1;
 }
 qubit[4] __qubits__;
-bell_state_arbitrary_qubits(0, 1);
-bell_state_arbitrary_qubits(2, 3);"""
+bell_state_arbitrary_qubits(__qubits__[0], __qubits__[1]);
+bell_state_arbitrary_qubits(__qubits__[2], __qubits__[3]);"""
     assert double_bell_state.to_ir() == expected
 
 
@@ -488,6 +488,7 @@ def test_qasm_inline_var_condition(qasm_inline_var_condition) -> None:
     expected = """OPENQASM 3.0;
 bit __bit_0__ = 1;
 int[32] __int_1__ = 1;
+output bit retval_;
 qubit[2] __qubits__;
 h __qubits__[0];
 if (__bit_0__) {
@@ -499,7 +500,8 @@ if (__int_1__) {
     x __qubits__[1];
 }
 bit __bit_2__;
-__bit_2__ = measure __qubits__[1];"""
+__bit_2__ = measure __qubits__[1];
+retval_ = __bit_2__;"""
     assert qasm_inline_var_condition.to_ir() == expected
 
 
@@ -528,15 +530,23 @@ def test_measurement_qubit_discovery(ground_state_measurements) -> None:
 def test_simple_measurement(ground_state_measurements) -> None:
     """Test that a program with only measurements is generated correctly."""
     expected = """OPENQASM 3.0;
+output bit retval_;
 qubit[6] __qubits__;
 bit[3] __bit_0__ = "000";
 __bit_0__[0] = measure __qubits__[5];
 __bit_0__[1] = measure __qubits__[2];
-__bit_0__[2] = measure __qubits__[1];"""
+__bit_0__[2] = measure __qubits__[1];
+retval_ = __bit_0__;"""
     assert ground_state_measurements.to_ir() == expected
 
 
-def test_sim_simple_measurement(ground_state_measurements) -> None:
+def test_sim_simple_measurement() -> None:
+    # TODO: Update when local sim has support for `output`
+    @aq.main
+    def ground_state_measurements() -> aq.BitVar:
+        """Measure a few ground state qubits."""
+        measure([5, 2, 1])
+
     _test_on_local_sim(ground_state_measurements)
 
 
@@ -587,6 +597,7 @@ def qasm_measurement_condition():
 
 def test_qasm_measurement_condition(qasm_measurement_condition) -> None:
     expected = """OPENQASM 3.0;
+output bit retval_;
 qubit[2] __qubits__;
 h __qubits__[0];
 bit __bit_0__;
@@ -595,7 +606,8 @@ if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
 bit __bit_1__;
-__bit_1__ = measure __qubits__[1];"""
+__bit_1__ = measure __qubits__[1];
+retval_ = __bit_1__;"""
     assert qasm_measurement_condition.to_ir() == expected
 
 
@@ -798,14 +810,14 @@ for int i in [0:5 - 1] {
 
 
 @aq.subroutine
-def bell(q0: int, q1: int) -> None:
+def bell(q0: aq.Qubit, q1: aq.Qubit) -> None:
     h(q0)
     cnot(q0, q1)
 
 
 @pytest.fixture
 def bell_in_for_loop():
-    @aq.main(num_qubits=5)
+    @aq.main
     def bell_in_for_loop() -> None:
         for i in aq.range(3):
             bell(0, 1)
@@ -816,13 +828,13 @@ def bell_in_for_loop():
 def test_subroutines_in_for_loop(bell_in_for_loop) -> None:
     """Test calling a parameterized subroutine from inside a for loop."""
     expected = """OPENQASM 3.0;
-def bell(int[32] q0, int[32] q1) {
-    h __qubits__[q0];
-    cnot __qubits__[q0], __qubits__[q1];
+def bell(qubit q0, qubit q1) {
+    h q0;
+    cnot q0, q1;
 }
-qubit[5] __qubits__;
+qubit[2] __qubits__;
 for int i in [0:3 - 1] {
-    bell(0, 1);
+    bell(__qubits__[0], __qubits__[1]);
 }"""
 
     assert bell_in_for_loop.to_ir() == expected
@@ -935,15 +947,6 @@ def test_double_decorated_function():
 
     expected = """OPENQASM 3.0;"""
     assert empty_program.to_ir() == expected
-
-
-def test_main_return():
-    @aq.main
-    def main() -> int:
-        return 1
-
-    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
-        main.to_ir()
 
 
 def test_main_no_return():
@@ -1083,8 +1086,8 @@ def test_input_types():
     expected_ir = """OPENQASM 3.0;
 input int[32] x;
 input bool y;
-input float[64] z;
-input float[64] u;
+input float u;
+input float z;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = x && y;
@@ -1108,7 +1111,7 @@ def test_input_qubit_indices():
 input int[32] q;
 input int[32] r;
 qubit[8] __qubits__;
-h __qubits__[2*q + r];"""
+h __qubits__[2 * q + r];"""
     assert circ.to_ir() == expected_ir
 
 

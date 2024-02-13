@@ -17,8 +17,8 @@
 from typing import Any
 
 from braket.experimental.autoqasm import program as aq_program
-
-from .qubits import QubitIdentifierType, _qubit
+from braket.experimental.autoqasm.instructions.qubits import _qubit
+from braket.experimental.autoqasm.types import QubitIdentifierType
 
 
 def _qubit_instruction(
