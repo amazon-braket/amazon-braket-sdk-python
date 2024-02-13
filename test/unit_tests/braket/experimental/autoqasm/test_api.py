@@ -959,6 +959,18 @@ def test_main_no_return():
         x = 3
         tester(x)
 
+    expected = """OPENQASM 3.0;
+def tester(int[32] x) -> bit {
+    bit __bit_0__;
+    __bit_0__ = measure __qubits__[x];
+    return __bit_0__;
+}
+qubit[3] __qubits__;
+bit __bit_1__;
+__bit_1__ = tester(3);"""
+
+    assert main.to_ir() == expected
+
 
 def test_subroutine_declared_after_main():
     """Test that subroutines can be declared after the main function
