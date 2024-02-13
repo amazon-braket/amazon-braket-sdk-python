@@ -304,15 +304,24 @@ class PulseSequence:
 
         return new_pulse_sequence
 
-    def to_ir(self) -> str:
+    def to_ir(self, sort_input_parameters: bool = False) -> str:
         """Converts this OpenPulse problem into IR representation.
+
+        Args:
+            sort_input_parameters (bool): whether input parameters should be printed
+                in a sorted order.
 
         Returns:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
         program = deepcopy(self._program)
         program.autodeclare(encal=False)
-        for param in self.parameters:
+        parameters = (
+            sorted(self.parameters, key=lambda p: p.name, reverse=True)
+            if sort_input_parameters
+            else self.parameters
+        )
+        for param in parameters:
             program.declare(param._to_oqpy_expression(), to_beginning=True)
 
         if self._capture_v0_count:
@@ -420,10 +429,11 @@ class PulseSequence:
         return self.make_bound_pulse_sequence(param_values)
 
     def __eq__(self, other):
+        sort_input_parameters = True
         return (
             isinstance(other, PulseSequence)
             and self.parameters == other.parameters
-            and self.to_ir() == other.to_ir()
+            and self.to_ir(sort_input_parameters) == other.to_ir(sort_input_parameters)
         )
 
 
