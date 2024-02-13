@@ -84,6 +84,19 @@ one_prob_noise_map = {
     "phase_damping": noises.PhaseDamping,
 }
 
+SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
+    "braket_noise_bit_flip": noises.BitFlip,
+    "braket_noise_phase_flip": noises.PhaseFlip,
+    "braket_noise_pauli_channel": noises.PauliChannel,
+    "braket_noise_depolarizing": noises.Depolarizing,
+    "braket_noise_two_qubit_depolarizing": noises.TwoQubitDepolarizing,
+    "braket_noise_two_qubit_dephasing": noises.TwoQubitDephasing,
+    "braket_noise_amplitude_damping": noises.AmplitudeDamping,
+    "braket_noise_generalized_amplitude_damping": noises.GeneralizedAmplitudeDamping,
+    "braket_noise_phase_damping": noises.PhaseDamping,
+    "braket_noise_kraus": noises.Kraus,
+}
+
 
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
     return _get_observable(obs)

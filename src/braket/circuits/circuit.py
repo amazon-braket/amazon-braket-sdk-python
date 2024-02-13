@@ -1235,6 +1235,7 @@ class Circuit:
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     ) -> list[str]:
         ir_instructions = ["OPENQASM 3.0;"]
+        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
@@ -1249,7 +1250,6 @@ class Circuit:
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
 
-        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
         if frame_wf_declarations:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
@@ -1269,8 +1269,20 @@ class Circuit:
                 waveforms[waveform.id] = waveform
 
     def _generate_frame_wf_defcal_declarations(
-        self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> Optional[str]:
+        self, gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None
+    ) -> str | None:
+        """Generates the header where frames, waveforms and defcals are declared.
+
+        It also adds any FreeParameter of the calibrations to the circuit parameter set.
+
+        Args:
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
+                calibration data for the device.
+
+        Returns:
+            str | None: An OpenQASM string
+        """
+
         program = oqpy.Program(None, simplify_constants=False)
 
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions)
@@ -1299,7 +1311,15 @@ class Circuit:
                         continue
 
                     gate_name = gate._qasm_name
-                    arguments = gate.parameters if isinstance(gate, Parameterizable) else None
+                    arguments = gate.parameters if isinstance(gate, Parameterizable) else []
+
+                    for param in calibration.parameters:
+                        self._parameters.add(param)
+                    arguments = [
+                        param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
+                        for param in arguments
+                    ]
+
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
