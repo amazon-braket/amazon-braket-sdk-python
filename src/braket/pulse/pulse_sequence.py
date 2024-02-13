@@ -309,7 +309,7 @@ class PulseSequence:
 
         Args:
             sort_input_parameters (bool): whether input parameters should be printed
-                in a sorted order.
+                in a sorted order. Defaults to False.
 
         Returns:
             str: a str representing the OpenPulse program encoding the PulseSequence.
