@@ -1269,18 +1269,18 @@ class Circuit:
                 waveforms[waveform.id] = waveform
 
     def _generate_frame_wf_defcal_declarations(
-        self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> Optional[str]:
-        """Generates the header where frame, waveform and defcals are declared.
+        self, gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None
+    ) -> str | None:
+        """Generates the header where frames, waveforms and defcals are declared.
 
-        It also adds any FreeParameter that is not gate arguments to the circuit parameter set.
+        It also adds any FreeParameter of the calibrations to the circuit parameter set.
 
         Args:
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
                 calibration data for the device.
 
         Returns:
-            Optional[str]: An OpenQASM string
+            str | None: An OpenQASM string
         """
 
         program = oqpy.Program(None, simplify_constants=False)
@@ -1314,8 +1314,7 @@ class Circuit:
                     arguments = gate.parameters if isinstance(gate, Parameterizable) else []
 
                     for param in calibration.parameters:
-                        if param not in arguments:
-                            self._parameters.add(param)
+                        self._parameters.add(param)
                     arguments = [
                         param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
                         for param in arguments

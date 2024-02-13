@@ -11,11 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.circuits import Circuit
+from braket.circuits import Circuit, Noise
+from braket.circuits.noise_model import NoiseModel
+from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
+from braket.device_schema import DeviceActionType
+from braket.ir.openqasm import Program
 from braket.tasks.quantum_task import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -39,7 +45,7 @@ class Device(ABC):
         shots: Optional[int],
         inputs: Optional[dict[str, float]],
         *args,
-        **kwargs
+        **kwargs,
     ) -> QuantumTask:
         """Run a quantum task specification on this quantum device. A quantum task can be a circuit
         or an annealing problem.
@@ -68,7 +74,7 @@ class Device(ABC):
         max_parallel: Optional[int],
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]],
         *args,
-        **kwargs
+        **kwargs,
     ) -> QuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
@@ -104,3 +110,36 @@ class Device(ABC):
             str: The status of this Device
         """
         return self._status
+
+    def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:
+        supported_noises = set(
+            SUPPORTED_NOISE_PRAGMA_TO_NOISE[pragma].__name__
+            for pragma in self.properties.action[DeviceActionType.OPENQASM].supportedPragmas
+            if pragma in SUPPORTED_NOISE_PRAGMA_TO_NOISE
+        )
+        noise_operators = set(noise_instr.noise.name for noise_instr in noise_model._instructions)
+        if not noise_operators <= supported_noises:
+            raise ValueError(
+                f"{self.name} does not support noise simulation or the noise model includes noise "
+                + f"that is not supported by {self.name}."
+            )
+
+    def _apply_noise_model_to_circuit(
+        self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
+    ) -> None:
+        if isinstance(task_specification, Circuit):
+            for instruction in task_specification.instructions:
+                if isinstance(instruction.operator, Noise):
+                    warnings.warn(
+                        "The noise model of the device is applied to a circuit that already has"
+                        " noise instructions."
+                    )
+                    break
+            task_specification = self._noise_model.apply(task_specification)
+        else:
+            warnings.warn(
+                "Noise model is only applicable to circuits. The type of the task specification is"
+                f" {task_specification.__class__.__name__}. The noise model of the device does not"
+                " apply."
+            )
+        return task_specification
