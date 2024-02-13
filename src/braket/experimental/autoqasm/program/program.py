@@ -377,6 +377,8 @@ class ProgramConversionContext:
             if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
                 raise NotImplementedError(parameter_type)
 
+            # In case a FreeParameter has already created a FloatVar somewhere else,
+            # we use need_declaration=False to avoid OQPy raising name conflict errors.
             if aq_type == oqpy.FloatVar:
                 var = aq_type("input", name=parameter_name, needs_declaration=False)
                 var.size = None
