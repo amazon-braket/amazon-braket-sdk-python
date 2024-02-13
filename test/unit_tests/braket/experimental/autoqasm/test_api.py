@@ -1028,8 +1028,8 @@ def test_input_types():
     expected_ir = """OPENQASM 3.0;
 input int[32] x;
 input bool y;
-input float[64] z;
-input float[64] u;
+input float u;
+input float z;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = x && y;
@@ -1053,7 +1053,7 @@ def test_input_qubit_indices():
 input int[32] q;
 input int[32] r;
 qubit[8] __qubits__;
-h __qubits__[2*q + r];"""
+h __qubits__[2 * q + r];"""
     assert circ.to_ir() == expected_ir
 
 

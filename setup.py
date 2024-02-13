@@ -27,13 +27,13 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.19.1",
+        "amazon-braket-schemas>=1.20.2",
         # Pin the latest commit of mcm-sim branch of aws/amazon-braket-default-simulator-python.git
         # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
         # simulation of mid-circuit measurement, which AutoQASM requires.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
         "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@f17d3070a4f87a3bbef677e385a2e94dd386af78#egg=amazon-braket-default-simulator",  # noqa E501
-        "oqpy~=0.3.3",
+        "oqpy~=0.3.5",
         "setuptools",
         "backoff",
         "boltons",

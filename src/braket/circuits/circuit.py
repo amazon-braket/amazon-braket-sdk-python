@@ -55,9 +55,10 @@ from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
-from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
+from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
@@ -1234,6 +1235,7 @@ class Circuit:
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     ) -> list[str]:
         ir_instructions = ["OPENQASM 3.0;"]
+        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
@@ -1248,7 +1250,6 @@ class Circuit:
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
 
-        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
         if frame_wf_declarations:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
@@ -1256,8 +1257,8 @@ class Circuit:
     def _validate_gate_calbrations_uniqueness(
         self,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
-        frames: dict[Frame],
-        waveforms: dict[ArbitraryWaveform],
+        frames: dict[str, Frame],
+        waveforms: dict[str, Waveform],
     ) -> None:
         for key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
@@ -1268,9 +1269,21 @@ class Circuit:
                 waveforms[waveform.id] = waveform
 
     def _generate_frame_wf_defcal_declarations(
-        self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> Optional[str]:
-        program = oqpy.Program(None)
+        self, gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None
+    ) -> str | None:
+        """Generates the header where frames, waveforms and defcals are declared.
+
+        It also adds any FreeParameter of the calibrations to the circuit parameter set.
+
+        Args:
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
+                calibration data for the device.
+
+        Returns:
+            str | None: An OpenQASM string
+        """
+
+        program = oqpy.Program(None, simplify_constants=False)
 
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions)
 
@@ -1298,11 +1311,15 @@ class Circuit:
                         continue
 
                     gate_name = gate._qasm_name
-                    arguments = (
-                        [calibration._format_parameter_ast(value) for value in gate.parameters]
-                        if isinstance(gate, Parameterizable)
-                        else None
-                    )
+                    arguments = gate.parameters if isinstance(gate, Parameterizable) else []
+
+                    for param in calibration.parameters:
+                        self._parameters.add(param)
+                    arguments = [
+                        param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
+                        for param in arguments
+                    ]
+
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
@@ -1315,7 +1332,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> tuple[dict[Frame], dict[ArbitraryWaveform]]:
+    ) -> tuple[dict[str, Frame], dict[str, Waveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}

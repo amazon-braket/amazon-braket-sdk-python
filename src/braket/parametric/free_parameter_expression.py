@@ -14,20 +14,14 @@
 from __future__ import annotations
 
 import ast
+import operator
+from functools import reduce
 from numbers import Number
-from typing import Any, Optional, Union
+from typing import Any, Union
 
-from openpulse.ast import (
-    ClassicalType,
-    DurationLiteral,
-    DurationType,
-    Expression,
-    FloatType,
-    Identifier,
-    TimeUnit,
-)
-from oqpy import Program
-from sympy import Expr, Float, Symbol, sympify
+import sympy
+from oqpy.base import OQPyExpression
+from oqpy.classical_types import FloatVar
 
 
 class FreeParameterExpression:
@@ -40,11 +34,7 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(
-        self,
-        expression: Union[FreeParameterExpression, Number, Expr, str],
-        _type: Optional[ClassicalType] = None,
-    ):
+    def __init__(self, expression: Union[FreeParameterExpression, Number, sympy.Expr, str]):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -53,10 +43,6 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (Optional[ClassicalType]): The OpenQASM3 type associated with the expression.
-                Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
-                expression in the OpenQASM3 IR. Any type other than DurationType is considered
-                as FloatType.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -69,12 +55,9 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
-        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-            if _type is None:
-                self._type = expression._type
-        elif isinstance(expression, (Number, Expr)):
+        elif isinstance(expression, (Number, sympy.Expr)):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression
@@ -82,7 +65,7 @@ class FreeParameterExpression:
             raise NotImplementedError
 
     @property
-    def expression(self) -> Union[Number, Expr]:
+    def expression(self) -> Union[Number, sympy.Expr]:
         """Gets the expression.
         Returns:
             Union[Number, Expr]: The expression for the FreeParameterExpression.
@@ -91,7 +74,7 @@ class FreeParameterExpression:
 
     def subs(
         self, parameter_values: dict[str, Number]
-    ) -> Union[FreeParameterExpression, Number, Expr]:
+    ) -> Union[FreeParameterExpression, Number, sympy.Expr]:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
@@ -106,7 +89,7 @@ class FreeParameterExpression:
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():
-            if isinstance(key, FreeParameterExpression):
+            if issubclass(type(key), FreeParameterExpression):
                 new_parameter_values[key.expression] = val
             else:
                 new_parameter_values[key] = val
@@ -124,7 +107,7 @@ class FreeParameterExpression:
         if isinstance(node, ast.Num):
             return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
-            return FreeParameterExpression(Symbol(node.id))
+            return FreeParameterExpression(sympy.Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -139,7 +122,7 @@ class FreeParameterExpression:
             raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
@@ -148,7 +131,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other + self.expression)
 
     def __sub__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
@@ -157,7 +140,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other - self.expression)
 
     def __mul__(self, other):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
@@ -166,7 +149,7 @@ class FreeParameterExpression:
         return FreeParameterExpression(other * self.expression)
 
     def __pow__(self, other, modulo=None):
-        if isinstance(other, FreeParameterExpression):
+        if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
@@ -179,7 +162,7 @@ class FreeParameterExpression:
 
     def __eq__(self, other):
         if isinstance(other, FreeParameterExpression):
-            return sympify(self.expression).equals(sympify(other.expression))
+            return sympy.sympify(self.expression).equals(sympy.sympify(other.expression))
         return False
 
     def __repr__(self) -> str:
@@ -191,20 +174,29 @@ class FreeParameterExpression:
         """
         return repr(self.expression)
 
-    def to_ast(self, program: Program) -> Expression:
-        """Creates an AST node for the :class:'FreeParameterExpression'.
-
-        Args:
-            program (Program): Unused.
+    def _to_oqpy_expression(self) -> OQPyExpression:
+        """Transforms into an OQPyExpression.
 
         Returns:
-            Expression: The AST node.
+            OQPyExpression: The AST node.
         """
-        # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
-        identifier = Identifier(name=self)
-        if isinstance(self._type, DurationType):
-            return DurationLiteral(identifier, TimeUnit.s)
-        return identifier
+        ops = {sympy.Add: operator.add, sympy.Mul: operator.mul, sympy.Pow: operator.pow}
+        if isinstance(self.expression, tuple(ops)):
+            return reduce(
+                ops[type(self.expression)],
+                map(
+                    lambda x: FreeParameterExpression(x)._to_oqpy_expression(), self.expression.args
+                ),
+            )
+        elif isinstance(self.expression, sympy.Number):
+            return float(self.expression)
+        else:
+            fvar = FloatVar(
+                name=self.expression.name, init_expression="input", needs_declaration=False
+            )
+            fvar.size = None
+            fvar.type.size = None
+            return fvar
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
@@ -218,7 +210,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
     """
     if isinstance(parameter, FreeParameterExpression):
         substituted = parameter.subs(kwargs)
-        if isinstance(substituted, Float):
+        if isinstance(substituted, sympy.Number):
             substituted = float(substituted)
         return substituted
     return parameter

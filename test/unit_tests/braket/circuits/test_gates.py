@@ -1048,8 +1048,8 @@ def test_bind_values_pulse_gate():
     assert a_bound_ir == "\n".join(
         [
             "cal {",
-            "    set_frequency(user_frame, b + 3);",
-            "    delay[(c) * 1s] user_frame;",
+            "    set_frequency(user_frame, 3.0 + b);",
+            "    delay[c * 1s] user_frame;",
             "}",
         ]
     )

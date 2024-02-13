@@ -376,7 +376,17 @@ class ProgramConversionContext:
             aq_type = aq_types.map_parameter_type(parameter_type)
             if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
                 raise NotImplementedError(parameter_type)
-            self._input_parameters[parameter_name] = aq_type("input", name=parameter_name)
+
+            # In case a FreeParameter has already created a FloatVar somewhere else,
+            # we use need_declaration=False to avoid OQPy raising name conflict errors.
+            if aq_type == oqpy.FloatVar:
+                var = aq_type("input", name=parameter_name, needs_declaration=False)
+                var.size = None
+                var.type.size = None
+            else:
+                var = aq_type("input", name=parameter_name)
+            self._input_parameters[parameter_name] = var
+            return var
 
     def register_output_parameter(
         self,
@@ -441,7 +451,10 @@ class ProgramConversionContext:
         for parameter_name, parameter in self._input_parameters.items():
             # The variable names sometimes get overwritten by the initializer
             parameter.name = parameter_name
-            root_oqpy_program._add_var(parameter)
+            if parameter.name in root_oqpy_program.undeclared_vars:
+                root_oqpy_program.undeclared_vars[parameter.name]._needs_declaration = True
+            else:
+                root_oqpy_program._add_var(parameter)
         for parameter_name, parameter in self._output_parameters.items():
             # Before adding the output variable to the program, remove any existing reference
             root_oqpy_program.undeclared_vars.pop(parameter_name, None)
