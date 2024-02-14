@@ -78,10 +78,13 @@ def hybrid_job(
     The job created will be a `LocalQuantumJob` when `local` is set to `True`, otherwise an
     `AwsQuantumJob`. The following parameters will be ignored when running a job with
     `local` set to `True`: `wait_until_complete`, `instance_config`, `distribution`,
-    `copy_checkpoints_from_job`, `stopping_condition`, `tags`, `logger`, and `quiet`. The
-    hybrid job created using decorator has limited access to the source code. Python module
-    that depends on source code analysis, like AutoQASM, may not work properly if you use
-    functions defined outside of the entry point function.
+    `copy_checkpoints_from_job`, `stopping_condition`, `tags`, `logger`, and `quiet`.
+
+    Remarks:
+        Hybrid jobs created using this decorator have limited access to the source code of
+        functions defined outside of the decorated function. Functionality that depends on
+        source code analysis may not work properly when referencing functions defined outside
+        of the decorated function.
 
     Args:
         device (str | None): Device ARN of the QPU device that receives priority quantum
@@ -217,7 +220,6 @@ def hybrid_job(
                     "entry_point": (
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
-                    # "input_data": inner_source_input,
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
