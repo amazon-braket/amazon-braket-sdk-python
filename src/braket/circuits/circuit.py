@@ -1309,20 +1309,20 @@ class Circuit:
                 ):
                     continue
 
-                    gate_name = gate._qasm_name
-                    arguments = gate.parameters if isinstance(gate, Parameterizable) else []
+                gate_name = gate._qasm_name
+                arguments = gate.parameters if isinstance(gate, Parameterizable) else []
 
-                    for param in calibration.parameters:
-                        self._parameters.add(param)
-                    arguments = [
-                        param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
-                        for param in arguments
-                    ]
+                for param in calibration.parameters:
+                    self._parameters.add(param)
+                arguments = [
+                    param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
+                    for param in arguments
+                ]
 
-                    with oqpy.defcal(
-                        program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
-                    ):
-                        program += calibration._program
+                with oqpy.defcal(
+                    program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
+                ):
+                    program += calibration._program
 
             ast = program.to_ast(encal=False, include_externs=False)
             return ast_to_qasm(ast)
