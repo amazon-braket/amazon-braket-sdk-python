@@ -21,6 +21,7 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from typing import Optional, Union
+import numpy as np
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -40,6 +41,8 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
     PulseDeviceActionProperties,
 )
 from braket.devices.device import Device
+from braket.emulation import EmulationContext
+from braket.emulation.device_emulator import DeviceEmulator
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
@@ -47,7 +50,11 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
-
+from braket.circuits.noise_model import (GateCriteria, NoiseModel,
+                                         ObservableCriteria)
+from braket.circuits.noises import (AmplitudeDamping, BitFlip, Depolarizing,
+                                    PauliChannel, PhaseDamping, PhaseFlip,
+                                    TwoQubitDepolarizing)
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -116,6 +123,7 @@ class AwsDevice(Device):
         if noise_model:
             self._validate_device_noise_model_support(noise_model)
         self._noise_model = noise_model
+        self._emulator = None
 
     def run(
         self,
@@ -201,8 +209,31 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
+        if EmulationContext.is_emulation_enabled():
+            if not self._emulator:
+                self._create_emulator()
+            return self._emulator.run(
+                task_specification,
+                s3_destination_folder
+                or (
+                    AwsSession.parse_s3_uri(os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_URI"))
+                    if "AMZN_BRAKET_TASK_RESULTS_S3_URI" in os.environ
+                    else None
+                )
+                or (self._aws_session.default_bucket(), "tasks"),
+                shots if shots is not None else self._default_shots,
+                poll_timeout_seconds=poll_timeout_seconds,
+                poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
+                inputs=inputs,
+                gate_definitions=gate_definitions,
+                reservation_arn=reservation_arn,
+                *aws_quantum_task_args,
+                **aws_quantum_task_kwargs,
+            )
+
         if self._noise_model:
             task_specification = self._apply_noise_model_to_circuit(task_specification)
+
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -298,6 +329,30 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
+        if EmulationContext.is_emulation_enabled():
+            if not self._emulator:
+                self._create_emulator()
+            return self._emulator.run_batch(
+                task_specifications,
+                s3_destination_folder
+                or (
+                    AwsSession.parse_s3_uri(os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_URI"))
+                    if "AMZN_BRAKET_TASK_RESULTS_S3_URI" in os.environ
+                    else None
+                )
+                or (self._aws_session.default_bucket(), "tasks"),
+                shots if shots is not None else self._default_shots,
+                max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
+                max_workers=max_connections,
+                poll_timeout_seconds=poll_timeout_seconds,
+                poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
+                inputs=inputs,
+                gate_definitions=gate_definitions,
+                reservation_arn=reservation_arn,
+                *aws_quantum_task_args,
+                **aws_quantum_task_kwargs,
+            )
+
         if self._noise_model:
             task_specifications = [
                 self._apply_noise_model_to_circuit(task_specification)
@@ -859,3 +914,66 @@ class AwsDevice(Device):
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
+
+    def _create_emulator(self):
+        self._emulator = DeviceEmulator(
+            self._arn,
+            self._aws_session,
+            self._noise_model or self._create_noise_model(),
+        )
+
+    def _get_device_specs(self, provider_info):
+        keys = ["specs", "properties"]
+        for key in keys:
+            if key in provider_info:
+                return provider_info[key]
+        return None
+
+    def _parse_spec_to_noise_model(self, noise_model: NoiseModel, gate_time_1_qubit, qubit_key: str, spec: any):
+        qubits = [int(s) for s in qubit_key.split("-")]
+        if len(qubits) == 2:
+            qubits = [(qubits[0], qubits[1]), (qubits[1], qubits[0])]
+        for spec_key, spec_value in spec.items():
+            if spec_key == "T1":
+                damping_prob = 1 - np.exp(-(gate_time_1_qubit / spec_value))
+                noise_model.add_noise(AmplitudeDamping(damping_prob), GateCriteria(qubits=qubits))
+            elif spec_key == "T2":
+                dephasing_prob = 0.5 * (1 - np.exp(-(gate_time_1_qubit / spec_value)))
+                noise_model.add_noise(PhaseDamping(dephasing_prob), GateCriteria(qubits=qubits))
+            elif spec_key == "f1Q_simultaneous_RB" or spec_key == "fRB":
+                depolar_rate = 1 - spec_value
+                noise_model.add_noise(Depolarizing(depolar_rate), GateCriteria(qubits=qubits))
+            elif spec_key == "fRO":
+                readout_value = 1 - spec_value
+                noise_model.add_noise(BitFlip(readout_value), ObservableCriteria(qubits=qubits))
+            elif spec_key == "fCPHASE":
+                phase_rate = 1 - spec_value
+                noise_model.add_noise(TwoQubitDepolarizing(phase_rate), GateCriteria(Gate.CPhaseShift, qubits))
+            elif spec_key == "fXY":
+                xy_rate = 1 - spec_value
+                noise_model.add_noise(TwoQubitDepolarizing(xy_rate), GateCriteria(Gate.XY, qubits))
+            elif spec_key == "fCZ":
+                cz_rate = 1 - spec_value
+                noise_model.add_noise(TwoQubitDepolarizing(cz_rate), GateCriteria(Gate.CZ, qubits))
+            # TODO: add other keys? fCX from Lucy?
+
+    def _create_noise_model(self):
+        if self._type == AwsDeviceType.SIMULATOR:
+            return None
+
+        provider_info = self._properties.dict()["provider"]
+        device_specs = self._get_device_specs(provider_info)
+
+        if not device_specs:
+            warnings.warn("Unable to determine noise model from device provider information.")
+            return None
+
+        # median 1q and 2q gate times
+        gate_time_1_qubit = 40e-9
+
+        noise_model = NoiseModel()
+
+        for key, value in device_specs.items():
+            for qubit_key, spec in value.items():
+                self._parse_spec_to_noise_model(noise_model, gate_time_1_qubit, qubit_key, spec)
+        return noise_model

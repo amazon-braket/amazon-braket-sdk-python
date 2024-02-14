@@ -258,6 +258,8 @@ class AwsQuantumTask(QuantumTask):
             >>> result = task.result()
             GateModelQuantumTaskResult(...)
         """
+        if arn and arn.startswith("emulation:"):
+            raise ValueError("Emulated tasks can not be used to initialize AwsQuantumTask")
 
         self._arn: str = arn
         self._aws_session: AwsSession = aws_session or AwsQuantumTask._aws_session_for_task_arn(

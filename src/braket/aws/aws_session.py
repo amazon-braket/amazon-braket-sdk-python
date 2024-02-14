@@ -224,6 +224,7 @@ class AwsSession(object):
         Returns:
             str: The ARN of the quantum task.
         """
+        print("CALLED: AWS CREATE QUANTUM TASK")
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
