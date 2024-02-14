@@ -681,7 +681,6 @@ class AwsSession:
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
-                print("test")
                 raise AssertionError
             bucket, key = s3_uri_match.groups()
             return bucket, key
