@@ -148,6 +148,25 @@ def pulse_sequence_2(predefined_frame_1):
 
 
 @pytest.fixture
+def pulse_sequence_3(predefined_frame_1):
+    return (
+        PulseSequence()
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("alpha"),
+        )
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("beta"),
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+
+@pytest.fixture
 def gate_calibrations(pulse_sequence, pulse_sequence_2):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
@@ -740,7 +759,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -769,7 +788,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "bit[2] b;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -800,7 +819,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -835,7 +854,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[5] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -866,7 +885,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -899,7 +918,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[5] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -933,7 +952,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[7] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -965,7 +984,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -1013,6 +1032,55 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
     assert copy_of_gate_calibrations.pulse_sequences == gate_calibrations.pulse_sequences
 
 
+@pytest.mark.parametrize(
+    "circuit, calibration_key, expected_ir",
+    [
+        (
+            Circuit().rx(0, 0.2),
+            (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float beta;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
+                        " 400.0ms, 0.2, 1, false);",
+                        "}",
+                        "defcal rx(0.2) $0 {",
+                        "    shift_phase(predefined_frame_1, 0.2);",
+                        "    shift_phase(predefined_frame_1, beta);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "rx(0.2) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+    ],
+)
+def test_circuit_with_parametric_defcal(circuit, calibration_key, expected_ir, pulse_sequence_3):
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    gate_calibrations = GateCalibrations(
+        {
+            calibration_key: pulse_sequence_3,
+        }
+    )
+
+    assert (
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_definitions=gate_calibrations.pulse_sequences,
+        )
+        == expected_ir
+    )
+
+
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
     circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
@@ -1033,8 +1101,7 @@ def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
                 "bit[1] b;",
                 "qubit[1] q;",
                 "cal {",
-                "    waveform drag_gauss_wf = drag_gaussian"
-                + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
                 "}",
                 "defcal z $0, $1 {",
                 "    set_frequency(predefined_frame_1, 6000000.0);",
@@ -1131,8 +1198,7 @@ def test_circuit_user_gate(pulse_sequence_2):
                 "bit[1] b;",
                 "qubit[1] q;",
                 "cal {",
-                "    waveform drag_gauss_wf = drag_gaussian"
-                + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
                 "}",
                 "defcal foo(-0.2) $0 {",
                 "    shift_phase(predefined_frame_1, -0.1);",
@@ -3003,11 +3069,9 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
             "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
-            "    waveform gauss_wf = gaussian(1000000.0ns, 700000000.0ns, 1, false);",
-            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 400000000.0ns, 0.2, 1,"
-            " false);",
-            "    waveform drag_gauss_wf_2 = drag_gaussian(3000000.0ns, 400000000.0ns, "
-            "0.2, 1, false);",
+            "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1," " false);",
+            "    waveform drag_gauss_wf_2 = drag_gaussian(3.0ms, 400.0ms, " "0.2, 1, false);",
             "}",
             "h $0;",
             "cal {",
@@ -3120,7 +3184,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
-            "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
+            "    waveform gauss_wf = gaussian(10.0us, 700.0ms, 1, false);",
             "}",
             "rx(0.5) $0;",
             "cal {",
@@ -3145,7 +3209,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
-            "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
+            "    waveform gauss_wf = gaussian(10.0us, 700.0ms, 1, false);",
             "}",
             "rx(0.5) $0;",
             "cal {",

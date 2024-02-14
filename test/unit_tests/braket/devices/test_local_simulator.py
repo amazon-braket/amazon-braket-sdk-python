@@ -11,8 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
+import textwrap
+import warnings
 from typing import Any, Dict, Optional
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from pydantic import create_model  # This is temporary for defining properties below
@@ -22,8 +25,10 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.ahs.atom_arrangement import AtomArrangement
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
-from braket.circuits import Circuit, FreeParameter
-from braket.device_schema import DeviceCapabilities
+from braket.circuits import Circuit, FreeParameter, Gate, Noise
+from braket.circuits.noise_model import GateCriteria, NoiseModel, NoiseModelInstruction
+from braket.device_schema import DeviceActionType, DeviceCapabilities
+from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
@@ -200,7 +205,7 @@ class DummyProgramSimulator(BraketSimulator):
 
     @property
     def properties(self) -> DeviceCapabilities:
-        return DeviceCapabilities.parse_obj(
+        device_properties = DeviceCapabilities.parse_obj(
             {
                 "service": {
                     "executionWindows": [
@@ -221,6 +226,87 @@ class DummyProgramSimulator(BraketSimulator):
                 "deviceParameters": {},
             }
         )
+        oq3_action = OpenQASMDeviceActionProperties.parse_raw(
+            json.dumps(
+                {
+                    "actionType": "braket.ir.openqasm.program",
+                    "version": ["1"],
+                    "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+                    "supportedResultTypes": [
+                        {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                    ],
+                    "supportedPragmas": [
+                        "braket_unitary_matrix",
+                        "braket_result_type_sample",
+                        "braket_result_type_expectation",
+                        "braket_result_type_variance",
+                        "braket_result_type_probability",
+                        "braket_result_type_state_vector",
+                    ],
+                }
+            )
+        )
+        device_properties.action[DeviceActionType.OPENQASM] = oq3_action
+        return device_properties
+
+
+class DummyProgramDensityMatrixSimulator(BraketSimulator):
+    def run(
+        self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
+    ) -> Dict[str, Any]:
+        self._shots = shots
+        return GATE_MODEL_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        device_properties = DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "11:00",
+                            "windowEndHour": "12:00",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {},
+                "deviceParameters": {},
+            }
+        )
+        oq3_action = OpenQASMDeviceActionProperties.parse_raw(
+            json.dumps(
+                {
+                    "actionType": "braket.ir.openqasm.program",
+                    "version": ["1"],
+                    "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+                    "supportedResultTypes": [
+                        {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                    ],
+                    "supportedPragmas": [
+                        "braket_noise_bit_flip",
+                        "braket_noise_depolarizing",
+                        "braket_noise_kraus",
+                        "braket_noise_pauli_channel",
+                        "braket_noise_generalized_amplitude_damping",
+                        "braket_noise_amplitude_damping",
+                        "braket_noise_phase_flip",
+                        "braket_noise_phase_damping",
+                        "braket_noise_two_qubit_dephasing",
+                        "braket_noise_two_qubit_depolarizing",
+                        "braket_unitary_matrix",
+                        "braket_result_type_sample",
+                        "braket_result_type_expectation",
+                        "braket_result_type_variance",
+                        "braket_result_type_probability",
+                        "braket_result_type_density_matrix",
+                    ],
+                }
+            )
+        )
+        device_properties.action[DeviceActionType.OPENQASM] = oq3_action
+        return device_properties
 
 
 class DummyAnnealingSimulator(BraketSimulator):
@@ -284,13 +370,16 @@ class DummyRydbergSimulator(BraketSimulator):
 mock_circuit_entry = Mock()
 mock_program_entry = Mock()
 mock_jaqcd_entry = Mock()
+mock_circuit_dm_entry = Mock()
 mock_circuit_entry.load.return_value = DummyCircuitSimulator
 mock_program_entry.load.return_value = DummyProgramSimulator
 mock_jaqcd_entry.load.return_value = DummyJaqcdSimulator
+mock_circuit_dm_entry.load.return_value = DummyProgramDensityMatrixSimulator
 local_simulator._simulator_devices = {
     "dummy": mock_circuit_entry,
     "dummy_oq3": mock_program_entry,
     "dummy_jaqcd": mock_jaqcd_entry,
+    "dummy_oq3_dm": mock_circuit_dm_entry,
 }
 
 mock_ahs_program = AnalogHamiltonianSimulation(
@@ -490,7 +579,12 @@ def test_run_ahs():
 
 
 def test_registered_backends():
-    assert LocalSimulator.registered_backends() == {"dummy", "dummy_oq3", "dummy_jaqcd"}
+    assert LocalSimulator.registered_backends() == {
+        "dummy",
+        "dummy_oq3",
+        "dummy_jaqcd",
+        "dummy_oq3_dm",
+    }
 
 
 @pytest.mark.xfail(raises=TypeError)
@@ -526,3 +620,129 @@ def test_properties():
     sim = LocalSimulator(dummy)
     expected_properties = dummy.properties
     assert sim.properties == expected_properties
+
+
+@pytest.fixture
+def noise_model():
+    return (
+        NoiseModel()
+        .add_noise(Noise.BitFlip(0.05), GateCriteria(Gate.H))
+        .add_noise(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot))
+    )
+
+
+@pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
+def test_valid_local_device_for_noise_model(backend, noise_model):
+    device = LocalSimulator(backend, noise_model=noise_model)
+    assert device._noise_model.instructions == [
+        NoiseModelInstruction(Noise.BitFlip(0.05), GateCriteria(Gate.H)),
+        NoiseModelInstruction(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot)),
+    ]
+
+
+@pytest.mark.parametrize("backend", ["dummy_oq3"])
+def test_invalid_local_device_for_noise_model(backend, noise_model):
+    with pytest.raises(ValueError):
+        _ = LocalSimulator(backend, noise_model=noise_model)
+
+
+@pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
+def test_local_device_with_invalid_noise_model(backend, noise_model):
+    with pytest.raises(TypeError):
+        _ = LocalSimulator(backend, noise_model=Mock())
+
+
+@patch.object(DummyProgramDensityMatrixSimulator, "run")
+def test_run_with_noise_model(mock_run, noise_model):
+    mock_run.return_value = GATE_MODEL_RESULT
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run(circuit, shots=4)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    mock_run.assert_called_with(
+        Program(source=expected_circuit, inputs={}),
+        4,
+    )
+
+
+@patch.object(LocalSimulator, "_apply_noise_model_to_circuit")
+def test_run_batch_with_noise_model(mock_apply, noise_model):
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+
+    mock_apply.return_value = noise_model.apply(circuit)
+    _ = device.run_batch([circuit] * 2, shots=4).results()
+    assert mock_apply.call_count == 2
+
+
+@patch.object(DummyProgramDensityMatrixSimulator, "run")
+def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
+    mock_run.return_value = GATE_MODEL_RESULT
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    circuit = Circuit().h(0).depolarizing(0, 0.1)
+    with warnings.catch_warnings(record=True) as w:
+        _ = device.run(circuit, shots=4)
+
+    expected_warning = (
+        "The noise model of the device is applied to a circuit that already has noise "
+        "instructions."
+    )
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[1] b;
+        qubit[1] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        #pragma braket noise depolarizing(0.1) q[0]
+        b[0] = measure q[0];
+        """
+    ).strip()
+
+    mock_run.assert_called_with(
+        Program(source=expected_circuit, inputs={}),
+        4,
+    )
+    assert w[-1].message.__str__() == expected_warning
+
+
+@patch.object(DummyProgramDensityMatrixSimulator, "run")
+def test_run_openqasm_with_noise_model(mock_run, noise_model):
+    mock_run.return_value = GATE_MODEL_RESULT
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[1] b;
+        qubit[1] q;
+        h q[0];
+        b[0] = measure q[0];
+        """
+    ).strip()
+    expected_warning = (
+        "Noise model is only applicable to circuits. The type of the task specification "
+        "is Program. The noise model of the device does not apply."
+    )
+    circuit = Program(source=expected_circuit)
+    with warnings.catch_warnings(record=True) as w:
+        _ = device.run(circuit, shots=4)
+
+    mock_run.assert_called_with(
+        Program(source=expected_circuit, inputs=None),
+        4,
+    )
+    assert w[-1].message.__str__() == expected_warning

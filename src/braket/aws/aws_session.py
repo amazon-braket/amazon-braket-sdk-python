@@ -677,8 +677,8 @@ class AwsSession:
         try:
             # Object URL e.g. https://my-bucket.s3.us-west-2.amazonaws.com/my/key
             # S3 URI e.g. s3://my-bucket/my/key
-            s3_uri_match = re.match("^https://([^./]+).[sS]3.[^/]+/(.+)$", s3_uri) or re.match(
-                "^[sS]3://([^./]+)/(.+)$", s3_uri
+            s3_uri_match = re.match(r"^https://([^./]+)\.[sS]3\.[^/]+/(.+)$", s3_uri) or re.match(
+                r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
                 print("test")
