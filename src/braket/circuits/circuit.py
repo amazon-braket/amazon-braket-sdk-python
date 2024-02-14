@@ -1010,7 +1010,7 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
 
-    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:  
+    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
         supports are supported by this method. If adding a
