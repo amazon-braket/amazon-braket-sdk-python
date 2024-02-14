@@ -84,7 +84,9 @@ class AwsDevice(Device):
         aws_session: Optional[AwsSession] = None,
         noise_model: Optional[NoiseModel] = None,
     ):
-        """Args:
+        """Initializes an `AwsDevice`.
+
+        Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
             noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit

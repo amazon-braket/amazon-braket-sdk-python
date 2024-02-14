@@ -57,7 +57,7 @@ class LocalSimulator(Device):
         noise_model: Optional[NoiseModel] = None,
     ):
         """Initializes a `LocalSimulator`.
-        
+
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
