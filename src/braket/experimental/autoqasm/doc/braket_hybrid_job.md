@@ -61,14 +61,13 @@ from braket.experimental.autoqasm.instructions import measure, h, cnot
     dependencies=["git+https://github.com/amazon-braket/amazon-braket-sdk-python.git@feature/autoqasm#egg=amazon-braket-sdk"],
 ) 
 def bell_circuit_job():
-    device = LocalSimulator()
-
     @aq.main
     def bell():
         h(0)
         cnot(0, 1)
         c = measure([0, 1])
 
+    device = LocalSimulator()
     for count in range(5):
         task = device.run(bell, shots=100)
         print(task.result().measurements)
