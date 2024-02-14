@@ -633,7 +633,6 @@ def test_sanitize_hyperparameters(hyperparameter, expected):
 @patch.object(sys.modules["os"], "mkdir")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
-# @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(LocalQuantumJob, "create")
 def test_decorator_persist_inner_function_source(
@@ -680,3 +679,37 @@ def test_decorator_persist_inner_function_source(
         input_data={INNER_SOURCE_INPUT_CHANNEL: f"{mock_tempdir_name}/{INNER_SOURCE_INPUT_FOLDER}"},
     )
     assert mock_tempdir.return_value.__exit__.called
+
+
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
+@patch("time.time", return_value=123.0)
+@patch("builtins.open")
+@patch("tempfile.TemporaryDirectory")
+@patch.object(AwsQuantumJob, "create")
+def test_decorator_conflict_channel_name(
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
+):
+    from braket.jobs.hybrid_job import INNER_SOURCE_INPUT_CHANNEL
+
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(
+        device=None, aws_session=aws_session, input_data={INNER_SOURCE_INPUT_CHANNEL: "foo-bar"}
+    )
+    def my_entry(c=0, d: float = 1.0, **extras):
+        return "my entry return value"
+
+    mock_tempdir_name = "job_temp_dir_00000"
+    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
+
+    expect_error_message = f"input channel cannot be {INNER_SOURCE_INPUT_CHANNEL}"
+    with pytest.raises(ValueError, match=expect_error_message):
+        my_entry()
