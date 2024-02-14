@@ -169,15 +169,14 @@ val_ = val;"""
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(raises=TypeError)  # Needs OQPy 0.3.5
 def test_return_inputs():
     @aq.main
     def main(val1, val2):
         return val1 + val2
 
     expected = """OPENQASM 3.0;
-input float[64] val1;
-input float[64] val2;
+input float val1;
+input float val2;
 output float[64] retval_;
 retval_ = val1 + val2;"""
 

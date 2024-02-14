@@ -49,8 +49,20 @@ def assign_for_output(target_name: str, value: Any) -> Any:
     ) and program_conversion_context.is_var_name_used(value.name)
 
     value = types.wrap_value(value)
-    if not isinstance(value, oqpy.base.Var):
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
+
+    if not isinstance(value, (oqpy.base.OQPyExpression, oqpy.base.Var)):
         return value
+
+    if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(value, oqpy.base.Var):  # Var is a subclass of expr?
+        try:
+            target = _get_oqpy_program_variable(target_name)
+        except KeyError:
+            # TODO laurecap type
+            target = oqpy.FloatVar(name=target_name)
+        oqpy_program.set(target, value)
+        return target
 
     target = copy.copy(value)
     target.init_expression = None
@@ -60,7 +72,6 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         # Avoid statements like `a = a;`
         return value
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
         oqpy_program.set(target, value)
     else:

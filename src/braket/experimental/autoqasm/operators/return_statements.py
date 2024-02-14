@@ -16,6 +16,7 @@
 
 from typing import Any
 
+import oqpy
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
@@ -35,9 +36,17 @@ def return_output_from_main(name: str, value: Any) -> Any:
     input = aq_context.get_input_parameter(name)
 
     if input is None:
-        if isinstance(value, FreeParameterExpression):
-            aq_context.register_output_parameter(name, aq_types.FloatVar)
+        if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(value, oqpy.base.Var):
+            value_type = float
+            if value.type == oqpy.int_():
+                value_type = int
+            elif value.type == oqpy.bool_:
+                value_type = bool
+            # TODO laurecap bool, bit, angle?
+
+            aq_context.register_output_parameter(name, value_type)
         else:
+            # TODO laurecap what uses this?
             aq_context.register_output_parameter(name, type(value))
     else:
         # Handle name collisions with input variables

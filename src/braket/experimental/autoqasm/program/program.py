@@ -451,6 +451,7 @@ class ProgramConversionContext:
         for parameter_name, parameter in self._input_parameters.items():
             # The variable names sometimes get overwritten by the initializer
             parameter.name = parameter_name
+            # TODO laurecap is this still necessary
             if parameter.name in root_oqpy_program.undeclared_vars:
                 root_oqpy_program.undeclared_vars[parameter.name]._needs_declaration = True
             else:
