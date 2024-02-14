@@ -47,6 +47,10 @@ def retrieve_image(framework: Framework, region: str) -> str:
 
     Returns:
         str: The ECR URI for the corresponding Amazon Braket Docker image.
+
+    Raises:
+        ValueError: If any of the supplied values are invalid or the combination of inputs
+            specified is not supported.
     """
     # Validate framework
     framework = Framework(framework)

@@ -212,6 +212,9 @@ class PauliString:
         Returns:
             PauliString: The resultant circuit from right multiplying `self` with `other`.
 
+        Raises:
+            ValueError: If the lengths of the Pauli strings being multiplied differ.
+
         See Also:
             `braket.quantum_information.PauliString.dot()`
         """
@@ -227,6 +230,9 @@ class PauliString:
 
         Returns:
             PauliString: The resultant circuit from right multiplying `self` with `other`.
+
+        Raises:
+            ValueError: If the lengths of the Pauli strings being multiplied differ.
 
         See Also:
             `braket.quantum_information.PauliString.dot()`
@@ -276,6 +282,9 @@ class PauliString:
             If zero, identity. If negative, self-multiplication from trivial
             inverse (recall Pauli operators are involutory).
 
+        Raises:
+            ValueError: If `n` isn't a plain Python `int`.
+
         See Also:
             `braket.quantum_information.PauliString.power()`
         """
@@ -293,6 +302,9 @@ class PauliString:
             PauliString: If `n` is positive, result from self-multiplication `n` times.
             If zero, identity. If negative, self-multiplication from trivial
             inverse (recall Pauli operators are involutory).
+
+        Raises:
+            ValueError: If `n` isn't a plain Python `int`.
 
         See Also:
             `braket.quantum_information.PauliString.power()`

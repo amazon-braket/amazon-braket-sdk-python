@@ -88,6 +88,12 @@ def load_job_checkpoint(
 
     Returns:
         dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
+
+    Raises:
+        FileNotFoundError: If the file `f"{job_name}(_{checkpoint_file_suffix})"` could not be found
+            in the directory specified by the container environment variable `CHECKPOINT_DIR`.
+        ValueError: If the data stored in the checkpoint file can't be deserialized (possibly due to
+            corruption).
     """
     job_name = job_name or get_job_name()
     checkpoint_directory = get_checkpoint_dir()

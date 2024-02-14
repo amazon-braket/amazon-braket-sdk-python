@@ -62,7 +62,7 @@ def hybrid_job(
     output_data_config: OutputDataConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
-    logger: Logger = getLogger(__name__),  # B008
+    logger: Logger = getLogger(__name__),
     quiet: bool | None = None,
     reservation_arn: str | None = None,
 ) -> Callable:
@@ -283,7 +283,7 @@ class _IncludeModules:
         for module in self._modules:
             cloudpickle.register_pickle_by_value(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """Unregister included modules with cloudpickle to be pickled by value"""
         for module in self._modules:
             cloudpickle.unregister_pickle_by_value(module)

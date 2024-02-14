@@ -88,7 +88,7 @@ class AwsQuantumTask(QuantumTask):
     RESULTS_FILENAME = "results.json"
 
     @staticmethod
-    def create(  # noqa: D417
+    def create(
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[
@@ -564,7 +564,7 @@ def _create_internal(
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
-) -> AwsQuantumTask:  # ARG001
+) -> AwsQuantumTask:
     raise TypeError("Invalid task specification type")
 
 

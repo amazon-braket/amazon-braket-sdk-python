@@ -102,7 +102,7 @@ def _get_observable(obs: Union[models.Observable, list]) -> Observable:
 
 
 @_get_observable.register(list)
-def _(obs):  # noqa: ANN001
+def _(obs):
     raise NotImplementedError
 
 
@@ -129,7 +129,7 @@ def _braket_result_to_result_type(result: Results) -> None:
     raise TypeError(f"Result type {type(result).__name__} is not supported")
 
 
-def braket_result_to_result_type(result: Results) -> None:  # noqa: D103
+def braket_result_to_result_type(result: Results) -> None:
     return _braket_result_to_result_type(result)
 
 

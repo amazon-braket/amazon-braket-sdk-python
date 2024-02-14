@@ -211,7 +211,7 @@ class AwsDevice(Device):
             **aws_quantum_task_kwargs,
         )
 
-    def run_batch(  # noqa: D417
+    def run_batch(
         self,
         task_specifications: Union[
             Union[
@@ -420,7 +420,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.utcnow()  # noqa: DTZ003
+        current_datetime_utc = datetime.utcnow()
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
@@ -762,7 +762,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(  # noqa S310
+                with urllib.request.urlopen(
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(

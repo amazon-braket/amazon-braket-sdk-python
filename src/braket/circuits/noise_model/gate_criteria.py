@@ -41,6 +41,10 @@ class GateCriteria(CircuitInstructionCriteria):
                 this matcher will match on all gates.
             qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
+
+        Raises:
+            ValueError: If the gates don't all operate on the same number of qubits, or if
+            qubits are not valid targets for the provided gates.
         """
         self._gates = parse_operator_input(gates)
         expected_qubit_count = next(iter(self._gates)).fixed_qubit_count() if self._gates else 0

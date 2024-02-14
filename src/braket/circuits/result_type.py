@@ -62,7 +62,7 @@ class ResultType:
         """
         return self.__class__.__name__
 
-    def to_ir(  # noqa: D417
+    def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties | None = None,

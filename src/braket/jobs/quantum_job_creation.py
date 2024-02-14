@@ -147,6 +147,9 @@ def prepare_quantum_job(
 
     Returns:
         dict: Hybrid job tracking the execution on Amazon Braket.
+
+    Raises:
+        ValueError: Raises ValueError if the parameters are not valid.
     """
     param_datatype_map = {
         "instance_config": (instance_config, InstanceConfig),

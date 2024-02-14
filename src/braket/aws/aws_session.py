@@ -205,7 +205,7 @@ class AwsSession:
     @staticmethod
     def _add_cost_tracker_count_handler(
         request: awsrequest.AWSRequest, **kwargs
-    ) -> None:  # noqa: ARG004
+    ) -> None:
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #

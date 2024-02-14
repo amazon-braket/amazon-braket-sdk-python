@@ -67,7 +67,7 @@ class BraketProgramContext(AbstractProgramContext):
         instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
         self._circuit.add_instruction(instruction)
 
-    def add_gate_instruction(  # noqa: D417
+    def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
     ) -> None:
         """Add Braket gate to the circuit.

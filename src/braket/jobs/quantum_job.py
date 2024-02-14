@@ -171,7 +171,7 @@ class QuantumJob(ABC):
         Raises:
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
-        """  # noqa: D402
+        """
 
     @abstractmethod
     def download_result(

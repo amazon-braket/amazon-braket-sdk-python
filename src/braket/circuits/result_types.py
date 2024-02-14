@@ -194,6 +194,11 @@ class AdjointGradient(ObservableParameterResultType):
             parameters (list[Union[str, FreeParameter]] | None): The free parameters in the circuit
                 to differentiate with respect to. Default: `all`.
 
+        Raises:
+            ValueError: If the observable's qubit count does not equal the number of target
+                qubits, or if `target=None` and the observable's qubit count is not 1.
+
+
         Examples:
             >>> ResultType.AdjointGradient(observable=Observable.Z(),
                                         target=0, parameters=["alpha", "beta"])
@@ -603,6 +608,10 @@ class Variance(ObservableResultType):
             target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
+
+        Raises:
+            ValueError: If the observable's qubit count does not equal the number of target
+                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Variance(observable=Observable.Z(), target=0)
