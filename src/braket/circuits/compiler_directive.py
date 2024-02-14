@@ -47,7 +47,7 @@ class CompilerDirective(Operator):
         """tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
 
-    def to_ir(  # noqa: D417
+    def to_ir(
         self,
         target: QubitSet | None = None,
         ir_type: IRType = IRType.JAQCD,
