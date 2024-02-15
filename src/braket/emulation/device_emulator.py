@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from typing import Optional, Union
+from collections.abc import Iterable
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -61,7 +62,8 @@ class DeviceEmulator:
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> EmulatedAwsQuantumTask:
-        local_sim = LocalSimulator("braket_dm" if self._noise_model else "default", noise_model=self._noise_model)
+        sim_type = self._determine_sim_type(task_specification)
+        local_sim = LocalSimulator(sim_type, noise_model=self._noise_model)
         local_task = local_sim.run(
             task_specification=task_specification,
             shots=shots,
@@ -93,7 +95,8 @@ class DeviceEmulator:
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> EmulatedAwsQuantumTaskBatch:
-        local_sim = LocalSimulator("braket_dm" if self._noise_model else "default", noise_model=self._noise_model)
+        sim_type = self._determine_sim_type(task_specifications)
+        local_sim = LocalSimulator(sim_type, noise_model=self._noise_model)
         local_task_batch = local_sim.run_batch(
             task_specifications=task_specifications,
             shots=shots,
@@ -102,3 +105,24 @@ class DeviceEmulator:
             **aws_quantum_task_kwargs
         )
         return EmulatedAwsQuantumTaskBatch(local_task_batch)
+
+    def _determine_sim_type(self, task_specifications: Union[
+            Union[
+                Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
+            list[
+                Union[
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+                ]
+            ],
+        ]):
+        if not isinstance(task_specifications, Iterable):
+            task_specifications = [task_specifications]
+
+        for task_specification in task_specifications:
+            if isinstance(task_specification, AnalogHamiltonianSimulation):
+                return "braket_ahs"
+            if isinstance(task_specification, PulseSequence):
+                return NotImplementedError("Pulse Sequence emulation is not currently supported.")
+        if self._noise_model:
+            return "braket_dm"
+        return "default"

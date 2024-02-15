@@ -56,6 +56,7 @@ from braket.circuits.noises import (AmplitudeDamping, BitFlip, Depolarizing,
                                     PauliChannel, PhaseDamping, PhaseFlip,
                                     TwoQubitDepolarizing)
 
+
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
 
@@ -961,7 +962,11 @@ class AwsDevice(Device):
         if self._type == AwsDeviceType.SIMULATOR:
             return None
 
-        provider_info = self._properties.dict()["provider"]
+        props = self._properties.dict()
+        if "provider" not in props:
+            return None
+
+        provider_info = props["provider"]
         device_specs = self._get_device_specs(provider_info)
 
         if not device_specs:
