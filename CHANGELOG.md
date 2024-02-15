@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.70.2 (2024-02-14)
+
+### Bug Fixes and Other Changes
+
+ * Sort input parameters when doing testing equality of two PulseSequences
+
 ## v1.70.1 (2024-02-13)
 
 ### Bug Fixes and Other Changes
