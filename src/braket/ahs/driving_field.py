@@ -104,7 +104,6 @@ class DrivingField(Hamiltonian):
         Returns:
             DrivingField: The stitched DrivingField object.
         """
-
         amplitude = self.amplitude.time_series.stitch(other.amplitude.time_series, boundary)
         detuning = self.detuning.time_series.stitch(other.detuning.time_series, boundary)
         phase = self.phase.time_series.stitch(other.phase.time_series, boundary)
@@ -143,8 +142,7 @@ class DrivingField(Hamiltonian):
     def from_lists(
         times: list[float], amplitudes: list[float], detunings: list[float], phases: list[float]
     ) -> DrivingField:
-        """
-        Builds DrivingField Hamiltonian from lists defining time evolution
+        """Builds DrivingField Hamiltonian from lists defining time evolution
         of Hamiltonian parameters (Rabi frequency, detuning, phase).
         The values of the parameters at each time points are global for all atoms.
 
@@ -153,6 +151,9 @@ class DrivingField(Hamiltonian):
             amplitudes (list[float]): The values of the amplitude
             detunings (list[float]): The values of the detuning
             phases (list[float]): The values of the phase
+
+        Raises:
+            ValueError: If any of the input args length is different from the rest.
 
         Returns:
             DrivingField: DrivingField Hamiltonian.

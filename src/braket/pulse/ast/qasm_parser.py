@@ -40,6 +40,7 @@ class _PulsePrinter(Printer):
             angle[20] a = 1+2;
             waveform wf = [];
             port a;
+
         Args:
             node (ast.ClassicalDeclaration): The classical declaration.
             context (PrinterState): The printer state context.
@@ -53,7 +54,7 @@ def ast_to_qasm(ast: ast.Program) -> str:
     """Converts an AST program to OpenQASM
 
     Args:
-        ast (Program): The AST program.
+        ast (ast.Program): The AST program.
 
     Returns:
         str: a str representing the OpenPulse program encoding the program.
