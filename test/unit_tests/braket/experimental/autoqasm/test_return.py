@@ -229,7 +229,7 @@ def ghz(int[32] n) {
     }
 }
 input int[32] n;
-output bit retval_;
+output bit[3] retval_;
 qubit[10] __qubits__;
 ghz(n);
 bit[3] __bit_0__ = "000";

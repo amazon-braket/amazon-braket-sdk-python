@@ -358,53 +358,62 @@ class ProgramConversionContext:
 
     def register_input_parameter(
         self,
-        parameter_name: str,
-        parameter_type: Union[float, int, bool] = float,
+        name: str,
+        type_: Union[float, int, bool] = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
         Args:
-            parameter_name (str): The name of the parameter to register with the program.
-            parameter_type (Union[float, int, bool]): The type of the parameter to register
+            name (str): The name of the parameter to register with the program.
+            type_ (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
 
         Raises:
             NotImplementedError: If the parameter type is not supported.
         """
         # TODO (#814): add type validation against existing inputs
-        if parameter_name not in self._input_parameters:
-            aq_type = aq_types.map_parameter_type(parameter_type)
+        if name not in self._input_parameters:
+            aq_type = aq_types.map_parameter_type(type_)
             if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
-                raise NotImplementedError(parameter_type)
+                raise NotImplementedError(type_)
 
             # In case a FreeParameter has already created a FloatVar somewhere else,
             # we use need_declaration=False to avoid OQPy raising name conflict errors.
             if aq_type == oqpy.FloatVar:
-                var = aq_type("input", name=parameter_name, needs_declaration=False)
+                var = aq_type("input", name=name, needs_declaration=False)
                 var.size = None
                 var.type.size = None
             else:
-                var = aq_type("input", name=parameter_name)
-            self._input_parameters[parameter_name] = var
+                var = aq_type("input", name=name)
+            self._input_parameters[name] = var
             return var
 
     def register_output_parameter(
         self,
-        parameter_name: str,
-        parameter_type: Union[float, int, bool, None] = float,
+        name: str,
+        type_: Union[float, int, bool, None] = float,
+        value: oqpy._ClassicalVar | None = None,
     ) -> None:
         """Register a new output parameter if it is not None.
 
         Args:
-            parameter_name (str): The name of the parameter to register with the program.
-            parameter_type (Union[float, int, bool, None]): The type of the parameter to register
+            name (str): The name of the parameter to register with the program.
+            type_ (Union[float, int, bool, None]): The type of the parameter to register
                 with the program. Default: float.
+            value (_ClassicalVar | None): Register the output parameter based on
+                the oqpy value it is assigned to.
         """
-        if parameter_type is type(None):
+        if type_ is type(None):
             return  # Do nothing
 
-        aq_type = aq_types.map_parameter_type(parameter_type)
-        self._output_parameters[parameter_name] = aq_type("output", name=parameter_name)
+        aq_type = aq_types.map_parameter_type(type_)
+        if value is not None:  # TODO laurecap clean up
+            value = copy.copy(value)
+            value.name = name
+            value.init_expression = "output"
+            self._output_parameters[name] = value
+        else:
+            self._output_parameters[name] = aq_type("output", name=name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.

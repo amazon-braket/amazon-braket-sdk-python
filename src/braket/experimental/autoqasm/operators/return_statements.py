@@ -17,7 +17,7 @@
 from typing import Any
 
 import oqpy
-from braket.circuits.free_parameter_expression import FreeParameterExpression
+
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
@@ -42,12 +42,15 @@ def return_output_from_main(name: str, value: Any) -> Any:
                 value_type = int
             elif value.type == oqpy.bool_:
                 value_type = bool
-            # TODO laurecap bool, bit, angle?
+            # TODO laurecap test and add bit support here
 
             aq_context.register_output_parameter(name, value_type)
         else:
-            # TODO laurecap what uses this?
-            aq_context.register_output_parameter(name, type(value))
+            # Value is an oqpy classical variable
+            if isinstance(value, oqpy.BitVar):
+                aq_context.register_output_parameter(name, type(value), value)
+            else:
+                aq_context.register_output_parameter(name, type(value))
     else:
         # Handle name collisions with input variables
         name = name + "_"

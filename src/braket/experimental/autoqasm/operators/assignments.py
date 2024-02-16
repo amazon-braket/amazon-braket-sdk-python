@@ -55,11 +55,14 @@ def assign_for_output(target_name: str, value: Any) -> Any:
     if not isinstance(value, (oqpy.base.OQPyExpression, oqpy.base.Var)):
         return value
 
-    if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(value, oqpy.base.Var):  # Var is a subclass of expr?
+    if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(
+        value, oqpy.base.Var
+    ):  # Classical types subclass from both Var and OQPyExpression, and we
+        # only need to handle `OQPyExpression`s here
         try:
             target = _get_oqpy_program_variable(target_name)
         except KeyError:
-            # TODO laurecap type
+            # TODO laurecap type based on value
             target = oqpy.FloatVar(name=target_name)
         oqpy_program.set(target, value)
         return target
