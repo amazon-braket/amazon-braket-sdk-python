@@ -17,7 +17,7 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import boto3
 
@@ -75,12 +75,13 @@ from braket.tracking.tracking_events import _TaskCompletionEvent
 
 class AwsQuantumTask(QuantumTask):
     """Amazon Braket implementation of a quantum task. A quantum task can be a circuit,
-    an OpenQASM program or an AHS program."""
+    an OpenQASM program or an AHS program.
+    """
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
-    NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
-    RESULTS_READY_STATES = {"COMPLETED"}
-    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
+    NO_RESULT_TERMINAL_STATES: ClassVar[set[str]] = {"FAILED", "CANCELLED"}
+    RESULTS_READY_STATES: ClassVar[set[str]] = {"COMPLETED"}
+    TERMINAL_STATES: ClassVar[set[str]] = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
     DEFAULT_RESULTS_POLL_INTERVAL = 1
@@ -174,7 +175,7 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `braket.aws.aws_quantum_simulator.AwsQuantumSimulator.run()`
             `braket.aws.aws_qpu.AwsQpu.run()`
-        """
+        """  # noqa E501
         if len(s3_destination_folder) != 2:
             raise ValueError(
                 "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
@@ -207,7 +208,7 @@ class AwsQuantumTask(QuantumTask):
             unbounded_parameters = param_names - set(inputs.keys())
             if unbounded_parameters:
                 raise ValueError(
-                    f"Cannot execute circuit with unbound parameters: " f"{unbounded_parameters}"
+                    f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                 )
 
         return _create_internal(
@@ -233,7 +234,8 @@ class AwsQuantumTask(QuantumTask):
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
     ):
-        """
+        """Initializes an `AwsQuantumTask`.
+
         Args:
             arn (str): The ARN of the quantum task.
             aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
@@ -278,9 +280,8 @@ class AwsQuantumTask(QuantumTask):
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
-        """
-        Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of the
-        quantum task.
+        """Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of
+        the quantum task.
 
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in quantum task's region.
@@ -304,19 +305,20 @@ class AwsQuantumTask(QuantumTask):
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the quantum task in Amazon
-        Braket."""
+        Braket.
+        """
         self._cancel_future()
         self._aws_session.cancel_quantum_task(self._arn)
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
-        """
-        Get quantum task metadata defined in Amazon Braket.
+        """Get quantum task metadata defined in Amazon Braket.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation, if it exists; if not,
                 `GetQuantumTask` will be called to retrieve the metadata. If `False`, always calls
                 `GetQuantumTask`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
@@ -328,26 +330,26 @@ class AwsQuantumTask(QuantumTask):
         return self._metadata
 
     def state(self, use_cached_value: bool = False) -> str:
-        """
-        The state of the quantum task.
+        """The state of the quantum task.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
                 `GetQuantumTask` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
             the value most recently returned from the `GetQuantumTask` operation is used.
+
         See Also:
             `metadata()`
         """
         return self._status(use_cached_value)
 
     def queue_position(self) -> QuantumTaskQueueInfo:
-        """
-        The queue position details for the quantum task.
+        """The queue position details for the quantum task.
 
         Returns:
             QuantumTaskQueueInfo: Instance of QuantumTaskQueueInfo class
@@ -401,8 +403,7 @@ class AwsQuantumTask(QuantumTask):
     ) -> Union[
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
-        """
-        Get the quantum task result by polling Amazon Braket to see if the task is completed.
+        """Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the quantum task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
@@ -411,10 +412,10 @@ class AwsQuantumTask(QuantumTask):
         Consecutive calls to this method return a cached result from the preceding request.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
-            The result of the quantum task, if the quantum task completed successfully; returns
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: The
+            result of the quantum task, if the quantum task completed successfully; returns
             `None` if the quantum task did not complete successfully or the future timed out.
-        """
+        """  # noqa E501
         if self._result or (
             self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
         ):
@@ -447,15 +448,13 @@ class AwsQuantumTask(QuantumTask):
         return self._future
 
     def async_result(self) -> asyncio.Task:
-        """
-        Get the quantum task result asynchronously. Consecutive calls to this method return
+        """Get the quantum task result asynchronously. Consecutive calls to this method return
         the result cached from the most recent request.
         """
         return self._get_future()
 
     async def _create_future(self) -> asyncio.Task:
-        """
-        Wrap the `_wait_for_completion` coroutine inside a future-like object.
+        """Wrap the `_wait_for_completion` coroutine inside a future-like object.
         Invoking this method starts the coroutine and returns back the future-like object
         that contains it. Note that this does not block on the coroutine to finish.
 
@@ -469,19 +468,19 @@ class AwsQuantumTask(QuantumTask):
     ) -> Union[
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
-        """
-        Waits for the quantum task to be completed, then returns the result from the S3 bucket.
+        """Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in the
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: If the task is in the
                 `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
                 the result from the S3 bucket is loaded and returned.
                 `None` is returned if a timeout occurs or task state is in
                 `AwsQuantumTask.NO_RESULT_TERMINAL_STATES`.
+
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
-        """
+        """  # noqa E501
         self._logger.debug(f"Task {self._arn}: start polling for completion")
         start_time = time.time()
 
@@ -547,7 +546,7 @@ class AwsQuantumTask(QuantumTask):
     def __repr__(self) -> str:
         return f"AwsQuantumTask('id/taskArn':'{self.id}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AwsQuantumTask) -> bool:
         if isinstance(other, AwsQuantumTask):
             return self.id == other.id
         return False
@@ -623,7 +622,7 @@ def _(
                 device_arn,
                 GateModelParameters(qubitCount=0),  # qubitCount unused
             )
-            if type(device_parameters) is dict
+            if isinstance(device_parameters, dict)
             else device_parameters
         )
         create_task_kwargs.update(
@@ -673,7 +672,7 @@ def _(
     )
     final_device_parameters = (
         _circuit_device_params_from_dict(device_parameters or {}, device_arn, paradigm_parameters)
-        if type(device_parameters) is dict
+        if isinstance(device_parameters, dict)
         else device_parameters
     )
 
@@ -727,7 +726,7 @@ def _(
         DwaveAdvantageDeviceParameters,
         Dwave2000QDeviceParameters,
     ],
-    _,
+    _: bool,
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
@@ -752,7 +751,7 @@ def _(
     create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: dict,
-    _,
+    _: AnalogHamiltonianSimulationTaskResult,
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
@@ -795,7 +794,7 @@ def _create_annealing_device_params(
         Union[DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters]: The device parameters.
 
     """
-    if type(device_params) is not dict:
+    if not isinstance(device_params, dict):
         device_params = device_params.dict()
 
     # check for device level or provider level parameters
@@ -836,7 +835,7 @@ def _create_common_params(
 
 @singledispatch
 def _format_result(
-    result: Union[GateModelTaskResult, AnnealingTaskResult, PhotonicModelTaskResult]
+    result: Union[GateModelTaskResult, AnnealingTaskResult, PhotonicModelTaskResult],
 ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
     raise TypeError("Invalid result specification type")
 

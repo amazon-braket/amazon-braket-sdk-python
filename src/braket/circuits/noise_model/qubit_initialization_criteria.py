@@ -24,8 +24,7 @@ class QubitInitializationCriteria(InitializationCriteria):
     """This class models initialization noise Criteria based on qubits."""
 
     def __init__(self, qubits: Optional[QubitSetInput] = None):
-        """
-        Creates initialization noise Qubit-based Criteria.
+        """Creates initialization noise Qubit-based Criteria.
 
         Args:
             qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
@@ -40,7 +39,8 @@ class QubitInitializationCriteria(InitializationCriteria):
         return f"{self.__class__.__name__}(qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
+        """Gets the QUBIT criteria key.
+
         Returns:
             Iterable[CriteriaKey]: This Criteria operates on Qubits, but is valid for all Gates.
         """
@@ -65,8 +65,8 @@ class QubitInitializationCriteria(InitializationCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
@@ -78,8 +78,7 @@ class QubitInitializationCriteria(InitializationCriteria):
         }
 
     def qubit_intersection(self, qubits: QubitSetInput) -> QubitSetInput:
-        """
-        Returns subset of passed qubits that match the criteria.
+        """Returns subset of passed qubits that match the criteria.
 
         Args:
             qubits (QubitSetInput): A qubit or set of qubits that may match the criteria.
@@ -94,8 +93,7 @@ class QubitInitializationCriteria(InitializationCriteria):
 
     @classmethod
     def from_dict(cls, criteria: dict) -> Criteria:
-        """
-        Deserializes a dictionary into a Criteria object.
+        """Deserializes a dictionary into a Criteria object.
 
         Args:
             criteria (dict): A dictionary representation of a QubitCriteria.
