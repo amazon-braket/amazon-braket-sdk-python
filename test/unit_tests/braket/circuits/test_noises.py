@@ -225,7 +225,7 @@ valid_subroutine_switcher = dict(
         "TwoDimensionalMatrixList": two_dimensional_matrix_list_valid_input,
         "DoubleTarget": double_target_valid_input,
         "DoubleControl": double_control_valid_input,
-    }
+    },
 )
 
 

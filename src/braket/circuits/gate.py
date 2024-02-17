@@ -28,14 +28,14 @@ from braket.registers.qubit_set import QubitSet
 
 
 class Gate(QuantumOperator):
-    """
-    Class `Gate` represents a quantum gate that operates on N qubits. Gates are considered the
+    """Class `Gate` represents a quantum gate that operates on N qubits. Gates are considered the
     building blocks of quantum circuits. This class is considered the gate definition containing
     the metadata that defines what a gate is and what it does.
     """
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """
+        """Initializes a `Gate`.
+
         Args:
             qubit_count (Optional[int]): Number of qubits this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
@@ -76,7 +76,7 @@ class Gate(QuantumOperator):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Any:
-        """Returns IR object of quantum operator and target
+        r"""Returns IR object of quantum operator and target
 
         Args:
             target (QubitSet): target qubit(s).
@@ -97,6 +97,7 @@ class Gate(QuantumOperator):
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
+
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -128,8 +129,7 @@ class Gate(QuantumOperator):
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
-        """
-        Returns the JAQCD representation of the gate.
+        """Returns the JAQCD representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -148,8 +148,7 @@ class Gate(QuantumOperator):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> str:
-        """
-        Returns the openqasm string representation of the gate.
+        """Returns the OpenQASM string representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -180,9 +179,11 @@ class Gate(QuantumOperator):
             for state, group in groupby(control_basis_state.as_tuple):
                 modifier_name = "neg" * (not state) + "ctrl"
                 control_modifiers += [
-                    f"{modifier_name}"
-                    if (num_control := len(list(group))) == 1
-                    else f"{modifier_name}({num_control})"
+                    (
+                        f"{modifier_name}"
+                        if (num_control := len(list(group))) == 1
+                        else f"{modifier_name}({num_control})"
+                    )
                 ]
             control_modifiers.append("")
             qubits = control_qubits + target_qubits
@@ -206,7 +207,7 @@ class Gate(QuantumOperator):
         """tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
 
-    def __eq__(self, other):
+    def __eq__(self, other: Gate):
         return isinstance(other, Gate) and self.name == other.name
 
     def __repr__(self):

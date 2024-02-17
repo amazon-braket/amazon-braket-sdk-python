@@ -14,30 +14,31 @@
 import collections
 import os
 import sys
+from collections.abc import Generator
 
 ##############################################################################
 #
 # Support for reading logs
 #
 ##############################################################################
-from typing import Dict, List, Tuple
+from typing import ClassVar, Optional
 
 from botocore.exceptions import ClientError
 
 from braket.aws.aws_session import AwsSession
 
 
-class ColorWrap(object):
+class ColorWrap:
     """A callable that prints text in a different color depending on the instance.
     Up to 5 if the standard output is a terminal or a Jupyter notebook cell.
     """
 
     # For what color each number represents, see
     # https://misc.flogisoft.com/bash/tip_colors_and_formatting#colors
-    _stream_colors = [34, 35, 32, 36, 33]
+    _stream_colors: ClassVar = [34, 35, 32, 36, 33]
 
-    def __init__(self, force=False):
-        """Initialize the class.
+    def __init__(self, force: bool = False):
+        """Initialize a `ColorWrap`.
 
         Args:
             force (bool): If True, the render output is colorized wherever the
@@ -45,7 +46,7 @@ class ColorWrap(object):
         """
         self.colorize = force or sys.stdout.isatty() or os.environ.get("JPY_PARENT_PID", None)
 
-    def __call__(self, index, s):
+    def __call__(self, index: int, s: str):
         """Prints the string, colorized or not, depending on the environment.
 
         Args:
@@ -73,8 +74,8 @@ Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 
 def multi_stream_iter(
-    aws_session: AwsSession, log_group: str, streams: List[str], positions: Dict[str, Position]
-) -> Tuple[int, Dict]:
+    aws_session: AwsSession, log_group: str, streams: list[str], positions: dict[str, Position]
+) -> Generator[tuple[int, dict]]:
     """Iterates over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream,
     so they yield in timestamp order.
@@ -82,13 +83,13 @@ def multi_stream_iter(
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
         log_group (str): The name of the log group.
-        streams (List[str]): A list of the log stream names. The the stream number is
+        streams (list[str]): A list of the log stream names. The the stream number is
             the position of the stream in this list.
-        positions (Dict[str, Position]): A list of (timestamp, skip) pairs which represent
+        positions (dict[str, Position]): A list of (timestamp, skip) pairs which represent
             the last record read from each stream.
 
     Yields:
-        Tuple[int, Dict]: A tuple of (stream number, cloudwatch log event).
+        Generator[tuple[int, dict]]: A tuple of (stream number, cloudwatch log event).
     """
     event_iters = [
         log_stream(aws_session, log_group, s, positions[s].timestamp, positions[s].skip)
@@ -112,7 +113,7 @@ def multi_stream_iter(
 
 def log_stream(
     aws_session: AwsSession, log_group: str, stream_name: str, start_time: int = 0, skip: int = 0
-) -> Dict:
+) -> Generator[dict]:
     """A generator for log items in a single stream.
     This yields all the items that are available at the current moment.
 
@@ -125,12 +126,11 @@ def log_stream(
             when there are multiple entries at the same timestamp.)
 
     Yields:
-        Dict: A CloudWatch log event with the following key-value pairs:
+        Generator[dict]: A CloudWatch log event with the following key-value pairs:
         'timestamp' (int): The time of the event.
         'message' (str): The log event data.
         'ingestionTime' (int): The time the event was ingested.
     """
-
     next_token = None
 
     event_count = 1
@@ -151,19 +151,20 @@ def log_stream(
         else:
             skip = skip - event_count
             events = []
-        for ev in events:
-            yield ev
+        yield from events
 
 
-def flush_log_streams(
+def flush_log_streams(  # noqa C901
     aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,
-    stream_names: List[str],
-    positions: Dict[str, Position],
+    stream_names: list[str],
+    positions: dict[str, Position],
     stream_count: int,
     has_streams: bool,
     color_wrap: ColorWrap,
+    state: list[str],
+    queue_position: Optional[str] = None,
 ) -> bool:
     """Flushes log streams to stdout.
 
@@ -171,11 +172,11 @@ def flush_log_streams(
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
         log_group (str): The name of the log group.
         stream_prefix (str): The prefix for log streams to flush.
-        stream_names (List[str]): A list of the log stream names. The position of the stream in
+        stream_names (list[str]): A list of the log stream names. The position of the stream in
             this list is the stream number. If incomplete, the function will check for remaining
             streams and mutate this list to add stream names when available, up to the
             `stream_count` limit.
-        positions (Dict[str, Position]): A dict mapping stream numbers to (timestamp, skip) pairs
+        positions (dict[str, Position]): A dict mapping stream numbers to (timestamp, skip) pairs
             which represent the last record read from each stream. The function will update this
             list after being called to represent the new last record read from each stream.
         stream_count (int): The number of streams expected.
@@ -183,6 +184,12 @@ def flush_log_streams(
             been found. This value is possibly updated and returned at the end of execution.
         color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
+        state (list[str]): The previous and current state of the job.
+        queue_position (Optional[str]): The current queue position. This is not passed in if the job
+            is ran with `quiet=True`
+
+    Raises:
+        Exception: Any exception found besides a ResourceNotFoundException.
 
     Returns:
         bool: Returns 'True' if any streams have been flushed.
@@ -225,6 +232,10 @@ def flush_log_streams(
                 positions[stream_names[idx]] = Position(timestamp=ts, skip=count + 1)
             else:
                 positions[stream_names[idx]] = Position(timestamp=event["timestamp"], skip=1)
+    elif queue_position is not None and state[1] == "QUEUED":
+        print(f"Job queue position: {queue_position}", end="\n", flush=True)
+    elif state[0] != state[1] and state[1] == "RUNNING" and queue_position is not None:
+        print("Running:", end="\n", flush=True)
     else:
         print(".", end="", flush=True)
     return has_streams

@@ -13,7 +13,7 @@ def test_for_import_cycles():
     # parameterized version wasn't able to correctly detect some circular imports when running tox.
     modules = get_modules_to_test()
     processes = []
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn", force=True)
     for module in modules:
         # We create a separate process to make sure the imports do not interfere with each-other.
         process = multiprocessing.Process(target=import_module, args=(module,))

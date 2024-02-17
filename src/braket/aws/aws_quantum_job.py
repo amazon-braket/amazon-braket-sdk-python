@@ -20,7 +20,7 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
@@ -49,12 +49,14 @@ from braket.jobs.quantum_job_creation import prepare_quantum_job
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES = {"CANCELLED", "COMPLETED", "FAILED"}
+    TERMINAL_STATES: ClassVar[set[str]] = {"CANCELLED", "COMPLETED", "FAILED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
 
     class LogState(Enum):
+        """Log state enum."""
+
         TAILING = "tailing"
         JOB_COMPLETE = "job_complete"
         COMPLETE = "complete"
@@ -81,6 +83,7 @@ class AwsQuantumJob(QuantumJob):
         aws_session: AwsSession | None = None,
         tags: dict[str, str] | None = None,
         logger: Logger = getLogger(__name__),
+        quiet: bool = False,
         reservation_arn: str | None = None,
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
@@ -176,6 +179,9 @@ class AwsQuantumJob(QuantumJob):
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
 
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
+
             reservation_arn (str | None): the reservation window arn provided by Braket
                 Direct to reserve exclusive usage for the device to run the hybrid job on.
                 Default: None.
@@ -210,7 +216,7 @@ class AwsQuantumJob(QuantumJob):
         )
 
         job_arn = aws_session.create_job(**create_job_kwargs)
-        job = AwsQuantumJob(job_arn, aws_session)
+        job = AwsQuantumJob(job_arn, aws_session, quiet)
 
         if wait_until_complete:
             print(f"Initializing Braket Job: {job_arn}")
@@ -218,15 +224,22 @@ class AwsQuantumJob(QuantumJob):
 
         return job
 
-    def __init__(self, arn: str, aws_session: AwsSession | None = None):
-        """
+    def __init__(self, arn: str, aws_session: AwsSession | None = None, quiet: bool = False):
+        """Initializes an `AwsQuantumJob`.
+
         Args:
             arn (str): The ARN of the hybrid job.
             aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the hybrid job.
+            quiet (bool): Sets the verbosity of the logger to low and does not report queue
+                position. Default is `False`.
+
+        Raises:
+            ValueError: Supplied region and session region do not match.
         """
         self._arn: str = arn
+        self._quiet = quiet
         if aws_session:
             if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
                 raise ValueError(
@@ -239,8 +252,11 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """
-        bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
+        """Checks whether the job region and session region match.
+
+        Returns:
+            bool: `True` when the aws_session region matches the job_arn region; otherwise
+            `False`.
         """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region
@@ -278,6 +294,7 @@ class AwsQuantumJob(QuantumJob):
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
@@ -288,8 +305,7 @@ class AwsQuantumJob(QuantumJob):
         return self.metadata(use_cached_value).get("status")
 
     def queue_position(self) -> HybridJobQueueInfo:
-        """
-        The queue position details for the hybrid job.
+        """The queue position details for the hybrid job.
 
         Returns:
             HybridJobQueueInfo: Instance of HybridJobQueueInfo class representing
@@ -371,10 +387,11 @@ class AwsQuantumJob(QuantumJob):
         instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
         has_streams = False
         color_wrap = logs.ColorWrap()
+        previous_state = self.state()
 
         while True:
             time.sleep(poll_interval_seconds)
-
+            current_state = self.state()
             has_streams = logs.flush_log_streams(
                 self._aws_session,
                 log_group,
@@ -384,14 +401,17 @@ class AwsQuantumJob(QuantumJob):
                 instance_count,
                 has_streams,
                 color_wrap,
+                [previous_state, current_state],
+                self.queue_position().queue_position if not self._quiet else None,
             )
+            previous_state = current_state
 
             if log_state == AwsQuantumJob.LogState.COMPLETE:
                 break
 
             if log_state == AwsQuantumJob.LogState.JOB_COMPLETE:
                 log_state = AwsQuantumJob.LogState.COMPLETE
-            elif self.state() in AwsQuantumJob.TERMINAL_STATES:
+            elif current_state in AwsQuantumJob.TERMINAL_STATES:
                 log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
@@ -402,6 +422,7 @@ class AwsQuantumJob(QuantumJob):
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
@@ -430,7 +451,7 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Any]] : The metrics data.
+            dict[str, list[Any]]: The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
@@ -460,7 +481,7 @@ class AwsQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using save_job_result() function.
+        """Retrieves the hybrid job result persisted using the `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -475,7 +496,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         with tempfile.TemporaryDirectory() as temp_dir:
             job_name = self.metadata(True)["jobName"]
 
@@ -515,7 +535,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         extract_to = extract_to or Path.cwd()
 
         timeout_time = time.time() + poll_timeout_seconds
@@ -565,7 +584,7 @@ class AwsQuantumJob(QuantumJob):
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AwsQuantumJob) -> bool:
         if isinstance(other, AwsQuantumJob):
             return self.arn == other.arn
         return False
@@ -598,9 +617,11 @@ class AwsQuantumJob(QuantumJob):
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
-            raise ValueError(f"'{device}' not found.") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{device}' not found.")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     @staticmethod
     def _initialize_non_regional_device_session(
