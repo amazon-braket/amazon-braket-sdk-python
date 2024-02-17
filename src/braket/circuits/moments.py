@@ -27,8 +27,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class MomentType(str, Enum):
-    """
-    The type of moments.
+    """The type of moments.
     GATE: a gate
     NOISE: a noise channel added directly to the circuit
     GATE_NOISE: a gate-based noise channel
@@ -48,6 +47,7 @@ class MomentType(str, Enum):
 
 class MomentsKey(NamedTuple):
     """Key of the Moments mapping.
+
     Args:
         time: moment
         qubits: qubit set
@@ -65,8 +65,7 @@ class MomentsKey(NamedTuple):
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
-    """
-    An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    r"""An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
     core data structure that contains instructions, ordering they are inserted in, and
     time slices when they occur. `Moments` implements `Mapping` and functions the same as
     a read-only dictionary. It is mutable only through the `add()` method.
@@ -77,7 +76,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     method.
 
     Args:
-        instructions (Iterable[Instruction], optional): Instructions to initialize self.
+        instructions (Iterable[Instruction] | None): Instructions to initialize self.
             Default = None.
 
     Examples:
@@ -125,9 +124,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     @property
     def qubits(self) -> QubitSet:
-        """
-        QubitSet: Get the qubits used across all of the instructions. The order of qubits is based
-        on the order in which the instructions were added.
+        """QubitSet: Get the qubits used across all of the instructions. The order of qubits is
+        based on the order in which the instructions were added.
 
         Note:
             Don't mutate this object, any changes may impact the behavior of this class and / or
@@ -136,8 +134,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._qubits
 
     def time_slices(self) -> dict[int, list[Instruction]]:
-        """
-        Get instructions keyed by time.
+        """Get instructions keyed by time.
 
         Returns:
             dict[int, list[Instruction]]: Key is the time and value is a list of instructions that
@@ -148,7 +145,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
             every call, with a computational runtime O(N) where N is the number
             of instructions in self.
         """
-
         time_slices = {}
         self.sort_moments()
         for key, instruction in self._moments.items():
@@ -161,8 +157,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def add(
         self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
     ) -> None:
-        """
-        Add one or more instructions to self.
+        """Add one or more instructions to self.
 
         Args:
             instructions (Union[Iterable[Instruction], Instruction]): Instructions to add to self.
@@ -218,6 +213,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
     ) -> None:
         """Adds noise to a moment.
+
         Args:
             instruction (Instruction): Instruction to add.
             input_type (str): One of MomentType.
@@ -237,8 +233,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._qubits.update(qubit_range)
 
     def sort_moments(self) -> None:
-        """
-        Make the disordered moments in order.
+        """Make the disordered moments in order.
 
         1. Make the readout noise in the end
         2. Make the initialization noise at the beginning
@@ -293,6 +288,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def values(self) -> ValuesView[Instruction]:
         """Return a view of self's instructions.
+
         Returns:
             ValuesView[Instruction]: The (in-order) instructions.
         """
@@ -300,8 +296,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._moments.values()
 
     def get(self, key: MomentsKey, default: Any | None = None) -> Instruction:
-        """
-        Get the instruction in self by key.
+        """Get the instruction in self by key.
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
@@ -312,7 +307,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._moments.get(key, default)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: MomentsKey):
         return self._moments.__getitem__(key)
 
     def __iter__(self):
@@ -321,15 +316,15 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def __len__(self):
         return self._moments.__len__()
 
-    def __contains__(self, item):
+    def __contains__(self, item: MomentsKey):
         return self._moments.__contains__(item)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Moments):
         if isinstance(other, Moments):
             return self._moments == other._moments
         return NotImplemented
 
-    def __ne__(self, other):
+    def __ne__(self, other: Moments):
         result = self.__eq__(other)
         if result is not NotImplemented:
             return not result
