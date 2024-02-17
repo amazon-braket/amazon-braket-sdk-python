@@ -18,7 +18,7 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
-from braket.circuits import Circuit, Gate, QubitSet
+from braket.circuits import Circuit, Gate, QubitSet, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
     PulseDeviceActionProperties,
@@ -115,6 +115,10 @@ class DeviceEmulator:
                 ]
             ],
         ]):
+
+        if self._noise_model:
+            return "braket_dm"
+
         if not isinstance(task_specifications, Iterable):
             task_specifications = [task_specifications]
 
@@ -123,6 +127,8 @@ class DeviceEmulator:
                 return "braket_ahs"
             if isinstance(task_specification, PulseSequence):
                 return NotImplementedError("Pulse Sequence emulation is not currently supported.")
-        if self._noise_model:
-            return "braket_dm"
+            if isinstance(task_specification, Circuit):
+                for instruction in task_specification.instructions:
+                    if isinstance(instruction.operator, Noise):
+                        return "braket_dm"
         return "default"
