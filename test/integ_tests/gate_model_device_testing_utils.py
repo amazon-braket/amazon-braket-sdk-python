@@ -81,8 +81,8 @@ def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict
         .variance(observable=Observable.Y(), target=[3])
     )
     bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
-    for task in (bell, bell_qasm):
-        result = device.run(task, **run_kwargs).result()
+    results = device.run_batch([bell, bell_qasm], **run_kwargs).results()
+    for result in results:
         assert np.allclose(result.values[0], 0, **tol)
         assert np.allclose(result.values[1], 1, **tol)
 
@@ -103,9 +103,9 @@ def result_types_zero_shots_bell_pair_testing(
         circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
-    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
-    for task in tasks:
-        result = device.run(task, **run_kwargs).result()
+    tasks = [circuit, circuit.to_ir(ir_type=IRType.OPENQASM)]
+    results = device.run_batch(tasks, **run_kwargs).results()
+    for result in results:
         assert len(result.result_types) == 3 if include_state_vector else 2
         assert np.allclose(
             result.get_value_by_result_type(
