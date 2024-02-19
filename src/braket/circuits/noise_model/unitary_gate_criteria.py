@@ -26,14 +26,14 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
     """This class models noise Criteria based on unitary gates represented as a matrix."""
 
     def __init__(self, unitary: Unitary, qubits: Optional[QubitSetInput] = None):
-        """
-        Creates unitary gate-based Criteria. See instruction_matches() for more details.
+        """Creates unitary gate-based Criteria. See instruction_matches() for more details.
 
         Args:
             unitary (Unitary): A unitary gate matrix represented as a Braket Unitary.
             qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
-        Throws:
+
+        Raises:
             ValueError: If unitary is not a Unitary type.
         """
         if not isinstance(unitary, Unitary):
@@ -48,7 +48,8 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
         return f"{self.__class__.__name__}(unitary={self._unitary}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
+        """Returns keys based on criterion.
+
         Returns:
             Iterable[CriteriaKey]: This Criteria operates on unitary gates and Qubits.
         """
@@ -75,8 +76,8 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.

@@ -13,26 +13,25 @@
 
 import codecs
 import pickle
-from typing import Any, Dict
+from typing import Any
 
 from braket.jobs_data import PersistedJobDataFormat
 
 
 def serialize_values(
-    data_dictionary: Dict[str, Any], data_format: PersistedJobDataFormat
-) -> Dict[str, Any]:
-    """
-    Serializes the `data_dictionary` values to the format specified by `data_format`.
+    data_dictionary: dict[str, Any], data_format: PersistedJobDataFormat
+) -> dict[str, Any]:
+    """Serializes the `data_dictionary` values to the format specified by `data_format`.
 
     Args:
-        data_dictionary (Dict[str, Any]): Dict whose values are to be serialized.
+        data_dictionary (dict[str, Any]): Dict whose values are to be serialized.
         data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization, so that they represent valid UTF-8 text and are compatible
             with `PersistedJobData.json()`.
 
     Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary` and values serialized to
+        dict[str, Any]: Dict with same keys as `data_dictionary` and values serialized to
         the specified `data_format`.
     """
     return (
@@ -46,18 +45,17 @@ def serialize_values(
 
 
 def deserialize_values(
-    data_dictionary: Dict[str, Any], data_format: PersistedJobDataFormat
-) -> Dict[str, Any]:
-    """
-    Deserializes the `data_dictionary` values from the format specified by `data_format`.
+    data_dictionary: dict[str, Any], data_format: PersistedJobDataFormat
+) -> dict[str, Any]:
+    """Deserializes the `data_dictionary` values from the format specified by `data_format`.
 
     Args:
-        data_dictionary (Dict[str, Any]): Dict whose values are to be deserialized.
+        data_dictionary (dict[str, Any]): Dict whose values are to be deserialized.
         data_format (PersistedJobDataFormat): The data format that the `data_dictionary` values
             are currently serialized with.
 
     Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary` and values deserialized from
+        dict[str, Any]: Dict with same keys as `data_dictionary` and values deserialized from
         the specified `data_format` to plaintext.
     """
     return (

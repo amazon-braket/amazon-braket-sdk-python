@@ -32,8 +32,7 @@ def _flatten(other: Any) -> Any:
 
 
 class QubitSet(IndexedSet):
-    """
-    An ordered, unique set of quantum bits.
+    """An ordered, unique set of quantum bits.
 
     Note:
         QubitSet implements `__hash__()` but is a mutable object, therefore be careful when
@@ -41,7 +40,8 @@ class QubitSet(IndexedSet):
     """
 
     def __init__(self, qubits: QubitSetInput | None = None):
-        """
+        """Initializes a `QubitSet`.
+
         Args:
             qubits (QubitSetInput | None): Qubits to be included in the `QubitSet`.
                 Default is `None`.
@@ -63,13 +63,11 @@ class QubitSet(IndexedSet):
             Qubit(2)
             Qubit(3)
         """
-
         _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None
         super().__init__(_qubits)
 
     def map(self, mapping: dict[QubitInput, QubitInput]) -> QubitSet:
-        """
-        Creates a new `QubitSet` where this instance's qubits are mapped to the values in `mapping`.
+        """Creates a new `QubitSet` where this instance's qubits are mapped to the values in `mapping`.
         If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
 
         Args:
@@ -85,8 +83,7 @@ class QubitSet(IndexedSet):
             >>> mapping = {0: 10, Qubit(1): Qubit(11)}
             >>> qubits.map(mapping)
             QubitSet([Qubit(10), Qubit(11)])
-        """
-
+        """  # noqa E501
         new_qubits = [mapping.get(qubit, qubit) for qubit in self]
 
         return QubitSet(new_qubits)
