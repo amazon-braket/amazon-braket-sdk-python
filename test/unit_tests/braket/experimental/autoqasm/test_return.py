@@ -87,7 +87,6 @@ b = __bit_0__;"""
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_basic_arithmetic():
     @aq.main
     def main():
@@ -95,14 +94,14 @@ def test_basic_arithmetic():
         return val
 
     expected = """OPENQASM 3.0;
-input int[32] input_a;
+int[32] __int_0__ = 1;
+int[32] __int_1__ = 2;
 output int[32] val;
-val = 3;"""
+val = __int_0__ + __int_1__;"""
 
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_expressions():
     @aq.main
     def main(input_a: int):
@@ -113,8 +112,7 @@ def test_expressions():
     expected = """OPENQASM 3.0;
 input int[32] input_a;
 output int[32] val;
-val = 1;
-val = val + input_a;"""
+val = 1 + input_a;"""
 
     assert main.to_ir() == expected
 
@@ -130,12 +128,12 @@ def test_expressions_and_control_flow():
 
     expected = """OPENQASM 3.0;
 output float[64] val;
-qubit[5] __qubits__;
+qubit[3] __qubits__;
 val = 0.5;
 for int i in [0:3 - 1] {
-    bit __bit_1__;
-    __bit_1__ = measure __qubits__[i];
-    val = val + __bit_1__;
+    bit __bit_0__;
+    __bit_0__ = measure __qubits__[i];
+    val = val + __bit_0__;
 }"""
 
     assert main.to_ir() == expected
