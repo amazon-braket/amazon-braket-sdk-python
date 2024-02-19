@@ -408,15 +408,13 @@ class ProgramConversionContext:
                 "Please give them unique names."
             )
 
-        if isinstance(value, oqpy.BitVar):
-            value = copy.copy(value)
-            value.name = name
-            value.init_expression = "output"
-            self._output_parameters[name] = value
+        value_type = aq_types.var_type_from_oqpy(value)
+        type_class = aq_types.map_parameter_type(value_type)
+        if isinstance(value, aq_types.BitVar):
+            new_output = type_class("output", name=name, size=value.size)
         else:
-            value_type = aq_types.var_type_from_oqpy(value)
-            type_class = aq_types.map_parameter_type(value_type)
-            self._output_parameters[name] = type_class("output", name=name)
+            new_output = type_class("output", name=name)
+        self._output_parameters[name] = new_output
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.

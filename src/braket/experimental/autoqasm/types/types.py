@@ -110,7 +110,7 @@ class BitVar(oqpy.BitVar):
             *args, annotations=make_annotations_list(annotations), **kwargs
         )
         self.name = program.get_program_conversion_context().next_var_name(oqpy.BitVar)
-        if self.size:
+        if self.size and self.init_expression != "output":
             value = self.init_expression or 0
             self.init_expression = ast.BitstringLiteral(value, self.size)
 
