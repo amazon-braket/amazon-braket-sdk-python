@@ -24,8 +24,7 @@ class IRType(str, Enum):
 
 
 class QubitReferenceType(str, Enum):
-    """
-    Defines how qubits should be referenced in the generated OpenQASM string.
+    """Defines how qubits should be referenced in the generated OpenQASM string.
     See https://qiskit.github.io/openqasm/language/types.html#quantum-types
     for details.
     """
@@ -56,8 +55,7 @@ class SerializableProgram(ABC):
 
 @dataclass
 class OpenQASMSerializationProperties:
-    """
-    Properties for serializing a circuit to OpenQASM.
+    """Properties for serializing a circuit to OpenQASM.
 
     qubit_reference_type (QubitReferenceType): determines whether to use
         logical qubits or physical qubits (q[i] vs $i).
@@ -67,6 +65,7 @@ class OpenQASMSerializationProperties:
 
     def format_target(self, target: int) -> str:
         """Format a target qubit to the appropriate OpenQASM representation.
+
         Args:
             target (int): The target qubit.
 

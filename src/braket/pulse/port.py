@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from oqpy import PortVar
@@ -18,13 +20,13 @@ from oqpy.base import OQPyExpression
 
 
 class Port:
-    """
-    Ports represent any input or output component meant to manipulate and observe qubits on
+    """Ports represent any input or output component meant to manipulate and observe qubits on
     a device. See https://openqasm.com/language/openpulse.html#ports for more details.
     """
 
     def __init__(self, port_id: str, dt: float, properties: Optional[dict[str, Any]] = None):
-        """
+        """Initializes a Port.
+
         Args:
             port_id (str): str identifying a unique port on the device.
             dt (float): The smallest time step that may be used on the control hardware.
@@ -45,7 +47,7 @@ class Port:
         """Returns the smallest time step that may be used on the control hardware."""
         return self._dt
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Port) -> bool:
         return self.id == other.id if isinstance(other, Port) else False
 
     def _to_oqpy_expression(self) -> OQPyExpression:

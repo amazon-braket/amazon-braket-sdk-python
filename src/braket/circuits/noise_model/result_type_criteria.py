@@ -26,6 +26,7 @@ class ResultTypeCriteria(Criteria):
 
         Args:
             result_type (ResultType): A result type or list of result types to match.
+
         Returns:
             bool: True if the result type matches the criteria.
         """
