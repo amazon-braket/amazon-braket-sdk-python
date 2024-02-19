@@ -21,8 +21,7 @@ import numpy as np
 import oqpy
 from openpulse import ast
 
-from braket.circuits.free_parameter_expression import FreeParameterExpression
-from braket.experimental.autoqasm import errors, program
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm import types as aq_types
 
 
