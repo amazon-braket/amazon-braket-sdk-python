@@ -40,8 +40,6 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         Any: Assignment value with updated name attribute if the value is an
         `oqpy` type. Otherwise, it returns unchanged assignment value.
     """
-    if isinstance(value, UndefinedReturnValue):
-        return value
     aq_context = program.get_program_conversion_context()
 
     is_value_name_used = isinstance(value, oqpy.base.Var) and aq_context.is_var_name_used(
