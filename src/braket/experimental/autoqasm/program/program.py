@@ -389,31 +389,34 @@ class ProgramConversionContext:
             return var
 
     def register_output_parameter(
-        self,
-        name: str,
-        type_: Union[float, int, bool, None] = float,
-        value: oqpy._ClassicalVar | None = None,
+        self, name: str, value: Union[bool, int, float, oqpy.base.Var, oqpy.OQPyExpression, None]
     ) -> None:
         """Register a new output parameter if it is not None.
 
         Args:
             name (str): The name of the parameter to register with the program.
-            type_ (Union[float, int, bool, None]): The type of the parameter to register
-                with the program. Default: float.
-            value (_ClassicalVar | None): Register the output parameter based on
-                the oqpy value it is assigned to.
+            value (Union[bool, int, float, Var, OQPyExpression, None]): Value to
+                register as an output parameter.
         """
-        if type_ is type(None):
-            return  # Do nothing
+        if value is None:
+            return
 
-        aq_type = aq_types.map_parameter_type(type_)
-        if value is not None:  # TODO laurecap clean up
+        input = self.get_input_parameter(name)
+        if input is not None:
+            raise errors.NameConflict(
+                f"Your output parameter has the same name as an input parameter: '{name}'. "
+                "Please give them unique names."
+            )
+
+        if isinstance(value, oqpy.BitVar):
             value = copy.copy(value)
             value.name = name
             value.init_expression = "output"
             self._output_parameters[name] = value
         else:
-            self._output_parameters[name] = aq_type("output", name=name)
+            value_type = aq_types.var_type_from_oqpy(value)
+            type_class = aq_types.map_parameter_type(value_type)
+            self._output_parameters[name] = type_class("output", name=name)
 
     def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
         """Return an oqpy.FloatVar that represents the provided expression.
@@ -460,7 +463,6 @@ class ProgramConversionContext:
         for parameter_name, parameter in self._input_parameters.items():
             # The variable names sometimes get overwritten by the initializer
             parameter.name = parameter_name
-            # TODO laurecap is this still necessary
             if parameter.name in root_oqpy_program.undeclared_vars:
                 root_oqpy_program.undeclared_vars[parameter.name]._needs_declaration = True
             else:

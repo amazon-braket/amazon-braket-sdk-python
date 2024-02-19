@@ -16,8 +16,6 @@
 
 from typing import Any
 
-import oqpy
-
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
@@ -33,32 +31,5 @@ def return_output_from_main(name: str, value: Any) -> Any:
         Any: Returns the same value that is being returned in the statement.
     """
     aq_context = program.get_program_conversion_context()
-    input = aq_context.get_input_parameter(name)
-
-    if input is None:
-        if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(value, oqpy.base.Var):
-            value_type = float
-            if value.type == oqpy.int_():
-                value_type = int
-            elif value.type == oqpy.bool_:
-                value_type = bool
-            # TODO laurecap test and add bit support here
-
-            aq_context.register_output_parameter(name, value_type)
-        else:
-            # Value is an oqpy classical variable
-            if isinstance(value, oqpy.BitVar):
-                aq_context.register_output_parameter(name, type(value), value)
-            else:
-                aq_context.register_output_parameter(name, type(value))
-    else:
-        # Handle name collisions with input variables
-        name = name + "_"
-        value_type = type(input)
-        aq_context.register_output_parameter(name, value_type)
-        # Add `val_ = val;` at the end of the program to equate these parameters
-        oqpy_program = aq_context.get_oqpy_program()
-        output = aq_context.get_output_parameter(name)
-        oqpy_program.set(output, input)
-
+    aq_context.register_output_parameter(name, value)
     return aq_types.wrap_value(value)
