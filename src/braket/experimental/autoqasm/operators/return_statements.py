@@ -14,7 +14,8 @@
 
 """Operations to override return statement behavior."""
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
