@@ -17,9 +17,9 @@
 import ast
 
 import gast
+from malt.core import ag_ctx, converter
+from malt.pyct import templates
 
-from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
-from braket.experimental.autoqasm.autograph.pyct import templates
 from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 

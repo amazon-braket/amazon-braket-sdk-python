@@ -24,6 +24,8 @@ from typing import Any, Iterable, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
+from malt.core import converter
+from malt.impl.api import autograph_artifact, is_autograph_artifact
 
 import braket.experimental.autoqasm.constants as aq_constants
 import braket.experimental.autoqasm.instructions as aq_instructions
@@ -33,12 +35,6 @@ import braket.experimental.autoqasm.types as aq_types
 from braket.aws import AwsDevice
 from braket.devices.device import Device
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.autograph.core import converter
-from braket.experimental.autoqasm.autograph.impl.api_core import (
-    autograph_artifact,
-    is_autograph_artifact,
-)
-from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 
@@ -205,8 +201,7 @@ def _function_wrapper(
     if inspect.isfunction(func) or inspect.ismethod(func):
         _wrapper = functools.update_wrapper(_wrapper, func)
 
-    decorated_wrapper = tf_decorator.make_decorator(func, _wrapper)
-    return autograph_artifact(decorated_wrapper)
+    return autograph_artifact(_wrapper)
 
 
 def _autograph_optional_features() -> tuple[converter.Feature]:

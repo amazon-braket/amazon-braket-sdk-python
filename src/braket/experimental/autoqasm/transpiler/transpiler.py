@@ -25,9 +25,7 @@ from collections.abc import Callable
 from typing import Any, Optional, Union
 
 import gast
-
-from braket.experimental.autoqasm import operators, program, types
-from braket.experimental.autoqasm.autograph.converters import (
+from malt.converters import (
     asserts,
     call_trees,
     conditional_expressions,
@@ -40,25 +38,14 @@ from braket.experimental.autoqasm.autograph.converters import (
     slices,
     variables,
 )
-from braket.experimental.autoqasm.autograph.core import (
-    ag_ctx,
-    converter,
-    function_wrappers,
-    unsupported_features_checker,
-)
-from braket.experimental.autoqasm.autograph.impl.api_core import (
-    StackTraceMapper,
-    _attach_error_metadata,
-    _log_callargs,
-    is_autograph_artifact,
-)
-from braket.experimental.autoqasm.autograph.logging import ag_logging as logging
-from braket.experimental.autoqasm.autograph.pyct import anno, cfg, qual_names, transpiler
-from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
-    activity,
-    reaching_definitions,
-)
-from braket.experimental.autoqasm.autograph.tf_utils import tf_stack
+from malt.core import ag_ctx, converter, unsupported_features_checker
+from malt.impl.api import _attach_error_metadata, _log_callargs, is_autograph_artifact
+from malt.operators import function_wrappers
+from malt.pyct import anno, cfg, qual_names, transpiler
+from malt.pyct.static_analysis import activity, reaching_definitions
+from malt.utils import ag_logging as logging
+
+from braket.experimental.autoqasm import operators, program, types
 from braket.experimental.autoqasm.converters import (
     assignments,
     break_statements,
@@ -241,13 +228,12 @@ def converted_call(
     if exc:
         raise exc
 
-    with StackTraceMapper(converted_f), tf_stack.CurrentModuleFilter():
-        try:
-            effective_kwargs = kwargs or {}
-            result = converted_f(*effective_args, **effective_kwargs)
-        except Exception as e:
-            _attach_error_metadata(e, converted_f)
-            raise
+    try:
+        effective_kwargs = kwargs or {}
+        result = converted_f(*effective_args, **effective_kwargs)
+    except Exception as e:
+        _attach_error_metadata(e, converted_f)
+        raise
 
     return types.wrap_value(result)
 
