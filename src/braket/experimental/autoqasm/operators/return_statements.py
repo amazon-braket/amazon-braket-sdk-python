@@ -16,7 +16,6 @@
 
 from typing import Any
 
-from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
@@ -32,21 +31,5 @@ def return_output_from_main(name: str, value: Any) -> Any:
         Any: Returns the same value that is being returned in the statement.
     """
     aq_context = program.get_program_conversion_context()
-    input = aq_context.get_input_parameter(name)
-
-    if input is None:
-        if isinstance(value, FreeParameterExpression):
-            aq_context.register_output_parameter(name, aq_types.FloatVar)
-        else:
-            aq_context.register_output_parameter(name, type(value))
-    else:
-        # Handle name collisions with input variables
-        name = name + "_"
-        value_type = type(input)
-        aq_context.register_output_parameter(name, value_type)
-        # Add `val_ = val;` at the end of the program to equate these parameters
-        oqpy_program = aq_context.get_oqpy_program()
-        output = aq_context.get_output_parameter(name)
-        oqpy_program.set(output, input)
-
+    aq_context.register_output_parameter(name, value)
     return aq_types.wrap_value(value)

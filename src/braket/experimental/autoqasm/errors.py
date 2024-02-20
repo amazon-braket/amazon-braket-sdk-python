@@ -114,3 +114,7 @@ class InvalidArrayDeclaration(AutoQasmError):
 
 class UnsupportedSubroutineReturnType(AutoQasmError):
     """Unsupported return type for an AutoQASM subroutine."""
+
+
+class NameConflict(AutoQasmError):
+    """Name conflict between user-named variables."""

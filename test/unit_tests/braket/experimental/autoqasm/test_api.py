@@ -526,7 +526,7 @@ def test_measurement_qubit_discovery(ground_state_measurements) -> None:
 def test_simple_measurement(ground_state_measurements) -> None:
     """Test that a program with only measurements is generated correctly."""
     expected = """OPENQASM 3.0;
-output bit retval_;
+output bit[3] retval_;
 qubit[6] __qubits__;
 bit[3] __bit_0__ = "000";
 __bit_0__[0] = measure __qubits__[5];

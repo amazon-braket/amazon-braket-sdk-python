@@ -40,17 +40,27 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         Any: Assignment value with updated name attribute if the value is an
         `oqpy` type. Otherwise, it returns unchanged assignment value.
     """
-    if isinstance(value, UndefinedReturnValue):
-        return value
-    program_conversion_context = program.get_program_conversion_context()
+    aq_context = program.get_program_conversion_context()
 
-    is_value_name_used = isinstance(
-        value, oqpy.base.Var
-    ) and program_conversion_context.is_var_name_used(value.name)
+    is_value_name_used = isinstance(value, oqpy.base.Var) and aq_context.is_var_name_used(
+        value.name
+    )
 
     value = types.wrap_value(value)
-    if not isinstance(value, oqpy.base.Var):
+
+    oqpy_program = aq_context.get_oqpy_program()
+
+    if not isinstance(value, (oqpy.base.OQPyExpression, oqpy.base.Var)):
         return value
+
+    if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(
+        value, oqpy.base.Var
+    ):  # Classical types subclass from both Var and OQPyExpression, and we
+        # only need to handle `OQPyExpression`s here
+        # Create a dummy target with the right name
+        target = oqpy.FloatVar(name=target_name)
+        oqpy_program.set(target, value)
+        return target
 
     target = copy.copy(value)
     target.init_expression = None
@@ -60,7 +70,6 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         # Avoid statements like `a = a;`
         return value
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
         oqpy_program.set(target, value)
     else:
