@@ -17,14 +17,11 @@
 import ast
 
 import gast
-
-from autograph.converters import return_statements
-from autograph.core import ag_ctx, converter
-
-from braket.experimental.autoqasm import program
 from autograph.converters import return_statements
 from autograph.core import ag_ctx, converter
 from autograph.pyct import templates
+
+from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
