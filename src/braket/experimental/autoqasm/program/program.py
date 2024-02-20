@@ -401,8 +401,7 @@ class ProgramConversionContext:
         if value is None:
             return
 
-        input = self.get_input_parameter(name)
-        if input is not None:
+        if self.get_input_parameter(name):
             raise errors.NameConflict(
                 f"Your output parameter has the same name as an input parameter: '{name}'. "
                 "Please give them unique names."
