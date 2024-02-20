@@ -163,7 +163,6 @@ def job_failed_name(request):
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(aws_session, job_completed_name):
     account = boto3.client("sts").get_caller_identity().get("Account")
-    print(account)
     job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:{account}:job/{job_completed_name}")
     return job
 
