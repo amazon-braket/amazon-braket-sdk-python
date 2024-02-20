@@ -29,7 +29,6 @@ from pygments.formatters.terminal import TerminalFormatter
 from sympy import Symbol
 
 import braket.experimental.autoqasm.types as aq_types
-from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType

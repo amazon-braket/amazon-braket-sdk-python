@@ -22,7 +22,6 @@ import oqpy.base
 from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
-from braket.parametric import FreeParameterExpression
 
 
 def _get_physical_qubit_indices(qids: list[str]) -> list[int]:
