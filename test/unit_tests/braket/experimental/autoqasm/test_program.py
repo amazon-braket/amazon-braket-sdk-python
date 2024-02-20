@@ -21,7 +21,6 @@ import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.circuits import FreeParameter
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm.instructions import cnot, measure, rx
 
