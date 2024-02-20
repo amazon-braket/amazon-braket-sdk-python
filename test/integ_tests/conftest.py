@@ -162,11 +162,15 @@ def job_failed_name(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(aws_session, job_completed_name):
-    job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_completed_name}")
+    account = boto3.client("sts").get_caller_identity().get("Account")
+    region = aws_session.region
+    job = AwsQuantumJob(arn=f"arn:aws:braket:{region}:{account}:job/{job_completed_name}")
     return job
 
 
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(aws_session, job_failed_name):
-    job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_failed_name}")
+    account = boto3.client("sts").get_caller_identity().get("Account")
+    region = aws_session.region
+    job = AwsQuantumJob(arn=f"arn:aws:braket:{region}:{account}:job/{job_failed_name}")
     return job
