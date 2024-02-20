@@ -139,17 +139,82 @@ for int i in [0:3 - 1] {
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_return_tuple():
     @aq.main
     def main():
         return 1, 2
 
     expected = """OPENQASM 3.0;
-output int[32] retval1_;
-output int[32] retval2_;
-retval1_ = 1;
-retval2_ = 2;"""
+output int[32] retval_0;
+output int[32] retval_1;
+retval_0 = 1;
+retval_1 = 2;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_list_floats():
+    @aq.main
+    def main():
+        return [11.1, 2.222]
+
+    expected = """OPENQASM 3.0;
+output float[64] retval_0;
+output float[64] retval_1;
+retval_0 = 11.1;
+retval_1 = 2.222;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_multi_meas():
+    @aq.main
+    def main():
+        a = measure(0)
+        b = measure(1)
+        return a, b, measure(2)
+
+    expected = """OPENQASM 3.0;
+bit a;
+bit b;
+output bit retval_0;
+output bit retval_1;
+output bit retval_2;
+qubit[3] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+a = __bit_0__;
+bit __bit_1__;
+__bit_1__ = measure __qubits__[1];
+b = __bit_1__;
+bit __bit_2__;
+__bit_2__ = measure __qubits__[2];
+retval_0 = a;
+retval_1 = b;
+retval_2 = __bit_2__;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_multi_types():
+    @aq.main
+    def main():
+        a = measure(0)
+        b = 1.11
+        return a, True, b
+
+    expected = """OPENQASM 3.0;
+bit a;
+output bit retval_0;
+output bool retval_1;
+output float[64] retval_2;
+qubit[1] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+a = __bit_0__;
+retval_0 = a;
+retval_1 = true;
+retval_2 = 1.11;"""
 
     assert main.to_ir() == expected
 
