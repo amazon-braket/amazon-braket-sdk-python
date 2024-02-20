@@ -21,7 +21,6 @@ import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.circuits import FreeParameter
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm.instructions import cnot, measure, rx
 
@@ -39,16 +38,6 @@ def test_program_conversion_context() -> None:
 
     assert prog.get_oqpy_program() == initial_oqpy_program
     assert len(prog._oqpy_program_stack) == 1
-
-
-def test_get_expression_var_invalid_name():
-    """Tests the get_expression_var function."""
-    prog = aq.program.ProgramConversionContext()
-    prog.register_input_parameter("alpha")
-    with pytest.raises(aq.errors.ParameterNotFoundError):
-        prog.get_expression_var(FreeParameter("not_a_parameter"))
-    with pytest.raises(aq.errors.ParameterNotFoundError):
-        prog.get_expression_var(3 * FreeParameter("also_not_a_parameter"))
 
 
 def test_build_program() -> None:
