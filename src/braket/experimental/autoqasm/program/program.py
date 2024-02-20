@@ -414,10 +414,6 @@ class ProgramConversionContext:
             new_output = type_class("output", name=name)
         self._output_parameters[name] = new_output
 
-    def get_input_parameters(self) -> list[oqpy.Var]:
-        """Return a list of named oqpy.Vars that are used as free parameters in the program."""
-        return list(self._input_parameters.values())
-
     def get_input_parameter(self, name: str) -> oqpy.Var | None:
         """Return the oqpy.Var associated with the variable name `name` in the program."""
         return self._input_parameters.get(name, None)
