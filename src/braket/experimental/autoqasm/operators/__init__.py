@@ -18,8 +18,8 @@ This module implements operators that AutoQASM overloads or adds on top of AutoG
 """
 
 # Operators below are imported directly from core autograph implementation
-from autograph.impl.api import autograph_artifact  # noqa: F401
-from autograph.operators.variables import Undefined, UndefinedReturnValue, ld, ldu  # noqa: F401
+from malt.impl.api import autograph_artifact  # noqa: F401
+from malt.operators.variables import Undefined, UndefinedReturnValue, ld, ldu  # noqa: F401
 
 from .assignments import assign_for_output, assign_stmt  # noqa: F401
 from .comparisons import gt_, gteq_, lt_, lteq_  # noqa: F401

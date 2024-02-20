@@ -25,7 +25,7 @@ from collections.abc import Callable
 from typing import Any, Optional, Union
 
 import gast
-from autograph.converters import (
+from malt.converters import (
     asserts,
     call_trees,
     conditional_expressions,
@@ -38,12 +38,12 @@ from autograph.converters import (
     slices,
     variables,
 )
-from autograph.core import ag_ctx, converter, unsupported_features_checker
-from autograph.impl.api import _attach_error_metadata, _log_callargs, is_autograph_artifact
-from autograph.operators import function_wrappers
-from autograph.pyct import anno, cfg, qual_names, transpiler
-from autograph.pyct.static_analysis import activity, reaching_definitions
-from autograph.utils import ag_logging as logging
+from malt.core import ag_ctx, converter, unsupported_features_checker
+from malt.impl.api import _attach_error_metadata, _log_callargs, is_autograph_artifact
+from malt.operators import function_wrappers
+from malt.pyct import anno, cfg, qual_names, transpiler
+from malt.pyct.static_analysis import activity, reaching_definitions
+from malt.utils import ag_logging as logging
 
 from braket.experimental.autoqasm import operators, program, types
 from braket.experimental.autoqasm.converters import (

@@ -16,7 +16,7 @@
 from typing import Union
 
 import gast
-from autograph.core import ag_ctx
+from malt.core import ag_ctx
 
 from braket.experimental.autoqasm.transpiler import PyToOqpy
 

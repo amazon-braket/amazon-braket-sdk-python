@@ -16,8 +16,8 @@
 import functools
 
 import pytest
-from autograph.core.ag_ctx import ControlStatusCtx, Status
-from autograph.utils import ag_logging
+from malt.core.ag_ctx import ControlStatusCtx, Status
+from malt.utils import ag_logging
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.errors import UnknownQubitCountError

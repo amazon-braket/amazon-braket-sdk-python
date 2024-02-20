@@ -14,7 +14,7 @@
 """Tests for the converters module."""
 
 import pytest
-from autograph.core import ag_ctx, converter
+from malt.core import ag_ctx, converter
 from mock_transpiler import MockTranspiler
 
 import braket.experimental.autoqasm as aq

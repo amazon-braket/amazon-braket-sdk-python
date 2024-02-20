@@ -16,8 +16,8 @@
 
 import ast
 
-from autograph.converters import break_statements
-from autograph.core import ag_ctx, converter
+from malt.converters import break_statements
+from malt.core import ag_ctx, converter
 
 from braket.experimental.autoqasm import errors
 

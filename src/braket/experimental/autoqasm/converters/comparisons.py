@@ -16,8 +16,8 @@
 import ast
 
 import gast
-from autograph.core import ag_ctx, converter
-from autograph.pyct import templates
+from malt.core import ag_ctx, converter
+from malt.pyct import templates
 
 COMPARISON_OPERATORS = {
     gast.Lt: "ag__.lt_",

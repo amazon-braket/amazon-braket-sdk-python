@@ -24,8 +24,8 @@ from typing import Any, Iterable, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
-from autograph.core import converter
-from autograph.impl.api import autograph_artifact, is_autograph_artifact
+from malt.core import converter
+from malt.impl.api import autograph_artifact, is_autograph_artifact
 
 import braket.experimental.autoqasm.constants as aq_constants
 import braket.experimental.autoqasm.instructions as aq_instructions
