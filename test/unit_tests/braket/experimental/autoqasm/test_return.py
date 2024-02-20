@@ -139,17 +139,30 @@ for int i in [0:3 - 1] {
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_return_tuple():
     @aq.main
     def main():
         return 1, 2
 
     expected = """OPENQASM 3.0;
-output int[32] retval1_;
-output int[32] retval2_;
-retval1_ = 1;
-retval2_ = 2;"""
+output int[32] retval_0;
+output int[32] retval_1;
+retval_0 = 1;
+retval_1 = 2;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_list_floats():
+    @aq.main
+    def main():
+        return [11.1, 2.222]
+
+    expected = """OPENQASM 3.0;
+output float[64] retval_0;
+output float[64] retval_1;
+retval_0 = 11.1;
+retval_1 = 2.222;"""
 
     assert main.to_ir() == expected
 

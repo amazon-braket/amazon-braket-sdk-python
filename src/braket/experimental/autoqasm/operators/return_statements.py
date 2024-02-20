@@ -14,7 +14,7 @@
 
 """Operations to override return statement behavior."""
 
-from typing import Any
+from typing import Any, Iterable
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
@@ -31,5 +31,10 @@ def return_output_from_main(name: str, value: Any) -> Any:
         Any: Returns the same value that is being returned in the statement.
     """
     aq_context = program.get_program_conversion_context()
-    aq_context.register_output_parameter(name, value)
-    return aq_types.wrap_value(value)
+    if isinstance(value, Iterable):
+        for i, item in enumerate(value):
+            aq_context.register_output_parameter(f"{name}{i}", item)
+        return aq_types.wrap_value(tuple(value))
+    else:
+        aq_context.register_output_parameter(name, value)
+        return aq_types.wrap_value(value)
