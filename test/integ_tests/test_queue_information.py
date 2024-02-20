@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws import AwsDevice, AwsQuantumJob
+
+from braket.aws import AwsDevice
 from braket.aws.queue_information import (
     HybridJobQueueInfo,
     QuantumTaskQueueInfo,
@@ -47,15 +48,11 @@ def test_task_queue_position():
         assert queue_information.message is None
 
 
-def test_job_queue_position(aws_session):
-    job = AwsQuantumJob.create(
-        device=Devices.Amazon.SV1,
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        aws_session=aws_session,
-        wait_until_complete=True,
-        hyperparameters={"test_case": "completed"},
-    )
+def test_job_queue_position(aws_session, completed_quantum_job):
+    job = completed_quantum_job
+
+    # Check the job is complete
+    job.result()
 
     # call the queue_position method.
     queue_information = job.queue_position()
