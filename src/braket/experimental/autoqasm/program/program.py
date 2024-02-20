@@ -415,33 +415,6 @@ class ProgramConversionContext:
             new_output = type_class("output", name=name)
         self._output_parameters[name] = new_output
 
-    def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
-        """Return an oqpy.FloatVar that represents the provided expression.
-
-        Args:
-            expression (FreeParameterExpression): The expression to represent.
-
-        Raises:
-            ParameterNotFoundError: If the expression contains any free parameter which has
-            not already been registered with the program.
-
-        Returns:
-            FloatVar: The variable representing the expression.
-        """
-        # Validate that all of the free symbols are registered as free parameters.
-        for name in self._free_symbol_names(expression):
-            if name not in self._input_parameters:
-                raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
-
-        # If the expression is just a standalone parameter, return the registered variable.
-        if isinstance(expression, FreeParameter):
-            return self._input_parameters[expression.name]
-
-        # Otherwise, create a new variable and declare it here
-        var = aq_types.FloatVar(init_expression=expression)
-        self.get_oqpy_program().declare(var)
-        return var
-
     def get_input_parameters(self) -> list[oqpy.Var]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
         return list(self._input_parameters.values())
@@ -449,10 +422,6 @@ class ProgramConversionContext:
     def get_input_parameter(self, name: str) -> oqpy.Var | None:
         """Return the oqpy.Var associated with the variable name `name` in the program."""
         return self._input_parameters.get(name, None)
-
-    def get_output_parameter(self, name: str) -> oqpy.Var | None:
-        """Return the oqpy.Var associated with the output variable `name` in the program."""
-        return self._output_parameters.get(name, None)
 
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""

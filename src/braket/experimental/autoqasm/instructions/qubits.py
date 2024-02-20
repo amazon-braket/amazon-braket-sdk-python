@@ -113,16 +113,5 @@ def _(qid: str) -> oqpy.Qubit:
 
 
 @_qubit.register
-def _(qid: FreeParameterExpression) -> oqpy.Qubit:
-    # Unbound expression dependent on input, like `h(q)` where q is unbound
-    int_var = oqpy.IntVar(
-        name=str(qid),
-        needs_declaration=False,
-        size=32,
-    )
-    return _qubit(int_var)
-
-
-@_qubit.register
 def _(qid: oqpy.Qubit) -> oqpy.Qubit:
     return qid
