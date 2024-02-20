@@ -8,26 +8,26 @@ There are a handful of decorators available through AutoQASM. Each one attaches 
 
 This decorator marks the entry point to a quantum program.
 
-You can include gates, pulse control, classical control and subroutine calls. When you call the function wrapped by `@aq.main`, you will get a `Program` object. The `Program` object can be executed on [devices available through Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html), including local simulators. The code snippet below creates a quantum program with `@aq.main` and runs it on the `Device` instantiated as `device`.
+You can include gates, pulse control, classical control and subroutine calls. The function wrapped by `@aq.main` is converted into a `Program` object. The `Program` object can be executed on [devices available through Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html), including local simulators. The code snippet below creates a quantum program with `@aq.main` and runs it on the `Device` instantiated as `device`.
 
 ```
-@aq.main(num_qubits=5)
-def ghz_state(max_qubits):
-    """Create a GHZ state from a variable number of qubits."""
+size = 5
+
+@aq.main(num_qubits=size)
+def ghz_state():
+    """Create a GHZ state of the specified size."""
     h(0)
-    for i in aq.range(1, max_qubits):
+    for i in aq.range(1, size):
         cnot(0, i)
-    measure(list(range(max_qubits))) 
-    
-ghz_state_program = ghz_state(max_qubits=5)
+    measure(range(size))
 
-device.run(ghz_state_program)
+device.run(ghz_state)
 ```
 
-When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `to_ir()` on the `Program` object.
+When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `display()` on the `Program` object.
 
 ```
-print(ghz_state_program.to_ir())
+ghz_state.display()
 ```
 
 ## `@aq.subroutine`
@@ -45,16 +45,13 @@ def bell(q0: int, q1: int) -> None:
     h(q0)
     cnot(q0, q1)
 
-    
 @aq.main(num_qubits=4)
 def two_bell() -> None:
     bell(0, 1)
     bell(2, 3)
-
-two_bell_program = two_bell()
 ```
 
-Let's take a look at the serialized output from `two_bell_program.to_ir()`, which shows that the modularity of the subroutine is preserved.
+Let's take a look at the serialized output from `two_bell.to_ir()`, which shows that the modularity of the subroutine is preserved.
 
 ```
 OPENQASM 3.0;
@@ -84,11 +81,9 @@ def ch(q0: aq.Qubit, q1: aq.Qubit):
     ry(q1, math.pi / 4)
     
 @aq.main(num_qubits=2)
-def main():
+def my_program():
     h(0)
     ch(0, 1)
-    
-main_program = main()
 ```
 
 
@@ -127,5 +122,5 @@ def my_program():
     rx("$0", 0.123)
     measure("$0")
 
-my_program().with_calibrations([cal_1])
+my_program.with_calibrations([cal_1])
 ```

@@ -35,10 +35,8 @@ import braket.experimental.autoqasm.types as aq_types
 from braket.aws import AwsDevice
 from braket.devices.device import Device
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
-from braket.parametric import FreeParameter
+from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 
 
 def main(
@@ -244,9 +242,10 @@ def _convert_main(
         # Capture inputs to decorated function as `FreeParameter` inputs for the Program
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
-                kwargs[param.name] = FreeParameter(param.name)
                 param_type = param.annotation if param.annotation is not param.empty else float
-                program_conversion_context.register_parameter(param.name, param_type)
+                kwargs[param.name] = program_conversion_context.register_input_parameter(
+                    param.name, param_type
+                )
             else:
                 raise NotImplementedError
 
@@ -345,6 +344,17 @@ def _convert_subroutine(
             oqpy_sub = oqpy.subroutine(annotations=annotations)(
                 _wrap_for_oqpy_subroutine(_clone_function(f), options)
             )
+
+            # Validate and declare used qubits
+            quantum_indices = {
+                i
+                for i, param in enumerate(inspect.signature(f).parameters.values())
+                if param.annotation == aq_types.QubitIdentifierType
+            }
+            args = [
+                (aq_instructions.qubits._qubit(arg) if i in quantum_indices else arg)
+                for i, arg in enumerate(args)
+            ]
 
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
@@ -630,7 +640,7 @@ def _convert_calibration(
         value = union_deco_func_args[name]
         is_qubit = i in gate_args.qubit_indices
 
-        if is_qubit and not is_qubit_identifier_type(value):
+        if is_qubit and not aq_types.is_qubit_identifier_type(value):
             raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of aq.Qubit.')
 
         if not is_qubit and not isinstance(value, (float, oqpy.AngleVar)):

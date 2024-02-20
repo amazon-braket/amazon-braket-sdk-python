@@ -70,7 +70,7 @@ def test_gate_calibrations_variable_args():
         """
         OPENQASM 3.0;
         defcal rx(angle[32] angle) $1 {
-            delay[(angle) * 1s] $1;
+            delay[angle * 1s] $1;
         }
         rx(1.0) $1;
         """
@@ -221,7 +221,7 @@ def test_gate_calibrations_with_gate_definition():
         }
         defcal my_gate(angle[32] a) $0 {
             barrier $0;
-            delay[(a) * 1s] $0;
+            delay[a * 1s] $0;
         }
         qubit[3] __qubits__;
         my_gate(0.123) __qubits__[2];

@@ -148,6 +148,25 @@ def pulse_sequence_2(predefined_frame_1):
 
 
 @pytest.fixture
+def pulse_sequence_3(predefined_frame_1):
+    return (
+        PulseSequence()
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("alpha"),
+        )
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("beta"),
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+
+@pytest.fixture
 def gate_calibrations(pulse_sequence, pulse_sequence_2):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
@@ -1013,6 +1032,55 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
     assert copy_of_gate_calibrations.pulse_sequences == gate_calibrations.pulse_sequences
 
 
+@pytest.mark.parametrize(
+    "circuit, calibration_key, expected_ir",
+    [
+        (
+            Circuit().rx(0, 0.2),
+            (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float beta;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
+                        " 400.0ms, 0.2, 1, false);",
+                        "}",
+                        "defcal rx(0.2) $0 {",
+                        "    shift_phase(predefined_frame_1, 0.2);",
+                        "    shift_phase(predefined_frame_1, beta);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "rx(0.2) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+    ],
+)
+def test_circuit_with_parametric_defcal(circuit, calibration_key, expected_ir, pulse_sequence_3):
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    gate_calibrations = GateCalibrations(
+        {
+            calibration_key: pulse_sequence_3,
+        }
+    )
+
+    assert (
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_definitions=gate_calibrations.pulse_sequences,
+        )
+        == expected_ir
+    )
+
+
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
     circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
@@ -1716,6 +1784,52 @@ def test_circuit_user_gate(pulse_sequence_2):
                 inputs={},
             ),
         ),
+        (
+            Circuit().rx(0, np.pi),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(π) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().rx(0, 2 * np.pi),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(τ) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().gphase(0.15).x(0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "gphase(0.15);",
+                        "x q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_from_ir(expected_circuit, ir):
@@ -1995,6 +2109,14 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
     )
 
 
+def test_to_unitary_with_global_phase():
+    circuit = Circuit().x(0)
+    circuit_unitary = np.array([[0, 1], [1, 0]])
+    assert np.allclose(circuit.to_unitary(), circuit_unitary)
+    circuit = circuit.gphase(np.pi / 2)
+    assert np.allclose(circuit.to_unitary(), 1j * circuit_unitary)
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [
@@ -2014,6 +2136,8 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
         (Circuit().rx(0, 0.15), gates.Rx(0.15).to_matrix()),
         (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
         (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
+        (Circuit().u(0, 0.15, 0.16, 0.17), gates.U(0.15, 0.16, 0.17).to_matrix()),
+        (Circuit().gphase(0.15), gates.GPhase(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
         (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
@@ -2946,8 +3070,8 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
-            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    waveform drag_gauss_wf_2 = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1," " false);",
+            "    waveform drag_gauss_wf_2 = drag_gaussian(3.0ms, 400.0ms, " "0.2, 1, false);",
             "}",
             "h $0;",
             "cal {",
@@ -3100,3 +3224,23 @@ def test_parametrized_pulse_circuit(user_defined_frame):
 
 def test_free_param_float_mix():
     Circuit().ms(0, 1, 0.1, FreeParameter("theta"))
+
+
+def test_circuit_with_global_phase():
+    circuit = Circuit().gphase(0.15).x(0)
+    assert circuit.global_phase == 0.15
+
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[1] b;",
+            "gphase(0.15);",
+            "x $0;",
+            "b[0] = measure $0;",
+        ]
+    )

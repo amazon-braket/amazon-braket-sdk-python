@@ -21,7 +21,6 @@ import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.circuits import FreeParameter
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm.instructions import cnot, measure, rx
 
@@ -39,16 +38,6 @@ def test_program_conversion_context() -> None:
 
     assert prog.get_oqpy_program() == initial_oqpy_program
     assert len(prog._oqpy_program_stack) == 1
-
-
-def test_get_expression_var_invalid_name():
-    """Tests the get_expression_var function."""
-    prog = aq.program.ProgramConversionContext()
-    prog.register_parameter("alpha")
-    with pytest.raises(aq.errors.ParameterNotFoundError):
-        prog.get_expression_var(FreeParameter("not_a_parameter"))
-    with pytest.raises(aq.errors.ParameterNotFoundError):
-        prog.get_expression_var(3 * FreeParameter("also_not_a_parameter"))
 
 
 def test_build_program() -> None:
@@ -110,6 +99,7 @@ def circuit(float[64] angle) {
     rx(angle) __qubits__[0];
     cnot __qubits__[0], __qubits__[1];
 }
+output bit retval_;
 qubit[2] __qubits__;
 for int i in [0:"""
             + str(scale)
@@ -119,7 +109,8 @@ for int i in [0:"""
             + """);
 }
 bit __bit_0__;
-__bit_0__ = measure __qubits__[1];"""
+__bit_0__ = measure __qubits__[1];
+retval_ = __bit_0__;"""
         )
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):
@@ -151,7 +142,7 @@ def test_to_ir_highlighted(mock_print):
         b"        \x1b[39;49;00m\x1b[32mx\x1b[39;49;00m\x1b[37m \x1b[39;49;00m__qubits__["
         b"\x1b[34m1\x1b[39;49;00m];\x1b[37m\x1b[39;49;00m\n\x1b[37m    \x1b[39;49;00m}"
         b"\x1b[37m\x1b[39;49;00m\n}\x1b[37m\x1b[39;49;00m\n\x1b[36minput\x1b[39;49;00m\x1b[37m "
-        b"\x1b[39;49;00m\x1b[36mfloat\x1b[39;49;00m[\x1b[34m64\x1b[39;49;00m]\x1b[37m "
+        b"\x1b[39;49;00m\x1b[36mfloat\x1b[39;49;00m\x1b[37m "
         b"\x1b[39;49;00mtheta;\x1b[37m\x1b[39;49;00m\n\x1b[36mqubit\x1b[39;49;00m["
         b"\x1b[34m3\x1b[39;49;00m]\x1b[37m \x1b[39;49;00m__qubits__;\x1b[37m\x1b[39;49;00m\n"
         b"\x1b[32msub\x1b[39;49;00m(\x1b[34m0\x1b[39;49;00m);\x1b[37m\x1b[39;49;00m\n\x1b[32mrx"

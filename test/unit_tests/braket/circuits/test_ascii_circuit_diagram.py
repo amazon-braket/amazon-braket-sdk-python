@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
+import pytest
 
 from braket.circuits import (
     AsciiCircuitDiagram,
@@ -27,6 +28,10 @@ from braket.pulse import Frame, Port, PulseSequence
 
 def test_empty_circuit():
     assert AsciiCircuitDiagram.build_diagram(Circuit()) == ""
+
+
+def test_only_gphase_circuit():
+    assert AsciiCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
 
 
 def test_one_gate_one_qubit():
@@ -58,6 +63,35 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     _assert_correct_diagram(circ, expected)
 
 
+@pytest.mark.parametrize("target", [0, 1])
+def test_one_gate_with_global_phase(target):
+    circ = Circuit().x(target=target).gphase(0.15)
+    expected = (
+        "T  : |0| 1  |",
+        "GP : |0|0.15|",
+        "             ",
+        f"q{target} : -X------",
+        "",
+        "T  : |0| 1  |",
+        "",
+        "Global phase: 0.15",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_with_zero_global_phase():
+    circ = Circuit().gphase(-0.15).x(target=0).gphase(0.15)
+    expected = (
+        "T  : |  0  | 1  |",
+        "GP : |-0.15|0.00|",
+        "                 ",
+        "q0 : -X----------",
+        "",
+        "T  : |  0  | 1  |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_one_gate_one_qubit_rotation_with_unicode():
     theta = FreeParameter("\u03B8")
     circ = Circuit().rx(angle=theta, target=0)
@@ -68,6 +102,24 @@ def test_one_gate_one_qubit_rotation_with_unicode():
         "q0 : -Rx(θ)-",
         "",
         "T  : |  0  |",
+        "",
+        "Unassigned parameters: [θ].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_with_parametric_expression_global_phase_():
+    theta = FreeParameter("\u03B8")
+    circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
+    expected = (
+        "T  : |0| 1 |    2    |",
+        "GP : |0|2*θ|2*θ + 1.0|",
+        "                      ",
+        "q0 : -X-X-------------",
+        "",
+        "T  : |0| 1 |    2    |",
+        "",
+        "Global phase: 2*θ + 1.0",
         "",
         "Unassigned parameters: [θ].",
     )
@@ -183,6 +235,38 @@ def test_connector_across_two_qubits():
         "q5 : -H---",
         "",
         "T  : |0|1|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_neg_control_qubits():
+    circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
+    expected = (
+        "T  : |0|",
+        "        ",
+        "q0 : -N-",
+        "      | ",
+        "q1 : -C-",
+        "      | ",
+        "q2 : -X-",
+        "",
+        "T  : |0|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_only_neg_control_qubits():
+    circ = Circuit().x(2, control=[0, 1], control_state=0)
+    expected = (
+        "T  : |0|",
+        "        ",
+        "q0 : -N-",
+        "      | ",
+        "q1 : -N-",
+        "      | ",
+        "q2 : -X-",
+        "",
+        "T  : |0|",
     )
     _assert_correct_diagram(circ, expected)
 

@@ -52,20 +52,25 @@ def test_failed_quantum_job(aws_session, capsys):
         hyperparameters={"test_case": "failed"},
     )
 
-    job_name = job.name
-    pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
-    re.match(pattern=pattern, string=job.arn)
+    pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
+    assert re.match(pattern=pattern, string=job.arn)
 
     # Check job is in failed state.
     assert job.state() == "FAILED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
+    job_name = job.name
+    s3_bucket = aws_session.default_bucket()
+    subdirectory = re.match(
+        rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
+        job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
+    ).group(1)
     keys = aws_session.list_keys(
-        bucket=f"amazon-braket-{aws_session.region}-{aws_session.account_id}",
-        prefix=f"jobs/{job_name}",
+        bucket=s3_bucket,
+        prefix=f"jobs/{job_name}/{subdirectory}/",
     )
-    assert keys == [f"jobs/{job_name}/script/source.tar.gz"]
+    assert keys == [f"jobs/{job_name}/{subdirectory}/script/source.tar.gz"]
 
     # no results saved
     assert job.result() == {}
@@ -108,33 +113,44 @@ def test_completed_quantum_job(aws_session, capsys):
         hyperparameters={"test_case": "completed"},
     )
 
-    job_name = job.name
-    pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
-    re.match(pattern=pattern, string=job.arn)
+    pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
+    assert re.match(pattern=pattern, string=job.arn)
 
     # check job is in completed state.
     assert job.state() == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
-    s3_bucket = f"amazon-braket-{aws_session.region}-{aws_session.account_id}"
+    job_name = job.name
+    s3_bucket = aws_session.default_bucket()
+    subdirectory = re.match(
+        rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
+        job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
+    ).group(1)
     keys = aws_session.list_keys(
         bucket=s3_bucket,
-        prefix=f"jobs/{job_name}",
+        prefix=f"jobs/{job_name}/{subdirectory}/",
     )
     for expected_key in [
-        f"jobs/{job_name}/script/source.tar.gz",
-        f"jobs/{job_name}/data/output/model.tar.gz",
-        f"jobs/{job_name}/tasks/[^/]*/results.json",
-        f"jobs/{job_name}/checkpoints/{job_name}_plain_data.json",
-        f"jobs/{job_name}/checkpoints/{job_name}.json",
+        f"jobs/{job_name}/{subdirectory}/script/source.tar.gz",
+        f"jobs/{job_name}/{subdirectory}/data/output/model.tar.gz",
+        f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}_plain_data.json",
+        f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}.json",
     ]:
         assert any(re.match(expected_key, key) for key in keys)
+
+    # Check that tasks exist in the correct location
+    tasks_keys = aws_session.list_keys(
+        bucket=s3_bucket,
+        prefix=f"jobs/{job_name}/tasks/",
+    )
+    expected_task_location = f"jobs/{job_name}/tasks/[^/]*/results.json"
+    assert any(re.match(expected_task_location, key) for key in tasks_keys)
 
     # Check if checkpoint is uploaded in requested format.
     for s3_key, expected_data in [
         (
-            f"jobs/{job_name}/checkpoints/{job_name}_plain_data.json",
+            f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}_plain_data.json",
             {
                 "braketSchemaHeader": {
                     "name": "braket.jobs_data.persisted_job_data",
@@ -145,7 +161,7 @@ def test_completed_quantum_job(aws_session, capsys):
             },
         ),
         (
-            f"jobs/{job_name}/checkpoints/{job_name}.json",
+            f"jobs/{job_name}/{subdirectory}/checkpoints/{job_name}.json",
             {
                 "braketSchemaHeader": {
                     "name": "braket.jobs_data.persisted_job_data",

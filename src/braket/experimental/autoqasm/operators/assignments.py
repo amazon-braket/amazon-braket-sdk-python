@@ -25,6 +25,59 @@ from braket.experimental.autoqasm import constants, errors, program, types
 from braket.experimental.autoqasm.types.conversions import var_type_from_oqpy
 
 
+def assign_for_output(target_name: str, value: Any) -> Any:
+    """Operator declares the `oq` variable, or sets variable's value if it's
+    already declared. Runs only for return statements on `main` decorated
+    functions.
+
+    Args:
+        target_name (str): The name of assignment target. It is the variable
+            name on the lhs of an assignment statement.
+        value (Any): The value of assignment. It is the object on the rhs of
+            an assignment statement.
+
+    Returns:
+        Any: Assignment value with updated name attribute if the value is an
+        `oqpy` type. Otherwise, it returns unchanged assignment value.
+    """
+    aq_context = program.get_program_conversion_context()
+
+    is_value_name_used = isinstance(value, oqpy.base.Var) and aq_context.is_var_name_used(
+        value.name
+    )
+
+    value = types.wrap_value(value)
+
+    oqpy_program = aq_context.get_oqpy_program()
+
+    if not isinstance(value, (oqpy.base.OQPyExpression, oqpy.base.Var)):
+        return value
+
+    if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(
+        value, oqpy.base.Var
+    ):  # Classical types subclass from both Var and OQPyExpression, and we
+        # only need to handle `OQPyExpression`s here
+        # Create a dummy target with the right name
+        target = oqpy.FloatVar(name=target_name)
+        oqpy_program.set(target, value)
+        return target
+
+    target = copy.copy(value)
+    target.init_expression = None
+    target.name = target_name
+
+    if target_name == value.name:
+        # Avoid statements like `a = a;`
+        return value
+
+    if is_value_name_used or value.init_expression is None:
+        oqpy_program.set(target, value)
+    else:
+        oqpy_program.set(target, value.init_expression)
+
+    return target
+
+
 def assign_stmt(target_name: str, value: Any) -> Any:
     """Operator declares the `oq` variable, or sets variable's value if it's
     already declared.
@@ -59,7 +112,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         # The special logic here is to handle this case properly and avoid
         # declaring a new variable unless it is necessary.
 
-        if is_value_name_used:
+        if program_conversion_context.subroutines_processing and is_value_name_used:
             # This is a value which already exists as a variable in the program.
             # Return it directly without wrapping it or declaring a new variable.
             return value
