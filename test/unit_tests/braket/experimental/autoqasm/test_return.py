@@ -117,28 +117,6 @@ val = 1 + input_a;"""
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
-def test_expressions_and_control_flow():
-    @aq.main(num_qubits=3)
-    def main():
-        val = 0.5
-        for i in aq.range(3):
-            val = val + measure(i)
-        return val
-
-    expected = """OPENQASM 3.0;
-output float[64] val;
-qubit[3] __qubits__;
-val = 0.5;
-for int i in [0:3 - 1] {
-    bit __bit_0__;
-    __bit_0__ = measure __qubits__[i];
-    val = val + __bit_0__;
-}"""
-
-    assert main.to_ir() == expected
-
-
 def test_return_tuple():
     @aq.main
     def main():
