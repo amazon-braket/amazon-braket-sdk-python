@@ -155,11 +155,12 @@ retval2_ = 2;"""
 
 
 def test_name_collisions():
-    with pytest.raises(aq.errors.NameConflict):
+    @aq.main
+    def main(val):
+        return val
 
-        @aq.main
-        def main(val):
-            return val
+    with pytest.raises(aq.errors.NameConflict):
+        main.to_ir()
 
 
 def test_return_inputs():
