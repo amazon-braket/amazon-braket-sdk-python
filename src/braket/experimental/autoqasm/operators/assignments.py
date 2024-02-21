@@ -15,6 +15,7 @@
 """Operators for assignment statements."""
 
 import copy
+from collections.abc import Iterable
 from typing import Any
 
 import oqpy
@@ -40,18 +41,12 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         Any: Assignment value with updated name attribute if the value is an
         `oqpy` type. Otherwise, it returns unchanged assignment value.
     """
-    aq_context = program.get_program_conversion_context()
-
-    is_value_name_used = isinstance(value, oqpy.base.Var) and aq_context.is_var_name_used(
-        value.name
-    )
-
+    if value is None:
+        return None
     value = types.wrap_value(value)
 
+    aq_context = program.get_program_conversion_context()
     oqpy_program = aq_context.get_oqpy_program()
-
-    if not isinstance(value, (oqpy.base.OQPyExpression, oqpy.base.Var)):
-        return value
 
     if isinstance(value, oqpy.base.OQPyExpression) and not isinstance(
         value, oqpy.base.Var
@@ -62,6 +57,28 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         oqpy_program.set(target, value)
         return target
 
+    if isinstance(value, Iterable):
+        retvals = []
+        for i, item in enumerate(value):
+            retvals.append(_add_assignment(f"{target_name}{i}", item))
+        return retvals
+    else:
+        return _add_assignment(target_name, value)
+
+
+def _add_assignment(target_name: str, value: Any) -> Any:
+    """Adds a statement to the underlying oqpy program that assigns `target_name`
+    to the `value`.
+
+    Args:
+        target_name (str): The name of assignment target.
+        value (Any): The value of assignment.
+
+    Returns:
+        Any: Value of the assignment.
+    """
+    aq_context = program.get_program_conversion_context()
+    oqpy_program = aq_context.get_oqpy_program()
     target = copy.copy(value)
     target.init_expression = None
     target.name = target_name
@@ -70,6 +87,9 @@ def assign_for_output(target_name: str, value: Any) -> Any:
         # Avoid statements like `a = a;`
         return value
 
+    is_value_name_used = isinstance(value, oqpy.base.Var) and aq_context.is_var_name_used(
+        value.name
+    )
     if is_value_name_used or value.init_expression is None:
         oqpy_program.set(target, value)
     else:

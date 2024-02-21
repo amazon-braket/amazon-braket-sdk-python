@@ -112,6 +112,12 @@ def wrap_value(node: Any) -> Any:
     raise NotImplementedError(node)
 
 
+@wrap_value.register(tuple)
+def _(node: tuple):
+    wrapped_nodes = tuple(wrap_value(item) for item in node)
+    return wrapped_nodes
+
+
 @wrap_value.register(bool)
 def _(node: bool):
     return aq_types.BoolVar(node)
