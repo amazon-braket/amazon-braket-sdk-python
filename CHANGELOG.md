@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.70.3 (2024-02-21)
+
+### Bug Fixes and Other Changes
+
+ * remove test with job creation with qpu
+ * use the caller's account id based on the session
+ * docs: add note about using env variables for endpoint
+
 ## v1.70.2 (2024-02-14)
 
 ### Bug Fixes and Other Changes
