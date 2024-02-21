@@ -56,10 +56,13 @@ def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
         )
 
 
-def test_create_job_via_invalid_reservation_arn_on_qpu(aws_session, reservation_arn):
+def test_create_job_via_invalid_reservation_arn_on_qpu(
+    aws_session, reservation_arn, braket_devices
+):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
+        online_dev = next(dev for dev in braket_devices if dev.is_available and dev.type == "QPU")
         AwsQuantumJob.create(
-            device=Devices.IonQ.Harmony,
+            device=online_dev.arn,
             source_module="test/integ_tests/job_test_script.py",
             entry_point="job_test_script:start_here",
             wait_until_complete=True,
