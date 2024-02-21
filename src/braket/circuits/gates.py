@@ -137,7 +137,7 @@ class H(Gate):
 Gate.register_gate(H)
 
 
-class I(Gate):  # noqa: E742, E261
+class I(Gate):  # noqa: E742
     r"""Identity gate.
 
     Unitary matrix:
@@ -224,6 +224,9 @@ class GPhase(AngledGate):
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
+
+    Raises:
+        ValueError: If `angle` is not present
     """
 
     def __init__(self, angle: Union[FreeParameterExpression, float]):
@@ -1066,8 +1069,9 @@ class Rx(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -1158,8 +1162,9 @@ class Ry(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -1435,8 +1440,9 @@ class U(TripleAngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         _theta = self.angle_1
         _phi = self.angle_2
@@ -1928,8 +1934,9 @@ class XY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -2694,8 +2701,9 @@ class XX(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -2806,8 +2814,9 @@ class YY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -3398,7 +3407,7 @@ class MS(TripleAngledGate):
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
         angle_3 (Union[FreeParameterExpression, float]): angle in radians.
-        Default value is angle_3=pi/2.
+            Default value is angle_3=pi/2.
     """
 
     def __init__(
@@ -3554,7 +3563,7 @@ class Unitary(Gate):
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Unitary.construct(
-            targets=[qubit for qubit in target],
+            targets=list(target),
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
@@ -3571,7 +3580,7 @@ class Unitary(Gate):
 
         return f"#pragma braket unitary({formatted_matrix}) {', '.join(qubits)}"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Unitary):
         if isinstance(other, Unitary):
             return self.matrix_equivalence(other)
         return False
@@ -3647,8 +3656,7 @@ class PulseGate(Gate, Parameterizable):
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
-        """
-        Takes in parameters and returns an object with specified parameters
+        """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Returns:
@@ -3681,7 +3689,7 @@ class PulseGate(Gate, Parameterizable):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+        r"""Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
 
         Args:
@@ -3721,8 +3729,7 @@ Gate.register_gate(PulseGate)
 
 
 def format_complex(number: complex) -> str:
-    """
-    Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
+    """Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
 
     Args:
         number (complex): A complex number.
@@ -3736,8 +3743,7 @@ def format_complex(number: complex) -> str:
             return f"{number.real} {imag_sign} {abs(number.imag)}im"
         else:
             return f"{number.real}"
+    elif number.imag:
+        return f"{number.imag}im"
     else:
-        if number.imag:
-            return f"{number.imag}im"
-        else:
-            return "0"
+        return "0"

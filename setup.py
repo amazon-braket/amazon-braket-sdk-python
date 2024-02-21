@@ -39,6 +39,7 @@ setup(
         "boltons",
         "boto3>=1.28.53",
         "cloudpickle==2.2.1",
+        "diastatic-malt",
         "nest-asyncio",
         "networkx",
         "numpy",

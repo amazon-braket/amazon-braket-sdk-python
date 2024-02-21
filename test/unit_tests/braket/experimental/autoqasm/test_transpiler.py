@@ -16,10 +16,10 @@
 import functools
 
 import pytest
+from malt.core.ag_ctx import ControlStatusCtx, Status
+from malt.utils import ag_logging
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.autograph import ag_logging
-from braket.experimental.autoqasm.autograph.core.ag_ctx import ControlStatusCtx, Status
 from braket.experimental.autoqasm.errors import UnknownQubitCountError
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 

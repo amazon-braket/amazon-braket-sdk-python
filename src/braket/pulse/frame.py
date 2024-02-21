@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import math
 from typing import Any, Optional
 
@@ -21,9 +23,9 @@ from braket.pulse.port import Port
 
 
 class Frame:
-    """
-    Frame tracks the frame of reference, when interacting with the qubits, throughout the execution
-    of a program. See https://openqasm.com/language/openpulse.html#frames for more details.
+    """Frame tracks the frame of reference, when interacting with the qubits, throughout the
+    execution of a program. See https://openqasm.com/language/openpulse.html#frames for more
+    details.
     """
 
     def __init__(
@@ -35,7 +37,8 @@ class Frame:
         is_predefined: bool = False,
         properties: Optional[dict[str, Any]] = None,
     ):
-        """
+        """Initializes a Frame.
+
         Args:
             frame_id (str): str identifying a unique frame.
             port (Port): port that this frame is attached to.
@@ -58,7 +61,7 @@ class Frame:
         """Returns a str indicating the frame id."""
         return self._frame_id
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Frame) -> bool:
         return (
             (
                 (self.id == other.id)

@@ -24,11 +24,10 @@ class CircuitDiagram(ABC):
     @staticmethod
     @abstractmethod
     def build_diagram(circuit: cir.Circuit) -> str:
-        """
-        Build a diagram for the specified `circuit`.
+        """Build a diagram for the specified `circuit`.
 
         Args:
-            circuit (Circuit): The circuit to build a diagram for.
+            circuit (cir.Circuit): The circuit to build a diagram for.
 
         Returns:
             str: String representation for the circuit diagram.

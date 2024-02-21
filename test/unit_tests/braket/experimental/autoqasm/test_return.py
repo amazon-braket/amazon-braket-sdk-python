@@ -87,7 +87,6 @@ b = __bit_0__;"""
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_basic_arithmetic():
     @aq.main
     def main():
@@ -95,14 +94,14 @@ def test_basic_arithmetic():
         return val
 
     expected = """OPENQASM 3.0;
-input int[32] input_a;
+int[32] __int_0__ = 1;
+int[32] __int_1__ = 2;
 output int[32] val;
-val = 3;"""
+val = __int_0__ + __int_1__;"""
 
     assert main.to_ir() == expected
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_expressions():
     @aq.main
     def main(input_a: int):
@@ -113,8 +112,7 @@ def test_expressions():
     expected = """OPENQASM 3.0;
 input int[32] input_a;
 output int[32] val;
-val = 1;
-val = val + input_a;"""
+val = 1 + input_a;"""
 
     assert main.to_ir() == expected
 
@@ -130,12 +128,12 @@ def test_expressions_and_control_flow():
 
     expected = """OPENQASM 3.0;
 output float[64] val;
-qubit[5] __qubits__;
+qubit[3] __qubits__;
 val = 0.5;
 for int i in [0:3 - 1] {
-    bit __bit_1__;
-    __bit_1__ = measure __qubits__[i];
-    val = val + __bit_1__;
+    bit __bit_0__;
+    __bit_0__ = measure __qubits__[i];
+    val = val + __bit_0__;
 }"""
 
     assert main.to_ir() == expected
@@ -157,29 +155,76 @@ retval2_ = 2;"""
 
 
 def test_name_collisions():
-    @aq.main
-    def main(val):
-        return val
+    with pytest.raises(aq.errors.NameConflict):
 
-    expected = """OPENQASM 3.0;
-input float val;
-output float[64] val_;
-val_ = val;"""
-
-    assert main.to_ir() == expected
+        @aq.main
+        def main(val):
+            return val
 
 
-@pytest.mark.xfail(raises=TypeError)  # Needs OQPy 0.3.5
 def test_return_inputs():
     @aq.main
     def main(val1, val2):
         return val1 + val2
 
     expected = """OPENQASM 3.0;
-input float[64] val1;
-input float[64] val2;
+input float val1;
+input float val2;
 output float[64] retval_;
 retval_ = val1 + val2;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_ints():
+    @aq.main
+    def main(val1: int, val2: int):
+        return val1 + val2
+
+    expected = """OPENQASM 3.0;
+input int[32] val1;
+input int[32] val2;
+output int[32] retval_;
+retval_ = val1 + val2;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_bools():
+    @aq.main
+    def main(val1: bool, val2: bool):
+        return val1 or val2
+
+    expected = """OPENQASM 3.0;
+input bool val1;
+input bool val2;
+output bool retval_;
+bool __bool_0__;
+__bool_0__ = val1 || val2;
+retval_ = __bool_0__;"""
+
+    assert main.to_ir() == expected
+
+
+def test_return_bits():
+    @aq.main
+    def main():
+        b0 = measure(0)
+        b1 = measure(1)
+        return b0 + b1
+
+    expected = """OPENQASM 3.0;
+bit b0;
+bit b1;
+output bit retval_;
+qubit[2] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+b0 = __bit_0__;
+bit __bit_1__;
+__bit_1__ = measure __qubits__[1];
+b1 = __bit_1__;
+retval_ = b0 + b1;"""
 
     assert main.to_ir() == expected
 
@@ -230,7 +275,7 @@ def ghz(int[32] n) {
     }
 }
 input int[32] n;
-output bit retval_;
+output bit[3] retval_;
 qubit[10] __qubits__;
 ghz(n);
 bit[3] __bit_0__ = "000";

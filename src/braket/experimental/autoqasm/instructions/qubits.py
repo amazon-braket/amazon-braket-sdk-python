@@ -22,7 +22,6 @@ import oqpy.base
 from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
-from braket.parametric import FreeParameterExpression
 
 
 def _get_physical_qubit_indices(qids: list[str]) -> list[int]:
@@ -110,17 +109,6 @@ def _(qid: str) -> oqpy.Qubit:
         return oqpy.PhysicalQubits[qubit_idx]
     else:
         raise ValueError(f"invalid qubit label: '{qid}'")
-
-
-@_qubit.register
-def _(qid: FreeParameterExpression) -> oqpy.Qubit:
-    # Unbound expression dependent on input, like `h(q)` where q is unbound
-    int_var = oqpy.IntVar(
-        name=str(qid),
-        needs_declaration=False,
-        size=32,
-    )
-    return _qubit(int_var)
 
 
 @_qubit.register

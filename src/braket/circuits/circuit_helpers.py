@@ -15,8 +15,7 @@ from braket.circuits import Circuit, ResultType
 
 
 def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
-    """
-    Validates if circuit and shots are correct before running on a device
+    """Validates if circuit and shots are correct before running on a device
 
     Args:
         circuit (Circuit): circuit to validate
@@ -40,7 +39,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         if not circuit.observables_simultaneously_measurable:
             raise ValueError("Observables cannot be sampled simultaneously")
         for rt in circuit.result_types:
-            if isinstance(rt, ResultType.StateVector) or isinstance(rt, ResultType.Amplitude):
+            if isinstance(rt, (ResultType.Amplitude, ResultType.StateVector)):
                 raise ValueError("StateVector or Amplitude cannot be specified when shots>0")
             elif isinstance(rt, ResultType.Probability):
                 num_qubits = len(rt.target) or circuit.qubit_count
