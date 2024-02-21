@@ -205,7 +205,7 @@ To run linters and doc generators and unit tests:
 tox
 ```
 
-or if your machine can handle higher workloads, run them in parallel with:
+or if your machine can handle multithreaded workloads, run them in parallel with:
 
 ```bash
 tox -p auto
