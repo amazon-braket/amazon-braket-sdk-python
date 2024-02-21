@@ -12,8 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Pulse instructions that apply to frames or qubits.
-"""
+"""Pulse instructions that apply to frames or qubits."""
 
 from typing import Union
 
@@ -31,12 +30,14 @@ from braket.pulse.waveforms import Waveform
 from braket.registers.qubit_set import QubitSet
 
 
-def _pulse_instruction(name: str, frame: Frame, *args) -> None:
+def _pulse_instruction(name: str, frame: Frame, *args) -> PulseSequence:
     """Define a pulse instruction.
 
     Args:
         name (str): Name of the pulse instruction.
         frame (Frame): Frame for which the instruction is apply to.
+    Returns:
+        PulseSequence: Sequence resulting from applying this instruction.
     """
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context._has_pulse_control = True
@@ -48,10 +49,11 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> None:
     )
 
     if program_conversion_context._calibration_definitions_processing:
-        getattr(pulse_sequence, name)(frame, *args)
+        res = getattr(pulse_sequence, name)(frame, *args)
     else:
         with oqpy.Cal(pulse_sequence._program):
-            getattr(pulse_sequence, name)(frame, *args)
+            res = getattr(pulse_sequence, name)(frame, *args)
+    return res
 
 
 def set_frequency(frame: Frame, frequency: float) -> None:
@@ -115,13 +117,21 @@ def play(frame: Frame, waveform: Waveform) -> None:
     _pulse_instruction("play", frame, waveform)
 
 
-def capture_v0(frame: Frame) -> None:
+def capture_v0(frame: Frame) -> BitVar:
     """Adds an instruction to capture the bit output from measuring the specified frame.
 
     Args:
         frame (Frame): Frame on which the capture operation needs to be performed.
+    Returns:
+        BitVar: A BitVar with the result of the capture.
     """
-    _pulse_instruction("_capture_v0_with_return", frame)
+    # FIXME: This is a hack to get the right classical variable name from the generated sequence.
+    # Fix with the Program refactor.
+    sequence = _pulse_instruction("_capture_v0_with_return", frame)
+    name = sequence._program.stack[0].body[-1].body[0].lvalue.name
+    bit = BitVar(name=name)  # Name gets overwritten
+    bit.name = name
+    return bit
 
 
 def delay(
