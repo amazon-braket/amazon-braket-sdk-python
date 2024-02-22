@@ -21,7 +21,7 @@ from malt.converters import return_statements
 from malt.core import ag_ctx, converter
 from malt.pyct import templates
 
-from braket.experimental.autoqasm import program, constants
+from braket.experimental.autoqasm import constants, program
 from braket.experimental.autoqasm.operators.assignments import assign_for_output
 
 
