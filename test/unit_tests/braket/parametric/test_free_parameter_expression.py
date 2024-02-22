@@ -111,6 +111,11 @@ def test_truediv():
     assert truediv_expr == expected
 
 
+def test_truediv_by_zero():
+    with pytest.raises(ValueError):
+        (FreeParameter("theta") + 5) / 0
+
+
 def test_r_truediv():
     r_truediv_expr = 1 / FreeParameter("theta")
     expected = FreeParameterExpression(1 / FreeParameter("theta"))

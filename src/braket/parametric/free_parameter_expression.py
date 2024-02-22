@@ -155,6 +155,8 @@ class FreeParameterExpression:
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression / other.expression)
         else:
+            if other == 0:
+                raise ValueError("Cannot divide by 0")
             return FreeParameterExpression(self.expression / other)
 
     def __rtruediv__(self, other: FreeParameterExpression):
