@@ -632,8 +632,9 @@ def noise_model():
 
 
 @pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
-def test_valid_local_device_for_noise_model(backend, noise_model):
-    device = LocalSimulator(backend, noise_model=noise_model)
+def test_set_noise_model(backend, noise_model):
+    device = LocalSimulator(backend)
+    device.set_noise_model(noise_model)
     assert device._noise_model.instructions == [
         NoiseModelInstruction(Noise.BitFlip(0.05), GateCriteria(Gate.H)),
         NoiseModelInstruction(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot)),
@@ -641,15 +642,26 @@ def test_valid_local_device_for_noise_model(backend, noise_model):
 
 
 @pytest.mark.parametrize("backend", ["dummy_oq3"])
-def test_invalid_local_device_for_noise_model(backend, noise_model):
+def test_set_noise_model_invalid_device(backend, noise_model):
     with pytest.raises(ValueError):
-        _ = LocalSimulator(backend, noise_model=noise_model)
+        device = LocalSimulator(backend)
+        device.set_noise_model(noise_model)
 
 
 @pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
-def test_local_device_with_invalid_noise_model(backend, noise_model):
+def test_set_noise_model_invalid_noise_model(backend, noise_model):
     with pytest.raises(TypeError):
-        _ = LocalSimulator(backend, noise_model=Mock())
+        device = LocalSimulator(backend)
+        device.set_noise_model(Mock())
+
+
+@pytest.mark.parametrize("backend", ["dummy_oq3_dm"])
+def test_valid_local_device_for_noise_model(backend, noise_model):
+    device = LocalSimulator(backend, noise_model=noise_model)
+    assert device._noise_model.instructions == [
+        NoiseModelInstruction(Noise.BitFlip(0.05), GateCriteria(Gate.H)),
+        NoiseModelInstruction(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot)),
+    ]
 
 
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
