@@ -289,6 +289,8 @@ class AwsQuantumJob(QuantumJob):
     @property
     def _logs_prefix(self) -> str:
         """str: the prefix for the job logs."""
+        # jobs ARNs used to contain the job name and use a log prefix of `job-name/`
+        # now job ARNs use a UUID and a log prefix of `job-name/UUID/`
         return (
             f"{self.name}/"
             if self.arn.endswith(self.name)
