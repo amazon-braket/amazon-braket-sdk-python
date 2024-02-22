@@ -1104,3 +1104,13 @@ def test_bad_device_arn_format(aws_session):
 
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
+
+
+def test_logs_prefix(quantum_job_arn, quantum_job_name, aws_session, generate_get_job_response):
+    quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
+    assert quantum_job._logs_prefix == f"{quantum_job_name}/"
+    uuid = "UUID-123456789"
+    uuid_arn = quantum_job_arn.replace(quantum_job_name, uuid)
+    uuid_job = AwsQuantumJob(uuid_arn, aws_session)
+    assert uuid_job._logs_prefix == f"{quantum_job_name}/{uuid}/"
