@@ -42,12 +42,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Build an ASCII string circuit diagram.
 
         Args:
-            circuit (Circuit): Circuit for which to build a diagram.
+            circuit (cir.Circuit): Circuit for which to build a diagram.
 
         Returns:
             str: ASCII string circuit diagram.
         """
-
         if not circuit.instructions:
             return ""
 
@@ -155,8 +154,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _compute_moment_global_phase(
         global_phase: float | None, items: list[Instruction]
     ) -> float | None:
-        """
-        Compute the integrated phase at a certain moment.
+        """Compute the integrated phase at a certain moment.
 
         Args:
             global_phase (float | None): The integrated phase up to the computed moment
@@ -180,8 +178,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
     ) -> list[tuple[QubitSet, list[Instruction]]]:
-        """
-        Group instructions in a moment for ASCII diagram
+        """Group instructions in a moment for ASCII diagram
 
         Args:
             circuit_qubits (QubitSet): set of qubits in circuit
@@ -239,8 +236,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _categorize_result_types(
         result_types: list[ResultType],
     ) -> tuple[list[str], list[ResultType]]:
-        """
-        Categorize result types into result types with target and those without.
+        """Categorize result types into result types with target and those without.
 
         Args:
             result_types (list[ResultType]): list of result types
@@ -267,8 +263,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         items: list[Union[Instruction, ResultType]],
         global_phase: float | None,
     ) -> str:
-        """
-        Return a set of columns in the ASCII string diagram of the circuit for a list of items.
+        """Return a set of columns in the ASCII string diagram of the circuit for a list of items.
 
         Args:
             col_title (str): title of column set
@@ -279,7 +274,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: An ASCII string diagram for the column set.
         """
-
         # Group items to separate out overlapping multi-qubit items
         groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
@@ -315,8 +309,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         items: list[Union[Instruction, ResultType]],
         global_phase: float | None = None,
     ) -> str:
-        """
-        Return a column in the ASCII string diagram of the circuit for a given list of items.
+        """Return a column in the ASCII string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
@@ -345,7 +338,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 marker = "*" * len(ascii_symbol)
                 num_after = len(circuit_qubits) - 1
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol] + after
+                ascii_symbols = [ascii_symbol, *after]
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -443,9 +436,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _build_map_control_qubits(item: Instruction, control_qubits: QubitSet) -> dict(Qubit, int):
         control_state = getattr(item, "control_state", None)
         if control_state is not None:
-            map_control_qubit_states = {
-                qubit: state for qubit, state in zip(control_qubits, control_state)
-            }
+            map_control_qubit_states = dict(zip(control_qubits, control_state))
         else:
             map_control_qubit_states = {qubit: 1 for qubit in control_qubits}
 

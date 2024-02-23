@@ -14,15 +14,18 @@
 from __future__ import annotations
 
 import ast
+import operator
+from functools import reduce
 from numbers import Number
 from typing import Any, Union
 
-from sympy import Expr, Float, Symbol, sympify
+import sympy
+from oqpy.base import OQPyExpression
+from oqpy.classical_types import FloatVar
 
 
 class FreeParameterExpression:
-    """
-    Class 'FreeParameterExpression'
+    """Class 'FreeParameterExpression'
 
     Objects that can take a parameter all inherit from :class:'Parameterizable'.
     FreeParametersExpressions can hold FreeParameters that can later be
@@ -30,15 +33,18 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
-        """
-        Initializes a FreeParameterExpression. Best practice is to initialize using
+    def __init__(self, expression: Union[FreeParameterExpression, Number, sympy.Expr, str]):
+        """Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
 
         Below are examples of how FreeParameterExpressions should be made.
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
+
+        Raises:
+            NotImplementedError: Raised if the expression is not of type
+                [FreeParameterExpression, Number, Expr, str]
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -53,7 +59,7 @@ class FreeParameterExpression:
         }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-        elif isinstance(expression, (Number, Expr)):
+        elif isinstance(expression, (Number, sympy.Expr)):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression
@@ -61,8 +67,9 @@ class FreeParameterExpression:
             raise NotImplementedError
 
     @property
-    def expression(self) -> Union[Number, Expr]:
+    def expression(self) -> Union[Number, sympy.Expr]:
         """Gets the expression.
+
         Returns:
             Union[Number, Expr]: The expression for the FreeParameterExpression.
         """
@@ -70,7 +77,7 @@ class FreeParameterExpression:
 
     def subs(
         self, parameter_values: dict[str, Number]
-    ) -> Union[FreeParameterExpression, Number, Expr]:
+    ) -> Union[FreeParameterExpression, Number, sympy.Expr]:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
@@ -83,7 +90,7 @@ class FreeParameterExpression:
             Union[FreeParameterExpression, Number, Expr]: A numerical value if there are no
             symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
-        new_parameter_values = dict()
+        new_parameter_values = {}
         for key, val in parameter_values.items():
             if issubclass(type(key), FreeParameterExpression):
                 new_parameter_values[key.expression] = val
@@ -103,7 +110,7 @@ class FreeParameterExpression:
         if isinstance(node, ast.Num):
             return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
-            return FreeParameterExpression(Symbol(node.id))
+            return FreeParameterExpression(sympy.Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -117,80 +124,103 @@ class FreeParameterExpression:
         else:
             raise ValueError(f"Unsupported string detected: {node}")
 
-    def __add__(self, other):
+    def __add__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other + self.expression)
 
-    def __sub__(self, other):
+    def __sub__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other - self.expression)
 
-    def __mul__(self, other):
+    def __mul__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other * self.expression)
 
-    def __pow__(self, other, modulo=None):
+    def __pow__(self, other: FreeParameterExpression, modulo: float = None):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
 
-    def __rpow__(self, other):
+    def __rpow__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other**self.expression)
 
     def __neg__(self):
         return FreeParameterExpression(-1 * self.expression)
 
-    def __eq__(self, other):
+    def __eq__(self, other: FreeParameterExpression):
         if isinstance(other, FreeParameterExpression):
-            return sympify(self.expression).equals(sympify(other.expression))
+            return sympy.sympify(self.expression).equals(sympy.sympify(other.expression))
         return False
 
     def __repr__(self) -> str:
-        """
-        The representation of the :class:'FreeParameterExpression'.
+        """The representation of the :class:'FreeParameterExpression'.
 
         Returns:
             str: The expression of the class:'FreeParameterExpression' to represent the class.
         """
         return repr(self.expression)
 
+    def _to_oqpy_expression(self) -> OQPyExpression:
+        """Transforms into an OQPyExpression.
 
-def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
+        Returns:
+            OQPyExpression: The AST node.
+        """
+        ops = {sympy.Add: operator.add, sympy.Mul: operator.mul, sympy.Pow: operator.pow}
+        if isinstance(self.expression, tuple(ops)):
+            return reduce(
+                ops[type(self.expression)],
+                map(
+                    lambda x: FreeParameterExpression(x)._to_oqpy_expression(), self.expression.args
+                ),
+            )
+        elif isinstance(self.expression, sympy.Number):
+            return float(self.expression)
+        else:
+            fvar = FloatVar(
+                name=self.expression.name, init_expression="input", needs_declaration=False
+            )
+            fvar.size = None
+            fvar.type.size = None
+            return fvar
+
+
+def subs_if_free_parameter(parameter: Any, **kwargs: Union[FreeParameterExpression, str]) -> Any:
     """Substitute a free parameter with the given kwargs, if any.
+
     Args:
         parameter (Any): The parameter.
-        ``**kwargs``: The kwargs to use to substitute.
+        **kwargs (Union[FreeParameterExpression, str]): The kwargs to use to substitute.
 
     Returns:
         Any: The substituted parameters.
     """
     if isinstance(parameter, FreeParameterExpression):
         substituted = parameter.subs(kwargs)
-        if isinstance(substituted, Float):
+        if isinstance(substituted, sympy.Number):
             substituted = float(substituted)
         return substituted
     return parameter
 
 
 def _is_float(argument: str) -> bool:
-    """
-    Checks if a string can be cast into a float.
+    """Checks if a string can be cast into a float.
 
     Args:
         argument (str): String to check.

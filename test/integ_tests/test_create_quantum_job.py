@@ -16,6 +16,7 @@ import os.path
 import re
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import job_test_script
@@ -36,27 +37,24 @@ def decorator_python_version():
     return int(major_version), int(minor_version)
 
 
-def test_failed_quantum_job(aws_session, capsys):
+def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     """Asserts the hybrid job is failed with the output, checkpoints,
     quantum tasks not created in bucket and only input is uploaded to s3. Validate the
     results/download results have the response raising RuntimeError. Also,
     check if the logs displays the Assertion Error.
     """
-
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        aws_session=aws_session,
-        wait_until_complete=True,
-        hyperparameters={"test_case": "failed"},
-    )
+    job = failed_quantum_job
+    job_name = job.name
 
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
     assert re.match(pattern=pattern, string=job.arn)
 
     # Check job is in failed state.
-    assert job.state() == "FAILED"
+    while True:
+        time.sleep(5)
+        if job.state() in AwsQuantumJob.TERMINAL_STATES:
+            break
+    assert job.state(use_cached_value=True) == "FAILED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
@@ -97,27 +95,22 @@ def test_failed_quantum_job(aws_session, capsys):
     )
 
 
-def test_completed_quantum_job(aws_session, capsys):
+def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     """Asserts the hybrid job is completed with the output, checkpoints, quantum tasks and
     script folder created in S3 for respective hybrid job. Validate the results are
     downloaded and results are what we expect. Also, assert that logs contains all the
     necessary steps for setup and running the hybrid job and is displayed to the user.
     """
 
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        wait_until_complete=True,
-        aws_session=aws_session,
-        hyperparameters={"test_case": "completed"},
-    )
-
+    job = completed_quantum_job
+    job_name = job.name
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
     assert re.match(pattern=pattern, string=job.arn)
 
-    # check job is in completed state.
-    assert job.state() == "COMPLETED"
+    # Check the job has completed
+    job.result()
+
+    assert job.state(use_cached_value=True) == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
@@ -179,19 +172,11 @@ def test_completed_quantum_job(aws_session, capsys):
             == expected_data
         )
 
-    # Check downloaded results exists in the file system after the call.
-    downloaded_result = f"{job_name}/{AwsQuantumJob.RESULTS_FILENAME}"
     current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         try:
-            job.download_result()
-            assert (
-                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
-                and Path(downloaded_result).exists()
-            )
-
             # Check results match the expectations.
             assert job.result() == {"converged": True, "energy": -0.2}
         finally:

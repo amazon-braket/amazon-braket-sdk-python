@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Union
 
 
 @dataclass
@@ -105,6 +104,9 @@ class TimeSeries:
 
         Returns:
             TimeSeries: time series constructed from lists
+
+        Raises:
+            ValueError: If the len of `times` does not equal len of `values`.
         """
         if len(times) != len(values):
             raise ValueError(
@@ -118,12 +120,12 @@ class TimeSeries:
         return ts
 
     @staticmethod
-    def constant_like(times: Union[list[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
+    def constant_like(times: list | float | TimeSeries, constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given another time series or the list of time points,
-        and the constant values
+        and the constant values.
 
         Args:
-            times (Union[list[float], TimeSeries]): list of time points or a time series
+            times (list | float | TimeSeries): list of time points or a time series
             constant (float): constant value
 
         Returns:
@@ -154,6 +156,10 @@ class TimeSeries:
         Returns:
             TimeSeries: The concatenated time series.
 
+        Raises:
+            ValueError: If the timeseries is not empty and time points in the first
+                TimeSeries are not strictly smaller than in the second.
+
         Example:
         ::
             time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
@@ -165,7 +171,6 @@ class TimeSeries:
                 concat_ts.times() = [0, 0.1, 0.2, 0.3]
                 concat_ts.values() = [1, 2, 4, 5]
         """
-
         not_empty_ts = len(other.times()) * len(self.times()) != 0
         if not_empty_ts and min(other.times()) <= max(self.times()):
             raise ValueError(
@@ -202,6 +207,9 @@ class TimeSeries:
         Returns:
             TimeSeries: The stitched time series.
 
+        Raises:
+            ValueError: If boundary is not one of {"mean", "left", "right"}.
+
         Example (StitchBoundaryCondition.MEAN):
         ::
             time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
@@ -229,7 +237,6 @@ class TimeSeries:
                 stitch_ts.times() = [0, 0.1, 0.3]
                 stitch_ts.values() = [1, 4, 5]
         """
-
         if len(self.times()) == 0:
             return TimeSeries.from_lists(times=other.times(), values=other.values())
         if len(other.times()) == 0:
@@ -287,18 +294,20 @@ class TimeSeries:
         Args:
             times (list[float]): List of time points in a single block
             values (list[float]): Values for the time series in a single block
-            num_repeat (int): Number of block repeatitions
+            num_repeat (int): Number of block repetitions
+
+        Raises:
+            ValueError: If the first and last values are not the same
 
         Returns:
             TimeSeries: A new periodic time series.
         """
-
         if not (values[0] == values[-1]):
-            raise ValueError("The first and last values must coinscide to guarantee periodicity")
+            raise ValueError("The first and last values must coincide to guarantee periodicity")
         new_time_series = TimeSeries()
 
         repeating_block = TimeSeries.from_lists(times=times, values=values)
-        for index in range(num_repeat):
+        for _index in range(num_repeat):
             new_time_series = new_time_series.stitch(repeating_block)
 
         return new_time_series
@@ -316,6 +325,9 @@ class TimeSeries:
             slew_rate_max (float): The maximum slew rate
             time_separation_min (float): The minimum separation of time points
 
+        Raises:
+            ValueError: If the time separation is negative
+
         Returns:
             TimeSeries: A trapezoidal time series
 
@@ -324,7 +336,6 @@ class TimeSeries:
             f(t) from t=0 to t=T, where T is the duration.
             We also assume the trapezoidal time series starts and ends at zero.
         """
-
         if area <= 0.0:
             raise ValueError("The area of the trapezoidal time series has to be positive.")
         if value_max <= 0.0:
@@ -370,8 +381,7 @@ class TimeSeries:
 
 # TODO: Verify if this belongs here.
 def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) -> bool:
-    """
-    Returns True if the times and values in two time series are all within (less than)
+    """Returns True if the times and values in two time series are all within (less than)
     a given tolerance range. The values in the TimeSeries must be numbers that can be
     subtracted from each-other, support getting the absolute value, and can be compared
     against the tolerance.

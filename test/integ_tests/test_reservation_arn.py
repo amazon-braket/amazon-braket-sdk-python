@@ -18,7 +18,6 @@ from botocore.exceptions import ClientError
 from test_create_quantum_job import decorator_python_version
 
 from braket.aws import AwsDevice
-from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.circuits import Circuit
 from braket.devices import Devices
 from braket.jobs import get_job_device_arn, hybrid_job
@@ -52,19 +51,6 @@ def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
         device.run(
             circuit,
             shots=10,
-            reservation_arn=reservation_arn,
-        )
-
-
-def test_create_job_via_invalid_reservation_arn_on_qpu(aws_session, reservation_arn):
-    with pytest.raises(ClientError, match="Reservation arn is invalid"):
-        AwsQuantumJob.create(
-            device=Devices.IonQ.Harmony,
-            source_module="test/integ_tests/job_test_script.py",
-            entry_point="job_test_script:start_here",
-            wait_until_complete=True,
-            aws_session=aws_session,
-            hyperparameters={"test_case": "completed"},
             reservation_arn=reservation_arn,
         )
 

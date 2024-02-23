@@ -18,7 +18,7 @@ import itertools
 import math
 import numbers
 from copy import deepcopy
-from typing import Union
+from typing import ClassVar, Union
 
 import numpy as np
 
@@ -37,9 +37,8 @@ class H(StandardObservable):
     """Hadamard operation as an observable."""
 
     def __init__(self):
-        """
-        Examples:
-            >>> Observable.H()
+        """Examples:
+        >>> Observable.H()
         """
         super().__init__(ascii_symbols=["H"])
 
@@ -68,19 +67,18 @@ class H(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Ry(-math.pi / 4)])
+        return tuple([Gate.Ry(-math.pi / 4)])  # noqa: C409
 
 
 Observable.register_observable(H)
 
 
-class I(Observable):  # noqa: E742, E261
+class I(Observable):  # noqa: E742
     """Identity operation as an observable."""
 
     def __init__(self):
-        """
-        Examples:
-            >>> Observable.I()
+        """Examples:
+        >>> Observable.I()
         """
         super().__init__(qubit_count=1, ascii_symbols=["I"])
 
@@ -112,6 +110,7 @@ class I(Observable):  # noqa: E742, E261
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -128,9 +127,8 @@ class X(StandardObservable):
     """Pauli-X operation as an observable."""
 
     def __init__(self):
-        """
-        Examples:
-            >>> Observable.X()
+        """Examples:
+        >>> Observable.X()
         """
         super().__init__(ascii_symbols=["X"])
 
@@ -157,7 +155,7 @@ class X(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.H()])
+        return tuple([Gate.H()])  # noqa: C409
 
 
 Observable.register_observable(X)
@@ -167,9 +165,8 @@ class Y(StandardObservable):
     """Pauli-Y operation as an observable."""
 
     def __init__(self):
-        """
-        Examples:
-            >>> Observable.Y()
+        """Examples:
+        >>> Observable.Y()
         """
         super().__init__(ascii_symbols=["Y"])
 
@@ -196,7 +193,7 @@ class Y(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Z(), Gate.S(), Gate.H()])
+        return tuple([Gate.Z(), Gate.S(), Gate.H()])  # noqa: C409
 
 
 Observable.register_observable(Y)
@@ -206,9 +203,8 @@ class Z(StandardObservable):
     """Pauli-Z operation as an observable."""
 
     def __init__(self):
-        """
-        Examples:
-            >>> Observable.Z()
+        """Examples:
+        >>> Observable.Z()
         """
         super().__init__(ascii_symbols=["Z"])
 
@@ -245,7 +241,8 @@ class TensorProduct(Observable):
     """Tensor product of observables"""
 
     def __init__(self, observables: list[Observable]):
-        """
+        """Initializes a `TensorProduct`.
+
         Args:
             observables (list[Observable]): List of observables for tensor product
 
@@ -348,6 +345,7 @@ class TensorProduct(Observable):
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
+
         Returns:
             tuple[Gate, ...]: The basis rotation gates for this observable.
         """
@@ -359,6 +357,7 @@ class TensorProduct(Observable):
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -400,7 +399,7 @@ class TensorProduct(Observable):
     def __repr__(self):
         return "TensorProduct(" + ", ".join([repr(o) for o in self.factors]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: TensorProduct):
         return self.matrix_equivalence(other)
 
     @staticmethod
@@ -432,7 +431,8 @@ class Sum(Observable):
     """Sum of observables"""
 
     def __init__(self, observables: list[Observable], display_name: str = "Hamiltonian"):
-        """
+        """Inits a `Sum`.
+
         Args:
             observables (list[Observable]): List of observables for Sum
             display_name (str): Name to use for an instance of this Sum
@@ -456,11 +456,11 @@ class Sum(Observable):
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    def __mul__(self, other) -> Observable:
+    def __mul__(self, other: numbers.Number) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             sum_copy = deepcopy(self)
-            for i, obs in enumerate(sum_copy.summands):
+            for i, _obs in enumerate(sum_copy.summands):
                 sum_copy._summands[i]._coef *= other
             return sum_copy
         raise TypeError("Observable coefficients must be numbers.")
@@ -514,7 +514,7 @@ class Sum(Observable):
     def __repr__(self):
         return "Sum(" + ", ".join([repr(o) for o in self.summands]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Sum):
         return repr(self) == repr(other)
 
     @staticmethod
@@ -529,12 +529,13 @@ class Hermitian(Observable):
     """Hermitian matrix as an observable."""
 
     # Cache of eigenpairs
-    _eigenpairs = {}
+    _eigenpairs: ClassVar = {}
 
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
-        """
+        """Inits a `Hermitian`.
+
         Args:
-            matrix (numpy.ndarray): Hermitian matrix that defines the observable.
+            matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
 
@@ -594,7 +595,7 @@ class Hermitian(Observable):
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * self._matrix
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Hermitian) -> bool:
         return self.matrix_equivalence(other)
 
     @property
@@ -604,6 +605,7 @@ class Hermitian(Observable):
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -614,8 +616,7 @@ class Hermitian(Observable):
 
     @staticmethod
     def _get_eigendecomposition(matrix: np.ndarray) -> dict[str, np.ndarray]:
-        """
-        Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
+        """Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
         is created with the same matrix, the eigendecomposition doesn't have to
         be recalculated.
@@ -649,8 +650,7 @@ Observable.register_observable(Hermitian)
 
 
 def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]]) -> Observable:
-    """
-    Create an observable from the IR observable list. This can be a tensor product of
+    """Create an observable from the IR observable list. This can be a tensor product of
     observables or a single observable.
 
     Args:
