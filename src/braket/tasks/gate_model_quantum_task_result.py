@@ -265,7 +265,7 @@ class GateModelQuantumTaskResult:
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         if result.measurements:
-            measurements = MeasurementsList(result.measurements)
+            measurements = MeasurementsList(result.measurements, dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
             m_probs = GateModelQuantumTaskResult.measurement_probabilities_from_measurement_counts(
                 m_counts
