@@ -54,7 +54,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
-    def _ascii_diagram_column(
+    def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],

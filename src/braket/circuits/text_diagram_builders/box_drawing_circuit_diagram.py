@@ -28,7 +28,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class BoxDrawingCircuitDiagram(CircuitDiagram):
-    """Builds ASCII string circuit diagrams using box-drawing characters."""
+    """Builds string circuit diagrams using box-drawing characters."""
 
     _vdelim = "│"  # Character that connects qubits of multi-qubit gates
     _qubit_line_char = "─"  # Character used for the qubit line
@@ -56,14 +56,14 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
         lines[-1] = lines[0]
 
     @classmethod
-    def _ascii_diagram_column(
+    def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,
         items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
         """
-        Return a column in the ASCII string diagram of the circuit for a given list of items.
+        Return a column in the string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
@@ -71,7 +71,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
             global_phase (float | None): the integrated global phase up to this column
 
         Returns:
-            str: an ASCII string diagram for the specified moment in time for a column.
+            str: a string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: cls._qubit_line_char for qubit in circuit_qubits}
         connections = {qubit: "none" for qubit in circuit_qubits}

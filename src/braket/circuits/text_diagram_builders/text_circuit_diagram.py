@@ -49,7 +49,7 @@ def _build_diagram_internal(target_class: type, circuit: cir.Circuit) -> str:
         circuit (Circuit): Circuit for which to build a diagram.
 
     Returns:
-        str: ASCII string circuit diagram.
+        str: string circuit diagram.
     """
 
     if not circuit.instructions:
@@ -71,7 +71,7 @@ def _build_diagram_internal(target_class: type, circuit: cir.Circuit) -> str:
     # Moment columns
     for time, instructions in time_slices.items():
         global_phase = _compute_moment_global_phase(global_phase, instructions)
-        moment_str = _ascii_diagram_column_set(
+        moment_str = _create_diagram_column_set(
             target_class, str(time), circuit_qubits, instructions, global_phase
         )
         column_strs.append(moment_str)
@@ -80,7 +80,7 @@ def _build_diagram_internal(target_class: type, circuit: cir.Circuit) -> str:
     additional_result_types, target_result_types = _categorize_result_types(circuit.result_types)
     if target_result_types:
         column_strs.append(
-            _ascii_diagram_column_set(
+            _create_diagram_column_set(
                 target_class, "Result Types", circuit_qubits, target_result_types, global_phase
             )
         )
@@ -253,7 +253,7 @@ def _categorize_result_types(
     return additional_result_types, target_result_types
 
 
-def _ascii_diagram_column_set(
+def _create_diagram_column_set(
     target_class: type,
     col_title: str,
     circuit_qubits: QubitSet,
@@ -261,7 +261,7 @@ def _ascii_diagram_column_set(
     global_phase: float | None,
 ) -> str:
     """
-    Return a set of columns in the ASCII string diagram of the circuit for a list of items.
+    Return a set of columns in the string diagram of the circuit for a list of items.
 
     Args:
         target_class (type): type of the diagram builder
@@ -271,14 +271,14 @@ def _ascii_diagram_column_set(
         global_phase (float | None): the integrated global phase up to this set
 
     Returns:
-        str: An ASCII string diagram for the column set.
+        str: A string diagram for the column set.
     """
 
     # Group items to separate out overlapping multi-qubit items
     groupings = _group_items(circuit_qubits, items)
 
     column_strs = [
-        target_class._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
+        target_class._create_diagram_column(circuit_qubits, grouping[1], global_phase)
         for grouping in groupings
     ]
 
