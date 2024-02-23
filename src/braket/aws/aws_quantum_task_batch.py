@@ -183,12 +183,12 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         single_gate_definitions_type = dict
 
         args = [task_specifications, inputs, gate_definitions]
-        arg_types = [single_task_type, single_input_type, single_gate_definitions_type]
+        single_arg_types = [single_task_type, single_input_type, single_gate_definitions_type]
 
         batch_length = 1
         arg_lengths = []
-        for arg, arg_type in zip(args, arg_types):
-            arg_length = 1 if isinstance(arg, arg_type) else len(arg)
+        for arg, single_arg_type in zip(args, single_arg_types):
+            arg_length = 1 if isinstance(arg, single_arg_type) else len(arg)
             arg_lengths.append(arg_length)
 
             if arg_length != 1:
