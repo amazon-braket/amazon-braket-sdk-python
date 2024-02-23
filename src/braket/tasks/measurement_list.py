@@ -16,7 +16,7 @@ from typing import Optional
 import numpy as np
 
 
-class MeasurementsList(list):
+class MeasurementsList(np.ndarray):
     """
     The gate model quantum task result measurements list. The measurements
     list is callable and can take in a list of qubits to measure.
@@ -27,8 +27,9 @@ class MeasurementsList(list):
             are the ones in `GateModelQuantumTaskResult.measured_qubits`.
     """
 
-    def __init__(self, measurements: np.ndarray):
-        super().__init__(measurements)
+    def __new__(cls, measurements: np.ndarray):
+        measurements_list = np.asarray(measurements).view(cls)
+        return measurements_list
 
     def __call__(self, **kwds: np.ndarray) -> np.ndarray:
         if kwds:
@@ -36,15 +37,11 @@ class MeasurementsList(list):
                 self, range(len(self)), kwds.get("qubits")
             )
 
-    def __str__(self):
-        return str(np.asarray(self))
-
     def _selected_measurements(
         measurements: np.ndarray, measured_qubits: list[int], targets: Optional[list[int]]
     ) -> np.ndarray:
-        selected_measurements = np.array(measurements)
         if targets is not None and not np.array_equal(targets, measured_qubits):
             # Only some qubits targeted
             columns = [measured_qubits.index(t) for t in targets]
-            selected_measurements = selected_measurements[:, columns]
-        return selected_measurements
+            measurements = measurements[:, columns]
+        return measurements

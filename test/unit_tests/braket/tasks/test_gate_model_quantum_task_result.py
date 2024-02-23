@@ -140,7 +140,7 @@ def additional_metadata_oqc(qasm2_program):
 @pytest.fixture
 def result_obj_1(task_metadata_shots, additional_metadata):
     return GateModelTaskResult(
-        measurements=MeasurementsList([[0, 0], [0, 1], [0, 1], [0, 1]]),
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
         measuredQubits=[0, 1],
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata,
@@ -238,20 +238,18 @@ def result_obj_5(task_metadata_shots):
                 results=[jaqcd.Probability(targets=[1]), jaqcd.Expectation(observable=["z"])],
             )
         ),
-        measurements=MeasurementsList(
-            [
-                [0, 0, 1, 0],
-                [1, 1, 1, 1],
-                [1, 0, 0, 1],
-                [0, 0, 1, 0],
-                [1, 1, 1, 1],
-                [0, 1, 1, 1],
-                [0, 0, 0, 1],
-                [0, 1, 1, 1],
-                [0, 0, 0, 0],
-                [0, 0, 0, 1],
-            ]
-        ),
+        measurements=[
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [1, 0, 0, 1],
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+        ],
         measuredQubits=[0, 1, 2, 3],
     )
 
@@ -278,7 +276,7 @@ def malformatted_results_2(task_metadata_shots, additional_metadata):
 @pytest.fixture
 def openqasm_result_obj_shots(task_metadata_shots, additional_metadata_openqasm):
     return GateModelTaskResult.construct(
-        measurements=MeasurementsList([[0, 0], [0, 1], [0, 1], [0, 1]]),
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
         measuredQubits=[0, 1],
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata_openqasm,
@@ -350,9 +348,14 @@ def test_get_compiled_circuit_no_metadata(result_obj_1):
 
 
 def test_measurement_counts_from_measurements():
-    measurements: MeasurementsList = MeasurementsList(
-        [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
-    )
+    measurements: MeasurementsList = [
+        [1, 0, 1, 0],
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 1, 0],
+    ]
     measurement_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(
         measurements
     )
@@ -374,9 +377,7 @@ def test_measurement_probabilities_from_measurement_counts():
 def test_measurements_from_measurement_probabilities():
     shots = 5
     probabilities = {"00": 0.2, "01": 0.2, "10": 0.2, "11": 0.4}
-    measurements_list = MeasurementsList(
-        [["0", "0"], ["0", "1"], ["1", "0"], ["1", "1"], ["1", "1"]]
-    )
+    measurements_list = [["0", "0"], ["0", "1"], ["1", "0"], ["1", "1"], ["1", "1"]]
     expected_results = np.asarray(measurements_list, dtype=int)
 
     measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
@@ -504,20 +505,18 @@ def test_calculate_ir_results(ir_result, expected_result):
         instructions=[jaqcd.H(target=i) for i in range(4)], results=[ir_result]
     ).json()
     measured_qubits = [0, 1, 2, 3]
-    measurements = MeasurementsList(
-        [
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [1, 0, 0, 1],
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
-        ]
-    )
+    measurements = [
+        [0, 0, 1, 0],
+        [1, 1, 1, 1],
+        [1, 0, 0, 1],
+        [0, 0, 1, 0],
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 0, 1],
+        [0, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ]
     result_types = GateModelQuantumTaskResult._calculate_result_types(
         ir_string, measurements, measured_qubits
     )
@@ -530,7 +529,7 @@ def test_calculate_ir_results(ir_result, expected_result):
 def test_calculate_ir_results_value_error():
     ir_string = json.dumps({"results": [{"type": "foo"}]})
     measured_qubits = [0]
-    measurements = MeasurementsList([[0]])
+    measurements = [[0]]
     GateModelQuantumTaskResult._calculate_result_types(ir_string, measurements, measured_qubits)
 
 
