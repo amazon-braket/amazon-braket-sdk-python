@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws import AwsDevice, AwsQuantumJob
+from braket.aws import AwsDevice
 from braket.circuits import Circuit, FreeParameter, Observable
 from braket.devices import Devices
 from braket.jobs import get_job_device_arn, hybrid_job
@@ -52,9 +52,4 @@ def run_hybrid_job(num_tasks=1):
     return {"final_theta": theta, "final_exp_val": exp_val}
 
 
-# job = run_hybrid_job(num_tasks=5)
-job = AwsQuantumJob("arn:aws:braket:us-west-2:318845237731:job/run-hybrid-job-1708646475161")
-print(job.arn)
-print(job.result())
-print(job.metrics())
-print(job.logs())
+job = run_hybrid_job(num_tasks=5)
