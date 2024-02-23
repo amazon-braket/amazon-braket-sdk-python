@@ -13,6 +13,7 @@
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
 device = AwsDevice(Devices.Amazon.SV1)
 
