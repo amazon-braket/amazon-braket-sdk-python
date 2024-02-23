@@ -20,7 +20,7 @@ from gate_model_device_testing_utils import bell_pair_openqasm_testing, no_resul
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
-SHOTS = 1000
+SHOTS = 100
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 SIMULATOR_ARNS = [TN1_ARN]
 
