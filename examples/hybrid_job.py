@@ -53,3 +53,4 @@ def run_hybrid_job(num_tasks=1):
 
 
 job = run_hybrid_job(num_tasks=5)
+print(job.result())
