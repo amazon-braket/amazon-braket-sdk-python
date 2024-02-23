@@ -13,8 +13,6 @@
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
-from braket.devices import LocalSimulator
-from braket.circuits import Circuit, FreeParameter
 
 device = AwsDevice(Devices.Amazon.SV1)
 
