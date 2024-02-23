@@ -22,7 +22,7 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
-from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagramUtilities
+from braket.circuits.text_diagram_builders import text_circuit_diagram
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
@@ -47,9 +47,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
             str: string circuit diagram.
         """
 
-        return TextCircuitDiagramUtilities._build_diagram_internal(
-            BoxDrawingCircuitDiagram, circuit
-        )
+        return text_circuit_diagram._build_diagram_internal(BoxDrawingCircuitDiagram, circuit)
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -118,7 +116,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = TextCircuitDiagramUtilities._create_output(
+        output = text_circuit_diagram._create_output(
             BoxDrawingCircuitDiagram, symbols, connections, circuit_qubits, global_phase
         )
         return output
