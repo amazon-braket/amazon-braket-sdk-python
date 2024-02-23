@@ -292,9 +292,9 @@ class AwsQuantumJob(QuantumJob):
         # jobs ARNs used to contain the job name and use a log prefix of `job-name/`
         # now job ARNs use a UUID and a log prefix of `job-name/UUID/`
         return (
-            f"{self.name}/"
+            f"{self.name}"
             if self.arn.endswith(self.name)
-            else f"{self.name}/{self.arn.split('/')[-1]}/"
+            else f"{self.name}/{self.arn.split('/')[-1]}"
         )
 
     def state(self, use_cached_value: bool = False) -> str:
@@ -472,7 +472,7 @@ class AwsQuantumJob(QuantumJob):
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
             job_end = int(math.ceil(metadata["endedAt"].timestamp()))
         return fetcher.get_metrics_for_job(
-            self.name, metric_type, statistic, job_start, job_end, self.arn
+            self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
         )
 
     def cancel(self) -> str:

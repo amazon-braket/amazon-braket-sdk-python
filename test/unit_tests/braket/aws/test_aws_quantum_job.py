@@ -1112,10 +1112,18 @@ def test_logs_prefix(job_region, quantum_job_name, aws_session, generate_get_job
     # old jobs with the `arn:.../job-name` style ARN use `job-name/` as the logs prefix
     name_arn = f"arn:aws:braket:{job_region}:875981177017:job/{quantum_job_name}"
     quantum_job = AwsQuantumJob(name_arn, aws_session)
-    assert quantum_job._logs_prefix == f"{quantum_job_name}/"
+    assert quantum_job._logs_prefix == f"{quantum_job_name}"
 
     # jobs with the `arn:.../uuid` style ARN use `job-name/uuid/` as the logs prefix
-    uuid = "UUID-123456789"
-    uuid_arn = f"arn:aws:braket:{job_region}:875981177017:job/{uuid}"
-    uuid_job = AwsQuantumJob(uuid_arn, aws_session)
-    assert uuid_job._logs_prefix == f"{quantum_job_name}/{uuid}/"
+    uuid_1 = "UUID-123456789"
+    uuid_2 = "UUID-987654321"
+    uuid_arn_1 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_1}"
+    uuid_job_1 = AwsQuantumJob(uuid_arn_1, aws_session)
+    uuid_arn_2 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_2}"
+    uuid_job_2 = AwsQuantumJob(uuid_arn_2, aws_session)
+    assert (
+        uuid_job_1._logs_prefix
+        == f"{quantum_job_name}/{uuid_1}"
+        != uuid_job_2._logs_prefix
+        == f"{quantum_job_name}/{uuid_2}"
+    )

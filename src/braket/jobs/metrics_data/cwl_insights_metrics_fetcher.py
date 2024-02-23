@@ -137,7 +137,7 @@ class CwlInsightsMetricsFetcher:
         statistic: MetricStatistic = MetricStatistic.MAX,
         job_start_time: int | None = None,
         job_end_time: int | None = None,
-        job_arn: str | None = None,
+        stream_prefix: str | None = None,
     ) -> dict[str, list[Union[str, float, int]]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
@@ -151,8 +151,8 @@ class CwlInsightsMetricsFetcher:
                 Default: 3 hours before job_end_time.
             job_end_time (int | None): If the hybrid job is complete, this should be the time at
                 which the hybrid job finished. Default: current time.
-            job_arn (str | None): The ARN for the job. This will allow for differentiation between
-                jobs of the same name.
+            stream_prefix (str | None): If a logs prefix is provided, it will be used instead
+                of the job name.
 
         Returns:
             dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
@@ -169,11 +169,7 @@ class CwlInsightsMetricsFetcher:
         query_end_time = job_end_time or int(time.time())
         query_start_time = job_start_time or query_end_time - self.QUERY_DEFAULT_JOB_DURATION
 
-        stream_prefix = (
-            f"{job_name}"
-            if not job_arn or job_arn.endswith(job_name)
-            else f"{job_name}/{job_arn.split('/')[-1]}"
-        )
+        stream_prefix = stream_prefix or job_name
 
         query = (
             f"fields @timestamp, @message "
