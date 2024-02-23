@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from functools import reduce
 from typing import Union
 
@@ -361,23 +360,3 @@ class TextCircuitDiagram(CircuitDiagram):
         for qubit in qubits:
             output += cls._draw_symbol(symbols[qubit], symbols_width, margins[qubit])
         return output
-
-    @classmethod
-    @abstractmethod
-    def _ascii_diagram_column(
-        cls,
-        circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
-        global_phase: float | None = None,
-    ) -> str:
-        """
-        Return a column in the ASCII string diagram of the circuit for a given list of items.
-
-        Args:
-            circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
-            global_phase (float | None): the integrated global phase up to this column
-
-        Returns:
-            str: an ASCII string diagram for the specified moment in time for a column.
-        """
