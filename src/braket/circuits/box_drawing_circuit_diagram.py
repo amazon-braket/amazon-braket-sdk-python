@@ -51,7 +51,7 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
         # Do not add a line after the circuit
-        # It is safe to do because the last line is empty by construction (see )
+        # It is safe to do because the last line is empty: _qubit_line_spacing["after"] = 1
         lines[-1] = lines[0]
 
     @classmethod
