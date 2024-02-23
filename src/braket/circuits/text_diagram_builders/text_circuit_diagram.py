@@ -38,6 +38,33 @@ class TextCircuitDiagram(CircuitDiagram):
     _qubit_line_spacing = ...  # number of empty lines around the qubit line
 
     @classmethod
+    def _duplicate_time_at_bottom(cls, lines: str) -> None:
+        raise NotImplementedError
+
+    @classmethod
+    def _ascii_diagram_column(
+        cls,
+        circuit_qubits: QubitSet,
+        items: list[Union[Instruction, ResultType]],
+        global_phase: float | None = None,
+    ) -> str:
+        """Return a column in the string diagram of the circuit for a given list of items.
+
+        Args:
+            circuit_qubits (QubitSet): qubits in circuit
+            items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            global_phase (float | None): the integrated global phase up to this column
+
+        Returns:
+            str: an ASCII string diagram for the specified moment in time for a column.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
+        raise NotImplementedError
+
+    @classmethod
     def _build_diagram_internal(cls, circuit: cir.Circuit) -> str:
         """
         Build a text circuit diagram.

@@ -21,7 +21,7 @@ import numpy as np
 import oqpy
 
 from braket.circuits import compiler_directives
-from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.text_diagram_builders.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
