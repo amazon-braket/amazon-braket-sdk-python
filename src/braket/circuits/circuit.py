@@ -21,7 +21,6 @@ import numpy as np
 import oqpy
 
 from braket.circuits import compiler_directives
-from braket.circuits.text_diagram_builders.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -50,6 +49,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
+from braket.circuits.text_diagram_builders.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
