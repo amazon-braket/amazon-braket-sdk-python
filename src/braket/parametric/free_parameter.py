@@ -16,7 +16,6 @@ from __future__ import annotations
 from numbers import Number
 from typing import Union
 
-import regex
 from sympy import Symbol
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -48,7 +47,6 @@ class FreeParameter(FreeParameterExpression):
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        assert name[0].isalpha() or name[0] == "_"
         self._set_name(name)
         super().__init__(expression=self._name)
 
@@ -95,19 +93,12 @@ class FreeParameter(FreeParameterExpression):
 
     @staticmethod
     def _validate_name(name: str) -> None:
-        unicode_chars = r"\p{Lu}\p{Ll}\p{Lt}\p{Lm}\p{Lo}\p{Nl}"
-        letters = "a-zA-Z"
-        underscore = "_"
-        digits = "0-9"
-        valid_openqasm3_name = regex.compile(
-            r"[{0}{1}{2}][{0}{1}{2}{3}]*".format(unicode_chars, letters, underscore, digits)
-        )
         if not name:
             raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
             raise TypeError("FreeParameter names must be strings")
-        if not valid_openqasm3_name.match(name):
-            raise TypeError("FreeParameter names must comply to OpenQASM3 specifications")
+        if not name[0].isalpha() and not name[0] == "_":
+            raise ValueError("FreeParameter names must start with a letter or an underscore")
 
     def to_dict(self) -> dict:
         return {
