@@ -40,6 +40,7 @@ setup(
         "numpy",
         "openpulse",
         "openqasm3",
+        "regex",
         "sympy",
     ],
     extras_require={
