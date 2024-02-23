@@ -29,6 +29,7 @@ from braket.task_result import (
 from braket.task_result.oqc_metadata_v1 import OqcMetadata
 from braket.task_result.rigetti_metadata_v1 import RigettiMetadata
 from braket.tasks import GateModelQuantumTaskResult
+from braket.tasks.measurement_list import MeasurementsList
 
 
 @pytest.fixture
@@ -139,7 +140,7 @@ def additional_metadata_oqc(qasm2_program):
 @pytest.fixture
 def result_obj_1(task_metadata_shots, additional_metadata):
     return GateModelTaskResult(
-        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measurements=MeasurementsList([[0, 0], [0, 1], [0, 1], [0, 1]]),
         measuredQubits=[0, 1],
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata,
@@ -237,18 +238,20 @@ def result_obj_5(task_metadata_shots):
                 results=[jaqcd.Probability(targets=[1]), jaqcd.Expectation(observable=["z"])],
             )
         ),
-        measurements=[
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [1, 0, 0, 1],
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
-        ],
+        measurements=MeasurementsList(
+            [
+                [0, 0, 1, 0],
+                [1, 1, 1, 1],
+                [1, 0, 0, 1],
+                [0, 0, 1, 0],
+                [1, 1, 1, 1],
+                [0, 1, 1, 1],
+                [0, 0, 0, 1],
+                [0, 1, 1, 1],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1],
+            ]
+        ),
         measuredQubits=[0, 1, 2, 3],
     )
 
@@ -275,7 +278,7 @@ def malformatted_results_2(task_metadata_shots, additional_metadata):
 @pytest.fixture
 def openqasm_result_obj_shots(task_metadata_shots, additional_metadata_openqasm):
     return GateModelTaskResult.construct(
-        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measurements=MeasurementsList([[0, 0], [0, 1], [0, 1], [0, 1]]),
         measuredQubits=[0, 1],
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata_openqasm,
@@ -346,23 +349,8 @@ def test_get_compiled_circuit_no_metadata(result_obj_1):
     assert result.get_compiled_circuit() is None
 
 
-def test_partial_measurements(result_oqc):
-    qubits: np.ndarray = np.array([0])
-    expected_partial_measurements: np.ndarray = [[0], [0], [0], [0]]
-    partial_measurements = result_oqc.partial_measurements(qubits)
-    assert np.array_equal(expected_partial_measurements, partial_measurements)
-
-
-def test_partial_measurement_counts(result_oqc):
-    [[0, 0], [0, 1], [0, 1], [0, 1]]
-    qubits: np.ndarray = np.array([1])
-    expected_partial_measurement_counts: Counter = {"0": 1, "1": 3}
-    partial_measurement_counts = result_oqc.partial_measurement_counts(qubits)
-    assert expected_partial_measurement_counts == partial_measurement_counts
-
-
 def test_measurement_counts_from_measurements():
-    measurements: np.ndarray = np.array(
+    measurements: MeasurementsList = MeasurementsList(
         [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
     )
     measurement_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(
@@ -386,7 +374,9 @@ def test_measurement_probabilities_from_measurement_counts():
 def test_measurements_from_measurement_probabilities():
     shots = 5
     probabilities = {"00": 0.2, "01": 0.2, "10": 0.2, "11": 0.4}
-    measurements_list = [["0", "0"], ["0", "1"], ["1", "0"], ["1", "1"], ["1", "1"]]
+    measurements_list = MeasurementsList(
+        [["0", "0"], ["0", "1"], ["1", "0"], ["1", "1"], ["1", "1"]]
+    )
     expected_results = np.asarray(measurements_list, dtype=int)
 
     measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
@@ -402,7 +392,9 @@ def test_from_string_measurements(result_str_1):
     expected_measurements = np.asarray(result_obj.measurements, dtype=int)
     assert task_result.task_metadata == result_obj.taskMetadata
     assert task_result.additional_metadata == result_obj.additionalMetadata
-    assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
+    assert np.array2string(np.asarray(task_result.measurements)) == np.array2string(
+        expected_measurements
+    )
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
     assert task_result.measurements_copied_from_device
@@ -415,7 +407,9 @@ def test_from_object_result_types(result_obj_5):
     result_obj = result_obj_5
     task_result = GateModelQuantumTaskResult.from_object(result_obj)
     expected_measurements = np.asarray(result_obj.measurements, dtype=int)
-    assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
+    assert np.array2string(np.asarray(task_result.measurements)) == np.array2string(
+        expected_measurements
+    )
     assert np.allclose(task_result.values[0], np.array([0.6, 0.4]))
     assert task_result.values[1] == [0.4, 0.2, -0.2, -0.4]
     assert task_result.result_types[0].type == jaqcd.Probability(targets=[1])
@@ -510,7 +504,7 @@ def test_calculate_ir_results(ir_result, expected_result):
         instructions=[jaqcd.H(target=i) for i in range(4)], results=[ir_result]
     ).json()
     measured_qubits = [0, 1, 2, 3]
-    measurements = np.array(
+    measurements = MeasurementsList(
         [
             [0, 0, 1, 0],
             [1, 1, 1, 1],
@@ -536,7 +530,7 @@ def test_calculate_ir_results(ir_result, expected_result):
 def test_calculate_ir_results_value_error():
     ir_string = json.dumps({"results": [{"type": "foo"}]})
     measured_qubits = [0]
-    measurements = np.array([[0]])
+    measurements = MeasurementsList([[0]])
     GateModelQuantumTaskResult._calculate_result_types(ir_string, measurements, measured_qubits)
 
 

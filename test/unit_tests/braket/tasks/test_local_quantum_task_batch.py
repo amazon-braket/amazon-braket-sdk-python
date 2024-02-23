@@ -13,11 +13,10 @@
 
 import uuid
 
-import numpy as np
-
 from braket.task_result import TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
+from braket.tasks.measurement_list import MeasurementsList
 
 RESULTS = [
     GateModelQuantumTaskResult(
@@ -25,7 +24,7 @@ RESULTS = [
             **{"id": str(uuid.uuid4()), "deviceId": "default", "shots": 100}
         ),
         additional_metadata=None,
-        measurements=np.array([[0, 1], [1, 0]]),
+        measurements=MeasurementsList([[0, 1], [1, 0]]),
         measured_qubits=[0, 1],
         result_types=None,
         values=None,
