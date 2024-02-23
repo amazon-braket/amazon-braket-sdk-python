@@ -311,7 +311,7 @@ def _create_output(
     global_phase: float | None,
 ) -> str:
     """
-    Creates the ouput for a single colum:
+    Creates the ouput for a single column:
         a. If there was one or more gphase gate, create a first line with the total global
         phase shift ending with target_class.vdelim, e.g. 0.14|
         b. for each qubit, append the text representation produces by target_class.draw_symbol

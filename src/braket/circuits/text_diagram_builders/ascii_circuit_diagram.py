@@ -22,7 +22,7 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
-from braket.circuits.text_diagram_builders import text_circuit_diagram
+from braket.circuits.text_diagram_builders import text_circuit_diagram_utils
 from braket.registers.qubit_set import QubitSet
 
 
@@ -46,7 +46,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: string circuit diagram.
         """
 
-        return text_circuit_diagram._build_diagram_internal(AsciiCircuitDiagram, circuit)
+        return text_circuit_diagram_utils._build_diagram_internal(AsciiCircuitDiagram, circuit)
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -149,7 +149,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "|"
 
-        output = text_circuit_diagram._create_output(
+        output = text_circuit_diagram_utils._create_output(
             cls, symbols, margins, circuit_qubits, global_phase
         )
         return output
