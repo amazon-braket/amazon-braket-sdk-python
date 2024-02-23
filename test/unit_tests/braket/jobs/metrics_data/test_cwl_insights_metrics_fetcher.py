@@ -99,7 +99,7 @@ def test_get_all_metrics_complete_results_stream_prefix(
     fetcher = CwlInsightsMetricsFetcher(aws_session)
 
     result = fetcher.get_metrics_for_job(
-        "test_job", job_start_time=1, job_end_time=2, stream_prefix="test_job/uuid/"
+        "test_job", job_start_time=1, job_end_time=2, stream_prefix="test_job/uuid"
     )
     logs_client_mock.get_query_results.assert_called_with(queryId="test")
     logs_client_mock.start_query.assert_called_with(
