@@ -17,15 +17,16 @@ from functools import reduce
 from typing import Union
 
 import braket.circuits.circuit as cir
+from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
-from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagram
+from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagramUtilities
 from braket.registers.qubit_set import QubitSet
 
 
-class AsciiCircuitDiagram(TextCircuitDiagram):
+class AsciiCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
     _vdelim = "|"  # Character that connects qubits of multi-qubit gates
@@ -45,7 +46,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
             str: string circuit diagram.
         """
 
-        return AsciiCircuitDiagram._build_diagram_internal(circuit)
+        return TextCircuitDiagramUtilities._build_diagram_internal(AsciiCircuitDiagram, circuit)
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -148,11 +149,26 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "|"
 
-        output = cls._create_output(symbols, margins, circuit_qubits, global_phase)
+        output = TextCircuitDiagramUtilities._create_output(
+            cls, symbols, margins, circuit_qubits, global_phase
+        )
         return output
 
     @classmethod
     def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
+        """
+        Create a string representing the symbol.
+
+        Args:
+            symbol (str): the gate name
+            symbols_width (int): size of the expected output. The ouput will be filled with
+                cls._qubit_line_char if needed.
+            connection (str): character indicating if the gate also involve a qubit with a lower
+                index.
+
+        Returns:
+            str: a string representing the symbol.
+        """
         output = "{0:{width}}\n".format(connection, width=symbols_width + 1)
         output += "{0:{fill}{align}{width}}\n".format(
             symbol, fill=cls._qubit_line_char, align="<", width=symbols_width + 1

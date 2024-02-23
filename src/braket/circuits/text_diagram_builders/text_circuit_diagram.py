@@ -17,7 +17,6 @@ from functools import reduce
 from typing import Union
 
 import braket.circuits.circuit as cir
-from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -28,43 +27,11 @@ from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class TextCircuitDiagram(CircuitDiagram):
-    """Builds ASCII string circuit diagrams."""
+class TextCircuitDiagramUtilities:
+    """Provides helper methods to build string circuit diagrams."""
 
-    _vdelim = ...  # Character that connects qubits of multi-qubit gates, e.g. "|"
-    _qubit_line_char = ...  # Character used for the qubit line, e.g. "-"
-    _box_padding = ...  # number of blank space characters around the gate name, e.g 0
-    _qubit_line_spacing = ...  # number of empty lines around the qubit line
-
-    @classmethod
-    def _duplicate_time_at_bottom(cls, lines: str) -> None:
-        raise NotImplementedError
-
-    @classmethod
-    def _ascii_diagram_column(
-        cls,
-        circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
-        global_phase: float | None = None,
-    ) -> str:
-        """Return a column in the string diagram of the circuit for a given list of items.
-
-        Args:
-            circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
-            global_phase (float | None): the integrated global phase up to this column
-
-        Returns:
-            str: an ASCII string diagram for the specified moment in time for a column.
-        """
-        raise NotImplementedError
-
-    @classmethod
-    def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
-        raise NotImplementedError
-
-    @classmethod
-    def _build_diagram_internal(cls, circuit: cir.Circuit) -> str:
+    @staticmethod
+    def _build_diagram_internal(target_class: type, circuit: cir.Circuit) -> str:
         """
         Build a text circuit diagram.
 
@@ -82,6 +49,7 @@ class TextCircuitDiagram(CircuitDiagram):
             c. the list of unassigned parameters
 
         Args:
+            target_class (type): type of the diagram builder
             circuit (Circuit): Circuit for which to build a diagram.
 
         Returns:
@@ -97,33 +65,37 @@ class TextCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        y_axis_str, global_phase = cls._prepare_qubit_identifier_column(circuit, circuit_qubits)
+        y_axis_str, global_phase = TextCircuitDiagramUtilities._prepare_qubit_identifier_column(
+            target_class, circuit, circuit_qubits
+        )
 
         time_slices = circuit.moments.time_slices()
         column_strs = []
 
         # Moment columns
         for time, instructions in time_slices.items():
-            global_phase = cls._compute_moment_global_phase(global_phase, instructions)
-            moment_str = cls._ascii_diagram_column_set(
-                str(time), circuit_qubits, instructions, global_phase
+            global_phase = TextCircuitDiagramUtilities._compute_moment_global_phase(
+                global_phase, instructions
+            )
+            moment_str = TextCircuitDiagramUtilities._ascii_diagram_column_set(
+                target_class, str(time), circuit_qubits, instructions, global_phase
             )
             column_strs.append(moment_str)
 
         # Result type columns
-        additional_result_types, target_result_types = cls._categorize_result_types(
-            circuit.result_types
+        additional_result_types, target_result_types = (
+            TextCircuitDiagramUtilities._categorize_result_types(circuit.result_types)
         )
         if target_result_types:
             column_strs.append(
-                cls._ascii_diagram_column_set(
-                    "Result Types", circuit_qubits, target_result_types, global_phase
+                TextCircuitDiagramUtilities._ascii_diagram_column_set(
+                    target_class, "Result Types", circuit_qubits, target_result_types, global_phase
                 )
             )
 
         # Unite strings
-        lines = cls._unite_strings(y_axis_str, column_strs)
-        cls._duplicate_time_at_bottom(lines)
+        lines = TextCircuitDiagramUtilities._unite_strings(y_axis_str, column_strs)
+        target_class._duplicate_time_at_bottom(lines)
 
         if global_phase:
             lines.append(f"\nGlobal phase: {global_phase}")
@@ -141,34 +113,34 @@ class TextCircuitDiagram(CircuitDiagram):
 
         return "\n".join(lines)
 
-    @classmethod
+    @staticmethod
     def _prepare_qubit_identifier_column(
-        cls, circuit: cir.Circuit, circuit_qubits: QubitSet
+        target_class: type, circuit: cir.Circuit, circuit_qubits: QubitSet
     ) -> tuple[str, float | None]:
         # Y Axis Column
         y_axis_width = len(str(int(max(circuit_qubits))))
         y_axis_str = "{0:{width}} : {vdelim}\n".format(
-            "T", width=y_axis_width + 1, vdelim=cls._vdelim
+            "T", width=y_axis_width + 1, vdelim=target_class._vdelim
         )
 
         global_phase = None
         if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
             y_axis_str += "{0:{width}} : {vdelim}\n".format(
-                "GP", width=y_axis_width, vdelim=cls._vdelim
+                "GP", width=y_axis_width, vdelim=target_class._vdelim
             )
             global_phase = 0
 
         for qubit in circuit_qubits:
-            for _ in range(cls._qubit_line_spacing["before"]):
+            for _ in range(target_class._qubit_line_spacing["before"]):
                 y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
 
             y_axis_str += "q{0:{width}} : {qubit_line_char}\n".format(
                 str(int(qubit)),
                 width=y_axis_width,
-                qubit_line_char=cls._qubit_line_char,
+                qubit_line_char=target_class._qubit_line_char,
             )
 
-            for _ in range(cls._qubit_line_spacing["after"]):
+            for _ in range(target_class._qubit_line_spacing["after"]):
                 y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
         return y_axis_str, global_phase
 
@@ -288,9 +260,9 @@ class TextCircuitDiagram(CircuitDiagram):
                 additional_result_types.extend(result_type.ascii_symbols)
         return additional_result_types, target_result_types
 
-    @classmethod
+    @staticmethod
     def _ascii_diagram_column_set(
-        cls,
+        target_class: type,
         col_title: str,
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
@@ -300,6 +272,7 @@ class TextCircuitDiagram(CircuitDiagram):
         Return a set of columns in the ASCII string diagram of the circuit for a list of items.
 
         Args:
+            target_class (type): type of the diagram builder
             col_title (str): title of column set
             circuit_qubits (QubitSet): qubits in circuit
             items (list[Union[Instruction, ResultType]]): list of instructions or result types
@@ -310,15 +283,15 @@ class TextCircuitDiagram(CircuitDiagram):
         """
 
         # Group items to separate out overlapping multi-qubit items
-        groupings = cls._group_items(circuit_qubits, items)
+        groupings = TextCircuitDiagramUtilities._group_items(circuit_qubits, items)
 
         column_strs = [
-            cls._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
+            target_class._ascii_diagram_column(circuit_qubits, grouping[1], global_phase)
             for grouping in groupings
         ]
 
         # Unite column strings
-        lines = cls._unite_strings(column_strs[0], column_strs[1:])
+        lines = TextCircuitDiagramUtilities._unite_strings(column_strs[0], column_strs[1:])
 
         # Adjust for column title width
         col_title_width = len(col_title)
@@ -326,26 +299,45 @@ class TextCircuitDiagram(CircuitDiagram):
         if symbols_width < col_title_width:
             diff = col_title_width - symbols_width
             for i in range(len(lines) - 1):
-                if lines[i].endswith(cls._qubit_line_char):
-                    lines[i] += cls._qubit_line_char * diff
+                if lines[i].endswith(target_class._qubit_line_char):
+                    lines[i] += target_class._qubit_line_char * diff
                 else:
                     lines[i] += " "
 
         first_line = "{:^{width}}{vdelim}\n".format(
-            col_title, width=len(lines[0]) - 1, vdelim=cls._vdelim
+            col_title, width=len(lines[0]) - 1, vdelim=target_class._vdelim
         )
 
         return first_line + "\n".join(lines)
 
-    @classmethod
+    @staticmethod
     def _create_output(
-        cls,
+        target_class: type,
         symbols: dict[Qubit, str],
         margins: dict[Qubit, str],
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._box_padding
+        """
+        Creates the ouput for a single colum:
+            a. If there was one or more gphase gate, create a first line with the total global
+            phase shift ending with target_class.vdelim, e.g. 0.14|
+            b. for each qubit, append the text representation produces by target_class.draw_symbol
+
+        Args:
+            target_class (type): type of the diagram builder
+            symbols (dict[Qubit, str]): dictionary of the gate name for each qubit
+            margins (dict[Qubit, str]): map of the qubit interconnections. Specific to the
+                `target_class.draw_symbol` method.
+            qubits (QubitSet): set of the circuit qubits
+            global_phase (float | None): total global phase shift added during the moment
+
+        Returns:
+            str: a string representing a diagram column.
+        """
+        symbols_width = (
+            max([len(symbol) for symbol in symbols.values()]) + target_class._box_padding
+        )
         output = ""
 
         if global_phase is not None:
@@ -354,9 +346,13 @@ class TextCircuitDiagram(CircuitDiagram):
             )
             symbols_width = max([symbols_width, len(global_phase_str)])
             output += "{0:{fill}{align}{width}}{vdelim}\n".format(
-                global_phase_str, fill=" ", align="^", width=symbols_width, vdelim=cls._vdelim
+                global_phase_str,
+                fill=" ",
+                align="^",
+                width=symbols_width,
+                vdelim=target_class._vdelim,
             )
 
         for qubit in qubits:
-            output += cls._draw_symbol(symbols[qubit], symbols_width, margins[qubit])
+            output += target_class._draw_symbol(symbols[qubit], symbols_width, margins[qubit])
         return output

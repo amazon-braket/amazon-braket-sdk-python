@@ -17,16 +17,17 @@ from functools import reduce
 from typing import Literal
 
 import braket.circuits.circuit as cir
+from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
-from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagram
+from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagramUtilities
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class BoxDrawingCircuitDiagram(TextCircuitDiagram):
+class BoxDrawingCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams using box-drawing characters."""
 
     _vdelim = "│"  # Character that connects qubits of multi-qubit gates
@@ -46,7 +47,9 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
             str: string circuit diagram.
         """
 
-        return BoxDrawingCircuitDiagram._build_diagram_internal(circuit)
+        return TextCircuitDiagramUtilities._build_diagram_internal(
+            BoxDrawingCircuitDiagram, circuit
+        )
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -115,7 +118,9 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
+        output = TextCircuitDiagramUtilities._create_output(
+            BoxDrawingCircuitDiagram, symbols, connections, circuit_qubits, global_phase
+        )
         return output
 
     @staticmethod
@@ -173,13 +178,28 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
             connections[qubits[-1]] = "above"
             connections[qubits[0]] = "below"
 
+    # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
+    # flake8: noqa: BCS005
     @classmethod
     def _draw_symbol(
         cls,
         symbol: str,
         symbols_width: int,
-        connection: Literal["above, below, both, none"],
+        connection: Literal["above", "below", "both", "none"],
     ) -> str:
+        """
+        Create a string representing the symbol inside a box.
+
+        Args:
+            symbol (str): the gate name
+            symbols_width (int): size of the expected output. The ouput will be filled with
+                cls._qubit_line_char if needed.
+            connection (Literal["above", "below", "both", "none"]): specifies if a connection
+                will be drawn above and/or below the box.
+
+        Returns:
+            str: a string representing the symbol.
+        """
         top = ""
         bottom = ""
         if symbol in ["C", "N", "SWAP"]:
@@ -211,7 +231,7 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
 
     @staticmethod
     def _build_box(
-        symbol: str, connection: Literal["above, below, both, none"]
+        symbol: str, connection: Literal["above", "below", "both", "none"]
     ) -> tuple[str, str, str]:
         top_edge_symbol = "┴" if connection in ["above", "both"] else "─"
         top = f"┌─{_fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
@@ -225,7 +245,7 @@ class BoxDrawingCircuitDiagram(TextCircuitDiagram):
     @staticmethod
     def _build_verbatim_box(
         symbol: Literal["StartVerbatim", "EndVerbatim"],
-        connection: Literal["above, below, both, none"],
+        connection: Literal["above", "below", "both", "none"],
     ) -> str:
         top = ""
         bottom = ""
