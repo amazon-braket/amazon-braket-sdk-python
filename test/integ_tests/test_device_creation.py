@@ -28,8 +28,8 @@ PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 @pytest.mark.parametrize(
     "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
-def test_device_creation(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_creation(arn, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.arn == arn
     assert device.name
     assert device.status
@@ -39,17 +39,17 @@ def test_device_creation(arn, aws_session):
 
 
 @pytest.mark.parametrize("arn", [(PULSE_ARN)])
-def test_device_pulse_properties(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_pulse_properties(arn, aws_session, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.ports
     assert device.frames
 
 
-def test_device_across_regions(aws_session):
+def test_device_across_regions(aws_session, created_braket_devices):
     # assert QPUs across different regions can be created using the same aws_session
-    AwsDevice(RIGETTI_ARN, aws_session)
-    AwsDevice(IONQ_ARN, aws_session)
-    AwsDevice(OQC_ARN, aws_session)
+    created_braket_devices[RIGETTI_ARN]
+    created_braket_devices[IONQ_ARN]
+    created_braket_devices[OQC_ARN]
 
 
 @pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN)])
@@ -59,8 +59,8 @@ def test_get_devices_arn(arn):
 
 
 @pytest.mark.parametrize("arn", [(PULSE_ARN)])
-def test_device_gate_calibrations(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_gate_calibrations(arn, aws_session, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.gate_calibrations
 
 
@@ -76,8 +76,8 @@ def test_get_devices_others():
         assert result.status in statuses
 
 
-def test_get_devices_all():
-    result_arns = [result.arn for result in AwsDevice.get_devices()]
+def test_get_devices_all(braket_devices):
+    result_arns = [result.arn for result in braket_devices]
     for arn in [RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN, OQC_ARN]:
         assert arn in result_arns
 
@@ -127,17 +127,16 @@ def _validate_device(device: AwsDevice, active_providers: Set[str]):
     assert getattr(getattr(Devices, provider_name), device_name) == device.arn
 
 
-def test_device_enum():
-    aws_devices = AwsDevice.get_devices()
-    active_providers = _get_active_providers(aws_devices)
+def test_device_enum(braket_devices, created_braket_devices):
+    active_providers = _get_active_providers(braket_devices)
 
     # validate all devices in API
-    for device in aws_devices:
+    for device in braket_devices:
         _validate_device(device, active_providers)
 
     # validate all devices in enum
     providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
     for provider in providers:
         for device_arn in provider:
-            device = AwsDevice(device_arn)
+            device = created_braket_devices[device_arn]
             _validate_device(device, active_providers)

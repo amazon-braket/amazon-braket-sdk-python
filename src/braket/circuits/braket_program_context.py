@@ -31,7 +31,8 @@ from braket.parametric import FreeParameterExpression
 
 class BraketProgramContext(AbstractProgramContext):
     def __init__(self, circuit: Optional[Circuit] = None):
-        """
+        """Inits a `BraketProgramContext`.
+
         Args:
             circuit (Optional[Circuit]): A partially-built circuit to continue building with this
                 context. Default: None.
@@ -133,8 +134,7 @@ class BraketProgramContext(AbstractProgramContext):
         self._circuit.add_instruction(instruction)
 
     def add_result(self, result: Results) -> None:
-        """
-        Abstract method to add result type to the circuit
+        """Abstract method to add result type to the circuit
 
         Args:
             result (Results): The result object representing the measurement results

@@ -28,7 +28,8 @@ class CompilerDirective(Operator):
     """
 
     def __init__(self, ascii_symbols: Sequence[str]):
-        """
+        """Inits a `CompilerDirective`.
+
         Args:
             ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directiver.
                 These are used when printing a diagram of circuits.
@@ -97,7 +98,7 @@ class CompilerDirective(Operator):
             f"Compiler directive {self.name} does not have counterpart implemented"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: CompilerDirective):
         return isinstance(other, CompilerDirective) and self.name == other.name
 
     def __repr__(self):

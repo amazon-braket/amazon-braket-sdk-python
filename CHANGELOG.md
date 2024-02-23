@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.70.3 (2024-02-21)
+
+### Bug Fixes and Other Changes
+
+ * remove test with job creation with qpu
+ * use the caller's account id based on the session
+ * docs: add note about using env variables for endpoint
+
+## v1.70.2 (2024-02-14)
+
+### Bug Fixes and Other Changes
+
+ * Sort input parameters when doing testing equality of two PulseSequences
+
+## v1.70.1 (2024-02-13)
+
+### Bug Fixes and Other Changes
+
+ * Do not autodeclare FreeParameter in OQpy
+
+## v1.70.0 (2024-02-12)
+
+### Features
+
+ * Support noise models in DM simulators
+
+## v1.69.1 (2024-02-08)
+
+### Bug Fixes and Other Changes
+
+ * let price tracker checks skip over devices without execution win…
+
 ## v1.69.0 (2024-02-06)
 
 ### Features

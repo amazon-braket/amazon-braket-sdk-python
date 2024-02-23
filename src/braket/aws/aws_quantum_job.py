@@ -20,7 +20,7 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
@@ -49,12 +49,14 @@ from braket.jobs.quantum_job_creation import prepare_quantum_job
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES = {"CANCELLED", "COMPLETED", "FAILED"}
+    TERMINAL_STATES: ClassVar[set[str]] = {"CANCELLED", "COMPLETED", "FAILED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
 
     class LogState(Enum):
+        """Log state enum."""
+
         TAILING = "tailing"
         JOB_COMPLETE = "job_complete"
         COMPLETE = "complete"
@@ -223,7 +225,8 @@ class AwsQuantumJob(QuantumJob):
         return job
 
     def __init__(self, arn: str, aws_session: AwsSession | None = None, quiet: bool = False):
-        """
+        """Initializes an `AwsQuantumJob`.
+
         Args:
             arn (str): The ARN of the hybrid job.
             aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
@@ -231,6 +234,9 @@ class AwsQuantumJob(QuantumJob):
                 region of the hybrid job.
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
                 position. Default is `False`.
+
+        Raises:
+            ValueError: Supplied region and session region do not match.
         """
         self._arn: str = arn
         self._quiet = quiet
@@ -246,8 +252,11 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """
-        bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
+        """Checks whether the job region and session region match.
+
+        Returns:
+            bool: `True` when the aws_session region matches the job_arn region; otherwise
+            `False`.
         """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region
@@ -277,6 +286,17 @@ class AwsQuantumJob(QuantumJob):
         """str: The name of the quantum job."""
         return self.metadata(use_cached_value=True).get("jobName")
 
+    @property
+    def _logs_prefix(self) -> str:
+        """str: the prefix for the job logs."""
+        # jobs ARNs used to contain the job name and use a log prefix of `job-name`
+        # now job ARNs use a UUID and a log prefix of `job-name/UUID`
+        return (
+            f"{self.name}"
+            if self.arn.endswith(self.name)
+            else f"{self.name}/{self.arn.split('/')[-1]}"
+        )
+
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum hybrid job.
 
@@ -285,6 +305,7 @@ class AwsQuantumJob(QuantumJob):
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
@@ -295,8 +316,7 @@ class AwsQuantumJob(QuantumJob):
         return self.metadata(use_cached_value).get("status")
 
     def queue_position(self) -> HybridJobQueueInfo:
-        """
-        The queue position details for the hybrid job.
+        """The queue position details for the hybrid job.
 
         Returns:
             HybridJobQueueInfo: Instance of HybridJobQueueInfo class representing
@@ -372,7 +392,6 @@ class AwsQuantumJob(QuantumJob):
         )
 
         log_group = AwsQuantumJob.LOG_GROUP
-        stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
         instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
@@ -386,7 +405,7 @@ class AwsQuantumJob(QuantumJob):
             has_streams = logs.flush_log_streams(
                 self._aws_session,
                 log_group,
-                stream_prefix,
+                self._logs_prefix,
                 stream_names,
                 positions,
                 instance_count,
@@ -413,6 +432,7 @@ class AwsQuantumJob(QuantumJob):
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
@@ -441,18 +461,19 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Any]] : The metrics data.
+            dict[str, list[Any]]: The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
-        job_name = metadata["jobName"]
         job_start = None
         job_end = None
         if "startedAt" in metadata:
             job_start = int(metadata["startedAt"].timestamp())
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
             job_end = int(math.ceil(metadata["endedAt"].timestamp()))
-        return fetcher.get_metrics_for_job(job_name, metric_type, statistic, job_start, job_end)
+        return fetcher.get_metrics_for_job(
+            self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
+        )
 
     def cancel(self) -> str:
         """Cancels the job.
@@ -471,7 +492,7 @@ class AwsQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using save_job_result() function.
+        """Retrieves the hybrid job result persisted using the `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -486,7 +507,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         with tempfile.TemporaryDirectory() as temp_dir:
             job_name = self.metadata(True)["jobName"]
 
@@ -526,7 +546,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         extract_to = extract_to or Path.cwd()
 
         timeout_time = time.time() + poll_timeout_seconds
@@ -576,7 +595,7 @@ class AwsQuantumJob(QuantumJob):
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AwsQuantumJob) -> bool:
         if isinstance(other, AwsQuantumJob):
             return self.arn == other.arn
         return False

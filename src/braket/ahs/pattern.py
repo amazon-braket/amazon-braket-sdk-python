@@ -30,7 +30,8 @@ class Pattern:
     @property
     def series(self) -> list[Number]:
         """list[Number]: A series of numbers representing the local
-        pattern of real numbers."""
+        pattern of real numbers.
+        """
         return self._series
 
     def discretize(self, resolution: Decimal) -> Pattern:

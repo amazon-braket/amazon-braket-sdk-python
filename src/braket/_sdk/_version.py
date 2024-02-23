@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 """Version information.
-   Version number (major.minor.patch[-label])
+Version number (major.minor.patch[-label])
 """
 
-__version__ = "1.69.1.dev0"
+__version__ = "1.70.4.dev0"

@@ -13,6 +13,7 @@
 import io
 import json
 import os
+import textwrap
 from datetime import datetime
 from unittest.mock import Mock, PropertyMock, patch
 from urllib.error import URLError
@@ -21,6 +22,7 @@ import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
 from common_test_utils import (
+    DM1_ARN,
     DWAVE_ARN,
     IONQ_ARN,
     OQC_ARN,
@@ -35,8 +37,9 @@ from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.aws.queue_information import QueueDepthInfo, QueueType
-from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
+from braket.circuits import Circuit, FreeParameter, Gate, Noise, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.noise_model import GateCriteria, NoiseModel
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -359,7 +362,59 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
             "actionType": "braket.ir.jaqcd.program",
             "version": ["1"],
             "supportedOperations": ["H"],
-        }
+        },
+    },
+    "paradigm": {"qubitCount": 30},
+    "deviceParameters": {},
+}
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.simulators.gate_model_simulator_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "version": ["1"],
+            "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+            "supportedResultTypes": [
+                {
+                    "name": "StateVector",
+                    "observables": ["x", "y", "z"],
+                    "minShots": 0,
+                    "maxShots": 0,
+                },
+            ],
+            "supportedPragmas": [
+                "braket_noise_bit_flip",
+                "braket_noise_depolarizing",
+                "braket_noise_kraus",
+                "braket_noise_pauli_channel",
+                "braket_noise_generalized_amplitude_damping",
+                "braket_noise_amplitude_damping",
+                "braket_noise_phase_flip",
+                "braket_noise_phase_damping",
+                "braket_noise_two_qubit_dephasing",
+                "braket_noise_two_qubit_depolarizing",
+                "braket_unitary_matrix",
+                "braket_result_type_sample",
+                "braket_result_type_expectation",
+                "braket_result_type_variance",
+                "braket_result_type_probability",
+                "braket_result_type_density_matrix",
+            ],
+        },
     },
     "paradigm": {"qubitCount": 30},
     "deviceParameters": {},
@@ -376,6 +431,18 @@ def test_gate_model_sim_schema():
     )
 
 
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON
+)
+
+
+def test_gate_model_sim_schema():
+    validate(
+        MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON,
+        GateModelSimulatorDeviceCapabilities.schema(),
+    )
+
+
 MOCK_GATE_MODEL_SIMULATOR = {
     "deviceName": "SV1",
     "deviceType": "SIMULATOR",
@@ -383,6 +450,16 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceStatus": "ONLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
+
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR = {
+    "deviceName": "DM1",
+    "deviceType": "SIMULATOR",
+    "providerName": "provider1",
+    "deviceStatus": "ONLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES.json(),
+}
+
 
 MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "amazon-braket-us-test-1-00000000",
@@ -2070,3 +2147,78 @@ def test_queue_depth(arn):
         quantum_tasks={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
         jobs="0 (3 prioritized job(s) running)",
     )
+
+
+@pytest.fixture
+def noise_model():
+    return (
+        NoiseModel()
+        .add_noise(Noise.BitFlip(0.05), GateCriteria(Gate.H))
+        .add_noise(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot))
+    )
+
+
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_noise_model(aws_quantum_task_mock, aws_session_init, aws_session, noise_model):
+    arn = DM1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
+    device = AwsDevice(arn, noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run(circuit)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_noise_model(
+    aws_quantum_task_mock, aws_session_init, aws_session, noise_model
+):
+    arn = DM1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
+    device = AwsDevice(arn, noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run_batch([circuit] * 2)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
