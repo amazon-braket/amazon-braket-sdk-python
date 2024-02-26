@@ -27,9 +27,8 @@ class MeasurementsList(np.ndarray):
             are the ones in `GateModelQuantumTaskResult.measured_qubits`.
     """
 
-    def __new__(cls, measurements: np.ndarray, dtype=int):
-        measurements_list = np.asarray(measurements, dtype=dtype).view(cls)
-        return measurements_list
+    def __new__(cls, measurements, *args, **kwargs):
+        return np.asarray(measurements, *args, **kwargs).view(cls)
 
     def __call__(self, **kwds: np.ndarray) -> np.ndarray:
         if kwds:
