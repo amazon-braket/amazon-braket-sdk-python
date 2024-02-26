@@ -343,13 +343,13 @@ def test_return_pulse_capture():
     expected = """OPENQASM 3.0;
 bit __bit_0__;
 bit __bit_1__;
-output bit retval_0;
-output bit retval_1;
+output bit return_value0;
+output bit return_value1;
 cal {
     __bit_0__ = capture_v0(frame1);
     __bit_1__ = capture_v0(frame1);
 }
-retval_0 = __bit_0__;
-retval_1 = __bit_1__;"""
+return_value0 = __bit_0__;
+return_value1 = __bit_1__;"""
 
     assert program.to_ir() == expected
