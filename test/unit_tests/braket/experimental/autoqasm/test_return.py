@@ -342,14 +342,14 @@ def test_return_pulse_capture():
 
     expected = """OPENQASM 3.0;
 bit __bit_0__;
-bit __bit_2__;
+bit __bit_1__;
 output bit retval_0;
 output bit retval_1;
 cal {
     __bit_0__ = capture_v0(frame1);
-    __bit_2__ = capture_v0(frame1);
+    __bit_1__ = capture_v0(frame1);
 }
 retval_0 = __bit_0__;
-retval_1 = __bit_2__;"""
+retval_1 = __bit_1__;"""
 
     assert program.to_ir() == expected

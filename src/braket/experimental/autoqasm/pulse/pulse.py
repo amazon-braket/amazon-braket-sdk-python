@@ -30,14 +30,12 @@ from braket.pulse.waveforms import Waveform
 from braket.registers.qubit_set import QubitSet
 
 
-def _pulse_instruction(name: str, frame: Frame, *args) -> PulseSequence:
+def _pulse_instruction(name: str, frame: Frame, *args) -> None:
     """Define a pulse instruction.
 
     Args:
         name (str): Name of the pulse instruction.
         frame (Frame): Frame for which the instruction is apply to.
-    Returns:
-        PulseSequence: Sequence resulting from applying this instruction.
     """
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context._has_pulse_control = True
@@ -49,11 +47,10 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> PulseSequence:
     )
 
     if program_conversion_context._calibration_definitions_processing:
-        res = getattr(pulse_sequence, name)(frame, *args)
+        getattr(pulse_sequence, name)(frame, *args)
     else:
         with oqpy.Cal(pulse_sequence._program):
-            res = getattr(pulse_sequence, name)(frame, *args)
-    return res
+            getattr(pulse_sequence, name)(frame, *args)
 
 
 def set_frequency(frame: Frame, frequency: float) -> None:
@@ -125,13 +122,27 @@ def capture_v0(frame: Frame) -> BitVar:
     Returns:
         BitVar: A BitVar with the result of the capture.
     """
-    # FIXME: This is a hack to get the right classical variable name from the generated sequence.
-    # Fix with the Program refactor.
-    sequence = _pulse_instruction("_capture_v0_with_return", frame)
-    name = sequence._program.stack[0].body[-1].body[0].lvalue.name
-    bit = BitVar(name=name)  # Name gets overwritten
-    bit.name = name
-    return bit
+
+    def _add_sequence() -> BitVar:
+        _validate_uniqueness(pulse_sequence._frames, frame)
+        extern_call = oqpy.declare_extern("capture_v0", [("frame", oqpy.FrameVar)], oqpy.bit)
+        bit_var = BitVar()
+        pulse_sequence._program.set(bit_var, extern_call(frame))
+        pulse_sequence._capture_v0_count += 1
+        pulse_sequence._frames[frame.id] = frame
+        return bit_var
+
+    aq_context = aq_program.get_program_conversion_context()
+    aq_context._has_pulse_control = True
+
+    pulse_sequence = PulseSequence()
+    pulse_sequence._program = aq_context.get_oqpy_program(mode=aq_program.ProgramMode.PULSE)
+
+    if aq_context._calibration_definitions_processing:
+        return _add_sequence()
+    else:
+        with oqpy.Cal(pulse_sequence._program):
+            return _add_sequence()
 
 
 def delay(
@@ -171,27 +182,3 @@ def barrier(
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
     _pulse_instruction("barrier", qubits_or_frames)
-
-
-def _pulse_sequence_capture_v0_with_return(self, frame: Frame) -> PulseSequence:
-    """
-    Implement a custom capturing method to be register it to the `PulseSequence` class. This method
-    adds an instruction to capture the bit output from measuring the specified frame and assigns
-    the output to a bit variable explicitly.
-
-    Args:
-        frame (Frame): Frame on which the capture operation needs to be performed.
-
-    Returns:
-        PulseSequence: self, with the instruction added.
-    """
-    _validate_uniqueness(self._frames, frame)
-
-    extern_call = oqpy.declare_extern("capture_v0", [("frame", oqpy.FrameVar)], oqpy.bit)
-    self._program.set(BitVar(), extern_call(frame))
-    self._capture_v0_count += 1
-    self._frames[frame.id] = frame
-    return self
-
-
-setattr(PulseSequence, "_capture_v0_with_return", _pulse_sequence_capture_v0_with_return)
