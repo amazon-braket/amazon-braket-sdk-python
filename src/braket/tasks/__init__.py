@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import braket.ipython_utils as ipython_utils
+from braket import ipython_utils
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # noqa: F401
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnalogHamiltonianSimulationShotStatus,

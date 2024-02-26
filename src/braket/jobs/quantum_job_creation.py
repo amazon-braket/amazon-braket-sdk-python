@@ -55,6 +55,7 @@ def prepare_quantum_job(
     checkpoint_config: CheckpointConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
+    reservation_arn: str | None = None,
 ) -> dict:
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
@@ -140,6 +141,10 @@ def prepare_quantum_job(
             hybrid job.
             Default: {}.
 
+        reservation_arn (str | None): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
+
     Returns:
         dict: Hybrid job tracking the execution on Amazon Braket.
 
@@ -156,14 +161,15 @@ def prepare_quantum_job(
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
-    job_name = job_name or _generate_default_job_name(image_uri=image_uri)
+    timestamp = str(int(time.time() * 1000))
+    job_name = job_name or _generate_default_job_name(image_uri=image_uri, timestamp=timestamp)
     role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = input_data or {}
     tags = tags or {}
     default_bucket = aws_session.default_bucket()
-    input_data_list = _process_input_data(input_data, job_name, aws_session)
+    input_data_list = _process_input_data(input_data, job_name, aws_session, timestamp)
     instance_config = instance_config or InstanceConfig()
     stopping_condition = stopping_condition or StoppingCondition()
     output_data_config = output_data_config or OutputDataConfig()
@@ -172,8 +178,10 @@ def prepare_quantum_job(
         default_bucket,
         "jobs",
         job_name,
+        timestamp,
         "script",
     )
+
     if AwsSession.is_s3_uri(source_module):
         _process_s3_source_module(source_module, entry_point, aws_session, code_location)
     else:
@@ -195,6 +203,7 @@ def prepare_quantum_job(
             default_bucket,
             "jobs",
             job_name,
+            timestamp,
             "data",
         )
     if not checkpoint_config.s3Uri:
@@ -202,6 +211,7 @@ def prepare_quantum_job(
             default_bucket,
             "jobs",
             job_name,
+            timestamp,
             "checkpoints",
         )
     if copy_checkpoints_from_job:
@@ -230,47 +240,61 @@ def prepare_quantum_job(
         "tags": tags,
     }
 
+    if reservation_arn:
+        create_job_kwargs.update(
+            {
+                "associations": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
+            }
+        )
+
     return create_job_kwargs
 
 
-def _generate_default_job_name(image_uri: str | None = None, func: Callable | None = None) -> str:
-    """
-    Generate default job name using the image uri and entrypoint function.
+def _generate_default_job_name(
+    image_uri: str | None = None, func: Callable | None = None, timestamp: int | str | None = None
+) -> str:
+    """Generate default job name using the image uri and entrypoint function.
 
     Args:
         image_uri (str | None): URI for the image container.
         func (Callable | None): The entry point function.
+        timestamp (int | str | None): Optional timestamp to use instead of generating one.
 
     Returns:
         str: Hybrid job name.
     """
     max_length = 50
-    timestamp = str(int(time.time() * 1000))
+    timestamp = timestamp if timestamp is not None else str(int(time.time() * 1000))
 
     if func:
         name = func.__name__.replace("_", "-")
         if len(name) + len(timestamp) > max_length:
             name = name[: max_length - len(timestamp) - 1]
             warnings.warn(
-                f"Job name exceeded {max_length} characters. Truncating name to {name}-{timestamp}."
+                f"Job name exceeded {max_length} characters. "
+                f"Truncating name to {name}-{timestamp}.",
+                stacklevel=1,
             )
+    elif not image_uri:
+        name = "braket-job-default"
     else:
-        if not image_uri:
-            name = "braket-job-default"
-        else:
-            job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
-                "/amazon-braket-([^:/]*)", image_uri
-            )
-            container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
-            name = f"braket-job{container}"
+        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+            "/amazon-braket-([^:/]*)", image_uri
+        )
+        container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
+        name = f"braket-job{container}"
     return f"{name}-{timestamp}"
 
 
 def _process_s3_source_module(
     source_module: str, entry_point: str, aws_session: AwsSession, code_location: str
 ) -> None:
-    """
-    Check that the source module is an S3 URI of the correct type and that entry point is
+    """Check that the source module is an S3 URI of the correct type and that entry point is
     provided.
 
     Args:
@@ -279,6 +303,9 @@ def _process_s3_source_module(
         aws_session (AwsSession): AwsSession to copy source module to code location.
         code_location (str): S3 URI pointing to the location where the code will be
             copied to.
+
+    Raises:
+        ValueError: The entry point is None or does not end with .tar.gz.
     """
     if entry_point is None:
         raise ValueError("If source_module is an S3 URI, entry_point must be provided.")
@@ -293,15 +320,18 @@ def _process_s3_source_module(
 def _process_local_source_module(
     source_module: str, entry_point: str, aws_session: AwsSession, code_location: str
 ) -> str:
-    """
-    Check that entry point is valid with respect to source module, or provide a default
+    """Check that entry point is valid with respect to source module, or provide a default
     value if entry point is not given. Tar and upload source module to code location in S3.
+
     Args:
         source_module (str): Local path pointing to the source module.
         entry_point (str): Entry point relative to the source module.
         aws_session (AwsSession): AwsSession for uploading tarred source module.
         code_location (str): S3 URI pointing to the location where the code will
             be uploaded to.
+
+    Raises:
+        ValueError: Raised if the source module file is not found.
 
     Returns:
         str: Entry point.
@@ -319,12 +349,14 @@ def _process_local_source_module(
 
 
 def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
-    """
-    Confirm that a valid entry point relative to source module is given.
+    """Confirm that a valid entry point relative to source module is given.
 
     Args:
         source_module_path (Path): Path to source module.
         entry_point (str): Entry point relative to source module.
+
+    Raises:
+        ValueError: Raised if the module was not found.
     """
     importable, _, _method = entry_point.partition(":")
     sys.path.append(str(source_module_path.parent))
@@ -332,7 +364,8 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
         # second argument allows relative imports
         importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
-        assert module is not None
+        if module is None:
+            raise AssertionError
     # if entry point is nested (ie contains '.'), parent modules are imported
     except (ModuleNotFoundError, AssertionError):
         raise ValueError(f"Entry point module was not found: {importable}")
@@ -343,8 +376,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
 def _tar_and_upload_to_code_location(
     source_module_path: Path, aws_session: AwsSession, code_location: str
 ) -> None:
-    """
-    Tar and upload source module to code location.
+    """Tar and upload source module to code location.
 
     Args:
         source_module_path (Path): Path to source module.
@@ -359,12 +391,14 @@ def _tar_and_upload_to_code_location(
 
 
 def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
-    """
-    Validate that config parameters are of the right type.
+    """Validate that config parameters are of the right type.
 
     Args:
         dict_arr (dict[str, tuple[any, any]]): dict mapping parameter names to
             a tuple containing the provided value and expected type.
+
+    Raises:
+        ValueError: If the user_input is not the same as the expected data type.
     """
     for parameter_name, value_tuple in dict_arr.items():
         user_input, expected_datatype = value_tuple
@@ -377,16 +411,20 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
 
 
 def _process_input_data(
-    input_data: str | dict | S3DataSourceConfig, job_name: str, aws_session: AwsSession
+    input_data: str | dict | S3DataSourceConfig,
+    job_name: str,
+    aws_session: AwsSession,
+    subdirectory: str,
 ) -> list[dict[str, Any]]:
-    """
-    Convert input data into a list of dicts compatible with the Braket API.
+    """Convert input data into a list of dicts compatible with the Braket API.
+
     Args:
         input_data (str | dict | S3DataSourceConfig): Either a channel definition or a
             dictionary mapping channel names to channel definitions, where a channel definition
             can be an S3DataSourceConfig or a str corresponding to a local prefix or S3 prefix.
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession for possibly uploading local data.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         list[dict[str, Any]]: A list of channel configs.
@@ -395,20 +433,27 @@ def _process_input_data(
         input_data = {"input": input_data}
     for channel_name, data in input_data.items():
         if not isinstance(data, S3DataSourceConfig):
-            input_data[channel_name] = _process_channel(data, job_name, aws_session, channel_name)
+            input_data[channel_name] = _process_channel(
+                data, job_name, aws_session, channel_name, subdirectory
+            )
     return _convert_input_to_config(input_data)
 
 
 def _process_channel(
-    location: str, job_name: str, aws_session: AwsSession, channel_name: str
+    location: str,
+    job_name: str,
+    aws_session: AwsSession,
+    channel_name: str,
+    subdirectory: str,
 ) -> S3DataSourceConfig:
-    """
-    Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
+    """Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
+
     Args:
         location (str): Local prefix or S3 prefix.
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession to be used for uploading local data.
         channel_name (str): Name of the channel.
+        subdirectory (str): Subdirectory within job name for S3 locations.
 
     Returns:
         S3DataSourceConfig: S3DataSourceConfig for the channel.
@@ -417,18 +462,23 @@ def _process_channel(
         return S3DataSourceConfig(location)
     else:
         # local prefix "path/to/prefix" will be mapped to
-        # s3://bucket/jobs/job-name/data/input/prefix
+        # s3://bucket/jobs/job-name/subdirectory/data/input/prefix
         location_name = Path(location).name
         s3_prefix = AwsSession.construct_s3_uri(
-            aws_session.default_bucket(), "jobs", job_name, "data", channel_name, location_name
+            aws_session.default_bucket(),
+            "jobs",
+            job_name,
+            subdirectory,
+            "data",
+            channel_name,
+            location_name,
         )
         aws_session.upload_local_data(location, s3_prefix)
         return S3DataSourceConfig(s3_prefix)
 
 
 def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[dict[str, Any]]:
-    """
-    Convert a dictionary mapping channel names to S3DataSourceConfigs into a list of channel
+    """Convert a dictionary mapping channel names to S3DataSourceConfigs into a list of channel
     configs compatible with the Braket API.
 
     Args:

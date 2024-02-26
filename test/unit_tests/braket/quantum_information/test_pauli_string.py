@@ -20,7 +20,7 @@ import pytest
 
 from braket.circuits import gates
 from braket.circuits.circuit import Circuit
-from braket.circuits.observables import X, Y, Z
+from braket.circuits.observables import I, X, Y, Z
 from braket.quantum_information import PauliString
 
 ORDER = ["I", "X", "Y", "Z"]
@@ -34,15 +34,16 @@ SIGN_MAP = {"+": 1, "-": -1}
 
 
 @pytest.mark.parametrize(
-    "pauli_string, string, phase, observable",
+    "pauli_string, string, phase, observable, obs_with_id",
     [
-        ("+XZ", "+XZ", 1, X() @ Z()),
-        ("-ZXY", "-ZXY", -1, Z() @ X() @ Y()),
-        ("YIX", "+YIX", 1, Y() @ X()),
-        (PauliString("-ZYXI"), "-ZYXI", -1, Z() @ Y() @ X()),
+        ("+XZ", "+XZ", 1, X() @ Z(), X() @ Z()),
+        ("-ZXY", "-ZXY", -1, Z() @ X() @ Y(), Z() @ X() @ Y()),
+        ("YIX", "+YIX", 1, Y() @ X(), Y() @ I() @ X()),
+        (PauliString("-ZYXI"), "-ZYXI", -1, Z() @ Y() @ X(), Z() @ Y() @ X() @ I()),
+        ("IIXIIIYI", "+IIXIIIYI", 1, X() @ Y(), I() @ I() @ X() @ I() @ I() @ I() @ Y() @ I()),
     ],
 )
-def test_happy_case(pauli_string, string, phase, observable):
+def test_happy_case(pauli_string, string, phase, observable, obs_with_id):
     instance = PauliString(pauli_string)
     assert str(instance) == string
     assert instance.phase == phase
@@ -57,6 +58,7 @@ def test_happy_case(pauli_string, string, phase, observable):
     assert instance == PauliString(pauli_string)
     assert instance == PauliString(instance)
     assert instance.to_unsigned_observable() == observable
+    assert instance.to_unsigned_observable(include_trivial=True) == obs_with_id
 
 
 @pytest.mark.parametrize(

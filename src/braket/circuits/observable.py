@@ -27,13 +27,11 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
-from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 
 
 class Observable(QuantumOperator):
-    """
-    Class `Observable` to represent a quantum observable.
+    """Class `Observable` to represent a quantum observable.
 
     Objects of this type can be used as input to `ResultType.Sample`, `ResultType.Variance`,
     `ResultType.Expectation` to specify the measurement basis.
@@ -68,7 +66,7 @@ class Observable(QuantumOperator):
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+                properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
@@ -95,8 +93,7 @@ class Observable(QuantumOperator):
         serialization_properties: OpenQASMSerializationProperties,
         target: QubitSet | None = None,
     ) -> str:
-        """
-        Returns the openqasm string representation of the result type.
+        """Returns the openqasm string representation of the result type.
 
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
@@ -128,7 +125,8 @@ class Observable(QuantumOperator):
 
     @property
     def coefficient(self) -> int:
-        """
+        """The coefficient of the observable.
+
         Returns:
             int: coefficient value of the observable.
         """
@@ -137,6 +135,7 @@ class Observable(QuantumOperator):
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
+
         Returns:
             tuple[Gate, ...]: The basis rotation gates for this observable.
         """
@@ -145,8 +144,9 @@ class Observable(QuantumOperator):
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
-            ndarray: The eigenvalues of this observable.
+            np.ndarray: The eigenvalues of this observable.
         """
         raise NotImplementedError
 
@@ -173,13 +173,13 @@ class Observable(QuantumOperator):
         """
         setattr(cls, observable.__name__, observable)
 
-    def __matmul__(self, other) -> Observable.TensorProduct:
+    def __matmul__(self, other: Observable) -> Observable.TensorProduct:
         if isinstance(other, Observable):
             return Observable.TensorProduct([self, other])
 
         raise ValueError("Can only perform tensor products between observables.")
 
-    def __mul__(self, other) -> Observable:
+    def __mul__(self, other: Observable) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             observable_copy = deepcopy(self)
@@ -187,16 +187,16 @@ class Observable(QuantumOperator):
             return observable_copy
         raise TypeError("Observable coefficients must be numbers.")
 
-    def __rmul__(self, other) -> Observable:
+    def __rmul__(self, other: Observable) -> Observable:
         return self * other
 
-    def __add__(self, other):
+    def __add__(self, other: Observable):
         if not isinstance(other, Observable):
             raise ValueError("Can only perform addition between observables.")
 
         return Observable.Sum([self, other])
 
-    def __sub__(self, other):
+    def __sub__(self, other: Observable):
         if not isinstance(other, Observable):
             raise ValueError("Can only perform subtraction between observables.")
 
@@ -205,15 +205,14 @@ class Observable(QuantumOperator):
     def __repr__(self) -> str:
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Observable) -> bool:
         if isinstance(other, Observable):
             return self.name == other.name
         return NotImplemented
 
 
 class StandardObservable(Observable):
-    """
-    Class `StandardObservable` to represent a Pauli-like quantum observable with
+    """Class `StandardObservable` to represent a Pauli-like quantum observable with
     eigenvalues of (+1, -1).
     """
 

@@ -25,7 +25,8 @@ class QuantumOperator(Operator):
     """A quantum operator is the definition of a quantum operation for a quantum device."""
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """
+        """Initializes a `QuantumOperator`.
+
         Args:
             qubit_count (Optional[int]): Number of qubits this quantum operator acts on.
                 If all instances of the operator act on the same number of qubits, this argument
@@ -48,7 +49,6 @@ class QuantumOperator(Operator):
                 ``fixed_qubit_count`` is implemented and and not equal to ``qubit_count``,
                 or ``len(ascii_symbols) != qubit_count``
         """
-
         fixed_qubit_count = self.fixed_qubit_count()
         if fixed_qubit_count is NotImplemented:
             self._qubit_count = qubit_count
@@ -79,8 +79,7 @@ class QuantumOperator(Operator):
 
     @staticmethod
     def fixed_qubit_count() -> int:
-        """
-        Returns the number of qubits this quantum operator acts on,
+        """Returns the number of qubits this quantum operator acts on,
         if instances are guaranteed to act on the same number of qubits.
 
         If different instances can act on a different number of qubits,
@@ -103,33 +102,45 @@ class QuantumOperator(Operator):
 
     @property
     def name(self) -> str:
-        """
-        Returns the name of the quantum operator
+        """Returns the name of the quantum operator
 
         Returns:
             str: The name of the quantum operator as a string
         """
         return self.__class__.__name__
 
-    def to_ir(self, *args, **kwargs) -> Any:
+    def to_ir(self, *args: Any, **kwargs: Any) -> Any:
         """Returns IR representation of quantum operator.
+
+        Args:
+            *args (Any): Not Implemented.
+            **kwargs (Any): Not Implemented.
+
+        Raises:
+            NotImplementError: Not Implemented.
 
         Returns:
             Any: The the canonical intermediate representation of the operator.
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-    def to_matrix(self, *args, **kwargs) -> np.ndarray:
-        """Returns a matrix representation of the quantum operator
+    def to_matrix(self, *args: Any, **kwargs: Any) -> np.ndarray:
+        """Returns a matrix representation of the quantum operator.
+
+        Args:
+            *args (Any): Not Implemented.
+            **kwargs (Any): Not Implemented.
+
+        Raises:
+            NotImplementError: Not Implemented.
 
         Returns:
-            ndarray: A matrix representation of the quantum operator
+            np.ndarray: A matrix representation of the quantum operator
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
     def matrix_equivalence(self, other: QuantumOperator) -> bool:
-        """
-        Whether the matrix form of two quantum operators are equivalent
+        """Whether the matrix form of two quantum operators are equivalent
 
         Args:
             other (QuantumOperator): Quantum operator instance to compare this quantum operator to

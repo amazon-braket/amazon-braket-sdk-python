@@ -84,6 +84,11 @@ def quantum_task(aws_session):
 
 
 @pytest.fixture
+def quantum_task_quiet(aws_session):
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2, quiet=True)
+
+
+@pytest.fixture
 def circuit_task(aws_session):
     return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
@@ -203,6 +208,29 @@ def test_metadata_call_if_none(quantum_task):
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
 
 
+def test_has_reservation_arn_from_metadata(quantum_task):
+    metadata_true = {
+        "associations": [
+            {
+                "arn": "123",
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ]
+    }
+    assert quantum_task._has_reservation_arn_from_metadata(metadata_true)
+
+    metadata_false = {
+        "status": "RUNNING",
+        "associations": [
+            {
+                "arn": "123",
+                "type": "other",
+            }
+        ],
+    }
+    assert not quantum_task._has_reservation_arn_from_metadata(metadata_false)
+
+
 def test_queue_position(quantum_task):
     state_1 = "QUEUED"
     _mock_metadata(quantum_task._aws_session, state_1)
@@ -216,6 +244,23 @@ def test_queue_position(quantum_task):
     )
     _mock_metadata(quantum_task._aws_session, state_2)
     assert quantum_task.queue_position() == QuantumTaskQueueInfo(
+        queue_type=QueueType.NORMAL, queue_position=None, message=message
+    )
+
+
+def test_queued_quiet(quantum_task_quiet):
+    state_1 = "QUEUED"
+    _mock_metadata(quantum_task_quiet._aws_session, state_1)
+    assert quantum_task_quiet.queue_position() == QuantumTaskQueueInfo(
+        queue_type=QueueType.NORMAL, queue_position="2", message=None
+    )
+
+    state_2 = "COMPLETED"
+    message = (
+        f"'Task is in {state_2} status. AmazonBraket does not show queue position for this status.'"
+    )
+    _mock_metadata(quantum_task_quiet._aws_session, state_2)
+    assert quantum_task_quiet.queue_position() == QuantumTaskQueueInfo(
         queue_type=QueueType.NORMAL, queue_position=None, message=message
     )
 
@@ -409,6 +454,43 @@ def test_async_result(circuit_task, status, result):
     assert result_from_future == result
 
 
+@pytest.mark.parametrize(
+    "status, result",
+    [
+        ("COMPLETED", GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)),
+        ("FAILED", None),
+    ],
+)
+def test_async_result_queued(circuit_task, status, result):
+    def set_result_from_callback(future):
+        # Set the result_from_callback variable in the enclosing functions scope
+        nonlocal result_from_callback
+        result_from_callback = future.result()
+
+    _mock_metadata(circuit_task._aws_session, "QUEUED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
+
+    future = circuit_task.async_result()
+
+    # test the different ways to get the result from async
+
+    # via callback
+    result_from_callback = None
+    future.add_done_callback(set_result_from_callback)
+
+    # via asyncio waiting for result
+    _mock_metadata(circuit_task._aws_session, status)
+    event_loop = asyncio.get_event_loop()
+    result_from_waiting = event_loop.run_until_complete(future)
+
+    # via future.result(). Note that this would fail if the future is not complete.
+    result_from_future = future.result()
+
+    assert result_from_callback == result
+    assert result_from_waiting == result
+    assert result_from_future == result
+
+
 def test_failed_task(quantum_task):
     _mock_metadata(quantum_task._aws_session, "FAILED")
     _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
@@ -560,6 +642,31 @@ def test_create_ahs_problem(aws_session, arn, ahs_problem):
     )
 
 
+def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    reservation_arn = (
+        "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+    )
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
+    )
+
+
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
     expected_openqasm = "\n".join(
         [
@@ -569,7 +676,7 @@ def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
             "}",
         ]
     )
-    expected_program = OpenQASMProgram(source=expected_openqasm)
+    expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
     AwsQuantumTask.create(aws_session, SIMULATOR_ARN, pulse_sequence, S3_TARGET, 10)
@@ -1098,6 +1205,7 @@ def _assert_create_quantum_task_called_with(
     shots,
     device_parameters=None,
     tags=None,
+    reservation_arn=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1111,6 +1219,17 @@ def _assert_create_quantum_task_called_with(
         test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
     if tags is not None:
         test_kwargs.update({"tags": tags})
+    if reservation_arn:
+        test_kwargs.update(
+            {
+                "associations": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
+            }
+        )
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

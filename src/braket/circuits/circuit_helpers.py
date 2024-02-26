@@ -15,21 +15,22 @@ from braket.circuits import Circuit, ResultType
 
 
 def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
-    """
-    Validates if circuit and shots are correct before running on a device
+    """Validates if circuit and shots are correct before running on a device
 
     Args:
         circuit (Circuit): circuit to validate
         shots (int): shots to validate
 
     Raises:
-        ValueError: If circuit has no instructions; if no result types
-            specified for circuit and `shots=0`. See `braket.circuit.result_types`;
+        ValueError: If circuit has no instructions; if circuit has a non-gphase instruction; if no
+            result types specified for circuit and `shots=0`. See `braket.circuit.result_types`;
             if circuit has observables that cannot be simultaneously measured and `shots>0`;
             or, if `StateVector` or `Amplitude` are specified as result types when `shots>0`.
     """
-    if not circuit.instructions:
-        raise ValueError("Circuit must have instructions to run on a device")
+    if not circuit.instructions or all(
+        not (inst.target or inst.control) for inst in circuit.instructions
+    ):
+        raise ValueError("Circuit must have at least one non-zero-qubit gate to run on a device")
     if not shots and not circuit.result_types:
         raise ValueError(
             "No result types specified for circuit and shots=0. See `braket.circuits.result_types`"
@@ -38,7 +39,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         if not circuit.observables_simultaneously_measurable:
             raise ValueError("Observables cannot be sampled simultaneously")
         for rt in circuit.result_types:
-            if isinstance(rt, ResultType.StateVector) or isinstance(rt, ResultType.Amplitude):
+            if isinstance(rt, (ResultType.Amplitude, ResultType.StateVector)):
                 raise ValueError("StateVector or Amplitude cannot be specified when shots>0")
             elif isinstance(rt, ResultType.Probability):
                 num_qubits = len(rt.target) or circuit.qubit_count

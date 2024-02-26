@@ -16,9 +16,14 @@ from braket.device_schema import error_mitigation
 
 class ErrorMitigation:
     def serialize(self) -> list[error_mitigation.ErrorMitigationScheme]:
-        """
+        """This returns a list of service-readable error mitigation
+        scheme descriptions.
+
         Returns:
             list[ErrorMitigationScheme]: A list of service-readable error
             mitigation scheme descriptions.
+
+        Raises:
+            NotImplementedError: Not implemented in the base class.
         """
         raise NotImplementedError("serialize is not implemented.")

@@ -21,6 +21,7 @@ RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 XANADU_ARN = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
 
@@ -201,6 +202,7 @@ def run_and_assert(
     poll_interval_seconds,  # Treated as positional arg
     inputs,  # Treated as positional arg
     gate_definitions,  # Treated as positional arg
+    reservation_arn,  # Treated as positional arg
     extra_args,
     extra_kwargs,
 ):
@@ -222,6 +224,8 @@ def run_and_assert(
         run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
+    if reservation_arn:
+        run_kwargs.update({"reservation_arn": reservation_arn})
 
     task = device.run(circuit, *run_args, **run_kwargs)
     assert task == task_mock
@@ -237,6 +241,7 @@ def run_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
@@ -263,6 +268,7 @@ def run_batch_and_assert(
     poll_interval_seconds,
     inputs,
     gate_definitions,
+    reservation_arn,
     extra_args,
     extra_kwargs,
 ):
@@ -291,6 +297,8 @@ def run_batch_and_assert(
         run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
+    if reservation_arn:
+        run_kwargs.update({"reservation_arn": reservation_arn})
 
     batch = device.run_batch(circuits, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
@@ -306,6 +314,7 @@ def run_batch_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
@@ -333,6 +342,7 @@ def _create_task_args_and_kwargs(
     poll_interval_seconds,
     inputs,
     gate_definitions,
+    reservation_arn,
     extra_args,
     extra_kwargs,
 ):
@@ -344,14 +354,17 @@ def _create_task_args_and_kwargs(
     create_kwargs = extra_kwargs or {}
     create_kwargs.update(
         {
-            "poll_timeout_seconds": poll_timeout_seconds
-            if poll_timeout_seconds is not None
-            else default_poll_timeout,
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else default_poll_interval,
+            "poll_timeout_seconds": (
+                poll_timeout_seconds if poll_timeout_seconds is not None else default_poll_timeout
+            ),
+            "poll_interval_seconds": (
+                poll_interval_seconds
+                if poll_interval_seconds is not None
+                else default_poll_interval
+            ),
             "inputs": inputs,
             "gate_definitions": gate_definitions,
+            "reservation_arn": reservation_arn,
         }
     )
     return create_args, create_kwargs

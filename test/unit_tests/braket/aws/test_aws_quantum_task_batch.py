@@ -34,7 +34,16 @@ def test_creation(mock_create):
 
     batch_size = 10
     batch = AwsQuantumTaskBatch(
-        Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=10
+        Mock(),
+        "foo",
+        _circuits(batch_size),
+        S3_TARGET,
+        1000,
+        max_parallel=10,
+        reservaion_arn=(
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+        ),
     )
     assert batch.size == batch_size
     assert batch.tasks == [task_mock for _ in range(batch_size)]
@@ -53,7 +62,16 @@ def test_successful(mock_create):
 
     batch_size = 15
     batch = AwsQuantumTaskBatch(
-        Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=10
+        Mock(),
+        "foo",
+        _circuits(batch_size),
+        S3_TARGET,
+        1000,
+        max_parallel=10,
+        reservaion_arn=(
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+        ),
     )
     assert batch.size == batch_size
     assert not batch.unfinished
@@ -71,7 +89,16 @@ def test_unsuccessful(mock_create):
     mock_create.return_value = task_mock
 
     batch = AwsQuantumTaskBatch(
-        Mock(), "foo", [Circuit().h(0).cnot(0, 1)], S3_TARGET, 1000, max_parallel=10
+        Mock(),
+        "foo",
+        [Circuit().h(0).cnot(0, 1)],
+        S3_TARGET,
+        1000,
+        max_parallel=10,
+        reservaion_arn=(
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+        ),
     )
     assert not batch.unfinished
     assert batch.unsuccessful == {task_id}
@@ -106,6 +133,10 @@ def test_retry(mock_create):
         S3_TARGET,
         1000,
         max_parallel=10,
+        reservaion_arn=(
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+        ),
     )
     assert not batch.unfinished
     assert batch.results(max_retries=0) == [None, result]
@@ -142,6 +173,10 @@ def test_abort(mock_threadpool):
             S3_TARGET,
             1000,
             max_parallel=num_workers,
+            reservaion_arn=(
+                "arn:aws:braket:us-west-2:123456789123:"
+                "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            ),
         )
 
 
@@ -153,7 +188,16 @@ def test_early_abort(mock_submit):
 
     with pytest.raises(KeyboardInterrupt):
         AwsQuantumTaskBatch(
-            Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=num_workers
+            Mock(),
+            "foo",
+            _circuits(batch_size),
+            S3_TARGET,
+            1000,
+            max_parallel=num_workers,
+            reservaion_arn=(
+                "arn:aws:braket:us-west-2:123456789123:"
+                "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            ),
         )
 
 
