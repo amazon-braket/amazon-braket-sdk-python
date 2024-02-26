@@ -53,9 +53,13 @@ class Pricing:
             text_response.readline()
         self._price_list = list(csv.DictReader(text_response))
 
-    @lru_cache()
-    def price_search(self, **kwargs) -> list[dict[str, str]]:
+    @lru_cache
+    def price_search(self, **kwargs: str) -> list[dict[str, str]]:
         """Searches the price list for a given set of parameters.
+
+        Args:
+            **kwargs (str): Arbitrary keyword arguments.
+
         Returns:
             list[dict[str, str]]: The price list.
         """

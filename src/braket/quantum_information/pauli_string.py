@@ -35,17 +35,19 @@ _SIGN_MAP = {"+": 1, "-": -1}
 
 
 class PauliString:
-    """
-    A lightweight representation of a Pauli string with its phase.
-    """
+    """A lightweight representation of a Pauli string with its phase."""
 
     def __init__(self, pauli_string: Union[str, PauliString]):
-        """
+        """Initializes a `PauliString`.
+
         Args:
             pauli_string (Union[str, PauliString]): The representation of the pauli word, either a
                 string or another PauliString object. A valid string consists of an optional phase,
                 specified by an optional sign +/- followed by an uppercase string in {I, X, Y, Z}.
                 Example valid strings are: XYZ, +YIZY, -YX
+
+        Raises:
+            ValueError: If the Pauli String is empty.
         """
         if not pauli_string:
             raise ValueError("pauli_string must not be empty")
@@ -343,7 +345,7 @@ class PauliString:
                 circ = circ.z(qubit)
         return circ
 
-    def __eq__(self, other):
+    def __eq__(self, other: PauliString):
         if isinstance(other, PauliString):
             return (
                 self._phase == other._phase
@@ -352,7 +354,7 @@ class PauliString:
             )
         return False
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int):
         if item >= self._qubit_count:
             raise IndexError(item)
         return _PAULI_INDICES[self._nontrivial.get(item, "I")]

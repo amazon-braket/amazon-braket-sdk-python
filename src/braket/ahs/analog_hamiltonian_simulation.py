@@ -54,7 +54,7 @@ class AnalogHamiltonianSimulation:
         representation.
 
         Returns:
-            Program: A representation of the circuit in the IR format.
+            ir.Program: A representation of the circuit in the IR format.
         """
         return ir.Program(
             setup=ir.Setup(ahs_register=self._register_to_ir()),
@@ -77,7 +77,7 @@ class AnalogHamiltonianSimulation:
             shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
         )
 
-    def discretize(self, device) -> AnalogHamiltonianSimulation:  # noqa
+    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
         as Decimal objects with fixed precision based on the capabilities of the device.
 
@@ -88,9 +88,8 @@ class AnalogHamiltonianSimulation:
             AnalogHamiltonianSimulation: A discretized version of this program.
 
         Raises:
-            DiscretizeError: If unable to discretize the program.
+            DiscretizationError: If unable to discretize the program.
         """
-
         required_action_schema = DeviceActionType.AHS
         if (required_action_schema not in device.properties.action) or (
             device.properties.action[required_action_schema].actionType != required_action_schema

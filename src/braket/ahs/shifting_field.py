@@ -56,7 +56,8 @@ class ShiftingField(Hamiltonian):
     def magnitude(self) -> Field:
         r"""Field: containing the global magnitude time series :math:`\Delta(t)`,
         where time is measured in seconds (s) and values measured in rad/s)
-        and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
+        and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1.
+        """
         return self._magnitude
 
     @staticmethod
@@ -67,6 +68,9 @@ class ShiftingField(Hamiltonian):
             times (list[float]): The time points of the shifting field
             values (list[float]): The values of the shifting field
             pattern (list[float]): The pattern of the shifting field
+
+        Raises:
+            ValueError: If the length of times and values differs.
 
         Returns:
             ShiftingField: The shifting field obtained
@@ -98,6 +102,9 @@ class ShiftingField(Hamiltonian):
                 and the second time series.
               - "left" - use the last value from the left time series as the boundary point.
               - "right" - use the first value from the right time series as the boundary point.
+
+        Raises:
+            ValueError: The ShiftingField patterns differ.
 
         Returns:
             ShiftingField: The stitched ShiftingField object.
