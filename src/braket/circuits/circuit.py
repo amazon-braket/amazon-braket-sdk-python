@@ -20,6 +20,7 @@ from typing import Any, Optional, TypeVar, Union
 import numpy as np
 import oqpy
 
+from braket.aws import AwsDevice
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
@@ -1099,17 +1100,16 @@ class Circuit:
     def pulse_sequence(
         self,
         device: AwsDevice,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        pulse_sequence_builder_class: Type = CircuitPulseSequenceBuilder,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        pulse_sequence_builder_class: type = CircuitPulseSequenceBuilder,
     ) -> PulseSequence:
-        """
-        Get the associated pulse sequence for the current circuit.
+        """Get the associated pulse sequence for the current circuit.
 
         Args:
             device (AwsDevice): an AWS device.
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): Additional
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): Additional
                 gate definitions.
-            pulse_sequence_builder_class (Type): A `CircuitPulseSequenceBuilder` class that builds
+            pulse_sequence_builder_class (type): A `CircuitPulseSequenceBuilder` class that builds
                 the pulse sequence for this circuit. Default = `CircuitPulseSequenceBuilder`.
 
         Returns:

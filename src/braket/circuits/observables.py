@@ -30,6 +30,7 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 
 

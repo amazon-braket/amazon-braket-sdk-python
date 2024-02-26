@@ -27,6 +27,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 
 
