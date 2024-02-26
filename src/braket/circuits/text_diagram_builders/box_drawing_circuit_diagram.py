@@ -117,7 +117,7 @@ class BoxDrawingCircuitDiagram(CircuitDiagram):
                     symbols[qubit] = "┼"
 
         output = text_circuit_diagram_utils._create_output(
-            BoxDrawingCircuitDiagram, symbols, connections, circuit_qubits, global_phase
+            cls, symbols, connections, circuit_qubits, global_phase
         )
         return output
 
