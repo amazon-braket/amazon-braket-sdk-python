@@ -1260,8 +1260,7 @@ class Circuit:
     ) -> str | None:
         """Generates the header where frames, waveforms and defcals are declared.
 
-        It also adds any FreeParameter of the calibrations that is not gate arguments
-        to the circuit parameter set.
+        It also adds any FreeParameter that is not gate arguments to the circuit parameter set.
 
         Args:
             gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
@@ -1269,18 +1268,6 @@ class Circuit:
 
         Returns:
             str | None: An OpenQASM string
-        """
-
-        """Generates the header where frame, waveform and defcals are declared.
-
-        It also adds any FreeParameter that is not gate arguments to the circuit parameter set.
-
-        Args:
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
-                calibration data for the device.
-
-        Returns:
-            Optional[str]: An OpenQASM string
         """
 
         program = oqpy.Program(None, simplify_constants=False)

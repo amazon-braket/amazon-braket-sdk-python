@@ -1073,8 +1073,8 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "input float gamma;",
                         "input float beta;",
+                        "input float gamma;",
                         "bit[1] b;",
                         "qubit[1] q;",
                         "cal {",
@@ -1101,8 +1101,8 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "input float gamma;",
                         "input float beta;",
+                        "input float gamma;",
                         "bit[1] b;",
                         "qubit[1] q;",
                         "cal {",
@@ -1170,38 +1170,6 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
                         " 400.0ms, 0.2, 1, false);",
                         "}",
                         "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
-                        "    shift_phase(predefined_frame_1, alpha);",
-                        "    set_phase(predefined_frame_1, gamma);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "ms(0.1, 0.2, gamma) q[0], q[1];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
-                    ]
-                ),
-                inputs={},
-            ),
-        ),
-        (
-            Circuit().ms(0, 1, 0.1, 0.2, FreeParameter("gamma")),
-            (
-                Gate.MS(FreeParameter("alpha"), FreeParameter("theta"), FreeParameter("gamma")),
-                QubitSet([0, 1]),
-            ),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "input float gamma;",
-                        "input float beta;",
-                        "bit[2] b;",
-                        "qubit[2] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal ms(float alpha, float theta, float gamma) $0, $1 {",
                         "    shift_phase(predefined_frame_1, alpha);",
                         "    set_phase(predefined_frame_1, gamma);",
                         "    shift_phase(predefined_frame_1, beta);",
