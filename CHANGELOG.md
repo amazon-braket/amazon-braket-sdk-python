@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.71.0 (2024-02-26)
+
+### Features
+
+ * update log stream prefix for new jobs
+
 ## v1.70.3 (2024-02-21)
 
 ### Bug Fixes and Other Changes
