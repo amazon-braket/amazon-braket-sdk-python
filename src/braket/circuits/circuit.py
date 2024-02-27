@@ -49,7 +49,9 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.text_diagram_builders.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.text_diagram_builders.box_drawing_circuit_diagram import (
+    BoxDrawingCircuitDiagram,
+)
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
@@ -82,7 +84,6 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
-    default_diagram_builder = AsciiCircuitDiagram
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -1084,7 +1085,7 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class: type = AsciiCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: type = BoxDrawingCircuitDiagram) -> str:
         """Get a diagram for the current circuit.
 
         Args:
@@ -1496,7 +1497,7 @@ class Circuit:
             )
 
     def __str__(self):
-        return self.diagram(self.default_diagram_builder)
+        return self.diagram()
 
     def __eq__(self, other: Circuit):
         if isinstance(other, Circuit):
