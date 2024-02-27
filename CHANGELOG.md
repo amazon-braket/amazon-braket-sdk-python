@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.72.0 (2024-02-27)
+
+### Features
+
+ * FreeParameterExpression division
+
 ## v1.71.0 (2024-02-26)
 
 ### Features
