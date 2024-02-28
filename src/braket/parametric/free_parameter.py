@@ -88,17 +88,13 @@ class FreeParameter(FreeParameterExpression):
         return self.name
 
     def _set_name(self, name: str) -> None:
-        FreeParameter._validate_name(name)
-        self._name = Symbol(name)
-
-    @staticmethod
-    def _validate_name(name: str) -> None:
         if not name:
             raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
             raise TypeError("FreeParameter names must be strings")
         if not name[0].isalpha() and not name[0] == "_":
             raise ValueError("FreeParameter names must start with a letter or an underscore")
+        self._name = Symbol(name)
 
     def to_dict(self) -> dict:
         return {
