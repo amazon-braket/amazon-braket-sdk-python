@@ -17,6 +17,8 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.instructions import measure
+from braket.experimental.autoqasm.pulse import capture_v0
+from braket.pulse import Frame, Port
 
 
 def test_float_lit():
@@ -326,5 +328,28 @@ __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 __bit_0__[2] = measure __qubits__[2];
 return_value = __bit_0__;"""
+
+    assert program.to_ir() == expected
+
+
+def test_return_pulse_capture():
+    port = Port(port_id="device_port_x0", dt=1e-9, properties={})
+    frame = Frame(frame_id="frame1", frequency=2e9, port=port, phase=0, is_predefined=True)
+
+    @aq.main
+    def program():
+        return capture_v0(frame), capture_v0(frame)
+
+    expected = """OPENQASM 3.0;
+bit __bit_0__;
+bit __bit_1__;
+output bit return_value0;
+output bit return_value1;
+cal {
+    __bit_0__ = capture_v0(frame1);
+    __bit_1__ = capture_v0(frame1);
+}
+return_value0 = __bit_0__;
+return_value1 = __bit_1__;"""
 
     assert program.to_ir() == expected
