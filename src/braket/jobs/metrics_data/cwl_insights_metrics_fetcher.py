@@ -169,7 +169,7 @@ class CwlInsightsMetricsFetcher:
         query_end_time = job_end_time or int(time.time())
         query_start_time = job_start_time or query_end_time - self.QUERY_DEFAULT_JOB_DURATION
 
-        stream_prefix = stream_prefix.replace("/", "\\/") or job_name
+        stream_prefix = (stream_prefix or job_name).replace("/", "\\/")
 
         query = (
             f"fields @timestamp, @message "
