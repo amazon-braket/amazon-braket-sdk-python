@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.72.1 (2024-02-28)
+
+### Bug Fixes and Other Changes
+
+ * escape slash in metrics prefix
+
+## v1.72.0 (2024-02-27)
+
+### Features
+
+ * FreeParameterExpression division
+
 ## v1.71.0 (2024-02-26)
 
 ### Features
