@@ -138,11 +138,8 @@ def capture_v0(frame: Frame) -> BitVar:
     pulse_sequence = PulseSequence()
     pulse_sequence._program = aq_context.get_oqpy_program(mode=aq_program.ProgramMode.PULSE)
 
-    if aq_context._calibration_definitions_processing:
+    with oqpy.Cal(pulse_sequence._program):
         return _add_sequence()
-    else:
-        with oqpy.Cal(pulse_sequence._program):
-            return _add_sequence()
 
 
 def delay(
