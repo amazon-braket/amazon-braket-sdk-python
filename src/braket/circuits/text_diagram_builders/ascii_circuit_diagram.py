@@ -17,21 +17,20 @@ from functools import reduce
 from typing import Union
 
 import braket.circuits.circuit as cir
-from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
-from braket.circuits.text_diagram_builders import text_circuit_diagram_utils
+from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagram
 from braket.registers.qubit_set import QubitSet
 
 
-class AsciiCircuitDiagram(CircuitDiagram):
+class AsciiCircuitDiagram(TextCircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
     _vdelim = "|"  # Character that connects qubits of multi-qubit gates
     _qubit_line_char = "-"  # Character used for the qubit line
-    _box_padding = 0  # number of blank space characters around the gate name
+    _box_pad = 0  # number of blank space characters around the gate name
     _qubit_line_spacing = {"before": 1, "after": 0}  # number of empty lines around the qubit line
 
     @staticmethod
@@ -45,8 +44,27 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: string circuit diagram.
         """
+        return AsciiCircuitDiagram._build(circuit)
 
-        return text_circuit_diagram_utils._build_diagram_internal(AsciiCircuitDiagram, circuit)
+    @classmethod
+    def _vertical_delimiter(cls) -> str:
+        return cls._vdelim
+
+    @classmethod
+    def _qubit_line_character(cls) -> str:
+        return cls._qubit_line_char
+
+    @classmethod
+    def _box_padding(cls) -> int:
+        return cls._box_pad
+
+    @classmethod
+    def _qubit_line_spacing_before(cls) -> int:
+        return cls._qubit_line_spacing["before"]
+
+    @classmethod
+    def _qubit_line_spacing_after(cls) -> int:
+        return cls._qubit_line_spacing["after"]
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -149,9 +167,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "|"
 
-        output = text_circuit_diagram_utils._create_output(
-            cls, symbols, margins, circuit_qubits, global_phase
-        )
+        output = cls._create_output(symbols, margins, circuit_qubits, global_phase)
         return output
 
     @classmethod
