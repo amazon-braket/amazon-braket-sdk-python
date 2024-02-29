@@ -286,6 +286,17 @@ class AwsQuantumJob(QuantumJob):
         """str: The name of the quantum job."""
         return self.metadata(use_cached_value=True).get("jobName")
 
+    @property
+    def _logs_prefix(self) -> str:
+        """str: the prefix for the job logs."""
+        # jobs ARNs used to contain the job name and use a log prefix of `job-name`
+        # now job ARNs use a UUID and a log prefix of `job-name/UUID`
+        return (
+            f"{self.name}"
+            if self.arn.endswith(self.name)
+            else f"{self.name}/{self.arn.split('/')[-1]}"
+        )
+
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum hybrid job.
 
@@ -381,7 +392,6 @@ class AwsQuantumJob(QuantumJob):
         )
 
         log_group = AwsQuantumJob.LOG_GROUP
-        stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
         instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
@@ -395,7 +405,7 @@ class AwsQuantumJob(QuantumJob):
             has_streams = logs.flush_log_streams(
                 self._aws_session,
                 log_group,
-                stream_prefix,
+                self._logs_prefix,
                 stream_names,
                 positions,
                 instance_count,
@@ -455,14 +465,15 @@ class AwsQuantumJob(QuantumJob):
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
-        job_name = metadata["jobName"]
         job_start = None
         job_end = None
         if "startedAt" in metadata:
             job_start = int(metadata["startedAt"].timestamp())
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
             job_end = int(math.ceil(metadata["endedAt"].timestamp()))
-        return fetcher.get_metrics_for_job(job_name, metric_type, statistic, job_start, job_end)
+        return fetcher.get_metrics_for_job(
+            self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
+        )
 
     def cancel(self) -> str:
         """Cancels the job.
