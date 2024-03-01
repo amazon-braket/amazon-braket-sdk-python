@@ -107,7 +107,7 @@ class FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
-        if isinstance(node, ast.Num):
+        if isinstance(node, ast.Constant):
             return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))

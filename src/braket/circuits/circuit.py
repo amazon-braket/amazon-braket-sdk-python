@@ -19,6 +19,7 @@ from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
+from sympy import Expr
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -472,7 +473,9 @@ class Circuit:
 
         if self._check_for_params(instruction):
             for param in instruction.operator.parameters:
-                if isinstance(param, FreeParameterExpression):
+                if isinstance(param, FreeParameterExpression) and isinstance(
+                    param.expression, Expr
+                ):
                     free_params = param.expression.free_symbols
                     for parameter in free_params:
                         self._parameters.add(FreeParameter(parameter.name))
