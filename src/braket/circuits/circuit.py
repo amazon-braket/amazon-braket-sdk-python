@@ -49,9 +49,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.text_diagram_builders.box_drawing_circuit_diagram import (
-    BoxDrawingCircuitDiagram,
-)
+from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
@@ -1085,7 +1083,7 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class: type = BoxDrawingCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: type = UnicodeCircuitDiagram) -> str:
         """Get a diagram for the current circuit.
 
         Args:

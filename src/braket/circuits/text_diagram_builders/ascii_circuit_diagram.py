@@ -28,11 +28,6 @@ from braket.registers.qubit_set import QubitSet
 class AsciiCircuitDiagram(TextCircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
-    _vdelim = "|"  # Character that connects qubits of multi-qubit gates
-    _qubit_line_char = "-"  # Character used for the qubit line
-    _box_pad = 0  # number of blank space characters around the gate name
-    _qubit_line_spacing = {"before": 1, "after": 0}  # number of empty lines around the qubit line
-
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
         """
@@ -48,23 +43,28 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
     @classmethod
     def _vertical_delimiter(cls) -> str:
-        return cls._vdelim
+        """Character that connects qubits of multi-qubit gates."""
+        return "|"
 
     @classmethod
     def _qubit_line_character(cls) -> str:
-        return cls._qubit_line_char
+        """Character used for the qubit line."""
+        return "-"
 
     @classmethod
-    def _box_padding(cls) -> int:
-        return cls._box_pad
+    def _box_pad(cls) -> int:
+        """number of blank space characters around the gate name."""
+        return 0
 
     @classmethod
-    def _qubit_line_spacing_before(cls) -> int:
-        return cls._qubit_line_spacing["before"]
+    def _qubit_line_spacing_above(cls) -> int:
+        """number of empty lines above the qubit line."""
+        return 1
 
     @classmethod
-    def _qubit_line_spacing_after(cls) -> int:
-        return cls._qubit_line_spacing["after"]
+    def _qubit_line_spacing_below(cls) -> int:
+        """number of empty lines below the qubit line."""
+        return 0
 
     @classmethod
     def _duplicate_time_at_bottom(cls, lines: str) -> None:
@@ -88,7 +88,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         Returns:
             str: an ASCII string diagram for the specified moment in time for a column.
         """
-        symbols = {qubit: cls._qubit_line_char for qubit in circuit_qubits}
+        symbols = {qubit: cls._qubit_line_character() for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
 
         for item in items:
@@ -117,7 +117,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
-                ascii_symbols = cls._qubit_line_char * len(circuit_qubits)
+                ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -178,7 +178,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         Args:
             symbol (str): the gate name
             symbols_width (int): size of the expected output. The ouput will be filled with
-                cls._qubit_line_char if needed.
+                cls._qubit_line_character() if needed.
             connection (str): character indicating if the gate also involve a qubit with a lower
                 index.
 
@@ -187,6 +187,6 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         """
         output = "{0:{width}}\n".format(connection, width=symbols_width + 1)
         output += "{0:{fill}{align}{width}}\n".format(
-            symbol, fill=cls._qubit_line_char, align="<", width=symbols_width + 1
+            symbol, fill=cls._qubit_line_character(), align="<", width=symbols_width + 1
         )
         return output

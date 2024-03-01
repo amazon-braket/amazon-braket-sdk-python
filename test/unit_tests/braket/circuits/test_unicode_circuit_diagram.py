@@ -15,27 +15,27 @@ import numpy as np
 import pytest
 
 from braket.circuits import (
-    BoxDrawingCircuitDiagram,
     Circuit,
     FreeParameter,
     Gate,
     Instruction,
     Observable,
     Operator,
+    UnicodeCircuitDiagram,
 )
 from braket.pulse import Frame, Port, PulseSequence
 
 
 def _assert_correct_diagram(circ, expected):
-    assert BoxDrawingCircuitDiagram.build_diagram(circ) == "\n".join(expected)
+    assert UnicodeCircuitDiagram.build_diagram(circ) == "\n".join(expected)
 
 
 def test_empty_circuit():
-    assert BoxDrawingCircuitDiagram.build_diagram(Circuit()) == ""
+    assert UnicodeCircuitDiagram.build_diagram(Circuit()) == ""
 
 
 def test_only_gphase_circuit():
-    assert BoxDrawingCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
+    assert UnicodeCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == "Global phase: 0.1"
 
 
 def test_one_gate_one_qubit():

@@ -40,6 +40,6 @@ from braket.circuits.result_type import ObservableResultType, ResultType  # noqa
 from braket.circuits.text_diagram_builders.ascii_circuit_diagram import (  # noqa: F401
     AsciiCircuitDiagram,
 )
-from braket.circuits.text_diagram_builders.box_drawing_circuit_diagram import (  # noqa: F401
-    BoxDrawingCircuitDiagram,
+from braket.circuits.text_diagram_builders.unicode_circuit_diagram import (  # noqa: F401
+    UnicodeCircuitDiagram,
 )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Literal, Union
 
 import braket.circuits.circuit as cir
@@ -20,36 +20,33 @@ from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class TextCircuitDiagram(CircuitDiagram):
+class TextCircuitDiagram(CircuitDiagram, ABC):
+    """Abstract base class for text circuit diagrams."""
+
     @classmethod
     @abstractmethod
     def _vertical_delimiter(cls) -> str:
-        """[TODO: add description]."""
+        """Character that connects qubits of multi-qubit gates."""
 
     @classmethod
     @abstractmethod
     def _qubit_line_character(cls) -> str:
-        """[TODO: add description]."""
+        """Character used for the qubit line."""
 
     @classmethod
     @abstractmethod
-    def _box_padding(cls) -> int:
-        """[TODO: add description]."""
+    def _box_pad(cls) -> int:
+        """number of blank space characters around the gate name."""
 
     @classmethod
     @abstractmethod
-    def _qubit_line_spacing_before(cls) -> int:
-        """[TODO: add description]."""
+    def _qubit_line_spacing_above(cls) -> int:
+        """number of empty lines above the qubit line."""
 
     @classmethod
     @abstractmethod
-    def _qubit_line_spacing_after(cls) -> int:
-        """[TODO: add description]."""
-
-    @classmethod
-    @abstractmethod
-    def _duplicate_time_at_bottom(cls, lines: list[str]) -> None:
-        """[TODO: add description]."""
+    def _qubit_line_spacing_below(cls) -> int:
+        """number of empty lines below the qubit line."""
 
     @classmethod
     @abstractmethod
@@ -59,8 +56,20 @@ class TextCircuitDiagram(CircuitDiagram):
         items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
-        """[TODO: add description]."""
+        """
+        Return a column in the string diagram of the circuit for a given list of items.
 
+        Args:
+            circuit_qubits (QubitSet): qubits in circuit
+            items (list[Instruction | ResultType]): list of instructions or result types
+            global_phase (float | None): the integrated global phase up to this column
+
+        Returns:
+            str: a string diagram for the specified moment in time for a column.
+        """
+
+    # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
+    # flake8: noqa: BCS005
     @classmethod
     @abstractmethod
     def _draw_symbol(
@@ -69,7 +78,19 @@ class TextCircuitDiagram(CircuitDiagram):
         symbols_width: int,
         connection: Literal["above", "below", "both", "none"],
     ) -> str:
-        """[TODO: add description]."""
+        """
+        Create a string representing the symbol inside a box.
+
+        Args:
+            symbol (str): the gate name
+            symbols_width (int): size of the expected output. The ouput will be filled with
+                cls._qubit_line_character() if needed.
+            connection (Literal["above", "below", "both", "none"]): specifies if a connection
+                will be drawn above and/or below the box.
+
+        Returns:
+            str: a string representing the symbol.
+        """
 
     @classmethod
     def _build(cls, circuit: cir.Circuit) -> str:
@@ -109,8 +130,8 @@ class TextCircuitDiagram(CircuitDiagram):
             circuit_qubits,
             cls._vertical_delimiter(),
             cls._qubit_line_character(),
-            cls._qubit_line_spacing_before(),
-            cls._qubit_line_spacing_after(),
+            cls._qubit_line_spacing_above(),
+            cls._qubit_line_spacing_below(),
         )
 
         column_strs = []
@@ -228,7 +249,7 @@ class TextCircuitDiagram(CircuitDiagram):
         Returns:
             str: a string representing a diagram column.
         """
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._box_padding()
+        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._box_pad()
         output = ""
 
         if global_phase is not None:

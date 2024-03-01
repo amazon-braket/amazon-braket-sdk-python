@@ -18,7 +18,6 @@ import pytest
 
 import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
-    BoxDrawingCircuitDiagram,
     Circuit,
     FreeParameter,
     Gate,
@@ -27,6 +26,7 @@ from braket.circuits import (
     Observable,
     QubitSet,
     ResultType,
+    UnicodeCircuitDiagram,
     circuit,
     compiler_directives,
     gates,
@@ -198,7 +198,7 @@ def test_repr_result_types(cnot_prob):
 
 
 def test_str(h):
-    expected = BoxDrawingCircuitDiagram.build_diagram(h)
+    expected = UnicodeCircuitDiagram.build_diagram(h)
     assert str(h) == expected
 
 
