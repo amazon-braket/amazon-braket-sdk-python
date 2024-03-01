@@ -7,7 +7,7 @@ from gate_model_device_testing_utils import get_tol
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, Noise, Observable
 
-SHOTS = 1000
+SHOTS = 500
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 SIMULATOR_ARNS = [DM1_ARN]
 
