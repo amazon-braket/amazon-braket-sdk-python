@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Union
+from typing import Literal, Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -30,8 +30,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
-        """
-        Build a text circuit diagram.
+        """Build a text circuit diagram.
 
         Args:
             circuit (Circuit): Circuit for which to build a diagram.
@@ -89,7 +88,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
             str: an ASCII string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: cls._qubit_line_character() for qubit in circuit_qubits}
-        margins = {qubit: " " for qubit in circuit_qubits}
+        connections = {qubit: "none" for qubit in circuit_qubits}
 
         for item in items:
             if isinstance(item, ResultType) and not item.target:
@@ -165,27 +164,31 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
                 # Set the margin to be a connector if not on the first qubit
                 if target_and_control and qubit != min(target_and_control):
-                    margins[qubit] = "|"
+                    connections[qubit] = "above"
 
-        output = cls._create_output(symbols, margins, circuit_qubits, global_phase)
+        output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
         return output
 
+    # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
+    # flake8: noqa: BCS005
     @classmethod
-    def _draw_symbol(cls, symbol: str, symbols_width: int, connection: str) -> str:
-        """
-        Create a string representing the symbol.
+    def _draw_symbol(
+        cls, symbol: str, symbols_width: int, connection: Literal["above", "below", "both", "none"]
+    ) -> str:
+        """Create a string representing the symbol.
 
         Args:
             symbol (str): the gate name
             symbols_width (int): size of the expected output. The ouput will be filled with
                 cls._qubit_line_character() if needed.
-            connection (str): character indicating if the gate also involve a qubit with a lower
-                index.
+            connection (Literal["above", "below", "both", "none"]): character indicating
+                if the gate also involve a qubit with a lower index.
 
         Returns:
             str: a string representing the symbol.
         """
-        output = "{0:{width}}\n".format(connection, width=symbols_width + 1)
+        connection_char = cls._vertical_delimiter() if connection in ["above"] else " "
+        output = "{0:{width}}\n".format(connection_char, width=symbols_width + 1)
         output += "{0:{fill}{align}{width}}\n".format(
             symbol, fill=cls._qubit_line_character(), align="<", width=symbols_width + 1
         )

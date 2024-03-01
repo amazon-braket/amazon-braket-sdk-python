@@ -31,8 +31,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
-        """
-        Build a text circuit diagram.
+        """Build a text circuit diagram.
 
         Args:
             circuit (Circuit): Circuit for which to build a diagram.
@@ -80,8 +79,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
-        """
-        Return a column in the string diagram of the circuit for a given list of items.
+        """Return a column in the string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
@@ -201,8 +199,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         symbols_width: int,
         connection: Literal["above", "below", "both", "none"],
     ) -> str:
-        """
-        Create a string representing the symbol inside a box.
+        """Create a string representing the symbol inside a box.
 
         Args:
             symbol (str): the gate name

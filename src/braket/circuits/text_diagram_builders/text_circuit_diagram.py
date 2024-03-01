@@ -56,8 +56,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
-        """
-        Return a column in the string diagram of the circuit for a given list of items.
+        """Return a column in the string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
@@ -78,8 +77,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         symbols_width: int,
         connection: Literal["above", "below", "both", "none"],
     ) -> str:
-        """
-        Create a string representing the symbol inside a box.
+        """Create a string representing the symbol inside a box.
 
         Args:
             symbol (str): the gate name
@@ -94,8 +92,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
 
     @classmethod
     def _build(cls, circuit: cir.Circuit) -> str:
-        """
-        Build a text circuit diagram.
+        """Build a text circuit diagram.
 
         The procedure follows as:
         1. Prepare the first column composed of the qubit identifiers
@@ -184,8 +181,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         items: list[Union[Instruction, ResultType]],
         global_phase: float | None,
     ) -> str:
-        """
-        Return a set of columns in the string diagram of the circuit for a list of items.
+        """Return a set of columns in the string diagram of the circuit for a list of items.
 
         Args:
             col_title (str): title of column set
@@ -233,8 +229,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        """
-        Creates the ouput for a single column:
+        """Creates the ouput for a single column:
             a. If there was one or more gphase gate, create a first line with the total global
             phase shift ending with target_class.vdelim, e.g. 0.14|
             b. for each qubit, append the text representation produces by target_class.draw_symbol
