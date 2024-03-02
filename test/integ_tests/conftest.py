@@ -48,7 +48,7 @@ def pytest_xdist_node_collection_finished(ids):
     profile_name = os.environ["AWS_PROFILE"]
     aws_session = AwsSession(boto3.session.Session(profile_name=profile_name))
     if run_jobs and os.getenv("JOBS_STARTED") is None:
-        job_success = AwsQuantumJob.create(
+        AwsQuantumJob.create(
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             job_name=job_fail_name,
             source_module="test/integ_tests/job_test_script.py",
@@ -57,7 +57,7 @@ def pytest_xdist_node_collection_finished(ids):
             wait_until_complete=False,
             hyperparameters={"test_case": "failed"},
         )
-        job_failed = AwsQuantumJob.create(
+        AwsQuantumJob.create(
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             job_name=job_complete_name,
             source_module="test/integ_tests/job_test_script.py",
@@ -162,14 +162,23 @@ def job_failed_name(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(aws_session, job_completed_name):
-    job_arn = [job['jobArn'] for job in boto3.client("braket").search_jobs(filters=[])['jobs'] if job['jobName'] == job_completed_name][0]
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_completed_name
+    ][0]
 
     job = AwsQuantumJob(arn=job_arn)
     return job
 
+
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(aws_session, job_failed_name):
-    job_arn = [job['jobArn'] for job in boto3.client("braket").search_jobs(filters=[])['jobs'] if job['jobName'] == job_failed_name][0]
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_failed_name
+    ][0]
 
     job = AwsQuantumJob(arn=job_arn)
     return job
