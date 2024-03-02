@@ -20,6 +20,7 @@ from typing import Any, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
+from sympy import Expr
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -330,7 +331,9 @@ class PulseSequence:
         self,
         parameter: Union[float, FreeParameterExpression],
     ) -> None:
-        if isinstance(parameter, FreeParameterExpression):
+        if isinstance(parameter, FreeParameterExpression) and isinstance(
+            parameter.expression, Expr
+        ):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
 
