@@ -168,8 +168,7 @@ def completed_quantum_job(aws_session, job_completed_name):
         if job["jobName"] == job_completed_name
     ][0]
 
-    job = AwsQuantumJob(arn=job_arn)
-    return job
+    return AwsQuantumJob(arn=job_arn)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -180,5 +179,4 @@ def failed_quantum_job(aws_session, job_failed_name):
         if job["jobName"] == job_failed_name
     ][0]
 
-    job = AwsQuantumJob(arn=job_arn)
-    return job
+    return AwsQuantumJob(arn=job_arn)
