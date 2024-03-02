@@ -161,7 +161,7 @@ def job_failed_name(request):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def completed_quantum_job(aws_session, job_completed_name):
+def completed_quantum_job(job_completed_name):
     job_arn = [
         job["jobArn"]
         for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
