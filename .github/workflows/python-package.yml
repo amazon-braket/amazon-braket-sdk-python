@@ -37,4 +37,6 @@ jobs:
         tox -e unit-tests
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
       if: ${{ strategy.job-index }} == 0
