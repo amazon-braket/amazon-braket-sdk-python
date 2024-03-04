@@ -19,6 +19,7 @@ from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
+from sympy import Expr
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -70,8 +71,7 @@ AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
 
 class Circuit:
-    """
-    A representation of a quantum circuit that contains the instructions to be performed on a
+    """A representation of a quantum circuit that contains the instructions to be performed on a
     quantum device and the requested result types.
 
     See :mod:`braket.circuits.gates` module for all of the supported instructions.
@@ -86,8 +86,7 @@ class Circuit:
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
-        """
-        Register the subroutine `func` as an attribute of the `Circuit` class. The attribute name
+        """Register the subroutine `func` as an attribute of the `Circuit` class. The attribute name
         is the name of `func`.
 
         Args:
@@ -116,10 +115,11 @@ class Circuit:
         setattr(cls, function_name, method_from_subroutine)
 
         function_attr = getattr(cls, function_name)
-        setattr(function_attr, "__doc__", func.__doc__)
+        function_attr.__doc__ = func.__doc__
 
     def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
-        """
+        """Inits a `Circuit`.
+
         Args:
             addable (AddableTypes | None): The item(s) to add to self.
                 Default = None.
@@ -223,6 +223,7 @@ class Circuit:
     @property
     def qubit_count(self) -> int:
         """Get the qubit count for this circuit. Note that this includes observables.
+
         Returns:
             int: The qubit count for this circuit.
         """
@@ -236,8 +237,7 @@ class Circuit:
 
     @property
     def parameters(self) -> set[FreeParameter]:
-        """
-        Gets a set of the parameters in the Circuit.
+        """Gets a set of the parameters in the Circuit.
 
         Returns:
             set[FreeParameter]: The `FreeParameters` in the Circuit.
@@ -250,8 +250,7 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """
-        Add a requested result type to `self`, returns `self` for chaining ability.
+        """Add a requested result type to `self`, returns `self` for chaining ability.
 
         Args:
             result_type (ResultType): `ResultType` to add into `self`.
@@ -414,8 +413,7 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """
-        Add an instruction to `self`, returns `self` for chaining ability.
+        """Add an instruction to `self`, returns `self` for chaining ability.
 
         Args:
             instruction (Instruction): `Instruction` to add into `self`.
@@ -475,7 +473,9 @@ class Circuit:
 
         if self._check_for_params(instruction):
             for param in instruction.operator.parameters:
-                if isinstance(param, FreeParameterExpression):
+                if isinstance(param, FreeParameterExpression) and isinstance(
+                    param.expression, Expr
+                ):
                     free_params = param.expression.free_symbols
                     for parameter in free_params:
                         self._parameters.add(FreeParameter(parameter.name))
@@ -484,8 +484,7 @@ class Circuit:
         return self
 
     def _check_for_params(self, instruction: Instruction) -> bool:
-        """
-        This checks for free parameters in an :class:{Instruction}. Checks children classes of
+        """This checks for free parameters in an :class:{Instruction}. Checks children classes of
         :class:{Parameterizable}.
 
         Args:
@@ -506,8 +505,7 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """
-        Add a `circuit` to self, returns self for chaining ability.
+        """Add a `Circuit` to `self`, returning `self` for chaining ability.
 
         Args:
             circuit (Circuit): Circuit to add into self.
@@ -582,9 +580,8 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """
-        Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in any way
-        by the compiler.
+        """Add a verbatim `Circuit` to `self`, ensuring that the circuit is not modified in
+        any way by the compiler.
 
         Args:
             verbatim_circuit (Circuit): Circuit to add into self.
@@ -700,7 +697,8 @@ class Circuit:
                 If `target_unitary` is not a unitary.
                 If `noise` is multi-qubit noise and `target_gates` contain gates
                 with the number of qubits not the same as `noise.qubit_count`.
-            Warning:
+
+        Warning:
                 If `noise` is multi-qubit noise while there is no gate with the same
                 number of qubits in `target_qubits` or in the whole circuit when
                 `target_qubits` is not given.
@@ -860,8 +858,7 @@ class Circuit:
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
     def make_bound_circuit(self, param_values: dict[str, Number], strict: bool = False) -> Circuit:
-        """
-        Binds FreeParameters based upon their name and values passed in. If parameters
+        """Binds `FreeParameter`s based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
@@ -879,16 +876,15 @@ class Circuit:
         return self._use_parameter_value(param_values)
 
     def _validate_parameters(self, parameter_values: dict[str, Number]) -> None:
-        """
-        This runs a check to see that the parameters are in the Circuit.
+        """Checks that the parameters are in the `Circuit`.
 
         Args:
             parameter_values (dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
 
         Raises:
-            ValueError: If a parameter name is given which does not appear in the circuit.
-
+            ValueError: If there are no parameters that match the key for the arg
+                param_values.
         """
         parameter_strings = set()
         for parameter in self.parameters:
@@ -898,8 +894,7 @@ class Circuit:
                 raise ValueError(f"No parameter in the circuit named: {param}")
 
     def _use_parameter_value(self, param_values: dict[str, Number]) -> Circuit:
-        """
-        Creates a Circuit that uses the parameter values passed in.
+        """Creates a `Circuit` that uses the parameter values passed in.
 
         Args:
             param_values (dict[str, Number]): A mapping of FreeParameter names
@@ -927,8 +922,7 @@ class Circuit:
 
     @staticmethod
     def _validate_parameter_value(val: Any) -> None:
-        """
-        Validates the value being used is a Number.
+        """Validates the value being used is a `Number`.
 
         Args:
             val (Any): The value be verified.
@@ -938,7 +932,7 @@ class Circuit:
         """
         if not isinstance(val, Number):
             raise ValueError(
-                f"Parameters can only be assigned numeric values. " f"Invalid inputs: {val}"
+                f"Parameters can only be assigned numeric values. Invalid inputs: {val}"
             )
 
     def apply_readout_noise(
@@ -1020,8 +1014,7 @@ class Circuit:
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
-        """
-        Generic add method for adding item(s) to self. Any arguments that
+        """Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
         supports are supported by this method. If adding a
         subroutine, check with that subroutines documentation to determine what
@@ -1094,8 +1087,7 @@ class Circuit:
         return circ
 
     def diagram(self, circuit_diagram_class: type = AsciiCircuitDiagram) -> str:
-        """
-        Get a diagram for the current circuit.
+        """Get a diagram for the current circuit.
 
         Args:
             circuit_diagram_class (type): A `CircuitDiagram` class that builds the
@@ -1109,21 +1101,20 @@ class Circuit:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: Optional[SerializationProperties] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        serialization_properties: SerializationProperties | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
-        """
-        Converts the circuit into the canonical intermediate representation.
+        """Converts the circuit into the canonical intermediate representation.
         If the circuit is sent over the wire, this method is called before it is sent.
 
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
                 IR representation.
-            serialization_properties (Optional[SerializationProperties]): The serialization
+            serialization_properties (SerializationProperties | None): The serialization
                 properties to use while serializing the object to the IR representation. The
                 serialization properties supplied must correspond to the supplied `ir_type`.
                 Defaults to None.
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
                 calibration data for the device. default: None.
 
         Returns:
@@ -1132,7 +1123,7 @@ class Circuit:
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+                properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
@@ -1155,8 +1146,7 @@ class Circuit:
     def from_ir(
         source: Union[str, OpenQasmProgram], inputs: Optional[dict[str, io_type]] = None
     ) -> Circuit:
-        """
-        Converts an OpenQASM program to a Braket Circuit object.
+        """Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
             source (Union[str, OpenQasmProgram]): OpenQASM string.
@@ -1260,7 +1250,7 @@ class Circuit:
         frames: dict[str, Frame],
         waveforms: dict[str, Waveform],
     ) -> None:
-        for key, calibration in gate_definitions.items():
+        for _key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
                 _validate_uniqueness(frames, frame)
                 frames[frame.id] = frame
@@ -1420,8 +1410,7 @@ class Circuit:
         return additional_calibrations
 
     def to_unitary(self) -> np.ndarray:
-        """
-        Returns the unitary matrix representation of the entire circuit.
+        """Returns the unitary matrix representation of the entire circuit.
 
         Note:
             The performance of this method degrades with qubit count. It might be slow for
@@ -1484,8 +1473,7 @@ class Circuit:
         return copy
 
     def copy(self) -> Circuit:
-        """
-        Return a shallow copy of the circuit.
+        """Return a shallow copy of the circuit.
 
         Returns:
             Circuit: A shallow copy of the circuit.
@@ -1512,25 +1500,25 @@ class Circuit:
     def __str__(self):
         return self.diagram(AsciiCircuitDiagram)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Circuit):
         if isinstance(other, Circuit):
             return (
                 self.instructions == other.instructions and self.result_types == other.result_types
             )
         return NotImplemented
 
-    def __call__(self, arg: Any | None = None, **kwargs) -> Circuit:
-        """
-        Implements the call function to easily make a bound Circuit.
+    def __call__(self, arg: Any | None = None, **kwargs: Any) -> Circuit:
+        """Implements the call function to easily make a bound Circuit.
 
         Args:
             arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
+            **kwargs (Any): The parameter and valued to be bound.
 
         Returns:
             Circuit: A circuit with the specified parameters bound.
         """
-        param_values = dict()
+        param_values = {}
         if arg is not None:
             for param in self.parameters:
                 param_values[str(param)] = arg
@@ -1540,8 +1528,7 @@ class Circuit:
 
 
 def subroutine(register: bool = False) -> Callable:
-    """
-    Subroutine is a function that returns instructions, result types, or circuits.
+    """Subroutine is a function that returns instructions, result types, or circuits.
 
     Args:
         register (bool): If `True`, adds this subroutine into the `Circuit` class.

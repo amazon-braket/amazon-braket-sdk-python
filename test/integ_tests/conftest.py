@@ -12,12 +12,61 @@
 # language governing permissions and limitations under the License.
 
 import os
+import random
+import string
 
 import boto3
 import pytest
 from botocore.exceptions import ClientError
 
+from braket.aws.aws_device import AwsDevice
+from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.aws.aws_session import AwsSession
+
+SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
+TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN, TN1_ARN]
+
+job_complete_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
+job_fail_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
+
+
+def pytest_configure_node(node):
+    """xdist hook"""
+    node.workerinput["JOB_COMPLETED_NAME"] = job_complete_name
+    node.workerinput["JOB_FAILED_NAME"] = job_fail_name
+
+
+def pytest_xdist_node_collection_finished(ids):
+    """Uses the pytest xdist hook to check whether tests with jobs are to be ran.
+    If they are, the first reporting worker sets a flag that it created the tests
+    to avoid concurrency limits. This is the first time in the pytest setup the
+    controller has all the tests to be ran from the worker nodes.
+    """
+    run_jobs = any("job" in test for test in ids)
+    profile_name = os.environ["AWS_PROFILE"]
+    aws_session = AwsSession(boto3.session.Session(profile_name=profile_name))
+    if run_jobs and os.getenv("JOBS_STARTED") is None:
+        AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_fail_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "failed"},
+        )
+        AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_complete_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "completed"},
+        )
+        os.environ["JOBS_STARTED"] = "True"
 
 
 @pytest.fixture(scope="session")
@@ -82,3 +131,52 @@ def s3_prefix():
 @pytest.fixture(scope="module")
 def s3_destination_folder(s3_bucket, s3_prefix):
     return AwsSession.S3DestinationFolder(s3_bucket, s3_prefix)
+
+
+@pytest.fixture(scope="session")
+def braket_simulators(aws_session):
+    return {
+        simulator_arn: AwsDevice(simulator_arn, aws_session) for simulator_arn in SIMULATOR_ARNS
+    }
+
+
+@pytest.fixture(scope="session")
+def braket_devices():
+    return AwsDevice.get_devices(statuses=["RETIRED", "ONLINE", "OFFLINE"])
+
+
+@pytest.fixture(scope="session", autouse=True)
+def created_braket_devices(aws_session, braket_devices):
+    return {device.arn: device for device in braket_devices}
+
+
+@pytest.fixture(scope="session")
+def job_completed_name(request):
+    return request.config.workerinput["JOB_COMPLETED_NAME"]
+
+
+@pytest.fixture(scope="session")
+def job_failed_name(request):
+    return request.config.workerinput["JOB_FAILED_NAME"]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def completed_quantum_job(job_completed_name):
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_completed_name
+    ][0]
+
+    return AwsQuantumJob(arn=job_arn)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def failed_quantum_job(job_failed_name):
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_failed_name
+    ][0]
+
+    return AwsQuantumJob(arn=job_arn)

@@ -22,8 +22,7 @@ from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class FreeParameter(FreeParameterExpression):
-    """
-    Class 'FreeParameter'
+    """Class 'FreeParameter'
 
     Free parameters can be used in parameterized circuits. Objects that can take a parameter
     all inherit from :class:'Parameterizable'. The FreeParameter can be swapped in to a circuit
@@ -39,8 +38,7 @@ class FreeParameter(FreeParameterExpression):
     """
 
     def __init__(self, name: str):
-        """
-        Initializes a new :class:'FreeParameter' object.
+        """Initializes a new :class:'FreeParameter' object.
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
@@ -49,19 +47,16 @@ class FreeParameter(FreeParameterExpression):
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._name = Symbol(name)
+        self._set_name(name)
         super().__init__(expression=self._name)
 
     @property
     def name(self) -> str:
-        """
-        str: Name of this parameter.
-        """
+        """str: Name of this parameter."""
         return self._name.name
 
     def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:
-        """
-        Substitutes a value in if the parameter exists within the mapping.
+        """Substitutes a value in if the parameter exists within the mapping.
 
         Args:
             parameter_values (dict[str, Number]): A mapping of parameter to its
@@ -79,19 +74,27 @@ class FreeParameter(FreeParameterExpression):
     def __hash__(self) -> int:
         return hash(tuple(self.name))
 
-    def __eq__(self, other):
+    def __eq__(self, other: FreeParameter):
         if isinstance(other, FreeParameter):
             return self._name == other._name
         return super().__eq__(other)
 
     def __repr__(self) -> str:
-        """
-        The representation of the :class:'FreeParameter'.
+        """The representation of the :class:'FreeParameter'.
 
         Returns:
             str: The name of the class:'FreeParameter' to represent the class.
         """
         return self.name
+
+    def _set_name(self, name: str) -> None:
+        if not name:
+            raise ValueError("FreeParameter names must be non empty")
+        if not isinstance(name, str):
+            raise TypeError("FreeParameter names must be strings")
+        if not name[0].isalpha() and not name[0] == "_":
+            raise ValueError("FreeParameter names must start with a letter or an underscore")
+        self._name = Symbol(name)
 
     def to_dict(self) -> dict:
         return {
