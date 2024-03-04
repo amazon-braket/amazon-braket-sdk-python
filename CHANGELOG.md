@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.72.2 (2024-03-04)
+
+### Bug Fixes and Other Changes
+
+ * validate FreeParameter name
+
 ## v1.72.1 (2024-02-28)
 
 ### Bug Fixes and Other Changes
