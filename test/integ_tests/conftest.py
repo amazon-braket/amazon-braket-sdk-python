@@ -36,8 +36,8 @@ def pytest_configure_node(node):
     """xdist hook"""
     node.workerinput["JOB_COMPLETED_NAME"] = job_complete_name
     node.workerinput["JOB_FAILED_NAME"] = job_fail_name
-    if os.getenv("BRAKET_ENDPOINT"):
-        node.workerinput["BRAKET_ENDPOINT"] = os.getenv("BRAKET_ENDPOINT")
+    if endpoint := os.getenv("BRAKET_ENDPOINT"):
+        node.workerinput["BRAKET_ENDPOINT"] = endpoint
 
 
 def pytest_xdist_node_collection_finished(ids):
