@@ -231,13 +231,13 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
     ) -> str:
         """Creates the ouput for a single column:
             a. If there was one or more gphase gate, create a first line with the total global
-            phase shift ending with target_class.vdelim, e.g. 0.14|
-            b. for each qubit, append the text representation produces by target_class.draw_symbol
+            phase shift ending with the _vertical_delimiter() class attribute, e.g. 0.14|
+            b. for each qubit, append the text representation produces by cls._draw_symbol
 
         Args:
             symbols (dict[Qubit, str]): dictionary of the gate name for each qubit
             margins (dict[Qubit, str]): map of the qubit interconnections. Specific to the
-                `target_class.draw_symbol` method.
+                `_draw_symbol` classmethod.
             qubits (QubitSet): set of the circuit qubits
             global_phase (float | None): total global phase shift added during the moment
 

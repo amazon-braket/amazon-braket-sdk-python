@@ -135,9 +135,9 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
         return output
 
-    @staticmethod
+    @classmethod
     def _build_parameters(
-        circuit_qubits: QubitSet, item: ResultType | Instruction, connections: dict[Qubit, str]
+        cls, circuit_qubits: QubitSet, item: ResultType | Instruction, connections: dict[Qubit, str]
     ) -> tuple:
         map_control_qubit_states = {}
 
@@ -148,7 +148,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             control_qubits = QubitSet()
             qubits = circuit_qubits
             ascii_symbols = [item.ascii_symbols[0]] * len(qubits)
-            UnicodeCircuitDiagram._update_connections(qubits, connections)
+            cls._update_connections(qubits, connections)
         elif (
             isinstance(item, Instruction)
             and isinstance(item.operator, Gate)
@@ -157,7 +157,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             target_qubits = circuit_qubits
             control_qubits = QubitSet()
             qubits = circuit_qubits
-            ascii_symbols = UnicodeCircuitDiagram._qubit_line_character() * len(circuit_qubits)
+            ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
         else:
             if isinstance(item.target, list):
                 target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -172,7 +172,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             target_and_control = target_qubits.union(control_qubits)
             qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
             ascii_symbols = item.ascii_symbols
-            UnicodeCircuitDiagram._update_connections(qubits, connections)
+            cls._update_connections(qubits, connections)
 
         return (
             target_qubits,
