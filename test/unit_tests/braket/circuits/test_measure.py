@@ -42,7 +42,17 @@ def test_ascii_symbols(measure, ascii_symbols):
 
 def test_none_ascii():
     with pytest.raises(ValueError):
-        Measure(qubit_count=1, ascii_symbols=None)
+        Measure(ascii_symbols=None)
+
+
+def test_equality():
+    measure1 = Measure()
+    measure2 = Measure(qubit_count=1, ascii_symbols=["M"])
+    non_measure = "non measure"
+
+    assert measure1 == measure2
+    assert measure1 is not measure2
+    assert measure1 != non_measure
 
 
 def test_name(measure):

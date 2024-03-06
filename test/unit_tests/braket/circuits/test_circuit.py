@@ -14,6 +14,7 @@
 from unittest.mock import Mock
 
 import numpy as np
+from braket.circuits.measure import Measure
 import pytest
 
 import braket.ir.jaqcd as jaqcd
@@ -569,6 +570,71 @@ def test_add_verbatim_box_result_types():
             Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
         )
 
+
+def test_measure():
+    circ = Circuit().h(0).cnot(0,1).measure([0])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
+def test_measure_int():
+    circ = Circuit().h(0).cnot(0,1).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
+def test_measure_multiple_targets():
+    circ = Circuit().h(0).cnot(0,1).cnot(1,2).cnot(2,3).measure([0, 1, 3])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
+        .add_instruction(Instruction(Gate.CNot(), [2, 3]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 3))
+    )
+    assert circ == expected
+    assert circ._measure_targets == [0, 1, 3]
+
+
+def test_measure_qubits_out_of_range():
+    with pytest.raises(IndexError):
+        Circuit().h(0).cnot(0,1).measure([4])
+
+
+def test_measure_empty_circuit():
+    with pytest.raises(IndexError):
+        Circuit().measure()
+
+
+def test_to_ir_with_measure():
+    circ = Circuit().h(0).cnot(0,1).measure(0)
+    expected_ir = OpenQasmProgram(
+            source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b[0] = measure q[0];",
+            ]
+            ),
+            inputs={},
+        )
+    assert circ.to_ir("OPENQASM") == expected_ir
 
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
