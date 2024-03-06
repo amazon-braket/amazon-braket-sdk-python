@@ -28,7 +28,9 @@ from braket.registers.qubit_set import QubitSet
 class Measure(QuantumOperator):
     """Class `Measure` represents a measure operation on targeted qubits"""
 
-    def __init__(self, qubit_count: Optional[int] = 1 , ascii_symbols: Sequence[str] = ["M"], **kwargs):
+    def __init__(
+        self, qubit_count: Optional[int] = 1, ascii_symbols: Sequence[str] = ["M"], **kwargs
+    ):
         """Inits a `Measure`.
 
         Args:

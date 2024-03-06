@@ -14,7 +14,6 @@
 from unittest.mock import Mock
 
 import numpy as np
-from braket.circuits.measure import Measure
 import pytest
 
 import braket.ir.jaqcd as jaqcd
@@ -36,6 +35,7 @@ from braket.circuits import (
     observables,
 )
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.measure import Measure
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.serialization import (
     IRType,
@@ -572,7 +572,7 @@ def test_add_verbatim_box_result_types():
 
 
 def test_measure():
-    circ = Circuit().h(0).cnot(0,1).measure([0])
+    circ = Circuit().h(0).cnot(0, 1).measure([0])
     expected = (
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
@@ -583,7 +583,7 @@ def test_measure():
 
 
 def test_measure_int():
-    circ = Circuit().h(0).cnot(0,1).measure(0)
+    circ = Circuit().h(0).cnot(0, 1).measure(0)
     expected = (
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
@@ -594,7 +594,7 @@ def test_measure_int():
 
 
 def test_measure_multiple_targets():
-    circ = Circuit().h(0).cnot(0,1).cnot(1,2).cnot(2,3).measure([0, 1, 3])
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 1, 3])
     expected = (
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
@@ -611,7 +611,7 @@ def test_measure_multiple_targets():
 
 def test_measure_qubits_out_of_range():
     with pytest.raises(IndexError):
-        Circuit().h(0).cnot(0,1).measure([4])
+        Circuit().h(0).cnot(0, 1).measure([4])
 
 
 def test_measure_empty_circuit():
@@ -620,9 +620,9 @@ def test_measure_empty_circuit():
 
 
 def test_to_ir_with_measure():
-    circ = Circuit().h(0).cnot(0,1).measure(0)
+    circ = Circuit().h(0).cnot(0, 1).measure(0)
     expected_ir = OpenQasmProgram(
-            source="\n".join(
+        source="\n".join(
             [
                 "OPENQASM 3.0;",
                 "bit[1] b;",
@@ -631,10 +631,11 @@ def test_to_ir_with_measure():
                 "cnot q[0], q[1];",
                 "b[0] = measure q[0];",
             ]
-            ),
-            inputs={},
-        )
+        ),
+        inputs={},
+    )
     assert circ.to_ir("OPENQASM") == expected_ir
+
 
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
