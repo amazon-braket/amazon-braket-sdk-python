@@ -251,8 +251,9 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         symbol = f"┤ {symbol} ├"
         return top, symbol, bottom
 
-    @staticmethod
+    @classmethod
     def _build_verbatim_box(
+        cls,
         symbol: Literal["StartVerbatim", "EndVerbatim"],
         connection: Literal["above", "below", "both", "none"],
     ) -> str:
@@ -267,7 +268,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             top = "║"
             symbol = "╨"
         top = _fill_symbol(top, " ")
-        symbol = _fill_symbol(symbol, UnicodeCircuitDiagram._qubit_line_character())
+        symbol = _fill_symbol(symbol, cls._qubit_line_character())
         bottom = _fill_symbol(bottom, " ")
 
         return top, symbol, bottom
