@@ -22,7 +22,6 @@ import oqpy
 from sympy import Expr
 
 from braket.circuits import compiler_directives
-from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -52,6 +51,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
+from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
@@ -1134,7 +1134,7 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class: type = AsciiCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: type = UnicodeCircuitDiagram) -> str:
         """Get a diagram for the current circuit.
 
         Args:
@@ -1548,7 +1548,7 @@ class Circuit:
             )
 
     def __str__(self):
-        return self.diagram(AsciiCircuitDiagram)
+        return self.diagram()
 
     def __eq__(self, other: Circuit):
         if isinstance(other, Circuit):

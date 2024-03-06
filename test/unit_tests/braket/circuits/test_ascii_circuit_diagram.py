@@ -26,6 +26,10 @@ from braket.circuits import (
 from braket.pulse import Frame, Port, PulseSequence
 
 
+def _assert_correct_diagram(circ, expected):
+    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
+
+
 def test_empty_circuit():
     assert AsciiCircuitDiagram.build_diagram(Circuit()) == ""
 
@@ -785,10 +789,6 @@ def test_pulse_gate_multi_qubit_circuit():
         "T  : |0|1 |",
     )
     _assert_correct_diagram(circ, expected)
-
-
-def _assert_correct_diagram(circ, expected):
-    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
 
 
 def test_circuit_with_nested_target_list():
