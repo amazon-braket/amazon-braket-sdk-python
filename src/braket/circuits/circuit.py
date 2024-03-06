@@ -26,6 +26,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import (
@@ -147,6 +148,7 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
+        self._measure_targets = None
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -638,6 +640,52 @@ class Circuit:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
             self._has_compiler_directives = True
+        return self
+
+    def measure(self, target_qubits: np.ndarray | int = []) -> Circuit:
+        """
+        Add a `measure` operator to `self` ensuring only the target qubits are measured.
+
+        Args:
+            target_qubits (ndarray | int): target qubits to measure
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            IndexError: If `circuit` has no qubits.
+            IndexError: If target qubits are not within the range of the current circuit.
+
+        Examples:
+            >>> circ = Circuit.h(0).cnot(0, 1).measure([0])
+            >>> circ.print(list(circ.instructions))
+            [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]),
+            Instruction('operator': CNot('qubit_count': 2), 'target': QubitSet([Qubit(0),
+                Qubit(1)]),
+            Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(2)]),
+            Instruction('operator': Measure, 'target': QubitSet([Qubit(0)])]
+        """
+        # check whether measuring an empty circuit
+        if not self.qubits:
+            raise IndexError("Cannot measure an empty circuit.")
+
+        if type(target_qubits) is int:
+            target_qubits = [target_qubits]
+
+        # Check that the target qubits are on the circuit
+        if not all(qubit in self.qubits for qubit in target_qubits):
+            raise IndexError("Target qubits must be within the range of the current circuit.")
+
+        if target_qubits:
+            for idx, target in enumerate(target_qubits):
+                self.add_instruction(
+                    Instruction(
+                        operator=Measure(qubit_count=1, ascii_symbols=["M"], index=idx),
+                        target=target,
+                    )
+                )
+            self._measure_targets = target_qubits
+
         return self
 
     def apply_gate_noise(
@@ -1204,7 +1252,8 @@ class Circuit:
                     for result_type in self.result_types
                 ]
             )
-        else:
+        # measure all the qubits if a measure instruction is not provided
+        elif self._measure_targets is None:
             qubits = (
                 sorted(self.qubits)
                 if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL
@@ -1226,7 +1275,8 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            ir_instructions.append(f"bit[{self.qubit_count}] b;")
+            bit_count = len(self._measure_targets) if self._measure_targets else self.qubit_count
+            ir_instructions.append(f"bit[{bit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1

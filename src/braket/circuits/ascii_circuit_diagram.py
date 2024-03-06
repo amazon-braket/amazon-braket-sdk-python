@@ -21,6 +21,7 @@ from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.moments import MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.result_type import ResultType
@@ -161,9 +162,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """
         groupings = []
         for item in items:
-            # Can only print Gate and Noise operators for instructions at the moment
+            # Can only print Gate, Noise, and Measure operators for instructions at the moment
             if isinstance(item, Instruction) and not isinstance(
-                item.operator, (Gate, Noise, CompilerDirective)
+                item.operator, (Gate, Noise, CompilerDirective, Measure)
             ):
                 continue
 

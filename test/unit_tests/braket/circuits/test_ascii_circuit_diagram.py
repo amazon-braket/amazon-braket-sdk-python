@@ -872,3 +872,17 @@ def test_power():
         "T  : |    0    |   1    |   2   |   3   |   4   |",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_measure():
+    circ = Circuit().h(0).cnot(0, 1).measure([0])
+    expected = (
+        "T  : |0|1|2|",
+        "            ",
+        "q0 : -H-C-M-",
+        "        |   ",
+        "q1 : ---X---",
+        "",
+        "T  : |0|1|2|",
+    )
+    _assert_correct_diagram(circ, expected)
