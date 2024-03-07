@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.73.0 (2024-03-07)
+
+### Features
+
+ * update circuit drawing
+
 ## v1.72.2 (2024-03-04)
 
 ### Bug Fixes and Other Changes
