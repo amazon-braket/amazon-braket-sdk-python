@@ -36,6 +36,7 @@ from braket.circuits import (
 )
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.measure import Measure
+from braket.circuits.noises import BitFlip
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.serialization import (
     IRType,
@@ -609,6 +610,18 @@ def test_measure_multiple_targets():
     assert circ._measure_targets == [0, 1, 3]
 
 
+def test_measure_with_noise():
+    circ = Circuit().x(0).x(1).bit_flip(0, probability=0.1).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(BitFlip(probability=0.1), 0))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
 def test_measure_qubits_out_of_range():
     with pytest.raises(IndexError):
         Circuit().h(0).cnot(0, 1).measure([4])
@@ -630,12 +643,34 @@ def test_measure_no_target():
         source="\n".join(
             [
                 "OPENQASM 3.0;",
-                "bit[2] b;",
                 "qubit[2] q;",
                 "h q[0];",
                 "cnot q[0], q[1];",
+            ]
+        ),
+        inputs={},
+    )
+    assert circ == expected
+    assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_measure_gate_after():
+    circ = Circuit().h(0).measure(0).h(1)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Gate.H(), 1))
+    )
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[2] q;",
+                "h q[0];",
                 "b[0] = measure q[0];",
-                "b[1] = measure q[1];",
+                "h q[1];",
             ]
         ),
         inputs={},

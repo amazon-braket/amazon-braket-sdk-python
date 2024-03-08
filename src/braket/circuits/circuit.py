@@ -688,7 +688,8 @@ class Circuit:
                     )
                 )
             self._measure_targets = target_qubits
-
+        else:
+            self._measure_targets = []
         return self
 
     def apply_gate_noise(
@@ -1278,8 +1279,13 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            bit_count = len(self._measure_targets) if self._measure_targets else self.qubit_count
-            ir_instructions.append(f"bit[{bit_count}] b;")
+            if self._measure_targets != []:
+                bit_count = (
+                    len(self._measure_targets)
+                    if self._measure_targets is not None
+                    else self.qubit_count
+                )
+                ir_instructions.append(f"bit[{bit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
