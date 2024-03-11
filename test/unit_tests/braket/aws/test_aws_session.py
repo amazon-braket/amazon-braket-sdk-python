@@ -58,7 +58,6 @@ def aws_session(boto_session, braket_client, account_id):
     _aws_session._sts.get_caller_identity.return_value = {
         "Account": account_id,
     }
-
     _aws_session._s3 = Mock()
     return _aws_session
 
