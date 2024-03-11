@@ -126,33 +126,33 @@ def test_device_parameter(
 
     for device in devices:
 
-        @aq.main(device=device)
+        @aq.main
         def my_program():
             h(0)
 
-        assert my_program.to_ir()
+        assert my_program.build(device=device).to_ir()
 
 
 def test_insufficient_qubits(aws_device: Mock) -> None:
     aws_device.properties.paradigm.qubitCount = 9
 
-    @aq.main(device=aws_device, num_qubits=10)
+    @aq.main(num_qubits=10)
     def my_program():
         pass
 
     with pytest.raises(errors.InsufficientQubitCountError):
-        my_program.to_ir()
+        my_program.build(device=aws_device)
 
 
 def test_unsupported_gate(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h"]
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         cphaseshift00(0, 1, 0.123)
 
     with pytest.raises(errors.UnsupportedGate):
-        my_program.to_ir()
+        my_program.build(device=aws_device)
 
 
 def test_unsupported_native_gate(aws_device: Mock) -> None:
@@ -160,14 +160,14 @@ def test_unsupported_native_gate(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
     aws_device.properties.paradigm.nativeGateSet = ["x"]
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             x("$0")
             h("$0")
 
     with pytest.raises(errors.UnsupportedNativeGate):
-        my_program.to_ir()
+        my_program.build(device=aws_device)
 
 
 def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
@@ -175,7 +175,7 @@ def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
     aws_device.properties.paradigm.nativeGateSet = ["x"]
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             x("$0")
@@ -185,7 +185,7 @@ def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
     def my_gate(q: aq.Qubit):
         x(q)
 
-    assert my_program.to_ir()
+    assert my_program.build(device=aws_device).to_ir()
 
 
 def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
@@ -197,25 +197,25 @@ def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> Non
     def my_gate(q: aq.Qubit):
         h(q)
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             my_gate("$0")
 
     with pytest.raises(errors.UnsupportedNativeGate):
-        my_program.to_ir()
+        my_program.build(device=aws_device)
 
 
 def test_unsupported_verbatim_block(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = []
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             h("$0")
 
     with pytest.raises(errors.VerbatimBlockNotAllowed):
-        my_program.to_ir()
+        my_program.build(device=aws_device)
 
 
 def test_validate_connectivity(aws_device: Mock) -> None:
@@ -225,35 +225,35 @@ def test_validate_connectivity(aws_device: Mock) -> None:
     aws_device.properties.paradigm.connectivity.fullyConnected = False
     aws_device.properties.paradigm.connectivity.connectivityGraph = {"0": ["2"], "1": ["0"]}
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program_invalid():
         with aq.verbatim():
             h("$0")
             cnot("$0", "$1")
 
     with pytest.raises(errors.InvalidTargetQubit):
-        my_program_invalid.to_ir()
+        my_program_invalid.build(device=aws_device)
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             h("$0")
             cnot("$0", "$2")
             cnot("$1", "$0")
 
-    assert my_program.to_ir()
+    assert my_program.build(device=aws_device).to_ir()
 
     aws_device.properties.paradigm.connectivity.fullyConnected = True
     aws_device.properties.paradigm.connectivity.connectivityGraph = {}
 
-    @aq.main(device=aws_device)
+    @aq.main
     def my_program():
         with aq.verbatim():
             h("$0")
             cnot("$0", "$7")
             cnot("$5", "$2")
 
-    assert my_program.to_ir()
+    assert my_program.build(device=aws_device).to_ir()
 
 
 @pytest.mark.parametrize(
