@@ -527,7 +527,7 @@ def test_duplicate_variable_name_fails():
         rx(0, FreeParameter("alpha"))
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
-        parametric_explicit.to_ir()
+        parametric_explicit.build()
 
     @aq.main
     def parametric(alpha):
@@ -535,7 +535,7 @@ def test_duplicate_variable_name_fails():
         rx(0, alpha)
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
-        parametric.to_ir()
+        parametric.build()
 
 
 def test_binding_variable_fails():
