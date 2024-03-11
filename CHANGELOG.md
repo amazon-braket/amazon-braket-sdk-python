@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.73.1 (2024-03-11)
+
+### Bug Fixes and Other Changes
+
+ * allow for braket endpoint to be set within the jobs
+
 ## v1.73.0 (2024-03-07)
 
 ### Features
