@@ -51,7 +51,7 @@ class SerializableProgram(ABC):
         Raises:
             ValueError: Raised if the supplied `ir_type` is not supported.
             RuntimeError: Raised if the program has not already been built and
-                `allow_implicit_build` is True.
+                `allow_implicit_build` is False.
 
         Returns:
             str: A representation of the program in the `ir_type` format.
