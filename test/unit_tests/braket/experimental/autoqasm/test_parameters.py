@@ -486,7 +486,7 @@ def test_bind_empty_program():
 
 
 def test_strict_parameter_bind():
-    """Test .build().make_bound_program with strict set to True."""
+    """Test make_bound_program with strict set to True."""
 
     @aq.main
     def parametric(alpha: float):
@@ -505,7 +505,7 @@ __bit_0__ = measure __qubits__[0];"""
 
 
 def test_strict_parameter_bind_failure():
-    """Test .build().make_bound_program with strict set to True."""
+    """Test make_bound_program with strict set to True."""
 
     @aq.main
     def parametric(alpha: float):

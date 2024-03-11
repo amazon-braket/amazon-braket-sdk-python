@@ -304,7 +304,7 @@ def test_bell_measurement_invalid_declared_type() -> None:
         c = measure(1)  # noqa: F841
 
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
-        bell_measurement_invalid_declared_type.to_ir()
+        bell_measurement_invalid_declared_type.build()
 
     expected_error_message = "Variables in assignment statements must have the same type"
     assert expected_error_message in str(exc_info.value)
@@ -324,7 +324,7 @@ def test_bell_measurement_invalid_declared_size() -> None:
         c = measure(1)  # noqa: F841
 
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
-        bell_measurement_invalid_declared_size.to_ir()
+        bell_measurement_invalid_declared_size.build()
 
     expected_error_message = "Variables in assignment statements must have the same size"
     assert expected_error_message in str(exc_info.value)
@@ -646,7 +646,7 @@ def test_invalid_physical_qubit_fails() -> None:
         cnot("$0l", "$O1")
 
     with pytest.raises(ValueError):
-        broken.to_ir()
+        broken.build()
 
 
 def test_invalid_qubit_label_fails() -> None:
@@ -658,7 +658,7 @@ def test_invalid_qubit_label_fails() -> None:
         h("nope")
 
     with pytest.raises(ValueError):
-        broken.to_ir()
+        broken.build()
 
 
 def test_float_qubit_index_fails() -> None:
@@ -671,7 +671,7 @@ def test_float_qubit_index_fails() -> None:
         h(i / 2)
 
     with pytest.raises(TypeError):
-        broken.to_ir()
+        broken.build()
 
 
 def test_bool_qubit_index_fails() -> None:
@@ -683,7 +683,7 @@ def test_bool_qubit_index_fails() -> None:
         h(True)
 
     with pytest.raises(ValueError):
-        broken.to_ir()
+        broken.build()
 
 
 def test_invalid_qubit_type_fails() -> None:
@@ -695,7 +695,7 @@ def test_invalid_qubit_type_fails() -> None:
         h(h)
 
     with pytest.raises(ValueError):
-        broken.to_ir()
+        broken.build()
 
 
 def test_bit_array_name() -> None:
@@ -767,7 +767,7 @@ def test_program_simple_expr() -> None:
             h(i)
 
     with pytest.raises(errors.UnknownQubitCountError):
-        simple_range.to_ir()
+        simple_range.build()
 
 
 def test_program_with_expr() -> None:
@@ -782,7 +782,7 @@ def test_program_with_expr() -> None:
             h(i + 3)
 
     with pytest.raises(errors.UnknownQubitCountError):
-        qubit_expr.to_ir()
+        qubit_expr.build()
 
 
 def test_multi_for_loop() -> None:
@@ -1069,7 +1069,7 @@ def test_main_from_main():
         bell(0, 1)
 
     with pytest.raises(errors.AutoQasmTypeError):
-        main.to_ir()
+        main.build()
 
 
 def test_empty_decorator_parentheses():
@@ -1143,4 +1143,4 @@ def test_input_qubit_indices_needs_num_qubits():
         h(2 * q + r)
 
     with pytest.raises(errors.UnknownQubitCountError):
-        circ.to_ir()
+        circ.build()

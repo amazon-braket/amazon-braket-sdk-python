@@ -205,7 +205,7 @@ def test_name_collisions():
         return val
 
     with pytest.raises(aq.errors.NameConflict):
-        main.to_ir()
+        main.build()
 
 
 def test_return_inputs():

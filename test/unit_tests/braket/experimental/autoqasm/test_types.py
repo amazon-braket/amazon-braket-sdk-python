@@ -212,7 +212,7 @@ def test_invalid_array_assignment():
         a = b  # noqa: F841
 
     with pytest.raises(aq.errors.InvalidAssignmentStatement):
-        invalid.to_ir()
+        invalid.build()
 
 
 def test_declare_array_in_local_scope():
@@ -224,7 +224,7 @@ def test_declare_array_in_local_scope():
             _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
 
     with pytest.raises(aq.errors.InvalidArrayDeclaration):
-        declare_array.to_ir()
+        declare_array.build()
 
 
 def test_declare_array_in_subroutine():
@@ -239,7 +239,7 @@ def test_declare_array_in_subroutine():
         _ = aq.ArrayVar([1, 2, 3], dimensions=[3])
 
     with pytest.raises(aq.errors.InvalidArrayDeclaration):
-        main.to_ir()
+        main.build()
 
 
 def test_return_python_array():
@@ -254,7 +254,7 @@ def test_return_python_array():
         return [1, 2, 3]
 
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main.to_ir()
+        main.build()
 
 
 def test_return_array_unsupported():
@@ -269,7 +269,7 @@ def test_return_array_unsupported():
         return [1.2, 2.1]
 
     with pytest.raises(aq.errors.ParameterTypeError):
-        main.to_ir()
+        main.build()
 
 
 def test_return_func_call():
@@ -387,7 +387,7 @@ def test_map_array():
         annotation_test(a)
 
     with pytest.raises(aq.errors.ParameterTypeError):
-        main.to_ir()
+        main.build()
 
 
 def test_map_other():
@@ -618,7 +618,7 @@ def test_error_for_tuple_param() -> None:
         param_test(aq.BitVar(1))
 
     with pytest.raises(aq.errors.ParameterTypeError):
-        main.to_ir()
+        main.build()
 
 
 def test_error_for_missing_param_type() -> None:
@@ -633,7 +633,7 @@ def test_error_for_missing_param_type() -> None:
         param_test(aq.BitVar(1))
 
     with pytest.raises(aq.errors.MissingParameterTypeError):
-        main.to_ir()
+        main.build()
 
 
 def test_ignore_ret_typehint_bool():
@@ -670,7 +670,7 @@ def test_ignore_ret_typehint_list():
         ret_test()
 
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main.to_ir()
+        main.build()
 
 
 def test_ignore_missing_ret_typehint_list():
@@ -685,7 +685,7 @@ def test_ignore_missing_ret_typehint_list():
         ret_test()
 
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main.to_ir()
+        main.build()
 
 
 def test_ignore_missing_ret_typehint_float():
@@ -723,4 +723,4 @@ def test_param_array_list_missing_arg():
         param_test()
 
     with pytest.raises(aq.errors.ParameterTypeError):
-        main.to_ir()
+        main.build()

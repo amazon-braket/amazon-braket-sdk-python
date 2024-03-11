@@ -73,7 +73,7 @@ def test_break_for_loop():
             break
 
     with pytest.raises(aq.errors.UnsupportedFeatureError):
-        main.to_ir()
+        main.build()
 
 
 def test_break_while_loop():
@@ -84,4 +84,4 @@ def test_break_while_loop():
             break
 
     with pytest.raises(aq.errors.UnsupportedFeatureError):
-        uses_while_w_break.to_ir()
+        uses_while_w_break.build()

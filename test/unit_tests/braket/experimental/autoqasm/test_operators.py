@@ -125,7 +125,7 @@ def test_unsupported_inline_conditional_assignment(else_value) -> None:
         a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
 
     with pytest.raises(UnsupportedConditionalExpressionError):
-        cond_exp_assignment_different_types.to_ir()
+        cond_exp_assignment_different_types.build()
 
 
 def test_branch_assignment_undeclared() -> None:
@@ -841,7 +841,7 @@ def test_py_assert() -> None:
         "measurement results or AutoQASM variables."
     )
     with pytest.raises(NotImplementedError, match=not_supported):
-        test_input_assert.to_ir()
+        test_input_assert.build()
 
     true_var = 1
     false_var = False
@@ -857,7 +857,7 @@ def test_py_assert() -> None:
         assert false_var
 
     with pytest.raises(AssertionError):
-        test_assert_false.to_ir()
+        test_assert_false.build()
 
 
 def test_measurement_assert() -> None:
@@ -868,7 +868,7 @@ def test_measurement_assert() -> None:
         assert measure(0)
 
     with pytest.raises(NotImplementedError):
-        test_assert.to_ir()
+        test_assert.build()
 
 
 def test_py_list_ops() -> None:

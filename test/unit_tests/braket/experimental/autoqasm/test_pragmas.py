@@ -63,7 +63,7 @@ def test_nested_verbatim_box() -> None:
                 h(0)
 
     with pytest.raises(errors.VerbatimBlockNotAllowed):
-        program_func.to_ir()
+        program_func.build()
 
 
 def test_verbatim_box_invalid_target_qubit() -> None:
@@ -73,4 +73,4 @@ def test_verbatim_box_invalid_target_qubit() -> None:
             h(0)
 
     with pytest.raises(errors.InvalidTargetQubit):
-        program_func.to_ir()
+        program_func.build()

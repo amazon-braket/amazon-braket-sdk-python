@@ -73,7 +73,7 @@ def test_gate_class() -> None:
         MyGate(0)
 
     with pytest.raises(ValueError):
-        main.to_ir()
+        main.build()
 
 
 def test_invalid_symbol() -> None:
@@ -87,7 +87,7 @@ def test_invalid_symbol() -> None:
         my_gate(0)
 
     with pytest.raises(NameError):
-        main.to_ir()
+        main.build()
 
 
 def test_duplicate_gate_names() -> None:
@@ -161,7 +161,7 @@ def test_incorrect_arg_count() -> None:
         errors.ParameterTypeError,
         match='Incorrect number of arguments passed to gate "my_gate". Expected 2, got 1.',
     ):
-        incorrect_arg_count.to_ir()
+        incorrect_arg_count.build()
 
 
 def test_incorrect_arg_types() -> None:
@@ -175,7 +175,7 @@ def test_incorrect_arg_types() -> None:
         my_gate(0.25, 0)
 
     with pytest.raises(TypeError):
-        incorrect_arg_types.to_ir()
+        incorrect_arg_types.build()
 
 
 def test_missing_annotation() -> None:
@@ -188,7 +188,7 @@ def test_missing_annotation() -> None:
         my_gate("test")
 
     with pytest.raises(errors.MissingParameterTypeError):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_incorrect_annotation() -> None:
@@ -201,7 +201,7 @@ def test_incorrect_annotation() -> None:
         my_gate("test")
 
     with pytest.raises(errors.ParameterTypeError):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_no_qubit_args() -> None:
@@ -217,7 +217,7 @@ def test_no_qubit_args() -> None:
         errors.ParameterTypeError,
         match='Gate definition "not_a_gate" has no arguments of type aq.Qubit.',
     ):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_invalid_qubit_used() -> None:
@@ -234,7 +234,7 @@ def test_invalid_qubit_used() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
     ):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_invalid_angle_used() -> None:
@@ -254,7 +254,7 @@ def test_invalid_angle_used() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses angle (.*) which is not an argument to the gate.',
     ):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_invalid_instruction() -> None:
@@ -271,7 +271,7 @@ def test_invalid_instruction() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_invalid_control_flow() -> None:
@@ -289,7 +289,7 @@ def test_invalid_control_flow() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
-        my_program.to_ir()
+        my_program.build()
 
 
 def test_nested_gates() -> None:

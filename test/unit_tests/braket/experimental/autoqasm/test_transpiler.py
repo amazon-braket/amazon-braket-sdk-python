@@ -32,7 +32,7 @@ def test_convert_invalid_main_object() -> None:
         pass
 
     with pytest.raises(ValueError):
-        MyClass.to_ir()
+        MyClass.build()
 
 
 def test_convert_invalid_subroutine_object() -> None:
@@ -47,7 +47,7 @@ def test_convert_invalid_subroutine_object() -> None:
         MyClass()
 
     with pytest.raises(ValueError):
-        main.to_ir()
+        main.build()
 
 
 def test_autograph_disabled() -> None:
@@ -63,7 +63,7 @@ def test_autograph_disabled() -> None:
                 x(0)
 
         with pytest.raises(RuntimeError):
-            my_program.to_ir()
+            my_program.build()
 
 
 def test_partial_function() -> None:
@@ -86,7 +86,7 @@ cnot __qubits__[1], __qubits__[3];"""
 
     bell_partial_no_num_qubits = aq.main(functools.partial(bell, 1))
     with pytest.raises(UnknownQubitCountError):
-        bell_partial_no_num_qubits.to_ir()
+        bell_partial_no_num_qubits.build()
 
     bell_partial = aq.main(num_qubits=4)(functools.partial(bell, 1))
     assert bell_partial.to_ir() == expected_partial
