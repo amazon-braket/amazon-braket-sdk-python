@@ -58,8 +58,8 @@ def main(
         program, or a partial function of the `main` decorator.
     """
 
-    # decorator is called on a Program
-    if isinstance(func, aq_program.Program):
+    # decorator is called on a MainProgram
+    if isinstance(func, aq_program.MainProgram):
         return func
 
     # decorator is used with parentheses
@@ -227,7 +227,7 @@ def _convert_main(
     Returns:
         aq_program.Program: Generated AutoQASM Program.
     """
-    if "device" in kwargs:
+    if "device" in kwargs and kwargs["device"]:
         user_config.device = kwargs["device"]
 
     param_dict = {}
