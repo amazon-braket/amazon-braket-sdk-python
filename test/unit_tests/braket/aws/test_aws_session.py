@@ -997,6 +997,11 @@ def test_upload_to_s3(aws_session):
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
 
 
+def test_account_id_idempotency(aws_session):
+    account_id = aws_session.account_id
+    assert account_id == aws_session.account_id
+
+
 def test_upload_local_data(aws_session):
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
