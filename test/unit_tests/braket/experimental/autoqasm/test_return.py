@@ -17,6 +17,8 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.instructions import measure
+from braket.experimental.autoqasm.pulse import capture_v0
+from braket.pulse import Frame, Port
 
 
 def test_float_lit():
@@ -25,8 +27,8 @@ def test_float_lit():
         return 1.5
 
     expected = """OPENQASM 3.0;
-output float[64] retval_;
-retval_ = 1.5;"""
+output float[64] return_value;
+return_value = 1.5;"""
 
     assert main.to_ir() == expected
 
@@ -37,8 +39,8 @@ def test_int_lit():
         return 1
 
     expected = """OPENQASM 3.0;
-output int[32] retval_;
-retval_ = 1;"""
+output int[32] return_value;
+return_value = 1;"""
 
     assert main.to_ir() == expected
 
@@ -62,11 +64,11 @@ def test_return_measure():
         return measure(0)
 
     expected = """OPENQASM 3.0;
-output bit retval_;
+output bit return_value;
 qubit[1] __qubits__;
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
-retval_ = __bit_0__;"""
+return_value = __bit_0__;"""
 
     assert main.to_ir() == expected
 
@@ -123,10 +125,10 @@ def test_return_tuple():
         return 1, 2
 
     expected = """OPENQASM 3.0;
-output int[32] retval_0;
-output int[32] retval_1;
-retval_0 = 1;
-retval_1 = 2;"""
+output int[32] return_value0;
+output int[32] return_value1;
+return_value0 = 1;
+return_value1 = 2;"""
 
     assert main.to_ir() == expected
 
@@ -137,10 +139,10 @@ def test_return_list_floats():
         return [11.1, 2.222]
 
     expected = """OPENQASM 3.0;
-output float[64] retval_0;
-output float[64] retval_1;
-retval_0 = 11.1;
-retval_1 = 2.222;"""
+output float[64] return_value0;
+output float[64] return_value1;
+return_value0 = 11.1;
+return_value1 = 2.222;"""
 
     assert main.to_ir() == expected
 
@@ -155,9 +157,9 @@ def test_return_multi_meas():
     expected = """OPENQASM 3.0;
 bit a;
 bit b;
-output bit retval_0;
-output bit retval_1;
-output bit retval_2;
+output bit return_value0;
+output bit return_value1;
+output bit return_value2;
 qubit[3] __qubits__;
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
@@ -167,9 +169,9 @@ __bit_1__ = measure __qubits__[1];
 b = __bit_1__;
 bit __bit_2__;
 __bit_2__ = measure __qubits__[2];
-retval_0 = a;
-retval_1 = b;
-retval_2 = __bit_2__;"""
+return_value0 = a;
+return_value1 = b;
+return_value2 = __bit_2__;"""
 
     assert main.to_ir() == expected
 
@@ -183,16 +185,16 @@ def test_return_multi_types():
 
     expected = """OPENQASM 3.0;
 bit a;
-output bit retval_0;
-output bool retval_1;
-output float[64] retval_2;
+output bit return_value0;
+output bool return_value1;
+output float[64] return_value2;
 qubit[1] __qubits__;
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
 a = __bit_0__;
-retval_0 = a;
-retval_1 = true;
-retval_2 = 1.11;"""
+return_value0 = a;
+return_value1 = true;
+return_value2 = 1.11;"""
 
     assert main.to_ir() == expected
 
@@ -214,8 +216,8 @@ def test_return_inputs():
     expected = """OPENQASM 3.0;
 input float val1;
 input float val2;
-output float[64] retval_;
-retval_ = val1 + val2;"""
+output float[64] return_value;
+return_value = val1 + val2;"""
 
     assert main.to_ir() == expected
 
@@ -228,8 +230,8 @@ def test_return_ints():
     expected = """OPENQASM 3.0;
 input int[32] val1;
 input int[32] val2;
-output int[32] retval_;
-retval_ = val1 + val2;"""
+output int[32] return_value;
+return_value = val1 + val2;"""
 
     assert main.to_ir() == expected
 
@@ -242,10 +244,10 @@ def test_return_bools():
     expected = """OPENQASM 3.0;
 input bool val1;
 input bool val2;
-output bool retval_;
+output bool return_value;
 bool __bool_0__;
 __bool_0__ = val1 || val2;
-retval_ = __bool_0__;"""
+return_value = __bool_0__;"""
 
     assert main.to_ir() == expected
 
@@ -260,7 +262,7 @@ def test_return_bits():
     expected = """OPENQASM 3.0;
 bit b0;
 bit b1;
-output bit retval_;
+output bit return_value;
 qubit[2] __qubits__;
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
@@ -268,7 +270,7 @@ b0 = __bit_0__;
 bit __bit_1__;
 __bit_1__ = measure __qubits__[1];
 b1 = __bit_1__;
-retval_ = b0 + b1;"""
+return_value = b0 + b1;"""
 
     assert main.to_ir() == expected
 
@@ -319,13 +321,36 @@ def ghz(int[32] n) {
     }
 }
 input int[32] n;
-output bit[3] retval_;
+output bit[3] return_value;
 qubit[10] __qubits__;
 ghz(n);
 bit[3] __bit_0__ = "000";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 __bit_0__[2] = measure __qubits__[2];
-retval_ = __bit_0__;"""
+return_value = __bit_0__;"""
+
+    assert program.to_ir() == expected
+
+
+def test_return_pulse_capture():
+    port = Port(port_id="device_port_x0", dt=1e-9, properties={})
+    frame = Frame(frame_id="frame1", frequency=2e9, port=port, phase=0, is_predefined=True)
+
+    @aq.main
+    def program():
+        return capture_v0(frame), capture_v0(frame)
+
+    expected = """OPENQASM 3.0;
+bit __bit_0__;
+bit __bit_1__;
+output bit return_value0;
+output bit return_value1;
+cal {
+    __bit_0__ = capture_v0(frame1);
+    __bit_1__ = capture_v0(frame1);
+}
+return_value0 = __bit_0__;
+return_value1 = __bit_1__;"""
 
     assert program.to_ir() == expected

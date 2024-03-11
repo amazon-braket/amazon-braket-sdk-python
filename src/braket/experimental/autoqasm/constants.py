@@ -35,3 +35,6 @@ QUBIT_REGISTER = "__qubits__"
 
 RETVAL_VARIABLE_NAME = "retval_"
 """A special name for variables assigned to the return values of function calls."""
+
+MAIN_RETURN_VAL_NAME = "return_value"
+"""The default name for the value returned from autoqasm.main functions."""
