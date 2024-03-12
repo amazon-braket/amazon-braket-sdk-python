@@ -244,8 +244,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_initialization_noise = []
         # key for READOUT_NOISE
         key_readout_noise = []
-        moment_copy = OrderedDict()
-        sorted_moment = OrderedDict()
+        moment_copy = {}
+        sorted_moment = {}
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
