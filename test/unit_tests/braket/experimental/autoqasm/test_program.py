@@ -114,7 +114,7 @@ return_value = __bit_0__;"""
         )
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):
-        assert programs[i].to_ir() == expected(scale, angle)
+        assert programs[i].build().to_ir() == expected(scale, angle)
 
 
 @patch("builtins.print")

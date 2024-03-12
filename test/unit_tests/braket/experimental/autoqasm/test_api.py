@@ -36,7 +36,7 @@ def _test_on_local_sim(program: aq.Program, inputs=None) -> None:
 def test_empty_function(empty_program) -> None:
     """Test that a function with no instructions generates an empty program."""
     expected = """OPENQASM 3.0;"""
-    assert empty_program.to_ir() == expected
+    assert empty_program.build().to_ir() == expected
 
 
 def test_sim_empty(empty_program) -> None:
@@ -54,7 +54,7 @@ def test_multiple_calls(empty_subroutine, bell_state_subroutine) -> None:
     """
 
     def count_function_calls(program: aq.Program, func_name: str) -> int:
-        return program.to_ir().count(f"{func_name}();")
+        return program.build().to_ir().count(f"{func_name}();")
 
     def empty_program_wrapper():
         empty_subroutine()
@@ -100,7 +100,7 @@ empty_function();
 bell_state();
 physical_bell();"""
 
-    assert call_subroutines.to_ir() == expected
+    assert call_subroutines.build().to_ir() == expected
 
     _test_on_local_sim(call_subroutines)
 
@@ -143,7 +143,7 @@ def recursive_h(int[32] q) {
 }
 qubit[6] __qubits__;
 recursive_h(5);"""
-    assert recursive_h_wrapper.to_ir() == expected
+    assert recursive_h_wrapper.build().to_ir() == expected
 
 
 def test_sim_recursive_h_wrapper(recursive_h_wrapper):
@@ -172,7 +172,7 @@ def recursive_h(int[32] q) {
 qubit[6] __qubits__;
 recursive_h(4);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 @aq.subroutine
@@ -200,7 +200,7 @@ def bell_state_arbitrary_qubits(qubit q0, qubit q1) {
 qubit[4] __qubits__;
 bell_state_arbitrary_qubits(__qubits__[0], __qubits__[1]);
 bell_state_arbitrary_qubits(__qubits__[2], __qubits__[3]);"""
-    assert double_bell_state.to_ir() == expected
+    assert double_bell_state.build().to_ir() == expected
 
 
 def test_sim_double_bell(double_bell_state) -> None:
@@ -229,7 +229,7 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 c = __bit_0__;"""
-    assert bell_measurement_undeclared.to_ir() == expected
+    assert bell_measurement_undeclared.build().to_ir() == expected
 
 
 def test_sim_bell_measurement_undeclared(bell_measurement_undeclared) -> None:
@@ -259,7 +259,7 @@ bit[2] __bit_1__ = "00";
 __bit_1__[0] = measure __qubits__[0];
 __bit_1__[1] = measure __qubits__[1];
 c = __bit_1__;"""
-    assert bell_measurement_declared.to_ir() == expected
+    assert bell_measurement_declared.build().to_ir() == expected
 
 
 def test_sim_bell_measurement_declared(bell_measurement_declared) -> None:
@@ -287,7 +287,7 @@ cnot __qubits__[0], __qubits__[1];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[1];
 c = __bit_0__;"""
-    assert bell_partial_measurement.to_ir() == expected
+    assert bell_partial_measurement.build().to_ir() == expected
 
 
 def test_bell_measurement_invalid_declared_type() -> None:
@@ -357,7 +357,7 @@ bit[2] __bit_2__ = "00";
 __bit_2__[0] = measure $0;
 __bit_2__[1] = measure $1;
 c = __bit_2__;"""
-    assert measure_physical_qubits.to_ir() == expected
+    assert measure_physical_qubits.build().to_ir() == expected
 
 
 @pytest.fixture
@@ -380,7 +380,7 @@ h __qubits__[0];
 for int i in [0:4 - 1] {
     cnot __qubits__[i], __qubits__[i + 1];
 }"""
-    assert ghz_qasm_for_loop.to_ir() == expected
+    assert ghz_qasm_for_loop.build().to_ir() == expected
 
 
 def test_sim_ghz_qasm_for_loop(ghz_qasm_for_loop) -> None:
@@ -408,7 +408,7 @@ cnot __qubits__[0], __qubits__[1];
 cnot __qubits__[1], __qubits__[2];
 cnot __qubits__[2], __qubits__[3];
 cnot __qubits__[3], __qubits__[4];"""
-    assert ghz_py_for_loop.to_ir() == expected
+    assert ghz_py_for_loop.build().to_ir() == expected
 
 
 def test_sim_ghz_py_for_loop(ghz_py_for_loop) -> None:
@@ -457,7 +457,7 @@ qubit[2] __qubits__;
 bool __bool_0__;
 """
     expected += f"__bool_0__ = qasm_simple_condition({'true' if do_cnot else 'false'});"
-    assert build_qasm_simple_condition_wrapper(do_cnot).to_ir() == expected
+    assert build_qasm_simple_condition_wrapper(do_cnot).build().to_ir() == expected
 
 
 @pytest.mark.parametrize("do_cnot", [True, False])
@@ -502,7 +502,7 @@ if (__int_1__) {
 bit __bit_2__;
 __bit_2__ = measure __qubits__[1];
 return_value = __bit_2__;"""
-    assert qasm_inline_var_condition.to_ir() == expected
+    assert qasm_inline_var_condition.build().to_ir() == expected
 
 
 def test_sim_qasm_inline_var_condition(qasm_inline_var_condition) -> None:
@@ -524,7 +524,7 @@ def test_measurement_qubit_discovery(ground_state_measurements) -> None:
     """Test that qubits measured by integer are automatically discovered for the purpose
     of qubit declaration.
     """
-    assert "qubit[6] __qubits__;" in ground_state_measurements.to_ir()
+    assert "qubit[6] __qubits__;" in ground_state_measurements.build().to_ir()
 
 
 def test_simple_measurement(ground_state_measurements) -> None:
@@ -537,7 +537,7 @@ __bit_0__[0] = measure __qubits__[5];
 __bit_0__[1] = measure __qubits__[2];
 __bit_0__[2] = measure __qubits__[1];
 return_value = __bit_0__;"""
-    assert ground_state_measurements.to_ir() == expected
+    assert ground_state_measurements.build().to_ir() == expected
 
 
 def test_sim_simple_measurement() -> None:
@@ -575,7 +575,7 @@ def ground_state_measurements_subroutine() -> bit[3] {
 qubit[6] __qubits__;
 bit[3] __bit_1__ = "000";
 __bit_1__ = ground_state_measurements_subroutine();"""
-    assert ground_state_measurements_wrapper.to_ir() == expected
+    assert ground_state_measurements_wrapper.build().to_ir() == expected
 
 
 @pytest.fixture
@@ -608,7 +608,7 @@ if (__bit_0__) {
 bit __bit_1__;
 __bit_1__ = measure __qubits__[1];
 return_value = __bit_1__;"""
-    assert qasm_measurement_condition.to_ir() == expected
+    assert qasm_measurement_condition.build().to_ir() == expected
 
 
 def test_sim_measurement_condition(qasm_measurement_condition) -> None:
@@ -617,13 +617,13 @@ def test_sim_measurement_condition(qasm_measurement_condition) -> None:
 
 def test_virtual_int_qubit_decl(bell_state_program) -> None:
     """Tests for ex. h(0) -> qubit[1] __qubits__"""
-    qasm = bell_state_program.to_ir()
+    qasm = bell_state_program.build().to_ir()
     assert "\nqubit[2] __qubits__;" in qasm
 
 
 def test_py_int_qubit_decl(ghz_py_for_loop) -> None:
     """Tests for ex. i = 1; h(i) -> qubit[1] __qubits__"""
-    qasm = ghz_py_for_loop.to_ir()
+    qasm = ghz_py_for_loop.build().to_ir()
     assert "\nqubit[5] __qubits__;" in qasm
 
 
@@ -634,7 +634,7 @@ def test_physical_qubit_decl(physical_bell_subroutine) -> None:
     def main():
         physical_bell_subroutine()
 
-    assert "__qubits__" not in main.to_ir()
+    assert "__qubits__" not in main.build().to_ir()
 
 
 def test_invalid_physical_qubit_fails() -> None:
@@ -715,7 +715,7 @@ def test_bit_array_name() -> None:
     bit __bit_0__;
     __bit_0__ = measure __qubits__[0];
     return __bit_0__;"""
-    assert expected in my_program_wrapper.to_ir()
+    assert expected in my_program_wrapper.build().to_ir()
 
 
 @pytest.fixture
@@ -752,7 +752,7 @@ __bit_2__ = measure __qubits__[0];
 if (__bit_2__) {
     x __qubits__[0];
 }"""
-    assert reset.to_ir() == expected
+    assert reset.build().to_ir() == expected
 
 
 def test_program_simple_expr() -> None:
@@ -806,7 +806,7 @@ for int i in [0:5 - 1] {
         for i in aq.range(5):
             h(i)
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 @aq.subroutine
@@ -837,7 +837,7 @@ for int i in [0:3 - 1] {
     bell(__qubits__[0], __qubits__[1]);
 }"""
 
-    assert bell_in_for_loop.to_ir() == expected
+    assert bell_in_for_loop.build().to_ir() == expected
 
 
 @pytest.fixture
@@ -873,7 +873,7 @@ int[32] b = 10;
 b = 15;
 float[64] c = 1.2;
 c = 3.4;"""
-    assert classical_variables_types.to_ir() == expected
+    assert classical_variables_types.build().to_ir() == expected
 
 
 def test_sim_classical_variables_types(classical_variables_types):
@@ -894,7 +894,7 @@ int[32] a = 1;
 a = 2;
 b = a;
 a = b;"""
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_assignment_measurement_results():
@@ -911,7 +911,7 @@ bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
 a = __bit_0__;
 b = a;"""
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_nested_function():
@@ -936,7 +936,7 @@ cnot __qubits__[0], __qubits__[2];
 cnot __qubits__[0], __qubits__[3];
 cnot __qubits__[0], __qubits__[4];"""
 
-    assert make_ghz.to_ir() == expected
+    assert make_ghz.build().to_ir() == expected
 
 
 def test_double_decorated_function():
@@ -946,7 +946,7 @@ def test_double_decorated_function():
         pass
 
     expected = """OPENQASM 3.0;"""
-    assert empty_program.to_ir() == expected
+    assert empty_program.build().to_ir() == expected
 
 
 def test_to_ir_implicit_build(empty_program) -> None:
@@ -979,7 +979,7 @@ qubit[3] __qubits__;
 bit __bit_1__;
 __bit_1__ = tester(3);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_subroutine_declared_after_main():
@@ -1003,7 +1003,7 @@ def my_subroutine() {
 qubit[2] __qubits__;
 my_subroutine();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
     @aq.subroutine
     def my_subroutine() -> None:  # noqa: F811
@@ -1018,7 +1018,7 @@ def my_subroutine() {
 qubit[4] __qubits__;
 my_subroutine();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_subroutine_args():
@@ -1086,7 +1086,7 @@ def nothing() {
 }
 nothing();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_input_types():
@@ -1117,9 +1117,9 @@ if (__bool_0__) {
     rx(u + z) __qubits__[0];
 }"""
     assert (
-        multiple_input_types.to_ir()
-        == multiple_input_types_parens.to_ir()
-        == multiple_input_types_params.to_ir()
+        multiple_input_types.build().to_ir()
+        == multiple_input_types_parens.build().to_ir()
+        == multiple_input_types_params.build().to_ir()
         == expected_ir
     )
 
@@ -1134,7 +1134,7 @@ input int[32] q;
 input int[32] r;
 qubit[8] __qubits__;
 h __qubits__[2 * q + r];"""
-    assert circ.to_ir() == expected_ir
+    assert circ.build().to_ir() == expected_ir
 
 
 def test_input_qubit_indices_needs_num_qubits():

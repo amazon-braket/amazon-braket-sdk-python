@@ -64,7 +64,7 @@ def test_mix_gate_pulse() -> None:
         }
         """
     ).strip()
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
 
 def test_merge_cal_box() -> None:
@@ -84,7 +84,7 @@ def test_merge_cal_box() -> None:
         }
         """
     ).strip()
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -203,7 +203,7 @@ def test_pulse_freeparameter() -> None:
         }
         """
     ).strip()
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
 
 def test_pulse_freeparameter_bound() -> None:
@@ -252,4 +252,4 @@ def test_pulse_freeparameter_condition() -> None:
         }
         """
     ).strip()
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected

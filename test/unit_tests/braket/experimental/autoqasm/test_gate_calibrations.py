@@ -190,9 +190,9 @@ def test_gate_calibrations_bind_calibrations_not_inplace():
     def my_program():
         rx("$1", 1.0)
 
-    program_1 = my_program
+    program_1 = my_program.build()
     program_2 = my_program.build().with_calibrations(cal_1)
-    program_3 = my_program
+    program_3 = my_program.build()
 
     assert program_1.to_ir() == program_3.to_ir() != program_2.to_ir()
 

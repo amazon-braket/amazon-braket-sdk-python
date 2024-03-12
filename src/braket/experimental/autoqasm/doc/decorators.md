@@ -51,7 +51,7 @@ def two_bell() -> None:
     bell(2, 3)
 ```
 
-Let's take a look at the serialized output from `two_bell.to_ir()`, which shows that the modularity of the subroutine is preserved.
+Let's take a look at the serialized output from `two_bell.build().to_ir()`, which shows that the modularity of the subroutine is preserved.
 
 ```
 OPENQASM 3.0;

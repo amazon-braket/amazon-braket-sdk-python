@@ -64,7 +64,7 @@ bit __bit_1__;
 __bit_1__ = ret_test();
 return_value = __bit_1__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_int():
@@ -89,7 +89,7 @@ int[32] __int_1__;
 __int_1__ = ret_test();
 return_value = __int_1__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_float():
@@ -114,7 +114,7 @@ float[64] __float_1__;
 __float_1__ = ret_test();
 return_value = __float_1__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_bool():
@@ -139,7 +139,7 @@ bool __bool_1__;
 __bool_1__ = ret_test();
 return_value = __bool_1__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_bin_expr():
@@ -166,7 +166,7 @@ int[32] __int_2__;
 __int_2__ = add(a, b);
 return_value = __int_2__;"""
 
-    assert ret_test.to_ir() == expected
+    assert ret_test.build().to_ir() == expected
 
 
 def test_return_none():
@@ -178,7 +178,7 @@ def test_return_none():
 
     expected = "OPENQASM 3.0;"
 
-    assert ret_test.to_ir() == expected
+    assert ret_test.build().to_ir() == expected
 
 
 def test_declare_array():
@@ -199,7 +199,7 @@ array[int[32], 3] b = {4, 5, 6};
 b[2] = 14;
 b = a;"""
 
-    assert declare_array.to_ir() == expected
+    assert declare_array.build().to_ir() == expected
 
 
 def test_invalid_array_assignment():
@@ -294,7 +294,7 @@ int[32] __int_1__;
 __int_1__ = helper();
 return_value = __int_1__;"""
 
-    assert ret_test.to_ir() == expected
+    assert ret_test.build().to_ir() == expected
 
 
 def test_map_bool():
@@ -313,7 +313,7 @@ def annotation_test(bool input) {
 }
 annotation_test(true);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_int():
@@ -332,7 +332,7 @@ def annotation_test(int[32] input) {
 }
 annotation_test(1);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_float():
@@ -351,7 +351,7 @@ def annotation_test(float[64] input) {
 }
 annotation_test(1.0);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_qubit():
@@ -371,7 +371,7 @@ def annotation_test(qubit input) {
 qubit[2] __qubits__;
 annotation_test(__qubits__[1]);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_array():
@@ -408,7 +408,7 @@ def annotation_test(bit input) {
 bit a = 1;
 annotation_test(a);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_other_unnamed_arg():
@@ -428,7 +428,7 @@ def annotation_test(bit input) {
 bit __bit_0__ = 1;
 annotation_test(__bit_0__);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_map_and_assign_arg():
@@ -452,7 +452,7 @@ def assign_param(int[32] c) {
 int[32] c = 0;
 assign_param(c);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_unnamed_retval_python_type() -> None:
@@ -476,7 +476,7 @@ int[32] __int_1__;
 __int_1__ = retval_test();
 return_value = __int_1__;"""
 
-    assert caller.to_ir() == expected_qasm
+    assert caller.build().to_ir() == expected_qasm
 
 
 def test_unnamed_retval_qasm_type() -> None:
@@ -500,7 +500,7 @@ bit __bit_1__;
 __bit_1__ = retval_test();
 return_value = __bit_1__;"""
 
-    assert caller.to_ir() == expected_qasm
+    assert caller.build().to_ir() == expected_qasm
 
 
 def test_recursive_unassigned_retval_python_type() -> None:
@@ -525,7 +525,7 @@ def retval_recursive() -> int[32] {
 int[32] __int_3__;
 __int_3__ = retval_recursive();"""
 
-    assert main.to_ir() == expected_qasm
+    assert main.build().to_ir() == expected_qasm
 
 
 def test_recursive_assigned_retval_python_type() -> None:
@@ -552,7 +552,7 @@ def retval_recursive() -> int[32] {
 int[32] __int_3__;
 __int_3__ = retval_recursive();"""
 
-    assert main.to_ir() == expected_qasm
+    assert main.build().to_ir() == expected_qasm
 
 
 def test_recursive_retval_expression_python_type() -> None:
@@ -588,7 +588,7 @@ float[64] __float_4__;
 __float_4__ = retval_recursive();
 return_value = __float_4__;"""
 
-    assert caller.to_ir() == expected_qasm
+    assert caller.build().to_ir() == expected_qasm
 
 
 def test_recursive_oqpy_type() -> None:
@@ -603,7 +603,7 @@ def test_recursive_oqpy_type() -> None:
     def main():
         retval_recursive()
 
-    assert "-> bit" in main.to_ir()
+    assert "-> bit" in main.build().to_ir()
 
 
 def test_error_for_tuple_param() -> None:
@@ -655,7 +655,7 @@ def ret_test() -> bool {
 bool __bool_1__;
 __bool_1__ = ret_test();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_ignore_ret_typehint_list():
@@ -708,7 +708,7 @@ qubit[4] __qubits__;
 float[64] __float_1__;
 __float_1__ = ret_test();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_param_array_list_missing_arg():

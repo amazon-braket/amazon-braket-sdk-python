@@ -106,7 +106,7 @@ if (__bool_0__) {
 }
 a = __int_3__;"""
 
-    assert cond_exp_assignment.to_ir() == expected
+    assert cond_exp_assignment.build().to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ if (__bool_0__) {
     a = 2;
 }"""
 
-    assert branch_assignment_undeclared.to_ir() == expected
+    assert branch_assignment_undeclared.build().to_ir() == expected
 
 
 def test_branch_assignment_declared() -> None:
@@ -170,7 +170,7 @@ if (__bool_1__) {
     a = 7;
 }"""
 
-    assert branch_assignment_declared.to_ir() == expected
+    assert branch_assignment_declared.build().to_ir() == expected
 
 
 def for_body(i: aq.Qubit) -> None:
@@ -381,7 +381,7 @@ def do_and(bool a, bool b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_and(true, false);"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_logical_op_or() -> None:
@@ -402,7 +402,7 @@ def do_or(bool a, bool b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_or(true, false);"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_logical_op_not() -> None:
@@ -423,7 +423,7 @@ def do_not(bool a) -> bool {
 bool __bool_1__;
 __bool_1__ = do_not(true);"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_logical_op_eq() -> None:
@@ -444,7 +444,7 @@ def do_eq(int[32] a, int[32] b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_eq(1, 2);"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_logical_op_not_eq() -> None:
@@ -465,7 +465,7 @@ def do_not_eq(int[32] a, int[32] b) -> bool {
 bool __bool_1__;
 __bool_1__ = do_not_eq(1, 2);"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_logical_ops_py() -> None:
@@ -484,7 +484,7 @@ def test_logical_ops_py() -> None:
 
     expected = """OPENQASM 3.0;"""
 
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_comparison_lt() -> None:
@@ -507,7 +507,7 @@ __bool_1__ = a < 1;
 if (__bool_1__) {
     h __qubits__[0];
 }"""
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_comparison_gt() -> None:
@@ -530,7 +530,7 @@ __bool_1__ = a > 1;
 if (__bool_1__) {
     h __qubits__[0];
 }"""
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 def test_comparison_ops_py() -> None:
@@ -549,7 +549,7 @@ def test_comparison_ops_py() -> None:
         assert all([c, d, not e, not f, h])
 
     expected = """OPENQASM 3.0;"""
-    assert prog.to_ir() == expected
+    assert prog.build().to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -642,7 +642,7 @@ bit[6] a = "000000";
 bit b = 1;
 a[3] = b;"""
 
-    assert slice.to_ir() == expected
+    assert slice.build().to_ir() == expected
 
 
 def test_slice_bits_w_measure() -> None:
@@ -663,7 +663,7 @@ __bit_1__ = measure __qubits__[0];
 c = __bit_1__;
 b0[3] = c;"""
 
-    assert measure_to_slice.to_ir() == expected
+    assert measure_to_slice.build().to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -807,7 +807,7 @@ qubit[1] __qubits__;
 {} __qubits__[0];""".format(
         "h" if value else "x"
     )
-    assert test_control_flow.to_ir() == expected
+    assert test_control_flow.build().to_ir() == expected
 
 
 def test_py_while() -> None:
@@ -826,7 +826,7 @@ qubit[1] __qubits__;
 h __qubits__[0];
 h __qubits__[0];"""
 
-    assert test_control_flow.to_ir() == expected
+    assert test_control_flow.build().to_ir() == expected
 
 
 def test_py_assert() -> None:
@@ -850,7 +850,7 @@ def test_py_assert() -> None:
     def test_assert():
         assert true_var
 
-    test_assert.to_ir()  # does not raise an exception
+    test_assert.build().to_ir()  # does not raise an exception
 
     @aq.main
     def test_assert_false():
@@ -883,4 +883,4 @@ def test_py_list_ops() -> None:
         c = np.stack([a, a])
         assert np.array_equal(c, [[2, 3, 4], [2, 3, 4]])
 
-    assert test_list_ops.to_ir()
+    assert test_list_ops.build().to_ir()
