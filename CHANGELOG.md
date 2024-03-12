@@ -1,5 +1,49 @@
 # Changelog
 
+## v1.73.1 (2024-03-11)
+
+### Bug Fixes and Other Changes
+
+ * allow for braket endpoint to be set within the jobs
+
+## v1.73.0 (2024-03-07)
+
+### Features
+
+ * update circuit drawing
+
+## v1.72.2 (2024-03-04)
+
+### Bug Fixes and Other Changes
+
+ * validate FreeParameter name
+
+## v1.72.1 (2024-02-28)
+
+### Bug Fixes and Other Changes
+
+ * escape slash in metrics prefix
+
+## v1.72.0 (2024-02-27)
+
+### Features
+
+ * FreeParameterExpression division
+
+## v1.71.0 (2024-02-26)
+
+### Features
+
+ * update log stream prefix for new jobs
+
+## v1.70.3 (2024-02-21)
+
+### Bug Fixes and Other Changes
+
+ * remove test with job creation with qpu
+ * use the caller's account id based on the session
+ * docs: add note about using env variables for endpoint
+
 ## v1.70.2 (2024-02-14)
 
 ### Bug Fixes and Other Changes

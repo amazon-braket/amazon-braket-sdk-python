@@ -18,15 +18,16 @@ import pytest
 
 import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
-    AsciiCircuitDiagram,
     Circuit,
     FreeParameter,
+    FreeParameterExpression,
     Gate,
     Instruction,
     Moments,
     Observable,
     QubitSet,
     ResultType,
+    UnicodeCircuitDiagram,
     circuit,
     compiler_directives,
     gates,
@@ -198,7 +199,7 @@ def test_repr_result_types(cnot_prob):
 
 
 def test_str(h):
-    expected = AsciiCircuitDiagram.build_diagram(h)
+    expected = UnicodeCircuitDiagram.build_diagram(h)
     assert str(h) == expected
 
 
@@ -749,6 +750,44 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
     "circuit, serialization_properties, expected_ir",
     [
         (
+            Circuit()
+            .rx(0, 0.15)
+            .ry(1, FreeParameterExpression("0.3"))
+            .rx(2, 3 * FreeParameterExpression(1)),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[3] b;",
+                        "qubit[3] q;",
+                        "rx(0.15) q[0];",
+                        "ry(0.3) q[1];",
+                        "rx(3) q[2];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+    ],
+)
+def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
+    assert (
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+        )
+        == expected_ir
+    )
+
+
+@pytest.mark.parametrize(
+    "circuit, serialization_properties, expected_ir",
+    [
+        (
             Circuit().rx(0, 0.15).rx(1, 0.3),
             OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
             OpenQasmProgram(
@@ -1019,7 +1058,9 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         ),
     ],
 )
-def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, gate_calibrations):
+def test_circuit_to_ir_openqasm_with_gate_calibrations(
+    circuit, serialization_properties, expected_ir, gate_calibrations
+):
     copy_of_gate_calibrations = gate_calibrations.copy()
     assert (
         circuit.to_ir(
@@ -1962,7 +2003,8 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "input float theta;" "bit[1] b;",
+                        "input float theta;",
+                        "bit[1] b;",
                         "qubit[1] q;",
                         "rx(theta) q[0];",
                         "rx(2*theta) q[0];",

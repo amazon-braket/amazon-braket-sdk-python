@@ -42,7 +42,7 @@ setup(
         "diastatic-malt",
         "nest-asyncio",
         "networkx",
-        "numpy",
+        "numpy<2",
         "openpulse",
         "openqasm3",
         "sympy",

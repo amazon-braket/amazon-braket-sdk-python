@@ -47,7 +47,7 @@ class FreeParameter(FreeParameterExpression):
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._name = Symbol(name)
+        self._set_name(name)
         super().__init__(expression=self._name)
 
     @property
@@ -86,6 +86,15 @@ class FreeParameter(FreeParameterExpression):
             str: The name of the class:'FreeParameter' to represent the class.
         """
         return self.name
+
+    def _set_name(self, name: str) -> None:
+        if not name:
+            raise ValueError("FreeParameter names must be non empty")
+        if not isinstance(name, str):
+            raise TypeError("FreeParameter names must be strings")
+        if not name[0].isalpha() and not name[0] == "_":
+            raise ValueError("FreeParameter names must start with a letter or an underscore")
+        self._name = Symbol(name)
 
     def to_dict(self) -> dict:
         return {
