@@ -89,8 +89,8 @@ class ProgramMode(Enum):
 
 
 class MainProgram(SerializableProgram):
-    """Represents an AutoQASM program that has not yet been generated. The program can be built by
-    calling build(), or it can be executed by passing it to the run() method of a Device object."""
+    """Represents an AutoQASM program. The program can be built by calling build(), or it can be
+    executed by passing it to the run() method of a Device object."""
 
     def __init__(self, program_generator: Callable[[Device | None], Program]):
         self._program_generator = program_generator
