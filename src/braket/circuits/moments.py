@@ -13,9 +13,9 @@
 
 from __future__ import annotations
 
-from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
+from collections.abc import ItemsView, Iterable, KeysView, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple, Union
+from typing import Any, Mapping, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
