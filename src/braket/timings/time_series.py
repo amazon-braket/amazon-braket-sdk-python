@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
@@ -35,7 +34,7 @@ class StitchBoundaryCondition(str, Enum):
 
 class TimeSeries:
     def __init__(self):
-        self._series = OrderedDict()
+        self._series = {}
         self._sorted = True
         self._largest_time = -1
 
@@ -91,7 +90,7 @@ class TimeSeries:
 
     def _ensure_sorted(self) -> None:
         if not self._sorted:
-            self._series = OrderedDict(sorted(self._series.items()))
+            self._series = dict(sorted(self._series.items()))
             self._sorted = True
 
     @staticmethod

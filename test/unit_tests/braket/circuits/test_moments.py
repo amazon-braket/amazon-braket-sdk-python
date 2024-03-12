@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from collections import OrderedDict
-
 import pytest
 
 from braket.circuits import Gate, Instruction, Moments, MomentsKey, QubitSet
@@ -36,24 +34,24 @@ def test_add():
     moments.add([h(0)])
     moments.add([h(0)])
 
-    expected = OrderedDict()
+    expected = {}
     expected[MomentsKey(0, QubitSet(0), "gate", 0)] = h(0)
     expected[MomentsKey(1, QubitSet(0), "gate", 0)] = h(0)
-    assert OrderedDict(moments) == expected
+    assert dict(moments) == expected
 
 
 def test_add_single_insturction():
     moments = Moments()
     moments.add(h(0))
 
-    expected = OrderedDict()
+    expected = {}
     expected[MomentsKey(0, QubitSet(0), "gate", 0)] = h(0)
-    assert OrderedDict(moments) == expected
+    assert dict(moments) == expected
 
 
 def test_default_constructor():
     moments = Moments()
-    assert OrderedDict(moments) == OrderedDict()
+    assert dict(moments) == {}
     assert moments.depth == 0
     assert moments.qubits == QubitSet()
 
@@ -87,6 +85,7 @@ def test_overlaping_qubits():
     assert moments.depth == 3
 
     moments.add([cnot(2, 4)])
+
     assert moments.depth == 3
 
 
@@ -180,8 +179,8 @@ def test_equals():
 
 
 def test_repr(moments):
-    assert repr(moments) == repr(OrderedDict(moments))
+    assert repr(moments) == repr(dict(moments))
 
 
 def test_str(moments):
-    assert str(moments) == str(OrderedDict(moments))
+    assert str(moments) == str(dict(moments))

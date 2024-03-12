@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
 from typing import Any, NamedTuple, Union
@@ -103,7 +102,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     """
 
     def __init__(self, instructions: Iterable[Instruction] | None = None):
-        self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
+        self._moments: dict[MomentsKey, Instruction] = {}
         self._max_times: dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
