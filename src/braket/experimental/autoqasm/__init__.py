@@ -27,7 +27,7 @@ The basic usage of AutoQASM is as follows:
         return result
 
     program = my_program()
-    print(program.to_ir())
+    print(program.build().to_ir())
 
 The Python code above outputs the following OpenQASM program:
 

@@ -89,10 +89,10 @@ cnot __qubits__[1], __qubits__[3];"""
         bell_partial_no_num_qubits.build()
 
     bell_partial = aq.main(num_qubits=4)(functools.partial(bell, 1))
-    assert bell_partial.to_ir() == expected_partial
+    assert bell_partial.build().to_ir() == expected_partial
 
     bell_noarg_partial = aq.main(functools.partial(bell, 1, 3))
-    assert bell_noarg_partial.to_ir() == expected_no_arg_partial
+    assert bell_noarg_partial.build().to_ir() == expected_no_arg_partial
 
 
 def test_classmethod() -> None:
@@ -113,8 +113,8 @@ qubit[2] __qubits__;
 h __qubits__[q0];
 cnot __qubits__[q0], __qubits__[q1];"""
 
-    assert aq.main(num_qubits=2)(MyClass.bell).to_ir() == expected
-    assert aq.main(num_qubits=2)(MyClass().bell).to_ir() == expected
+    assert aq.main(num_qubits=2)(MyClass.bell).build().to_ir() == expected
+    assert aq.main(num_qubits=2)(MyClass().bell).build().to_ir() == expected
 
 
 def test_with_verbose_logging() -> None:

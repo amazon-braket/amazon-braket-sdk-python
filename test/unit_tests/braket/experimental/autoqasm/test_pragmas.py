@@ -52,7 +52,7 @@ box {
     cnot $1, $2;
 }"""
 
-    assert program_func.to_ir() == expected
+    assert program_func.build().to_ir() == expected
 
 
 def test_nested_verbatim_box() -> None:

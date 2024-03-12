@@ -72,7 +72,7 @@ qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
-    assert simple_parametric.to_ir() == expected
+    assert simple_parametric.build().to_ir() == expected
 
 
 def test_simple_parametric_fp(simple_parametric_fp):
@@ -84,7 +84,7 @@ qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
-    assert simple_parametric_fp.to_ir() == expected
+    assert simple_parametric_fp.build().to_ir() == expected
 
 
 def test_sim_simple(simple_parametric):
@@ -126,7 +126,7 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 c = __bit_0__;"""
-    assert multi_parametric.to_ir() == expected
+    assert multi_parametric.build().to_ir() == expected
 
 
 def test_sim_multi_param(multi_parametric):
@@ -156,7 +156,7 @@ rx(theta) __qubits__[1];
 cnot __qubits__[0], __qubits__[1];
 rx(theta) __qubits__[0];
 rx(alpha) __qubits__[1];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 @pytest.mark.xfail(
@@ -183,7 +183,7 @@ def rx_alpha(int[32] qubit) {
 input float[64] alpha;
 qubit[3] __qubits__;
 rx_alpha(2);"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_captured_parameter():
@@ -202,7 +202,7 @@ input float alpha;
 qubit[2] __qubits__;
 rz(alpha) __qubits__[0];
 rx(alpha) __qubits__[1];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_multi_angle_gates():
@@ -218,7 +218,7 @@ def test_multi_angle_gates():
 input float phi;
 qubit[5] __qubits__;
 ms(phi, phi, 0.5) __qubits__[0], __qubits__[2];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_sim_multi_angle():
@@ -245,7 +245,7 @@ def test_parameters_passed_as_main_arg():
 input float my_phi;
 qubit[2] __qubits__;
 cphaseshift(my_phi) __qubits__[0], __qubits__[1];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_simple_subroutine_arg():
@@ -266,7 +266,7 @@ def silly_rz(float[64] theta) {
 input float alpha;
 qubit[1] __qubits__;
 silly_rz(alpha);"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_parameters_passed_as_subroutine_arg():
@@ -290,7 +290,7 @@ input float beta;
 qubit[5] __qubits__;
 silly_ms(1, alpha, 0.707);
 silly_ms(3, 0.5, beta);"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_sim_subroutine_arg():
@@ -325,7 +325,7 @@ gate rx_theta(theta) q {
 input float θ;
 qubit[3] __qubits__;
 rx_theta(θ) __qubits__[2];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_parametric_pulse_cals():
@@ -371,10 +371,10 @@ rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    assert parametric.to_ir() == unbound_expected
+    assert parametric.build().to_ir() == unbound_expected
     bound_prog = parametric.build().make_bound_program({"alpha": 0.5})
     # Original program unchanged
-    assert parametric.to_ir() == unbound_expected
+    assert parametric.build().to_ir() == unbound_expected
     assert bound_prog.to_ir() == bound_template.format(0.5)
     # Can rebind
     bound_prog = parametric.build().make_bound_program({"alpha": 0.432143})
@@ -479,7 +479,7 @@ def test_bind_empty_program():
     def empty_program():
         pass
 
-    qasm = empty_program.to_ir()
+    qasm = empty_program.build().to_ir()
     bound_program1 = empty_program.build().make_bound_program({}).to_ir()
     bound_program2 = empty_program.build().make_bound_program({"alpha": 0.5}).to_ir()
     assert qasm == bound_program1 == bound_program2
@@ -575,7 +575,7 @@ if (__bool_2__) {
 }
 bit __bit_3__;
 __bit_3__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_lt_condition():
@@ -604,7 +604,7 @@ if (__bool_1__) {
 }
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_parameter_in_predicate_in_subroutine():
@@ -634,7 +634,7 @@ qubit[1] __qubits__;
 sub(val);
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_eq_condition():
@@ -666,7 +666,7 @@ if (__bool_0__) {
 }
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_sim_conditional_stmts():
@@ -716,7 +716,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_param_or():
@@ -741,7 +741,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_param_and():
@@ -764,7 +764,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_param_and_float():
@@ -787,7 +787,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_param_not():
@@ -809,7 +809,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_parameter_binding_conditions():
@@ -859,8 +859,8 @@ gpi(2 * theta) __qubits__[0];"""
 input float theta;
 qubit[1] __qubits__;
 gpi(2.0 * theta) __qubits__[0];"""
-    assert parametric.to_ir() == expected_1
-    assert parametric_fp.to_ir() == expected_2
+    assert parametric.build().to_ir() == expected_1
+    assert parametric_fp.build().to_ir() == expected_2
 
 
 def test_sim_expressions():
@@ -886,7 +886,7 @@ input float alpha;
 input float theta;
 qubit[1] __qubits__;
 gpi(alpha * theta) __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_bound_parameter_expressions():
@@ -937,7 +937,7 @@ def rotate(float[64] theta) {
 input float alpha;
 qubit[1] __qubits__;
 rotate(2 * alpha);"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_gate_parameter_expressions():
@@ -958,7 +958,7 @@ gate rotate(theta) q {
 input float alpha;
 qubit[1] __qubits__;
 rotate(2 * alpha) __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_conditional_parameter_expressions():
@@ -980,7 +980,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.to_ir() == expected
+    assert parametric.build().to_ir() == expected
 
 
 def test_parameter_expressions_range_index():
@@ -1000,5 +1000,5 @@ for int _ in [0:2 * n - 1] {
 }
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
-    assert two_n_hs.to_ir() == expected
+    assert two_n_hs.build().to_ir() == expected
     _test_parametric_on_local_sim(two_n_hs, {"n": 3})

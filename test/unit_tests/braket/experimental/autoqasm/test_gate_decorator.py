@@ -39,7 +39,7 @@ gate empty_gate q {
 qubit[1] __qubits__;
 empty_gate __qubits__[0];"""
 
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
     _test_on_local_sim(my_program)
 
@@ -57,7 +57,7 @@ gate empty_gate q {
 qubit[1] __qubits__;
 empty_gate __qubits__[0];"""
 
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
 
 def test_gate_class() -> None:
@@ -110,7 +110,7 @@ gate my_gate(angle) q {
 qubit[1] __qubits__;
 my_gate(0.7853981633974483) __qubits__[0];"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_duplicate_gate_names_in_subroutine() -> None:
@@ -144,7 +144,7 @@ qubit[2] __qubits__;
 my_gate(0.7853981633974483) __qubits__[0];
 define_gate_in_subroutine();"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_incorrect_arg_count() -> None:
@@ -325,7 +325,7 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];"""
 
-    assert my_program.to_ir() == expected
+    assert my_program.build().to_ir() == expected
 
     _test_on_local_sim(my_program)
 
@@ -357,4 +357,4 @@ qubit[4] __qubits__;
 subroutine(0, 1);
 subroutine(2, 3);"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected

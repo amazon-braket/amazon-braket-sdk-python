@@ -53,7 +53,7 @@ def test_variable_annotations(
 """
         + f"{qasm_type} b = {qasm_value};"
     )
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ def test_subroutine_annotations(
 subroutine_test();"""
     )
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_range_annotations():
@@ -112,7 +112,7 @@ for int i in [0:5 - 1] {
     h __qubits__[i];
 }"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_verbatim_box_annotations():
@@ -138,4 +138,4 @@ box {
     cnot $0, $1;
 }"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected

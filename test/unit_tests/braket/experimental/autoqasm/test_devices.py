@@ -295,5 +295,5 @@ def test_aws_device_run(
     }
     aws_session.create_quantum_task.assert_called_once()
     assert expected_run_call_args.items() <= run_call_args.items()
-    assert run_call_args_action["source"] == my_program.to_ir()
+    assert run_call_args_action["source"] == my_program.build().to_ir()
     assert run_call_args_action["inputs"] == inputs

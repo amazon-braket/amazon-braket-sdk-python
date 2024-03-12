@@ -30,7 +30,7 @@ def test_float_lit():
 output float[64] return_value;
 return_value = 1.5;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_int_lit():
@@ -42,7 +42,7 @@ def test_int_lit():
 output int[32] return_value;
 return_value = 1;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_named_value():
@@ -55,7 +55,7 @@ def test_named_value():
 output int[32] output_name;
 output_name = 1;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_measure():
@@ -70,7 +70,7 @@ bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
 return_value = __bit_0__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_named_measure():
@@ -86,7 +86,7 @@ bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
 b = __bit_0__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_basic_arithmetic():
@@ -101,7 +101,7 @@ int[32] __int_1__ = 2;
 output int[32] val;
 val = __int_0__ + __int_1__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_expressions():
@@ -116,7 +116,7 @@ input int[32] input_a;
 output int[32] val;
 val = 1 + input_a;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_tuple():
@@ -130,7 +130,7 @@ output int[32] return_value1;
 return_value0 = 1;
 return_value1 = 2;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_list_floats():
@@ -144,7 +144,7 @@ output float[64] return_value1;
 return_value0 = 11.1;
 return_value1 = 2.222;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_multi_meas():
@@ -173,7 +173,7 @@ return_value0 = a;
 return_value1 = b;
 return_value2 = __bit_2__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_multi_types():
@@ -196,7 +196,7 @@ return_value0 = a;
 return_value1 = true;
 return_value2 = 1.11;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_name_collisions():
@@ -219,7 +219,7 @@ input float val2;
 output float[64] return_value;
 return_value = val1 + val2;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_ints():
@@ -233,7 +233,7 @@ input int[32] val2;
 output int[32] return_value;
 return_value = val1 + val2;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_bools():
@@ -249,7 +249,7 @@ bool __bool_0__;
 __bool_0__ = val1 || val2;
 return_value = __bool_0__;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_return_bits():
@@ -272,7 +272,7 @@ __bit_1__ = measure __qubits__[1];
 b1 = __bit_1__;
 return_value = b0 + b1;"""
 
-    assert main.to_ir() == expected
+    assert main.build().to_ir() == expected
 
 
 def test_returns_with_subroutine():
@@ -298,7 +298,7 @@ int[32] __int_1__;
 __int_1__ = helper();
 val = __int_1__;"""
 
-    assert ret_test.to_ir() == expected
+    assert ret_test.build().to_ir() == expected
 
 
 def test_return_measure_range():
@@ -330,7 +330,7 @@ __bit_0__[1] = measure __qubits__[1];
 __bit_0__[2] = measure __qubits__[2];
 return_value = __bit_0__;"""
 
-    assert program.to_ir() == expected
+    assert program.build().to_ir() == expected
 
 
 def test_return_pulse_capture():
@@ -353,4 +353,4 @@ cal {
 return_value0 = __bit_0__;
 return_value1 = __bit_1__;"""
 
-    assert program.to_ir() == expected
+    assert program.build().to_ir() == expected

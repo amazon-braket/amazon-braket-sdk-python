@@ -167,9 +167,9 @@ represent a quantum program equivalently in either format, but using AutoQASM
 allows one to also make use of Python, including the Amazon Braket SDK.
 
 AutoQASM can be seen as implementing a builder pattern for OpenQASM. It
-allows you serialize your program to OpenQASM with `Program.to_ir()`. The
-interface is not strongly tied to OpenQASM, so we could serialize to other
-formats in the future.
+allows you serialize your program to OpenQASM by calling `to_ir()` on the
+built program. The interface is not strongly tied to OpenQASM, so we could
+serialize to other formats in the future.
 
 ### 3. What is the relationship between AutoQASM and the Amazon Braket SDK?
 
