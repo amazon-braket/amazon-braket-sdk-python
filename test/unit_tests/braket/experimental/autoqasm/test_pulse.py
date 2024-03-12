@@ -222,7 +222,7 @@ def test_pulse_freeparameter_bound() -> None:
         }
         """
     ).strip()
-    qasm = my_program.make_bound_program({"duration": 0.123}).to_ir()
+    qasm = my_program.build().make_bound_program({"duration": 0.123}).to_ir()
     assert qasm == expected
 
 

@@ -149,5 +149,5 @@ def test_to_ir_highlighted(mock_print):
         b"\x1b[39;49;00m(theta)\x1b[37m \x1b[39;49;00m__qubits__[\x1b[34m1\x1b[39;49;00m];"
         b"\x1b[37m\x1b[39;49;00m\n"
     ).decode("utf-8")
-    teleportation.display()
+    teleportation.build().display()
     mock_print.assert_called_with(expected)

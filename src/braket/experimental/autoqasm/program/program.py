@@ -29,6 +29,7 @@ from pygments.formatters.terminal import TerminalFormatter
 from sympy import Symbol
 
 import braket.experimental.autoqasm.types as aq_types
+from braket.aws.aws_device import AwsDevice
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
@@ -85,6 +86,65 @@ class ProgramMode(Enum):
     """For program conversion inside a context where only unitary operations are allowed."""
     PULSE = 2
     """For program conversion inside a context where only pulse operations are allowed."""
+
+
+class MainProgram(SerializableProgram):
+    """Represents an AutoQASM program. The program can be built by calling build(), or it can be
+    executed by passing it to the run() method of a Device object."""
+
+    def __init__(self, program_generator: Callable[[Device | None], Program]):
+        self._program_generator = program_generator
+
+    def build(self, device: Device | str | None = None) -> Program:
+        """Builds and validates the AutoQASM program. If device is specified, program validation
+        is also performed against the properties of the device.
+
+        Args:
+            device (Device | str | None): Configuration to set the target device for the
+                program. Can be either an Device object or a valid Amazon Braket device ARN.
+
+        Returns:
+            Program: The generated AutoQASM program.
+        """
+        if isinstance(device, str):
+            device = AwsDevice(device)
+
+        return self._program_generator(device=device)
+
+    def to_ir(
+        self,
+        ir_type: IRType = IRType.OPENQASM,
+        allow_implicit_build: bool = True,
+        serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
+    ) -> str:
+        """Serializes the program into an intermediate representation.
+
+        Args:
+            ir_type (IRType): The IRType to use for converting the program to its
+                IR representation. Defaults to IRType.OPENQASM.
+            allow_implicit_build (bool): Whether to allow the program to be implicitly
+                built as a side effect of calling this function. Defaults to True.
+            serialization_properties (SerializationProperties): IR serialization configuration.
+                Default to OpenQASMSerializationProperties().
+
+        Raises:
+            ValueError: Raised if the supplied `ir_type` is not supported.
+            RuntimeError: Raised if `allow_implicit_build` is False, since a MainProgram object
+                has not yet been built.
+
+        Returns:
+            str: A representation of the program in the `ir_type` format.
+        """
+        if not allow_implicit_build:
+            raise RuntimeError(
+                "The AutoQASM program cannot be serialized because it has not yet been built. "
+                "To serialize the program, first call build() to obtain a built Program object, "
+                "and then call to_ir() on the returned Program object."
+            )
+
+        return self.build().to_ir(
+            ir_type=ir_type, serialization_properties=serialization_properties
+        )
 
 
 class Program(SerializableProgram):
@@ -160,6 +220,7 @@ class Program(SerializableProgram):
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
+        allow_implicit_build: bool = True,
         serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
     ) -> str:
         """Serializes the program into an intermediate representation.
@@ -167,6 +228,10 @@ class Program(SerializableProgram):
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
+            allow_implicit_build (bool): Whether to allow the program to be implicitly
+                built as a side effect of calling this function. Defaults to True.
+                This parameter is ignored for the Program class, since the program has
+                already been built.
             serialization_properties (SerializationProperties): IR serialization configuration.
                 Default to OpenQASMSerializationProperties().
 

@@ -32,8 +32,6 @@ import braket.experimental.autoqasm.instructions as aq_instructions
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
-from braket.aws import AwsDevice
-from braket.devices.device import Device
 from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
@@ -43,7 +41,6 @@ def main(
     func: Optional[Callable] = None,
     *,
     num_qubits: Optional[int] = None,
-    device: Optional[Union[Device, str]] = None,
 ) -> aq_program.Program | Callable[..., aq_program.Program]:
     """Decorator that converts a function into a Program object containing the quantum program.
 
@@ -55,24 +52,20 @@ def main(
             is used with parentheses.
         num_qubits (Optional[int]): Configuration to set the total number of qubits to declare in
             the program.
-        device (Optional[Union[Device, str]]): Configuration to set the target device for the
-            program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
         Program | Callable[..., Program]: The Program object containing the converted quantum
         program, or a partial function of the `main` decorator.
     """
-    if isinstance(device, str):
-        device = AwsDevice(device)
 
-    # decorator is called on a Program
-    if isinstance(func, aq_program.Program):
+    # decorator is called on a MainProgram
+    if isinstance(func, aq_program.MainProgram):
         return func
 
     # decorator is used with parentheses
     # (see _function_wrapper for more details)
     if not (func and callable(func)):
-        return functools.partial(main, num_qubits=num_qubits, device=device)
+        return functools.partial(main, num_qubits=num_qubits)
 
     program_builder = _function_wrapper(
         func,
@@ -80,12 +73,11 @@ def main(
         converter_args={
             "user_config": aq_program.UserConfig(
                 num_qubits=num_qubits,
-                device=device,
             )
         },
     )
 
-    return program_builder()
+    return aq_program.MainProgram(program_builder)
 
 
 def subroutine(
@@ -235,7 +227,10 @@ def _convert_main(
     Returns:
         aq_program.Program: Generated AutoQASM Program.
     """
-    kwargs = {}
+    if "device" in kwargs and kwargs["device"]:
+        user_config.device = kwargs["device"]
+
+    param_dict = {}
     parameters = inspect.signature(f).parameters
 
     with aq_program.build_program(user_config) as program_conversion_context:
@@ -243,14 +238,14 @@ def _convert_main(
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 param_type = param.annotation if param.annotation is not param.empty else float
-                kwargs[param.name] = program_conversion_context.register_input_parameter(
+                param_dict[param.name] = program_conversion_context.register_input_parameter(
                     param.name, param_type
                 )
             else:
                 raise NotImplementedError
 
         # Process the program
-        aq_transpiler.converted_call(f, (), kwargs, options=options)
+        aq_transpiler.converted_call(f, (), param_dict, options=options)
 
         # Modify program to add global declarations if necessary
         _add_qubit_declaration(program_conversion_context)

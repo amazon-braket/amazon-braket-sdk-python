@@ -200,11 +200,12 @@ return_value2 = 1.11;"""
 
 
 def test_name_collisions():
-    with pytest.raises(aq.errors.NameConflict):
+    @aq.main
+    def main(val):
+        return val
 
-        @aq.main
-        def main(val):
-            return val
+    with pytest.raises(aq.errors.NameConflict):
+        main.build()
 
 
 def test_return_inputs():

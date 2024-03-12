@@ -337,7 +337,7 @@ class LocalSimulator(Device):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-        program = Program(source=program.to_ir(ir_type=IRType.OPENQASM))
+        program = Program(source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True))
         if inputs:
             inputs_copy = program.inputs.copy() if program.inputs is not None else {}
             inputs_copy.update(inputs)

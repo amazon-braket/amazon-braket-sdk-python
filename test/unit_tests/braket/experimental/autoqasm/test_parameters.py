@@ -345,7 +345,7 @@ defcal rx(angle[32] angle) $1 {
     delay[angle * 1s] $1;
 }
 rx(theta) $1;"""
-    qasm = my_program.with_calibrations(cal_1).to_ir()
+    qasm = my_program.build().with_calibrations(cal_1).to_ir()
     assert qasm == expected
 
 
@@ -372,12 +372,12 @@ bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
     assert parametric.to_ir() == unbound_expected
-    bound_prog = parametric.make_bound_program({"alpha": 0.5})
+    bound_prog = parametric.build().make_bound_program({"alpha": 0.5})
     # Original program unchanged
     assert parametric.to_ir() == unbound_expected
     assert bound_prog.to_ir() == bound_template.format(0.5)
     # Can rebind
-    bound_prog = parametric.make_bound_program({"alpha": 0.432143})
+    bound_prog = parametric.build().make_bound_program({"alpha": 0.432143})
     assert bound_prog.to_ir() == bound_template.format(0.432143)
 
 
@@ -401,7 +401,7 @@ def test_multi_bind_parameters():
         sub(alpha, beta)
         rx_alpha(2)
 
-    bound_prog = parametric.make_bound_program({"alpha": 0.5, "beta": 1.5})
+    bound_prog = parametric.build().make_bound_program({"alpha": 0.5, "beta": 1.5})
 
     expected = """OPENQASM 3.0;
 def sub(float[64] alpha, float[64] theta) {
@@ -434,7 +434,7 @@ def test_partial_bind():
         rx_alpha(2, alpha)
         rx_alpha(2, beta)
 
-    bound_prog = parametric.make_bound_program({"beta": np.pi})
+    bound_prog = parametric.build().make_bound_program({"beta": np.pi})
 
     expected = """OPENQASM 3.0;
 def rx_alpha(int[32] qubit, float[64] theta) {
@@ -459,8 +459,8 @@ def test_binding_pulse_parameters():
     def my_program(theta):
         rx("$1", theta)
 
-    qasm1 = my_program.with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
-    qasm2 = my_program.make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
+    qasm1 = my_program.build().with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
+    qasm2 = my_program.build().make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
     assert qasm1 == qasm2
 
     expected = """OPENQASM 3.0;
@@ -480,8 +480,8 @@ def test_bind_empty_program():
         pass
 
     qasm = empty_program.to_ir()
-    bound_program1 = empty_program.make_bound_program({}).to_ir()
-    bound_program2 = empty_program.make_bound_program({"alpha": 0.5}).to_ir()
+    bound_program1 = empty_program.build().make_bound_program({}).to_ir()
+    bound_program2 = empty_program.build().make_bound_program({"alpha": 0.5}).to_ir()
     assert qasm == bound_program1 == bound_program2
 
 
@@ -500,7 +500,7 @@ rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    bound_prog = parametric.make_bound_program({"alpha": 0.5}, strict=True)
+    bound_prog = parametric.build().make_bound_program({"alpha": 0.5}, strict=True)
     assert bound_prog.to_ir() == template.format(0.5)
 
 
@@ -515,25 +515,27 @@ def test_strict_parameter_bind_failure():
     with pytest.raises(
         aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
     ):
-        parametric.make_bound_program({"beta": 0.5}, strict=True)
+        parametric.build().make_bound_program({"beta": 0.5}, strict=True)
 
 
 def test_duplicate_variable_name_fails():
     """Test using a variable and FreeParameter with the same name."""
 
-    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
-
-        @aq.main
-        def parametric_explicit():
-            alpha = aq.FloatVar(1.2)  # noqa: F841
-            rx(0, FreeParameter("alpha"))
+    @aq.main
+    def parametric_explicit():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, FreeParameter("alpha"))
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric_explicit.build()
 
-        @aq.main
-        def parametric(alpha):
-            alpha = aq.FloatVar(1.2)  # noqa: F841
-            rx(0, alpha)
+    @aq.main
+    def parametric(alpha):
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, alpha)
+
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric.build()
 
 
 def test_binding_variable_fails():
@@ -546,7 +548,7 @@ def test_binding_variable_fails():
     with pytest.raises(
         aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
     ):
-        parametric.make_bound_program({"beta": 0.5}, strict=True)
+        parametric.build().make_bound_program({"beta": 0.5}, strict=True)
 
 
 def test_compound_condition():
@@ -829,9 +831,9 @@ if (__bool_0__) {{
 }}
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    bound_prog = parametric.make_bound_program({"val": 0})
+    bound_prog = parametric.build().make_bound_program({"val": 0})
     assert bound_prog.to_ir() == template.format(0)
-    bound_prog = parametric.make_bound_program({"val": 1})
+    bound_prog = parametric.build().make_bound_program({"val": 1})
     assert bound_prog.to_ir() == template.format(1)
 
 
@@ -898,7 +900,7 @@ def test_bound_parameter_expressions():
 float phi = 1.5707963267948966;
 qubit[1] __qubits__;
 rx(2 * phi) __qubits__[0];"""
-    assert parametric.make_bound_program({"phi": np.pi / 2}).to_ir() == expected
+    assert parametric.build().make_bound_program({"phi": np.pi / 2}).to_ir() == expected
 
 
 def test_partially_bound_parameter_expressions():
@@ -914,7 +916,7 @@ float prefactor = 3;
 input float theta;
 qubit[1] __qubits__;
 gpi(prefactor * theta) __qubits__[0];"""
-    assert parametric.make_bound_program({"prefactor": 3}).to_ir() == expected
+    assert parametric.build().make_bound_program({"prefactor": 3}).to_ir() == expected
 
 
 def test_subroutine_parameter_expressions():
