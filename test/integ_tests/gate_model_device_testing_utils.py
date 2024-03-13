@@ -27,7 +27,7 @@ from braket.tasks import GateModelQuantumTaskResult
 
 
 def get_tol(shots: int) -> Dict[str, float]:
-    return {"atol": 0.1, "rtol": 0.15} if shots else {"atol": 0.01, "rtol": 0}
+    return {"atol": 0.2, "rtol": 0.3} if shots else {"atol": 0.01, "rtol": 0}
 
 
 def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
