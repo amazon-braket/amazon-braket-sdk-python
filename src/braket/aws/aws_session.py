@@ -108,7 +108,7 @@ class AwsSession:
 
     @property
     def account_id(self) -> str:
-        """Gets the callers account number.
+        """Gets the caller's account number.
 
         Returns:
             str: The account number of the caller.
