@@ -5,7 +5,7 @@ import sys
 import tempfile
 from logging import getLogger
 from pathlib import Path
-from ssl import SSLContext, PROTOCOL_TLS_CLIENT
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext
 from unittest.mock import MagicMock, patch
 
 import job_module
