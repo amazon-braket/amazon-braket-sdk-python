@@ -46,3 +46,4 @@ from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
 from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
 from .types import Range as range  # noqa: F401
+from .types import global_qubit_register as qubits  # noqa: F401
