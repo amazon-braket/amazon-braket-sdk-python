@@ -5,7 +5,7 @@ import sys
 import tempfile
 from logging import getLogger
 from pathlib import Path
-from ssl import SSLContext
+from ssl import PROTOCOL_TLS_CLIENT, SSLContext
 from unittest.mock import MagicMock, patch
 
 import job_module
@@ -488,7 +488,7 @@ def test_decorator_pos_only_args(
 
 
 def test_serialization_error(aws_session):
-    ssl_context = SSLContext()
+    ssl_context = SSLContext(protocol=PROTOCOL_TLS_CLIENT)
 
     @hybrid_job(device=None, aws_session=aws_session)
     def fails_serialization():
