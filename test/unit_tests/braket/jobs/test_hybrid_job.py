@@ -1,12 +1,13 @@
 import ast
 import importlib
+import inspect
 import re
 import sys
 import tempfile
 from logging import getLogger
 from pathlib import Path
 from ssl import SSLContext
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import job_module
 import pytest
@@ -35,13 +36,20 @@ def aws_session():
     return aws_session
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_decorator_defaults(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -51,6 +59,7 @@ def test_decorator_defaults(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     source_module = mock_tempdir_name
     entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
@@ -69,10 +78,12 @@ def test_decorator_defaults(
         hyperparameters={"c": "0", "d": "1.0"},
         logger=getLogger("braket.jobs.hybrid_job"),
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @pytest.mark.parametrize("include_modules", (job_module, ["job_module"]))
 @patch("braket.jobs.image_uris.retrieve_image")
 @patch("sys.stdout")
@@ -91,6 +102,7 @@ def test_decorator_non_defaults(
     mock_time,
     mock_stdout,
     mock_retrieve,
+    mock_persist_source,
     include_modules,
 ):
     mock_retrieve.return_value = "should-not-be-used"
@@ -147,6 +159,7 @@ def test_decorator_non_defaults(
         mock_tempdir = MagicMock(spec=tempfile.TemporaryDirectory)
         mock_tempdir_name = "job_temp_dir_00000"
         mock_tempdir.__enter__.return_value = mock_tempdir_name
+        mock_persist_source.return_value.__enter__.return_value = {}
 
         device = Devices.Amazon.SV1
         source_module = mock_tempdir_name
@@ -200,13 +213,20 @@ def test_decorator_non_defaults(
     mock_stdout.write.assert_any_call(s3_not_linked)
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_decorator_non_dict_input(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
     input_prefix = "my_input"
@@ -217,6 +237,7 @@ def test_decorator_non_dict_input(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     source_module = mock_tempdir_name
     entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
@@ -234,19 +255,26 @@ def test_decorator_non_dict_input(
         job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
-        input_data=input_prefix,
+        input_data={"input": input_prefix},
         aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_decorator_list_dependencies(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
     dependency_list = ["dep_1", "dep_2", "dep_3"]
@@ -261,6 +289,7 @@ def test_decorator_list_dependencies(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     source_module = mock_tempdir_name
     entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
@@ -279,6 +308,7 @@ def test_decorator_list_dependencies(
         hyperparameters={"c": "0", "d": "1.0"},
         logger=getLogger("braket.jobs.hybrid_job"),
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
     _mock_open.assert_called_with(Path(mock_tempdir_name) / "requirements.txt", "w")
@@ -287,13 +317,20 @@ def test_decorator_list_dependencies(
     )
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(LocalQuantumJob, "create")
 def test_decorator_local(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -303,6 +340,7 @@ def test_decorator_local(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     device = Devices.Amazon.SV1
     source_module = mock_tempdir_name
@@ -317,17 +355,25 @@ def test_decorator_local(
         job_name="my-entry-123000",
         hyperparameters={},
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(LocalQuantumJob, "create")
 def test_decorator_local_unsupported_args(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -348,6 +394,7 @@ def test_decorator_local_unsupported_args(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     device = Devices.Amazon.SV1
     source_module = mock_tempdir_name
@@ -362,17 +409,25 @@ def test_decorator_local_unsupported_args(
         job_name="my-entry-123000",
         hyperparameters={},
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_job_name_too_long(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -382,6 +437,7 @@ def test_job_name_too_long(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     device = "local:braket/default"
     source_module = mock_tempdir_name
@@ -404,18 +460,26 @@ def test_job_name_too_long(
             hyperparameters={},
             logger=getLogger("braket.jobs.hybrid_job"),
             aws_session=aws_session,
+            input_data={},
         )
         assert len(expected_job_name) == 50
         assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_decorator_pos_only_slash(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -425,6 +489,7 @@ def test_decorator_pos_only_slash(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     device = "local:braket/default"
     source_module = mock_tempdir_name
@@ -444,17 +509,25 @@ def test_decorator_pos_only_slash(
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
 def test_decorator_pos_only_args(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
 ):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
@@ -464,6 +537,7 @@ def test_decorator_pos_only_args(
 
     mock_tempdir_name = "job_temp_dir_00000"
     mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
 
     device = "local:braket/default"
     source_module = mock_tempdir_name
@@ -483,6 +557,7 @@ def test_decorator_pos_only_args(
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
         aws_session=aws_session,
+        input_data={},
     )
     assert mock_tempdir.return_value.__exit__.called
 
@@ -552,3 +627,89 @@ def test_python_validation(aws_session):
 )
 def test_sanitize_hyperparameters(hyperparameter, expected):
     assert _sanitize(hyperparameter) == expected
+
+
+@patch("builtins.open", new_callable=mock_open)
+@patch.object(sys.modules["os"], "mkdir")
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
+@patch("time.time", return_value=123.0)
+@patch("tempfile.TemporaryDirectory")
+@patch.object(LocalQuantumJob, "create")
+def test_decorator_persist_inner_function_source(
+    mock_create, mock_tempdir, mock_time, mock_retrieve, mock_mkdir, mock_file, aws_session
+):
+    from braket.jobs.hybrid_job import INNER_SOURCE_INPUT_CHANNEL, INNER_SOURCE_INPUT_FOLDER
+
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    def my_entry():
+        def inner_function_1():
+            def inner_function_2():
+                return "my inner function 2"
+
+            return "my inner function 1"
+
+        return inner_function_1
+
+    inner1 = my_entry()
+
+    mock_tempdir_name = "job_temp_dir_00000"
+    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+
+    device = Devices.Amazon.SV1
+    source_module = mock_tempdir_name
+    entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
+
+    my_entry = hybrid_job(device=Devices.Amazon.SV1, local=True, aws_session=aws_session)(my_entry)
+    my_entry()
+
+    expected_source = "".join(inspect.findsource(inner1)[0])
+    assert mock_file().write.call_args_list[0][0][0] == expected_source
+
+    expect_source_path = f"{mock_tempdir_name}/{INNER_SOURCE_INPUT_FOLDER}/source_0.py"
+    assert mock_file.call_args_list[0][0][0] == expect_source_path
+
+    mock_create.assert_called_with(
+        device=device,
+        source_module=source_module,
+        entry_point=entry_point,
+        job_name="my-entry-123000",
+        hyperparameters={},
+        aws_session=aws_session,
+        input_data={INNER_SOURCE_INPUT_CHANNEL: f"{mock_tempdir_name}/{INNER_SOURCE_INPUT_FOLDER}"},
+    )
+    assert mock_tempdir.return_value.__exit__.called
+
+
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "persist_inner_function_source")
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
+@patch("time.time", return_value=123.0)
+@patch("builtins.open")
+@patch("tempfile.TemporaryDirectory")
+@patch.object(AwsQuantumJob, "create")
+def test_decorator_conflict_channel_name(
+    mock_create,
+    mock_tempdir,
+    _mock_open,
+    mock_time,
+    mock_retrieve,
+    mock_persist_source,
+    aws_session,
+):
+    from braket.jobs.hybrid_job import INNER_SOURCE_INPUT_CHANNEL
+
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(
+        device=None, aws_session=aws_session, input_data={INNER_SOURCE_INPUT_CHANNEL: "foo-bar"}
+    )
+    def my_entry(c=0, d: float = 1.0, **extras):
+        return "my entry return value"
+
+    mock_tempdir_name = "job_temp_dir_00000"
+    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+    mock_persist_source.return_value.__enter__.return_value = {}
+
+    expect_error_message = f"input channel cannot be {INNER_SOURCE_INPUT_CHANNEL}"
+    with pytest.raises(ValueError, match=expect_error_message):
+        my_entry()
