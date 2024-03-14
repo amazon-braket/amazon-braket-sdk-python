@@ -26,4 +26,4 @@ jobs:
         pip install tox
     - name: Run code format checks
       run: |
-        tox -e linters_check
+        tox -e linters_check -p auto
