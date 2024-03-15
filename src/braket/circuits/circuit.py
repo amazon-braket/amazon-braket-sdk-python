@@ -70,6 +70,14 @@ SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., Subroutin
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
 
+def _flatten(other: Any) -> Any:
+    if isinstance(other, Iterable) and not isinstance(other, str):
+        for item in other:
+            yield from _flatten(item)
+    else:
+        yield other
+
+
 class Circuit:
     """A representation of a quantum circuit that contains the instructions to be performed on a
     quantum device and the requested result types.
@@ -148,7 +156,7 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
-
+        self._qubits = QubitSet()
         if addable is not None:
             self.add(addable, *args, **kwargs)
 
@@ -227,13 +235,12 @@ class Circuit:
         Returns:
             int: The qubit count for this circuit.
         """
-        all_qubits = self._moments.qubits.union(self._qubit_observable_set)
-        return len(all_qubits)
+        return len(self._qubits)
 
     @property
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
-        return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
+        return self._qubits
 
     @property
     def parameters(self) -> set[FreeParameter]:
@@ -406,6 +413,8 @@ class Circuit:
     def _add_to_qubit_observable_set(self, result_type: ResultType) -> None:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
+            for qubit in _flatten(self._qubit_observable_set):
+                self._qubits.add(qubit)
 
     def add_instruction(
         self,
@@ -480,6 +489,8 @@ class Circuit:
                     for parameter in free_params:
                         self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
+        for qubit in _flatten(self._moments.qubits):
+            self._qubits.add(qubit)
 
         return self
 
@@ -982,7 +993,7 @@ class Circuit:
             >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
 
         """
-        if (len(self.qubits) == 0) and (target_qubits is None):
+        if not len(self.qubits) and (target_qubits is None):
             raise IndexError(
                 "target_qubits must be provided in order to"
                 " apply the readout noise to an empty circuit."
@@ -1048,14 +1059,6 @@ class Circuit:
             ...
             >>> circ = Circuit().add(bell_pair, [4,5])
         """
-
-        def _flatten(addable: Union[Iterable, AddableTypes]) -> AddableTypes:
-            if isinstance(addable, Iterable):
-                for item in addable:
-                    yield from _flatten(item)
-            else:
-                yield addable
-
         for item in _flatten(addable):
             if isinstance(item, Instruction):
                 self.add_instruction(item, *args, **kwargs)
