@@ -51,16 +51,6 @@ class PulseSequence:
     def waveforms(self) -> WaveformDict:
         return self._waveforms
 
-    @waveforms.setter
-    def waveforms(self, value: WaveformDict) -> None:
-        """
-        Adds a set of waveforms.
-
-        Args:
-            value (WaveformDict): the waveform dict.
-        """
-        self._waveforms = value
-
     def to_time_trace(self) -> PulseSequenceTrace:
         """Generate an approximate trace of the amplitude, frequency, phase for each frame
         contained in the PulseSequence, under the action of the instructions contained in

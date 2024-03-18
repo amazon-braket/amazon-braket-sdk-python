@@ -23,6 +23,7 @@ from braket.pulse import (
     Port,
     PulseSequence,
 )
+from braket.pulse.waveforms import WaveformDict
 
 
 @pytest.fixture
@@ -78,6 +79,15 @@ def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
         ]
     )
     assert pulse_sequence.to_ir() == expected_str
+
+
+def test_create_waveformdict_with_pulse_sequence(user_defined_frame):
+    pulse_sequence = PulseSequence().set_frequency(user_defined_frame, 6e6)
+    wf = ConstantWaveform(1e-3, complex(1, 2), "wf_id")
+
+    waveform_dict = WaveformDict({"wf_id": wf}, pulse_sequence)
+    assert waveform_dict._pulse_sequence == pulse_sequence
+    assert waveform_dict["wf_id"]._pulse_sequence == pulse_sequence
 
 
 def test_pulse_sequence_with_modified_wf(predefined_frame_1):

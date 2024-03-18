@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from braket.pulse.pulse_sequence import PulseSequence
 
 import numpy as np
