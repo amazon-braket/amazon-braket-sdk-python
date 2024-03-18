@@ -49,7 +49,7 @@ class WaveformDict(dict):
             waveform is modified so the OQpy object is also updated.
     """
 
-    def __init__(self, waveform_dict: Dict, pulse_sequence: PulseSequence):
+    def __init__(self, waveform_dict: dict, pulse_sequence: PulseSequence):
         for waveform in waveform_dict.values():
             waveform._pulse_sequence = pulse_sequence
         super().__init__(waveform_dict)
@@ -137,16 +137,16 @@ class ArbitraryWaveform(Waveform):
         super().__init__()
 
     @property
-    def amplitudes(self) -> List[complex]:
+    def amplitudes(self) -> list[complex]:
         return self._amplitudes
 
     @amplitudes.setter
-    def amplitudes(self, value: List[complex]) -> None:
+    def amplitudes(self, value: list[complex]) -> None:
         """
         Sets the list of amplitudes.
 
         Args:
-            value (List[complex]): Array of complex values specifying the
+            value (list[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
                 of the frame to which waveform is applied to.
 
