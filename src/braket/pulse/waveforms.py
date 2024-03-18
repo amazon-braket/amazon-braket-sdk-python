@@ -69,9 +69,9 @@ class Waveform(ABC):
         self, key: str, value: Any, type_: ast.ClassicalType = float64
     ) -> None:
         if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                key
-            ] = self._pulse_sequence._format_parameter_ast(value, type_)
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[key] = (
+                self._pulse_sequence._format_parameter_ast(value, type_)
+            )
 
     @abstractmethod
     def _to_oqpy_expression(self) -> OQPyExpression:
