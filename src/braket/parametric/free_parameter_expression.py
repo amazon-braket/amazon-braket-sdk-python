@@ -41,10 +41,6 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (Optional[ClassicalType]): The OpenQASM3 type associated with the expression.
-                Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
-                expression in the OpenQASM3 IR. Any type other than DurationType is considered
-                as FloatType.
 
         Raises:
             NotImplementedError: Raised if the expression is not of type
@@ -61,7 +57,6 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
-        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
         elif isinstance(expression, (Number, sympy.Expr)):
@@ -70,7 +65,6 @@ class FreeParameterExpression:
             self._expression = self._parse_string_expression(expression).expression
         else:
             raise NotImplementedError
-        self._validate_type()
 
     @property
     def expression(self) -> Union[Number, sympy.Expr]:
@@ -108,13 +102,6 @@ class FreeParameterExpression:
             return subbed_expr
         else:
             return FreeParameterExpression(subbed_expr)
-
-    def _validate_type(self) -> None:
-        if not isinstance(self._type, (FloatType, DurationType)):
-            raise TypeError(
-                "FreeParameterExpression must be of type openqasm3.ast.FloatType "
-                "or openqasm3.ast.DurationType"
-            )
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)

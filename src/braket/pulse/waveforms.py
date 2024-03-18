@@ -20,8 +20,16 @@ from typing import Optional, Union
 
 import numpy as np
 import openpulse.ast as ast
-from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
-from oqpy.base import OQPyExpression
+from oqpy import (
+    WaveformVar,
+    bool_,
+    complex128,
+    convert_float_to_duration,
+    declare_waveform_generator,
+    duration,
+    float64,
+)
+from oqpy.base import OQPyExpression, to_ast
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -69,8 +77,16 @@ class Waveform(ABC):
         self, key: str, value: Any, type_: ast.ClassicalType = float64
     ) -> None:
         if self._pulse_sequence is not None:
+            self._pulse_sequence._register_free_parameters(value)
             self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[key] = (
-                self._pulse_sequence._format_parameter_ast(value, type_)
+                to_ast(
+                    self._pulse_sequence._program,
+                    (
+                        convert_float_to_duration(value)
+                        if isinstance(type_, ast.DurationType)
+                        else value
+                    ),
+                )
             )
 
     @abstractmethod

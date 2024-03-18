@@ -40,7 +40,7 @@ class _FreeParameterTransformer(QASMTransformer):
         using the given parameter values.
 
         Args:
-            identifier (_FreeParameterExpressionIdentifier): The identifier.
+            identifier (Identifier): The identifier.
 
         Returns:
             Union[Identifier, FloatLiteral]: The transformed identifier.
