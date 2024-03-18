@@ -1219,12 +1219,13 @@ def test_parametric_circuit_with_parametric_defcal(
         source="\n".join(
             [
                 "OPENQASM 3.0;",
-                *[f"input float {parameter};" for parameter in input_variables],
+                *[f"input float {parameter};" for parameter in circuit.parameters],
                 *expected_ir,
             ]
         ),
         inputs=input_values,
     )
+    assert circuit.parameters == {FreeParameter(name) for name in input_variables}
 
 
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
