@@ -16,7 +16,11 @@ from __future__ import annotations
 import random
 import string
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from copy import deepcopy
+from typing import TYPE_CHECKING, Any, Optional, Union
+
+if TYPE_CHECKING:
+    from braket.pulse.pulse_sequence import PulseSequence
 
 import numpy as np
 import openpulse.ast as ast

@@ -31,7 +31,7 @@ from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
-from braket.pulse.waveforms import Waveform
+from braket.pulse.waveforms import Waveform, WaveformDict
 from braket.registers.qubit_set import QubitSet
 
 

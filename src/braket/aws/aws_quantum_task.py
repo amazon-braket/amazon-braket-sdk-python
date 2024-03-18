@@ -162,15 +162,6 @@ class AwsQuantumTask(QuantumTask):
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
-            quiet (bool): Sets the verbosity of the logger to low and does not report queue
-                position. Default is `False`.
-
-            reservation_arn (str | None): The reservation ARN provided by Braket Direct
-                to reserve exclusive usage for the device to run the quantum task on.
-                Note: If you are creating tasks in a job that itself was created reservation ARN,
-                those tasks do not need to be created with the reservation ARN.
-                Default: None.
-
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.
 
@@ -199,18 +190,6 @@ class AwsQuantumTask(QuantumTask):
             create_task_kwargs.update({"tags": tags})
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
-
-        if reservation_arn:
-            create_task_kwargs.update(
-                {
-                    "associations": [
-                        {
-                            "arn": reservation_arn,
-                            "type": "RESERVATION_TIME_WINDOW_ARN",
-                        }
-                    ]
-                }
-            )
 
         if reservation_arn:
             create_task_kwargs.update(
