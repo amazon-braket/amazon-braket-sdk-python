@@ -107,7 +107,7 @@ class FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
-        if isinstance(node, ast.Num):
+        if isinstance(node, ast.Constant):
             return FreeParameterExpression(node.n)
         elif isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
@@ -150,6 +150,15 @@ class FreeParameterExpression:
 
     def __rmul__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other * self.expression)
+
+    def __truediv__(self, other):
+        if issubclass(type(other), FreeParameterExpression):
+            return FreeParameterExpression(self.expression / other.expression)
+        else:
+            return FreeParameterExpression(self.expression / other)
+
+    def __rtruediv__(self, other: FreeParameterExpression):
+        return FreeParameterExpression(other / self.expression)
 
     def __pow__(self, other: FreeParameterExpression, modulo: float = None):
         if issubclass(type(other), FreeParameterExpression):

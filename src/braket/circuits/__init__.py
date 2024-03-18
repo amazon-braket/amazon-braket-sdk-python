@@ -20,7 +20,6 @@ from braket.circuits import (  # noqa: F401
     result_types,
 )
 from braket.circuits.angled_gate import AngledGate, DoubleAngledGate  # noqa: F401
-from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401
@@ -38,3 +37,9 @@ from braket.circuits.quantum_operator import QuantumOperator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401
 from braket.circuits.result_type import ObservableResultType, ResultType  # noqa: F401
+from braket.circuits.text_diagram_builders.ascii_circuit_diagram import (  # noqa: F401
+    AsciiCircuitDiagram,
+)
+from braket.circuits.text_diagram_builders.unicode_circuit_diagram import (  # noqa: F401
+    UnicodeCircuitDiagram,
+)
