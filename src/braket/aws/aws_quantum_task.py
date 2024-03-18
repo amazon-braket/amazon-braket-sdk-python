@@ -149,9 +149,8 @@ class AwsQuantumTask(QuantumTask):
                 Default: {}.
 
             gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A `dict`
-                for user defined gate calibration. The calibration is defined for
-                a particular `Gate` on a particular `QubitSet` and is represented by
-                a `PulseSequence`.
+                for user defined gate calibration. The calibration is defined for a particular
+                `Gate` on a particular `QubitSet` and is represented by a `PulseSequence`.
                 Default: None.
 
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
