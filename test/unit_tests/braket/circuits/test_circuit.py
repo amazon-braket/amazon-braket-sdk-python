@@ -1105,63 +1105,49 @@ def test_circuit_to_ir_openqasm_with_gate_calibrations(
 
 
 @pytest.mark.parametrize(
-    "circuit, calibration_key, expected_ir",
+    "circuit, calibration_key, input_variables, expected_ir, input_values",
     [
         (
             Circuit().rx(0, 0.2),
             (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "input float beta;",
-                        "input float gamma;",
-                        "bit[1] b;",
-                        "qubit[1] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal rx(float alpha) $0 {",
-                        "    shift_phase(predefined_frame_1, alpha);",
-                        "    set_phase(predefined_frame_1, gamma);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "rx(0.2) q[0];",
-                        "b[0] = measure q[0];",
-                    ]
-                ),
-                inputs={},
-            ),
+            {"beta", "gamma"},
+            [
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal rx(float alpha) $0 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "rx(0.2) q[0];",
+                "b[0] = measure q[0];",
+            ],
+            {},
         ),
         (
             Circuit().rx(0, FreeParameter("gamma")),
             (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "input float beta;",
-                        "input float gamma;",
-                        "bit[1] b;",
-                        "qubit[1] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal rx(float alpha) $0 {",
-                        "    shift_phase(predefined_frame_1, alpha);",
-                        "    set_phase(predefined_frame_1, gamma);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "rx(gamma) q[0];",
-                        "b[0] = measure q[0];",
-                    ]
-                ),
-                inputs={},
-            ),
+            {"beta", "gamma"},
+            [
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal rx(float alpha) $0 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "rx(gamma) q[0];",
+                "b[0] = measure q[0];",
+            ],
+            {},
         ),
         (
             Circuit().ms(0, 1, 0.1, 0.2, 0.3),
@@ -1169,29 +1155,24 @@ def test_circuit_to_ir_openqasm_with_gate_calibrations(
                 Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
                 QubitSet([0, 1]),
             ),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "bit[2] b;",
-                        "qubit[2] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
-                        "    shift_phase(predefined_frame_1, alpha);",
-                        "    set_phase(predefined_frame_1, gamma);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "ms(0.1, 0.2, 0.3) q[0], q[1];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
-                    ]
-                ),
-                inputs={},
-            ),
+            {},
+            [
+                "bit[2] b;",
+                "qubit[2] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "ms(0.1, 0.2, 0.3) q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ],
+            {},
         ),
         (
             Circuit().ms(0, 1, 0.1, 0.2, FreeParameter("gamma")),
@@ -1199,35 +1180,29 @@ def test_circuit_to_ir_openqasm_with_gate_calibrations(
                 Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
                 QubitSet([0, 1]),
             ),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "input float gamma;",
-                        "bit[2] b;",
-                        "qubit[2] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
-                        "    shift_phase(predefined_frame_1, alpha);",
-                        "    set_phase(predefined_frame_1, gamma);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "ms(0.1, 0.2, gamma) q[0], q[1];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
-                    ]
-                ),
-                inputs={},
-            ),
+            {"gamma"},
+            [
+                "bit[2] b;",
+                "qubit[2] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "ms(0.1, 0.2, gamma) q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ],
+            {},
         ),
     ],
 )
 def test_parametric_circuit_with_parametric_defcal(
-    circuit, calibration_key, expected_ir, pulse_sequence_2
+    circuit, calibration_key, input_variables, expected_ir, input_values, pulse_sequence_2
 ):
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     gate_calibrations = GateCalibrations(
@@ -1236,13 +1211,19 @@ def test_parametric_circuit_with_parametric_defcal(
         }
     )
 
-    assert (
-        circuit.to_ir(
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
-            gate_definitions=gate_calibrations.pulse_sequences,
-        )
-        == expected_ir
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        gate_definitions=gate_calibrations.pulse_sequences,
+    ) == OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                *[f"input float {parameter};" for parameter in input_variables],
+                *expected_ir,
+            ]
+        ),
+        inputs=input_values,
     )
 
 
