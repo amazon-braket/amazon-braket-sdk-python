@@ -1138,7 +1138,7 @@ def test_run_param_circuit_with_reservation_arn_batch_task(
         43200,
         0.25,
         inputs,
-        None,
+        {},
         reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
 
@@ -1170,6 +1170,7 @@ def test_run_param_circuit_with_inputs_batch_task(
         43200,
         0.25,
         inputs,
+        {},
     )
 
 
@@ -1303,7 +1304,9 @@ def test_batch_circuit_with_task_and_input_mismatch(
     inputs = [{"beta": 0.2}, {"gamma": 0.1}, {"theta": 0.2}]
     circ_1 = Circuit().ry(angle=3, target=0)
     task_specifications = [[circ_1, single_circuit_input], openqasm_program]
-    wrong_number_of_inputs = "Multiple inputs and task specifications must " "be equal in number."
+    wrong_number_of_inputs = (
+        "Multiple inputs, task specifications and gate definitions must be equal in length."
+    )
 
     with pytest.raises(ValueError, match=wrong_number_of_inputs):
         _run_batch_and_assert(
@@ -1318,6 +1321,7 @@ def test_batch_circuit_with_task_and_input_mismatch(
             43200,
             0.25,
             inputs,
+            {},
         )
 
 
@@ -1494,7 +1498,7 @@ def test_run_with_positional_args_and_kwargs(
         86400,
         0.25,
         {},
-        ["foo"],
+        {},
         "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
         None,
         {"bar": 1, "baz": 2},
@@ -1534,6 +1538,7 @@ def test_run_batch_no_extra(
         43200,
         0.25,
         {},
+        {},
     )
 
 
@@ -1559,6 +1564,7 @@ def test_run_batch_with_shots(
         50,
         43200,
         0.25,
+        {},
         {},
     )
 
@@ -1586,6 +1592,7 @@ def test_run_batch_with_max_parallel_and_kwargs(
         43200,
         0.25,
         inputs={"theta": 0.2},
+        gate_definitions={},
         extra_kwargs={"bar": 1, "baz": 2},
     )
 

@@ -106,7 +106,7 @@ def test_get_all_metrics_complete_results_stream_prefix(
         logGroupName="/aws/braket/jobs",
         startTime=1,
         endTime=2,
-        queryString="fields @timestamp, @message | filter @logStream like /^test_job/uuid\\//"
+        queryString="fields @timestamp, @message | filter @logStream like /^test_job\\/uuid\\//"
         " | filter @message like /Metrics - /",
         limit=10000,
     )

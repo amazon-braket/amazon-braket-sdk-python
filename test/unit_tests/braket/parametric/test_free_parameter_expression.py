@@ -80,7 +80,6 @@ def test_commutativity():
 def test_add():
     add_expr = FreeParameter("theta") + FreeParameter("theta")
     expected = FreeParameterExpression(2 * FreeParameter("theta"))
-
     assert add_expr == expected
 
 
@@ -89,14 +88,12 @@ def test_sub():
     expected = FreeParameterExpression(FreeParameter("theta")) - FreeParameterExpression(
         FreeParameter("alpha")
     )
-
     assert sub_expr == expected
 
 
 def test_r_sub():
     r_sub_expr = 1 - FreeParameter("theta")
     expected = FreeParameterExpression(1 - FreeParameter("theta"))
-
     assert r_sub_expr == expected
 
 
@@ -104,6 +101,20 @@ def test_mul():
     mul_expr = FreeParameter("theta") * FreeParameter("alpha") * 2 * FreeParameter("theta")
     expected = FreeParameterExpression(FreeParameter("theta") ** 2 * FreeParameter("alpha") * 2)
     assert mul_expr == expected
+
+
+def test_truediv():
+    truediv_expr = FreeParameter("theta") / FreeParameter("alpha")
+    expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(
+        FreeParameter("alpha")
+    )
+    assert truediv_expr == expected
+
+
+def test_r_truediv():
+    r_truediv_expr = 1 / FreeParameter("theta")
+    expected = FreeParameterExpression(1 / FreeParameter("theta"))
+    assert r_truediv_expr == expected
 
 
 def test_pow():
