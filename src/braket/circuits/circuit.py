@@ -489,8 +489,7 @@ class Circuit:
                     for parameter in free_params:
                         self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
-        for qubit in _flatten(self._moments.qubits):
-            self._qubits.add(qubit)
+        self._qubits.update(self._moments.qubits)
 
         return self
 
