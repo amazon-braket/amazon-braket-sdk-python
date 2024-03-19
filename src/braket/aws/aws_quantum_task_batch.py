@@ -170,11 +170,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         ]
     ]:
         inputs = inputs or {}
-        if isinstance(inputs, list) and len(inputs) == 1:
-            inputs = inputs[0]
         gate_definitions = gate_definitions or {}
-        if isinstance(gate_definitions, list) and len(gate_definitions) == 1:
-            gate_definitions = gate_definitions[0]
 
         single_task_type = (
             Circuit,
