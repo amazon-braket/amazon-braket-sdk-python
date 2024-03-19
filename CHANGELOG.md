@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.73.3 (2024-03-18)
+
+### Bug Fixes and Other Changes
+
+ * store account id if already accessed
+
+## v1.73.2 (2024-03-13)
+
+### Bug Fixes and Other Changes
+
+ * increase tol value for our integ tests
+
+## v1.73.1 (2024-03-11)
+
+### Bug Fixes and Other Changes
+
+ * allow for braket endpoint to be set within the jobs
+
+## v1.73.0 (2024-03-07)
+
+### Features
+
+ * update circuit drawing
+
 ## v1.72.2 (2024-03-04)
 
 ### Bug Fixes and Other Changes
