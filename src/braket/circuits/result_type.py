@@ -118,20 +118,13 @@ class ResultType:
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
-    def to_pulse_sequence(
-        self, serialization_properties: OpenQASMSerializationProperties
-    ) -> PulseSequence:
-        """
-        Returns the openqasm string representation of the result type.
-
-        Args:
-            serialization_properties (OpenQASMSerializationProperties): The serialization properties
-                to use while serializing the object to the IR representation.
+    def _to_pulse_sequence(self) -> PulseSequence:
+        """Returns the pulse sequence of the result type.
 
         Returns:
-            PulseSequence: A PulseSequence corresponding to the full circuit.
+            PulseSequence: A PulseSequence corresponding to the result type.
         """
-        raise NotImplementedError("to_pulse_sequence has not been implemented yet.")
+        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
 
     def copy(
         self,

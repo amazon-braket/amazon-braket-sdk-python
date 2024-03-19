@@ -493,13 +493,9 @@ class Expectation(ObservableResultType):
         )
         return f"#pragma braket result expectation {observable_ir}"
 
-    def to_pulse_sequence(
-        self, serialization_properties: OpenQASMSerializationProperties
-    ) -> PulseSequence:
-        observable_pulse_sequence = self.observable.to_pulse_sequence(
+    def _to_pulse_sequence(self) -> PulseSequence:
+        observable_pulse_sequence = self.observable._to_pulse_sequence(
             target=self.target,
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
         )
         return observable_pulse_sequence
 

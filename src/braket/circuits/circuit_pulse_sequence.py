@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from braket.aws.aws_device import AwsDevice
@@ -23,7 +23,6 @@ from braket.circuits.gate import Gate
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
-from braket.circuits.serialization import IRType
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence
 
@@ -34,7 +33,7 @@ class CircuitPulseSequenceBuilder:
     def __init__(
         self,
         device: AwsDevice | None = None,
-        gate_definitions: Dict[Tuple[Gate, QubitSet], PulseSequence] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> None:
         self._device = device
         if gate_definitions is not None:
@@ -93,11 +92,7 @@ class CircuitPulseSequenceBuilder:
         ) = CircuitPulseSequenceBuilder._categorize_result_types(circuit.result_types)
 
         for result_type in target_result_types:
-            pragma_str = result_type.to_ir(IRType.OPENQASM)
-            if pragma_str[:8] == "#pragma ":
-                pulse_sequence._program.pragma(pragma_str[8:])
-            else:
-                raise ValueError("Result type cannot be used with pulse sequences.")
+            pulse_sequence += result_type._to_pulse_sequence()
         for qubit in circuit.qubits:
             pulse_sequence.capture_v0(self._readout_frame(qubit))
 
@@ -115,16 +110,16 @@ class CircuitPulseSequenceBuilder:
 
     @staticmethod
     def _categorize_result_types(
-        result_types: List[ResultType],
-    ) -> Tuple[List[str], List[ResultType]]:
+        result_types: list[ResultType],
+    ) -> tuple[list[str], list[ResultType]]:
         """
         Categorize result types into result types with target and those without.
 
         Args:
-            result_types (List[ResultType]): list of result types
+            result_types (list[ResultType]): list of result types
 
         Returns:
-            Tuple[List[str], List[ResultType]]: first element is a list of result types
+            tuple[list[str], list[ResultType]]: first element is a list of result types
             without `target` attribute; second element is a list of result types with
             `target` attribute
         """

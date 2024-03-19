@@ -106,23 +106,16 @@ class Observable(QuantumOperator):
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
-    def _to_pulse_sequence(
-        self,
-        serialization_properties: OpenQASMSerializationProperties,
-        target: QubitSet | None = None,
-    ) -> PulseSequence:
-        """
-        Returns the openqasm string representation of the result type.
+    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
+        """Returns the pulse sequence of the result type.
 
         Args:
-            serialization_properties (OpenQASMSerializationProperties): The serialization properties
-                to use while serializing the object to the IR representation.
             target (QubitSet | None): target qubit(s). Defaults to None.
 
         Returns:
-            PulseSequence: A PulseSequence corresponding to the full circuit.
+            PulseSequence: A PulseSequence of the basis rotation for the corresponding observable.
         """
-        raise NotImplementedError("to_pulse_sequence has not been implemented yet.")
+        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
 
     @property
     def coefficient(self) -> int:
