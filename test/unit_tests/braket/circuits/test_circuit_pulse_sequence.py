@@ -19,12 +19,14 @@ import numpy as np
 import pytest
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit
+from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
-from braket.pulse import PulseSequence
+from braket.pulse.pulse_sequence import PulseSequence
+from braket.pulse.waveforms import DragGaussianWaveform
 
-RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-M-3"
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -42,7 +44,34 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
             "qubitMappings": None,
             "centerFrequencies": [375000000.0],
             "qhpSpecificProperties": None,
-        }
+        },
+        "q0_rf": {
+            "portId": "q0_rf",
+            "direction": "tx",
+            "portType": "rf",
+            "dt": 1e-09,
+            "qubitMappings": None,
+            "centerFrequencies": [4875000000.0],
+            "qhpSpecificProperties": None,
+        },
+        "q0_ro_rx": {
+            "portId": "q0_ro_rx",
+            "direction": "rx",
+            "portType": "ro_rx",
+            "dt": 5e-10,
+            "qubitMappings": None,
+            "centerFrequencies": [],
+            "qhpSpecificProperties": None,
+        },
+        "q1_ro_rx": {
+            "portId": "q1_ro_rx",
+            "direction": "rx",
+            "portType": "ro_rx",
+            "dt": 5e-10,
+            "qubitMappings": None,
+            "centerFrequencies": [],
+            "qhpSpecificProperties": None,
+        },
     },
     "frames": {
         "q0_q1_cphase_frame": {
@@ -54,7 +83,37 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
             "associatedGate": "cphase",
             "qubitMappings": [0, 1],
             "qhpSpecificProperties": None,
-        }
+        },
+        "q0_rf_frame": {
+            "frameId": "q0_rf_frame",
+            "portId": "q0_rf",
+            "frequency": 5041233612.58213,
+            "centerFrequency": 4875000000.0,
+            "phase": 0.0,
+            "associatedGate": None,
+            "qubitMappings": [0],
+            "qhpSpecificProperties": None,
+        },
+        "q0_ro_rx_frame": {
+            "frameId": "q0_ro_rx_frame",
+            "portId": "q0_ro_rx",
+            "frequency": 7359200001.83969,
+            "centerFrequency": None,
+            "phase": 0.0,
+            "associatedGate": None,
+            "qubitMappings": [0],
+            "qhpSpecificProperties": None,
+        },
+        "q1_ro_rx_frame": {
+            "frameId": "q1_ro_rx_frame",
+            "portId": "q1_ro_rx",
+            "frequency": 7228259838.38781,
+            "centerFrequency": None,
+            "phase": 0.0,
+            "associatedGate": None,
+            "qubitMappings": [1],
+            "qhpSpecificProperties": None,
+        },
     },
     "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
@@ -119,7 +178,7 @@ def get_pulse_model(capabilities_json):
     }
     device_obj = RigettiDeviceCapabilities.parse_obj(device_json)
     return {
-        "deviceName": "M-2-Pulse",
+        "deviceName": "Aspen-M-3",
         "deviceType": "QPU",
         "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",
@@ -127,9 +186,8 @@ def get_pulse_model(capabilities_json):
     }
 
 
-@patch("urllib.request.urlopen")
 @pytest.fixture
-def device(mock_url_request):
+def device():
     response_data_content = {
         "gates": {
             "0_1": {
@@ -137,14 +195,14 @@ def device(mock_url_request):
                     {
                         "name": "cphaseshift",
                         "qubits": ["0", "1"],
-                        "arguments": ["-1.5707963267948966"],
+                        "arguments": ["theta"],
                         "calibrations": [
                             {
                                 "name": "play",
                                 "arguments": [
                                     {
                                         "name": "waveform",
-                                        "value": "wf_drag_gaussian_0",
+                                        "value": "q0_q1_cphase_sqrtCPHASE",
                                         "type": "waveform",
                                     },
                                     {
@@ -154,15 +212,141 @@ def device(mock_url_request):
                                     },
                                 ],
                             },
+                            {
+                                "name": "shift_phase",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_rf_frame",
+                                        "type": "frame",
+                                        "optional": False,
+                                    },
+                                    {
+                                        "name": "phase",
+                                        "value": "-1.0*theta",
+                                        "type": "expr",
+                                        "optional": False,
+                                    },
+                                ],
+                            },
                         ],
                     }
                 ],
-                "rx_12": [{"name": "rx_12", "qubits": ["0"]}],
+            },
+            "0": {
+                "rx": [
+                    {
+                        "name": "rx",
+                        "qubits": ["0"],
+                        "arguments": ["1.5707963267948966"],
+                        "calibrations": [
+                            {
+                                "name": "barrier",
+                                "arguments": [
+                                    {
+                                        "name": "qubit",
+                                        "value": "0",
+                                        "type": "string",
+                                        "optional": False,
+                                    }
+                                ],
+                            },
+                            {
+                                "name": "shift_frequency",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_rf_frame",
+                                        "type": "frame",
+                                        "optional": False,
+                                    },
+                                    {
+                                        "name": "frequency",
+                                        "value": -321047.14178613486,
+                                        "type": "float",
+                                        "optional": False,
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "play",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_rf_frame",
+                                        "type": "frame",
+                                        "optional": False,
+                                    },
+                                    {
+                                        "name": "waveform",
+                                        "value": "wf_drag_gaussian_1",
+                                        "type": "waveform",
+                                        "optional": False,
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "shift_frequency",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_rf_frame",
+                                        "type": "frame",
+                                        "optional": False,
+                                    },
+                                    {
+                                        "name": "frequency",
+                                        "value": 321047.14178613486,
+                                        "type": "float",
+                                        "optional": False,
+                                    },
+                                ],
+                            },
+                            {
+                                "name": "barrier",
+                                "arguments": [
+                                    {
+                                        "name": "qubit",
+                                        "value": "0",
+                                        "type": "string",
+                                        "optional": False,
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                "rz": [
+                    {
+                        "name": "rz",
+                        "qubits": ["0"],
+                        "arguments": ["theta"],
+                        "calibrations": [
+                            {
+                                "name": "shift_phase",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_rf_frame",
+                                        "type": "frame",
+                                        "optional": False,
+                                    },
+                                    {
+                                        "name": "phase",
+                                        "value": "-1.0*theta",
+                                        "type": "expr",
+                                        "optional": False,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
             },
         },
         "waveforms": {
-            "wf_drag_gaussian_0": {
-                "waveformId": "wf_drag_gaussian_0",
+            "wf_drag_gaussian_1": {
+                "waveformId": "wf_drag_gaussian_1",
                 "name": "drag_gaussian",
                 "arguments": [
                     {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
@@ -171,63 +355,97 @@ def device(mock_url_request):
                     {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
                 ],
             },
+            "q0_q1_cphase_sqrtCPHASE": {
+                "waveformId": "q0_q1_cphase_sqrtCPHASE",
+                "amplitudes": [
+                    [0.0, 0.0],
+                    [0.0, 0.0],
+                    [0.0, 0.0],
+                    [0.0, 0.0],
+                ],
+            },
         },
     }
 
     response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
-    mock_url_request.return_value.__enter__.return_value = response_data_stream
-    mock_session = Mock()
-    mock_session.get_device.return_value = get_pulse_model(
-        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    with patch("urllib.request.urlopen") as mock_url_request:
+        mock_url_request.return_value.__enter__.return_value = response_data_stream
+        mock_session = Mock()
+        mock_session.get_device.return_value = get_pulse_model(
+            MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+        )
+        yield AwsDevice(RIGETTI_ARN, mock_session)
+
+
+@pytest.fixture
+def pulse_sequence(predefined_frame_1):
+    return (
+        PulseSequence()
+        .set_frequency(
+            predefined_frame_1,
+            6e6,
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
     )
-    device = AwsDevice(RIGETTI_ARN, mock_session)
-    return device
 
 
 @pytest.fixture()
-def gate_calibrations(device):
-    return device.gate_calibrations
-
-
-def test_empty_circuit():
-    assert CircuitPulseSequenceBuilder(None).build_pulse_sequence(Circuit()) == PulseSequence()
-
-
-def test_non_parametric_defcal(gate_calibrations):
-    circ = Circuit().rx(0, np.pi)
-    expected = (
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[1] psb;",
-        "    waveform wf_drag_gaussian_3 = drag_gaussian(24.0ns, 2.547965400864ns, "
-        "2.3223415460834803e-10, 0.606950905462208, false);",
-        "    barrier $0;",
-        "    shift_frequency(q0_rf_frame, -321047.14178613486);",
-        "    play(q0_rf_frame, wf_drag_gaussian_3);",
-        "    shift_frequency(q0_rf_frame, 321047.14178613486);",
-        "    barrier $0;",
-        "    psb[0] = capture_v0(q0_ro_rx_frame);",
-        "}",
+def user_defined_gate_calibrations():
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    return GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+        }
     )
 
-    assert circ.pulse_sequence(gate_calibrations).to_ir() == expected
+
+def test_empty_circuit(device):
+    assert CircuitPulseSequenceBuilder(device).build_pulse_sequence(Circuit()) == PulseSequence()
 
 
-def test_parametric_defcal(gate_calibrations):
-    circ = Circuit().xy(0, 1, 0.1)
-    expected = (
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[1] psb;",
-        "    waveform wf_drag_gaussian_3 = drag_gaussian(24.0ns, 2.547965400864ns, "
-        "2.3223415460834803e-10, 0.606950905462208, false);",
-        "    barrier $0;",
-        "    shift_frequency(q0_rf_frame, -321047.14178613486);",
-        "    play(q0_rf_frame, wf_drag_gaussian_3);",
-        "    shift_frequency(q0_rf_frame, 321047.14178613486);",
-        "    barrier $0;",
-        "    psb[0] = capture_v0(q0_ro_rx_frame);",
-        "}",
+def test_no_device():
+    with pytest.raises(AssertionError, match="Device must be set before building pulse sequences."):
+        CircuitPulseSequenceBuilder(None)
+
+
+def test_non_parametric_defcal(device):
+    circ = Circuit().rx(0, np.pi / 2)
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[1] psb;",
+            "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
+            "7.494904522022295e-10, -0.4549282253548838, false);",
+            "    barrier $0;",
+            "    shift_frequency(q0_rf_frame, -321047.14178613486);",
+            "    play(q0_rf_frame, wf_drag_gaussian_1);",
+            "    shift_frequency(q0_rf_frame, 321047.14178613486);",
+            "    barrier $0;",
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "}",
+        ]
+    )
+    assert circ.pulse_sequence(device).to_ir() == expected
+
+
+def test_parametric_defcal(device):
+    circ = Circuit().cphaseshift(0, 1, 0.1)
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+            "    shift_phase(q0_rf_frame, -0.1);",
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "    psb[1] = capture_v0(q1_ro_rx_frame);",
+            "}",
+        ]
     )
 
-    assert circ.pulse_sequence(gate_calibrations).to_ir() == expected
+    assert circ.pulse_sequence(device).to_ir() == expected

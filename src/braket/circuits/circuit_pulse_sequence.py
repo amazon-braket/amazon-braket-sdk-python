@@ -23,6 +23,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
+from braket.parametric.free_parameter import FreeParameter
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence
 
@@ -32,16 +33,20 @@ class CircuitPulseSequenceBuilder:
 
     def __init__(
         self,
-        device: AwsDevice | None = None,
+        device: AwsDevice,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> None:
+        assert device is not None, "Device must be set before building pulse sequences."
+
+        gate_definitions = gate_definitions or {}
+
         self._device = device
-        if gate_definitions is not None:
-            self._gate_calibrations = GateCalibrations(gate_definitions)
-        elif device is not None and device.gate_calibrations is not None:
-            self._gate_calibrations = device.gate_calibrations
-        else:
-            self._gate_calibrations = GateCalibrations({})
+        self._gate_calibrations = (
+            device.gate_calibrations
+            if device.gate_calibrations is not None
+            else GateCalibrations({})
+        )
+        self._gate_calibrations.pulse_sequences.update(gate_definitions)
 
     def build_pulse_sequence(self, circuit: cir.Circuit) -> PulseSequence:
         """
@@ -68,18 +73,9 @@ class CircuitPulseSequenceBuilder:
 
         for instruction in circuit.instructions:
             gate = instruction.operator
-            qubit = instruction.target
-            if isinstance(gate, Gate) and gate.name == "PulseGate":
-                gate_pulse_sequence = gate.pulse_sequence
-            elif (
-                gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get(
-                    (gate, qubit), None
-                )
-            ) is None:
-                raise ValueError(
-                    f"No pulse sequence for {gate.name} was provided in the gate"
-                    " calibration set."
-                )
+            qubits = instruction.target
+
+            gate_pulse_sequence = self._get_pulse_sequence(gate, qubits)
 
             # FIXME: this creates a single cal block, we should have defcals because barrier;
             # would be applied to everything
@@ -102,11 +98,34 @@ class CircuitPulseSequenceBuilder:
 
         return pulse_sequence
 
+    def _get_pulse_sequence(self, gate: Gate, qubit: QubitSet) -> PulseSequence:
+        angle = None
+        if isinstance(gate, Gate) and gate.name == "PulseGate":
+            gate_pulse_sequence = gate.pulse_sequence
+        elif (
+            gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get((gate, qubit), None)
+        ) is None:
+            if hasattr(gate, "angle"):
+                angle = gate.angle
+                gate._parameters[0] = FreeParameter("theta")
+            if (
+                gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get(
+                    (gate, qubit), None
+                )
+            ) is None:
+                raise ValueError(
+                    f"No pulse sequence for {gate.name} was provided in the gate"
+                    " calibration set."
+                )
+        return gate_pulse_sequence(theta=angle) if angle is not None else gate_pulse_sequence
+
     def _readout_frame(self, qubit: QubitSet) -> Frame:
         if self._device.name == "Aspen-M-3":
             return self._device.frames[f"q{int(qubit)}_ro_rx_frame"]
         elif self._device.name == "Lucy":
             return self._device.frames[f"r{int(qubit)}_measure"]
+        else:
+            raise ValueError(f"Unknown device {self._device.name}")
 
     @staticmethod
     def _categorize_result_types(
