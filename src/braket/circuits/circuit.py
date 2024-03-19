@@ -15,12 +15,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from numbers import Number
-from typing import Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
 
-from braket.aws import AwsDevice
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
@@ -63,6 +62,9 @@ from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
+
+if TYPE_CHECKING:  # pragma: no cover
+    from braket.aws import AwsDevice
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]

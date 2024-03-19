@@ -23,6 +23,7 @@ from braket.circuits.angled_gate import AngledGate, DoubleAngledGate  # noqa: F4
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
+from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401
 from braket.circuits.free_parameter import FreeParameter  # noqa: F401
 from braket.circuits.free_parameter_expression import FreeParameterExpression  # noqa: F401

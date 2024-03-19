@@ -19,11 +19,12 @@ if TYPE_CHECKING:
     from braket.aws.aws_device import AwsDevice
 
 import braket.circuits.circuit as cir
+from braket.circuits.gate import Gate
 from braket.circuits.gate_calibrations import GateCalibrations
-from braket.circuits.gates import Gate, PulseGate
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
 from braket.circuits.serialization import IRType
+from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence
 
 
@@ -32,13 +33,16 @@ class CircuitPulseSequenceBuilder:
 
     def __init__(
         self,
-        device: AwsDevice,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        device: AwsDevice | None = None,
+        gate_definitions: Dict[Tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> None:
         self._device = device
-        self._gate_calibrations = GateCalibrations(
-            gate_definitions if gate_definitions is not None else {}
-        )
+        if gate_definitions is not None:
+            self._gate_calibrations = GateCalibrations(gate_definitions)
+        elif device is not None and device.gate_calibrations is not None:
+            self._gate_calibrations = device.gate_calibrations
+        else:
+            self._gate_calibrations = GateCalibrations({})
 
     def build_pulse_sequence(self, circuit: cir.Circuit) -> PulseSequence:
         """
@@ -66,10 +70,12 @@ class CircuitPulseSequenceBuilder:
         for instruction in circuit.instructions:
             gate = instruction.operator
             qubit = instruction.target
-            if isinstance(gate, PulseGate):
+            if isinstance(gate, Gate) and gate.name == "PulseGate":
                 gate_pulse_sequence = gate.pulse_sequence
             elif (
-                gate_pulse_sequence := self._gate_calibrations.pulse_sequences[(gate, qubit)]
+                gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get(
+                    (gate, qubit), None
+                )
             ) is None:
                 raise ValueError(
                     f"No pulse sequence for {gate.name} was provided in the gate"
@@ -80,44 +86,24 @@ class CircuitPulseSequenceBuilder:
             # would be applied to everything
             pulse_sequence += gate_pulse_sequence
 
-        if circuit.result_types:
-            for result_type in circuit.result_types:
-                pragma_str = result_type.to_ir(IRType.OPENQASM)
-                if pragma_str[:8] == "#pragma ":
-                    pulse_sequence._program.pragma(pragma_str[8:])
-                else:
-                    raise ValueError("Result type cannot be used with pulse sequences.")
-        else:
-            for qubit in circuit.qubits:
-                pulse_sequence.capture_v0(self._readout_frame(qubit))
-                # if (
-                #     measure_pulse_sequence := self._gate_calibrations.pulse_sequences[
-                #         ("MEASURE", qubit)
-                #     ]
-                # ) is None:
-                #     raise ValueError(
-                #         "No pulse sequence for the measurement instruction was provided"
-                #         " in the gate calibration set."
-                #     )
-                # pulse_sequence += measure_pulse_sequence
-
         # Result type columns
         (
             additional_result_types,
-            _,
+            target_result_types,
         ) = CircuitPulseSequenceBuilder._categorize_result_types(circuit.result_types)
+
+        for result_type in target_result_types:
+            pragma_str = result_type.to_ir(IRType.OPENQASM)
+            if pragma_str[:8] == "#pragma ":
+                pulse_sequence._program.pragma(pragma_str[8:])
+            else:
+                raise ValueError("Result type cannot be used with pulse sequences.")
 
         # Additional result types line on bottom
         if additional_result_types:
             print(f"\nAdditional result types: {', '.join(additional_result_types)}")
 
         return pulse_sequence
-
-    def _readout_frame(self, qubit: QubitSet):
-        if self._device.name == "Aspen-M-3":
-            return self._device.frames[f"q{int(qubit)}_ro_rx_frame"]
-        elif self._device.name == "Lucy":
-            return self._device.frames[f"r{int(qubit)}_measure"]
 
     @staticmethod
     def _categorize_result_types(
