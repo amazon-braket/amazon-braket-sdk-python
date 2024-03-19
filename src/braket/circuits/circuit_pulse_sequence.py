@@ -98,12 +98,20 @@ class CircuitPulseSequenceBuilder:
                 pulse_sequence._program.pragma(pragma_str[8:])
             else:
                 raise ValueError("Result type cannot be used with pulse sequences.")
+        for qubit in circuit.qubits:
+            pulse_sequence.capture_v0(self._readout_frame(qubit))
 
         # Additional result types line on bottom
         if additional_result_types:
             print(f"\nAdditional result types: {', '.join(additional_result_types)}")
 
         return pulse_sequence
+
+    def _readout_frame(self, qubit: QubitSet) -> Frame:
+        if self._device.name == "Aspen-M-3":
+            return self._device.frames[f"q{int(qubit)}_ro_rx_frame"]
+        elif self._device.name == "Lucy":
+            return self._device.frames[f"r{int(qubit)}_measure"]
 
     @staticmethod
     def _categorize_result_types(
