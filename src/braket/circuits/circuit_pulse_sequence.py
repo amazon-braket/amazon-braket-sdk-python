@@ -116,14 +116,14 @@ class CircuitPulseSequenceBuilder:
         )
 
     def _find_parametric_gate_calibration(
-        self, gate: Gate, qubitset: QubitSet, number_assignment_values: int
+        self, gate: Gate, qubitset: QubitSet, number_assigned_values: int
     ) -> PulseSequence | None:
         for key in self._gate_calibrations.pulse_sequences:
             if (
                 key[0].name == gate.name
                 and key[1] == qubitset
                 and sum(isinstance(param, FreeParameter) for param in key[0].parameters)
-                == number_assignment_values
+                == number_assigned_values
             ):
                 return self._gate_calibrations.pulse_sequences[key]
 
@@ -154,8 +154,7 @@ class CircuitPulseSequenceBuilder:
                 target_result_types.append(result_type)
             else:
                 warnings.warn(
-                    f"{result_type} does not have have a pulse representation"
-                    " and it is ignored."
+                    f"{result_type} does not have have a pulse representation" " and it is ignored."
                 )
         return target_result_types
 
