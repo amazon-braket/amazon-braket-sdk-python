@@ -99,30 +99,45 @@ class CircuitPulseSequenceBuilder:
         return pulse_sequence
 
     def _get_pulse_sequence(self, gate: Gate, qubit: QubitSet) -> PulseSequence:
-        angle = None
         if isinstance(gate, Gate) and gate.name == "PulseGate":
             gate_pulse_sequence = gate.pulse_sequence
         elif (
             gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get((gate, qubit), None)
         ) is None:
-            if hasattr(gate, "angle"):
-                angle = gate.angle
-                gate._parameters[0] = FreeParameter("theta")
             if (
-                gate_pulse_sequence := self._gate_calibrations.pulse_sequences.get(
-                    (gate, qubit), None
+                not hasattr(gate, "parameters")
+                or (
+                    gate_pulse_sequence := self._find_parametric_gate_calibration(
+                        gate, qubit, len(gate.parameters)
+                    )
                 )
-            ) is None:
+                is None
+            ):
                 raise ValueError(
                     f"No pulse sequence for {gate.name} was provided in the gate"
                     " calibration set."
                 )
-        return gate_pulse_sequence(theta=angle) if angle is not None else gate_pulse_sequence
+
+        return gate_pulse_sequence(
+            **{p.name: v for p, v in zip(gate_pulse_sequence.parameters, gate.parameters)}
+        )
+
+    def _find_parametric_gate_calibration(
+        self, gate: Gate, qubitset: QubitSet, number_assignment_values: int
+    ) -> PulseSequence | None:
+        for key in self._gate_calibrations.pulse_sequences:
+            if (
+                key[0].name == gate.name
+                and key[1] == qubitset
+                and sum(isinstance(param, FreeParameter) for param in key[0].parameters)
+                == number_assignment_values
+            ):
+                return self._gate_calibrations.pulse_sequences[key]
 
     def _readout_frame(self, qubit: QubitSet) -> Frame:
-        if self._device.name == "Aspen-M-3":
+        if self._device.provider_name == "Rigetti":
             return self._device.frames[f"q{int(qubit)}_ro_rx_frame"]
-        elif self._device.name == "Lucy":
+        elif self._device.provider_name == "Oxford":
             return self._device.frames[f"r{int(qubit)}_measure"]
         else:
             raise ValueError(f"Unknown device {self._device.name}")
