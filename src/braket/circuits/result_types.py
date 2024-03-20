@@ -494,10 +494,7 @@ class Expectation(ObservableResultType):
         return f"#pragma braket result expectation {observable_ir}"
 
     def _to_pulse_sequence(self) -> PulseSequence:
-        observable_pulse_sequence = self.observable._to_pulse_sequence(
-            target=self.target,
-        )
-        return observable_pulse_sequence
+        return self.observable._to_pulse_sequence(target=self.target)
 
     @staticmethod
     @circuit.subroutine(register=True)
