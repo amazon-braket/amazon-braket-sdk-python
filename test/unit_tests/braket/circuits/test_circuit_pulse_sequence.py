@@ -694,18 +694,17 @@ def test_readout_with_not_supported_device(device):
 
 
 def test_expectation_value_result_type_on_one_qubit(device):
-    circ = (
-        Circuit()
-        .rx(0, np.pi / 2)
-        .cphaseshift(0, 1, 0.1)
-        .expectation(observable=Observable.X(), target=[0])
-    )
+    circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X(), target=[1])
     expected = "\n".join(
         [
             "OPENQASM 3.0;",
             "cal {",
             "    bit[2] psb;",
-            "   ...;" "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+            "    shift_phase(q0_rf_frame, -0.1);",
+            "    rx(pi/2) $1;",  # FIXME: this need the right basis rotation
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
             "    psb[1] = capture_v0(q1_ro_rx_frame);",
             "}",
         ]
@@ -717,13 +716,18 @@ def test_expectation_value_result_type_on_one_qubit(device):
 
 
 def test_expectation_value_result_type_on_all_qubits(device):
-    circ = Circuit().rx(0, np.pi / 2).cphaseshift(0, 1, 0.1).expectation(observable=Observable.X())
+    circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X())
     expected = "\n".join(
         [
             "OPENQASM 3.0;",
             "cal {",
             "    bit[2] psb;",
-            "   ...;" "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+            "    shift_phase(q0_rf_frame, -0.1);",
+            "    rx(pi/2) $0;",  # FIXME: this need the right basis rotation
+            "    rx(pi/2) $1;",  # FIXME: this need the right basis rotation
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
             "    psb[1] = capture_v0(q1_ro_rx_frame);",
             "}",
         ]
