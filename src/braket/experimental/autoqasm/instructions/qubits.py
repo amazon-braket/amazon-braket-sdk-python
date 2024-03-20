@@ -48,7 +48,8 @@ def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> oqpy.Qubit:
     return oqpy.Qubit(f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]", needs_declaration=False)
 
 
-global_qubit_register = oqpy.Qubit(constants.QUBIT_REGISTER, needs_declaration=False)
+def global_qubit_register() -> oqpy.Qubit:
+    return program.get_program_conversion_context().global_qubit_register
 
 
 @singledispatch
