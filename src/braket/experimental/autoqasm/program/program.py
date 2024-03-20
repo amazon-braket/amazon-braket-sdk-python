@@ -35,7 +35,11 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
-from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
+from braket.experimental.autoqasm.instructions.qubits import (
+    _get_physical_qubit_indices,
+    _qubit,
+    global_qubit_register,
+)
 from braket.experimental.autoqasm.program.serialization_properties import (
     OpenQASMSerializationProperties,
     SerializationProperties,
@@ -367,6 +371,16 @@ class ProgramConversionContext:
         Returns None if the user did not specify how many qubits are in the program.
         """
         return self.user_config.num_qubits
+
+    def declare_global_qubit_register(self, size: int) -> None:
+        """Declare the global qubit register for the program.
+
+        Args:
+            size (int): The size of the global qubit register to declare.
+        """
+        root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
+        global_qubit_register.size = size
+        root_oqpy_program.declare(global_qubit_register, to_beginning=True)
 
     def register_gate(self, gate_name: str) -> None:
         """Register a gate that is used in this program.

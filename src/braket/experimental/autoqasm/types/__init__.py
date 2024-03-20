@@ -24,7 +24,6 @@ from .types import (  # noqa: F401
     IntVar,
     QubitIdentifierType,
     Range,
-    global_qubit_register,
     is_qasm_type,
     is_qubit_identifier_type,
     make_annotations_list,

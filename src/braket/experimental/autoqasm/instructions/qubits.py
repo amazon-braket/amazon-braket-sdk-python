@@ -48,6 +48,9 @@ def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> oqpy.Qubit:
     return oqpy.Qubit(f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]", needs_declaration=False)
 
 
+global_qubit_register = oqpy.Qubit(constants.QUBIT_REGISTER, needs_declaration=False)
+
+
 @singledispatch
 def _qubit(qid: Any) -> oqpy.Qubit:
     """Maps a given qubit representation to an oqpy qubit.

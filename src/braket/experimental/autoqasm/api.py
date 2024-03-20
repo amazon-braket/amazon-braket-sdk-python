@@ -290,11 +290,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
         )
 
     # Declare the global qubit register
-    root_oqpy_program = program_conversion_context.get_oqpy_program(
-        scope=aq_program.ProgramScope.MAIN
-    )
-    aq_types.global_qubit_register.size = num_qubits
-    root_oqpy_program.declare(aq_types.global_qubit_register, to_beginning=True)
+    program_conversion_context.declare_global_qubit_register(num_qubits)
 
 
 def _convert_subroutine(

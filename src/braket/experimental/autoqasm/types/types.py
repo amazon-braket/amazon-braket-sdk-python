@@ -23,7 +23,7 @@ import oqpy.base
 from openpulse import ast
 
 from braket.circuits import FreeParameterExpression
-from braket.experimental.autoqasm import constants, errors, program
+from braket.experimental.autoqasm import errors, program
 from braket.registers import Qubit
 
 
@@ -53,9 +53,6 @@ def is_qasm_type(val: Any) -> bool:
 
 def make_annotations_list(annotations: Optional[str | Iterable[str]]) -> List[str]:
     return [annotations] if isinstance(annotations, str) else annotations or []
-
-
-global_qubit_register = oqpy.Qubit(constants.QUBIT_REGISTER, needs_declaration=False)
 
 
 QubitIdentifierType = Union[
