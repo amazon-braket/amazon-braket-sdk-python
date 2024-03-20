@@ -1280,13 +1280,12 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            if self._measure_targets != []:
-                bit_count = (
-                    len(self._measure_targets)
-                    if self._measure_targets is not None
-                    else self.qubit_count
-                )
-                ir_instructions.append(f"bit[{bit_count}] b;")
+            bit_count = (
+                len(self._measure_targets)
+                if self._measure_targets is not None
+                else self.qubit_count
+            )
+            ir_instructions.append(f"bit[{bit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
