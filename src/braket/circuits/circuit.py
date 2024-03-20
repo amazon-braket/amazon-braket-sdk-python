@@ -1,4 +1,4 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# C/pyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -72,10 +72,9 @@ AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
 def _flatten(other: Any) -> Any:
     if isinstance(other, Iterable) and not isinstance(other, str):
-        for item in other:
-            yield from _flatten(item)
+        return [a for i in other for a in _flatten(i)]
     else:
-        yield other
+        return [other]
 
 
 class Circuit:
@@ -413,8 +412,7 @@ class Circuit:
     def _add_to_qubit_observable_set(self, result_type: ResultType) -> None:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
-            for qubit in _flatten(self._qubit_observable_set):
-                self._qubits.add(qubit)
+            self._qubits.update(_flatten(result_type.target))
 
     def add_instruction(
         self,
