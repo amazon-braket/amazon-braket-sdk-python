@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from braket.aws.aws_device import AwsDevice
 
 import braket.circuits.circuit as cir
@@ -36,8 +36,7 @@ class CircuitPulseSequenceBuilder:
         device: AwsDevice,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> None:
-        assert device is not None, "Device must be set before building pulse sequences."
-
+        _validate_device(device)
         gate_definitions = gate_definitions or {}
 
         self._device = device
@@ -67,23 +66,20 @@ class CircuitPulseSequenceBuilder:
         if circuit.parameters:
             raise ValueError("All parameters must be assigned to draw the pulse sequence.")
 
-        # circuit needs to be verbatim
-        # if circuit not verbatim
-        #     raise ValueError("Circuit must be encapsulated in a verbatim box.")
-
         for instruction in circuit.instructions:
             gate = instruction.operator
             qubits = instruction.target
 
             gate_pulse_sequence = self._get_pulse_sequence(gate, qubits)
 
-            # FIXME: this creates a single cal block, we should have defcals because barrier;
-            # would be applied to everything
+            # FIXME: this creates a single cal block, "barrier;" in defcal could be either
+            # global or restricted to the defcal context
+            # Right they are global
             pulse_sequence += gate_pulse_sequence
 
         # Result type columns
         (
-            additional_result_types,
+            _,
             target_result_types,
         ) = CircuitPulseSequenceBuilder._categorize_result_types(circuit.result_types)
 
@@ -92,13 +88,10 @@ class CircuitPulseSequenceBuilder:
         for qubit in circuit.qubits:
             pulse_sequence.capture_v0(self._readout_frame(qubit))
 
-        # Additional result types line on bottom
-        if additional_result_types:
-            print(f"\nAdditional result types: {', '.join(additional_result_types)}")
-
         return pulse_sequence
 
     def _get_pulse_sequence(self, gate: Gate, qubit: QubitSet) -> PulseSequence:
+        parameters = gate.parameters if hasattr(gate, "parameters") else []
         if isinstance(gate, Gate) and gate.name == "PulseGate":
             gate_pulse_sequence = gate.pulse_sequence
         elif (
@@ -119,7 +112,7 @@ class CircuitPulseSequenceBuilder:
                 )
 
         return gate_pulse_sequence(
-            **{p.name: v for p, v in zip(gate_pulse_sequence.parameters, gate.parameters)}
+            **{p.name: v for p, v in zip(gate_pulse_sequence.parameters, parameters)}
         )
 
     def _find_parametric_gate_calibration(
@@ -135,12 +128,12 @@ class CircuitPulseSequenceBuilder:
                 return self._gate_calibrations.pulse_sequences[key]
 
     def _readout_frame(self, qubit: QubitSet) -> Frame:
-        if self._device.provider_name == "Rigetti":
-            return self._device.frames[f"q{int(qubit)}_ro_rx_frame"]
-        elif self._device.provider_name == "Oxford":
-            return self._device.frames[f"r{int(qubit)}_measure"]
-        else:
-            raise ValueError(f"Unknown device {self._device.name}")
+        readout_frame_names = {
+            "Rigetti": f"q{int(qubit)}_ro_rx_frame",
+            "Oxford": f"r{int(qubit)}_measure",
+        }
+        frame_name = readout_frame_names[self._device.provider_name]
+        return self._device.frames[frame_name]
 
     @staticmethod
     def _categorize_result_types(
@@ -165,3 +158,10 @@ class CircuitPulseSequenceBuilder:
             else:
                 additional_result_types.extend(result_type.ascii_symbols)
         return additional_result_types, target_result_types
+
+
+def _validate_device(device: AwsDevice | None) -> None:
+    if device is None:
+        raise ValueError("Device must be set before building pulse sequences.")
+    elif device.provider_name not in ("Rigetti", "Oxford"):
+        raise ValueError(f"Device {device.name} is not supported.")

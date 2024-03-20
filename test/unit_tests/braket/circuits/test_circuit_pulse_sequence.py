@@ -19,14 +19,21 @@ import numpy as np
 import pytest
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit, Gate, QubitSet
+from braket.circuits import Circuit, Gate, Observable, QubitSet
 from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.device_schema.ionq import IonqDeviceCapabilities
+from braket.device_schema.oqc import OqcDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
+from braket.parametric.free_parameter import FreeParameter
+from braket.pulse.frame import Frame
+from braket.pulse.port import Port
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.pulse.waveforms import DragGaussianWaveform
 
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-M-3"
+OQC_ARN = "arn:aws:braket:::device/qpu/oqc/Lucy"
+IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/Harmony"
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -118,8 +125,40 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
 
+MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.pulse.pulse_device_action_properties",
+        "version": "1",
+    },
+    "supportedQhpTemplateWaveforms": {},
+    "supportedFunctions": {},
+    "ports": {
+        "channel_14": {
+            "portId": "channel_14",
+            "direction": "rx",
+            "portType": "port_type_1",
+            "dt": 5e-10,
+            "qubitMappings": [1],
+            "centerFrequencies": None,
+            "qhpSpecificProperties": None,
+        }
+    },
+    "frames": {
+        "r1_measure": {
+            "frameId": "r1_measure",
+            "portId": "channel_14",
+            "frequency": 9624889855.38831,
+            "centerFrequency": 9000000000.0,
+            "phase": 0.0,
+            "associatedGate": None,
+            "qubitMappings": [1],
+            "qhpSpecificProperties": None,
+        }
+    },
+}
 
-def get_pulse_model(capabilities_json):
+
+def get_rigetti_pulse_model(capabilities_json):
     device_json = {
         "braketSchemaHeader": {
             "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
@@ -181,6 +220,87 @@ def get_pulse_model(capabilities_json):
         "deviceName": "Aspen-M-3",
         "deviceType": "QPU",
         "providerName": "Rigetti",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": device_obj.json(),
+    }
+
+
+def get_oqc_pulse_model(capabilities_json):
+    device_json = {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.oqc.oqc_device_capabilities",
+            "version": "1",
+        },
+        "service": {
+            "executionWindows": [
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
+            ],
+            "shotsRange": [1, 10],
+        },
+        "action": {
+            "braket.ir.jaqcd.program": {
+                "actionType": "braket.ir.jaqcd.program",
+                "version": ["1"],
+                "supportedOperations": ["H"],
+            }
+        },
+        "paradigm": {
+            "qubitCount": 30,
+            "nativeGateSet": ["ccnot", "cy"],
+            "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
+        },
+        "deviceParameters": {},
+        "pulse": capabilities_json,
+    }
+    device_obj = OqcDeviceCapabilities.parse_obj(device_json)
+    return {
+        "deviceName": "Lucy",
+        "deviceType": "QPU",
+        "providerName": "Oxford",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": device_obj.json(),
+    }
+
+
+def get_ionq_model():
+    device_json = {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.ionq.ionq_device_capabilities",
+            "version": "1",
+        },
+        "service": {
+            "executionWindows": [
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
+            ],
+            "shotsRange": [1, 10],
+        },
+        "action": {
+            "braket.ir.jaqcd.program": {
+                "actionType": "braket.ir.jaqcd.program",
+                "version": ["1"],
+                "supportedOperations": ["H"],
+            }
+        },
+        "paradigm": {
+            "qubitCount": 30,
+            "nativeGateSet": ["ccnot", "cy"],
+            "connectivity": {"fullyConnected": True, "connectivityGraph": {"1": ["2", "3"]}},
+        },
+        "deviceParameters": {},
+    }
+    device_obj = IonqDeviceCapabilities.parse_obj(device_json)
+    return {
+        "deviceName": "IonqDevice",
+        "deviceType": "QPU",
+        "providerName": "IonQ",
         "deviceStatus": "OFFLINE",
         "deviceCapabilities": device_obj.json(),
     }
@@ -371,10 +491,46 @@ def device():
     with patch("urllib.request.urlopen") as mock_url_request:
         mock_url_request.return_value.__enter__.return_value = response_data_stream
         mock_session = Mock()
-        mock_session.get_device.return_value = get_pulse_model(
+        mock_session.get_device.return_value = get_rigetti_pulse_model(
             MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
         )
         yield AwsDevice(RIGETTI_ARN, mock_session)
+
+
+@pytest.fixture
+def OQC_device():
+    response_data_content = {"gates": {}, "waveforms": {}}
+    response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
+    with patch("urllib.request.urlopen") as mock_url_request:
+        mock_url_request.return_value.__enter__.return_value = response_data_stream
+        mock_session = Mock()
+        mock_session.get_device.return_value = get_oqc_pulse_model(
+            MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2
+        )
+        yield AwsDevice(OQC_ARN, mock_session)
+
+
+@pytest.fixture
+def not_supported_device():
+    response_data_content = {"gates": {}, "waveforms": {}}
+    response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
+    with patch("urllib.request.urlopen") as mock_url_request:
+        mock_url_request.return_value.__enter__.return_value = response_data_stream
+        mock_session = Mock()
+        mock_session.get_device.return_value = get_ionq_model()
+        yield AwsDevice(IONQ_ARN, mock_session)
+
+
+@pytest.fixture
+def port():
+    return Port(port_id="device_port_x0", dt=1e-9, properties={})
+
+
+@pytest.fixture
+def predefined_frame_1(port):
+    return Frame(
+        frame_id="predefined_frame_1", frequency=2e9, port=port, phase=0, is_predefined=True
+    )
 
 
 @pytest.fixture
@@ -393,8 +549,8 @@ def pulse_sequence(predefined_frame_1):
 
 
 @pytest.fixture()
-def user_defined_gate_calibrations():
-    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+def user_defined_gate_calibrations(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([1]))
     return GateCalibrations(
         {
             calibration_key: pulse_sequence,
@@ -407,8 +563,21 @@ def test_empty_circuit(device):
 
 
 def test_no_device():
-    with pytest.raises(AssertionError, match="Device must be set before building pulse sequences."):
+    with pytest.raises(ValueError, match="Device must be set before building pulse sequences."):
         CircuitPulseSequenceBuilder(None)
+
+
+def test_not_supported_device(not_supported_device):
+    with pytest.raises(ValueError, match=f"Device {not_supported_device.name} is not supported."):
+        CircuitPulseSequenceBuilder(not_supported_device)
+
+
+def test_unbound_circuit(device):
+    circuit = Circuit().rz(0, FreeParameter("theta"))
+    with pytest.raises(
+        ValueError, match="All parameters must be assigned to draw the pulse sequence."
+    ):
+        circuit.pulse_sequence(device)
 
 
 def test_non_parametric_defcal(device):
@@ -432,6 +601,46 @@ def test_non_parametric_defcal(device):
     assert circ.pulse_sequence(device).to_ir() == expected
 
 
+def test_user_defined_gate_calibrations_extension(device, user_defined_gate_calibrations):
+    circ = Circuit().z(1)
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[1] psb;",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    set_frequency(predefined_frame_1, 6000000.0);",
+            "    play(predefined_frame_1, drag_gauss_wf);",
+            "    psb[0] = capture_v0(q1_ro_rx_frame);",
+            "}",
+        ]
+    )
+    assert (
+        circ.pulse_sequence(device, user_defined_gate_calibrations.pulse_sequences).to_ir()
+        == expected
+    )
+
+
+def test_with_oxford_device(OQC_device, user_defined_gate_calibrations):
+    circ = Circuit().z(1)
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[1] psb;",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    set_frequency(predefined_frame_1, 6000000.0);",
+            "    play(predefined_frame_1, drag_gauss_wf);",
+            "    psb[0] = capture_v0(r1_measure);",
+            "}",
+        ]
+    )
+    assert (
+        circ.pulse_sequence(OQC_device, user_defined_gate_calibrations.pulse_sequences).to_ir()
+        == expected
+    )
+
+
 def test_parametric_defcal(device):
     circ = Circuit().cphaseshift(0, 1, 0.1)
     expected = "\n".join(
@@ -448,4 +657,99 @@ def test_parametric_defcal(device):
         ]
     )
 
+    assert circ.pulse_sequence(device).to_ir() == expected
+
+
+def test_pulse_gate(device):
+    pulse_sequence = PulseSequence().set_frequency(device.frames["q0_rf_frame"], 1e6)
+    circ = Circuit().pulse_gate(0, pulse_sequence)
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[1] psb;",
+            "    set_frequency(q0_rf_frame, 1000000.0);",
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "}",
+        ]
+    )
+
+    assert circ.pulse_sequence(device).to_ir() == expected
+
+
+def test_missing_calibration(device):
+    circuit = Circuit().rz(1, 0.1)
+    with pytest.raises(
+        ValueError, match="No pulse sequence for Rz was provided in the gate calibration set."
+    ):
+        circuit.pulse_sequence(device)
+
+
+def test_readout_with_not_supported_device(device):
+    circuit = Circuit().rz(1, 0.1)
+    with pytest.raises(
+        ValueError, match="No pulse sequence for Rz was provided in the gate calibration set."
+    ):
+        circuit.pulse_sequence(device)
+
+
+def test_expectation_value_result_type_on_one_qubit(device):
+    circ = (
+        Circuit()
+        .rx(0, np.pi / 2)
+        .cphaseshift(0, 1, 0.1)
+        .expectation(observable=Observable.X(), target=[0])
+    )
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            "   ...;" "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "    psb[1] = capture_v0(q1_ro_rx_frame);",
+            "}",
+        ]
+    )
+    with pytest.raises(
+        NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
+    ):
+        assert circ.pulse_sequence(device).to_ir() == expected
+
+
+def test_expectation_value_result_type_on_all_qubits(device):
+    circ = Circuit().rx(0, np.pi / 2).cphaseshift(0, 1, 0.1).expectation(observable=Observable.X())
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            "   ...;" "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "    psb[1] = capture_v0(q1_ro_rx_frame);",
+            "}",
+        ]
+    )
+    with pytest.raises(
+        NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
+    ):
+        assert circ.pulse_sequence(device).to_ir() == expected
+
+
+def test_no_target_result_type(device):
+    circ = Circuit().rx(0, np.pi / 2).state_vector()
+    expected = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[1] psb;",
+            "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
+            "7.494904522022295e-10, -0.4549282253548838, false);",
+            "    barrier $0;",
+            "    shift_frequency(q0_rf_frame, -321047.14178613486);",
+            "    play(q0_rf_frame, wf_drag_gaussian_1);",
+            "    shift_frequency(q0_rf_frame, 321047.14178613486);",
+            "    barrier $0;",
+            "    psb[0] = capture_v0(q0_ro_rx_frame);",
+            "}",
+        ]
+    )
     assert circ.pulse_sequence(device).to_ir() == expected
