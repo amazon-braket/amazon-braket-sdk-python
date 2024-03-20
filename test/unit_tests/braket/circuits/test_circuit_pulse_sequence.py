@@ -748,4 +748,8 @@ def test_no_target_result_type(device):
             "}",
         ]
     )
-    assert circ.pulse_sequence(device).to_ir() == expected
+    with pytest.warns(
+        UserWarning,
+        match=r"StateVector\(\) does not have have a pulse representation and it is ignored.",
+    ):
+        assert circ.pulse_sequence(device).to_ir() == expected

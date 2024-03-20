@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -29,7 +30,7 @@ from braket.pulse.pulse_sequence import PulseSequence
 
 
 class CircuitPulseSequenceBuilder:
-    """Builds ASCII string circuit diagrams."""
+    """Builds a pulse sequence from circuits."""
 
     def __init__(
         self,
@@ -78,13 +79,13 @@ class CircuitPulseSequenceBuilder:
             pulse_sequence += gate_pulse_sequence
 
         # Result type columns
-        (
-            _,
-            target_result_types,
-        ) = CircuitPulseSequenceBuilder._categorize_result_types(circuit.result_types)
+        target_result_types = CircuitPulseSequenceBuilder._categorize_result_types(
+            circuit.result_types
+        )
 
         for result_type in target_result_types:
             pulse_sequence += result_type._to_pulse_sequence()
+
         for qubit in circuit.qubits:
             pulse_sequence.capture_v0(self._readout_frame(qubit))
 
@@ -138,7 +139,7 @@ class CircuitPulseSequenceBuilder:
     @staticmethod
     def _categorize_result_types(
         result_types: list[ResultType],
-    ) -> tuple[list[str], list[ResultType]]:
+    ) -> list[ResultType]:
         """
         Categorize result types into result types with target and those without.
 
@@ -146,18 +147,18 @@ class CircuitPulseSequenceBuilder:
             result_types (list[ResultType]): list of result types
 
         Returns:
-            tuple[list[str], list[ResultType]]: first element is a list of result types
-            without `target` attribute; second element is a list of result types with
-            `target` attribute
+            list[ResultType]: a list of result types with `target` attribute
         """
-        additional_result_types = []
         target_result_types = []
         for result_type in result_types:
             if hasattr(result_type, "target"):
                 target_result_types.append(result_type)
             else:
-                additional_result_types.extend(result_type.ascii_symbols)
-        return additional_result_types, target_result_types
+                warnings.warn(
+                    f"{result_type} does not have have a pulse representation"
+                    " and it is ignored."
+                )
+        return target_result_types
 
 
 def _validate_device(device: AwsDevice | None) -> None:
