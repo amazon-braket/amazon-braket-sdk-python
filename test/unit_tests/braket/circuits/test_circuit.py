@@ -633,25 +633,9 @@ def test_measure_empty_circuit():
 
 
 def test_measure_no_target():
-    circ = Circuit().h(0).cnot(0, 1).measure()
-    expected = (
-        Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-    )
-    expected_ir = OpenQasmProgram(
-        source="\n".join(
-            [
-                "OPENQASM 3.0;",
-                "qubit[2] q;",
-                "h q[0];",
-                "cnot q[0], q[1];",
-            ]
-        ),
-        inputs={},
-    )
-    assert circ == expected
-    assert circ.to_ir("OPENQASM") == expected_ir
+    message = "Measure must include one or more target qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure()
 
 
 def test_measure_gate_after():

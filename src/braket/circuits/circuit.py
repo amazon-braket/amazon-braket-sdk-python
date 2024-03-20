@@ -689,7 +689,7 @@ class Circuit:
                 )
             self._measure_targets = target_qubits
         else:
-            self._measure_targets = []
+            raise ValueError("Measure must include one or more target qubits.")
         return self
 
     def apply_gate_noise(
