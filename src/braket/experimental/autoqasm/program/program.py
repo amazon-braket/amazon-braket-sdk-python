@@ -317,6 +317,7 @@ class ProgramConversionContext:
     def __init__(self, user_config: Optional[UserConfig] = None):
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
+        global_qubit_register.size = self.user_config.num_qubits or 0
         self.return_variable = None
         self.in_verbatim_block = False
         self.at_function_root_scope = True  # whether we are at the root scope of main or subroutine

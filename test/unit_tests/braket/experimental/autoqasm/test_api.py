@@ -1156,6 +1156,5 @@ def test_global_qubit_register_loop():
 qubit[5] __qubits__;
 for int q in [0:5 - 1] {
     h __qubits__[q];
-}
-"""
+}"""
     assert main.build().to_ir() == expected_ir
