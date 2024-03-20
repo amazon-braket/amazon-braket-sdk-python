@@ -300,6 +300,9 @@ class Circuit:
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
+        if self._measure_targets:
+            raise ValueError("Cannot add a result type with a measure instruction.")
+
         if not target_mapping and not target:
             # Nothing has been supplied, add result_type
             result_type_to_add = result_type
@@ -637,6 +640,9 @@ class Circuit:
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
 
+        if verbatim_circuit._measure_targets:
+            raise ValueError("Verbatim subcircuit is not measured.")
+
         if verbatim_circuit.instructions:
             self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
             for instruction in verbatim_circuit.instructions:
@@ -678,6 +684,14 @@ class Circuit:
         # Check that the target qubits are on the circuit
         if not all(qubit in self.qubits for qubit in target_qubits):
             raise IndexError("Target qubits must be within the range of the current circuit.")
+
+        # Check if result types are added on the circuit
+        if self.result_types:
+            raise ValueError("Cannot perform a measure instruction with a result type.")
+
+        # Check if there is more than one measure instruction
+        if any(isinstance(instruction.operator, Measure) for instruction in self.instructions):
+            raise ValueError("Cannot perform more than one measure instruction.")
 
         if target_qubits:
             for idx, target in enumerate(target_qubits):

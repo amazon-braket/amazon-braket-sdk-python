@@ -622,6 +622,42 @@ def test_measure_with_noise():
     assert circ == expected
 
 
+def test_measure_verbatim_box():
+    circ = Circuit().add_verbatim_box(Circuit().x(0).x(1)).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[2] q;",
+                "#pragma braket verbatim",
+                "box{",
+                "x q[0];",
+                "x q[1];",
+                "}",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={},
+    )
+    assert circ == expected
+    assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_measure_in_verbatim_subcircuit():
+    message = "Verbatim subcircuit is not measured."
+    with pytest.raises(ValueError, match=message):
+        Circuit().add_verbatim_box(Circuit().x(0).x(1).measure(0))
+
+
 def test_measure_qubits_out_of_range():
     with pytest.raises(IndexError):
         Circuit().h(0).cnot(0, 1).measure([4])
@@ -636,6 +672,24 @@ def test_measure_no_target():
     message = "Measure must include one or more target qubits."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure()
+
+
+def test_measure_with_result_types():
+    message = "Cannot perform a measure instruction with a result type."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).sample(observable=Observable.Z(), target=0).measure(0)
+
+
+def test_result_type_with_measure():
+    message = "Cannot add a result type with a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).measure(0).sample(observable=Observable.Z(), target=0)
+
+
+def test_measure_with_multiple_measures():
+    message = "Cannot perform more than one measure instruction."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(0).h(2).measure(1)
 
 
 def test_measure_gate_after():
