@@ -34,7 +34,7 @@ class StitchBoundaryCondition(str, Enum):
 
 class TimeSeries:
     def __init__(self):
-        self._series = {} # As of Python 3.7, dicts are ordered
+        self._series = {}  # As of Python 3.7, dicts are ordered
         self._sorted = True
         self._largest_time = -1
 
