@@ -63,7 +63,6 @@ class CircuitPulseSequenceBuilder:
         if not circuit.instructions:
             return pulse_sequence
 
-        # A list of parameters in the circuit to the currently assigned values.
         if circuit.parameters:
             raise ValueError("All parameters must be assigned to draw the pulse sequence.")
 
