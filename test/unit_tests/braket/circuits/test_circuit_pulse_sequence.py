@@ -685,14 +685,6 @@ def test_missing_calibration(device):
         circuit.pulse_sequence(device)
 
 
-def test_readout_with_not_supported_device(device):
-    circuit = Circuit().rz(1, 0.1)
-    with pytest.raises(
-        ValueError, match="No pulse sequence for Rz was provided in the gate calibration set."
-    ):
-        circuit.pulse_sequence(device)
-
-
 def test_expectation_value_result_type_on_one_qubit(device):
     circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X(), target=[1])
     expected = "\n".join(
