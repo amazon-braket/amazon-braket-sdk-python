@@ -3301,7 +3301,7 @@ class GPi2(AngledGate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2} \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
@@ -3351,7 +3351,7 @@ class GPi2(AngledGate):
     ) -> Iterable[Instruction]:
         r"""IonQ GPi2 gate.
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2}}  \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
