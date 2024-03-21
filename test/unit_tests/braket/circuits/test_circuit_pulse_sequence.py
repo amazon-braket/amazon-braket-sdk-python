@@ -165,52 +165,21 @@ def get_rigetti_pulse_model(capabilities_json):
             "version": "1",
         },
         "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
+            "executionWindows": [],
             "shotsRange": [1, 10],
         },
-        "provider": {
-            "specs": {
-                "1Q": {
-                    "0": {
-                        "fActiveReset": 0.9715,
-                        "fRO": 0.951,
-                        "f1QRB": 0.997339217568556,
-                        "f1QRB_std_err": 0.00006690422818326937,
-                        "f1Q_simultaneous_RB": 0.9949723201166536,
-                        "f1Q_simultaneous_RB_std_err": 0.00021695233492231294,
-                        "T1": 0.000010019627401991471,
-                        "T2": 0.000018156447816365015,
-                    }
-                },
-                "2Q": {
-                    "0-1": {
-                        "fCZ": 0.9586440436264603,
-                        "fCZ_std_err": 0.007025921432645824,
-                        "fCPHASE": 0.9287330972713645,
-                        "fCPHASE_std_err": 0.009709406809550082,
-                        "fXY": 0.9755179214520402,
-                        "fXY_std_err": 0.0060234488782598536,
-                    },
-                },
-            }
-        },
+        "provider": {"specs": {}},
         "action": {
             "braket.ir.jaqcd.program": {
                 "actionType": "braket.ir.jaqcd.program",
                 "version": ["1"],
-                "supportedOperations": ["H"],
+                "supportedOperations": [],
             }
         },
         "paradigm": {
-            "qubitCount": 30,
-            "nativeGateSet": ["ccnot", "cy"],
-            "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
+            "qubitCount": 1,
+            "nativeGateSet": [],
+            "connectivity": {"fullyConnected": False, "connectivityGraph": {}},
         },
         "deviceParameters": {},
         "pulse": capabilities_json,
@@ -232,26 +201,20 @@ def get_oqc_pulse_model(capabilities_json):
             "version": "1",
         },
         "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
+            "executionWindows": [],
             "shotsRange": [1, 10],
         },
         "action": {
             "braket.ir.jaqcd.program": {
                 "actionType": "braket.ir.jaqcd.program",
                 "version": ["1"],
-                "supportedOperations": ["H"],
+                "supportedOperations": [],
             }
         },
         "paradigm": {
             "qubitCount": 30,
-            "nativeGateSet": ["ccnot", "cy"],
-            "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
+            "nativeGateSet": [],
+            "connectivity": {"fullyConnected": False, "connectivityGraph": {}},
         },
         "deviceParameters": {},
         "pulse": capabilities_json,
@@ -273,26 +236,20 @@ def get_ionq_model():
             "version": "1",
         },
         "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
+            "executionWindows": [],
             "shotsRange": [1, 10],
         },
         "action": {
             "braket.ir.jaqcd.program": {
                 "actionType": "braket.ir.jaqcd.program",
                 "version": ["1"],
-                "supportedOperations": ["H"],
+                "supportedOperations": [],
             }
         },
         "paradigm": {
             "qubitCount": 30,
-            "nativeGateSet": ["ccnot", "cy"],
-            "connectivity": {"fullyConnected": True, "connectivityGraph": {"1": ["2", "3"]}},
+            "nativeGateSet": [],
+            "connectivity": {"fullyConnected": True, "connectivityGraph": {}},
         },
         "deviceParameters": {},
     }
@@ -527,22 +484,22 @@ def port():
 
 
 @pytest.fixture
-def predefined_frame_1(port):
+def frame_1(port):
     return Frame(
-        frame_id="predefined_frame_1", frequency=2e9, port=port, phase=0, is_predefined=True
+        frame_id="frame_1", frequency=2e9, port=port, phase=0, is_predefined=False
     )
 
 
 @pytest.fixture
-def pulse_sequence(predefined_frame_1):
+def pulse_sequence(frame_1):
     return (
         PulseSequence()
         .set_frequency(
-            predefined_frame_1,
+            frame_1,
             6e6,
         )
         .play(
-            predefined_frame_1,
+            frame_1,
             DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
         )
     )
@@ -608,9 +565,10 @@ def test_user_defined_gate_calibrations_extension(device, user_defined_gate_cali
             "OPENQASM 3.0;",
             "cal {",
             "    bit[1] psb;",
+            "    frame frame_1 = newframe(device_port_x0, 2000000000.0, 0);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "    play(predefined_frame_1, drag_gauss_wf);",
+            "    set_frequency(frame_1, 6000000.0);",
+            "    play(frame_1, drag_gauss_wf);",
             "    psb[0] = capture_v0(q1_ro_rx_frame);",
             "}",
         ]
@@ -628,9 +586,10 @@ def test_with_oxford_device(OQC_device, user_defined_gate_calibrations):
             "OPENQASM 3.0;",
             "cal {",
             "    bit[1] psb;",
+            "    frame frame_1 = newframe(device_port_x0, 2000000000.0, 0);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "    play(predefined_frame_1, drag_gauss_wf);",
+            "    set_frequency(frame_1, 6000000.0);",
+            "    play(frame_1, drag_gauss_wf);",
             "    psb[0] = capture_v0(r1_measure);",
             "}",
         ]
