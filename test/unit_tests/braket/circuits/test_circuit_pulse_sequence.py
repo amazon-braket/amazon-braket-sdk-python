@@ -485,9 +485,7 @@ def port():
 
 @pytest.fixture
 def frame_1(port):
-    return Frame(
-        frame_id="frame_1", frequency=2e9, port=port, phase=0, is_predefined=False
-    )
+    return Frame(frame_id="frame_1", frequency=2e9, port=port, phase=0, is_predefined=False)
 
 
 @pytest.fixture
