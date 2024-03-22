@@ -29,7 +29,7 @@ def ascii_symbols():
 
 @pytest.fixture
 def measure(ascii_symbols):
-    return Measure(qubit_count=1, ascii_symbols=ascii_symbols, index=0)
+    return Measure(qubit_count=1, ascii_symbols=ascii_symbols)
 
 
 def test_is_operator(measure):
@@ -55,11 +55,6 @@ def test_equality():
     assert measure1 != non_measure
 
 
-def test_name(measure):
-    expected = measure.__class__.__name__
-    assert measure.name == expected
-
-
 def test_str(measure):
     assert str(measure) == measure.name
 
@@ -67,7 +62,12 @@ def test_str(measure):
 @pytest.mark.parametrize(
     "ir_type, serialization_properties, expected_exception, expected_message",
     [
-        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (
+            IRType.JAQCD,
+            None,
+            NotImplementedError,
+            "Measure instructions are not supported with JAQCD.",
+        ),
         ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
     ],
 )
@@ -83,16 +83,16 @@ def test_measure_to_ir(
     "measure, target, serialization_properties, expected_ir",
     [
         (
-            Measure(qubit_count=1, ascii_symbols=["M"], index=0),
+            Measure(),
             [0],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "b[0] = measure q[0];",
         ),
         (
-            Measure(qubit_count=1, ascii_symbols=["M"], index=1),
-            [4],
+            Measure(qubit_count=4, ascii_symbols=["M", "M", "M", "M"]),
+            [1, 4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "b[1] = measure $4;",
+            "b[0] = measure $1;b[1] = measure $4;",
         ),
     ],
 )

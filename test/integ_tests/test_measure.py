@@ -60,7 +60,6 @@ def test_measure_on_supported_devices(arn):
         pytest.skip("Device offline")
     circ = Circuit().h(0).cnot(0, 1).measure([0])
     result = device.run(circ, SHOTS).result()
-    print(result)
     assert len(result.measurements[0]) == 1
     assert result.measured_qubits == [0]
 
@@ -74,7 +73,6 @@ def test_measure_on_supported_devices(arn):
 )
 def test_measure_targets(circuit, expected_measured_qubits):
     result = DEVICE.run(circuit, SHOTS).result()
-    print(result)
     assert result.measured_qubits == expected_measured_qubits
     assert len(result.measurements[0]) == len(expected_measured_qubits)
 

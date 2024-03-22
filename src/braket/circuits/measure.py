@@ -28,9 +28,7 @@ from braket.registers.qubit_set import QubitSet
 class Measure(QuantumOperator):
     """Class `Measure` represents a measure operation on targeted qubits"""
 
-    def __init__(
-        self, qubit_count: Optional[int] = 1, ascii_symbols: Sequence[str] = ["M"], **kwargs
-    ):
+    def __init__(self, qubit_count: Optional[int] = 1, ascii_symbols: Sequence[str] = ["M"]):
         """Inits a `Measure`.
 
         Args:
@@ -44,11 +42,6 @@ class Measure(QuantumOperator):
                 `ascii_symbols` length != `qubit_count`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
-        self._target_index = kwargs.get("index")
-
-    @property
-    def name(self) -> str:
-        return self.__class__.__name__
 
     @property
     def ascii_symbols(self) -> tuple[str, ...]:
@@ -89,7 +82,7 @@ class Measure(QuantumOperator):
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the measure."""
-        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+        raise NotImplementedError("Measure instructions are not supported with JAQCD.")
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
@@ -98,12 +91,12 @@ class Measure(QuantumOperator):
         target_qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
         instructions = ""
         for idx, qubit in enumerate(target_qubits):
-            instructions += f"b[{self._target_index}] = measure {qubit};"
+            instructions += f"b[{idx}] = measure {qubit};"
 
         return instructions
 
     def __eq__(self, other: Measure):
-        return isinstance(other, Measure) and self.name == other.name
+        return isinstance(other, Measure) and self.qubit_count == other.qubit_count
 
     def __repr__(self):
         return self.name

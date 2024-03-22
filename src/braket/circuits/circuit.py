@@ -641,7 +641,7 @@ class Circuit:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
 
         if verbatim_circuit._measure_targets:
-            raise ValueError("Verbatim subcircuit is not measured.")
+            raise ValueError("Cannot measure a subcircuit inside a verbatim box.")
 
         if verbatim_circuit.instructions:
             self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
@@ -651,7 +651,7 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
-    def measure(self, target_qubits: np.ndarray | int = []) -> Circuit:
+    def measure(self, target_qubits: np.ndarray | int = None) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
 
@@ -682,28 +682,39 @@ class Circuit:
             target_qubits = [target_qubits]
 
         # Check that the target qubits are on the circuit
-        if not all(qubit in self.qubits for qubit in target_qubits):
+        if target_qubits and not all(qubit in self.qubits for qubit in target_qubits):
             raise IndexError("Target qubits must be within the range of the current circuit.")
 
         # Check if result types are added on the circuit
         if self.result_types:
-            raise ValueError("Cannot perform a measure instruction with a result type.")
+            raise ValueError("a circuit cannot contain both measure instructions and result types.")
 
         # Check if there is more than one measure instruction
         if any(isinstance(instruction.operator, Measure) for instruction in self.instructions):
             raise ValueError("Cannot perform more than one measure instruction.")
 
         if target_qubits:
-            for idx, target in enumerate(target_qubits):
-                self.add_instruction(
-                    Instruction(
-                        operator=Measure(qubit_count=1, ascii_symbols=["M"], index=idx),
-                        target=target,
-                    )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(
+                        qubit_count=len(target_qubits), ascii_symbols=["M"] * len(target_qubits)
+                    ),
+                    target=target_qubits,
                 )
+            )
             self._measure_targets = target_qubits
         else:
-            raise ValueError("Measure must include one or more target qubits.")
+            # Measure all the qubits
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(
+                        qubit_count=self.qubit_count, ascii_symbols=["M"] * self.qubit_count
+                    ),
+                    target=self.qubits,
+                )
+            )
+            self._measure_targets = self.qubits
+
         return self
 
     def apply_gate_noise(

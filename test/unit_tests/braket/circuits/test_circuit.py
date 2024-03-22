@@ -602,9 +602,9 @@ def test_measure_multiple_targets():
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_instruction(Instruction(Gate.CNot(), [1, 2]))
         .add_instruction(Instruction(Gate.CNot(), [2, 3]))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Measure(), 3))
+        .add_instruction(
+            Instruction(Measure(qubit_count=3, ascii_symbols=["M", "M", "M"]), [0, 1, 3])
+        )
     )
     assert circ == expected
     assert circ._measure_targets == [0, 1, 3]
@@ -653,7 +653,7 @@ def test_measure_verbatim_box():
 
 
 def test_measure_in_verbatim_subcircuit():
-    message = "Verbatim subcircuit is not measured."
+    message = "Cannot measure a subcircuit inside a verbatim box."
     with pytest.raises(ValueError, match=message):
         Circuit().add_verbatim_box(Circuit().x(0).x(1).measure(0))
 
@@ -669,13 +669,18 @@ def test_measure_empty_circuit():
 
 
 def test_measure_no_target():
-    message = "Measure must include one or more target qubits."
-    with pytest.raises(ValueError, match=message):
-        Circuit().h(0).cnot(0, 1).measure()
+    circ = Circuit().h(0).cnot(0, 1).measure()
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(qubit_count=2, ascii_symbols=["M", "M"]), [0, 1]))
+    )
+    assert circ == expected
 
 
 def test_measure_with_result_types():
-    message = "Cannot perform a measure instruction with a result type."
+    message = "a circuit cannot contain both measure instructions and result types."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).sample(observable=Observable.Z(), target=0).measure(0)
 
