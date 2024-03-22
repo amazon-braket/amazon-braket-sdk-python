@@ -652,7 +652,7 @@ def test_expectation_value_result_type_on_one_qubit(device):
             "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
             "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
             "    shift_phase(q0_rf_frame, -0.1);",
-            "    rx(pi/2) $1;",  # FIXME: this need the right basis rotation
+            "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
             "    psb[0] = capture_v0(q0_ro_rx_frame);",
             "    psb[1] = capture_v0(q1_ro_rx_frame);",
             "}",
@@ -674,8 +674,8 @@ def test_expectation_value_result_type_on_all_qubits(device):
             "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
             "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
             "    shift_phase(q0_rf_frame, -0.1);",
-            "    rx(pi/2) $0;",  # FIXME: this need the right basis rotation
-            "    rx(pi/2) $1;",  # FIXME: this need the right basis rotation
+            "    rx(pi/2) $0;",  # FIXME: this needs the right basis rotation
+            "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
             "    psb[0] = capture_v0(q0_ro_rx_frame);",
             "    psb[1] = capture_v0(q1_ro_rx_frame);",
             "}",
