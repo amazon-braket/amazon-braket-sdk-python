@@ -106,9 +106,11 @@ class CircuitPulseSequenceBuilder:
                 )
                 is None
             ):
+                parameter_str = ", ".join(str(p) for p in parameters)
+                qubit_str = ", ".join(str(int(q)) for q in qubit)
                 raise ValueError(
-                    f"No pulse sequence for {gate.name} was provided in the gate"
-                    " calibration set."
+                    f"No pulse sequence for {gate.name}({parameter_str}) on qubit {qubit_str} was"
+                    " provided in the gate calibration set."
                 )
 
         return gate_pulse_sequence(

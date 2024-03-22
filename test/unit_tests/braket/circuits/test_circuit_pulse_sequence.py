@@ -637,7 +637,9 @@ def test_pulse_gate(device):
 def test_missing_calibration(device):
     circuit = Circuit().rz(1, 0.1)
     with pytest.raises(
-        ValueError, match="No pulse sequence for Rz was provided in the gate calibration set."
+        ValueError,
+        match=r"No pulse sequence for Rz\(0.1\) on qubit 1 was provided"
+        " in the gate calibration set.",
     ):
         circuit.pulse_sequence(device)
 
