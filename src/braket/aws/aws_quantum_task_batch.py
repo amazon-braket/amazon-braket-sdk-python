@@ -201,7 +201,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                     batch_length = arg_length
 
         for i, arg_length in enumerate(arg_lengths):
-            if arg_length == 1:
+            if isinstance(args[i], (dict, single_task_type)):
                 args[i] = repeat(args[i], batch_length)
 
         tasks_inputs_definitions = list(zip(*args))
