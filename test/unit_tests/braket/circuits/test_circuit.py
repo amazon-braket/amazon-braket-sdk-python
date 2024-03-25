@@ -692,52 +692,62 @@ def test_result_type_with_measure():
 
 
 def test_measure_with_multiple_measures():
-    message = "Cannot perform more than one measure instruction."
-    with pytest.raises(ValueError, match=message):
-        Circuit().h(0).cnot(0, 1).measure(0).h(2).measure(1)
-
-
-def test_measure_gate_after():
-    circ = Circuit().h(0).measure(0).h(1)
+    circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1]).measure(2)
     expected = (
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Gate.H(), 1))
-    )
-    expected_ir = OpenQasmProgram(
-        source="\n".join(
-            [
-                "OPENQASM 3.0;",
-                "bit[1] b;",
-                "qubit[2] q;",
-                "h q[0];",
-                "b[0] = measure q[0];",
-                "h q[1];",
-            ]
-        ),
-        inputs={},
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.H(), 2))
+        .add_instruction(Instruction(Measure(qubit_count=2, ascii_symbols=["M", "M"]), [0, 1]))
+        .add_instruction(Instruction(Measure(), 2))
     )
     assert circ == expected
-    assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_measure_gate_after():
+    message = "Cannot add a gate or noise after a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).measure(0).h(1)
 
 
 def test_to_ir_with_measure():
-    circ = Circuit().h(0).cnot(0, 1).measure(0)
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 2])
     expected_ir = OpenQasmProgram(
         source="\n".join(
             [
                 "OPENQASM 3.0;",
-                "bit[1] b;",
-                "qubit[2] q;",
+                "bit[2] b;",
+                "qubit[3] q;",
                 "h q[0];",
                 "cnot q[0], q[1];",
+                "cnot q[1], q[2];",
                 "b[0] = measure q[0];",
+                "b[1] = measure q[2];",
             ]
         ),
         inputs={},
     )
     assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_from_ir_with_measure():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[3] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "cnot q[1], q[2];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[2];",
+            ]
+        ),
+        inputs={},
+    )
+    expected_circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).measure(2)
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
 
 
 def test_add_with_instruction_with_default(cnot_instr):
@@ -1438,7 +1448,7 @@ def test_circuit_user_gate(pulse_sequence_2):
     "expected_circuit, ir",
     [
         (
-            Circuit().h(0, control=1, control_state=0),
+            Circuit().h(0, control=1, control_state=0).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1454,7 +1464,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cnot(target=0, control=1),
+            Circuit().cnot(target=0, control=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1470,7 +1480,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().x(0, control=[1], control_state=[0]),
+            Circuit().x(0, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1486,7 +1496,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, 0.15, control=1, control_state=1),
+            Circuit().rx(0, 0.15, control=1, control_state=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1502,7 +1512,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().ry(0, 0.2, control=1, control_state=1),
+            Circuit().ry(0, 0.2, control=1, control_state=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1518,7 +1528,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rz(0, 0.25, control=[1], control_state=[0]),
+            Circuit().rz(0, 0.25, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1534,7 +1544,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().s(target=0, control=[1], control_state=[0]),
+            Circuit().s(target=0, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1550,7 +1560,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().t(target=1, control=[0], control_state=[0]),
+            Circuit().t(target=1, control=[0], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1566,7 +1576,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cphaseshift(target=0, control=1, angle=0.15),
+            Circuit().cphaseshift(target=0, control=1, angle=0.15).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1582,7 +1592,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().ccnot(*[0, 1], target=2),
+            Circuit().ccnot(*[0, 1], target=2).measure(0).measure(1).measure(2),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1669,7 +1679,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().bit_flip(0, 0.1),
+            Circuit().bit_flip(0, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1684,7 +1694,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().generalized_amplitude_damping(0, 0.1, 0.1),
+            Circuit().generalized_amplitude_damping(0, 0.1, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1699,7 +1709,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().phase_flip(0, 0.2),
+            Circuit().phase_flip(0, 0.2).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1714,7 +1724,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().depolarizing(0, 0.5),
+            Circuit().depolarizing(0, 0.5).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1729,7 +1739,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().amplitude_damping(0, 0.8),
+            Circuit().amplitude_damping(0, 0.8).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1744,7 +1754,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().phase_damping(0, 0.1),
+            Circuit().phase_damping(0, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1776,7 +1786,12 @@ def test_circuit_user_gate(pulse_sequence_2):
             Circuit()
             .rx(0, 0.15, control=2, control_state=0)
             .rx(1, 0.3, control=[2, 3])
-            .cnot(target=0, control=[2, 3, 4]),
+            .cnot(target=0, control=[2, 3, 4])
+            .measure(0)
+            .measure(1)
+            .measure(2)
+            .measure(3)
+            .measure(4),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1797,7 +1812,17 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cnot(0, 1).cnot(target=2, control=3).cnot(target=4, control=[5, 6]),
+            Circuit()
+            .cnot(0, 1)
+            .cnot(target=2, control=3)
+            .cnot(target=4, control=[5, 6])
+            .measure(0)
+            .measure(1)
+            .measure(2)
+            .measure(3)
+            .measure(4)
+            .measure(5)
+            .measure(6),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1820,7 +1845,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().h(0, power=-2.5).h(0, power=0),
+            Circuit().h(0, power=-2.5).h(0, power=0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1836,7 +1861,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]),
+            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1851,7 +1876,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3),
+            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1866,7 +1891,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_depolarizing(0, 1, probability=0.1),
+            Circuit().two_qubit_depolarizing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1882,7 +1907,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1898,7 +1923,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1957,13 +1982,15 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().kraus(
+            Circuit()
+            .kraus(
                 [0],
                 matrices=[
                     np.array([[0.9486833j, 0], [0, 0.9486833j]]),
                     np.array([[0, 0.31622777], [0.31622777, 0]]),
                 ],
-            ),
+            )
+            .measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1980,7 +2007,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, FreeParameter("theta")),
+            Circuit().rx(0, FreeParameter("theta")).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1996,7 +2023,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, np.pi),
+            Circuit().rx(0, np.pi).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2011,7 +2038,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, 2 * np.pi),
+            Circuit().rx(0, 2 * np.pi).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2026,7 +2053,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().gphase(0.15).x(0),
+            Circuit().gphase(0.15).x(0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2049,7 +2076,7 @@ def test_from_ir(expected_circuit, ir):
 
 
 def test_from_ir_inputs_updated():
-    circuit = Circuit().rx(0, 0.2).ry(0, 0.1)
+    circuit = Circuit().rx(0, 0.2).ry(0, 0.1).measure(0)
     openqasm = OpenQasmProgram(
         source="\n".join(
             [
@@ -2072,7 +2099,7 @@ def test_from_ir_inputs_updated():
     "expected_circuit, ir",
     [
         (
-            Circuit().h(0).cnot(0, 1),
+            Circuit().h(0).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2092,7 +2119,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1),
+            Circuit().h(0).h(1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2112,7 +2139,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1).cnot(0, 1),
+            Circuit().h(0).h(1).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2131,7 +2158,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1).cnot(0, 1),
+            Circuit().h(0).h(1).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2150,7 +2177,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().x(0),
+            Circuit().x(0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2168,7 +2195,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")),
+            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [

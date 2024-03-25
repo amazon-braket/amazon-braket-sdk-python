@@ -18,6 +18,7 @@ from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
+from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
@@ -159,3 +160,9 @@ class BraketProgramContext(AbstractProgramContext):
                 return evaluated_value
             return FreeParameterExpression(evaluated_value)
         return value
+
+    def add_measure(self, target: tuple[int]):
+        instruction = Instruction(
+            Measure(qubit_count=len(target), ascii_symbols=["M"] * len(target)), list(target)
+        )
+        self._circuit.add_instruction(instruction)

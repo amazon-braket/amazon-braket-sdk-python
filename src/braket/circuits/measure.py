@@ -89,11 +89,11 @@ class Measure(QuantumOperator):
     ) -> str:
         """Returns the openqasm string representation of the measure."""
         target_qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
-        instructions = ""
+        instructions = []
         for idx, qubit in enumerate(target_qubits):
-            instructions += f"b[{idx}] = measure {qubit};"
+            instructions.append(f"b[{idx}] = measure {qubit};")
 
-        return instructions
+        return "\n".join(instructions)
 
     def __eq__(self, other: Measure):
         return isinstance(other, Measure) and self.qubit_count == other.qubit_count

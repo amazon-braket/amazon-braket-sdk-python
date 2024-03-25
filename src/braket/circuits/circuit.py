@@ -463,6 +463,12 @@ class Circuit:
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
+        # Check if there is a measure instruction on the circuit
+        if not isinstance(instruction.operator, Measure) and any(
+            isinstance(instruction.operator, Measure) for instruction in self.instructions
+        ):
+            raise ValueError("Cannot add a gate or noise after a measure instruction.")
+
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
             instructions_to_add = [instruction]
@@ -656,7 +662,7 @@ class Circuit:
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
 
         Args:
-            target_qubits (ndarray | int | None): target qubits to measure
+            target_qubits (ndarray | int): target qubits to measure. Default=None
 
         Returns:
             Circuit: self
@@ -688,10 +694,6 @@ class Circuit:
         # Check if result types are added on the circuit
         if self.result_types:
             raise ValueError("a circuit cannot contain both measure instructions and result types.")
-
-        # Check if there is more than one measure instruction
-        if any(isinstance(instruction.operator, Measure) for instruction in self.instructions):
-            raise ValueError("Cannot perform more than one measure instruction.")
 
         if target_qubits:
             self.add_instruction(

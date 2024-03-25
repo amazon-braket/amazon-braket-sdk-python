@@ -1022,7 +1022,7 @@ def test_unbalanced_ascii_symbols():
 
 
 def test_measure():
-    circ = circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2, 3])
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2, 3])
     expected = (
         "T  : │  0  │  1  │  2  │  3  │  4  │",
         "      ┌───┐                   ┌───┐ ",
@@ -1039,4 +1039,26 @@ def test_measure():
         "                        └───┘ └───┘ ",
         "T  : │  0  │  1  │  2  │  3  │  4  │",
     )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_multiple_measures():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2]).measure(3).measure(1)
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │     4     │",
+        "      ┌───┐                   ┌───┐       ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├───────",
+        "      └───┘   │               └─┬─┘       ",
+        "            ┌─┴─┐               │   ┌───┐ ",
+        "q1 : ───────┤ X ├───●───────────┼───┤ M ├─",
+        "            └───┘   │           │   └───┘ ",
+        "                  ┌─┴─┐       ┌─┴─┐       ",
+        "q2 : ─────────────┤ X ├───●───┤ M ├───────",
+        "                  └───┘   │   └───┘       ",
+        "                        ┌─┴─┐ ┌───┐       ",
+        "q3 : ───────────────────┤ X ├─┤ M ├───────",
+        "                        └───┘ └───┘       ",
+        "T  : │  0  │  1  │  2  │  3  │     4     │",
+    )
+    _assert_correct_diagram(circ, expected)
     _assert_correct_diagram(circ, expected)

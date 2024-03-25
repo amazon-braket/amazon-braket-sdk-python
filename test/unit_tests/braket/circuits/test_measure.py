@@ -92,7 +92,12 @@ def test_measure_to_ir(
             Measure(qubit_count=4, ascii_symbols=["M", "M", "M", "M"]),
             [1, 4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "b[0] = measure $1;b[1] = measure $4;",
+            "\n".join(
+                [
+                    "b[0] = measure $1;",
+                    "b[1] = measure $4;",
+                ]
+            ),
         ),
     ],
 )

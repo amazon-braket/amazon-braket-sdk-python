@@ -68,7 +68,7 @@ def test_measure_on_supported_devices(arn):
     "circuit, expected_measured_qubits",
     [
         (Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 1, 3]), [0, 1, 3]),
-        (Circuit().h(0).measure(0).h(1), [0]),
+        (Circuit().h(0).measure(0), [0]),
     ],
 )
 def test_measure_targets(circuit, expected_measured_qubits):
