@@ -662,7 +662,8 @@ class Circuit:
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
 
         Args:
-            target_qubits (ndarray | int): target qubits to measure. Default=None
+            target_qubits (Optional[ndarray] | Optional[int]): target qubits to measure.
+                Default=None
 
         Returns:
             Circuit: self

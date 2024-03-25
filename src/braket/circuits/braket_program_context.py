@@ -161,7 +161,12 @@ class BraketProgramContext(AbstractProgramContext):
             return FreeParameterExpression(evaluated_value)
         return value
 
-    def add_measure(self, target: tuple[int]):
+    def add_measure(self, target: tuple[int]) -> None:
+        """Add a measure instruction to the circuit
+
+        Args:
+            target (tuple[int]): the target qubits to be measured.
+        """
         instruction = Instruction(
             Measure(qubit_count=len(target), ascii_symbols=["M"] * len(target)), list(target)
         )
