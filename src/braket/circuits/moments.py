@@ -13,10 +13,9 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
-from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
+from collections.abc import ItemsView, Iterable, KeysView, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple, Union
+from typing import Any, Mapping, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -103,7 +102,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     """
 
     def __init__(self, instructions: Iterable[Instruction] | None = None):
-        self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
+        self._moments: dict[MomentsKey, Instruction] = {}
         self._max_times: dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
@@ -244,8 +243,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_initialization_noise = []
         # key for READOUT_NOISE
         key_readout_noise = []
-        moment_copy = OrderedDict()
-        sorted_moment = OrderedDict()
+        moment_copy = {}
+        sorted_moment = {}
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
