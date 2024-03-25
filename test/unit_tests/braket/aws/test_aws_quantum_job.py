@@ -338,7 +338,7 @@ def test_results_when_job_is_completed(
 def test_download_result_when_job_is_running(
     quantum_job, aws_session, generate_get_job_response, result_setup
 ):
-    poll_timeout_seconds, poll_interval_seconds, state = 1, 0.5, "RUNNING"
+    poll_timeout_seconds, poll_interval_seconds, state = 0.5, 0.25, "RUNNING"
     get_job_response_completed = generate_get_job_response(status=state)
     aws_session.get_job.return_value = get_job_response_completed
     job_metadata = quantum_job.metadata(True)

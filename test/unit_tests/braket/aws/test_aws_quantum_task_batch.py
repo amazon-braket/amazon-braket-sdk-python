@@ -44,6 +44,7 @@ def test_creation(mock_create):
             "arn:aws:braket:us-west-2:123456789123:"
             "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
+        poll_interval_seconds=0.25,
     )
     assert batch.size == batch_size
     assert batch.tasks == [task_mock for _ in range(batch_size)]

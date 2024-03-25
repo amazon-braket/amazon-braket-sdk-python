@@ -386,6 +386,11 @@ mock_ahs_program = AnalogHamiltonianSimulation(
     register=AtomArrangement(), hamiltonian=Hamiltonian()
 )
 
+@pytest.fixture
+def sim():
+    dummy = DummyProgramSimulator()
+    return LocalSimulator(dummy)
+
 
 def test_load_from_entry_point():
     sim = LocalSimulator("dummy_oq3")
@@ -393,34 +398,28 @@ def test_load_from_entry_point():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_run_gate_model():
-    dummy = DummyProgramSimulator()
-    sim = LocalSimulator(dummy)
+def test_run_gate_model(sim):
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit():
-    dummy = DummyProgramSimulator()
+def test_batch_circuit(sim):
     theta = FreeParameter("theta")
     task = Circuit().rx(angle=theta, target=0)
-    device = LocalSimulator(dummy)
     num_tasks = 3
     circuits = [task for _ in range(num_tasks)]
     inputs = [{"theta": i} for i in range(num_tasks)]
-    batch = device.run_batch(circuits, inputs=inputs, shots=10)
+    batch = sim.run_batch(circuits, inputs=inputs, shots=10)
     assert len(batch.results()) == num_tasks
     for x in batch.results():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_with_max_parallel():
-    dummy = DummyProgramSimulator()
+def test_batch_with_max_parallel(sim):
     task = Circuit().h(0).cnot(0, 1)
-    device = LocalSimulator(dummy)
     num_tasks = 3
     circuits = [task for _ in range(num_tasks)]
-    batch = device.run_batch(circuits, shots=10, max_parallel=2)
+    batch = sim.run_batch(circuits, shots=10, max_parallel=2)
     assert len(batch.results()) == num_tasks
     for x in batch.results():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
@@ -429,56 +428,48 @@ def test_batch_with_max_parallel():
 def test_batch_with_annealing_problems():
     dummy = DummyAnnealingSimulator()
     problem = Problem(ProblemType.ISING)
-    device = LocalSimulator(dummy)
+    sim = LocalSimulator(dummy)
     num_tasks = 3
     problems = [problem for _ in range(num_tasks)]
-    batch = device.run_batch(problems, shots=10)
+    batch = sim.run_batch(problems, shots=10)
     assert len(batch.results()) == num_tasks
     for x in batch.results():
         assert x == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
 
 
-def test_batch_circuit_without_inputs():
-    dummy = DummyProgramSimulator()
+def test_batch_circuit_without_inputs(sim):
     bell = Circuit().h(0).cnot(0, 1)
-    device = LocalSimulator(dummy)
     num_tasks = 3
     circuits = [bell for _ in range(num_tasks)]
-    batch = device.run_batch(circuits, shots=10)
+    batch = sim.run_batch(circuits, shots=10)
     assert len(batch.results()) == num_tasks
     for x in batch.results():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit_with_unbound_parameters():
-    dummy = DummyProgramSimulator()
-    device = LocalSimulator(dummy)
+def test_batch_circuit_with_unbound_parameters(sim):
     theta = FreeParameter("theta")
     task = Circuit().rx(angle=theta, target=0)
     inputs = {"beta": 0.2}
     cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
     with pytest.raises(ValueError, match=cannot_execute_with_unbound):
-        device.run_batch(task, inputs=inputs, shots=10)
+        sim.run_batch(task, inputs=inputs, shots=10)
 
 
-def test_batch_circuit_with_single_task():
-    dummy = DummyProgramSimulator()
+def test_batch_circuit_with_single_task(sim):
     bell = Circuit().h(0).cnot(0, 1)
-    device = LocalSimulator(dummy)
-    batch = device.run_batch(bell, shots=10)
+    batch = sim.run_batch(bell, shots=10)
     assert len(batch.results()) == 1
     assert batch.results()[0] == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit_with_task_and_input_mismatch():
-    dummy = DummyProgramSimulator()
+def test_batch_circuit_with_task_and_input_mismatch(sim):
     bell = Circuit().h(0).cnot(0, 1)
-    device = LocalSimulator(dummy)
     num_tasks = 3
     circuits = [bell for _ in range(num_tasks)]
     inputs = [{} for _ in range(num_tasks - 1)]
     with pytest.raises(ValueError):
-        device.run_batch(circuits, inputs=inputs, shots=10)
+        sim.run_batch(circuits, inputs=inputs, shots=10)
 
 
 def test_run_gate_model_inputs():
