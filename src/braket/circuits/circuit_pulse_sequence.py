@@ -74,7 +74,7 @@ class CircuitPulseSequenceBuilder:
 
             # FIXME: this creates a single cal block, "barrier;" in defcal could be either
             # global or restricted to the defcal context
-            # Right they are global
+            # Right now they are global
             pulse_sequence += gate_pulse_sequence
 
         # Result type columns
