@@ -657,7 +657,7 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
-    def measure(self, target_qubits: np.ndarray | int = None) -> Circuit:
+    def measure(self, target_qubits: Optional[np.ndarray] | Optional[int] = None) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
 
