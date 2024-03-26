@@ -301,7 +301,7 @@ class Circuit:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
         if self._measure_targets:
-            raise ValueError("Cannot add a result type with a measure instruction.")
+            raise ValueError("Cannot add a result type to a circuit which already contains a measure instruction.")
 
         if not target_mapping and not target:
             # Nothing has been supplied, add result_type
@@ -669,7 +669,7 @@ class Circuit:
             Circuit: self
 
         Raises:
-            IndexError: If `circuit` has no qubits.
+            IndexError: If `self` has no qubits.
             IndexError: If target qubits are not within the range of the current circuit.
 
         Examples:
@@ -685,7 +685,7 @@ class Circuit:
         if not self.qubits:
             raise IndexError("Cannot measure an empty circuit.")
 
-        if type(target_qubits) is int:
+        if isinstance(target_qubits, int):
             target_qubits = [target_qubits]
 
         # Check that the target qubits are on the circuit

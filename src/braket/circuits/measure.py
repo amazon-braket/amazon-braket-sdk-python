@@ -55,7 +55,7 @@ class Measure(QuantumOperator):
         serialization_properties: SerializationProperties | None = None,
         **kwargs,
     ) -> Any:
-        """Returns IR object of the meaure.
+        """Returns IR object of the measure operator.
 
         Args:
             target (QubitSet | None): target qubit(s). Defaults to None
