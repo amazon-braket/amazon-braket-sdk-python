@@ -80,27 +80,37 @@ def aws_session():
 
 @pytest.fixture
 def quantum_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25)
+    return AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25
+    )
 
 
 @pytest.fixture
 def quantum_task_quiet(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25, quiet=True)
+    return AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25, quiet=True
+    )
 
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25)
+    return AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25
+    )
 
 
 @pytest.fixture
 def annealing_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25)
+    return AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25
+    )
 
 
 @pytest.fixture
 def photonic_model_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25)
+    return AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=1, poll_interval_seconds=0.25
+    )
 
 
 @pytest.fixture

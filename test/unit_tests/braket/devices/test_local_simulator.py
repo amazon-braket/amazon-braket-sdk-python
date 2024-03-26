@@ -386,6 +386,7 @@ mock_ahs_program = AnalogHamiltonianSimulation(
     register=AtomArrangement(), hamiltonian=Hamiltonian()
 )
 
+
 @pytest.fixture
 def sim():
     dummy = DummyProgramSimulator()
