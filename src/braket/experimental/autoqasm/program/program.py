@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 """AutoQASM Program class, context managers, and related functions."""
+
 from __future__ import annotations
 
 import contextlib
@@ -35,7 +36,11 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
-from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
+from braket.experimental.autoqasm.instructions.qubits import (
+    GlobalQubitRegister,
+    _get_physical_qubit_indices,
+    _qubit,
+)
 from braket.experimental.autoqasm.program.serialization_properties import (
     OpenQASMSerializationProperties,
     SerializationProperties,
@@ -313,9 +318,7 @@ class ProgramConversionContext:
     def __init__(self, user_config: Optional[UserConfig] = None):
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
-        self.global_qubit_register = oqpy.Qubit(
-            constants.QUBIT_REGISTER, size=self.user_config.num_qubits, needs_declaration=False
-        )
+        self.global_qubit_register = GlobalQubitRegister(size=self.user_config.num_qubits)
         self.return_variable = None
         self.in_verbatim_block = False
         self.at_function_root_scope = True  # whether we are at the root scope of main or subroutine
