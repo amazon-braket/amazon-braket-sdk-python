@@ -1163,15 +1163,20 @@ return_value = __bit_0__;"""
     assert main.build().to_ir() == expected_ir
 
 
-def test_measure_register_not_allowed():
-    @aq.main(num_qubits=4)
+def test_measure_all_using_iter():
+    @aq.main(num_qubits=3)
     def main():
         return measure(aq.qubits())
 
-    with pytest.raises(
-        ValueError, match="qubit index must be a single value, not a list or a register"
-    ):
-        main.build()
+    expected_ir = """OPENQASM 3.0;
+output bit[3] return_value;
+qubit[3] __qubits__;
+bit[3] __bit_0__ = "000";
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
+__bit_0__[2] = measure __qubits__[2];
+return_value = __bit_0__;"""
+    assert main.build().to_ir() == expected_ir
 
 
 def test_gate_register_not_allowed():

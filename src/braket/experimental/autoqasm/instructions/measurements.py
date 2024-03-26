@@ -45,9 +45,9 @@ def measure(
         BitVar: Bit variable the measurement results are assigned to.
     """
     if qubits is None:
-        qubits = range(len(global_qubit_register()))
+        qubits = global_qubit_register()
 
-    if aq_types.is_qubit_identifier_type(qubits):
+    if isinstance(qubits, str) or not isinstance(qubits, Iterable):
         qubits = [qubits]
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
