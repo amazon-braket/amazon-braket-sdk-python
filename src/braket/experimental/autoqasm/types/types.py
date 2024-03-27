@@ -37,7 +37,13 @@ def is_qasm_type(val: Any) -> bool:
     Returns:
         bool: Whether the object is a QASM type.
     """
-    qasm_types = (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression, FreeParameterExpression)
+    qasm_types = (
+        oqpy.Range,
+        oqpy._ClassicalVar,
+        oqpy.Qubit,
+        oqpy.base.OQPyExpression,
+        FreeParameterExpression,
+    )
     # The input can either be a class, like oqpy.Range ...
     if type(val) is type:
         return issubclass(val, qasm_types)

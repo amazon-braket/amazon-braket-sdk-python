@@ -1144,3 +1144,100 @@ def test_input_qubit_indices_needs_num_qubits():
 
     with pytest.raises(errors.UnknownQubitCountError):
         circ.build()
+
+
+def test_measure_all():
+    @aq.main(num_qubits=4)
+    def main():
+        return measure()
+
+    expected_ir = """OPENQASM 3.0;
+output bit[4] return_value;
+qubit[4] __qubits__;
+bit[4] __bit_0__ = "0000";
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
+__bit_0__[2] = measure __qubits__[2];
+__bit_0__[3] = measure __qubits__[3];
+return_value = __bit_0__;"""
+    assert main.build().to_ir() == expected_ir
+
+
+def test_measure_all_using_iter():
+    @aq.main(num_qubits=3)
+    def main():
+        return measure(aq.qubits)
+
+    expected_ir = """OPENQASM 3.0;
+output bit[3] return_value;
+qubit[3] __qubits__;
+bit[3] __bit_0__ = "000";
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
+__bit_0__[2] = measure __qubits__[2];
+return_value = __bit_0__;"""
+    assert main.build().to_ir() == expected_ir
+
+
+def test_gate_register_not_allowed():
+    @aq.main(num_qubits=4)
+    def main():
+        h(aq.qubits)
+
+    with pytest.raises(
+        ValueError, match="qubit index must be a single value, not a list or a register"
+    ):
+        main.build()
+
+
+def test_global_qubit_register_loop():
+    @aq.main(num_qubits=5)
+    def main():
+        for q in aq.qubits:
+            h(q)
+
+    expected_ir = """OPENQASM 3.0;
+qubit[5] __qubits__;
+for int q in [0:5 - 1] {
+    h __qubits__[q];
+}"""
+    assert main.build().to_ir() == expected_ir
+
+
+def test_global_qubit_register_needs_num_qubits():
+    @aq.main
+    def main():
+        for q in aq.qubits:
+            h(q)
+
+    with pytest.raises(errors.UnknownQubitCountError):
+        main.build()
+
+
+def test_global_qubit_register_len_aq_range():
+    @aq.main(num_qubits=6)
+    def main():
+        for q in aq.range(len(aq.qubits)):
+            h(q)
+
+    expected_ir = """OPENQASM 3.0;
+qubit[6] __qubits__;
+for int q in [0:6 - 1] {
+    h __qubits__[q];
+}"""
+    assert main.build().to_ir() == expected_ir
+
+
+def test_global_qubit_register_len_py_range():
+    @aq.main(num_qubits=4)
+    def main():
+        for q in range(len(aq.qubits)):
+            h(q)
+
+    expected_ir = """OPENQASM 3.0;
+qubit[4] __qubits__;
+h __qubits__[0];
+h __qubits__[1];
+h __qubits__[2];
+h __qubits__[3];"""
+    assert main.build().to_ir() == expected_ir

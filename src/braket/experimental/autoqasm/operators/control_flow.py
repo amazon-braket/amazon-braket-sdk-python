@@ -20,11 +20,11 @@ from typing import Any, Optional, Union
 import oqpy.base
 
 from braket.experimental.autoqasm import program
-from braket.experimental.autoqasm.types import is_qasm_type
+from braket.experimental.autoqasm.types import Range, is_qasm_type
 
 
 def for_stmt(
-    iter: Union[Iterable, oqpy.Range],
+    iter: Union[Iterable, oqpy.Range, oqpy.Qubit],
     extra_test: Optional[Callable[[], Any]],
     body: Callable[[Any], None],
     get_state: Any,
@@ -35,7 +35,7 @@ def for_stmt(
     """Implements a for loop.
 
     Args:
-        iter (Union[Iterable, Range]): The iterable to be looped over.
+        iter (Union[Iterable, Range, Qubit]): The iterable to be looped over.
         extra_test (Optional[Callable[[], Any]]): A function to cause the loop to break if true.
         body (Callable[[Any], None]): The body of the for loop.
         get_state (Any): Unused.
@@ -54,12 +54,14 @@ def for_stmt(
 
 
 def _oqpy_for_stmt(
-    iter: oqpy.Range,
+    iter: Union[oqpy.Range, oqpy.Qubit],
     body: Callable[[Any], None],
     opts: dict,
 ) -> None:
     """Overload of for_stmt that produces an oqpy for loop."""
     program_conversion_context = program.get_program_conversion_context()
+    if isinstance(iter, oqpy.Qubit):
+        iter = Range(iter.size)
     with program_conversion_context.for_in(iter, opts["iterate_names"]) as f:
         body(f)
 

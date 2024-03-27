@@ -14,9 +14,12 @@
 
 """Utility functions that handle qubit construction and naming."""
 
+from __future__ import annotations
+
 import re
+from collections.abc import Iterable
 from functools import singledispatch
-from typing import Any, Union
+from typing import Any
 
 import oqpy.base
 from openpulse.printer import dumps
@@ -44,8 +47,23 @@ def _get_physical_qubit_indices(qids: list[str]) -> list[int]:
     return braket_qubits
 
 
-def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> oqpy.Qubit:
+def _global_qubit_register(qubit_idx_expr: int | str) -> oqpy.Qubit:
     return oqpy.Qubit(f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]", needs_declaration=False)
+
+
+class GlobalQubitRegister(oqpy.Qubit):
+    def __init__(self, size: int | None):
+        super().__init__(name=constants.QUBIT_REGISTER, size=size, needs_declaration=False)
+
+    def __len__(self) -> int:
+        return self.size
+
+    def __iter__(self) -> Iterable:
+        return iter(range(len(self)))
+
+
+def global_qubit_register() -> GlobalQubitRegister:
+    return program.get_program_conversion_context().global_qubit_register
 
 
 @singledispatch
@@ -76,6 +94,11 @@ def _(qid: int) -> oqpy.Qubit:
     # Integer virtual qubit, like `h(0)`
     program.get_program_conversion_context().register_qubit(qid)
     return _global_qubit_register(qid)
+
+
+@_qubit.register
+def _(qid: GlobalQubitRegister) -> oqpy.Qubit:
+    raise ValueError("qubit index must be a single value, not a list or a register")
 
 
 @_qubit.register

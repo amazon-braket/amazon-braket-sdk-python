@@ -27,7 +27,6 @@ import oqpy.base
 from malt.core import converter
 from malt.impl.api import autograph_artifact, is_autograph_artifact
 
-import braket.experimental.autoqasm.constants as aq_constants
 import braket.experimental.autoqasm.instructions as aq_instructions
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
@@ -291,13 +290,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
         )
 
     # Declare the global qubit register
-    root_oqpy_program = program_conversion_context.get_oqpy_program(
-        scope=aq_program.ProgramScope.MAIN
-    )
-    root_oqpy_program.declare(
-        [oqpy.Qubit(aq_constants.QUBIT_REGISTER, num_qubits)],
-        to_beginning=True,
-    )
+    program_conversion_context.declare_global_qubit_register(num_qubits)
 
 
 def _convert_subroutine(
