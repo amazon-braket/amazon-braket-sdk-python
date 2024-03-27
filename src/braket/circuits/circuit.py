@@ -735,13 +735,13 @@ class Circuit:
                     f"cannot measure the same qubit(s) {', '.join(map(str, target_qubits))} "
                     "more than once."
                 )
-            Circuit._add_measure(self, target_qubits=target_qubits)
+            self._add_measure(target_qubits=target_qubits)
         else:
             # Check if any qubits are already measured
             if self._measure_targets:
                 raise ValueError("cannot perform multiple measurements of the same qubits.")
             # Measure all the qubits
-            Circuit._add_measure(self, target_qubits=self.qubits)
+            self._add_measure(target_qubits=self.qubits)
 
         return self
 
