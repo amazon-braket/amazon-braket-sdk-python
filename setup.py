@@ -28,19 +28,28 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.20.2",
-        "amazon-braket-default-simulator>=1.19.1",
+        # Pin the latest commit of mcm-sim branch of aws/amazon-braket-default-simulator-python.git
+        # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
+        # simulation of mid-circuit measurement, which AutoQASM requires.
+        # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
+        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@f17d3070a4f87a3bbef677e385a2e94dd386af78#egg=amazon-braket-default-simulator",  # noqa E501
         "oqpy~=0.3.5",
         "setuptools",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
         "cloudpickle==2.2.1",
+        "diastatic-malt",
         "nest-asyncio",
         "networkx",
         "numpy<2",
         "openpulse",
         "openqasm3",
         "sympy",
+        "astunparse",
+        "gast",
+        "termcolor",
+        "openqasm_pygments",
     ],
     extras_require={
         "test": [
@@ -59,7 +68,7 @@ setup(
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
             "tox",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",
