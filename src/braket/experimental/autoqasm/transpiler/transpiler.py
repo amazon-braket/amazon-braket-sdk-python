@@ -18,11 +18,13 @@ in the TensorFlow implementation of autograph. Consider refactoring
 to reduce duplication if possible.
 """
 
+from __future__ import annotations
+
 import functools
 import importlib
 import inspect
 from collections.abc import Callable
-from typing import Any, Optional, Union
+from typing import Any
 
 import gast
 from malt.converters import (
@@ -61,7 +63,7 @@ class PyToOqpy(transpiler.PyToPy):
         super(PyToOqpy, self).__init__()
         self._extra_locals = None
 
-    def get_transformed_name(self, node: Union[gast.Lambda, gast.FunctionDef]) -> str:
+    def get_transformed_name(self, node: gast.Lambda | gast.FunctionDef) -> str:
         return "oq__" + super(PyToOqpy, self).get_transformed_name(node)
 
     def get_extra_locals(self) -> dict:
@@ -91,8 +93,8 @@ class PyToOqpy(transpiler.PyToPy):
         return ctx.options
 
     def _initial_analysis(
-        self, node: Union[gast.Lambda, gast.FunctionDef], ctx: ag_ctx.ControlStatusCtx
-    ) -> Union[gast.Lambda, gast.FunctionDef]:
+        self, node: gast.Lambda | gast.FunctionDef, ctx: ag_ctx.ControlStatusCtx
+    ) -> gast.Lambda | gast.FunctionDef:
         graphs = cfg.build(node)
         node = qual_names.resolve(node)
         node = activity.resolve(node, ctx, None)
@@ -106,17 +108,17 @@ class PyToOqpy(transpiler.PyToPy):
         return node
 
     def transform_ast(
-        self, node: Union[gast.Lambda, gast.FunctionDef], ctx: ag_ctx.ControlStatusCtx
-    ) -> Union[gast.Lambda, gast.FunctionDef]:
+        self, node: gast.Lambda | gast.FunctionDef, ctx: ag_ctx.ControlStatusCtx
+    ) -> gast.Lambda | gast.FunctionDef:
         """Performs an actual transformation of a function's AST.
 
         Args:
-            node (Union[Lambda, FunctionDef]): One or more ast.AST nodes
+            node (Lambda | FunctionDef): One or more ast.AST nodes
                 representing the AST to be transformed.
             ctx (ControlStatusCtx): transformer context.
 
         Returns:
-            Union[Lambda, FunctionDef]: The root of the transformed AST.
+            Lambda | FunctionDef: The root of the transformed AST.
         """
         unsupported_features_checker.verify(node)
         # TODO (#809): add forbidden_aq_program_usage_checker.verify(node)
@@ -145,7 +147,7 @@ class PyToOqpy(transpiler.PyToPy):
         return node
 
 
-def _convert_actual(entity: Callable, program_ctx: Optional[ag_ctx.ControlStatusCtx]) -> Callable:
+def _convert_actual(entity: Callable, program_ctx: ag_ctx.ControlStatusCtx | None) -> Callable:
     """Applies AutoGraph to entity."""
     if not hasattr(entity, "__code__"):
         raise ValueError(
@@ -171,9 +173,9 @@ def _convert_actual(entity: Callable, program_ctx: Optional[ag_ctx.ControlStatus
 def converted_call(
     f: Callable,
     args: tuple,
-    kwargs: Optional[dict],
-    caller_fn_scope: Optional[function_wrappers.FunctionScope] = None,
-    options: Optional[converter.ConversionOptions] = None,
+    kwargs: dict | None,
+    caller_fn_scope: function_wrappers.FunctionScope | None = None,
+    options: converter.ConversionOptions | None = None,
 ) -> Any:
     """Converts a function call inline.
 
@@ -189,10 +191,10 @@ def converted_call(
     Args:
         f (Callable): The function to convert.
         args (tuple): the original positional arguments of f.
-        kwargs (Optional[dict]): the original keyword arguments of f.
-        caller_fn_scope (Optional[FunctionScope]): the function scope of the converted
+        kwargs (dict | None): the original keyword arguments of f.
+        caller_fn_scope (FunctionScope | None): the function scope of the converted
             function in which this call was originally made. Defaults to None.
-        options (Optional[ConversionOptions]): conversion options. If not
+        options (ConversionOptions | None): conversion options. If not
             specified, the value of caller_fn_scope.callopts is used. Either options
             or caller_fn_scope must be present. Defaults to None.
 
@@ -241,9 +243,9 @@ def converted_call(
 def _converted_partial(
     f: Callable,
     args: tuple,
-    kwargs: Optional[dict],
-    caller_fn_scope: Optional[function_wrappers.FunctionScope] = None,
-    options: Optional[converter.ConversionOptions] = None,
+    kwargs: dict | None,
+    caller_fn_scope: function_wrappers.FunctionScope | None = None,
+    options: converter.ConversionOptions | None = None,
 ) -> Any:
     # Use copy to avoid mutating the underlying keywords.
     new_kwargs = f.keywords.copy()
@@ -275,7 +277,7 @@ def _try_convert_actual(
     effective_args: tuple,
     kwargs: dict,
     options: converter.ConversionOptions,
-) -> tuple[Callable, Optional[Exception]]:
+) -> tuple[Callable, Exception | None]:
     converted_f = None
     exc = None
     try:

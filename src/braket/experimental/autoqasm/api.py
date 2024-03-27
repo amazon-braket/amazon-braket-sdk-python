@@ -20,7 +20,7 @@ import functools
 import inspect
 from collections.abc import Callable
 from types import FunctionType
-from typing import Any, Iterable, Optional, Union, get_args
+from typing import Any, Iterable, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -37,9 +37,9 @@ from braket.experimental.autoqasm.types import QubitIdentifierType as Qubit
 
 
 def main(
-    func: Optional[Callable] = None,
+    func: Callable | None = None,
     *,
-    num_qubits: Optional[int] = None,
+    num_qubits: int | None = None,
 ) -> aq_program.Program | Callable[..., aq_program.Program]:
     """Decorator that converts a function into a Program object containing the quantum program.
 
@@ -47,9 +47,9 @@ def main(
     function is called, and a new Program object is returned each time.
 
     Args:
-        func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
+        func (Callable | None): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
-        num_qubits (Optional[int]): Configuration to set the total number of qubits to declare in
+        num_qubits (int | None): Configuration to set the total number of qubits to declare in
             the program.
 
     Returns:
@@ -80,15 +80,15 @@ def main(
 
 
 def subroutine(
-    func: Optional[Callable] = None, annotations: Optional[str | Iterable[str]] = None
+    func: Callable | None = None, annotations: str | Iterable[str] | None = None
 ) -> Callable[..., aq_program.Program]:
     """Decorator that converts a function into a callable that will insert a subroutine into
     the quantum program.
 
     Args:
-        func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
+        func (Callable | None): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
-        annotations (Optional[str | Iterable[str]]): Annotations to be added to the subroutine.
+        annotations (str | Iterable[str] | None): Annotations to be added to the subroutine.
 
     Returns:
         Callable[..., Program]: A callable which returns the converted
@@ -103,11 +103,11 @@ def subroutine(
     )
 
 
-def gate(func: Optional[Callable] = None) -> Callable[..., None]:
+def gate(func: Callable | None = None) -> Callable[..., None]:
     """Decorator that converts a function into a callable gate definition.
 
     Args:
-        func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
+        func (Callable | None): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
 
     Returns:
@@ -139,21 +139,21 @@ def gate_calibration(*, implements: Callable, **kwargs) -> Callable[[], GateCali
 
 
 def _function_wrapper(
-    func: Optional[Callable],
+    func: Callable | None,
     *,
     converter_callback: Callable,
-    converter_args: Optional[dict[str, Any]] = None,
-) -> Callable[..., Optional[Union[aq_program.Program, GateCalibration]]]:
+    converter_args: dict[str, Any] | None = None,
+) -> Callable[..., aq_program.Program | GateCalibration | None]:
     """Wrapping and conversion logic around the user function `f`.
 
     Args:
-        func (Optional[Callable]): Decorated function. May be `None` in the case where decorator
+        func (Callable | None): Decorated function. May be `None` in the case where decorator
             is used with parentheses.
         converter_callback (Callable): The function converter, e.g., _convert_main.
-        converter_args (Optional[dict[str, Any]]): Extra arguments for the function converter.
+        converter_args (dict[str, Any] | None): Extra arguments for the function converter.
 
     Returns:
-        Callable[..., Optional[Union[Program, GateCalibration]]]: A callable which
+        Callable[..., Program | GateCalibration | None]: A callable which
         returns the converted construct, if any, when called.
     """
     if not (func and callable(func)):
@@ -489,7 +489,7 @@ def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
     return var_type()
 
 
-def _get_bitvar_size(node: qasm_ast.BitType) -> Optional[int]:
+def _get_bitvar_size(node: qasm_ast.BitType) -> int | None:
     if not isinstance(node, qasm_ast.BitType) or not node.size:
         return None
     return node.size.value
@@ -663,14 +663,14 @@ def _convert_calibration(
 
 def _validate_calibration_args(
     gate_function: Callable,
-    decorator_args: dict[str, Union[Qubit, float]],
+    decorator_args: dict[str, Qubit | float],
     func_args: aq_program.GateArgs,
 ) -> None:
     """Validate the arguments passed to the calibration decorator and function.
 
     Args:
         gate_function (Callable): The gate function which calibration is being defined.
-        decorator_args (dict[str, Union[Qubit, float]]): The calibration decorator arguments.
+        decorator_args (dict[str, Qubit | float]): The calibration decorator arguments.
         func_args (aq_program.GateArgs): The gate function arguments.
     """
     gate_args = _get_gate_args(gate_function)

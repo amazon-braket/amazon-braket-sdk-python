@@ -14,9 +14,11 @@
 
 """Operators for other data structures (e.g. list)."""
 
+from __future__ import annotations
+
 import collections
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 
 class ListPopOpts(collections.namedtuple("ListPopOpts", ("element_dtype", "element_shape"))):
@@ -41,12 +43,12 @@ def list_append(target: list, element: Any) -> list:
     return target
 
 
-def list_pop(target: list, element: Optional[Any], opts: ListPopOpts) -> tuple:
+def list_pop(target: list, element: Any, opts: ListPopOpts) -> tuple:
     """The list pop function.
 
     Args:
         target (list): An entity that supports append semantics.
-        element (Optional[Any]): The element index to pop. If None, pops the last element.
+        element (Any): The element index to pop. If None, pops the last element.
         opts (ListPopOpts): Metadata about the converted pop operation.
 
     Returns:
@@ -69,11 +71,11 @@ def list_stack(target: list, opts: ListStackOpts) -> list:
     return opts.original_call(target)
 
 
-def new_list(iterable: Optional[Iterable] = None) -> list:
+def new_list(iterable: Iterable | None = None) -> list:
     """The list constructor.
 
     Args:
-        iterable (Optional[Iterable]): Optional elements to fill the list with. Defaults to None.
+        iterable (Iterable | None): Optional elements to fill the list with. Defaults to None.
 
     Returns:
         list: A list-like object. The exact return value depends on the initial elements.

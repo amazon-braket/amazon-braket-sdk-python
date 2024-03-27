@@ -14,7 +14,9 @@
 
 """Operators for comparison operators: <, <=, >, and >=."""
 
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import Any
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
@@ -22,7 +24,7 @@ from braket.experimental.autoqasm import types as aq_types
 from .utils import _register_and_convert_parameters
 
 
-def lt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def lt_(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of "<".
 
     Args:
@@ -30,7 +32,7 @@ def lt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): The second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression is less than the second.
+        bool | BoolVar: Whether the first expression is less than the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_lt(a, b)
@@ -48,7 +50,7 @@ def _aq_lt(a: Any, b: Any) -> aq_types.BoolVar:
     return result
 
 
-def lteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def lteq_(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of "<=".
 
     Args:
@@ -56,7 +58,7 @@ def lteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): The second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression is less than or equal to the second.
+        bool | BoolVar: Whether the first expression is less than or equal to the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_lteq(a, b)
@@ -74,7 +76,7 @@ def _aq_lteq(a: Any, b: Any) -> aq_types.BoolVar:
     return result
 
 
-def gt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def gt_(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of ">".
 
     Args:
@@ -82,7 +84,7 @@ def gt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): The second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression is greater than the second.
+        bool | BoolVar: Whether the first expression is greater than the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_gt(a, b)
@@ -100,7 +102,7 @@ def _aq_gt(a: Any, b: Any) -> aq_types.BoolVar:
     return result
 
 
-def gteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def gteq_(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of ">=".
 
     Args:
@@ -108,7 +110,7 @@ def gteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): The second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression is greater than or equal to the second.
+        bool | BoolVar: Whether the first expression is greater than or equal to the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_gteq(a, b)

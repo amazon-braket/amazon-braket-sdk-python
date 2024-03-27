@@ -14,7 +14,9 @@
 
 """Operators for logical boolean operators (e.g. not, and, or)."""
 
-from typing import Any, Callable, Union
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import oqpy.base
 from openpulse import ast
@@ -25,7 +27,7 @@ from braket.experimental.autoqasm import types as aq_types
 from .utils import _register_and_convert_parameters
 
 
-def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.BoolVar]:
+def and_(a: Callable[[], Any], b: Callable[[], Any]) -> bool | aq_types.BoolVar:
     """Functional form of "and".
 
     Args:
@@ -33,7 +35,7 @@ def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Boo
         b (Callable[[], Any]): Callable that returns the second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether both expressions are true.
+        bool | BoolVar: Whether both expressions are true.
     """
     a = a()
     b = b()
@@ -57,7 +59,7 @@ def _py_and(a: Any, b: Any) -> bool:
     return a and b
 
 
-def or_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.BoolVar]:
+def or_(a: Callable[[], Any], b: Callable[[], Any]) -> bool | aq_types.BoolVar:
     """Functional form of "or".
 
     Args:
@@ -65,7 +67,7 @@ def or_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Bool
         b (Callable[[], Any]): Callable that returns the second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether either expression is true.
+        bool | BoolVar: Whether either expression is true.
     """
     a = a()
     b = b()
@@ -89,14 +91,14 @@ def _py_or(a: Any, b: Any) -> bool:
     return a or b
 
 
-def not_(a: Any) -> Union[bool, aq_types.BoolVar]:
+def not_(a: Any) -> bool | aq_types.BoolVar:
     """Functional form of "not".
 
     Args:
         a (Any): Expression to negate.
 
     Returns:
-        Union[bool, BoolVar]: Whether the expression is false.
+        bool | BoolVar: Whether the expression is false.
     """
     if aq_types.is_qasm_type(a):
         return _oqpy_not(a)
@@ -118,7 +120,7 @@ def _py_not(a: Any) -> bool:
     return not a
 
 
-def eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def eq(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of "equal".
 
     Args:
@@ -126,7 +128,7 @@ def eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): Second expression to compare.
 
     Returns:
-        Union[bool, BoolVar]: Whether the expressions are equal.
+        bool | BoolVar: Whether the expressions are equal.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _oqpy_eq(a, b)
@@ -148,7 +150,7 @@ def _py_eq(a: Any, b: Any) -> bool:
     return a == b
 
 
-def not_eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
+def not_eq(a: Any, b: Any) -> bool | aq_types.BoolVar:
     """Functional form of "not equal".
 
     Args:
@@ -156,7 +158,7 @@ def not_eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): Second expression to compare.
 
     Returns:
-        Union[bool, BoolVar]: Whether the expressions are not equal.
+        bool | BoolVar: Whether the expressions are not equal.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _oqpy_not_eq(a, b)

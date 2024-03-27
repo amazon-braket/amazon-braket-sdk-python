@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import contextlib
 from enum import Enum
-from typing import Iterable, Optional
+from typing import Iterable
 
 from braket.device_schema import DeviceActionType
 from braket.experimental.autoqasm import errors, program
@@ -46,7 +46,7 @@ class PragmaType(str, Enum):
 
 
 @contextlib.contextmanager
-def verbatim(annotations: Optional[str | Iterable[str]] = None) -> None:
+def verbatim(annotations: str | Iterable[str] | None = None) -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
     in a verbatim block.
 
@@ -54,7 +54,7 @@ def verbatim(annotations: Optional[str | Iterable[str]] = None) -> None:
     programmed without compilation or modification of any sort.
 
     Args:
-        annotations (Optional[str | Iterable[str]]): Annotations for the box.
+        annotations (str | Iterable[str] | None): Annotations for the box.
 
     Raises:
         errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
