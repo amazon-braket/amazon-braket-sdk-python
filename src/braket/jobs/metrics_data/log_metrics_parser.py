@@ -12,15 +12,15 @@
 # language governing permissions and limitations under the License.
 
 import re
+from collections.abc import Iterator
 from logging import Logger, getLogger
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 
-class LogMetricsParser(object):
-    """
-    This class is used to parse metrics from log lines, and return them in a more
+class LogMetricsParser:
+    """This class is used to parse metrics from log lines, and return them in a more
     convenient format.
     """
 
@@ -43,8 +43,7 @@ class LogMetricsParser(object):
         new_value: Union[str, float, int],
         statistic: MetricStatistic,
     ) -> Union[str, float, int]:
-        """
-        Gets the value based on a statistic.
+        """Gets the value based on a statistic.
 
         Args:
             current_value (Optional[Union[str, float, int]]): The current value.
@@ -64,15 +63,14 @@ class LogMetricsParser(object):
 
     def _get_metrics_from_log_line_matches(
         self, all_matches: Iterator
-    ) -> Dict[str, Union[str, float, int]]:
-        """
-        Converts matches from a RegEx to a set of metrics.
+    ) -> dict[str, Union[str, float, int]]:
+        """Converts matches from a RegEx to a set of metrics.
 
         Args:
             all_matches (Iterator): An iterator for RegEx matches on a log line.
 
         Returns:
-            Dict[str, Union[str, float, int]]: The set of metrics found by the RegEx. The result
+            dict[str, Union[str, float, int]]: The set of metrics found by the RegEx. The result
             is in the format {<metric name> : <value>}. This implies that multiple metrics
             with the same name are deduped to the last instance of that metric.
         """
@@ -87,8 +85,7 @@ class LogMetricsParser(object):
         return metrics
 
     def parse_log_message(self, timestamp: str, message: str) -> None:
-        """
-        Parses a line from logs, adding all the metrics that have been logged
+        """Parses a line from logs, adding all the metrics that have been logged
         on that line. The timestamp is also added to match the corresponding values.
 
         Args:
@@ -111,19 +108,19 @@ class LogMetricsParser(object):
 
     def get_columns_and_pivot_indices(
         self, pivot: str
-    ) -> Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]:
-        """
-        Parses the metrics to find all the metrics that have the pivot column. The values of the
+    ) -> tuple[dict[str, list[Union[str, float, int]]], dict[tuple[int, str], int]]:
+        """Parses the metrics to find all the metrics that have the pivot column. The values of the
         pivot column are paired with the node_id and assigned a row index, so that all metrics
         with the same pivot value and node_id are stored in the same row.
+
         Args:
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
 
         Returns:
-            Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]: Contains:
-            The Dict[str, List[Any]] is the result table with all the metrics values initialized
+            tuple[dict[str, list[Union[str, float, int]]], dict[tuple[int, str], int]]: Contains:
+            The dict[str, list[Any]] is the result table with all the metrics values initialized
             to None.
-            The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
+            The dict[tuple[int, str], int] is the list of pivot indices, where the value of a
             pivot column and node_id is mapped to a row index.
         """
         row_count = 0
@@ -144,9 +141,8 @@ class LogMetricsParser(object):
 
     def get_metric_data_with_pivot(
         self, pivot: str, statistic: MetricStatistic
-    ) -> Dict[str, List[Union[str, float, int]]]:
-        """
-        Gets the metric data for a given pivot column name. Metrics without the pivot column
+    ) -> dict[str, list[Union[str, float, int]]]:
+        """Gets the metric data for a given pivot column name. Metrics without the pivot column
         are not included in the results. Metrics that have the same value in the pivot column
         from the same node are returned in the same row. Metrics from different nodes are stored
         in different rows. If the metric has multiple values for the row, the statistic is used
@@ -169,7 +165,7 @@ class LogMetricsParser(object):
             statistic (MetricStatistic): The statistic to determine which value to use.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            dict[str, list[Union[str, float, int]]]: The metrics data.
         """
         table, pivot_indices = self.get_columns_and_pivot_indices(pivot)
         for metric in self.all_metrics:
@@ -184,9 +180,8 @@ class LogMetricsParser(object):
 
     def get_parsed_metrics(
         self, metric_type: MetricType, statistic: MetricStatistic
-    ) -> Dict[str, List[Union[str, float, int]]]:
-        """
-        Gets all the metrics data, where the keys are the column names and the values are a list
+    ) -> dict[str, list[Union[str, float, int]]]:
+        """Gets all the metrics data, where the keys are the column names and the values are a list
         containing the values in each row.
 
         Args:
@@ -196,7 +191,7 @@ class LogMetricsParser(object):
                 when there is a conflict.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            dict[str, list[Union[str, float, int]]]: The metrics data.
 
         Example:
             timestamp energy

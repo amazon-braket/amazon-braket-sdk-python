@@ -31,7 +31,7 @@ def test_is_operator(angled_gate):
 
 
 def test_angle_is_none():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="angle must not be None"):
         AngledGate(qubit_count=1, ascii_symbols=["foo"], angle=None)
 
 

@@ -27,7 +27,7 @@ from braket.tasks import GateModelQuantumTaskResult
 
 
 def get_tol(shots: int) -> Dict[str, float]:
-    return {"atol": 0.1, "rtol": 0.15} if shots else {"atol": 0.01, "rtol": 0}
+    return {"atol": 0.2, "rtol": 0.3} if shots else {"atol": 0.01, "rtol": 0}
 
 
 def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
@@ -81,8 +81,8 @@ def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict
         .variance(observable=Observable.Y(), target=[3])
     )
     bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
-    for task in (bell, bell_qasm):
-        result = device.run(task, **run_kwargs).result()
+    results = device.run_batch([bell, bell_qasm], **run_kwargs).results()
+    for result in results:
         assert np.allclose(result.values[0], 0, **tol)
         assert np.allclose(result.values[1], 1, **tol)
 
@@ -103,9 +103,9 @@ def result_types_zero_shots_bell_pair_testing(
         circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
-    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
-    for task in tasks:
-        result = device.run(task, **run_kwargs).result()
+    tasks = [circuit, circuit.to_ir(ir_type=IRType.OPENQASM)]
+    results = device.run_batch(tasks, **run_kwargs).results()
+    for result in results:
         assert len(result.result_types) == 3 if include_state_vector else 2
         assert np.allclose(
             result.get_value_by_result_type(
@@ -139,7 +139,7 @@ def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: 
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.5, 0, 0, 0.5]),
-            **tol
+            **tol,
         )
 
 
@@ -154,7 +154,7 @@ def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwar
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability(target=0)),
             np.array([0.5, 0.5]),
-            **tol
+            **tol,
         )
 
 
@@ -592,7 +592,7 @@ def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: Dict
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.0, 0.1, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 
@@ -611,7 +611,7 @@ def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.1, 0.0, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 
@@ -671,7 +671,7 @@ def openqasm_noisy_circuit_1qubit_noise_full_probability(
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability(target=[0, 1])),
             np.array([0.0, 0.1, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 

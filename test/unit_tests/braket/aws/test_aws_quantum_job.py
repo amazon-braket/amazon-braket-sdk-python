@@ -43,7 +43,7 @@ def aws_session(quantum_job_arn, job_region):
 
     _aws_session.copy_session.side_effect = fake_copy_session
     _aws_session.list_keys.return_value = ["job-path/output/model.tar.gz"]
-    _aws_session.region = "us-test-1"
+    _aws_session.region = job_region
 
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
@@ -93,6 +93,7 @@ def generate_get_job_response():
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
             "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/data"},
+            "queueInfo": {"position": "1", "queue": "JOBS_QUEUE"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},
@@ -142,7 +143,7 @@ def quantum_job(quantum_job_arn, aws_session):
 
 
 def test_equality(quantum_job_arn, aws_session, job_region):
-    new_aws_session = Mock(braket_client=Mock(meta=Mock(region_name=job_region)))
+    new_aws_session = Mock(region=job_region)
     quantum_job_1 = AwsQuantumJob(quantum_job_arn, aws_session)
     quantum_job_2 = AwsQuantumJob(quantum_job_arn, aws_session)
     quantum_job_3 = AwsQuantumJob(quantum_job_arn, new_aws_session)
@@ -195,7 +196,7 @@ def test_quantum_job_constructor_invalid_region(aws_session):
 
 @patch("braket.aws.aws_quantum_job.boto3.Session")
 def test_quantum_job_constructor_explicit_session(mock_session, quantum_job_arn, job_region):
-    aws_session_mock = Mock(braket_client=Mock(meta=Mock(region_name=job_region)))
+    aws_session_mock = Mock(region=job_region)
     job = AwsQuantumJob(quantum_job_arn, aws_session_mock)
     assert job._aws_session == aws_session_mock
     assert job.arn == quantum_job_arn
@@ -507,7 +508,7 @@ def role_arn():
 
 @pytest.fixture(
     params=[
-        "arn:aws:braket:us-test-1::device/qpu/test/device-name",
+        "arn:aws:braket:us-west-2::device/qpu/test/device-name",
         "arn:aws:braket:::device/qpu/test/device-name",
     ]
 )
@@ -516,7 +517,12 @@ def device_arn(request):
 
 
 @pytest.fixture
-def prepare_job_args(aws_session, device_arn):
+def reservation_arn():
+    return "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+
+
+@pytest.fixture
+def prepare_job_args(aws_session, device_arn, reservation_arn):
     return {
         "device": device_arn,
         "source_module": Mock(),
@@ -535,6 +541,7 @@ def prepare_job_args(aws_session, device_arn):
         "checkpoint_config": Mock(),
         "aws_session": aws_session,
         "tags": Mock(),
+        "reservation_arn": reservation_arn,
     }
 
 
@@ -548,8 +555,9 @@ def test_arn(quantum_job_arn, aws_session):
     assert quantum_job.arn == quantum_job_arn
 
 
-def test_name(quantum_job_arn, quantum_job_name, aws_session):
+def test_name(quantum_job_arn, quantum_job_name, aws_session, generate_get_job_response):
     quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
     assert quantum_job.name == quantum_job_name
 
 
@@ -713,6 +721,14 @@ def test_logs(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
@@ -724,6 +740,48 @@ def test_logs(
     assert captured.out == "\n".join(
         (
             "..",
+            "hi there #1",
+            "hi there #2",
+            "hi there #2a",
+            "hi there #3",
+            "",
+        )
+    )
+
+
+def test_logs_queue_progress(
+    quantum_job,
+    generate_get_job_response,
+    log_events_responses,
+    log_stream_responses,
+    capsys,
+):
+    queue_info = {"queue": "JOBS_QUEUE", "position": "1"}
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+    )
+    quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
+    quantum_job._aws_session.get_log_events.side_effect = log_events_responses
+
+    quantum_job.logs(wait=True, poll_interval_seconds=0)
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n".join(
+        (
+            f"Job queue position: {queue_info['position']}",
+            "Running:",
+            "",
             "hi there #1",
             "hi there #2",
             "hi there #2a",
@@ -746,6 +804,15 @@ def test_logs_multiple_instances(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     log_stream_responses[-1]["logStreams"].append({"logStreamName": "stream-2"})
@@ -811,6 +878,7 @@ def test_logs_multiple_instances(
 
 def test_logs_error(quantum_job, generate_get_job_response, capsys):
     quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="COMPLETED"),
@@ -961,7 +1029,7 @@ def test_no_region_routing_simulator(aws_session):
     )
 
     device_arn = "arn:aws:braket:::device/simulator/test/device-name"
-    device_not_found = f"Simulator '{device_arn}' not found in 'us-test-1'"
+    device_not_found = f"Simulator '{device_arn}' not found in 'us-west-2'"
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
 
@@ -1027,7 +1095,7 @@ def test_initialize_session_local_device(mock_new_session, aws_session):
     assert AwsQuantumJob._initialize_session(None, device, logger) == mock_new_session()
 
 
-def test_bad_arn_format(aws_session):
+def test_bad_device_arn_format(aws_session):
     logger = logging.getLogger(__name__)
     device_not_found = (
         "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "
@@ -1036,3 +1104,26 @@ def test_bad_arn_format(aws_session):
 
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
+
+
+def test_logs_prefix(job_region, quantum_job_name, aws_session, generate_get_job_response):
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
+
+    # old jobs with the `arn:.../job-name` style ARN use `job-name/` as the logs prefix
+    name_arn = f"arn:aws:braket:{job_region}:875981177017:job/{quantum_job_name}"
+    quantum_job = AwsQuantumJob(name_arn, aws_session)
+    assert quantum_job._logs_prefix == f"{quantum_job_name}"
+
+    # jobs with the `arn:.../uuid` style ARN use `job-name/uuid/` as the logs prefix
+    uuid_1 = "UUID-123456789"
+    uuid_2 = "UUID-987654321"
+    uuid_arn_1 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_1}"
+    uuid_job_1 = AwsQuantumJob(uuid_arn_1, aws_session)
+    uuid_arn_2 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_2}"
+    uuid_job_2 = AwsQuantumJob(uuid_arn_2, aws_session)
+    assert (
+        uuid_job_1._logs_prefix
+        == f"{quantum_job_name}/{uuid_1}"
+        != uuid_job_2._logs_prefix
+        == f"{quantum_job_name}/{uuid_2}"
+    )

@@ -1,5 +1,290 @@
 # Changelog
 
+## v1.74.1 (2024-03-27)
+
+### Bug Fixes and Other Changes
+
+ * temporarily pin the schemas version
+
+## v1.74.0 (2024-03-21)
+
+### Features
+
+ * Allow sets of calibrations in batches
+
+### Bug Fixes and Other Changes
+
+ * batch tasking passing lists to single tasks
+
+## v1.73.3 (2024-03-18)
+
+### Bug Fixes and Other Changes
+
+ * store account id if already accessed
+
+## v1.73.2 (2024-03-13)
+
+### Bug Fixes and Other Changes
+
+ * increase tol value for our integ tests
+
+## v1.73.1 (2024-03-11)
+
+### Bug Fixes and Other Changes
+
+ * allow for braket endpoint to be set within the jobs
+
+## v1.73.0 (2024-03-07)
+
+### Features
+
+ * update circuit drawing
+
+## v1.72.2 (2024-03-04)
+
+### Bug Fixes and Other Changes
+
+ * validate FreeParameter name
+
+## v1.72.1 (2024-02-28)
+
+### Bug Fixes and Other Changes
+
+ * escape slash in metrics prefix
+
+## v1.72.0 (2024-02-27)
+
+### Features
+
+ * FreeParameterExpression division
+
+## v1.71.0 (2024-02-26)
+
+### Features
+
+ * update log stream prefix for new jobs
+
+## v1.70.3 (2024-02-21)
+
+### Bug Fixes and Other Changes
+
+ * remove test with job creation with qpu
+ * use the caller's account id based on the session
+ * docs: add note about using env variables for endpoint
+
+## v1.70.2 (2024-02-14)
+
+### Bug Fixes and Other Changes
+
+ * Sort input parameters when doing testing equality of two PulseSequences
+
+## v1.70.1 (2024-02-13)
+
+### Bug Fixes and Other Changes
+
+ * Do not autodeclare FreeParameter in OQpy
+
+## v1.70.0 (2024-02-12)
+
+### Features
+
+ * Support noise models in DM simulators
+
+## v1.69.1 (2024-02-08)
+
+### Bug Fixes and Other Changes
+
+ * let price tracker checks skip over devices without execution win…
+
+## v1.69.0 (2024-02-06)
+
+### Features
+
+ * update OQpy to version 0.3.5
+
+## v1.68.3 (2024-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Allow identities in PauliString observable
+
+## v1.68.2 (2024-01-31)
+
+### Bug Fixes and Other Changes
+
+ * update S3 uri regex for AWS sessions
+ * update batch circuit to limit repeat calls
+
+## v1.68.1 (2024-01-29)
+
+### Bug Fixes and Other Changes
+
+ * add force flag for import testing
+
+## v1.68.0 (2024-01-25)
+
+### Features
+
+ * update S3 locations for jobs
+
+## v1.67.0 (2024-01-23)
+
+### Features
+
+ * add queue position to the logs for tasks and jobs
+
+## v1.66.0 (2024-01-11)
+
+### Features
+
+ * update job name to use metadata
+
+## v1.65.1 (2023-12-25)
+
+### Bug Fixes and Other Changes
+
+ * validate out circuits that contain only non-zero-qubit gates
+
+## v1.65.0 (2023-12-21)
+
+### Features
+
+ * add U and GPhase gates
+
+## v1.64.2 (2023-12-19)
+
+### Bug Fixes and Other Changes
+
+ * treating OpenQASM builtin types as constants
+
+## v1.64.1 (2023-12-12)
+
+### Bug Fixes and Other Changes
+
+ * make filter more convenient
+
+## v1.64.0 (2023-12-07)
+
+### Features
+
+ * add str, repr and getitem to BasisState
+
+### Bug Fixes and Other Changes
+
+ * update: adding a test to check for circular imports
+
+## v1.63.0 (2023-12-05)
+
+### Features
+
+ * Allow reservation ARN in task and job creation
+
+### Bug Fixes and Other Changes
+
+ * Add Forte 1 device
+
+## v1.62.1 (2023-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken link to example notebook
+ * update: default no longer returning RETIRED devices from get_devices
+
+### Documentation Changes
+
+ * Add matrix expressions to docstrings
+
+## v1.62.0 (2023-11-09)
+
+### Features
+
+ * Add get_compiled_circuit convenience method
+
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
+## v1.61.0 (2023-11-06)
+
+### Features
+
+ * simplify entry point wrapper
+
+### Bug Fixes and Other Changes
+
+ * fixing some type hints for optional params
+
+## v1.60.2 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * drop task count for batch task tests to 3
+
+## v1.60.1 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * set python container version explicitly
+ * set decorator job working directory inside of function
+ * s3 config support for decorator jobs
+
+## v1.60.0 (2023-10-31)
+
+### Features
+
+ * support dependency list for decorator hybrid jobs
+
+### Bug Fixes and Other Changes
+
+ * Don't run pulse tests when QPU offline
+
+### Documentation Changes
+
+ * Fix some nits in the decorator doc string
+ * update intended audience to include education and research
+
+## v1.59.2 (2023-10-25)
+
+### Bug Fixes and Other Changes
+
+ * remove deprecated as_unitary method
+
+## v1.59.1.post0 (2023-10-24)
+
+### Documentation Changes
+
+ * add the amazon braket tag in the stack exchange URL
+
+## v1.59.1 (2023-10-18)
+
+### Bug Fixes and Other Changes
+
+ * doc fixes
+
+## v1.59.0 (2023-10-17)
+
+### Features
+
+ * use region property
+
+## v1.58.1 (2023-10-16)
+
+### Bug Fixes and Other Changes
+
+ * use separate aws session for python validation
+
+## v1.58.0 (2023-10-16)
+
+### Features
+
+ * job decorator
+
+### Bug Fixes and Other Changes
+
+ * update integ test for non-py310
+
 ## v1.57.2 (2023-10-11)
 
 ### Bug Fixes and Other Changes

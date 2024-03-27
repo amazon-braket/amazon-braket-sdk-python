@@ -1,4 +1,5 @@
 """Sphinx configuration."""
+
 import datetime
 
 import pkg_resources

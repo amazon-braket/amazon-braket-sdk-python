@@ -1,11 +1,22 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 import json
 import os
-from typing import Dict
 
 
 def get_job_name() -> str:
-    """
-    Get the name of the current job.
+    """Get the name of the current job.
 
     Returns:
         str: The name of the job if in a job, else an empty string.
@@ -14,8 +25,7 @@ def get_job_name() -> str:
 
 
 def get_job_device_arn() -> str:
-    """
-    Get the device ARN of the current job. If not in a job, default to "local:none/none".
+    """Get the device ARN of the current job. If not in a job, default to "local:none/none".
 
     Returns:
         str: The device ARN of the current job or "local:none/none".
@@ -24,8 +34,7 @@ def get_job_device_arn() -> str:
 
 
 def get_input_data_dir(channel: str = "input") -> str:
-    """
-    Get the job input data directory.
+    """Get the job input data directory.
 
     Args:
         channel (str): The name of the input channel. Default value
@@ -41,8 +50,7 @@ def get_input_data_dir(channel: str = "input") -> str:
 
 
 def get_results_dir() -> str:
-    """
-    Get the job result directory.
+    """Get the job result directory.
 
     Returns:
         str: The results directory, defaulting to current working directory.
@@ -51,8 +59,7 @@ def get_results_dir() -> str:
 
 
 def get_checkpoint_dir() -> str:
-    """
-    Get the job checkpoint directory.
+    """Get the job checkpoint directory.
 
     Returns:
         str: The checkpoint directory, defaulting to current working directory.
@@ -60,14 +67,13 @@ def get_checkpoint_dir() -> str:
     return os.getenv("AMZN_BRAKET_CHECKPOINT_DIR", ".")
 
 
-def get_hyperparameters() -> Dict[str, str]:
-    """
-    Get the job hyperparameters as strings.
+def get_hyperparameters() -> dict[str, str]:
+    """Get the job hyperparameters as a dict, with the values stringified.
 
     Returns:
-        Dict[str, str]: The hyperparameters of the job.
+        dict[str, str]: The hyperparameters of the job.
     """
     if "AMZN_BRAKET_HP_FILE" in os.environ:
-        with open(os.getenv("AMZN_BRAKET_HP_FILE"), "r") as f:
+        with open(os.getenv("AMZN_BRAKET_HP_FILE")) as f:
             return json.load(f)
     return {}

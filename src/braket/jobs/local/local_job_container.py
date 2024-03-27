@@ -10,17 +10,18 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
+
 import base64
 import re
 import subprocess
 from logging import Logger, getLogger
 from pathlib import PurePosixPath
-from typing import Dict, List
 
 from braket.aws.aws_session import AwsSession
 
 
-class _LocalJobContainer(object):
+class _LocalJobContainer:
     """Uses docker CLI to run Braket Hybrid Jobs on a local docker container."""
 
     ECR_URI_PATTERN = r"^((\d+)\.dkr\.ecr\.([^.]+)\.[^/]*)/([^:]*):(.*)$"
@@ -29,7 +30,7 @@ class _LocalJobContainer(object):
     def __init__(
         self,
         image_uri: str,
-        aws_session: AwsSession = None,
+        aws_session: AwsSession | None = None,
         logger: Logger = getLogger(__name__),
         force_update: bool = False,
     ):
@@ -37,9 +38,10 @@ class _LocalJobContainer(object):
         container.
 
         The function "end_session" must be called when the container is no longer needed.
+
         Args:
             image_uri (str): The URI of the container image to run.
-            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
@@ -63,16 +65,17 @@ class _LocalJobContainer(object):
         self._end_session()
 
     @staticmethod
-    def _envs_to_list(environment_variables: Dict[str, str]) -> List[str]:
+    def _envs_to_list(environment_variables: dict[str, str]) -> list[str]:
         """Converts a dictionary environment variables to a list of parameters that can be
         passed to the container exec/run commands to ensure those env variables are available
         in the container.
 
         Args:
-            environment_variables (Dict[str, str]): A dictionary of environment variables and
+            environment_variables (dict[str, str]): A dictionary of environment variables and
                 their values.
+
         Returns:
-            List[str]: The list of parameters to use when running a hybrid job that will include the
+            list[str]: The list of parameters to use when running a hybrid job that will include the
             provided environment variables as part of the runtime.
         """
         env_list = []
@@ -82,12 +85,12 @@ class _LocalJobContainer(object):
         return env_list
 
     @staticmethod
-    def _check_output_formatted(command: List[str]) -> str:
+    def _check_output_formatted(command: list[str]) -> str:
         """This is a wrapper around the subprocess.check_output command that decodes the output
         to UTF-8 encoding.
 
         Args:
-            command(List[str]): The command to run.
+            command(list[str]): The command to run.
 
         Returns:
             str: The UTF-8 encoded output of running the command.
@@ -101,6 +104,9 @@ class _LocalJobContainer(object):
         Args:
             account_id(str): The customer account ID.
             ecr_url(str): The URL of the ECR repo to log into.
+
+        Raises:
+            ValueError: Invalid permissions to pull container.
         """
         ecr_client = self._aws_session.ecr_client
         authorization_data_result = ecr_client.get_authorization_token(registryIds=[account_id])
@@ -119,6 +125,9 @@ class _LocalJobContainer(object):
 
         Args:
             image_uri(str): The URI of the ECR image to pull.
+
+        Raises:
+            ValueError: Invalid ECR URL.
         """
         ecr_pattern = re.compile(self.ECR_URI_PATTERN)
         ecr_pattern_match = ecr_pattern.match(image_uri)
@@ -142,6 +151,9 @@ class _LocalJobContainer(object):
         Args:
             image_uri(str): The URI of the ECR image to run.
             force_update(bool): Do a docker pull, even if the image is local, in order to update.
+
+        Raises:
+            ValueError: Invalid local image URI.
 
         Returns:
             str: The name of the running container, which can be used to execute further commands.
@@ -228,13 +240,16 @@ class _LocalJobContainer(object):
 
     def run_local_job(
         self,
-        environment_variables: Dict[str, str],
+        environment_variables: dict[str, str],
     ) -> None:
         """Runs a Braket Hybrid job in a local container.
 
         Args:
-            environment_variables (Dict[str, str]): The environment variables to make available
+            environment_variables (dict[str, str]): The environment variables to make available
                 as part of running the hybrid job.
+
+        Raises:
+            ValueError: `start_program_name` is not found.
         """
         start_program_name = self._check_output_formatted(
             ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]

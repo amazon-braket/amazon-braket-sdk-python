@@ -91,7 +91,8 @@ def test_all_devices_price_search():
     tasks = {}
     for region in AwsDevice.REGIONS:
         s = AwsSession(boto3.Session(region_name=region))
-        for device in devices:
+        # Skip devices with empty execution windows
+        for device in [device for device in devices if device.properties.service.executionWindows]:
             try:
                 s.get_device(device.arn)
 

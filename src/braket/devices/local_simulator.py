@@ -17,7 +17,7 @@ from functools import singledispatchmethod
 from itertools import repeat
 from multiprocessing import Pool
 from os import cpu_count
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import pkg_resources
 
@@ -25,6 +25,7 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.circuits.noise_model import NoiseModel
 from braket.circuits.serialization import IRType
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
@@ -50,12 +51,20 @@ class LocalSimulator(Device):
     results using constructs from the SDK rather than Braket IR.
     """
 
-    def __init__(self, backend: Union[str, BraketSimulator] = "default"):
-        """
+    def __init__(
+        self,
+        backend: Union[str, BraketSimulator] = "default",
+        noise_model: Optional[NoiseModel] = None,
+    ):
+        """Initializes a `LocalSimulator`.
+
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
+            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
+                before execution. Noise model can only be added to the devices that support
+                noise simulation.
         """
         delegate = self._get_simulator(backend)
         super().__init__(
@@ -63,14 +72,17 @@ class LocalSimulator(Device):
             status="AVAILABLE",
         )
         self._delegate = delegate
+        if noise_model:
+            self._validate_device_noise_model_support(noise_model)
+        self._noise_model = noise_model
 
     def run(
         self,
         task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
         shots: int = 0,
         inputs: Optional[dict[str, float]] = None,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> LocalQuantumTask:
         """Runs the given task with the wrapped local simulator.
 
@@ -84,6 +96,8 @@ class LocalSimulator(Device):
             inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
                 value. Default: {}.
+            *args (Any): Arbitrary arguments.
+            **kwargs(Any): Arbitrary keyword arguments.
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
@@ -98,10 +112,12 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
+        if self._noise_model:
+            task_specification = self._apply_noise_model_to_circuit(task_specification)
         result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
-    def run_batch(
+    def run_batch(  # noqa: C901
         self,
         task_specifications: Union[
             Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
@@ -116,7 +132,7 @@ class LocalSimulator(Device):
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]): # noqa
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]):
                 Single instance or list of quantum task specification.
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
@@ -131,8 +147,14 @@ class LocalSimulator(Device):
 
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
-        """
+        """  # noqa E501
         inputs = inputs or {}
+
+        if self._noise_model:
+            task_specifications = [
+                self._apply_noise_model_to_circuit(task_specification)
+                for task_specification in task_specifications
+            ]
 
         if not max_parallel:
             max_parallel = cpu_count()
@@ -146,9 +168,7 @@ class LocalSimulator(Device):
 
         if not single_task and not single_input:
             if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
+                raise ValueError("Multiple inputs and task specifications must be equal in number.")
         if single_task:
             task_specifications = repeat(task_specifications)
 
@@ -184,7 +204,8 @@ class LocalSimulator(Device):
 
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
-        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python
+        """
         return self._delegate.properties
 
     @staticmethod

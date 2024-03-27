@@ -33,7 +33,7 @@ def start_here():
 
 def failed_job_script():
     print("Test job started!!!!!")
-    assert 0
+    open("fake_file")
 
 
 def completed_job_script():
@@ -43,11 +43,16 @@ def completed_job_script():
     device = AwsDevice(get_job_device_arn())
 
     bell = Circuit().h(0).cnot(0, 1)
-    for count in range(5):
-        task = device.run(bell, shots=100)
+    for count in range(3):
+        task = device.run(bell, shots=10)
         print(task.result().measurement_counts)
         save_job_result({"converged": True, "energy": -0.2})
         save_job_checkpoint({"some_data": "abc"}, checkpoint_file_suffix="plain_data")
         save_job_checkpoint({"some_data": "abc"}, data_format=PersistedJobDataFormat.PICKLED_V4)
 
     print("Test job completed!!!!!")
+
+
+def job_helper():
+    print("import successful!")
+    return {"status": "SUCCESS"}

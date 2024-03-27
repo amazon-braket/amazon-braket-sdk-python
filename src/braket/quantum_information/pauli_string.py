@@ -17,7 +17,7 @@ import itertools
 from typing import Optional, Union
 
 from braket.circuits.circuit import Circuit
-from braket.circuits.observables import TensorProduct, X, Y, Z
+from braket.circuits.observables import I, TensorProduct, X, Y, Z
 
 _IDENTITY = "I"
 _PAULI_X = "X"
@@ -29,22 +29,25 @@ _PRODUCT_MAP = {
     "Y": {"X": ["Z", -1j], "Z": ["X", 1j]},
     "Z": {"X": ["Y", 1j], "Y": ["X", -1j]},
 }
+_ID_OBS = I()
 _PAULI_OBSERVABLES = {_PAULI_X: X(), _PAULI_Y: Y(), _PAULI_Z: Z()}
 _SIGN_MAP = {"+": 1, "-": -1}
 
 
 class PauliString:
-    """
-    A lightweight representation of a Pauli string with its phase.
-    """
+    """A lightweight representation of a Pauli string with its phase."""
 
     def __init__(self, pauli_string: Union[str, PauliString]):
-        """
+        """Initializes a `PauliString`.
+
         Args:
             pauli_string (Union[str, PauliString]): The representation of the pauli word, either a
                 string or another PauliString object. A valid string consists of an optional phase,
                 specified by an optional sign +/- followed by an uppercase string in {I, X, Y, Z}.
                 Example valid strings are: XYZ, +YIZY, -YX
+
+        Raises:
+            ValueError: If the Pauli String is empty.
         """
         if not pauli_string:
             raise ValueError("pauli_string must not be empty")
@@ -74,14 +77,29 @@ class PauliString:
         """int: The number of qubits this Pauli string acts on."""
         return self._qubit_count
 
-    def to_unsigned_observable(self) -> TensorProduct:
+    def to_unsigned_observable(self, include_trivial: bool = False) -> TensorProduct:
         """Returns the observable corresponding to the unsigned part of the Pauli string.
 
         For example, for a Pauli string -XYZ, the corresponding observable is X ⊗ Y ⊗ Z.
 
+        Args:
+            include_trivial (bool): Whether to include explicit identity factors in the observable.
+                Default: False.
+
         Returns:
             TensorProduct: The tensor product of the unsigned factors in the Pauli string.
         """
+        if include_trivial:
+            return TensorProduct(
+                [
+                    (
+                        _PAULI_OBSERVABLES[self._nontrivial[qubit]]
+                        if qubit in self._nontrivial
+                        else _ID_OBS
+                    )
+                    for qubit in range(self._qubit_count)
+                ]
+            )
         return TensorProduct(
             [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
         )
@@ -101,9 +119,11 @@ class PauliString:
         substrings = []
         for indices in itertools.combinations(self._nontrivial, weight):
             factors = [
-                self._nontrivial[qubit]
-                if qubit in set(indices).intersection(self._nontrivial)
-                else "I"
+                (
+                    self._nontrivial[qubit]
+                    if qubit in set(indices).intersection(self._nontrivial)
+                    else "I"
+                )
                 for qubit in range(self._qubit_count)
             ]
             substrings.append(
@@ -325,7 +345,7 @@ class PauliString:
                 circ = circ.z(qubit)
         return circ
 
-    def __eq__(self, other):
+    def __eq__(self, other: PauliString):
         if isinstance(other, PauliString):
             return (
                 self._phase == other._phase
@@ -334,7 +354,7 @@ class PauliString:
             )
         return False
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int):
         if item >= self._qubit_count:
             raise IndexError(item)
         return _PAULI_INDICES[self._nontrivial.get(item, "I")]
