@@ -602,9 +602,9 @@ def test_measure_multiple_targets():
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_instruction(Instruction(Gate.CNot(), [1, 2]))
         .add_instruction(Instruction(Gate.CNot(), [2, 3]))
-        .add_instruction(
-            Instruction(Measure(qubit_count=3, ascii_symbols=["M", "M", "M"]), [0, 1, 3])
-        )
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 3))
     )
     assert circ == expected
     assert circ._measure_targets == [0, 1, 3]
@@ -674,7 +674,8 @@ def test_measure_no_target():
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(qubit_count=2, ascii_symbols=["M", "M"]), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
     )
     assert circ == expected
 
@@ -698,7 +699,8 @@ def test_measure_with_multiple_measures():
         .add_instruction(Instruction(Gate.H(), 0))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_instruction(Instruction(Gate.H(), 2))
-        .add_instruction(Instruction(Measure(qubit_count=2, ascii_symbols=["M", "M"]), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
         .add_instruction(Instruction(Measure(), 2))
     )
     assert circ == expected

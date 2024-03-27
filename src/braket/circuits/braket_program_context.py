@@ -167,7 +167,5 @@ class BraketProgramContext(AbstractProgramContext):
         Args:
             target (tuple[int]): the target qubits to be measured.
         """
-        instruction = Instruction(
-            Measure(qubit_count=len(target), ascii_symbols=["M"] * len(target)), list(target)
-        )
+        instruction = Instruction(Measure(), list(target))
         self._circuit.add_instruction(instruction)

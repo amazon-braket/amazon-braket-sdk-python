@@ -23,31 +23,17 @@ from braket.circuits.serialization import (
 
 
 @pytest.fixture
-def ascii_symbols():
-    return ["foo"]
-
-
-@pytest.fixture
-def measure(ascii_symbols):
-    return Measure(qubit_count=1, ascii_symbols=ascii_symbols)
+def measure():
+    return Measure()
 
 
 def test_is_operator(measure):
     assert isinstance(measure, QuantumOperator)
 
 
-def test_ascii_symbols(measure, ascii_symbols):
-    assert measure.ascii_symbols == tuple(ascii_symbols)
-
-
-def test_none_ascii():
-    with pytest.raises(ValueError):
-        Measure(ascii_symbols=None)
-
-
 def test_equality():
     measure1 = Measure()
-    measure2 = Measure(qubit_count=1, ascii_symbols=["M"])
+    measure2 = Measure()
     non_measure = "non measure"
 
     assert measure1 == measure2
@@ -89,7 +75,7 @@ def test_measure_to_ir(
             "b[0] = measure q[0];",
         ),
         (
-            Measure(qubit_count=4, ascii_symbols=["M", "M", "M", "M"]),
+            Measure(),
             [1, 4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "\n".join(

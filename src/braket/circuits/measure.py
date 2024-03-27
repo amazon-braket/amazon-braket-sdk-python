@@ -13,8 +13,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.serialization import (
@@ -28,20 +27,15 @@ from braket.registers.qubit_set import QubitSet
 class Measure(QuantumOperator):
     """Class `Measure` represents a measure operation on targeted qubits"""
 
-    def __init__(self, qubit_count: Optional[int] = 1, ascii_symbols: Sequence[str] = ["M"]):
+    def __init__(self, **kwargs):
         """Inits a `Measure`.
-
-        Args:
-            qubit_count (Optional[int]): Number of qubits this measure operation interacts with.
-            ascii_symbols (Sequence[str]): ASCII string symbols for the measure. These are used when
-                printing a diagram of circuits. Length must be the same as `qubit_count`, and
-                index ordering is expected to correlate with target ordering on the instruction.
 
         Raises:
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
-        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        super().__init__(qubit_count=1, ascii_symbols=["M"])
+        self._target_index = kwargs.get("index")
 
     @property
     def ascii_symbols(self) -> tuple[str, ...]:
@@ -91,12 +85,15 @@ class Measure(QuantumOperator):
         target_qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
         instructions = []
         for idx, qubit in enumerate(target_qubits):
-            instructions.append(f"b[{idx}] = measure {qubit};")
+            bit_index = (
+                self._target_index if self._target_index and len(target_qubits) == 1 else idx
+            )
+            instructions.append(f"b[{bit_index}] = measure {qubit};")
 
         return "\n".join(instructions)
 
     def __eq__(self, other: Measure):
-        return isinstance(other, Measure) and self.qubit_count == other.qubit_count
+        return isinstance(other, Measure)
 
     def __repr__(self):
         return self.name

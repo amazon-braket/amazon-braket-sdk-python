@@ -275,6 +275,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If a meaure instruction exists on the current circuit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -439,6 +440,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If adding a gate or noise after a measure instruction.
 
         Examples:
             >>> instr = Instruction(Gate.CNot(), [0, 1])
@@ -660,6 +662,29 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
+    def _add_measure(self, target_qubits: QubitSetInput) -> None:
+        """Adds a measure instruction to the the circuit
+
+        Args:
+            target_qubits (QubitSetInput): target qubits to measure.
+        """
+        for idx, target in enumerate(target_qubits):
+            num_qubits_measured = (
+                len(self._measure_targets)
+                if self._measure_targets and len(target_qubits) == 1
+                else 0
+            )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(index=idx + num_qubits_measured),
+                    target=target,
+                )
+            )
+            if self._measure_targets:
+                self._measure_targets.append(target)
+            else:
+                self._measure_targets = [target]
+
     def measure(self, target_qubits: QubitSetInput | None = None) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
@@ -674,6 +699,8 @@ class Circuit:
         Raises:
             IndexError: If `self` has no qubits.
             IndexError: If target qubits are not within the range of the current circuit.
+            ValueError: If the current circuit contains any result types.
+            ValueError: If the target qubit is already measured.
 
         Examples:
             >>> circ = Circuit.h(0).cnot(0, 1).measure([0])
@@ -708,32 +735,13 @@ class Circuit:
                     f"cannot measure the same qubit(s) {', '.join(map(str, target_qubits))} "
                     "more than once."
                 )
-            self.add_instruction(
-                Instruction(
-                    operator=Measure(
-                        qubit_count=len(target_qubits), ascii_symbols=["M"] * len(target_qubits)
-                    ),
-                    target=target_qubits,
-                )
-            )
-            if self._measure_targets:
-                self._measure_targets += target_qubits
-            else:
-                self._measure_targets = target_qubits
+            Circuit._add_measure(self, target_qubits=target_qubits)
         else:
             # Check if any qubits are already measured
             if self._measure_targets:
                 raise ValueError("cannot perform multiple measurements of the same qubits.")
             # Measure all the qubits
-            self.add_instruction(
-                Instruction(
-                    operator=Measure(
-                        qubit_count=self.qubit_count, ascii_symbols=["M"] * self.qubit_count
-                    ),
-                    target=self.qubits,
-                )
-            )
-            self._measure_targets = self.qubits
+            Circuit._add_measure(self, target_qubits=self.qubits)
 
         return self
 
