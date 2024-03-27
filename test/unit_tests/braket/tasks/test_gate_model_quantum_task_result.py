@@ -348,7 +348,14 @@ def test_get_compiled_circuit_no_metadata(result_obj_1):
 
 def test_measurement_counts_from_measurements():
     measurements: np.ndarray = np.array(
-        [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
+        [
+            [1, 0, 1, 0],
+            [0, 0, 0, 0],
+            [1, 0, 1, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 1, 0],
+        ]
     )
     measurement_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(
         measurements

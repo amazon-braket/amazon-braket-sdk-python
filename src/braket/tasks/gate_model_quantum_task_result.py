@@ -30,6 +30,7 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+from braket.tasks.measurement_list import MeasurementsList
 
 T = TypeVar("T")
 
@@ -52,16 +53,17 @@ class GateModelQuantumTaskResult:
             This can be an empty list if no result types are specified in the IR.
             This is calculated from `measurements` and
             the IR of the circuit program when `shots>0`.
-        measurements (numpy.ndarray, optional): 2d array - row is shot and column is qubit.
+        measurements (MeasurementsList, optional): 2d array - row is shot and column is qubit.
             Default is None. Only available when shots > 0. The qubits in `measurements`
             are the ones in `GateModelQuantumTaskResult.measured_qubits`.
         measured_qubits (list[int], optional): The indices of the measured qubits. Default
             is None. Only available when shots > 0. Indicates which qubits are in
             `measurements`.
-        measurement_counts (Counter, optional): A `Counter` of measurements. Key is the measurements
-            in a big endian binary string. Value is the number of times that measurement occurred.
-            Default is None. Only available when shots > 0. Note that the keys in `Counter` are
-            unordered.
+        measurement_counts (MeasurementsCounter, optional): A `Counter` of measurements.
+            Key is the measurements in a big endian binary string.
+            Value is the number of times that measurement occurred.
+            Default is None. Only available when shots > 0.
+            Note that the keys in `Counter` are unordered.
         measurement_probabilities (dict[str, float], optional):
             A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
@@ -83,7 +85,7 @@ class GateModelQuantumTaskResult:
     additional_metadata: AdditionalMetadata
     result_types: list[ResultTypeValue] = None
     values: list[Any] = None
-    measurements: np.ndarray = None
+    measurements: MeasurementsList = None
     measured_qubits: list[int] = None
     measurement_counts: Counter = None
     measurement_probabilities: dict[str, float] = None
@@ -150,7 +152,8 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
-        """Creates measurement counts from measurements
+        """
+        Creates measurement counts from measurements
 
         Args:
             measurements (np.ndarray): 2d array - row is shot and column is qubit.
@@ -262,7 +265,7 @@ class GateModelQuantumTaskResult:
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         if result.measurements:
-            measurements = np.asarray(result.measurements, dtype=int)
+            measurements = MeasurementsList(result.measurements, dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
             m_probs = GateModelQuantumTaskResult.measurement_probabilities_from_measurement_counts(
                 m_counts
@@ -413,7 +416,7 @@ class GateModelQuantumTaskResult:
     def _selected_measurements(
         measurements: np.ndarray, measured_qubits: list[int], targets: Optional[list[int]]
     ) -> np.ndarray:
-        if targets is not None and targets != measured_qubits:
+        if targets is not None and not np.array_equal(targets, measured_qubits):
             # Only some qubits targeted
             columns = [measured_qubits.index(t) for t in targets]
             measurements = measurements[:, columns]
