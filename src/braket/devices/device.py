@@ -116,6 +116,18 @@ class Device(ABC):
         """
         return self._status
 
+    def set_noise_model(self, noise_model: NoiseModel) -> None:
+        """Set the noise model of the device.
+
+        Args:
+            noise_model (NoiseModel): The Braket noise model to apply to the circuit before
+                execution. Noise model can only be added to the devices that support noise
+                simulation.
+        """
+        if noise_model:
+            self._validate_device_noise_model_support(noise_model)
+        self._noise_model = noise_model
+
     def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:
         supported_noises = set(
             SUPPORTED_NOISE_PRAGMA_TO_NOISE[pragma].__name__
