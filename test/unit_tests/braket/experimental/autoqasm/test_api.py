@@ -1166,7 +1166,7 @@ return_value = __bit_0__;"""
 def test_measure_all_using_iter():
     @aq.main(num_qubits=3)
     def main():
-        return measure(aq.qubits())
+        return measure(aq.qubits)
 
     expected_ir = """OPENQASM 3.0;
 output bit[3] return_value;
@@ -1182,7 +1182,7 @@ return_value = __bit_0__;"""
 def test_gate_register_not_allowed():
     @aq.main(num_qubits=4)
     def main():
-        h(aq.qubits())
+        h(aq.qubits)
 
     with pytest.raises(
         ValueError, match="qubit index must be a single value, not a list or a register"
@@ -1193,7 +1193,7 @@ def test_gate_register_not_allowed():
 def test_global_qubit_register_loop():
     @aq.main(num_qubits=5)
     def main():
-        for q in aq.qubits():
+        for q in aq.qubits:
             h(q)
 
     expected_ir = """OPENQASM 3.0;
@@ -1207,7 +1207,7 @@ for int q in [0:5 - 1] {
 def test_global_qubit_register_needs_num_qubits():
     @aq.main
     def main():
-        for q in aq.qubits():
+        for q in aq.qubits:
             h(q)
 
     with pytest.raises(errors.UnknownQubitCountError):
@@ -1217,7 +1217,7 @@ def test_global_qubit_register_needs_num_qubits():
 def test_global_qubit_register_len_aq_range():
     @aq.main(num_qubits=6)
     def main():
-        for q in aq.range(len(aq.qubits())):
+        for q in aq.range(len(aq.qubits)):
             h(q)
 
     expected_ir = """OPENQASM 3.0;
@@ -1231,7 +1231,7 @@ for int q in [0:6 - 1] {
 def test_global_qubit_register_len_py_range():
     @aq.main(num_qubits=4)
     def main():
-        for q in range(len(aq.qubits())):
+        for q in range(len(aq.qubits)):
             h(q)
 
     expected_ir = """OPENQASM 3.0;
