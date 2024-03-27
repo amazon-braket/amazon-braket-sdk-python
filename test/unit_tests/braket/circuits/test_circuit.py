@@ -686,7 +686,7 @@ def test_measure_with_result_types():
 
 
 def test_result_type_with_measure():
-    message = "Cannot add a result type with a measure instruction."
+    message = "Cannot add a result type to a circuit which already contains a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).sample(observable=Observable.Z(), target=0)
 
@@ -702,6 +702,18 @@ def test_measure_with_multiple_measures():
         .add_instruction(Instruction(Measure(), 2))
     )
     assert circ == expected
+
+
+def test_measure_same_qubit_twice():
+    message = "cannot measure the same qubit\(s\) 0 more than once."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
+
+
+def test_measure_empty_measure_after_measure_with_targets():
+    message = "cannot perform multiple measurements of the same qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).measure(0).measure()
 
 
 def test_measure_gate_after():

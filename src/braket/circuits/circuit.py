@@ -301,7 +301,10 @@ class Circuit:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
         if self._measure_targets:
-            raise ValueError("Cannot add a result type to a circuit which already contains a measure instruction.")
+            raise ValueError(
+                "Cannot add a result type to a circuit which already contains a "
+                "measure instruction."
+            )
 
         if not target_mapping and not target:
             # Nothing has been supplied, add result_type
@@ -657,12 +660,12 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
-    def measure(self, target_qubits: Optional[np.ndarray] | Optional[int] = None) -> Circuit:
+    def measure(self, target_qubits: QubitSetInput | None = None) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
 
         Args:
-            target_qubits (Optional[ndarray] | Optional[int]): target qubits to measure.
+            target_qubits (QubitSetInput | None): target qubits to measure.
                 Default=None
 
         Returns:
@@ -697,6 +700,14 @@ class Circuit:
             raise ValueError("a circuit cannot contain both measure instructions and result types.")
 
         if target_qubits:
+            # Check if the target_qubits are already measured
+            if self._measure_targets and all(
+                target in self._measure_targets for target in target_qubits
+            ):
+                raise ValueError(
+                    f"cannot measure the same qubit(s) {', '.join(map(str, target_qubits))} "
+                    "more than once."
+                )
             self.add_instruction(
                 Instruction(
                     operator=Measure(
@@ -705,8 +716,14 @@ class Circuit:
                     target=target_qubits,
                 )
             )
-            self._measure_targets = target_qubits
+            if self._measure_targets:
+                self._measure_targets += target_qubits
+            else:
+                self._measure_targets = target_qubits
         else:
+            # Check if any qubits are already measured
+            if self._measure_targets:
+                raise ValueError("cannot perform multiple measurements of the same qubits.")
             # Measure all the qubits
             self.add_instruction(
                 Instruction(
