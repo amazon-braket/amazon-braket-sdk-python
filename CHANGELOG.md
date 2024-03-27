@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.74.1 (2024-03-27)
+
+### Bug Fixes and Other Changes
+
+ * temporarily pin the schemas version
+
 ## v1.74.0 (2024-03-21)
 
 ### Features
