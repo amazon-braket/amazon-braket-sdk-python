@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.74.0 (2024-03-21)
+
+### Features
+
+ * Allow sets of calibrations in batches
+
+### Bug Fixes and Other Changes
+
+ * batch tasking passing lists to single tasks
+
+## v1.73.3 (2024-03-18)
+
+### Bug Fixes and Other Changes
+
+ * store account id if already accessed
+
+## v1.73.2 (2024-03-13)
+
+### Bug Fixes and Other Changes
+
+ * increase tol value for our integ tests
+
 ## v1.73.1 (2024-03-11)
 
 ### Bug Fixes and Other Changes

@@ -85,7 +85,6 @@ class AwsSession:
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
-
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
@@ -101,6 +100,7 @@ class AwsSession:
         self._sts = None
         self._logs = None
         self._ecr = None
+        self._account_id = None
 
     @property
     def region(self) -> str:
@@ -108,7 +108,14 @@ class AwsSession:
 
     @property
     def account_id(self) -> str:
-        return self.sts_client.get_caller_identity()["Account"]
+        """Gets the caller's account number.
+
+        Returns:
+            str: The account number of the caller.
+        """
+        if not self._account_id:
+            self._account_id = self.sts_client.get_caller_identity()["Account"]
+        return self._account_id
 
     @property
     def iam_client(self) -> client:
