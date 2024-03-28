@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, List, Optional, Union, get_args
+from typing import Any, List, Union, get_args
 
 import oqpy
 import oqpy.base
@@ -51,7 +51,7 @@ def is_qasm_type(val: Any) -> bool:
     return isinstance(val, qasm_types)
 
 
-def make_annotations_list(annotations: Optional[str | Iterable[str]]) -> List[str]:
+def make_annotations_list(annotations: str | Iterable[str] | None) -> List[str]:
     return [annotations] if isinstance(annotations, str) else annotations or []
 
 
@@ -76,17 +76,17 @@ class Range(oqpy.Range):
     def __init__(
         self,
         start: int,
-        stop: Optional[int] = None,
-        step: Optional[int] = 1,
-        annotations: Optional[str | Iterable[str]] = None,
+        stop: int | None = None,
+        step: int | None = 1,
+        annotations: str | Iterable[str] | None = None,
     ):
         """Creates a range definition.
 
         Args:
             start (int): Start of the range.
-            stop (Optional[int]): End of the range. Defaults to None.
-            step (Optional[int]): Step of the range. Defaults to 1.
-            annotations (Optional[str | Iterable[str]]): Annotations for the range.
+            stop (int | None): End of the range. Defaults to None.
+            step (int | None): Step of the range. Defaults to 1.
+            annotations (str | Iterable[str] | None): Annotations for the range.
         """
         if stop is None:
             stop = start
@@ -96,7 +96,7 @@ class Range(oqpy.Range):
 
 
 class ArrayVar(oqpy.ArrayVar):
-    def __init__(self, *args, annotations: Optional[str | Iterable[str]] = None, **kwargs):
+    def __init__(self, *args, annotations: str | Iterable[str] | None = None, **kwargs):
         if (
             program.get_program_conversion_context().subroutines_processing
             or not program.get_program_conversion_context().at_function_root_scope
@@ -111,7 +111,7 @@ class ArrayVar(oqpy.ArrayVar):
 
 
 class BitVar(oqpy.BitVar):
-    def __init__(self, *args, annotations: Optional[str | Iterable[str]] = None, **kwargs):
+    def __init__(self, *args, annotations: str | Iterable[str] | None = None, **kwargs):
         super(BitVar, self).__init__(
             *args, annotations=make_annotations_list(annotations), **kwargs
         )
@@ -122,7 +122,7 @@ class BitVar(oqpy.BitVar):
 
 
 class BoolVar(oqpy.BoolVar):
-    def __init__(self, *args, annotations: Optional[str | Iterable[str]] = None, **kwargs):
+    def __init__(self, *args, annotations: str | Iterable[str] | None = None, **kwargs):
         super(BoolVar, self).__init__(
             *args, annotations=make_annotations_list(annotations), **kwargs
         )
@@ -130,7 +130,7 @@ class BoolVar(oqpy.BoolVar):
 
 
 class FloatVar(oqpy.FloatVar):
-    def __init__(self, *args, annotations: Optional[str | Iterable[str]] = None, **kwargs):
+    def __init__(self, *args, annotations: str | Iterable[str] | None = None, **kwargs):
         super(FloatVar, self).__init__(
             *args, annotations=make_annotations_list(annotations), **kwargs
         )
@@ -138,7 +138,7 @@ class FloatVar(oqpy.FloatVar):
 
 
 class IntVar(oqpy.IntVar):
-    def __init__(self, *args, annotations: Optional[str | Iterable[str]] = None, **kwargs):
+    def __init__(self, *args, annotations: str | Iterable[str] | None = None, **kwargs):
         super(IntVar, self).__init__(
             *args, annotations=make_annotations_list(annotations), **kwargs
         )

@@ -14,7 +14,9 @@
 
 "Utility methods for operators."
 
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import Any
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
@@ -22,7 +24,7 @@ from braket.experimental.autoqasm import types as aq_types
 
 def _register_and_convert_parameters(
     *args: tuple[Any],
-) -> Union[list[aq_types.FloatVar], aq_types.FloatVar]:
+) -> list[aq_types.FloatVar] | aq_types.FloatVar:
     """Adds FreeParameters to the program conversion context parameter registry, and
     returns the associated FloatVar objects.
 
@@ -32,7 +34,7 @@ def _register_and_convert_parameters(
     FloatVars are more compatible with the program conversion operations.
 
     Returns:
-        Union[list[FloatVar], FloatVar]: FloatVars for program conversion.
+        list[FloatVar] | FloatVar: FloatVars for program conversion.
     """
     program_conversion_context = program.get_program_conversion_context()
     program_conversion_context.register_args(args)

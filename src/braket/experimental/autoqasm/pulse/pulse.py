@@ -14,7 +14,7 @@
 
 """Pulse instructions that apply to frames or qubits."""
 
-from typing import Union
+from __future__ import annotations
 
 import oqpy
 
@@ -143,17 +143,17 @@ def capture_v0(frame: Frame) -> BitVar:
 
 
 def delay(
-    qubits_or_frames: Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]],
-    duration: Union[float, oqpy.FloatVar, FreeParameterExpression],
+    qubits_or_frames: Frame | list[Frame] | QubitIdentifierType | list[QubitIdentifierType],
+    duration: float | oqpy.FloatVar | FreeParameterExpression,
 ) -> None:
     """Adds an instruction to advance the frame clock by the specified `duration` value.
 
     Args:
-        qubits_or_frames (Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]):
+        qubits_or_frames (Frame | list[Frame] | QubitIdentifierType | list[QubitIdentifierType]):
             Qubits or frame(s) on which the delay needs to be introduced.
-        duration (Union[float, FloatVar, FreeParameterExpression]): Value (in seconds) defining the
+        duration (float | FloatVar | FreeParameterExpression): Value (in seconds) defining the
             duration of the delay.
-    """  # noqa: E501
+    """
     if not isinstance(qubits_or_frames, list):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
@@ -164,16 +164,16 @@ def delay(
 
 
 def barrier(
-    qubits_or_frames: Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]
+    qubits_or_frames: Frame | list[Frame] | QubitIdentifierType | list[QubitIdentifierType],
 ) -> None:
     """Adds an instruction to align the frame clocks to the latest time across all the specified
     frames. When applied on qubits, it prevents compilations across the barrier, if the compiler
     supports barrier.
 
     Args:
-        qubits_or_frames (Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]):
+        qubits_or_frames (Frame | list[Frame] | QubitIdentifierType | list[QubitIdentifierType]):
             Qubits or frame(s) on which the barrier needs to be introduced.
-    """  # noqa: E501
+    """
     if not isinstance(qubits_or_frames, list):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):

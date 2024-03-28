@@ -13,9 +13,11 @@
 
 """Type conversions between Python and the autoqasm representation for types."""
 
+from __future__ import annotations
+
 import typing
 from functools import singledispatch
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import oqpy
@@ -77,11 +79,11 @@ def var_type_from_ast_type(ast_type: ast.ClassicalType) -> type:
     raise NotImplementedError
 
 
-def var_type_from_oqpy(expr_or_var: Union[oqpy.base.OQPyExpression, oqpy.base.Var]) -> type:
+def var_type_from_oqpy(expr_or_var: oqpy.base.OQPyExpression | oqpy.base.Var) -> type:
     """Returns the AutoQASM variable type corresponding to the provided OQPy object.
 
     Args:
-        expr_or_var (Union[OQPyExpression, Var]): An OQPy expression or variable.
+        expr_or_var (OQPyExpression | Var): An OQPy expression or variable.
 
     Returns:
         type: The corresponding AutoQASM variable type.
@@ -125,13 +127,13 @@ def _(node: bool):
 
 @wrap_value.register(int)
 @wrap_value.register(np.integer)
-def _(node: Union[int, np.integer]):
+def _(node: int | np.integer):
     return aq_types.IntVar(node)
 
 
 @wrap_value.register(float)
 @wrap_value.register(np.floating)
-def _(node: Union[float, np.floating]):
+def _(node: float | np.floating):
     return aq_types.FloatVar(node)
 
 

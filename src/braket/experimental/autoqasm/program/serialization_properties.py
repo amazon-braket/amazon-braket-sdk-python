@@ -11,17 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
 class OpenQASMSerializationProperties:
-    auto_defcalgrammar: Optional[bool] = False
+    auto_defcalgrammar: bool | None = False
     """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
 
-    include_externs: Optional[bool] = False
+    include_externs: bool | None = False
     """Whether to include externs. Default to False."""
 
 

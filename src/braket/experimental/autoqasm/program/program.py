@@ -21,7 +21,7 @@ import threading
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any
 
 import oqpy.base
 import pygments
@@ -66,10 +66,10 @@ def _get_local() -> threading.local:
 class UserConfig:
     """User-specified configurations that influence program building."""
 
-    num_qubits: Optional[int] = None
+    num_qubits: int | None = None
     """The total number of qubits to declare in the program."""
 
-    device: Optional[Device] = None
+    device: Device | None = None
     """The target device for the program."""
 
 
@@ -172,12 +172,12 @@ class Program(SerializableProgram):
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
 
-    def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
+    def with_calibrations(self, gate_calibrations: Callable | list[Callable]) -> Program:
         """Add the gate calibrations to the program. The calibration added program is returned
         as a new object. The original program is not modified.
 
         Args:
-            gate_calibrations (Union[Callable, list[Callable]]): The gate calibrations to add to
+            gate_calibrations (Callable | list[Callable]): The gate calibrations to add to
                 the main program. Calibration are passed as callable without evaluation.
 
         Returns:
@@ -274,7 +274,7 @@ class GateArgs:
     """Represents a list of qubit and angle arguments for a gate definition."""
 
     def __init__(self):
-        self._args: list[Union[oqpy.Qubit, oqpy.AngleVar]] = []
+        self._args: list[oqpy.Qubit | oqpy.AngleVar] = []
 
     def __len__(self):
         return len(self._args)
@@ -315,7 +315,7 @@ class GateArgs:
 class ProgramConversionContext:
     """The data structure used while converting a program. Intended for internal use."""
 
-    def __init__(self, user_config: Optional[UserConfig] = None):
+    def __init__(self, user_config: UserConfig | None = None):
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
         self.global_qubit_register = GlobalQubitRegister(size=self.user_config.num_qubits)
@@ -368,7 +368,7 @@ class ProgramConversionContext:
         """Register a virtual qubit that is used in this program."""
         self._virtual_qubits_used.add(qubit)
 
-    def get_declared_qubits(self) -> Optional[int]:
+    def get_declared_qubits(self) -> int | None:
         """Return the number of qubits to declare in the program, as specified by the user.
         Returns None if the user did not specify how many qubits are in the program.
         """
@@ -439,13 +439,13 @@ class ProgramConversionContext:
     def register_input_parameter(
         self,
         name: str,
-        type_: Union[float, int, bool] = float,
+        type_: float | int | bool = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
         Args:
             name (str): The name of the parameter to register with the program.
-            type_ (Union[float, int, bool]): The type of the parameter to register
+            type_ (float | int | bool): The type of the parameter to register
                 with the program. Default: float.
 
         Raises:
@@ -469,13 +469,13 @@ class ProgramConversionContext:
             return var
 
     def register_output_parameter(
-        self, name: str, value: Union[bool, int, float, oqpy.base.Var, oqpy.OQPyExpression, None]
+        self, name: str, value: bool | int | float | oqpy.base.Var | oqpy.OQPyExpression | None
     ) -> None:
         """Register a new output parameter if it is not None.
 
         Args:
             name (str): The name of the parameter to register with the program.
-            value (Union[bool, int, float, Var, OQPyExpression, None]): Value to
+            value (bool | int | float | Var | OQPyExpression | None): Value to
                 register as an output parameter.
         """
         if value is None:
@@ -517,7 +517,7 @@ class ProgramConversionContext:
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)
 
-    def get_target_device(self) -> Optional[Device]:
+    def get_target_device(self) -> Device | None:
         """Return the target device for the program, as specified by the user.
         Returns None if the user did not specify a target device.
         """
@@ -700,7 +700,7 @@ class ProgramConversionContext:
         finally:
             self.at_function_root_scope = original
 
-    def _add_annotations(self, annotations: Optional[str | Iterable[str]] = None) -> None:
+    def _add_annotations(self, annotations: str | Iterable[str] | None = None) -> None:
         oqpy_program = self.get_oqpy_program()
         for annotation in aq_types.make_annotations_list(annotations):
             oqpy_program.annotate(annotation)
@@ -728,13 +728,13 @@ class ProgramConversionContext:
         return self._control_flow_block(oqpy.Else(oqpy_program))
 
     def for_in(
-        self, iterator: aq_types.Range, iterator_name: Optional[str]
+        self, iterator: aq_types.Range, iterator_name: str | None
     ) -> contextlib._GeneratorContextManager:
         """Sets the program conversion context into a for loop context.
 
         Args:
             iterator (Range): The iterator of the for loop.
-            iterator_name (Optional[str]): The symbol to use as the name of the iterator.
+            iterator_name (str | None): The symbol to use as the name of the iterator.
 
         Yields:
             _GeneratorContextManager: The context manager of the oqpy.ForIn block.
@@ -805,14 +805,14 @@ class ProgramConversionContext:
     @contextlib.contextmanager
     def box(
         self,
-        pragma: Optional[str] = None,
-        annotations: Optional[str | Iterable[str]] = None,
+        pragma: str | None = None,
+        annotations: str | Iterable[str] | None = None,
     ) -> None:
         """Sets the program conversion context into a box context.
 
         Args:
-            pragma (Optional[str]): Pragma to include before the box. Defaults to None.
-            annotations (Optional[str | Iterable[str]]): Annotations for the box.
+            pragma (str | None): Pragma to include before the box. Defaults to None.
+            annotations (str | Iterable[str] | None): Annotations for the box.
         """
         oqpy_program = self.get_oqpy_program()
         if pragma:
@@ -823,7 +823,7 @@ class ProgramConversionContext:
 
 
 @contextlib.contextmanager
-def build_program(user_config: Optional[UserConfig] = None) -> None:
+def build_program(user_config: UserConfig | None = None) -> None:
     """Creates a context manager which ensures there is a valid thread-local
     ProgramConversionContext object. If this context manager created the
     ProgramConversionContext object, it removes it from thread-local storage when
@@ -837,7 +837,7 @@ def build_program(user_config: Optional[UserConfig] = None) -> None:
         program = program_conversion_context.make_program()
 
     Args:
-        user_config (Optional[UserConfig]): User-supplied program building options.
+        user_config (UserConfig | None): User-supplied program building options.
     """
     try:
         owns_program_conversion_context = False
