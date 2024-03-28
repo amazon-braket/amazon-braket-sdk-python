@@ -263,16 +263,6 @@ def malformatted_results_1(task_metadata_shots, additional_metadata):
 
 
 @pytest.fixture
-def malformatted_results_2(task_metadata_shots, additional_metadata):
-    return GateModelTaskResult(
-        measurementProbabilities={"011000": 0.9999999999999982},
-        measuredQubits=[0],
-        taskMetadata=task_metadata_shots,
-        additionalMetadata=additional_metadata,
-    ).json()
-
-
-@pytest.fixture
 def openqasm_result_obj_shots(task_metadata_shots, additional_metadata_openqasm):
     return GateModelTaskResult.construct(
         measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
@@ -482,11 +472,6 @@ def test_get_value_by_result_type_value_error(result_obj_4):
 @pytest.mark.xfail(raises=ValueError)
 def test_shots_no_measurements_no_measurement_probs(malformatted_results_1):
     GateModelQuantumTaskResult.from_string(malformatted_results_1)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_measurements_measured_qubits_mismatch(malformatted_results_2):
-    GateModelQuantumTaskResult.from_string(malformatted_results_2)
 
 
 @pytest.mark.parametrize("ir_result,expected_result", test_ir_results)

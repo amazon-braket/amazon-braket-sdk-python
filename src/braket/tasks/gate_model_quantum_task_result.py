@@ -286,11 +286,6 @@ class GateModelQuantumTaskResult:
                 " the result obj",
             )
         measured_qubits = result.measuredQubits
-        if len(measured_qubits) != measurements.shape[1]:
-            raise ValueError(
-                f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
-                + f"{measurements.shape[1]} in measurements"
-            )
         if result.resultTypes:
             # Jaqcd does not return anything in the resultTypes schema field since the
             # result types are easily parsable from the IR. However, an OpenQASM program
