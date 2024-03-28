@@ -15,7 +15,7 @@ import re
 
 import numpy as np
 import pytest
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
 from braket.circuits.angled_gate import DoubleAngledGate, TripleAngledGate

@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.75.0 (2024-03-28)
+
+### Features
+
+ * upgrade to pydantic 2.x
+
+### Bug Fixes and Other Changes
+
+ * change schemas constraint
+
 ## v1.74.1 (2024-03-27)
 
 ### Bug Fixes and Other Changes
