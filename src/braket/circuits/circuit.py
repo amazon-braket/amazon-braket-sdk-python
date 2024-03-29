@@ -303,7 +303,7 @@ class Circuit:
 
         if self._measure_targets:
             raise ValueError(
-                "Cannot add a result type to a circuit which already contains a "
+                "cannot add a result type to a circuit which already contains a "
                 "measure instruction."
             )
 
@@ -472,7 +472,7 @@ class Circuit:
         if not isinstance(instruction.operator, Measure) and any(
             isinstance(instruction.operator, Measure) for instruction in self.instructions
         ):
-            raise ValueError("Cannot add a gate or noise after a measure instruction.")
+            raise ValueError("cannot add a gate or noise after a measure instruction.")
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -652,7 +652,7 @@ class Circuit:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
 
         if verbatim_circuit._measure_targets:
-            raise ValueError("Cannot measure a subcircuit inside a verbatim box.")
+            raise ValueError("cannot measure a subcircuit inside a verbatim box.")
 
         if verbatim_circuit.instructions:
             self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
@@ -713,7 +713,7 @@ class Circuit:
         """
         # check whether measuring an empty circuit
         if not self.qubits:
-            raise IndexError("Cannot measure an empty circuit.")
+            raise IndexError("cannot measure an empty circuit.")
 
         if isinstance(target_qubits, int):
             target_qubits = [target_qubits]
@@ -727,15 +727,20 @@ class Circuit:
             if self._measure_targets and all(
                 target in self._measure_targets for target in target_qubits
             ):
+                intersection = set(target_qubits) & set(self._measure_targets)
                 raise ValueError(
-                    f"cannot measure the same qubit(s) {', '.join(map(str, target_qubits))} "
+                    f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
                     "more than once."
                 )
             self._add_measure(target_qubits=target_qubits)
         else:
             # Check if any qubits are already measured
             if self._measure_targets:
-                raise ValueError("cannot perform multiple measurements of the same qubits.")
+                intersection = set(self.qubits) & set(self._measure_targets)
+                raise ValueError(
+                    f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
+                    "more than once."
+                )
             # Measure all the qubits
             self._add_measure(target_qubits=self.qubits)
 

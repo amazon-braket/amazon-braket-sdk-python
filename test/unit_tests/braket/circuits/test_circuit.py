@@ -653,7 +653,7 @@ def test_measure_verbatim_box():
 
 
 def test_measure_in_verbatim_subcircuit():
-    message = "Cannot measure a subcircuit inside a verbatim box."
+    message = "cannot measure a subcircuit inside a verbatim box."
     with pytest.raises(ValueError, match=message):
         Circuit().add_verbatim_box(Circuit().x(0).x(1).measure(0))
 
@@ -682,7 +682,7 @@ def test_measure_with_result_types():
 
 
 def test_result_type_with_measure():
-    message = "Cannot add a result type to a circuit which already contains a measure instruction."
+    message = "cannot add a result type to a circuit which already contains a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).sample(observable=Observable.Z(), target=0)
 
@@ -708,13 +708,13 @@ def test_measure_same_qubit_twice():
 
 
 def test_measure_empty_measure_after_measure_with_targets():
-    message = "cannot perform multiple measurements of the same qubits."
+    message = "cannot measure the same qubit\\(s\\) 0, 1 more than once."
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).measure(0).measure()
+        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).measure(1).measure()
 
 
 def test_measure_gate_after():
-    message = "Cannot add a gate or noise after a measure instruction."
+    message = "cannot add a gate or noise after a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).h(1)
 

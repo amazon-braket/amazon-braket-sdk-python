@@ -41,6 +41,10 @@ def test_equality():
     assert measure1 != non_measure
 
 
+def test_ascii_symbols(measure):
+    assert measure.ascii_symbols == ("M",)
+
+
 def test_str(measure):
     assert str(measure) == measure.name
 
@@ -54,7 +58,7 @@ def test_str(measure):
             NotImplementedError,
             "Measure instructions are not supported with JAQCD.",
         ),
-        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        ("invalid-ir-type", None, ValueError, "supplied ir_type invalid-ir-type is not supported."),
     ],
 )
 def test_measure_to_ir(

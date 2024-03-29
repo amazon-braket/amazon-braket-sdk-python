@@ -38,8 +38,8 @@ class Measure(QuantumOperator):
         self._target_index = kwargs.get("index")
 
     @property
-    def ascii_symbols(self) -> tuple[str, ...]:
-        """tuple[str, ...]: Returns the ascii symbols for the measure."""
+    def ascii_symbols(self) -> tuple[str]:
+        """tuple[str]: Returns the ascii symbols for the measure."""
         return self._ascii_symbols
 
     def to_ir(
@@ -72,7 +72,7 @@ class Measure(QuantumOperator):
                 target, serialization_properties or OpenQASMSerializationProperties() ** kwargs
             )
         else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+            raise ValueError(f"supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the measure."""
