@@ -440,12 +440,16 @@ class Circuit:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
         if (
+            # check if there is a measure instruction on the target qubit
             target
             and target in self._measure_targets
-            or (target_mapping and all(targ in self._measure_targets for targ in target_mapping))
+            # check if there is a measure instruction on any qubits in the target_mapping
+            or (target_mapping and any(targ in self._measure_targets for targ in target_mapping))
+            # If no target or target_mapping is supplied, check if there is a measure
+            # instruction on the current instructions target qubit
             or (
                 instruction.target
-                and all(targ in self._measure_targets for targ in instruction.target)
+                and any(targ in self._measure_targets for targ in instruction.target)
             )
         ):
             raise ValueError(
