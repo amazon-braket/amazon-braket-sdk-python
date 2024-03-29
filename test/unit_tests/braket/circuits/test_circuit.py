@@ -658,11 +658,6 @@ def test_measure_in_verbatim_subcircuit():
         Circuit().add_verbatim_box(Circuit().x(0).x(1).measure(0))
 
 
-def test_measure_qubits_out_of_range():
-    with pytest.raises(IndexError):
-        Circuit().h(0).cnot(0, 1).measure([4])
-
-
 def test_measure_empty_circuit():
     with pytest.raises(IndexError):
         Circuit().measure()

@@ -718,10 +718,6 @@ class Circuit:
         if isinstance(target_qubits, int):
             target_qubits = [target_qubits]
 
-        # Check that the target qubits are on the circuit
-        if target_qubits and not all(qubit in self.qubits for qubit in target_qubits):
-            raise IndexError("Target qubits must be within the range of the current circuit.")
-
         # Check if result types are added on the circuit
         if self.result_types:
             raise ValueError("a circuit cannot contain both measure instructions and result types.")
