@@ -439,8 +439,6 @@ class Circuit:
         Raises:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
-        print(self._measure_targets)
-        print("Instruction: ", instruction.target)
         if (
             target
             and target in self._measure_targets
