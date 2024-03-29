@@ -56,7 +56,7 @@ def test_str(measure):
             IRType.JAQCD,
             None,
             NotImplementedError,
-            "Measure instructions are not supported with JAQCD.",
+            "measure instructions are not supported with JAQCD.",
         ),
         ("invalid-ir-type", None, ValueError, "supplied ir_type invalid-ir-type is not supported."),
     ],
