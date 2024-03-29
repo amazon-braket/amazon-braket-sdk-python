@@ -172,7 +172,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         #   int[32] a = 10;
         # where `a` is at the root scope of the function (not inside any if/for/while block).
         target.init_expression = value_init_expression
-        oqpy_program.declare(target)
+        oqpy_program._add_var(target)
     else:
         # Set to `value_init_expression` to avoid declaring an unnecessary variable.
         # The variable will be set in the current scope and auto-declared at the root scope.

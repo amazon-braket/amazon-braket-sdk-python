@@ -25,6 +25,7 @@ from typing import Any
 
 import oqpy.base
 import pygments
+from openpulse import ast
 from openqasm_pygments import OpenQASM3Lexer
 from pygments.formatters.terminal import TerminalFormatter
 from sympy import Symbol
@@ -509,10 +510,23 @@ class ProgramConversionContext:
                 root_oqpy_program.undeclared_vars[parameter.name]._needs_declaration = True
             else:
                 root_oqpy_program._add_var(parameter)
+
         for parameter_name, parameter in self._output_parameters.items():
             # Before adding the output variable to the program, remove any existing reference
-            root_oqpy_program.undeclared_vars.pop(parameter_name, None)
-            root_oqpy_program.declared_vars.pop(parameter_name, None)
+            popped_undeclared = root_oqpy_program.undeclared_vars.pop(parameter_name, None)
+            popped_declared = root_oqpy_program.declared_vars.pop(parameter_name, None)
+
+            popped = popped_undeclared if popped_undeclared is not None else popped_declared
+            if popped is not None and popped.init_expression is not None:
+                # Add an assignment statement to the beginning of the program to initialize
+                # the output parameter to the desired value.
+                # TODO: This logic uses oqpy internals - should it be moved into oqpy?
+                init_stmt = ast.ClassicalAssignment(
+                    ast.Identifier(name=parameter_name),
+                    ast.AssignmentOperator["="],
+                    oqpy.base.to_ast(root_oqpy_program, popped.init_expression),
+                )
+                root_oqpy_program._state.body.insert(0, init_stmt)
 
             parameter.name = parameter_name
             root_oqpy_program._add_var(parameter)

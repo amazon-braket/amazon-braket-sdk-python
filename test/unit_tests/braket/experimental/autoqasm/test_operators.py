@@ -162,8 +162,8 @@ def test_branch_assignment_declared() -> None:
             a = aq.IntVar(7)  # noqa: F841
 
     expected = """OPENQASM 3.0;
-bool __bool_1__ = true;
 int[32] a = 5;
+bool __bool_1__ = true;
 if (__bool_1__) {
     a = 6;
 } else {
@@ -184,8 +184,8 @@ def test_iterative_assignment() -> None:
             rx(0, val)
 
     expected = """OPENQASM 3.0;
-qubit[3] __qubits__;
 float[64] val = 0.5;
+qubit[3] __qubits__;
 for int q in [0:3 - 1] {
     bit __bit_1__;
     __bit_1__ = measure __qubits__[q];
@@ -194,6 +194,29 @@ for int q in [0:3 - 1] {
 }"""
 
     assert iterative_assignment.build().to_ir() == expected
+
+
+def test_iterative_output_assignment() -> None:
+    """Tests a for loop where an output variable is updated on each iteration."""
+
+    @aq.main(num_qubits=3)
+    def iterative_output_assignment():
+        val = aq.FloatVar(0.5)
+        for q in aq.range(3):
+            val = val + measure(q)
+        return val
+
+    expected = """OPENQASM 3.0;
+output float[64] val;
+val = 0.5;
+qubit[3] __qubits__;
+for int q in [0:3 - 1] {
+    bit __bit_1__;
+    __bit_1__ = measure __qubits__[q];
+    val = val + __bit_1__;
+}"""
+
+    assert iterative_output_assignment.build().to_ir() == expected
 
 
 def for_body(i: aq.Qubit) -> None:
@@ -678,9 +701,9 @@ def test_slice_bits_w_measure() -> None:
         b0[3] = c
 
     expected = """OPENQASM 3.0;
+bit[10] b0 = "0000000000";
 bit c;
 qubit[1] __qubits__;
-bit[10] b0 = "0000000000";
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 c = __bit_1__;

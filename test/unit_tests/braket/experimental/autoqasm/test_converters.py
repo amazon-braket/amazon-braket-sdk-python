@@ -54,13 +54,12 @@ def test_assignment(program_ctx: ag_ctx.ControlStatusCtx) -> None:
 
     qasm = program_conversion_context.make_program().to_ir()
     expected_qasm = """OPENQASM 3.0;
-int[32] e;
-int[32] a = 5;
+int[32] a = 1;
 float[64] b = 1.2;
-a = 1;
-e = a;
+int[32] e;
 bool f = false;
 bool g = true;
+e = a;
 g = f;"""
     assert qasm == expected_qasm
 
