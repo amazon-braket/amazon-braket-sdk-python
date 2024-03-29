@@ -23,7 +23,7 @@ import pytest
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
-from braket.experimental.autoqasm.instructions import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, rx, x
 
 
 @pytest.fixture
@@ -171,6 +171,29 @@ if (__bool_1__) {
 }"""
 
     assert branch_assignment_declared.build().to_ir() == expected
+
+
+def test_iterative_assignment() -> None:
+    """Tests a for loop where a variable is updated on each iteration."""
+
+    @aq.main(num_qubits=3)
+    def iterative_assignment():
+        val = aq.FloatVar(0.5)
+        for q in aq.qubits:
+            val = val + measure(q)
+            rx(0, val)
+
+    expected = """OPENQASM 3.0;
+qubit[3] __qubits__;
+float[64] val = 0.5;
+for int q in [0:3 - 1] {
+    bit __bit_1__;
+    __bit_1__ = measure __qubits__[q];
+    val = val + __bit_1__;
+    rx(val) __qubits__[0];
+}"""
+
+    assert iterative_assignment.build().to_ir() == expected
 
 
 def for_body(i: aq.Qubit) -> None:
