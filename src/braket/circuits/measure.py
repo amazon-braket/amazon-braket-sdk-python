@@ -76,7 +76,7 @@ class Measure(QuantumOperator):
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the measure."""
-        raise NotImplementedError("Measure instructions are not supported with JAQCD.")
+        raise NotImplementedError("measure instructions are not supported with JAQCD.")
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
