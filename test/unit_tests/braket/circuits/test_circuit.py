@@ -727,7 +727,7 @@ def test_measure_empty_measure_after_measure_with_targets():
 def test_measure_gate_after():
     message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).measure(0).h(0)
+        Circuit().h(0).measure(0).h([0, 1])
 
 
 def test_measure_gate_after_with_target_mapping():
