@@ -904,3 +904,34 @@ def test_measure_multiple_targets():
         "T  : |0|1|2|3|4|",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_measure_multiple_instructions_after():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .measure(0)
+        .measure(1)
+        .h(3)
+        .cnot(3, 4)
+        .measure([2, 3])
+    )
+    expected = (
+        "T  : |0|1|2|3|4|5|6|",
+        "                    ",
+        "q0 : -H-C-----M-----",
+        "        |           ",
+        "q1 : ---X-C---M-----",
+        "          |         ",
+        "q2 : -----X-C-----M-",
+        "            |       ",
+        "q3 : -------X-H-C-M-",
+        "                |   ",
+        "q4 : -----------X---",
+        "",
+        "T  : |0|1|2|3|4|5|6|",
+    )
+    _assert_correct_diagram(circ, expected)

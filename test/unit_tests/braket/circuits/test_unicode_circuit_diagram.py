@@ -1062,3 +1062,38 @@ def test_measure_with_multiple_measures():
     )
     _assert_correct_diagram(circ, expected)
     _assert_correct_diagram(circ, expected)
+
+
+def test_measure_multiple_instructions_after():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .measure(0)
+        .measure(1)
+        .h(3)
+        .cnot(3, 4)
+        .measure([2, 3])
+    )
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │  5  │  6  │",
+        "      ┌───┐                   ┌───┐             ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├─────────────",
+        "      └───┘   │               └───┘             ",
+        "            ┌─┴─┐             ┌───┐             ",
+        "q1 : ───────┤ X ├───●─────────┤ M ├─────────────",
+        "            └───┘   │         └───┘             ",
+        "                  ┌─┴─┐                   ┌───┐ ",
+        "q2 : ─────────────┤ X ├───●───────────────┤ M ├─",
+        "                  └───┘   │               └───┘ ",
+        "                        ┌─┴─┐ ┌───┐       ┌───┐ ",
+        "q3 : ───────────────────┤ X ├─┤ H ├───●───┤ M ├─",
+        "                        └───┘ └───┘   │   └───┘ ",
+        "                                    ┌─┴─┐       ",
+        "q4 : ───────────────────────────────┤ X ├───────",
+        "                                    └───┘       ",
+        "T  : │  0  │  1  │  2  │  3  │  4  │  5  │  6  │",
+    )
+    _assert_correct_diagram(circ, expected)

@@ -416,6 +416,44 @@ class Circuit:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
 
+    def _check_if_qubit_measured(
+        self,
+        instruction: Instruction,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> None:
+        """Checks if the target qubits are measured. If the qubit is already measured
+        the instruction will not be added to the Circuit.
+
+        Args:
+            instruction (Instruction): `Instruction` to add into `self`.
+            target (QubitSetInput | None): Target qubits for the
+                `instruction`. If a single qubit gate, an instruction is created for every index
+                in `target`.
+                Default = `None`.
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
+                qubit mappings to apply to the `instruction.target`. Key is the qubit in
+                `instruction.target` and the value is what the key will be changed to.
+                Default = `None`.
+
+        Raises:
+            ValueError: If adding a gate or noise operation after a measure instruction.
+        """
+        print(self._measure_targets)
+        print("Instruction: ", instruction.target)
+        if (
+            target
+            and target in self._measure_targets
+            or (target_mapping and all(targ in self._measure_targets for targ in target_mapping))
+            or (
+                instruction.target
+                and all(targ in self._measure_targets for targ in instruction.target)
+            )
+        ):
+            raise ValueError(
+                "cannot add a gate or noise operation on a qubit after a measure instruction."
+            )
+
     def add_instruction(
         self,
         instruction: Instruction,
@@ -469,10 +507,8 @@ class Circuit:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
         # Check if there is a measure instruction on the circuit
-        if not isinstance(instruction.operator, Measure) and any(
-            isinstance(instruction.operator, Measure) for instruction in self.instructions
-        ):
-            raise ValueError("cannot add a gate or noise after a measure instruction.")
+        if not isinstance(instruction.operator, Measure) and self._measure_targets:
+            self._check_if_qubit_measured(instruction, target, target_mapping)
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction

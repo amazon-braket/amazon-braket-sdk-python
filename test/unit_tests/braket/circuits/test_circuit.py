@@ -725,9 +725,38 @@ def test_measure_empty_measure_after_measure_with_targets():
 
 
 def test_measure_gate_after():
-    message = "cannot add a gate or noise after a measure instruction."
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).measure(0).h(1)
+        Circuit().h(0).measure(0).h(0)
+
+
+def test_measure_gate_after_with_target_mapping():
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(
+            instr, target_mapping={0: 10, 1: 11}
+        )
+
+
+def test_measure_gate_after_with_target():
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(instr, target=[10, 11])
+
+
+def test_measure_gate_after_measurement():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).h(2)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Gate.H(), 2))
+    )
+    assert circ == expected
 
 
 def test_to_ir_with_measure():
