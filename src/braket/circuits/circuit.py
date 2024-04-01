@@ -26,6 +26,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import (
@@ -148,6 +149,7 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
+        self._measure_targets = None
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -273,6 +275,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If a meaure instruction exists on the current circuit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -297,6 +300,12 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        if self._measure_targets:
+            raise ValueError(
+                "cannot add a result type to a circuit which already contains a "
+                "measure instruction."
+            )
 
         if not target_mapping and not target:
             # Nothing has been supplied, add result_type
@@ -407,6 +416,46 @@ class Circuit:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
 
+    def _check_if_qubit_measured(
+        self,
+        instruction: Instruction,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> None:
+        """Checks if the target qubits are measured. If the qubit is already measured
+        the instruction will not be added to the Circuit.
+
+        Args:
+            instruction (Instruction): `Instruction` to add into `self`.
+            target (QubitSetInput | None): Target qubits for the
+                `instruction`. If a single qubit gate, an instruction is created for every index
+                in `target`.
+                Default = `None`.
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
+                qubit mappings to apply to the `instruction.target`. Key is the qubit in
+                `instruction.target` and the value is what the key will be changed to.
+                Default = `None`.
+
+        Raises:
+            ValueError: If adding a gate or noise operation after a measure instruction.
+        """
+        if (
+            # check if there is a measure instruction on the target qubit
+            target
+            and target in self._measure_targets
+            # check if there is a measure instruction on any qubits in the target_mapping
+            or (target_mapping and any(targ in self._measure_targets for targ in target_mapping))
+            # If no target or target_mapping is supplied, check if there is a measure
+            # instruction on the current instructions target qubit
+            or (
+                instruction.target
+                and any(targ in self._measure_targets for targ in instruction.target)
+            )
+        ):
+            raise ValueError(
+                "cannot add a gate or noise operation on a qubit after a measure instruction."
+            )
+
     def add_instruction(
         self,
         instruction: Instruction,
@@ -431,6 +480,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If adding a gate or noise after a measure instruction.
 
         Examples:
             >>> instr = Instruction(Gate.CNot(), [0, 1])
@@ -457,6 +507,10 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        # Check if there is a measure instruction on the circuit
+        if not isinstance(instruction.operator, Measure) and self._measure_targets:
+            self._check_if_qubit_measured(instruction, target, target_mapping)
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -635,12 +689,99 @@ class Circuit:
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
 
+        if verbatim_circuit._measure_targets:
+            raise ValueError("cannot measure a subcircuit inside a verbatim box.")
+
         if verbatim_circuit.instructions:
             self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
             self._has_compiler_directives = True
+        return self
+
+    def _add_measure(self, target_qubits: QubitSetInput) -> None:
+        """Adds a measure instruction to the the circuit
+
+        Args:
+            target_qubits (QubitSetInput): target qubits to measure.
+        """
+        for idx, target in enumerate(target_qubits):
+            num_qubits_measured = (
+                len(self._measure_targets)
+                if self._measure_targets and len(target_qubits) == 1
+                else 0
+            )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(index=idx + num_qubits_measured),
+                    target=target,
+                )
+            )
+            if self._measure_targets:
+                self._measure_targets.append(target)
+            else:
+                self._measure_targets = [target]
+
+    def measure(self, target_qubits: QubitSetInput | None = None) -> Circuit:
+        """
+        Add a `measure` operator to `self` ensuring only the target qubits are measured.
+
+        Args:
+            target_qubits (QubitSetInput | None): target qubits to measure.
+                Default=None
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            IndexError: If `self` has no qubits.
+            IndexError: If target qubits are not within the range of the current circuit.
+            ValueError: If the current circuit contains any result types.
+            ValueError: If the target qubit is already measured.
+
+        Examples:
+            >>> circ = Circuit.h(0).cnot(0, 1).measure([0])
+            >>> circ.print(list(circ.instructions))
+            [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]),
+            Instruction('operator': CNot('qubit_count': 2), 'target': QubitSet([Qubit(0),
+                Qubit(1)]),
+            Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(2)]),
+            Instruction('operator': Measure, 'target': QubitSet([Qubit(0)])]
+        """
+        # check whether measuring an empty circuit
+        if not self.qubits:
+            raise IndexError("cannot measure an empty circuit.")
+
+        if isinstance(target_qubits, int):
+            target_qubits = [target_qubits]
+
+        # Check if result types are added on the circuit
+        if self.result_types:
+            raise ValueError("a circuit cannot contain both measure instructions and result types.")
+
+        if target_qubits:
+            # Check if the target_qubits are already measured
+            if self._measure_targets and all(
+                target in self._measure_targets for target in target_qubits
+            ):
+                intersection = set(target_qubits) & set(self._measure_targets)
+                raise ValueError(
+                    f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
+                    "more than once."
+                )
+            self._add_measure(target_qubits=target_qubits)
+        else:
+            # Check if any qubits are already measured
+            if self._measure_targets:
+                intersection = set(self.qubits) & set(self._measure_targets)
+                raise ValueError(
+                    f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
+                    "more than once."
+                )
+            # Measure all the qubits
+            self._add_measure(target_qubits=self.qubits)
+
         return self
 
     def apply_gate_noise(
@@ -1208,7 +1349,8 @@ class Circuit:
                     for result_type in self.result_types
                 ]
             )
-        else:
+        # measure all the qubits if a measure instruction is not provided
+        elif self._measure_targets is None:
             qubits = (
                 sorted(self.qubits)
                 if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL
@@ -1230,7 +1372,12 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            ir_instructions.append(f"bit[{self.qubit_count}] b;")
+            bit_count = (
+                len(self._measure_targets)
+                if self._measure_targets is not None
+                else self.qubit_count
+            )
+            ir_instructions.append(f"bit[{bit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
