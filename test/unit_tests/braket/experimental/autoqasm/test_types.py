@@ -159,9 +159,9 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
-output int[32] return_value;
 int[32] a = 5;
 int[32] b = 6;
+output int[32] return_value;
 int[32] __int_2__;
 __int_2__ = add(a, b);
 return_value = __int_2__;"""
@@ -194,8 +194,8 @@ def test_declare_array():
 
     expected = """OPENQASM 3.0;
 array[int[32], 3] a = {1, 2, 3};
-a[0] = 11;
 array[int[32], 3] b = {4, 5, 6};
+a[0] = 11;
 b[2] = 14;
 b = a;"""
 
@@ -517,9 +517,9 @@ def test_recursive_unassigned_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
+    int[32] retval_ = 1;
     int[32] __int_1__;
     __int_1__ = retval_recursive();
-    int[32] retval_ = 1;
     return retval_;
 }
 int[32] __int_3__;
@@ -543,10 +543,10 @@ def test_recursive_assigned_retval_python_type() -> None:
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
     int[32] a;
+    int[32] retval_ = 1;
     int[32] __int_1__;
     __int_1__ = retval_recursive();
     a = __int_1__;
-    int[32] retval_ = 1;
     return retval_;
 }
 int[32] __int_3__;

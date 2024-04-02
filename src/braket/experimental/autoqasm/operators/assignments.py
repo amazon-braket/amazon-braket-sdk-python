@@ -144,19 +144,20 @@ def assign_stmt(target_name: str, value: Any) -> Any:
 
         value = types.wrap_value(value)
 
-    if not isinstance(value, oqpy.base.Var):
-        return value
-
-    if is_target_name_used:
+    if is_target_name_used and isinstance(value, (oqpy.base.Var, oqpy.base.OQPyExpression)):
         target = _get_oqpy_program_variable(target_name)
         _validate_assignment_types(target, value)
-    else:
+    elif isinstance(value, oqpy.base.Var):
         target = copy.copy(value)
         target.init_expression = None
         target.name = target_name
+    else:
+        return value
 
     oqpy_program = program_conversion_context.get_oqpy_program()
-    if is_value_name_used or value.init_expression is None:
+
+    value_init_expression = value.init_expression if isinstance(value, oqpy.base.Var) else None
+    if is_value_name_used or value_init_expression is None:
         # Directly assign the value to the target.
         # For example:
         #   a = b;
@@ -170,17 +171,17 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         # For example:
         #   int[32] a = 10;
         # where `a` is at the root scope of the function (not inside any if/for/while block).
-        target.init_expression = value.init_expression
-        oqpy_program.declare(target)
+        target.init_expression = value_init_expression
+        oqpy_program._add_var(target)
     else:
-        # Set to `value.init_expression` to avoid declaring an unnecessary variable.
+        # Set to `value_init_expression` to avoid declaring an unnecessary variable.
         # The variable will be set in the current scope and auto-declared at the root scope.
         # For example, the `a = 1` and `a = 0` statements in the following:
         #   int[32] a;
         #   if (b == True) { a = 1; }
         #   else { a = 0; }
         # where `b` is previously declared.
-        oqpy_program.set(target, value.init_expression)
+        oqpy_program.set(target, value_init_expression)
 
     return target
 
@@ -211,12 +212,14 @@ def _validate_assignment_types(var1: oqpy.base.Var, var2: oqpy.base.Var) -> None
             "Variables in assignment statements must have the same type"
         )
 
-    if isinstance(var1, oqpy.ArrayVar):
+    if isinstance(var1, oqpy.ArrayVar) and isinstance(var2, oqpy.ArrayVar):
         if var1.dimensions != var2.dimensions:
             raise errors.InvalidAssignmentStatement(
                 "Arrays in assignment statements must have the same dimensions"
             )
-    elif isinstance(var1, oqpy.classical_types._SizedVar):
+    elif isinstance(var1, oqpy.classical_types._SizedVar) and isinstance(
+        var2, oqpy.classical_types._SizedVar
+    ):
         var1_size = var1.size or 1
         var2_size = var2.size or 1
         if var1_size != var2_size:
