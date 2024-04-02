@@ -516,6 +516,9 @@ class ProgramConversionContext:
             popped_undeclared = root_oqpy_program.undeclared_vars.pop(parameter_name, None)
             popped_declared = root_oqpy_program.declared_vars.pop(parameter_name, None)
 
+            # Verify that we didn't find it in both lists
+            assert popped_undeclared is None or popped_declared is None
+
             popped = popped_undeclared if popped_undeclared is not None else popped_declared
             if popped is not None and popped.init_expression is not None:
                 # Add an assignment statement to the beginning of the program to initialize
