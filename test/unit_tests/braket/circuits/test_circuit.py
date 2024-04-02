@@ -799,6 +799,24 @@ def test_from_ir_with_measure():
     assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
 
 
+def test_from_ir_with_single_measure():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b = measure q;",
+            ]
+        ),
+        inputs={},
+    )
+    expected_circ = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
+
+
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
