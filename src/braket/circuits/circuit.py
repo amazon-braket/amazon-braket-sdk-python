@@ -762,7 +762,7 @@ class Circuit:
 
         if target_qubits:
             # Check if the target_qubits are already measured
-            if self._measure_targets and all(
+            if self._measure_targets and any(
                 target in self._measure_targets for target in target_qubits
             ):
                 intersection = set(target_qubits) & set(self._measure_targets)
