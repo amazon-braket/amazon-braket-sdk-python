@@ -40,6 +40,7 @@ setup(
         "openpulse",
         "openqasm3",
         "sympy",
+        "backports.entry-points-selectable",
     ],
     extras_require={
         "test": [
