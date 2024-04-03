@@ -1,7 +1,6 @@
 """Sphinx configuration."""
 
 import datetime
-
 from importlib.metadata import version
 
 # Sphinx configuration below.
