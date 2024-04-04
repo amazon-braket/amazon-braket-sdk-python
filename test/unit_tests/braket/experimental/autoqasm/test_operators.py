@@ -162,8 +162,8 @@ def test_branch_assignment_declared() -> None:
             a = aq.IntVar(7)  # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a = 5;
 bool __bool_1__ = true;
+int[32] a = 5;
 if (__bool_1__) {
     a = 6;
 } else {
@@ -184,8 +184,8 @@ def test_iterative_assignment() -> None:
             rx(0, val)
 
     expected = """OPENQASM 3.0;
-float[64] val = 0.5;
 qubit[3] __qubits__;
+float[64] val = 0.5;
 for int q in [0:3 - 1] {
     bit __bit_1__;
     __bit_1__ = measure __qubits__[q];
@@ -701,9 +701,9 @@ def test_slice_bits_w_measure() -> None:
         b0[3] = c
 
     expected = """OPENQASM 3.0;
-bit[10] b0 = "0000000000";
 bit c;
 qubit[1] __qubits__;
+bit[10] b0 = "0000000000";
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 c = __bit_1__;

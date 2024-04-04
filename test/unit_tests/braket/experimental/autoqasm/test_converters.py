@@ -38,7 +38,7 @@ def test_assignment(program_ctx: ag_ctx.ControlStatusCtx) -> None:
     def fn() -> None:
         """user program to test"""
         a = aq.IntVar(5)  # noqa: F841
-        b = aq.FloatVar(1.2)  # noqa: F841
+        b = a  # noqa: F841
         c = 123  # noqa: F841
         d = (0.123, "foo")  # noqa: F841
         a = aq.IntVar(1)  # noqa: F841
@@ -54,12 +54,14 @@ def test_assignment(program_ctx: ag_ctx.ControlStatusCtx) -> None:
 
     qasm = program_conversion_context.make_program().to_ir()
     expected_qasm = """OPENQASM 3.0;
-int[32] a = 1;
-float[64] b = 1.2;
+int[32] b;
 int[32] e;
+int[32] a = 5;
+b = a;
+a = 1;
+e = a;
 bool f = false;
 bool g = true;
-e = a;
 g = f;"""
     assert qasm == expected_qasm
 

@@ -251,8 +251,8 @@ def bell_measurement_declared():
 
 def test_bell_measurement_declared(bell_measurement_declared) -> None:
     expected = """OPENQASM 3.0;
-bit[2] c = "00";
 qubit[2] __qubits__;
+bit[2] c = "00";
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit[2] __bit_1__ = "00";
@@ -863,13 +863,16 @@ def classical_variables_types():
 
 def test_classical_variables_types(classical_variables_types):
     expected = """OPENQASM 3.0;
-bit a = 1;
+bit a = 0;
+a = 1;
 int[32] i = 1;
 bit[2] a_array = "00";
-int[32] b = 15;
-float[64] c = 3.4;
 a_array[0] = 0;
-a_array[i] = 1;"""
+a_array[i] = 1;
+int[32] b = 10;
+b = 15;
+float[64] c = 1.2;
+c = 3.4;"""
     assert classical_variables_types.build().to_ir() == expected
 
 
@@ -886,8 +889,9 @@ def test_classical_variables_assignment():
         a = b  # declared target, declared value # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a = 2;
 int[32] b;
+int[32] a = 1;
+a = 2;
 b = a;
 a = b;"""
     assert prog.build().to_ir() == expected
