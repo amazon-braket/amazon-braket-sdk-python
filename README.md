@@ -197,6 +197,11 @@ You can also pass in various pytest arguments to run selected tests:
 tox -e unit-tests -- your-arguments
 ```
 
+Running unit-tests offline is possible if all packages are installed ahead of time. Note that this may result in out of date packages so testing done this way is not to be considered reliable:
+```bash
+INSTALL_DIR=$(pip show pip | grep Location | sed -e "s/^Location: //") tox -e offline-tests 
+```
+
 For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
 
 To run linters and doc generators and unit tests:
