@@ -522,7 +522,6 @@ class Circuit:
 
         # Check if there is a measure instruction on the circuit
         if not isinstance(instruction.operator, Measure):
-            # and self._measure_targets:
             self._check_if_qubit_measured(instruction, target, target_mapping)
 
         if not target_mapping and not target:
@@ -782,8 +781,6 @@ class Circuit:
                 "more than once."
             )
         self._add_measure(target_qubits=target_qubits)
-
-        print("Moments in circuit: ", self._moments)
 
         return self
 
