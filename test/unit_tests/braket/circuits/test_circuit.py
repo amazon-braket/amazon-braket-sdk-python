@@ -725,7 +725,7 @@ def test_measure_same_qubit_twice_with_list():
 
 
 def test_measure_same_qubit_twice_with_one_measure():
-    message = "cannot measure the same qubit\\(s\\) 0 more than once."
+    message = "cannot repeat qubit\\(s\\) 0 in the same measurement."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure([0, 0, 0])
 
