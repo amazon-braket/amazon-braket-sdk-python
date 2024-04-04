@@ -24,6 +24,7 @@ from braket.circuits import (
     Gate,
     Instruction,
     Moments,
+    Noise,
     Observable,
     QubitSet,
     ResultType,
@@ -670,20 +671,24 @@ def test_measure_qubits_out_of_range():
 
 
 def test_measure_empty_circuit():
-    with pytest.raises(IndexError):
-        Circuit().measure()
-
-
-def test_measure_no_target():
-    circ = Circuit().h(0).cnot(0, 1).measure()
+    circ = Circuit().measure([0, 1, 2])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_instruction(Instruction(Measure(), 0))
         .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 2))
     )
     assert circ == expected
+
+
+def test_measure_target_input():
+    message = "target qubit index '1.1' must be an integer."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(1.1)
+
+    message = "target qubit index 'a' must be an integer."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(FreeParameter("a"))
 
 
 def test_measure_with_result_types():
@@ -718,16 +723,37 @@ def test_measure_same_qubit_twice():
         Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
 
 
-def test_measure_empty_measure_after_measure_with_targets():
-    message = "cannot measure the same qubit\\(s\\) 0, 1 more than once."
-    with pytest.raises(ValueError, match=message):
-        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).measure(1).measure()
-
-
 def test_measure_gate_after():
     message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).h([0, 1])
+
+
+def test_measure_noise_after():
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(1).h(1).h(2).h(5).h(4).h(3).cnot(1, 2).measure([0, 1, 2, 3, 4]).kraus(
+            targets=[0], matrices=[np.array([[1, 0], [0, 1]])]
+        )
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+    )
+    assert circ == expected
 
 
 def test_measure_gate_after_with_target_mapping():
