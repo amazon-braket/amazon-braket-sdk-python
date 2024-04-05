@@ -735,8 +735,8 @@ def test_measure_same_qubit_twice_with_one_measure():
         Circuit().h(0).cnot(0, 1).measure([0, 0, 0])
 
 
-def test_measure_empty_measure_after_measure_with_targets():
-    message = "cannot measure the same qubit\\(s\\) 0, 1 more than once."
+def test_measure_gate_after():
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).h([0, 1])
 
