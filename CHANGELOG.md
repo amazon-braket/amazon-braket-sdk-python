@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.76.0 (2024-04-01)
+
+### Features
+
+ * add support for OpenQASM measure on a subset of qubits
+
+### Bug Fixes and Other Changes
+
+ * restore the dependent test back to pennylane
+
+### Documentation Changes
+
+ * fix GPI2 gate matrix representation
+
 ## v1.75.0 (2024-03-28)
 
 ### Features
