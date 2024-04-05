@@ -519,6 +519,17 @@ class ProgramConversionContext:
             # Verify that we didn't find it in both lists
             assert popped_undeclared is None or popped_declared is None
 
+            # Remove the existing declaration statement, if any
+            if popped_declared is not None:
+                declarations = [
+                    stmt
+                    for stmt in root_oqpy_program._state.body
+                    if isinstance(stmt, ast.ClassicalDeclaration)
+                    and stmt.identifier.name == parameter_name
+                ]
+                assert len(declarations) == 1
+                root_oqpy_program._state.body.remove(declarations[0])
+
             popped = popped_undeclared if popped_undeclared is not None else popped_declared
             if popped is not None and popped.init_expression is not None:
                 # Add an assignment statement to the beginning of the program to initialize

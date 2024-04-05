@@ -529,20 +529,13 @@ def test_duplicate_variable_name_fails():
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
         parametric_explicit.build()
 
-
-def test_assignment_to_input_variable_name():
-    """Test assigning to overwrite an input variable within the program."""
-
     @aq.main
     def parametric(alpha):
         alpha = aq.FloatVar(1.2)
         rx(0, alpha)
 
-    expected = """OPENQASM 3.0;
-float[64] alpha = 1.2;
-qubit[1] __qubits__;
-rx(alpha) __qubits__[0];"""
-    assert parametric.build().to_ir() == expected
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric.build()
 
 
 def test_binding_variable_fails():
