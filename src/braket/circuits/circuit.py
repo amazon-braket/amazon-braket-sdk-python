@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable, Iterable
 from numbers import Number
 from typing import Any, Optional, TypeVar, Union
@@ -762,13 +763,22 @@ class Circuit:
 
         if target_qubits:
             # Check if the target_qubits are already measured
-            if self._measure_targets and all(
+            if self._measure_targets and any(
                 target in self._measure_targets for target in target_qubits
             ):
                 intersection = set(target_qubits) & set(self._measure_targets)
                 raise ValueError(
                     f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
                     "more than once."
+                )
+            # Check if there are repeated qubits in the same measurement
+            if len(target_qubits) != len(set(target_qubits)):
+                intersection = [
+                    qubit for qubit, count in Counter(target_qubits).items() if count > 1
+                ]
+                raise ValueError(
+                    f"cannot repeat qubit(s) {', '.join(map(str, intersection))} "
+                    "in the same measurement."
                 )
             self._add_measure(target_qubits=target_qubits)
         else:
