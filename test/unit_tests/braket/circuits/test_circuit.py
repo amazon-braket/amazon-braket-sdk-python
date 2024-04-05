@@ -682,12 +682,12 @@ def test_measure_empty_circuit():
 
 
 def test_measure_target_input():
-    message = "target qubit index '1.1' must be an integer."
-    with pytest.raises(ValueError, match=message):
+    message = "Supplied qubit index, 1.1, must be an integer."
+    with pytest.raises(TypeError, match=message):
         Circuit().h(0).cnot(0, 1).measure(1.1)
 
-    message = "target qubit index 'a' must be an integer."
-    with pytest.raises(ValueError, match=message):
+    message = "Supplied qubit index, a, must be an integer."
+    with pytest.raises(TypeError, match=message):
         Circuit().h(0).cnot(0, 1).measure(FreeParameter("a"))
 
 
@@ -718,13 +718,13 @@ def test_measure_with_multiple_measures():
 
 
 def test_measure_same_qubit_twice():
-    message = "cannot measure the same qubit\\(s\\) 0 more than once."
+    message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
 
 
 def test_measure_same_qubit_twice_with_list():
-    message = "cannot measure the same qubit\\(s\\) 0 more than once."
+    message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure(0).measure([0, 1])
 
@@ -739,6 +739,16 @@ def test_measure_gate_after():
     message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).h([0, 1])
+
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        instr = Instruction(Gate.CNot(), [0, 1])
+        Circuit().measure([0, 1]).add_instruction(instr, target_mapping={0: 0, 1: 1})
+
+    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        instr = Instruction(Gate.CNot(), [0, 1])
+        Circuit().h(0).measure(0).add_instruction(instr, target=[0, 1])
 
 
 def test_measure_noise_after():
