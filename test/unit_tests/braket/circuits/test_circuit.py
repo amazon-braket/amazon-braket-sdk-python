@@ -718,6 +718,18 @@ def test_measure_same_qubit_twice():
         Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
 
 
+def test_measure_same_qubit_twice_with_list():
+    message = "cannot measure the same qubit\\(s\\) 0 more than once."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(0).measure([0, 1])
+
+
+def test_measure_same_qubit_twice_with_one_measure():
+    message = "cannot repeat qubit\\(s\\) 0 in the same measurement."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure([0, 0, 0])
+
+
 def test_measure_empty_measure_after_measure_with_targets():
     message = "cannot measure the same qubit\\(s\\) 0, 1 more than once."
     with pytest.raises(ValueError, match=message):
@@ -797,6 +809,48 @@ def test_from_ir_with_measure():
     )
     expected_circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).measure(2)
     assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
+
+
+def test_from_ir_with_single_measure():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b = measure q;",
+            ]
+        ),
+        inputs={},
+    )
+    expected_circ = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
+
+
+def test_from_ir_round_trip_transformation():
+    circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ]
+        ),
+        inputs={},
+    )
+    new_ir = circuit.to_ir("OPENQASM")
+    new_circuit = Circuit.from_ir(new_ir)
+
+    assert new_ir == ir
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == circuit
+    assert new_circuit == circuit
 
 
 def test_add_with_instruction_with_default(cnot_instr):
