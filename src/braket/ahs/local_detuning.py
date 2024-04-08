@@ -159,4 +159,3 @@ class LocalDetuning(Hamiltonian):
             pattern_resolution=shifting_parameters.localDetuningResolution,
         )
         return LocalDetuning(discretized_magnitude)
-

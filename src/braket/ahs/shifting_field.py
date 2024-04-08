@@ -18,4 +18,3 @@ from braket.ahs.local_detuning import LocalDetuning
 # We are retaining this now to avoid breaking backwards compatibility for users already
 # utilizing this nomenclature.
 ShiftingField = LocalDetuning
-
