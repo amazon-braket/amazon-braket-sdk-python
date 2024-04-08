@@ -177,18 +177,18 @@ def test_discretize(register, driving_field, shifting_field):
             "values": ["-125664000.0", "-125664000.0", "125664000.0", "125664000.0"],
         },
     }
-    assert (
+    local_detuning = (
         discretized_json["hamiltonian"]["shiftingFields"][0]["magnitude"]
-        if discretized_json["hamiltonian"] in discretized_json["hamiltonian"].keys()
+        if "shiftingFields" in discretized_json["hamiltonian"].keys()
         else discretized_json["hamiltonian"]["localDetuning"][0]["magnitude"]
-        == {
-            "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
-            "time_series": {
-                "times": ["0E-9", "0.000003000"],
-                "values": ["-125664000.0", "125664000.0"],
-            },
-        }
     )
+    assert local_detuning == {
+        "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
+        "time_series": {
+            "times": ["0E-9", "0.000003000"],
+            "values": ["-125664000.0", "125664000.0"],
+        },
+    }
 
 
 def test_converting_numpy_array_sites_to_ir(driving_field):
