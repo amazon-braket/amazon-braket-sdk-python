@@ -718,13 +718,15 @@ def test_measure_with_multiple_measures():
 
 
 def test_measure_same_qubit_twice():
-    message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    # message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
 
 
 def test_measure_same_qubit_twice_with_list():
-    message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    # message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).measure(0).measure([0, 1])
 
@@ -736,23 +738,27 @@ def test_measure_same_qubit_twice_with_one_measure():
 
 
 def test_measure_gate_after():
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).measure(0).h([0, 1])
 
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         instr = Instruction(Gate.CNot(), [0, 1])
         Circuit().measure([0, 1]).add_instruction(instr, target_mapping={0: 0, 1: 1})
 
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         instr = Instruction(Gate.CNot(), [0, 1])
         Circuit().h(0).measure(0).add_instruction(instr, target=[0, 1])
 
 
 def test_measure_noise_after():
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
         Circuit().h(1).h(1).h(2).h(5).h(4).h(3).cnot(1, 2).measure([0, 1, 2, 3, 4]).kraus(
             targets=[0], matrices=[np.array([[1, 0], [0, 1]])]
@@ -779,7 +785,8 @@ def test_measure_with_readout_noise():
 
 
 def test_measure_gate_after_with_target_mapping():
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     instr = Instruction(Gate.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(
@@ -788,7 +795,8 @@ def test_measure_gate_after_with_target_mapping():
 
 
 def test_measure_gate_after_with_target():
-    message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
     instr = Instruction(Gate.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
         Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(instr, target=[10, 11])

@@ -419,7 +419,7 @@ class Circuit:
 
     def _check_if_qubit_measured(
         self,
-        instruction: Instruction | None = None,
+        instruction: Instruction,
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> None:
@@ -427,8 +427,7 @@ class Circuit:
         the instruction will not be added to the Circuit.
 
         Args:
-            instruction (Instruction | None): `Instruction` to add into `self`.
-                Default = `None`.
+            instruction (Instruction): `Instruction` to add into `self`.
             target (QubitSetInput | None): Target qubits for the
                 `instruction`. If a single qubit gate, an instruction is created for every index
                 in `target`.
@@ -457,22 +456,11 @@ class Circuit:
             )
             if (
                 # check if there is a measure instruction on the targeted qubit(s)
-                not isinstance(instruction.operator, Measure)
-                and (
-                    measure_on_target or measure_on_target_mapping or measure_on_instruction_target
-                )
+                measure_on_target
+                or measure_on_target_mapping
+                or measure_on_instruction_target
             ):
-                raise ValueError(
-                    "cannot add a gate or noise operation on a qubit after a measure instruction."
-                )
-
-            # Check if the target_qubits are already measured
-            if isinstance(instruction.operator, Measure) and measure_on_instruction_target:
-                intersection = set(instruction.target) & set(self._measure_targets)
-                raise ValueError(
-                    f"cannot measure the same qubit(s) {', '.join(map(str, intersection))} "
-                    "more than once."
-                )
+                raise ValueError("cannot apply instruction to measured qubits.")
 
     def add_instruction(
         self,
