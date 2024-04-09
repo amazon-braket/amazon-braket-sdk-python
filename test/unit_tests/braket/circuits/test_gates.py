@@ -107,7 +107,7 @@ testdata = [
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
     (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
     (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
-    (Gate.PhaseRx, "phaserx", None, [SingleTarget, DoubleAngle], {}),
+    (Gate.PRx, "prx", None, [SingleTarget, DoubleAngle], {}),
     (Gate.MS, "ms", None, [DoubleTarget, TripleAngle], {}),
     (
         Gate.Unitary,
@@ -185,7 +185,7 @@ def angle_valid_input(**kwargs):
 
 
 def double_angle_valid_input(**kwargs):
-    return {"angle_1": 0.123, "angle_2": 4.567}
+    return {"angle_1": 0.123, "angle_2": 3.567}
 
 
 def triple_angle_valid_input(**kwargs):

@@ -3301,7 +3301,7 @@ class GPi(AngledGate):
 Gate.register_gate(GPi)
 
 
-class PhaseRx(DoubleAngledGate):
+class PRx(DoubleAngledGate):
     r"""Phase Rx gate.
 
     Unitary matrix:
@@ -3327,7 +3327,7 @@ class PhaseRx(DoubleAngledGate):
             angle_1=angle_1,
             angle_2=angle_2,
             qubit_count=None,
-            ascii_symbols=[_multi_angled_ascii_characters("PhaseRx", angle_1, angle_2)],
+            ascii_symbols=[_multi_angled_ascii_characters("PRx", angle_1, angle_2)],
         )
 
     def to_matrix(self) -> np.ndarray:
@@ -3352,21 +3352,21 @@ class PhaseRx(DoubleAngledGate):
         )
 
     def _qasm_name(self) -> str:
-        return "phaserx"
+        return "prx"
 
     def adjoint(self) -> list[Gate]:
-        return [PhaseRx(-self.angle_1, -self.angle_2)]
+        return [PRx(-self.angle_1, self.angle_2)]
 
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def bind_values(self, **kwargs) -> PhaseRx:
-        return get_angle(self, **kwargs)
+    def bind_values(self, **kwargs) -> PRx:
+        return _get_angles(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def phaserx(
+    def prx(
         target: QubitSetInput,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
@@ -3378,7 +3378,7 @@ class PhaseRx(DoubleAngledGate):
         r"""PhaseRx gate.
 
         .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
-                cos(\theta) & -i e^{-i \phi} sin(\theta / 2) \\
+                cos(\theta / 2) & -i e^{-i \phi} sin(\theta / 2) \\
                 -i e^{i \phi} sin(\theta / 2) & cos(\theta / 2)
             \end{bmatrix}.
 
@@ -3401,11 +3401,11 @@ class PhaseRx(DoubleAngledGate):
             Iterable[Instruction]: PhaseRx instruction.
 
         Examples:
-            >>> circ = Circuit().phaserx(0, 0.15, 0.25)
+            >>> circ = Circuit().prx(0, 0.15, 0.25)
         """
         return [
             Instruction(
-                PhaseRx(angle_1, angle_2),
+                PRx(angle_1, angle_2),
                 target=qubit,
                 control=control,
                 control_state=control_state,
@@ -3415,7 +3415,7 @@ class PhaseRx(DoubleAngledGate):
         ]
 
 
-Gate.register_gate(PhaseRx)
+Gate.register_gate(PRx)
 
 
 class GPi2(AngledGate):

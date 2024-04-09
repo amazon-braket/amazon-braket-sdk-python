@@ -2496,7 +2496,7 @@ def test_to_unitary_with_global_phase():
         (Circuit().cphaseshift00(0, 1, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
         (Circuit().cphaseshift01(0, 1, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
         (Circuit().cphaseshift10(0, 1, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
-        (Circuit().phaserx(0, 1, 0.15), gates.PhaseRx(1, 0.15).to_matrix()),
+        (Circuit().prx(0, 1, 0.15), gates.PRx(1, 0.15).to_matrix()),
         (Circuit().cy(0, 1), gates.CY().to_matrix()),
         (Circuit().cz(0, 1), gates.CZ().to_matrix()),
         (Circuit().xx(0, 1, 0.15), gates.XX(0.15).to_matrix()),

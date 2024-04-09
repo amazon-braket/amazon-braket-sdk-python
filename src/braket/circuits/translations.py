@@ -67,7 +67,7 @@ BRAKET_GATES = {
     "cswap": braket_gates.CSwap,
     "gpi": braket_gates.GPi,
     "gpi2": braket_gates.GPi2,
-    "phaserx": braket_gates.PhaseRx,
+    "prx": braket_gates.PRx,
     "ms": braket_gates.MS,
     "unitary": braket_gates.Unitary,
 }
