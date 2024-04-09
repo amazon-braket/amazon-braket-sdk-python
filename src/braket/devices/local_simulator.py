@@ -13,13 +13,12 @@
 
 from __future__ import annotations
 
+import sys
 from functools import singledispatchmethod
 from itertools import repeat
 from multiprocessing import Pool
 from os import cpu_count
 from typing import Any, Optional, Union
-
-import pkg_resources
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -39,9 +38,12 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
 from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 
-_simulator_devices = {
-    entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
-}
+if sys.version_info.minor == 9:
+    from backports.entry_points_selectable import entry_points
+else:
+    from importlib.metadata import entry_points
+
+_simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
 
 
 class LocalSimulator(Device):
