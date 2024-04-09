@@ -30,7 +30,6 @@ setup(
         "amazon-braket-schemas>=1.21.0",
         "amazon-braket-default-simulator>=1.21.2",
         "oqpy~=0.3.5",
-        "setuptools",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
@@ -41,6 +40,7 @@ setup(
         "openpulse",
         "openqasm3",
         "sympy",
+        "backports.entry-points-selectable",
     ],
     extras_require={
         "test": [
