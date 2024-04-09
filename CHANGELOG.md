@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.76.3 (2024-04-09)
+
+### Bug Fixes and Other Changes
+
+ * Replace pkg_resources with importlib.metadata
+
+### Documentation Changes
+
+ * Improve gphase unitary matrix definition in docstring
+
+## v1.76.2 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * backwards compatiblity for local detuning
+
 ## v1.76.1 (2024-04-08)
 
 ### Bug Fixes and Other Changes
