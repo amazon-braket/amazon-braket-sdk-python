@@ -278,7 +278,7 @@ class GPhase(AngledGate):
         `negctrl @ gphase(λ) q = x q; ctrl @ gphase(λ) q; x q`.
 
         Unitary matrix:
-    
+
             .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I = \begin{bmatrix}
                         e^{i \gamma} & 0 \\
                         0 & e^{i \gamma} \end{bmatrix}.
