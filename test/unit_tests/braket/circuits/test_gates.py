@@ -39,6 +39,10 @@ class NoTarget:
     pass
 
 
+class DoubleAngle:
+    pass
+
+
 class TripleAngle:
     pass
 
@@ -103,6 +107,7 @@ testdata = [
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
     (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
     (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
+    (Gate.PhaseRx, "phaserx", None, [SingleTarget, DoubleAngle], {}),
     (Gate.MS, "ms", None, [DoubleTarget, TripleAngle], {}),
     (
         Gate.Unitary,
@@ -179,6 +184,10 @@ def angle_valid_input(**kwargs):
     return {"angle": 0.123}
 
 
+def double_angle_valid_input(**kwargs):
+    return {"angle_1": 0.123, "angle_2": 4.567}
+
+
 def triple_angle_valid_input(**kwargs):
     return {"angle_1": 0.123, "angle_2": 4.567, "angle_3": 8.910}
 
@@ -217,6 +226,7 @@ valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
+    "DoubleAngle": double_angle_valid_input,
     "TripleAngle": triple_angle_valid_input,
     "SingleControl": single_control_valid_input,
     "SingleNegControlModifier": single_neg_control_valid_input,
@@ -273,7 +283,7 @@ def create_valid_target_input(irsubclasses):
             control_state = list(single_neg_control_valid_input()["control_state"])
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
+        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -287,6 +297,8 @@ def create_valid_gate_class_input(irsubclasses, **kwargs):
     input = {}
     if Angle in irsubclasses:
         input.update(angle_valid_input())
+    if DoubleAngle in irsubclasses:
+        input.update(double_angle_valid_input())
     if TripleAngle in irsubclasses:
         input.update(triple_angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
@@ -313,7 +325,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass in (NoTarget, Angle, TwoDimensionalMatrix, TripleAngle):
+        elif subclass in (NoTarget, Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -902,6 +914,8 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         subroutine_input = {"target": multi_targets}
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
+        if DoubleAngle in irsubclasses:
+            subroutine_input.update(double_angle_valid_input())
         if TripleAngle in irsubclasses:
             subroutine_input.update(triple_angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
