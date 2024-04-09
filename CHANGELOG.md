@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.76.2 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * backwards compatiblity for local detuning
+
+## v1.76.1 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * Support single-register measurements in `from_ir`
+ * prevent repeated measurements on a qubit
+
 ## v1.76.0 (2024-04-01)
 
 ### Features
