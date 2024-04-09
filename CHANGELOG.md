@@ -1,5 +1,68 @@
 # Changelog
 
+## v1.76.3 (2024-04-09)
+
+### Bug Fixes and Other Changes
+
+ * Replace pkg_resources with importlib.metadata
+
+### Documentation Changes
+
+ * Improve gphase unitary matrix definition in docstring
+
+## v1.76.2 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * backwards compatiblity for local detuning
+
+## v1.76.1 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * Support single-register measurements in `from_ir`
+ * prevent repeated measurements on a qubit
+
+## v1.76.0 (2024-04-01)
+
+### Features
+
+ * add support for OpenQASM measure on a subset of qubits
+
+### Bug Fixes and Other Changes
+
+ * restore the dependent test back to pennylane
+
+### Documentation Changes
+
+ * fix GPI2 gate matrix representation
+
+## v1.75.0 (2024-03-28)
+
+### Features
+
+ * upgrade to pydantic 2.x
+
+### Bug Fixes and Other Changes
+
+ * change schemas constraint
+
+## v1.74.1 (2024-03-27)
+
+### Bug Fixes and Other Changes
+
+ * temporarily pin the schemas version
+
+## v1.74.0 (2024-03-21)
+
+### Features
+
+ * Allow sets of calibrations in batches
+
+### Bug Fixes and Other Changes
+
+ * batch tasking passing lists to single tasks
+
 ## v1.73.3 (2024-03-18)
 
 ### Bug Fixes and Other Changes
