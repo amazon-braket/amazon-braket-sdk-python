@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.77.1 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * add measure qubit targets in braket_program_context
+
 ## v1.77.0 (2024-04-10)
 
 ### Features
