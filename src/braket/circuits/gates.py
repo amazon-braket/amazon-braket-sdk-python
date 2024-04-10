@@ -220,7 +220,9 @@ class GPhase(AngledGate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+        .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I = \begin{bmatrix}
+                    e^{i \gamma} & 0 \\
+                    0 & e^{i \gamma} \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -277,7 +279,9 @@ class GPhase(AngledGate):
 
         Unitary matrix:
 
-            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+            .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I = \begin{bmatrix}
+                        e^{i \gamma} & 0 \\
+                        0 & e^{i \gamma} \end{bmatrix}.
 
         Args:
             angle (Union[FreeParameterExpression, float]): Phase in radians.
@@ -3301,7 +3305,7 @@ class GPi2(AngledGate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
@@ -3351,7 +3355,7 @@ class GPi2(AngledGate):
     ) -> Iterable[Instruction]:
         r"""IonQ GPi2 gate.
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2}}  \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
