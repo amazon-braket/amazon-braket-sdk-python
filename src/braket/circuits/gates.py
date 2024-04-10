@@ -3406,7 +3406,11 @@ class PRx(DoubleAngledGate):
         """
         return [
             Instruction(
-                PRx(angle_1, angle_2), target=qubit, control=control, control_state=control_state, power=power
+                PRx(angle_1, angle_2),
+                target=qubit,
+                control=control,
+                control_state=control_state,
+                power=power,
             )
             for qubit in QubitSet(target)
         ]

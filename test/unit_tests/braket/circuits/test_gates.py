@@ -155,7 +155,6 @@ parameterizable_gates = [
 ]
 
 
-
 invalid_unitary_matrices = [
     (np.array([[1]])),
     (np.array([1])),
@@ -866,13 +865,13 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             Gate.PRx(angle_1=0.17, angle_2=3.45),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            f"prx(0.17, 3.45) q[4];",
+            "prx(0.17, 3.45) q[4];",
         ),
         (
             Gate.PRx(angle_1=0.17, angle_2=3.45),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            f"prx(0.17, 3.45) $4;",
+            "prx(0.17, 3.45) $4;",
         ),
         (
             Gate.MS(angle_1=0.17, angle_2=3.45),
@@ -1043,7 +1042,7 @@ def test_large_unitary():
 def test_bind_values(gate):
     double_angled = gate.__name__ in ["PRx"]
     triple_angled = gate.__name__ in ("MS", "U")
-    num_params = 1 
+    num_params = 1
     if triple_angled:
         num_params = 3
     elif double_angled:

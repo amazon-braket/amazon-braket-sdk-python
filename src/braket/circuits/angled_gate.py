@@ -438,18 +438,18 @@ def _get_angles(
     """Gets the angle with all values substituted in that are requested.
 
     Args:
-        gate Union[DoubleAngledGate, TripleAngledGate]: The subclass of multi angle AngledGate for which the angle is being
-            obtained.
+        gate (Union[DoubleAngledGate, TripleAngledGate]): The subclass of multi angle AngledGate for
+            which the angle is being obtained.
         **kwargs (FreeParameterExpression | str): The named parameters that are being filled
             for a particular gate.
 
     Returns:
-        Union[DoubleAngledGate, TripleAngledGate]: A new gate of the type of the AngledGate originally used with all angles
-        updated.
+        Union[DoubleAngledGate, TripleAngledGate]: A new gate of the type of the AngledGate
+        originally used with all angles updated.
     """
-    angles = [f'angle_{i + 1}' for i in range(len(gate._parameters))]
-    new_angles_args = {angle:
-        (
+    angles = [f"angle_{i + 1}" for i in range(len(gate._parameters))]
+    new_angles_args = {
+        angle: (
             getattr(gate, angle).subs(kwargs)
             if isinstance(getattr(gate, angle), FreeParameterExpression)
             else getattr(gate, angle)
