@@ -34,7 +34,6 @@ setup(
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
         "amazon-braket-default-simulator @ git+https://github.com/amazon-braket/amazon-braket-default-simulator-python.git@7245414b79856a03ac0507f86f1eae92ff697cd0#egg=amazon-braket-default-simulator",  # noqa E501
         "oqpy~=0.3.5",
-        "setuptools",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
@@ -46,6 +45,7 @@ setup(
         "openpulse",
         "openqasm3",
         "sympy",
+        "backports.entry-points-selectable",
         "astunparse",
         "gast",
         "termcolor",
