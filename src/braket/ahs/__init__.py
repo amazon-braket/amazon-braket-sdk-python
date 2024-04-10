@@ -18,4 +18,5 @@ from braket.ahs.driving_field import DrivingField  # noqa: F401
 from braket.ahs.field import Field  # noqa: F401
 from braket.ahs.hamiltonian import Hamiltonian  # noqa: F401
 from braket.ahs.pattern import Pattern  # noqa: F401
+from braket.ahs.shifting_field import LocalDetuning  # noqa: F401
 from braket.ahs.shifting_field import ShiftingField  # noqa: F401

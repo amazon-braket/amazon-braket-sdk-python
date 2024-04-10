@@ -16,49 +16,49 @@ from unittest.mock import Mock
 import pytest
 
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.shifting_field import ShiftingField
+from braket.ahs.local_detuning import LocalDetuning
 from braket.timings.time_series import StitchBoundaryCondition
 
 
 @pytest.fixture
-def default_shifting_field():
-    return ShiftingField(Mock())
+def default_local_detuning():
+    return LocalDetuning(Mock())
 
 
 def test_create():
     mock0 = Mock()
-    field = ShiftingField(magnitude=mock0)
+    field = LocalDetuning(magnitude=mock0)
     assert mock0 == field.magnitude
 
 
-def test_add_hamiltonian(default_shifting_field):
-    expected = [default_shifting_field, Mock(), Mock(), Mock()]
+def test_add_hamiltonian(default_local_detuning):
+    expected = [default_local_detuning, Mock(), Mock(), Mock()]
     result = expected[0] + Hamiltonian([expected[1], expected[2], expected[3]])
     assert result.terms == expected
 
 
-def test_add_to_hamiltonian(default_shifting_field):
-    expected = [Mock(), Mock(), Mock(), default_shifting_field]
+def test_add_to_hamiltonian(default_local_detuning):
+    expected = [Mock(), Mock(), Mock(), default_local_detuning]
     result = Hamiltonian([expected[0], expected[1], expected[2]]) + expected[3]
     assert result.terms == expected
 
 
 def test_add_to_other():
-    field0 = ShiftingField(Mock())
-    field1 = ShiftingField(Mock())
+    field0 = LocalDetuning(Mock())
+    field1 = LocalDetuning(Mock())
     result = field0 + field1
     assert type(result) is Hamiltonian
     assert result.terms == [field0, field1]
 
 
-def test_add_to_self(default_shifting_field):
-    result = default_shifting_field + default_shifting_field
+def test_add_to_self(default_local_detuning):
+    result = default_local_detuning + default_local_detuning
     assert type(result) is Hamiltonian
-    assert result.terms == [default_shifting_field, default_shifting_field]
+    assert result.terms == [default_local_detuning, default_local_detuning]
 
 
-def test_iadd_to_other(default_shifting_field):
-    expected = [Mock(), Mock(), Mock(), default_shifting_field]
+def test_iadd_to_other(default_local_detuning):
+    expected = [Mock(), Mock(), Mock(), default_local_detuning]
     other = Hamiltonian([expected[0], expected[1], expected[2]])
     other += expected[3]
     assert other.terms == expected
@@ -69,7 +69,7 @@ def test_from_lists():
     glob_amplitude = [0.5, 0.8, 0.9, 1.0]
     pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
 
-    sh_field = ShiftingField.from_lists(times, glob_amplitude, pattern)
+    sh_field = LocalDetuning.from_lists(times, glob_amplitude, pattern)
     assert sh_field.magnitude.time_series.values() == glob_amplitude
     assert sh_field.magnitude.pattern.series == pattern
 
@@ -82,7 +82,7 @@ def test_from_lists_not_eq_length():
     glob_amplitude = [0.5, 0.8, 0.9, 1.0]
     pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
 
-    ShiftingField.from_lists(times, glob_amplitude, pattern)
+    LocalDetuning.from_lists(times, glob_amplitude, pattern)
 
 
 def test_stitch():
@@ -94,8 +94,8 @@ def test_stitch():
     glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
     pattern_2 = pattern_1
 
-    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
-    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+    sh_field_1 = LocalDetuning.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = LocalDetuning.from_lists(times_2, glob_amplitude_2, pattern_2)
 
     new_sh_field = sh_field_1.stitch(sh_field_2, boundary=StitchBoundaryCondition.LEFT)
 
@@ -116,8 +116,8 @@ def test_stitch_not_eq_pattern():
     glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
     pattern_2 = [-0.3, 0.7, 0.6, -0.5, 0, 1.6]
 
-    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
-    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+    sh_field_1 = LocalDetuning.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = LocalDetuning.from_lists(times_2, glob_amplitude_2, pattern_2)
 
     sh_field_1.stitch(sh_field_2)
 
@@ -125,7 +125,7 @@ def test_stitch_not_eq_pattern():
 def test_discretize():
     magnitude_mock = Mock()
     mock_properties = Mock()
-    field = ShiftingField(magnitude=magnitude_mock)
+    field = LocalDetuning(magnitude=magnitude_mock)
     discretized_field = field.discretize(mock_properties)
     magnitude_mock.discretize.assert_called_with(
         time_resolution=mock_properties.rydberg.rydbergLocal.timeResolution,
@@ -137,5 +137,5 @@ def test_discretize():
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_iadd_to_itself(default_shifting_field):
-    default_shifting_field += Hamiltonian(Mock())
+def test_iadd_to_itself(default_local_detuning):
+    default_local_detuning += Hamiltonian(Mock())
