@@ -170,3 +170,7 @@ class BraketProgramContext(AbstractProgramContext):
         for index, qubit in enumerate(target):
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
+            if self._circuit._measure_targets:
+                self._circuit._measure_targets.append(qubit)
+            else:
+                self._circuit._measure_targets = [qubit]
