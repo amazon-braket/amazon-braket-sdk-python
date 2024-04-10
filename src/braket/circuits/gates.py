@@ -3379,8 +3379,8 @@ class PRx(DoubleAngledGate):
         r"""PhaseRx gate.
 
         .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
-                cos(\theta / 2) & -i e^{-i \phi} sin(\theta / 2) \\
-                -i e^{i \phi} sin(\theta / 2) & cos(\theta / 2)
+                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
+                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
             \end{bmatrix}.
 
         Args:
