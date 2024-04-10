@@ -3330,6 +3330,10 @@ class PRx(DoubleAngledGate):
             ascii_symbols=[_multi_angled_ascii_characters("PRx", angle_1, angle_2)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "prx"
+
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
 
@@ -3350,9 +3354,6 @@ class PRx(DoubleAngledGate):
                 ],
             ]
         )
-
-    def _qasm_name(self) -> str:
-        return "prx"
 
     def adjoint(self) -> list[Gate]:
         return [PRx(-self.angle_1, self.angle_2)]
@@ -3405,11 +3406,7 @@ class PRx(DoubleAngledGate):
         """
         return [
             Instruction(
-                PRx(angle_1, angle_2),
-                target=qubit,
-                control=control,
-                control_state=control_state,
-                power=power,
+                PRx(angle_1, angle_2), target=qubit, control=control, control_state=control_state, power=power
             )
             for qubit in QubitSet(target)
         ]

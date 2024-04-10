@@ -150,8 +150,11 @@ parameterizable_gates = [
     Gate.CPhaseShift10,
     Gate.GPi,
     Gate.GPi2,
+    Gate.PRx,
     Gate.MS,
 ]
+
+
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -860,6 +863,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "gpi2(0.17) $4;",
         ),
         (
+            Gate.PRx(angle_1=0.17, angle_2=3.45),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            f"prx(0.17, 3.45) q[4];",
+        ),
+        (
+            Gate.PRx(angle_1=0.17, angle_2=3.45),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            f"prx(0.17, 3.45) $4;",
+        ),
+        (
             Gate.MS(angle_1=0.17, angle_2=3.45),
             [4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -1026,8 +1041,13 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
+    double_angled = gate.__name__ in ["PRx"]
     triple_angled = gate.__name__ in ("MS", "U")
-    num_params = 3 if triple_angled else 1
+    num_params = 1 
+    if triple_angled:
+        num_params = 3
+    elif double_angled:
+        num_params = 2
     thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
     mapping = {f"theta_{i}": i for i in range(num_params)}
     param_gate = gate(*thetas)
@@ -1037,6 +1057,9 @@ def test_bind_values(gate):
     assert type(new_gate) is type(param_gate) and new_gate == expected
     if triple_angled:
         for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
+            assert isinstance(angle, float)
+    elif double_angled:
+        for angle in new_gate.angle_1, new_gate.angle_2:
             assert isinstance(angle, float)
     else:
         assert isinstance(new_gate.angle, float)
