@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.77.2 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * remove shifting field from testing
+
 ## v1.77.1 (2024-04-10)
 
 ### Bug Fixes and Other Changes
