@@ -16,8 +16,8 @@ from unittest.mock import Mock
 import pytest
 
 from braket.aws.aws_device import AwsDevice, AwsDeviceType
-from braket.reservations import Reservation
 from braket.devices.local_simulator import LocalSimulator
+from braket.reservations import Reservation
 
 
 def test_non_braket_device():
