@@ -451,7 +451,8 @@ class Circuit:
             if (
                 # check if there is a measure instruction on the targeted qubit(s)
                 measure_on_target_mapping
-                or any(tar in self._measure_targets for tar in QubitSet(target) + QubitSet(instruction.target))
+                or any(tar in self._measure_targets for tar in QubitSet(target))
+                or any(tar in self._measure_targets for tar in QubitSet(instruction.target))
             ):
                 raise ValueError("cannot apply instruction to measured qubits.")
 
