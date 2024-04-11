@@ -441,24 +441,17 @@ class Circuit:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
         if self._measure_targets:
-            measure_on_target = (
-                target and any(tar in self._measure_targets for tar in target)
-                if isinstance(target, Iterable)
-                else target in self._measure_targets
-            )
+            measure_on_target = any(tar in self._measure_targets for tar in QubitSet(target))
             measure_on_target_mapping = target_mapping and any(
                 targ in self._measure_targets for targ in target_mapping.values()
             )
-            measure_on_instruction_target = (
-                instruction
-                and instruction.target
-                and any(targ in self._measure_targets for targ in instruction.target)
+            measure_on_instruction_target = any(
+                targ in self._measure_targets for targ in QubitSet(instruction.target)
             )
             if (
                 # check if there is a measure instruction on the targeted qubit(s)
-                measure_on_target
-                or measure_on_target_mapping
-                or measure_on_instruction_target
+                measure_on_target_mapping
+                or any(tar in self._measure_targets for tar in QubitSet(target) + QubitSet(instruction.target))
             ):
                 raise ValueError("cannot apply instruction to measured qubits.")
 
