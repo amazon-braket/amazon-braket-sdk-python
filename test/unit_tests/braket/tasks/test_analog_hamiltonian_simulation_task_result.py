@@ -75,7 +75,7 @@ def additional_metadata():
                         },
                     }
                 ],
-                "shiftingFields": [
+                "localDetuning": [
                     {
                         "magnitude": {
                             "time_series": {
