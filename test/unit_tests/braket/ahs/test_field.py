@@ -16,7 +16,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
 from braket.timings.time_series import TimeSeries
@@ -80,6 +79,12 @@ def test_discretize(
     [
         (Decimal("0.1"), Decimal("10"), Decimal("0.5")),
         (Decimal("10"), Decimal("20"), None),
+        (Decimal("0.1"), None, Decimal("0.5")),
+        (None, Decimal("10"), Decimal("0.5")),
+        (None, None, Decimal("0.5")),
+        (None, Decimal("10"), None),
+        (Decimal("0.1"), None, None),
+        (None, None, None),
         (Decimal("100"), Decimal("0.1"), Decimal("1")),
     ],
 )
@@ -93,14 +98,3 @@ def test_uniform_field(
     ) or expected.pattern.series == actual.pattern.series
     assert expected.time_series.times() == actual.time_series.times()
     assert expected.time_series.values() == actual.time_series.values()
-
-
-@pytest.mark.parametrize(
-    "time_res, value_res, pattern_res",
-    [
-        (Decimal("10"), Decimal("20"), None),
-    ],
-)
-@pytest.mark.xfail(raises=DiscretizationError)
-def test_invalid_pattern_res(default_field, time_res, value_res, pattern_res):
-    default_field.discretize(time_res, value_res, pattern_res)

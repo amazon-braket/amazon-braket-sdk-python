@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
+from typing import Optional
 
 
 @dataclass
@@ -267,24 +268,31 @@ class TimeSeries:
 
         return new_time_series
 
-    def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
+    def discretize(self, time_resolution: Optional[Decimal], value_resolution: Optional[Decimal]) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the
         corresponding resolution.
 
         Args:
-            time_resolution (Decimal): Time resolution
-            value_resolution (Decimal): Value resolution
+            time_resolution (Optional[Decimal]): Time resolution
+            value_resolution (Optional[Decimal]): Value resolution
 
         Returns:
             TimeSeries: A new discretized time series.
         """
         discretized_ts = TimeSeries()
         for item in self:
-            discretized_ts.put(
-                time=round(Decimal(item.time) / time_resolution) * time_resolution,
-                value=round(Decimal(item.value) / value_resolution) * value_resolution,
-            )
+            if time_resolution is None:
+                discretized_time = Decimal(item.time)
+            else:
+                discretized_time = round(Decimal(item.time) / time_resolution) * time_resolution
+
+            if value_resolution is None:
+                discretized_value = Decimal(item.value)
+            else:
+                discretized_value = round(Decimal(item.value) / value_resolution) * value_resolution
+
+            discretized_ts.put(time=discretized_time, value=discretized_value)
         return discretized_ts
 
     @staticmethod

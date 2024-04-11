@@ -152,10 +152,17 @@ class LocalDetuning(Hamiltonian):
         Returns:
             LocalDetuning: A new discretized LocalDetuning.
         """
-        shifting_parameters = properties.rydberg.rydbergLocal
+        local_detuning_parameters = properties.rydberg.rydbergLocal
+        time_resolution, value_resolution, pattern_resolution = (None, None, None)
+        if hasattr(local_detuning_parameters, "timeResolution"):
+            time_resolution = local_detuning_parameters.timeResolution
+        if hasattr(local_detuning_parameters, "commonDetuningResolution"):
+            value_resolution = local_detuning_parameters.commonDetuningResolution
+        if hasattr(local_detuning_parameters, "localDetuningResolution"):
+            pattern_resolution = local_detuning_parameters.localDetuningResolution
         discretized_magnitude = self.magnitude.discretize(
-            time_resolution=shifting_parameters.timeResolution,
-            value_resolution=shifting_parameters.commonDetuningResolution,
-            pattern_resolution=shifting_parameters.localDetuningResolution,
+            time_resolution=time_resolution,
+            value_resolution=value_resolution,
+            pattern_resolution=pattern_resolution,
         )
         return LocalDetuning(discretized_magnitude)
