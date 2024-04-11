@@ -47,7 +47,7 @@ def Reservation(device: Device, reservation_arn: str | None = None) -> Device | 
         raise ValueError("The provided device is not a valid Braket device.")
 
     # Local simulators do not accept reservation ARNs
-    if isinstance(device, LocalSimulator):
+    if isinstance(device, LocalSimulator) or device.type == AwsDeviceType.SIMULATOR:
         yield device
 
     elif isinstance(device, AwsDevice):
