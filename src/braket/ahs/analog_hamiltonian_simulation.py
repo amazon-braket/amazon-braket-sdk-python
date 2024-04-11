@@ -21,12 +21,12 @@ from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.shifting_field import ShiftingField
+from braket.ahs.local_detuning import LocalDetuning
 from braket.device_schema import DeviceActionType
 
 
 class AnalogHamiltonianSimulation:
-    SHIFTING_FIELDS_PROPERTY = "shifting_fields"
+    LOCAL_DETUNING_PROPERTY = "local_detuning"
     DRIVING_FIELDS_PROPERTY = "driving_fields"
 
     def __init__(self, register: AtomArrangement, hamiltonian: Hamiltonian) -> None:
@@ -74,7 +74,7 @@ class AnalogHamiltonianSimulation:
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
             drivingFields=terms[AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY],
-            shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
+            localDetuning=terms[AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY],
         )
 
     def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
@@ -116,8 +116,8 @@ def _get_term_ir(
 
 
 @_get_term_ir.register
-def _(term: ShiftingField) -> tuple[str, ir.ShiftingField]:
-    return AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY, ir.ShiftingField(
+def _(term: LocalDetuning) -> tuple[str, ir.LocalDetuning]:
+    return AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY, ir.LocalDetuning(
         magnitude=ir.PhysicalField(
             time_series=ir.TimeSeries(
                 times=term.magnitude.time_series.times(),

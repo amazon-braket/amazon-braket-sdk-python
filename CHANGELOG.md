@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.77.3 (2024-04-11)
+
+### Bug Fixes and Other Changes
+
+ * measure target qubits are required
+
+## v1.77.2 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * remove shifting field from testing
+
+## v1.77.1 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * add measure qubit targets in braket_program_context
+
 ## v1.77.0 (2024-04-10)
 
 ### Features
