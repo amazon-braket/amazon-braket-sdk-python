@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from braket.aws.aws_device import AwsDevice, AwsDeviceType
+from braket.aws.aws_device import AwsDevice
 from braket.devices.local_simulator import LocalSimulator
 from braket.reservations import reservation
 
@@ -23,7 +23,7 @@ from braket.reservations import reservation
 def test_non_braket_device():
     non_device = Mock()
     with pytest.raises(ValueError):
-        with reservation(non_device):
+        with reservation(non_device, reservation_arn=None):
             pass
 
 
@@ -37,21 +37,9 @@ def test_local_simulator():
     local_simulator.run.assert_called_once_with("circuit", 100)
 
 
-def test_aws_simulator():
-    simulator_device = Mock(spec=AwsDevice)
-    simulator_device.type = AwsDeviceType.SIMULATOR
-    simulator_device.run = Mock()
-
-    with reservation(simulator_device, reservation_arn="arn:test"):
-        simulator_device.run("circuit", 100)
-
-    simulator_device.run.assert_called_once_with("circuit", 100)
-
-
 @pytest.mark.parametrize("reservation_arn", [None, "arn:test"])
-def test_qpu_device(reservation_arn):
+def test_aws_device(reservation_arn):
     qpu_device = Mock(spec=AwsDevice)
-    qpu_device.type = AwsDeviceType.QPU
     qpu_device.run = Mock()
 
     with reservation(qpu_device, reservation_arn=reservation_arn):
