@@ -12,4 +12,4 @@
 # language governing permissions and limitations under the License.
 
 
-from braket.reservations.reservations import Reservation  # noqa: F401
+from braket.reservations.reservations import reservation  # noqa: F401

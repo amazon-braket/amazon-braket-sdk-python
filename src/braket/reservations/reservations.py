@@ -16,18 +16,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import contextmanager
 
-from braket.aws.aws_device import AwsDevice, AwsDeviceType
+from braket.aws.aws_device import AwsDevice
 from braket.devices.device import Device
 from braket.devices.local_simulator import LocalSimulator
 
 
 @contextmanager
-def Reservation(device: Device, reservation_arn: str | None = None) -> Device | None:
+def reservation(device: Device, reservation_arn: str | None) -> Device | None:
     """
     A context manager that temporarily modifies the `run` method of a `device` object
     to include a specified `reservation_arn` in all calls within the context. This is useful
     for ensuring that all quantum task run within the context are associated with a given
     reservation ARN (Amazon Resource Name).
+
+    Reservations are AWS account and device specific. Only the AWS account that created the
+    reservation can use your reservation ARN. Additionally, the reservation ARN is only valid on the
+    reserved device at the chosen start and end times.
 
     Args:
         device (Device): The Braket device for which you have a reservation ARN.
@@ -40,33 +44,37 @@ def Reservation(device: Device, reservation_arn: str | None = None) -> Device | 
         modification.
 
     Examples:
-        >>> with Reservation(device, reservation_arn="<my_reservation_arn>"):
+        As a context manager
+        >>> with reservation(device, reservation_arn="<my_reservation_arn>"):
         ...     task1 = device.run(circuit, shots)
         ...     task2 = device.run(circuit, shots)
+
+        or as a decorator
+
+        >>> @reservation(device, reservation_arn="<my_reservation_arn>"):
+        ... def func():
+        ...     task1 = device.run(circuit, shots)
+        ...     task2 = device.run(circuit, shots)
+    References:
+    [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
 
-    if not isinstance(device, Device):
-        raise ValueError("The provided device is not a valid Braket device.")
+    if isinstance(device, AwsDevice):
+        original_run = device.run
+
+        def _run_with_reservation(*args, **kwargs) -> Callable:
+            kwargs["reservation_arn"] = reservation_arn
+            return original_run(*args, **kwargs)
+
+        device.run = _run_with_reservation
+
+        try:
+            yield device
+        finally:
+            device.run = original_run
 
     # Local simulators do not accept reservation ARNs
-    if isinstance(device, LocalSimulator) or device.type == AwsDeviceType.SIMULATOR:
+    elif isinstance(device, LocalSimulator):
         yield device
-
-    elif isinstance(device, AwsDevice):
-        # on-demand simulators do not accept reservation ARNs
-        if device.type == AwsDeviceType.SIMULATOR:
-            yield device
-
-        elif device.type == AwsDeviceType.QPU:
-            original_run = device.run
-
-            def _run_with_reservation(*args, **kwargs) -> Callable:
-                kwargs["reservation_arn"] = reservation_arn
-                return original_run(*args, **kwargs)
-
-            device.run = _run_with_reservation
-
-            try:
-                yield device
-            finally:
-                device.run = original_run
+    else:
+        raise TypeError(f"The provided device {device} is not a valid Braket device.")
