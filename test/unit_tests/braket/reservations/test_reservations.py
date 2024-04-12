@@ -22,7 +22,7 @@ from braket.reservations import reservation
 
 def test_non_braket_device():
     non_device = Mock()
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         with reservation(non_device, reservation_arn=None):
             pass
 

@@ -55,7 +55,9 @@ def reservation(device: Device, reservation_arn: str | None) -> Device | None:
         ... def func():
         ...     task1 = device.run(circuit, shots)
         ...     task2 = device.run(circuit, shots)
+
     References:
+
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
 
