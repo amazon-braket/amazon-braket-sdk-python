@@ -121,29 +121,21 @@ class DrivingField(Hamiltonian):
             DrivingField: A new discretized DrivingField.
         """
         driving_parameters = properties.rydberg.rydbergGlobal
-        time_resolution = None
-        if hasattr(driving_parameters, "timeResolution"):
-            time_resolution = driving_parameters.timeResolution
+        time_resolution = driving_parameters.timeResolution
 
-        amplitude_value_resolution = None
-        if hasattr(driving_parameters, "rabiFrequencyResolution"):
-            amplitude_value_resolution = driving_parameters.rabiFrequencyResolution
+        amplitude_value_resolution = driving_parameters.rabiFrequencyResolution
         discretized_amplitude = self.amplitude.discretize(
             time_resolution=time_resolution,
             value_resolution=amplitude_value_resolution,
         )
 
-        phase_value_resolution = None
-        if hasattr(driving_parameters, "phaseResolution"):
-            phase_value_resolution = driving_parameters.phaseResolution
+        phase_value_resolution = driving_parameters.phaseResolution
         discretized_phase = self.phase.discretize(
             time_resolution=time_resolution,
             value_resolution=phase_value_resolution,
         )
 
-        detuning_value_resolution = None
-        if hasattr(driving_parameters, "detuningResolution"):
-            detuning_value_resolution = driving_parameters.detuningResolution
+        detuning_value_resolution = driving_parameters.detuningResolution
         discretized_detuning = self.detuning.discretize(
             time_resolution=time_resolution,
             value_resolution=detuning_value_resolution,
