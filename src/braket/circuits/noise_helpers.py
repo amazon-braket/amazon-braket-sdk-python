@@ -110,7 +110,7 @@ def check_noise_target_qubits(
     """Helper function to check whether all the target_qubits are positive integers.
 
     Args:
-        circuit (Circuit): A ciruit where `noise` is to be checked.
+        circuit (Circuit): A circuit where `noise` is to be checked.
         target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
 
     Returns:
@@ -141,7 +141,7 @@ def apply_noise_to_moments(
     `target_qubits`.
 
     Args:
-        circuit (Circuit): A ciruit where `noise` is applied to.
+        circuit (Circuit): A circuit where `noise` is applied to.
         noise (Iterable[type[Noise]]): Noise channel(s) to be applied
             to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is applied to.
@@ -209,7 +209,7 @@ def _apply_noise_to_gates_helper(
 
     Returns:
         tuple[Iterable[Instruction], int, bool]: A tuple of three values:
-        new_noise_instruction: A list of noise intructions
+        new_noise_instruction: A list of noise instructions
         noise_index: The number of noise channels applied to the gate
         noise_applied: Whether noise is applied or not
     """
@@ -248,7 +248,7 @@ def apply_noise_to_gates(
     the same number of qubits as `noise.qubit_count`.
 
     Args:
-        circuit (Circuit): A ciruit where `noise` is applied to.
+        circuit (Circuit): A circuit where `noise` is applied to.
         noise (Iterable[type[Noise]]): Noise channel(s) to be applied
             to the circuit.
         target_gates (Union[Iterable[type[Gate]], ndarray]): List of gates, or a unitary matrix

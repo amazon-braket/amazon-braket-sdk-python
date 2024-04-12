@@ -731,7 +731,7 @@ class AwsSession:
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing logStreams and nextToken
+            dict[str, Any]: Dictionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -767,7 +767,7 @@ class AwsSession:
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            dict[str, Any]: Dictionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,

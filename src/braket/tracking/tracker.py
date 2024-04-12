@@ -122,7 +122,7 @@ class Tracker:
 
         Returns:
             dict[str, dict[str, Any]]: A dictionary where each key is a device arn, and maps to
-            a dictionary sumarizing the quantum tasks run on the device. The summary includes the
+            a dictionary summarizing the quantum tasks run on the device. The summary includes the
             total shots sent to the device and the most recent status of the quantum tasks
             created on this device. For finished quantum tasks on simulator devices, the summary
             also includes the duration of the simulation.
@@ -271,7 +271,7 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
         product_family = "Simulator Task"
         operation = "CompleteTask"
         if details["status"] == "FAILED" and device_name == "TN1":
-            # Rehersal step of TN1 can fail and charges still apply.
+            # Rehearsal step of TN1 can fail and charges still apply.
             operation = "FailedTask"
 
     search_dict = {
