@@ -14,11 +14,26 @@
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 from braket.devices import Devices
+from braket.reservations import reservation
 
 bell = Circuit().h(0).cnot(0, 1)
 device = AwsDevice(Devices.IonQ.Aria1)
 
 # To run a task in a device reservation, change the device to the one you reserved
-# and fill in your reservation ARN
+# and fill in your reservation ARN.
+with reservation(device, reservation_arn="reservation ARN"):
+    task = device.run(bell, shots=100)
+
+print(task.result().measurement_counts)
+
+# Alternatively, you may directly pass the reservation ARN to all quantum tasks.
 task = device.run(bell, shots=100, reservation_arn="reservation ARN")
 print(task.result().measurement_counts)
+
+
+# A third option to run a reservation is by decorating a function.
+# All tasks created within the function will use the reservation.
+@reservation(device, reservation_arn="reservation ARN")
+def my_function():
+    task = device.run(bell, shots=100)
+    print(task.result().measurement_counts)
