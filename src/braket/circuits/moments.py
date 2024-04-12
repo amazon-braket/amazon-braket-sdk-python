@@ -257,6 +257,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_readout_noise = []
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
+        last_measure = self._depth
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
@@ -264,6 +265,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 key_readout_noise.append(key)
             elif key.moment_type == MomentType.INITIALIZATION_NOISE:
                 key_initialization_noise.append(key)
+            elif key.moment_type == MomentType.MEASURE:
+                last_measure = key.time
+                key_noise.append(key)
             else:
                 key_noise.append(key)
 
@@ -272,7 +276,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         for key in key_noise:
             sorted_moment[key] = moment_copy[key]
         # find the max time in the circuit and make it the time for readout noise
-        max_time = max(self._depth - 1, 0)
+        max_time = max(last_measure - 1, 0)
 
         for key in key_readout_noise:
             sorted_moment[

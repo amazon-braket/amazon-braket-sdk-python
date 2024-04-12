@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.77.3 (2024-04-11)
+
+### Bug Fixes and Other Changes
+
+ * measure target qubits are required
+
 ## v1.77.2 (2024-04-10)
 
 ### Bug Fixes and Other Changes
