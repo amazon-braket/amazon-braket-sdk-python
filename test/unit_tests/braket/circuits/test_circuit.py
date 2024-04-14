@@ -152,25 +152,6 @@ def pulse_sequence_2(predefined_frame_1):
 
 
 @pytest.fixture
-def pulse_sequence_3(predefined_frame_1):
-    return (
-        PulseSequence()
-        .shift_phase(
-            predefined_frame_1,
-            FreeParameter("alpha"),
-        )
-        .shift_phase(
-            predefined_frame_1,
-            FreeParameter("beta"),
-        )
-        .play(
-            predefined_frame_1,
-            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
-        )
-    )
-
-
-@pytest.fixture
 def gate_calibrations(pulse_sequence, pulse_sequence_2):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
@@ -1127,8 +1108,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "rx(0.15) q[0];",
@@ -1156,8 +1143,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "rx(0.15) $0;",
@@ -1187,8 +1180,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "rx(0.15) $0;",
@@ -1222,8 +1221,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "rx(0.15) q[0];",
@@ -1253,8 +1258,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "rx(0.15) q[0];",
@@ -1286,8 +1297,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal rx(0.15) $0 {",
+                        "defcal rx(float theta) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "negctrl @ rx(0.15) q[2], q[0];",
@@ -1318,6 +1335,16 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(float theta) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "cnot q[0], q[1];",
@@ -1352,10 +1379,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "defcal ms(-0.1, -0.2, -0.3) $0, $1 {",
-                        "    shift_phase(predefined_frame_1, -0.1);",
-                        "    set_phase(predefined_frame_1, -0.3);",
-                        "    shift_phase(predefined_frame_1, -0.2);",
+                        "defcal rx(float theta) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, alpha);",
+                        "    set_phase(predefined_frame_1, gamma);",
+                        "    shift_phase(predefined_frame_1, beta);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
                         "inv @ pow(2.5) @ h q[0];",
@@ -1397,52 +1428,127 @@ def test_circuit_to_ir_openqasm_with_gate_calibrations(
 
 
 @pytest.mark.parametrize(
-    "circuit, calibration_key, expected_ir",
+    "circuit, calibration_key, input_variables, expected_ir, input_values",
     [
         (
             Circuit().rx(0, 0.2),
             (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
-            OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "input float beta;",
-                        "bit[1] b;",
-                        "qubit[1] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian(3.0ms,"
-                        " 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal rx(0.2) $0 {",
-                        "    shift_phase(predefined_frame_1, 0.2);",
-                        "    shift_phase(predefined_frame_1, beta);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "rx(0.2) q[0];",
-                        "b[0] = measure q[0];",
-                    ]
-                ),
-                inputs={},
+            {"beta", "gamma"},
+            [
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal rx(float alpha) $0 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "rx(0.2) q[0];",
+                "b[0] = measure q[0];",
+            ],
+            {},
+        ),
+        (
+            Circuit().rx(0, FreeParameter("gamma")),
+            (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
+            {"beta", "gamma"},
+            [
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal rx(float alpha) $0 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "rx(gamma) q[0];",
+                "b[0] = measure q[0];",
+            ],
+            {},
+        ),
+        (
+            Circuit().ms(0, 1, 0.1, 0.2, 0.3),
+            (
+                Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
+                QubitSet([0, 1]),
             ),
+            {},
+            [
+                "bit[2] b;",
+                "qubit[2] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "ms(0.1, 0.2, 0.3) q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ],
+            {},
+        ),
+        (
+            Circuit().ms(0, 1, 0.1, 0.2, FreeParameter("gamma")),
+            (
+                Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
+                QubitSet([0, 1]),
+            ),
+            {"gamma"},
+            [
+                "bit[2] b;",
+                "qubit[2] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian(3.0ms," " 400.0ms, 0.2, 1, false);",
+                "}",
+                "defcal ms(float alpha, float beta, float gamma) $0, $1 {",
+                "    shift_phase(predefined_frame_1, alpha);",
+                "    set_phase(predefined_frame_1, gamma);",
+                "    shift_phase(predefined_frame_1, beta);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "ms(0.1, 0.2, gamma) q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ],
+            {},
         ),
     ],
 )
-def test_circuit_with_parametric_defcal(circuit, calibration_key, expected_ir, pulse_sequence_3):
+def test_parametric_circuit_with_parametric_defcal(
+    circuit, calibration_key, input_variables, expected_ir, input_values, pulse_sequence_2
+):
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     gate_calibrations = GateCalibrations(
         {
-            calibration_key: pulse_sequence_3,
+            calibration_key: pulse_sequence_2,
         }
     )
 
-    assert (
-        circuit.to_ir(
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
-            gate_definitions=gate_calibrations.pulse_sequences,
-        )
-        == expected_ir
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        gate_definitions=gate_calibrations.pulse_sequences,
+    ) == OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                *[f"input float {parameter};" for parameter in circuit.parameters],
+                *expected_ir,
+            ]
+        ),
+        inputs=input_values,
     )
+    assert circuit.parameters == {FreeParameter(name) for name in input_variables}
 
 
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
@@ -1564,10 +1670,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 "cal {",
                 "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
                 "}",
-                "defcal foo(-0.2) $0 {",
+                "defcal foo(float beta) $0 {",
                 "    shift_phase(predefined_frame_1, -0.1);",
                 "    set_phase(predefined_frame_1, -0.3);",
-                "    shift_phase(predefined_frame_1, -0.2);",
+                "    shift_phase(predefined_frame_1, beta);",
                 "    play(predefined_frame_1, drag_gauss_wf);",
                 "}",
                 "foo(-0.2) q[0];",
