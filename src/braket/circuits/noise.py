@@ -639,7 +639,7 @@ class DampingNoise(Noise, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Initalizes a `DampingNoise`.
+        """Initializes a `DampingNoise`.
 
         Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.

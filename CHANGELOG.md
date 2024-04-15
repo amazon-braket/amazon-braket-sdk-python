@@ -44,7 +44,7 @@
 
 ### Bug Fixes and Other Changes
 
- * backwards compatiblity for local detuning
+ * backwards compatibility for local detuning
 
 ## v1.76.1 (2024-04-08)
 
