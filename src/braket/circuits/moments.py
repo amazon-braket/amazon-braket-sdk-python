@@ -290,7 +290,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._max_times.get(qubit, -1)
 
     #
-    # Implement abstract methods, default to calling self underlying dictionary
+    # Implement abstract methods, default to calling `self`'s underlying dictionary
     #
 
     def keys(self) -> KeysView[MomentsKey]:

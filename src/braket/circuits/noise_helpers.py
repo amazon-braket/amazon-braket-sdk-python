@@ -141,7 +141,7 @@ def apply_noise_to_moments(
     `target_qubits`.
 
     Args:
-        circuit (Circuit): A circuit where `noise` is applied to.
+        circuit (Circuit): A circuit to `noise` is applied to.
         noise (Iterable[type[Noise]]): Noise channel(s) to be applied
             to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is applied to.
