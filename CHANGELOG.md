@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.77.3.post0 (2024-04-15)
+
+### Documentation Changes
+
+ * correct gphase matrix representation
+
 ## v1.77.3 (2024-04-11)
 
 ### Bug Fixes and Other Changes
