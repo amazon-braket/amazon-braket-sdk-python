@@ -12,17 +12,16 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
-
+from typing import Any
 from collections.abc import Callable
 from contextlib import contextmanager
 
-from braket.aws.aws_device import AwsDevice
 from braket.devices.device import Device
-from braket.devices.local_simulator import LocalSimulator
+import inspect
 
 
 @contextmanager
-def reservation(device: Device, reservation_arn: str | None) -> Device | None:
+def reservation(device: Any, reservation_arn: str | None) -> Device | None:
     """
     A context manager that temporarily modifies the `run` method of a `device` object
     to include a specified `reservation_arn` in all calls within the context. This is useful
@@ -60,23 +59,36 @@ def reservation(device: Device, reservation_arn: str | None) -> Device | None:
 
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
+    # if reservation_arn is None or isinstance(device, LocalSimulator):
+    #     yield device
+    # else:
 
-    if isinstance(device, AwsDevice):
-        original_run = device.run
+    # Check if the device has a 'run' or 'execute' method and it's callable
+    if hasattr(device, "run") and callable(getattr(device, "run")):
+        method_name = "run"  # Braket and Qiskit
+    elif hasattr(device, "execute") and callable(getattr(device, "execute")):
+        method_name = "execute"  # PennyLane
+    else:
+        raise AttributeError("The device does not have 'run' or 'execute' methods")
 
-        def _run_with_reservation(*args, **kwargs) -> Callable:
+    # inspect the method to find "reservation_arn" or **kwargs
+    original_method = getattr(device, method_name)
+    sig = inspect.signature(original_method)
+    kw_in_args = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())  # allows kw args
+    arn_in_args = "reservation_arn" in sig.parameters
+
+    if arn_in_args or kw_in_args:
+
+        def _method_with_reservation(*args, **kwargs) -> Callable:
             kwargs["reservation_arn"] = reservation_arn
-            return original_run(*args, **kwargs)
+            return original_method(*args, **kwargs)
 
-        device.run = _run_with_reservation
-
+        # Replace the original method with the new method
+        setattr(device, method_name, _method_with_reservation)
         try:
             yield device
         finally:
-            device.run = original_run
-
-    # Local simulators do not accept reservation ARNs
-    elif isinstance(device, LocalSimulator):
-        yield device
+            # Restore the original method when exiting the context
+            setattr(device, method_name, original_method)
     else:
-        raise TypeError(f"The provided device {device} is not a valid Braket device.")
+        yield device

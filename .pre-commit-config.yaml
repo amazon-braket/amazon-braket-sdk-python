@@ -1,8 +1,109 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+#
+default_language_version:
+  python: python3.10
+
 repos:
-  - repo: local
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: v4.6.0
+  #   hooks:
+  #     - id: check-added-large-files
+  #     - id: check-yaml
+  #     - id: check-json
+  #     - id: end-of-file-fixer
+  #     - id: mixed-line-ending
+  #     - id: trailing-whitespace
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
     hooks:
-      - id: tox_linters
-        name: linters
-        entry: tox -e linters_check
-        language: system
-        types: [python]
+      - id: pyupgrade
+        args: [--py39-plus, --keep-runtime-typing]
+  # automatically removes unused imports
+  - repo: https://github.com/myint/autoflake.git
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args:
+          [
+            --in-place,
+            --expand-star-imports,
+            --ignore-init-module-imports,
+            --remove-all-unused-imports,
+            --remove-unused-variables,
+            --remove-duplicate-keys,
+          ]
+  # - repo: https://github.com/PyCQA/isort
+  #   rev: 5.13.2
+  #   hooks:
+  #     - id: isort
+  #       args: ["--profile", "black", "--filter-files"]
+  # - repo: https://github.com/codespell-project/codespell
+  #   rev: v2.2.6
+  #   hooks:
+  #     - id: codespell
+  #       types_or: [python, rst, markdown, yaml]
+  #       args: ["-L", "braket,Braket"]
+  # - repo: https://github.com/ambv/black
+  #   rev: 24.3.0
+  #   hooks:
+  #     - id: black
+  # - repo: https://github.com/asottile/blacken-docs
+  #   rev: 1.16.0
+  #   hooks:
+  #     - id: blacken-docs
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-use-type-annotations
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-logging
+          - flake8-tidy-imports
+          - flake8-comprehensions
+  # - flake8-docstrings
+  # - repo: https://github.com/pycqa/flake8
+  #   rev: 7.0.0
+  #   hooks:
+  #     - id: flake8
+  #       additional_dependencies: [
+  #           flake8-comprehensions==3.2.2, # for better list comprehensions
+  #           flake8-docstrings==1.5.0,
+  #         ]
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.9.0
+  #   hooks:
+  #     - id: mypy
+  # # Jupyter notebook clean up
+  # - repo: https://github.com/nbQA-dev/nbQA
+  #   rev: 1.8.5
+  #   hooks:
+  #     - id: nbqa-black
+  #       additional_dependencies: [black==20.8b1]
+  #       args: [--nbqa-mutate]
+  #     - id: nbqa-pyupgrade
+  #       additional_dependencies: [pyupgrade==2.7.3]
+  #       args: [--nbqa-mutate, --py36-plus]
+  #     - id: nbqa-isort
+  #       additional_dependencies: [isort==5.7.0]
+  #       args: [--nbqa-mutate]
+  # # Prettier yaml formatter
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v4.0.0-alpha.8
+  #   hooks:
+  #     - id: prettier
+  # - repo: local
+  #   hooks:
+  #     - id: pytest
+  #       name: pytest
+  #       entry: pytest
+  #       language: system
+  #       types: [python]
+  #       pass_filenames: false
+  #       always_run: true
+  #       stages: [commit, push]
