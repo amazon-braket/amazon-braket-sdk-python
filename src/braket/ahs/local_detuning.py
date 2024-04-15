@@ -154,11 +154,7 @@ class LocalDetuning(Hamiltonian):
         """
         local_detuning_parameters = properties.rydberg.rydbergLocal
         time_resolution = local_detuning_parameters.timeResolution
-        value_resolution = local_detuning_parameters.commonDetuningResolution
-        pattern_resolution = local_detuning_parameters.localDetuningResolution
         discretized_magnitude = self.magnitude.discretize(
             time_resolution=time_resolution,
-            value_resolution=value_resolution,
-            pattern_resolution=pattern_resolution,
         )
         return LocalDetuning(discretized_magnitude)
