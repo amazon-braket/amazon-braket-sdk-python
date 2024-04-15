@@ -20,6 +20,7 @@ from braket.circuits import (
     FreeParameter,
     Gate,
     Instruction,
+    Noise,
     Observable,
     Operator,
 )
@@ -933,5 +934,25 @@ def test_measure_multiple_instructions_after():
         "q4 : -----------X---",
         "",
         "T  : |0|1|2|3|4|5|6|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        "T  : |0|    1    |2|",
+        "                    ",
+        "q0 : -H-C---------M-",
+        "        |           ",
+        "q1 : ---X-BF(0.1)-M-",
+        "",
+        "T  : |0|    1    |2|",
     )
     _assert_correct_diagram(circ, expected)

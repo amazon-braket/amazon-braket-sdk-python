@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from numbers import Number
+from typing import Optional
 
 
 class Pattern:
@@ -34,16 +35,21 @@ class Pattern:
         """
         return self._series
 
-    def discretize(self, resolution: Decimal) -> Pattern:
+    def discretize(self, resolution: Optional[Decimal]) -> Pattern:
         """Creates a discretized version of the pattern,
         where each value is rounded to the closest multiple
         of the resolution.
 
         Args:
-            resolution (Decimal): Resolution of the discretization
+            resolution (Optional[Decimal]): Resolution of the discretization
 
         Returns:
             Pattern: The new discretized pattern
         """
-        discretized_series = [round(Decimal(num) / resolution) * resolution for num in self.series]
+        if resolution is None:
+            discretized_series = [Decimal(num) for num in self.series]
+        else:
+            discretized_series = [
+                round(Decimal(num) / resolution) * resolution for num in self.series
+            ]
         return Pattern(series=discretized_series)

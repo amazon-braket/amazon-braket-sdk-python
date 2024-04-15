@@ -20,7 +20,15 @@ from braket.ahs.pattern import Pattern
 
 @pytest.fixture
 def default_values():
-    return [0, 0.1, 1, 0.5, 0.2, 0.001, 1e-10]
+    return [
+        Decimal(0),
+        Decimal("0.1"),
+        Decimal(1),
+        Decimal("0.5"),
+        Decimal("0.2"),
+        Decimal("0.001"),
+        Decimal("1e-10"),
+    ]
 
 
 @pytest.fixture
@@ -38,6 +46,18 @@ def test_create():
     "res, expected_series",
     [
         # default pattern: [0, 0.1, 1, 0.5, 0.2, 0.001, 1e-10]
+        (
+            None,
+            [
+                Decimal("0"),
+                Decimal("0.1"),
+                Decimal("1"),
+                Decimal("0.5"),
+                Decimal("0.2"),
+                Decimal("0.001"),
+                Decimal("1e-10"),
+            ],
+        ),
         (
             Decimal("0.001"),
             [
