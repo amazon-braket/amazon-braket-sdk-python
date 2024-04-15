@@ -179,7 +179,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
         Args:
             symbol (str): the gate name
-            symbols_width (int): size of the expected output. The ouput will be filled with
+            symbols_width (int): size of the expected output. The output will be filled with
                 cls._qubit_line_character() if needed.
             connection (Literal["above", "below", "both", "none"]): character indicating
                 if the gate also involve a qubit with a lower index.
