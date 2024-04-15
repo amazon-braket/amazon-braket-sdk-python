@@ -20,10 +20,15 @@ from braket.circuits import (
     FreeParameter,
     Gate,
     Instruction,
+    Noise,
     Observable,
     Operator,
 )
 from braket.pulse import Frame, Port, PulseSequence
+
+
+def _assert_correct_diagram(circ, expected):
+    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
 
 
 def test_empty_circuit():
@@ -787,10 +792,6 @@ def test_pulse_gate_multi_qubit_circuit():
     _assert_correct_diagram(circ, expected)
 
 
-def _assert_correct_diagram(circ, expected):
-    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
-
-
 def test_circuit_with_nested_target_list():
     circ = (
         Circuit()
@@ -870,5 +871,88 @@ def test_power():
         "q2 : -(H^-3.14)------------------(FOO^3)-(FOO^4)-",
         "",
         "T  : |    0    |   1    |   2   |   3   |   4   |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure():
+    circ = Circuit().h(0).cnot(0, 1).measure([0])
+    expected = (
+        "T  : |0|1|2|",
+        "            ",
+        "q0 : -H-C-M-",
+        "        |   ",
+        "q1 : ---X---",
+        "",
+        "T  : |0|1|2|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_multiple_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2, 3])
+    expected = (
+        "T  : |0|1|2|3|4|",
+        "                ",
+        "q0 : -H-C-----M-",
+        "        |       ",
+        "q1 : ---X-C-----",
+        "          |     ",
+        "q2 : -----X-C-M-",
+        "            |   ",
+        "q3 : -------X-M-",
+        "",
+        "T  : |0|1|2|3|4|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_multiple_instructions_after():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .measure(0)
+        .measure(1)
+        .h(3)
+        .cnot(3, 4)
+        .measure([2, 3])
+    )
+    expected = (
+        "T  : |0|1|2|3|4|5|6|",
+        "                    ",
+        "q0 : -H-C-----M-----",
+        "        |           ",
+        "q1 : ---X-C---M-----",
+        "          |         ",
+        "q2 : -----X-C-----M-",
+        "            |       ",
+        "q3 : -------X-H-C-M-",
+        "                |   ",
+        "q4 : -----------X---",
+        "",
+        "T  : |0|1|2|3|4|5|6|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        "T  : |0|    1    |2|",
+        "                    ",
+        "q0 : -H-C---------M-",
+        "        |           ",
+        "q1 : ---X-BF(0.1)-M-",
+        "",
+        "T  : |0|    1    |2|",
     )
     _assert_correct_diagram(circ, expected)

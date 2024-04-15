@@ -58,7 +58,6 @@ def aws_session(boto_session, braket_client, account_id):
     _aws_session._sts.get_caller_identity.return_value = {
         "Account": account_id,
     }
-
     _aws_session._s3 = Mock()
     return _aws_session
 
@@ -996,6 +995,12 @@ def test_upload_to_s3(aws_session):
     bucket, key = "bucket-123", "key"
     aws_session.upload_to_s3(filename, s3_uri)
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
+
+
+def test_account_id_idempotency(aws_session, account_id):
+    acc_id = aws_session.account_id
+    assert acc_id == aws_session.account_id
+    assert acc_id == account_id
 
 
 def test_upload_local_data(aws_session):

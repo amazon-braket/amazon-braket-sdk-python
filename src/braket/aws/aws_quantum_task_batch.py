@@ -23,8 +23,11 @@ from braket.annealing import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.circuits.gate import Gate
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
@@ -61,6 +64,13 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
+        gate_definitions: (
+            Union[
+                dict[tuple[Gate, QubitSet], PulseSequence],
+                list[dict[tuple[Gate, QubitSet], PulseSequence]],
+            ]
+            | None
+        ) = None,
         reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
@@ -92,6 +102,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
+            gate_definitions (Union[dict[tuple[Gate, QubitSet], PulseSequence], list[dict[tuple[Gate, QubitSet], PulseSequence]]] | None): # noqa: E501
+                User-defined gate calibration. The calibration is defined for a particular `Gate` on a
+                particular `QubitSet` and is represented by a `PulseSequence`. Default: None.
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
                 Note: If you are creating tasks in a job that itself was created reservation ARN,
@@ -111,6 +124,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             poll_timeout_seconds,
             poll_interval_seconds,
             inputs,
+            gate_definitions,
             reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -134,7 +148,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
     @staticmethod
-    def _tasks_and_inputs(
+    def _tasks_inputs_gatedefs(
         task_specifications: Union[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             list[
@@ -144,45 +158,55 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             ],
         ],
         inputs: Union[dict[str, float], list[dict[str, float]]] = None,
+        gate_definitions: Union[
+            dict[tuple[Gate, QubitSet], PulseSequence],
+            list[dict[tuple[Gate, QubitSet], PulseSequence]],
+        ] = None,
     ) -> list[
         tuple[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             dict[str, float],
+            dict[tuple[Gate, QubitSet], PulseSequence],
         ]
     ]:
         inputs = inputs or {}
+        gate_definitions = gate_definitions or {}
 
-        max_inputs_tasks = 1
-        single_task = isinstance(
-            task_specifications,
-            (Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation),
+        single_task_type = (
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            AnalogHamiltonianSimulation,
         )
-        single_input = isinstance(inputs, dict)
+        single_input_type = dict
+        single_gate_definitions_type = dict
 
-        max_inputs_tasks = (
-            max(max_inputs_tasks, len(task_specifications)) if not single_task else max_inputs_tasks
-        )
-        max_inputs_tasks = (
-            max(max_inputs_tasks, len(inputs)) if not single_input else max_inputs_tasks
-        )
+        args = [task_specifications, inputs, gate_definitions]
+        single_arg_types = [single_task_type, single_input_type, single_gate_definitions_type]
 
-        if not single_task and not single_input:
-            if len(task_specifications) != len(inputs):
-                raise ValueError("Multiple inputs and task specifications must be equal in number.")
-        if single_task:
-            task_specifications = repeat(task_specifications, times=max_inputs_tasks)
+        batch_length = 1
+        arg_lengths = []
+        for arg, single_arg_type in zip(args, single_arg_types):
+            arg_length = 1 if isinstance(arg, single_arg_type) else len(arg)
+            arg_lengths.append(arg_length)
 
-        if single_input:
-            inputs = repeat(inputs, times=max_inputs_tasks)
+            if arg_length != 1:
+                if batch_length != 1 and arg_length != batch_length:
+                    raise ValueError(
+                        "Multiple inputs, task specifications and gate definitions must "
+                        "be equal in length."
+                    )
+                else:
+                    batch_length = arg_length
 
-        tasks_and_inputs = zip(task_specifications, inputs)
+        for i, arg_length in enumerate(arg_lengths):
+            if isinstance(args[i], (dict, single_task_type)):
+                args[i] = repeat(args[i], batch_length)
 
-        if single_task and single_input:
-            tasks_and_inputs = list(tasks_and_inputs)
+        tasks_inputs_definitions = list(zip(*args))
 
-        tasks_and_inputs = list(tasks_and_inputs)
-
-        for task_specification, input_map in tasks_and_inputs:
+        for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
                 unbounded_parameters = param_names - set(input_map.keys())
@@ -192,7 +216,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         f"{unbounded_parameters}"
                     )
 
-        return tasks_and_inputs
+        return tasks_inputs_definitions
 
     @staticmethod
     def _execute(
@@ -213,13 +237,22 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] = None,
+        gate_definitions: (
+            Union[
+                dict[tuple[Gate, QubitSet], PulseSequence],
+                list[dict[tuple[Gate, QubitSet], PulseSequence]],
+            ]
+            | None
+        ) = None,
         reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
-        tasks_and_inputs = AwsQuantumTaskBatch._tasks_and_inputs(task_specifications, inputs)
+        tasks_inputs_gatedefs = AwsQuantumTaskBatch._tasks_inputs_gatedefs(
+            task_specifications, inputs, gate_definitions
+        )
         max_threads = min(max_parallel, max_workers)
-        remaining = [0 for _ in tasks_and_inputs]
+        remaining = [0 for _ in tasks_inputs_gatedefs]
         try:
             with ThreadPoolExecutor(max_workers=max_threads) as executor:
                 task_futures = [
@@ -234,11 +267,12 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         poll_timeout_seconds=poll_timeout_seconds,
                         poll_interval_seconds=poll_interval_seconds,
                         inputs=input_map,
+                        gate_definitions=gatedefs,
                         reservation_arn=reservation_arn,
                         *args,
                         **kwargs,
                     )
-                    for task, input_map in tasks_and_inputs
+                    for task, input_map, gatedefs in tasks_inputs_gatedefs
                 ]
         except KeyboardInterrupt:
             # If an exception is thrown before the thread pool has finished,
@@ -266,6 +300,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: dict[str, float] = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
         *args,
         **kwargs,
@@ -278,6 +313,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             shots,
             poll_interval_seconds=poll_interval_seconds,
             inputs=inputs,
+            gate_definitions=gate_definitions,
             reservation_arn=reservation_arn,
             *args,
             **kwargs,

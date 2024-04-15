@@ -21,6 +21,7 @@ from typing import Any, NamedTuple, Union
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.noise import Noise
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
@@ -34,6 +35,7 @@ class MomentType(str, Enum):
     INITIALIZATION_NOISE: a initialization noise channel
     READOUT_NOISE: a readout noise channel
     COMPILER_DIRECTIVE: an instruction to the compiler, external to the quantum program itself
+    MEASURE: a measurement
     """
 
     GATE = "gate"
@@ -43,6 +45,7 @@ class MomentType(str, Enum):
     READOUT_NOISE = "readout_noise"
     COMPILER_DIRECTIVE = "compiler_directive"
     GLOBAL_PHASE = "global_phase"
+    MEASURE = "measure"
 
 
 class MomentsKey(NamedTuple):
@@ -191,6 +194,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 self._number_gphase_in_current_moment,
             )
             self._moments[key] = instruction
+        elif isinstance(operator, Measure):
+            qubit_range = instruction.target.union(instruction.control)
+            time = self._get_qubit_times(self._max_times.keys()) + 1
+            self._moments[MomentsKey(time, qubit_range, MomentType.MEASURE, noise_index)] = (
+                instruction
+            )
+            self._qubits.update(qubit_range)
+            self._depth = max(self._depth, time + 1)
         else:
             qubit_range = instruction.target.union(instruction.control)
             time = self._update_qubit_times(qubit_range)
@@ -246,6 +257,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_readout_noise = []
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
+        last_measure = self._depth
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
@@ -253,6 +265,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 key_readout_noise.append(key)
             elif key.moment_type == MomentType.INITIALIZATION_NOISE:
                 key_initialization_noise.append(key)
+            elif key.moment_type == MomentType.MEASURE:
+                last_measure = key.time
+                key_noise.append(key)
             else:
                 key_noise.append(key)
 
@@ -261,7 +276,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         for key in key_noise:
             sorted_moment[key] = moment_copy[key]
         # find the max time in the circuit and make it the time for readout noise
-        max_time = max(self._depth - 1, 0)
+        max_time = max(last_measure - 1, 0)
 
         for key in key_readout_noise:
             sorted_moment[
