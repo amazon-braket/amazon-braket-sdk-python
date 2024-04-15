@@ -241,7 +241,6 @@ class LocalQuantumJob(QuantumJob):
         Returns:
             dict[str, Any]: None
         """
-        pass
 
     def cancel(self) -> str:
         """When running the hybrid job in local mode, the cancelling a running is not possible.
@@ -249,7 +248,6 @@ class LocalQuantumJob(QuantumJob):
         Returns:
             str: None
         """
-        pass
 
     def download_result(
         self,
@@ -268,7 +266,6 @@ class LocalQuantumJob(QuantumJob):
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
         """
-        pass
 
     def result(
         self,

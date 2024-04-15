@@ -220,9 +220,9 @@ def test_decorator_job():
         input_data=str(Path("test", "integ_tests", "requirements")),
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
-        with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir()) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
         assert a.attribute == "value"
@@ -232,7 +232,7 @@ def test_decorator_job():
         assert extras["extra_arg"] == "extra_value"
 
         hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
-        with open(hp_file, "r") as f:
+        with open(hp_file) as f:
             hyperparameters = json.load(f)
         assert hyperparameters == {
             "a": "MyClass{value}",
@@ -255,7 +255,7 @@ def test_decorator_job():
         os.chdir(temp_dir)
         try:
             job.download_result()
-            with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+            with open(Path(job.name, "test", "output_file.txt")) as f:
                 assert f.read() == "hello"
             assert (
                 Path(job.name, "results.json").exists()
@@ -286,13 +286,12 @@ def test_decorator_job_submodule():
         },
     )
     def decorator_job_submodule():
-        with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir("my_input")) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
-            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
-        ) as f:
+            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
         with open(
             Path(
@@ -302,7 +301,6 @@ def test_decorator_job_submodule():
                 "job_test_submodule",
                 "requirements.txt",
             ),
-            "r",
         ) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)

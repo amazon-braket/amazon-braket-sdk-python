@@ -477,7 +477,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
         """
-        pass
 
     def play(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'play' Function call.

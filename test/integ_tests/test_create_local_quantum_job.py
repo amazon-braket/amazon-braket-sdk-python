@@ -81,7 +81,7 @@ def test_completed_local_job(aws_session, capsys):
                     },
                 ),
             ]:
-                with open(file_name, "r") as f:
+                with open(file_name) as f:
                     assert json.loads(f.read()) == expected_data
 
             # Capture logs

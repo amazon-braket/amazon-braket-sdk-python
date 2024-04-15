@@ -39,7 +39,7 @@ def test_index_gte_zero(qubit_index):
 
 
 def test_str(qubit):
-    expected = "Qubit({})".format(int(qubit))
+    expected = f"Qubit({int(qubit)})"
     assert str(qubit) == expected
 
 

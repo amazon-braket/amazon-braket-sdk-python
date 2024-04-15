@@ -255,8 +255,8 @@ def create_job_args(
     reservation_arn,
 ):
     if request.param == "fixtures":
-        return dict(
-            (key, value)
+        return {
+            key: value
             for key, value in {
                 "device": device,
                 "source_module": source_module,
@@ -277,7 +277,7 @@ def create_job_args(
                 "reservation_arn": reservation_arn,
             }.items()
             if value is not None
-        )
+        }
     elif request.param == "defaults":
         return {
             "device": device,

@@ -3551,7 +3551,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
         Circuit().rx(angle=theta, target=0).pulse_gate(pulse_sequence=pulse_sequence, targets=1)
     )
 
-    assert circuit.parameters == set([frequency_parameter, length, theta])
+    assert circuit.parameters == {frequency_parameter, length, theta}
 
     bound_half = circuit(theta=0.5, length=1e-5)
     assert bound_half.to_ir(
