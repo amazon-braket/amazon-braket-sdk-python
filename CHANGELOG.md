@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.77.4 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * discretize method now takes None as an arg
+
+### Documentation Changes
+
+ * Correct miscellaneous spelling mistakes in docstrings
+
 ## v1.77.3.post0 (2024-04-15)
 
 ### Documentation Changes
