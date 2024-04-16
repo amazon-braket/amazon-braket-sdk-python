@@ -54,4 +54,4 @@ def test_new_with_int():
     qubit = 0
     qubit_new = Qubit.new(qubit)
     assert qubit_new == qubit
-    assert qubit_new != qubit
+    assert qubit_new is not qubit
