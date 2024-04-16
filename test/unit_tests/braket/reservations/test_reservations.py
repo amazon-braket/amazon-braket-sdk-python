@@ -71,7 +71,7 @@ def test_stop_reservation_not_active(aws_device):
 
 
 def test_start_without_device_arn():
-    with pytest.raises(ValueError, match="Device ARN must be a device or string."):
+    with pytest.raises(ValueError, match="Device ARN must be an AwsDevice or string."):
         DirectReservation(None, "reservation_arn_example")
 
 

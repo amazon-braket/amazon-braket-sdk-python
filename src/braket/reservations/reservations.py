@@ -17,7 +17,6 @@ import os
 from contextlib import AbstractContextManager
 
 from braket.aws import AwsDevice
-from braket.devices import Device
 
 
 class DirectReservation(AbstractContextManager):
@@ -30,7 +29,7 @@ class DirectReservation(AbstractContextManager):
     reserved device at the chosen start and end times.
 
     Args:
-        device (Device | str): The Braket device for which you have a reservation ARN, or
+        device (AwsDevice | str): The Braket device for which you have a reservation ARN, or
             optionally the device ARN.
         reservation_arn (str | None): The Braket Direct reservation ARN to be applied to all
             quantum tasks run within the context.
@@ -51,17 +50,16 @@ class DirectReservation(AbstractContextManager):
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
 
-    def __init__(self, device_arn: Device | str, reservation_arn: str | None) -> Device | None:
+    def __init__(self, device_arn: AwsDevice | str, reservation_arn: str | None):
         if isinstance(device_arn, AwsDevice):
             self.device_arn = device_arn._arn
         elif isinstance(device_arn, str):
             self.device_arn = device_arn
-        elif isinstance(device_arn, Device):
-            self.device_arn = None
         else:
-            raise ValueError("Device ARN must be a device or string.")
-        self.context_active = False
+            raise ValueError("Device ARN must be an AwsDevice or string.")
+
         self.reservation_arn = reservation_arn
+        self.context_active = False
 
     def __enter__(self):
         self.start()
@@ -74,13 +72,9 @@ class DirectReservation(AbstractContextManager):
         """Start the reservation context."""
         if self.context_active:
             raise RuntimeError("Context is already active")
-
-        if self.device_arn:
-            os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = self.device_arn
-            os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = self.reservation_arn
-            self.context_active = True
-        else:
-            raise ValueError("Device ARN must not be None")
+        os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = self.device_arn
+        os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = self.reservation_arn
+        self.context_active = True
 
     def stop(self) -> None:
         """Stop the reservation context."""
