@@ -203,7 +203,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
 
         Args:
             symbol (str): the gate name
-            symbols_width (int): size of the expected output. The ouput will be filled with
+            symbols_width (int): size of the expected output. The output will be filled with
                 cls._qubit_line_character() if needed.
             connection (Literal["above", "below", "both", "none"]): specifies if a connection
                 will be drawn above and/or below the box.

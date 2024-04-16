@@ -27,7 +27,7 @@ selection for your circuits manually, when running on QPUs.
 ***************************************************************************************************************************************************************************************************
 
 This example shows how to interact with the Amazon Braket GetDevice API to 
-retrieve Amazon Braket devices (such as simulators and QPUs) programatically, 
+retrieve Amazon Braket devices (such as simulators and QPUs) programmatically, 
 and how to gain access to their properties.
 
 ***********************************************************************************************************************************************************************************

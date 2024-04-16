@@ -141,8 +141,6 @@ def test_discretize(register, driving_field, local_detuning):
     device.properties.paradigm.rydberg.rydbergGlobal.phaseResolution = Decimal("5E-7")
 
     device.properties.paradigm.rydberg.rydbergLocal.timeResolution = Decimal("1E-9")
-    device.properties.paradigm.rydberg.rydbergLocal.commonDetuningResolution = Decimal("2000.0")
-    device.properties.paradigm.rydberg.rydbergLocal.localDetuningResolution = Decimal("0.01")
 
     discretized_ahs = ahs.discretize(device)
     discretized_ir = discretized_ahs.to_ir()
@@ -179,10 +177,10 @@ def test_discretize(register, driving_field, local_detuning):
     }
     local_detuning = discretized_json["hamiltonian"]["localDetuning"][0]["magnitude"]
     assert local_detuning == {
-        "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
+        "pattern": ["0.5", "1", "0.5", "0.5", "0.5", "0.5"],
         "time_series": {
             "times": ["0E-9", "0.000003000"],
-            "values": ["-125664000.0", "125664000.0"],
+            "values": ["-125664000", "125664000"],
         },
     }
 
