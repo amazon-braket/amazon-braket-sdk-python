@@ -3,7 +3,7 @@ parallel = True
 branch = True
 source =
     src
-omit = 
+omit =
     **/braket/ir/*
     **/braket/device_schema/*
     **/braket/schema_common/*

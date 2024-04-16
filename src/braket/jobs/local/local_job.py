@@ -211,8 +211,10 @@ class LocalQuantumJob(QuantumJob):
             try:
                 with open(os.path.join(self.name, "log.txt")) as log_file:
                     self._run_log = log_file.read()
-            except FileNotFoundError:
-                raise ValueError(f"Unable to find logs in the local job directory {self.name}.")
+            except FileNotFoundError as e:
+                raise ValueError(
+                    f"Unable to find logs in the local job directory {self.name}."
+                ) from e
         return self._run_log
 
     def state(self, use_cached_value: bool = False) -> str:
@@ -293,8 +295,10 @@ class LocalQuantumJob(QuantumJob):
                     persisted_data.dataDictionary, persisted_data.dataFormat
                 )
                 return deserialized_data
-        except FileNotFoundError:
-            raise ValueError(f"Unable to find results in the local job directory {self.name}.")
+        except FileNotFoundError as e:
+            raise ValueError(
+                f"Unable to find results in the local job directory {self.name}."
+            ) from e
 
     def metrics(
         self,

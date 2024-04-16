@@ -165,9 +165,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
                 target_qubits = item.target
             control_qubits = getattr(item, "control", QubitSet())
             control_state = getattr(item, "control_state", "1" * len(control_qubits))
-            map_control_qubit_states = {
-                qubit: state for qubit, state in zip(control_qubits, control_state)
-            }
+            map_control_qubit_states = dict(zip(control_qubits, control_state))
 
             target_and_control = target_qubits.union(control_qubits)
             qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
@@ -213,7 +211,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         """
         top = ""
         bottom = ""
-        if symbol in ["C", "N", "SWAP"]:
+        if symbol in {"C", "N", "SWAP"}:
             if connection in ["above", "both"]:
                 top = _fill_symbol(cls._vertical_delimiter(), " ")
             if connection in ["below", "both"]:
@@ -227,10 +225,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         elif symbol == "┼":
             top = bottom = _fill_symbol(cls._vertical_delimiter(), " ")
             symbol = _fill_symbol(f"{symbol}", cls._qubit_line_character())
-        elif symbol == cls._qubit_line_character():
-            # We do not box when no gate is applied.
-            pass
-        else:
+        elif symbol != cls._qubit_line_character():
             top, symbol, bottom = cls._build_box(symbol, connection)
 
         output = f"{_fill_symbol(top, ' ', symbols_width)} \n"

@@ -221,7 +221,7 @@ def test_data_sort_by_none(annealing_result, solutions, values, solution_counts)
 def test_data_selected_fields(annealing_result, solutions, values, solution_counts):
     d = list(annealing_result.data(selected_fields=["value"]))
     for i in range(len(solutions)):
-        assert d[i] == tuple([values[i]])
+        assert d[i] == (values[i],)
 
 
 def test_data_reverse(annealing_result, solutions, values, solution_counts):

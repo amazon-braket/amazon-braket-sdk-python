@@ -108,10 +108,9 @@ def _get_device_name(device: AwsDevice) -> str:
 
 
 def _get_active_providers(aws_devices: list[AwsDevice]) -> set[str]:
-    active_providers = set()
-    for device in aws_devices:
-        if device.status != "RETIRED":
-            active_providers.add(_get_provider_name(device))
+    active_providers = {
+        _get_provider_name(device) for device in aws_devices if device.status != "RETIRED"
+    }
     return active_providers
 
 

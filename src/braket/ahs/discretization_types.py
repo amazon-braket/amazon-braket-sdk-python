@@ -19,7 +19,6 @@ class DiscretizationError(Exception):
     """Raised if the discretization of the numerical values of the AHS program fails."""
 
 
-
 @dataclass
 class DiscretizationProperties:
     """Capabilities of a device that represent the resolution with which the device can

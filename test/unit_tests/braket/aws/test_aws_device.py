@@ -833,7 +833,7 @@ def test_gate_calibration_refresh_no_url(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
 
-    assert device.refresh_gate_calibrations() == None
+    assert device.refresh_gate_calibrations() is None
 
 
 @patch("urllib.request.urlopen")
@@ -1882,6 +1882,7 @@ def test_get_devices_invalid_order_by():
 
 @patch("braket.aws.aws_device.datetime")
 def test_get_device_availability(mock_utc_now):
+
     class Expando:
         pass
 
@@ -1890,19 +1891,18 @@ def test_get_device_availability(mock_utc_now):
             self._status = status
             self._properties = Expando()
             self._properties.service = Expando()
-            execution_windows = []
-            for execution_day, window_start_hour, window_end_hour in execution_window_args:
-                execution_windows.append(
-                    DeviceExecutionWindow.parse_raw(
-                        json.dumps(
-                            {
-                                "executionDay": execution_day,
-                                "windowStartHour": window_start_hour,
-                                "windowEndHour": window_end_hour,
-                            }
-                        )
+            execution_windows = [
+                DeviceExecutionWindow.parse_raw(
+                    json.dumps(
+                        {
+                            "executionDay": execution_day,
+                            "windowStartHour": window_start_hour,
+                            "windowEndHour": window_end_hour,
+                        }
                     )
                 )
+                for execution_day, window_start_hour, window_end_hour in execution_window_args
+            ]
             self._properties.service.executionWindows = execution_windows
 
     test_sets = (

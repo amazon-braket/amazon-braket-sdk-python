@@ -245,9 +245,7 @@ def test_call_one_param_not_bound():
     circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
     new_circ = circ(theta=1)
     expected_circ = Circuit().h(0).rx(angle=1, target=1).ry(angle=alpha, target=0)
-    expected_parameters = set()
-    expected_parameters.add(alpha)
-
+    expected_parameters = {alpha}
     assert new_circ == expected_circ and new_circ.parameters == expected_parameters
 
 
@@ -3218,9 +3216,7 @@ def test_add_parameterized_check_true():
         .ry(angle=theta, target=2)
         .ry(angle=theta, target=3)
     )
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3230,10 +3226,7 @@ def test_add_parameterized_instr_parameterized_circ_check_true():
     alpha2 = FreeParameter("alpha")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=alpha2, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
-    expected = set()
-    expected.add(theta)
-    expected.add(alpha)
-
+    expected = {theta, alpha}
     assert circ.parameters == expected
 
 
@@ -3241,9 +3234,7 @@ def test_add_non_parameterized_instr_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(0.1), 3))
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3251,9 +3242,7 @@ def test_add_circ_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
 
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3261,9 +3250,7 @@ def test_add_circ_not_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).add_circuit(Circuit().ry(angle=0.1, target=0))
 
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3284,9 +3271,7 @@ def test_parameterized_check_false(input_circ):
 def test_parameters():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3344,9 +3329,7 @@ def test_make_bound_circuit_partial_bind():
     expected_circ = (
         Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=alpha, target=2)
     )
-    expected_parameters = set()
-    expected_parameters.add(alpha)
-
+    expected_parameters = {alpha}
     assert circ_new == expected_circ and circ_new.parameters == expected_parameters
 
 

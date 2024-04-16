@@ -132,9 +132,7 @@ class ObservableCriteria(ResultTypeCriteria):
         if self._qubits is None:
             return True
         target = list(result_type.target)
-        if not target:
-            return True
-        return target[0] in self._qubits
+        return target[0] in self._qubits if target else True
 
     @classmethod
     def from_dict(cls, criteria: dict) -> Criteria:

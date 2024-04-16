@@ -85,7 +85,7 @@ def test_delay_multiple_frames(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["frame1"].put(shift_time_frame1, 0).put(
@@ -104,7 +104,7 @@ def test_delay_multiple_frames(port):
     expected_phases["frame2"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -156,7 +156,7 @@ def test_delay_qubits(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["q0_frame"].put(shift_time_frame1, 0).put(
@@ -177,7 +177,7 @@ def test_delay_qubits(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -230,7 +230,7 @@ def test_delay_no_args(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["q0_frame"].put(shift_time_frame1, 0).put(
@@ -251,7 +251,7 @@ def test_delay_no_args(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -636,7 +636,7 @@ def test_play_drag_gaussian_waveforms(port):
         dtype=np.complex128,
     )
 
-    shift_time = shift_time + 20e-9
+    shift_time += 20e-9
     for t, v in zip(times, values):
         expected_amplitudes["frame1"].put(t + shift_time, v)
         expected_frequencies["frame1"].put(t + shift_time, 1e8)
@@ -681,7 +681,7 @@ def test_barrier_same_dt(port):
     expected_phases["frame2"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -739,7 +739,7 @@ def test_barrier_no_args(port):
     expected_phases["frame2"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -797,7 +797,7 @@ def test_barrier_qubits(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)

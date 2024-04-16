@@ -151,9 +151,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             context.variables[identifier] = self.visit(node.init_expression, context)
         elif type(node.type) == ast.FrameType:
             pass
-        elif type(node.type) == ast.PortType:
-            pass
-        else:
+        elif type(node.type) != ast.PortType:
             raise NotImplementedError
 
     def visit_DelayInstruction(self, node: ast.DelayInstruction, context: _ParseState) -> None:
@@ -171,7 +169,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -198,7 +196,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -391,7 +389,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Returns:
             bool: The parsed boolean value.
         """
-        return True if node.value else False
+        return bool(node.value)
 
     def visit_DurationLiteral(self, node: ast.DurationLiteral, context: _ParseState) -> float:
         """Visit Duration Literal.
@@ -553,17 +551,16 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
 
 def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:
-    frame_states = {}
-    for frameId, frame in frames.items():
-        frame_states[frameId] = _FrameState(
-            frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)
-        )
+    frame_states = {
+        frameId: _FrameState(frame.port.dt, frame.frequency, frame.phase % (2 * np.pi))
+        for frameId, frame in frames.items()
+    }
     return frame_states
 
 
 def _init_qubit_frame_mapping(frames: dict[str, Frame]) -> dict[str, list[str]]:
     mapping = {}
-    for frameId in frames.keys():
+    for frameId in frames:
         if m := (
             re.search(r"q(\d+)_q(\d+)_[a-z_]+", frameId) or re.search(r"[rq](\d+)_[a-z_]+", frameId)
         ):

@@ -148,9 +148,7 @@ def data_parallel(request):
 
 @pytest.fixture
 def distribution(data_parallel):
-    if data_parallel:
-        return "data_parallel"
-    return None
+    return "data_parallel" if data_parallel else None
 
 
 @pytest.fixture
@@ -339,7 +337,7 @@ def _translate_creation_args(create_job_args):
             "sagemaker_distributed_dataparallel_enabled": "true",
             "sagemaker_instance_type": instance_config.instanceType,
         }
-        hyperparameters.update(distributed_hyperparams)
+        hyperparameters |= distributed_hyperparams
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
         s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, timestamp, "data")
     )
@@ -379,16 +377,12 @@ def _translate_creation_args(create_job_args):
     }
 
     if reservation_arn:
-        test_kwargs.update(
+        test_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
 
     return test_kwargs
 

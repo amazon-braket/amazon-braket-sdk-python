@@ -63,7 +63,7 @@ def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -119,7 +119,7 @@ def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -291,7 +291,8 @@ def test_decorator_job_submodule():
         with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
-            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt") as f:
+            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt"
+        ) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
             Path(

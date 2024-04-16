@@ -52,12 +52,12 @@ class QuantumOperator(Operator):
         fixed_qubit_count = self.fixed_qubit_count()
         if fixed_qubit_count is NotImplemented:
             self._qubit_count = qubit_count
+        elif qubit_count and qubit_count != fixed_qubit_count:
+            raise ValueError(
+                f"Provided qubit count {qubit_count}"
+                "does not equal fixed qubit count {fixed_qubit_count}"
+            )
         else:
-            if qubit_count and qubit_count != fixed_qubit_count:
-                raise ValueError(
-                    f"Provided qubit count {qubit_count}"
-                    "does not equal fixed qubit count {fixed_qubit_count}"
-                )
             self._qubit_count = fixed_qubit_count
 
         if not isinstance(self._qubit_count, int):

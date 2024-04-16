@@ -232,21 +232,20 @@ valid_subroutine_switcher = dict(
 def create_valid_ir_input(irsubclasses):
     input = {}
     for subclass in irsubclasses:
-        input.update(valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
+        input |= valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")()
     return input
 
 
 def create_valid_subroutine_input(irsubclasses, **kwargs):
     input = {}
     for subclass in irsubclasses:
-        input.update(
-            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(**kwargs)
+        input |= valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(
+            **kwargs
         )
     return input
 
 
 def create_valid_target_input(irsubclasses):
-    input = {}
     qubit_set = []
     # based on the concept that control goes first in target input
     for subclass in irsubclasses:
@@ -260,8 +259,8 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif any(
-            subclass == i
+        elif all(
+            subclass != i
             for i in [
                 SingleProbability,
                 SingleProbability_34,
@@ -273,17 +272,15 @@ def create_valid_target_input(irsubclasses):
                 MultiProbability,
             ]
         ):
-            pass
-        else:
             raise ValueError("Invalid subclass")
-    input["target"] = QubitSet(qubit_set)
+    input = {"target": QubitSet(qubit_set)}
     return input
 
 
 def create_valid_noise_class_input(irsubclasses, **kwargs):
     input = {}
     if SingleProbability in irsubclasses:
-        input.update(single_probability_valid_input())
+        input |= single_probability_valid_input()
     if SingleProbability_34 in irsubclasses:
         input.update(single_probability_34_valid_input())
     if SingleProbability_1516 in irsubclasses:
@@ -320,8 +317,8 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif any(
-            subclass == i
+        elif all(
+            subclass != i
             for i in [
                 SingleProbability,
                 SingleProbability_34,
@@ -333,8 +330,6 @@ def calculate_qubit_count(irsubclasses):
                 TwoDimensionalMatrixList,
             ]
         ):
-            pass
-        else:
             raise ValueError("Invalid subclass")
     return qubit_count
 
@@ -365,18 +360,17 @@ def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwa
     )
     if qubit_count == 1:
         multi_targets = [0, 1, 2]
-        instruction_list = []
-        for target in multi_targets:
-            instruction_list.append(
-                Instruction(
-                    operator=testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)),
-                    target=target,
-                )
+        instruction_list = [
+            Instruction(
+                operator=testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)),
+                target=target,
             )
+            for target in multi_targets
+        ]
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
         if SingleProbability in irsubclasses:
-            subroutine_input.update(single_probability_valid_input())
+            subroutine_input |= single_probability_valid_input()
         if SingleProbability_34 in irsubclasses:
             subroutine_input.update(single_probability_34_valid_input())
         if SingleProbability_1516 in irsubclasses:
