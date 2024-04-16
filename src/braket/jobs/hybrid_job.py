@@ -386,7 +386,7 @@ def _process_input_data(input_data: dict) -> list[str]:
                 f"the working directory. Use `get_input_data_dir({channel_arg})` to read "
                 f"input data from S3 source inside the job container."
             )
-        elif is_prefix(data):
+        elif is_prefix(str(data)):
             prefix_channels.add(channel)
         elif Path(data).is_dir():
             directory_channels.add(channel)
