@@ -56,9 +56,10 @@ class DirectReservation(AbstractContextManager):
             self.device_arn = device_arn._arn
         elif isinstance(device_arn, str):
             self.device_arn = device_arn
-        else:
+        elif isinstance(device_arn, Device):
             self.device_arn = None
-
+        else:
+            raise ValueError("Device ARN must be a device or string.")
         self.context_active = False
         self.reservation_arn = reservation_arn
 
@@ -77,7 +78,7 @@ class DirectReservation(AbstractContextManager):
         if self.device_arn:
             os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = self.device_arn
             os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = self.reservation_arn
-            self.active = True
+            self.context_active = True
         else:
             raise ValueError("Device ARN must not be None")
 
