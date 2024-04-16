@@ -110,7 +110,7 @@ def test_str(instr):
         f"Instruction('operator': {instr.operator}, "
         f"'target': {instr.target}, "
         f"'control': {instr.control}, "
-        f"'control_state': {instr.control_state.as_tuple()}, "  # Assuming as_tuple is a method
+        f"'control_state': {instr.control_state.as_tuple}, "
         f"'power': {instr.power})"
     )
     assert str(instr) == expected
