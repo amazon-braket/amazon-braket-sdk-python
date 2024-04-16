@@ -28,6 +28,7 @@ from braket.experimental.autoqasm.instructions import (
     cy,
     cz,
     ecr,
+    gphase,
     gpi,
     gpi2,
     h,
@@ -46,6 +47,7 @@ from braket.experimental.autoqasm.instructions import (
     swap,
     t,
     ti,
+    u,
     v,
     vi,
     x,
@@ -109,6 +111,7 @@ __bit_0__ = measure __qubits__[0];"""
         (cy, [0, 1], [], "\ncy __qubits__[0], __qubits__[1];"),
         (cz, [0, 1], [], "\ncz __qubits__[0], __qubits__[1];"),
         (ecr, [0, 1], [], "\necr __qubits__[0], __qubits__[1];"),
+        (gphase, [], [0.1], "\ngphase(0.1) ;"),
         (gpi, [0], [0.1], "\ngpi(0.1) __qubits__[0];"),
         (gpi2, [0], [0.1], "\ngpi2(0.1) __qubits__[0];"),
         (h, [0], [], "\nh __qubits__[0];"),
@@ -125,6 +128,7 @@ __bit_0__ = measure __qubits__[0];"""
         (swap, [0, 1], [], "\nswap __qubits__[0], __qubits__[1];"),
         (t, [0], [], "\nt __qubits__[0];"),
         (ti, [0], [], "\nti __qubits__[0];"),
+        (u, [0], [0.1, 0.2, 0.3], "\nu(0.1, 0.2, 0.3) __qubits__[0];"),
         (v, [0], [], "\nv __qubits__[0];"),
         (vi, [0], [], "\nvi __qubits__[0];"),
         (x, [0], [], "\nx __qubits__[0];"),
@@ -142,3 +146,49 @@ def test_gates(gate, qubits, params, expected_qasm) -> None:
         gate(*qubits, *params)
 
     assert expected_qasm in program_conversion_context.make_program().to_ir()
+
+
+@pytest.mark.parametrize(
+    "gate,qubits,params,control,control_state,power,expected_qasm",
+    [
+        (x, [1], [], 0, None, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        (x, [1], [], [0], None, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        (x, [1], [], 0, "1", None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        (x, [1], [], [0], "0", None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
+        (
+            x,
+            [2],
+            [],
+            [0, 1],
+            "11",
+            None,
+            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
+        ),
+        (
+            x,
+            [2],
+            [],
+            [0, 1],
+            "10",
+            None,
+            "\nctrl @ negctrl @ x __qubits__[0], __qubits__[1], __qubits__[2];",
+        ),
+        (x, [1], [], None, None, -2.0, "\npow(-2.0) @ x __qubits__[1];"),
+        (x, [1], [], [0], "1", 0.5, "\nctrl @ pow(0.5) @ x __qubits__[0], __qubits__[1];"),
+    ],
+)
+def test_gate_modifiers(gate, qubits, params, control, control_state, power, expected_qasm) -> None:
+    """Tests quantum gate modifiers."""
+    with aq.build_program() as program_conversion_context:
+        gate(*qubits, *params, control=control, control_state=control_state, power=power)
+
+    assert expected_qasm in program_conversion_context.make_program().to_ir()
+
+
+def test_invalid_gate_modifiers() -> None:
+    """Tests quantum gate modifiers."""
+    with aq.build_program() as _:
+        with pytest.raises(ValueError, match="control_state provided without control qubits"):
+            x(1, control=None, control_state="00")
+        with pytest.raises(ValueError, match="control and control_state must have same length"):
+            x(1, control=0, control_state="00")

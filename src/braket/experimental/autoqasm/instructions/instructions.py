@@ -14,7 +14,12 @@
 
 """Non-unitary instructions that apply to qubits."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable
 from typing import Any
+
+import oqpy
 
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import _qubit
@@ -22,7 +27,13 @@ from braket.experimental.autoqasm.types import QubitIdentifierType
 
 
 def _qubit_instruction(
-    name: str, qubits: list[QubitIdentifierType], *args: Any, is_unitary: bool = True
+    name: str,
+    qubits: Iterable[QubitIdentifierType],
+    *args: Any,
+    is_unitary: bool = True,
+    control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
+    control_state: str | None = None,
+    power: float | None = None,
 ) -> None:
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context.validate_gate_targets(qubits, args)
@@ -31,8 +42,43 @@ def _qubit_instruction(
     program_conversion_context.register_gate(name)
     program_conversion_context.register_args(args)
     program_mode = aq_program.ProgramMode.UNITARY if is_unitary else aq_program.ProgramMode.NONE
+    pos_control, neg_control = _get_pos_neg_control(control, control_state)
     oqpy_program = program_conversion_context.get_oqpy_program(mode=program_mode)
-    oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
+    oqpy_program.gate(
+        [_qubit(q) for q in qubits],
+        name,
+        *args,
+        control=pos_control,
+        neg_control=neg_control,
+        exp=power,
+    )
+
+
+def _get_pos_neg_control(
+    control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
+    control_state: str | None = None,
+) -> tuple[Iterable[oqpy.Qubit], Iterable[oqpy.Qubit]]:
+    if control is None and control_state is not None:
+        raise ValueError(control_state, "control_state provided without control qubits")
+
+    if control is None:
+        return None, None
+
+    if isinstance(control, str) or not isinstance(control, Iterable):
+        control = [control]
+
+    if control_state is not None and len(control) != len(control_state):
+        raise ValueError(control_state, "control and control_state must have same length")
+
+    pos_control = [
+        _qubit(q) for i, q in enumerate(control) if control_state is None or control_state[i] == "1"
+    ]
+    neg_control = [
+        _qubit(q)
+        for i, q in enumerate(control)
+        if control_state is not None and control_state[i] == "0"
+    ]
+    return pos_control, neg_control
 
 
 def reset(target: QubitIdentifierType) -> None:

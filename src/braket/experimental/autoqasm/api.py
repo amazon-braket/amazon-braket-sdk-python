@@ -574,6 +574,9 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
     gate_args = aq_program.GateArgs()
     sig = inspect.signature(f)
     for param in sig.parameters.values():
+        if param.kind == param.VAR_KEYWORD:
+            continue
+
         if param.annotation is param.empty:
             raise errors.MissingParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
