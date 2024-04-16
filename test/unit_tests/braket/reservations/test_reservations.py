@@ -10,39 +10,62 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-from unittest.mock import Mock
+import os
 
 import pytest
 
-from braket.aws.aws_device import AwsDevice
-from braket.devices.local_simulator import LocalSimulator
-from braket.reservations import reservation
+from braket.aws import AwsDevice
+
+# Assuming DirectReservation is in a module named direct_reservation_module
+from braket.reservations.reservations import DirectReservation
 
 
-def test_non_braket_device():
-    non_device = Mock()
-    with pytest.raises(TypeError):
-        with reservation(non_device, reservation_arn=None):
-            pass
+@pytest.fixture
+def aws_device():
+    device = AwsDevice("device_arn_example")
+    return device
 
 
-def test_local_simulator():
-    local_simulator = Mock(spec=LocalSimulator)
-    local_simulator.run = Mock()
-
-    with reservation(local_simulator, reservation_arn="arn:test"):
-        local_simulator.run("circuit", 100)
-
-    local_simulator.run.assert_called_once_with("circuit", 100)
+def test_initialization_with_string():
+    """Test initialization with string device ARN and valid reservation ARN."""
+    res = DirectReservation("device_arn_string", "reservation_arn_string")
+    assert res.device_arn == "device_arn_string"
+    assert res.reservation_arn == "reservation_arn_string"
 
 
-@pytest.mark.parametrize("reservation_arn", [None, "arn:test"])
-def test_aws_device(reservation_arn):
-    qpu_device = Mock(spec=AwsDevice)
-    qpu_device.run = Mock()
+def test_initialization_with_device(aws_device):
+    """Test initialization with AwsDevice instance."""
+    res = DirectReservation(aws_device, "reservation_arn_string")
+    assert res.device_arn == "device_arn_example"
 
-    with reservation(qpu_device, reservation_arn=reservation_arn):
-        qpu_device.run("circuit", 100)
 
-    qpu_device.run.assert_called_once_with("circuit", 100, reservation_arn=reservation_arn)
+def test_environment_variables_set_and_cleared():
+    """Test that environment variables are correctly set and cleared."""
+    with DirectReservation("device_arn_string", "reservation_arn_string"):
+        assert os.getenv("AMZN_BRAKET_DEVICE_ARN_TEMP") == "device_arn_string"
+        assert os.getenv("AMZN_BRAKET_RESERVATION_ARN_TEMP") == "reservation_arn_string"
+    # Check variables are cleared after context
+    assert os.getenv("AMZN_BRAKET_DEVICE_ARN_TEMP") is None
+    assert os.getenv("AMZN_BRAKET_RESERVATION_ARN_TEMP") is None
+
+
+def test_start_raises_error_when_already_active():
+    """Test that starting an already active context raises an error."""
+    res = DirectReservation("device_arn_string", "reservation_arn_string")
+    res.start()
+    with pytest.raises(RuntimeError):
+        res.start()
+    res.stop()  # Ensure clean-up
+
+
+def test_stop_raises_error_when_not_active():
+    """Test that stopping a non-active context raises an error."""
+    res = DirectReservation("device_arn_string", "reservation_arn_string")
+    with pytest.raises(RuntimeError):
+        res.stop()
+
+
+def test_invalid_device_arn_type():
+    """Test that passing an invalid device_arn type raises a ValueError."""
+    with pytest.raises(ValueError):
+        DirectReservation(123, "reservation_arn_string")  # Invalid type, should be str or AwsDevice
