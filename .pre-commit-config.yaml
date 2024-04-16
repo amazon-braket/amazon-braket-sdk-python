@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: tox_linters
+        name: linters
+        entry: tox -e linters_check
+        language: system
+        types: [python]

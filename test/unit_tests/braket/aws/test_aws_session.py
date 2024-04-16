@@ -1415,10 +1415,8 @@ def test_create_quantum_task_with_correct_device_and_reservation():
 
     # Expected boto3 parameters
     boto3_params = {"deviceArn": "device_arn_example"}
-
     expected_arn = "example_quantum_task_arn"
 
-    # Mock boto3 client and its response
     with patch("boto3.client") as mock_boto3_client:
         mock_client = MagicMock()
         mock_client.create_quantum_task.return_value = {"quantumTaskArn": expected_arn}
@@ -1430,7 +1428,6 @@ def test_create_quantum_task_with_correct_device_and_reservation():
         # Assertions
         mock_client.create_quantum_task.assert_called_once_with(
             deviceArn="device_arn_example",
-            someOtherParam="value",
             reservationArn="reservation_arn_example",
         )
         assert arn == expected_arn
