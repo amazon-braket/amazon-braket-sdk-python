@@ -5,6 +5,7 @@
 [![Build status](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
+[![Stack Overflow](https://img.shields.io/badge/StackExchange-Ask%20questions-blue?logo=stackexchange)](https://quantumcomputing.stackexchange.com/questions/tagged/amazon-braket)
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
 
