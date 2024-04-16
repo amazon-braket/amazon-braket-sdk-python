@@ -45,7 +45,7 @@ class _LocalJobContainer:
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
-            force_update (bool): Try to update the container, if an update is availble.
+            force_update (bool): Try to update the container, if an update is available.
                 Default: False
         """
         self._aws_session = aws_session or AwsSession()

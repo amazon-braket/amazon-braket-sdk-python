@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.77.4 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * discretize method now takes None as an arg
+
+### Documentation Changes
+
+ * Correct miscellaneous spelling mistakes in docstrings
+
+## v1.77.3.post0 (2024-04-15)
+
+### Documentation Changes
+
+ * correct gphase matrix representation
+
 ## v1.77.3 (2024-04-11)
 
 ### Bug Fixes and Other Changes
@@ -38,7 +54,7 @@
 
 ### Bug Fixes and Other Changes
 
- * backwards compatiblity for local detuning
+ * backwards compatibility for local detuning
 
 ## v1.76.1 (2024-04-08)
 
