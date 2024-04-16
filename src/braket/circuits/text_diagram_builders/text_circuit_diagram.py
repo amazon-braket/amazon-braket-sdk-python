@@ -81,7 +81,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
 
         Args:
             symbol (str): the gate name
-            symbols_width (int): size of the expected output. The ouput will be filled with
+            symbols_width (int): size of the expected output. The output will be filled with
                 cls._qubit_line_character() if needed.
             connection (Literal["above", "below", "both", "none"]): specifies if a connection
                 will be drawn above and/or below the box.
@@ -229,7 +229,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        """Creates the ouput for a single column:
+        """Creates the output for a single column:
             a. If there was one or more gphase gate, create a first line with the total global
             phase shift ending with the _vertical_delimiter() class attribute, e.g. 0.14|
             b. for each qubit, append the text representation produces by cls._draw_symbol

@@ -220,9 +220,8 @@ class GPhase(AngledGate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I = \begin{bmatrix}
-                    e^{i \gamma} & 0 \\
-                    0 & e^{i \gamma} \end{bmatrix}.
+        .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I_1 = \begin{bmatrix}
+                    e^{i \gamma} \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -279,9 +278,8 @@ class GPhase(AngledGate):
 
         Unitary matrix:
 
-            .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I = \begin{bmatrix}
-                        e^{i \gamma} & 0 \\
-                        0 & e^{i \gamma} \end{bmatrix}.
+            .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I_1 = \begin{bmatrix}
+                        e^{i \gamma} \end{bmatrix}.
 
         Args:
             angle (Union[FreeParameterExpression, float]): Phase in radians.
