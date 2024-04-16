@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.77.5 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * remove optional discretization fields
+
 ## v1.77.4 (2024-04-16)
 
 ### Bug Fixes and Other Changes
