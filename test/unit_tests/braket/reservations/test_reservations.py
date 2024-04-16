@@ -22,8 +22,9 @@ from braket.reservations.reservations import DirectReservation
 
 @pytest.fixture
 def aws_device():
-    device = AwsDevice("device_arn_example")
-    return device
+    mock_device = MagicMock(name="AwsDevice")
+    mock_device.device_arn = "device_arn_example"
+    return mock_device
 
 
 def test_initialization_with_string():
