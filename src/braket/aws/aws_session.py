@@ -235,10 +235,17 @@ class AwsSession:
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add reservation arn if available and device is correct.
+        device_arn = os.getenv("AMZN_BRAKET_DEVICE_ARN_TEMP")
+        reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_ARN_TEMP")
+        if device_arn == boto3_kwargs["deviceArn"] and reservation_arn:
+            boto3_kwargs["reservation_arn"] = reservation_arn
+
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
+
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(

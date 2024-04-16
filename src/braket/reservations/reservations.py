@@ -12,83 +12,80 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
-from typing import Any
-from collections.abc import Callable
-from contextlib import contextmanager
 
-from braket.devices.device import Device
-import inspect
+import os
+from contextlib import AbstractContextManager
+
+from braket.aws import AwsDevice
+from braket.devices import Device
 
 
-@contextmanager
-def reservation(device: Any, reservation_arn: str | None) -> Device | None:
+class DirectReservation(AbstractContextManager):
     """
-    A context manager that temporarily modifies the `run` method of a `device` object
-    to include a specified `reservation_arn` in all calls within the context. This is useful
-    for ensuring that all quantum task run within the context are associated with a given
-    reservation ARN (Amazon Resource Name).
+    Modify AwsQuantumTasks created within this context to run on a device with a reservation
+    ARN.This is useful for ensuring that all quantum task
 
     Reservations are AWS account and device specific. Only the AWS account that created the
     reservation can use your reservation ARN. Additionally, the reservation ARN is only valid on the
     reserved device at the chosen start and end times.
 
     Args:
-        device (Device): The Braket device for which you have a reservation ARN.
+        device (Device | str): The Braket device for which you have a reservation ARN, or
+            optionally the device ARN.
         reservation_arn (str | None): The Braket Direct reservation ARN to be applied to all
-            quantum tasks run within the context. Defaults to None.
-
-    Yields:
-        Device | None: The device object with a potentially modified `run` method. If the device is
-        a local simulator or the reservation ARN is None, the original device is yielded without
-        modification.
+            quantum tasks run within the context.
 
     Examples:
         As a context manager
-        >>> with reservation(device, reservation_arn="<my_reservation_arn>"):
+        >>> with DirectReservation(device_arn, reservation_arn="<my_reservation_arn>"):
         ...     task1 = device.run(circuit, shots)
         ...     task2 = device.run(circuit, shots)
 
-        or as a decorator
-
-        >>> @reservation(device, reservation_arn="<my_reservation_arn>"):
-        ... def func():
-        ...     task1 = device.run(circuit, shots)
-        ...     task2 = device.run(circuit, shots)
+        or start the reservation
+        >>> DirectReservation(device_arn, reservation_arn="<my_reservation_arn>").start()
+        ... task1 = device.run(circuit, shots)
+        ... task2 = device.run(circuit, shots)
 
     References:
 
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
-    # if reservation_arn is None or isinstance(device, LocalSimulator):
-    #     yield device
-    # else:
 
-    # Check if the device has a 'run' or 'execute' method and it's callable
-    if hasattr(device, "run") and callable(getattr(device, "run")):
-        method_name = "run"  # Braket and Qiskit
-    elif hasattr(device, "execute") and callable(getattr(device, "execute")):
-        method_name = "execute"  # PennyLane
-    else:
-        raise AttributeError("The device does not have 'run' or 'execute' methods")
+    def __init__(self, device_arn: Device | str, reservation_arn: str | None) -> Device | None:
+        if isinstance(device_arn, AwsDevice):
+            self.device_arn = device_arn._arn
+        elif isinstance(device_arn, str):
+            self.device_arn = device_arn
+        else:
+            self.device_arn = None
 
-    # inspect the method to find "reservation_arn" or **kwargs
-    original_method = getattr(device, method_name)
-    sig = inspect.signature(original_method)
-    kw_in_args = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())  # allows kw args
-    arn_in_args = "reservation_arn" in sig.parameters
+        self.context_active = False
+        self.reservation_arn = reservation_arn
 
-    if arn_in_args or kw_in_args:
+    def __enter__(self):
+        self.start()
+        return self
 
-        def _method_with_reservation(*args, **kwargs) -> Callable:
-            kwargs["reservation_arn"] = reservation_arn
-            return original_method(*args, **kwargs)
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.stop()
 
-        # Replace the original method with the new method
-        setattr(device, method_name, _method_with_reservation)
-        try:
-            yield device
-        finally:
-            # Restore the original method when exiting the context
-            setattr(device, method_name, original_method)
-    else:
-        yield device
+    def start(self) -> None:
+        """Start the reservation context."""
+        if self.context_active:
+            raise RuntimeError("Context is already active")
+
+        if self.device_arn:
+            os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = self.device_arn
+            os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = self.reservation_arn
+            self.active = True
+        else:
+            raise ValueError("Device ARN must not be None")
+
+    def stop(self) -> None:
+        """Stop the reservation context."""
+        if not self.context_active:
+            raise RuntimeError("Context is not active")
+
+        os.environ.pop("AMZN_BRAKET_DEVICE_ARN_TEMP", None)
+        os.environ.pop("AMZN_BRAKET_RESERVATION_ARN_TEMP", None)
+        self.context_active = False

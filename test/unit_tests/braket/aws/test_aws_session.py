@@ -27,6 +27,7 @@ from botocore.stub import Stubber
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
 from braket.aws import AwsSession
+from braket.reservations.reservations import DirectReservation
 
 TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {
@@ -1405,3 +1406,34 @@ def test_get_full_image_tag_no_py_info(aws_session):
     no_py_info = "Full image tag missing."
     with pytest.raises(ValueError, match=no_py_info):
         aws_session.get_full_image_tag(image_uri)
+
+
+# Test AwsQuantumTask.create with reservation env vars
+def test_create_quantum_task_with_correct_device_and_reservation():
+    os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = "device_arn_example"
+    os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = "reservation_arn_example"
+
+    # Expected boto3 parameters
+    boto3_params = {"deviceArn": "device_arn_example"}
+
+    expected_arn = "example_quantum_task_arn"
+
+    # Mock boto3 client and its response
+    with patch("boto3.client") as mock_boto3_client:
+        mock_client = MagicMock()
+        mock_client.create_quantum_task.return_value = {"quantumTaskArn": expected_arn}
+        mock_boto3_client.return_value = mock_client
+
+        dr = DirectReservation("device_arn_example", "reservation_arn_example")
+        arn = dr.create_quantum_task(**boto3_params)
+
+        # Assertions
+        mock_client.create_quantum_task.assert_called_once_with(
+            deviceArn="device_arn_example",
+            someOtherParam="value",
+            reservationArn="reservation_arn_example",
+        )
+        assert arn == expected_arn
+
+    os.environ.pop("AMZN_BRAKET_DEVICE_ARN_TEMP", None)
+    os.environ.pop("AMZN_BRAKET_RESERVATION_ARN_TEMP", None)
