@@ -7,7 +7,7 @@ from importlib.metadata import version
 project = "amazon-braket-sdk"
 version = version(project)
 release = version
-copyright = "{}, Amazon.com".format(datetime.datetime.now().year)
+copyright = f"{datetime.datetime.now().year}, Amazon.com"
 
 extensions = [
     "sphinxcontrib.apidoc",
@@ -26,7 +26,7 @@ autodoc_member_order = "bysource"
 default_role = "py:obj"
 
 html_theme = "sphinx_rtd_theme"
-htmlhelp_basename = "{}doc".format(project)
+htmlhelp_basename = f"{project}doc"
 
 language = "en"
 

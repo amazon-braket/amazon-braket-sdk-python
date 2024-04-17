@@ -136,7 +136,7 @@ class LocalDetuning(Hamiltonian):
                 stitch_ts.times() = [0, 0.1, 0.3]
                 stitch_ts.values() = [1, 4, 5]
         """
-        if not (self.magnitude.pattern.series == other.magnitude.pattern.series):
+        if self.magnitude.pattern.series != other.magnitude.pattern.series:
             raise ValueError("The LocalDetuning pattern for both fields must be equal.")
 
         new_ts = self.magnitude.time_series.stitch(other.magnitude.time_series, boundary)

@@ -1,7 +1,7 @@
 ########
 Examples
 ########
-   
+
 There are several examples available in the Amazon Braket repo:
 https://github.com/amazon-braket/amazon-braket-examples.
 
@@ -14,5 +14,3 @@ https://github.com/amazon-braket/amazon-braket-examples.
    examples-hybrid-quantum.rst
    examples-ml-pennylane.rst
    examples-hybrid-jobs.rst
-   
-    

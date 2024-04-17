@@ -497,7 +497,7 @@ def test_flattened_tensor_product():
 def test_hermitian_basis_rotation_gates(matrix, basis_rotation_matrix):
     expected_unitary = Gate.Unitary(matrix=basis_rotation_matrix)
     actual_rotation_gates = Observable.Hermitian(matrix=matrix).basis_rotation_gates
-    assert actual_rotation_gates == tuple([expected_unitary])
+    assert actual_rotation_gates == (expected_unitary,)
     assert expected_unitary.matrix_equivalence(actual_rotation_gates[0])
 
 
@@ -596,16 +596,16 @@ def test_tensor_product_eigenvalues(observable, eigenvalues):
 @pytest.mark.parametrize(
     "observable,basis_rotation_gates",
     [
-        (Observable.X() @ Observable.Y(), tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()])),
+        (Observable.X() @ Observable.Y(), (Gate.H(), Gate.Z(), Gate.S(), Gate.H())),
         (
             Observable.X() @ Observable.Y() @ Observable.Z(),
-            tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()]),
+            (Gate.H(), Gate.Z(), Gate.S(), Gate.H()),
         ),
         (
             Observable.X() @ Observable.Y() @ Observable.I(),
-            tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()]),
+            (Gate.H(), Gate.Z(), Gate.S(), Gate.H()),
         ),
-        (Observable.X() @ Observable.H(), tuple([Gate.H(), Gate.Ry(-np.pi / 4)])),
+        (Observable.X() @ Observable.H(), (Gate.H(), Gate.Ry(-np.pi / 4))),
     ],
 )
 def test_tensor_product_basis_rotation_gates(observable, basis_rotation_gates):
@@ -642,9 +642,7 @@ def test_sum_not_allowed_in_tensor_product():
 
 @pytest.mark.parametrize(
     "observable,basis_rotation_gates",
-    [
-        (Observable.X() + Observable.Y(), tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()])),
-    ],
+    [(Observable.X() + Observable.Y(), (Gate.H(), Gate.Z(), Gate.S(), Gate.H()))],
 )
 def test_no_basis_rotation_support_for_sum(observable, basis_rotation_gates):
     no_basis_rotation_support_for_sum = "Basis rotation calculation not supported for Sum"
