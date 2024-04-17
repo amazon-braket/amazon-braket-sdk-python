@@ -538,7 +538,7 @@ def _convert_gate(
         )
     qubit_args = [args[i] for i in gate_args.qubit_indices]
     angle_args = [args[i] for i in gate_args.angle_indices]
-    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
+    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args, **kwargs)
 
 
 def _wrap_for_oqpy_gate(
