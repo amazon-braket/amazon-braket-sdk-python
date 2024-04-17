@@ -322,6 +322,23 @@ def phaseshift(
     _qubit_instruction("phaseshift", [target], angle, **kwargs)
 
 
+def prx(
+    target: QubitIdentifierType,
+    angle_0: GateParameterType,
+    angle_1: GateParameterType,
+    **kwargs,
+) -> None:
+    """PhaseRx gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle_0 (GateParameterType): First angle in radians.
+        angle_1 (GateParameterType): Second angle in radians.
+
+    """
+    _qubit_instruction("prx", [target], angle_0, angle_1, **kwargs)
+
+
 def pswap(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
