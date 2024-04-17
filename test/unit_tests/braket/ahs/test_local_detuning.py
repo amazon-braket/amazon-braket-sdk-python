@@ -129,8 +129,6 @@ def test_discretize():
     discretized_field = field.discretize(mock_properties)
     magnitude_mock.discretize.assert_called_with(
         time_resolution=mock_properties.rydberg.rydbergLocal.timeResolution,
-        value_resolution=mock_properties.rydberg.rydbergLocal.commonDetuningResolution,
-        pattern_resolution=mock_properties.rydberg.rydbergLocal.localDetuningResolution,
     )
     assert field is not discretized_field
     assert discretized_field.magnitude == magnitude_mock.discretize.return_value
