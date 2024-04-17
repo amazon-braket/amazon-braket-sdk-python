@@ -1455,6 +1455,7 @@ class Circuit:
                 for waveform in instruction.operator.pulse_sequence._waveforms.values():
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
+            # this will change with full parametric calibration support
             elif isinstance(instruction.operator, Parameterizable):
                 fixed_argument_calibrations = self._add_fixed_argument_calibrations(
                     gate_definitions, instruction
