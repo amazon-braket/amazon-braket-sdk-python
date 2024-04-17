@@ -66,7 +66,7 @@ class FreeParameter(FreeParameterExpression):
             Union[FreeParameter, Number]: The substituted value if this parameter is in
             parameter_values, otherwise returns self
         """
-        return parameter_values[self.name] if self.name in parameter_values else self
+        return parameter_values.get(self.name, self)
 
     def __str__(self):
         return str(self.name)
@@ -92,7 +92,7 @@ class FreeParameter(FreeParameterExpression):
             raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
             raise TypeError("FreeParameter names must be strings")
-        if not name[0].isalpha() and not name[0] == "_":
+        if not name[0].isalpha() and name[0] != "_":
             raise ValueError("FreeParameter names must start with a letter or an underscore")
         self._name = Symbol(name)
 

@@ -343,10 +343,9 @@ class NoiseModel:
             list[str]: A list of string representations of the passed instructions.
         """
         results = []
-        if len(instructions) > 0:
+        if instructions:
             results.append(instructions_title)
-            for item in instructions:
-                results.append(f"  {item}")
+            results.extend(f"  {item}" for item in instructions)
         return results
 
     @classmethod

@@ -208,7 +208,7 @@ class PauliString:
 
         # ignore complex global phase
         if phase_result.real < 0 or phase_result.imag < 0:
-            pauli_result = "-" + pauli_result
+            pauli_result = f"-{pauli_result}"
         out_pauli_string = PauliString(pauli_result)
 
         if inplace:

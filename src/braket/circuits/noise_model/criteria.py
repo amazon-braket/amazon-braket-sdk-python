@@ -73,10 +73,10 @@ class Criteria(ABC):
             return NotImplemented
         if self.applicable_key_types() != other.applicable_key_types():
             return False
-        for key_type in self.applicable_key_types():
-            if self.get_keys(key_type) != other.get_keys(key_type):
-                return False
-        return True
+        return all(
+            self.get_keys(key_type) == other.get_keys(key_type)
+            for key_type in self.applicable_key_types()
+        )
 
     @abstractmethod
     def to_dict(self) -> dict:

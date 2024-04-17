@@ -59,9 +59,7 @@ class QubitInitializationCriteria(InitializationCriteria):
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
-            if self._qubits is None:
-                return CriteriaKeyResult.ALL
-            return set(self._qubits)
+            return CriteriaKeyResult.ALL if self._qubits is None else set(self._qubits)
         return set()
 
     def to_dict(self) -> dict:

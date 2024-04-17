@@ -117,12 +117,12 @@ class Device(ABC):
         return self._status
 
     def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:
-        supported_noises = set(
+        supported_noises = {
             SUPPORTED_NOISE_PRAGMA_TO_NOISE[pragma].__name__
             for pragma in self.properties.action[DeviceActionType.OPENQASM].supportedPragmas
             if pragma in SUPPORTED_NOISE_PRAGMA_TO_NOISE
-        )
-        noise_operators = set(noise_instr.noise.name for noise_instr in noise_model._instructions)
+        }
+        noise_operators = {noise_instr.noise.name for noise_instr in noise_model._instructions}
         if not noise_operators <= supported_noises:
             raise ValueError(
                 f"{self.name} does not support noise simulation or the noise model includes noise "

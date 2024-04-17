@@ -101,8 +101,7 @@ class LogMetricsParser:
             return
         if timestamp and self.TIMESTAMP not in parsed_metrics:
             parsed_metrics[self.TIMESTAMP] = timestamp
-        node_match = self.NODE_TAG.match(message)
-        if node_match:
+        if node_match := self.NODE_TAG.match(message):
             parsed_metrics[self.NODE_ID] = node_match.group(1)
         self.all_metrics.append(parsed_metrics)
 

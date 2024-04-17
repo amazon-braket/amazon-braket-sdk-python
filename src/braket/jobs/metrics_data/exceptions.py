@@ -14,5 +14,3 @@
 
 class MetricsRetrievalError(Exception):
     """Raised when retrieving metrics fails."""
-
-    pass
