@@ -3333,7 +3333,7 @@ class PRx(DoubleAngledGate):
         return "prx"
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
