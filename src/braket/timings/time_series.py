@@ -152,7 +152,7 @@ class TimeSeries:
                 Notes:
                 Keeps the time points in both time series unchanged.
                 Assumes that the time points in the first TimeSeries
-                are at earler times then the time points in the second TimeSeries.
+                are at earlier times then the time points in the second TimeSeries.
 
         Returns:
             TimeSeries: The concatenated time series.

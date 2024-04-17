@@ -276,7 +276,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
-            ValueError: If a meaure instruction exists on the current circuit.
+            ValueError: If a measure instruction exists on the current circuit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])

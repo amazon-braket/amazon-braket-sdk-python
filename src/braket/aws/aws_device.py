@@ -819,7 +819,7 @@ class AwsDevice(Device):
 
         Returns:
             dict[tuple[Gate, QubitSet], PulseSequence]: The
-            structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration repesented as a
+            structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration represented as a
             `PulseSequence`.
 
         """  # noqa: E501

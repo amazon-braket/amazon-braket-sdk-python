@@ -321,7 +321,7 @@ class AwsQuantumTask(QuantumTask):
             dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
             retrieved value is used, unless `GetQuantumTask` was never called, in which case
-            it wil still be called to populate the metadata for the first time.
+            it will still be called to populate the metadata for the first time.
         """
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_quantum_task(self._arn)
