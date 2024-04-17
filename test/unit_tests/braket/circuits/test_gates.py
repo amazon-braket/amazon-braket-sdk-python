@@ -39,6 +39,10 @@ class NoTarget:
     pass
 
 
+class DoubleAngle:
+    pass
+
+
 class TripleAngle:
     pass
 
@@ -103,6 +107,7 @@ testdata = [
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
     (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
     (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
+    (Gate.PRx, "prx", None, [SingleTarget, DoubleAngle], {}),
     (Gate.MS, "ms", None, [DoubleTarget, TripleAngle], {}),
     (
         Gate.Unitary,
@@ -145,8 +150,10 @@ parameterizable_gates = [
     Gate.CPhaseShift10,
     Gate.GPi,
     Gate.GPi2,
+    Gate.PRx,
     Gate.MS,
 ]
+
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -177,6 +184,10 @@ def double_target_valid_input(**kwargs):
 
 def angle_valid_input(**kwargs):
     return {"angle": 0.123}
+
+
+def double_angle_valid_input(**kwargs):
+    return {"angle_1": 0.123, "angle_2": 3.567}
 
 
 def triple_angle_valid_input(**kwargs):
@@ -217,6 +228,7 @@ valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
+    "DoubleAngle": double_angle_valid_input,
     "TripleAngle": triple_angle_valid_input,
     "SingleControl": single_control_valid_input,
     "SingleNegControlModifier": single_neg_control_valid_input,
@@ -272,7 +284,7 @@ def create_valid_target_input(irsubclasses):
             control_state = list(single_neg_control_valid_input()["control_state"])
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass not in (Angle, TwoDimensionalMatrix, TripleAngle):
+        elif subclass not in (Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
             raise ValueError("Invalid subclass")
     input = {"target": QubitSet(qubit_set)}
     input["control"] = QubitSet(control_qubit_set)
@@ -283,7 +295,9 @@ def create_valid_target_input(irsubclasses):
 def create_valid_gate_class_input(irsubclasses, **kwargs):
     input = {}
     if Angle in irsubclasses:
-        input |= angle_valid_input()
+        input.update(angle_valid_input())
+    if DoubleAngle in irsubclasses:
+        input.update(double_angle_valid_input())
     if TripleAngle in irsubclasses:
         input.update(triple_angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
@@ -314,6 +328,7 @@ def calculate_qubit_count(irsubclasses):
             NoTarget,
             Angle,
             TwoDimensionalMatrix,
+            DoubleAngle,
             TripleAngle,
         ):
             raise ValueError("Invalid subclass")
@@ -848,6 +863,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "gpi2(0.17) $4;",
         ),
         (
+            Gate.PRx(angle_1=0.17, angle_2=3.45),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "prx(0.17, 3.45) q[4];",
+        ),
+        (
+            Gate.PRx(angle_1=0.17, angle_2=3.45),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "prx(0.17, 3.45) $4;",
+        ),
+        (
             Gate.MS(angle_1=0.17, angle_2=3.45),
             [4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -900,7 +927,9 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
         if Angle in irsubclasses:
-            subroutine_input |= angle_valid_input()
+            subroutine_input.update(angle_valid_input())
+        if DoubleAngle in irsubclasses:
+            subroutine_input.update(double_angle_valid_input())
         if TripleAngle in irsubclasses:
             subroutine_input.update(triple_angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
@@ -1011,8 +1040,13 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
+    double_angled = gate.__name__ in ["PRx"]
     triple_angled = gate.__name__ in ("MS", "U")
-    num_params = 3 if triple_angled else 1
+    num_params = 1
+    if triple_angled:
+        num_params = 3
+    elif double_angled:
+        num_params = 2
     thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
     mapping = {f"theta_{i}": i for i in range(num_params)}
     param_gate = gate(*thetas)
@@ -1022,6 +1056,9 @@ def test_bind_values(gate):
     assert type(new_gate) is type(param_gate) and new_gate == expected
     if triple_angled:
         for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
+            assert isinstance(angle, float)
+    elif double_angled:
+        for angle in new_gate.angle_1, new_gate.angle_2:
             assert isinstance(angle, float)
     else:
         assert isinstance(new_gate.angle, float)
