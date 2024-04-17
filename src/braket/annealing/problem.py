@@ -39,7 +39,7 @@ class Problem:
         linear: dict[int, float] | None = None,
         quadratic: dict[tuple[int, int], float] | None = None,
     ):
-        """Initialzes a `Problem`.
+        """Initializes a `Problem`.
 
         Args:
             problem_type (ProblemType): The type of annealing problem

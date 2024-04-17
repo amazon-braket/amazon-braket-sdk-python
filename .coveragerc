@@ -23,8 +23,14 @@ exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
 
+    # Skipping import testing
+    from importlib.metadata import entry_points
+ 
     # Don't complain if tests don't hit defensive assertion code:
     raise NotImplementedError
+
+    # Avoid situation where system version causes coverage issues
+    if sys.version_info.minor == 9:
 
 [html]
 directory = build/coverage
