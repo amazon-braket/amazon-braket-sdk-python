@@ -3338,17 +3338,17 @@ class PRx(DoubleAngledGate):
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
-        _theta = self.angle_1
-        _phi = self.angle_2
+        theta = self.angle_1
+        phi = self.angle_2
         return np.array(
             [
                 [
-                    np.cos(_theta / 2),
-                    -1j * np.exp(-1j * _phi) * np.sin(_theta / 2),
+                    np.cos(theta / 2),
+                    -1j * np.exp(-1j * phi) * np.sin(theta / 2),
                 ],
                 [
-                    -1j * np.exp(1j * _phi) * np.sin(_theta / 2),
-                    np.cos(_theta / 2),
+                    -1j * np.exp(1j * phi) * np.sin(theta / 2),
+                    np.cos(theta / 2),
                 ],
             ]
         )
