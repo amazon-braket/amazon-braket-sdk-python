@@ -244,7 +244,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         Returns:
             str: a string representing a diagram column.
         """
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._box_pad()
+        symbols_width = max(len(symbol) for symbol in symbols.values()) + cls._box_pad()
         output = ""
 
         if global_phase is not None:
