@@ -177,6 +177,7 @@ def test_gates(gate, qubits, params, expected_qasm) -> None:
         ),
         (x, [1], [], None, None, -2.0, "\npow(-2.0) @ x __qubits__[1];"),
         (x, [1], [], [0], "1", 0.5, "\nctrl @ pow(0.5) @ x __qubits__[0], __qubits__[1];"),
+        (x, ["$1"], [], "$0", "1", None, "\nctrl @ x $0, $1;"),
     ],
 )
 def test_gate_modifiers(gate, qubits, params, control, control_state, power, expected_qasm) -> None:
