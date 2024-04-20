@@ -833,7 +833,7 @@ def test_gate_calibration_refresh_no_url(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
 
-    assert device.refresh_gate_calibrations() == None
+    assert device.refresh_gate_calibrations() is None
 
 
 @patch("urllib.request.urlopen")
@@ -945,7 +945,7 @@ def test_repr(arn):
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
-    expected = "Device('name': {}, 'arn': {})".format(device.name, device.arn)
+    expected = f"Device('name': {device.name}, 'arn': {device.arn})"
     assert repr(device) == expected
 
 
@@ -1882,7 +1882,8 @@ def test_get_devices_invalid_order_by():
 
 @patch("braket.aws.aws_device.datetime")
 def test_get_device_availability(mock_utc_now):
-    class Expando(object):
+
+    class Expando:
         pass
 
     class MockDevice(AwsDevice):
@@ -1890,19 +1891,18 @@ def test_get_device_availability(mock_utc_now):
             self._status = status
             self._properties = Expando()
             self._properties.service = Expando()
-            execution_windows = []
-            for execution_day, window_start_hour, window_end_hour in execution_window_args:
-                execution_windows.append(
-                    DeviceExecutionWindow.parse_raw(
-                        json.dumps(
-                            {
-                                "executionDay": execution_day,
-                                "windowStartHour": window_start_hour,
-                                "windowEndHour": window_end_hour,
-                            }
-                        )
+            execution_windows = [
+                DeviceExecutionWindow.parse_raw(
+                    json.dumps(
+                        {
+                            "executionDay": execution_day,
+                            "windowStartHour": window_start_hour,
+                            "windowEndHour": window_end_hour,
+                        }
                     )
                 )
+                for execution_day, window_start_hour, window_end_hour in execution_window_args
+            ]
             self._properties.service.executionWindows = execution_windows
 
     test_sets = (
@@ -2041,7 +2041,7 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
 def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    device = AwsDevice(DWAVE_ARN, mock_session)
+    AwsDevice(DWAVE_ARN, mock_session)
 
 
 def test_parse_calibration_data():

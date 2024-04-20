@@ -13,7 +13,7 @@
 
 from setuptools import find_namespace_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 with open("src/braket/_sdk/_version.py") as f:
@@ -27,10 +27,9 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.20.2",
-        "amazon-braket-default-simulator>=1.19.1",
+        "amazon-braket-schemas>=1.21.3",
+        "amazon-braket-default-simulator>=1.21.4",
         "oqpy~=0.3.5",
-        "setuptools",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
@@ -41,6 +40,7 @@ setup(
         "openpulse",
         "openqasm3",
         "sympy",
+        "backports.entry-points-selectable",
     ],
     extras_require={
         "test": [

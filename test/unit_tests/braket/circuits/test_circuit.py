@@ -24,6 +24,7 @@ from braket.circuits import (
     Gate,
     Instruction,
     Moments,
+    Noise,
     Observable,
     QubitSet,
     ResultType,
@@ -35,6 +36,8 @@ from braket.circuits import (
     observables,
 )
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.measure import Measure
+from braket.circuits.noises import BitFlip
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.serialization import (
     IRType,
@@ -242,9 +245,7 @@ def test_call_one_param_not_bound():
     circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
     new_circ = circ(theta=1)
     expected_circ = Circuit().h(0).rx(angle=1, target=1).ry(angle=alpha, target=0)
-    expected_parameters = set()
-    expected_parameters.add(alpha)
-
+    expected_parameters = {alpha}
     assert new_circ == expected_circ and new_circ.parameters == expected_parameters
 
 
@@ -568,6 +569,326 @@ def test_add_verbatim_box_result_types():
         Circuit().h(0).add_verbatim_box(
             Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
         )
+
+
+def test_measure():
+    circ = Circuit().h(0).cnot(0, 1).measure([0])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
+def test_measure_int():
+    circ = Circuit().h(0).cnot(0, 1).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
+def test_measure_multiple_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 1, 3])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
+        .add_instruction(Instruction(Gate.CNot(), [2, 3]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 3))
+    )
+    assert circ == expected
+    assert circ._measure_targets == [0, 1, 3]
+
+
+def test_measure_with_noise():
+    circ = Circuit().x(0).x(1).bit_flip(0, probability=0.1).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(BitFlip(probability=0.1), 0))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circ == expected
+
+
+def test_measure_verbatim_box():
+    circ = Circuit().add_verbatim_box(Circuit().x(0).x(1)).measure(0)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[2] q;",
+                "#pragma braket verbatim",
+                "box{",
+                "x q[0];",
+                "x q[1];",
+                "}",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={},
+    )
+    assert circ == expected
+    assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_measure_in_verbatim_subcircuit():
+    message = "cannot measure a subcircuit inside a verbatim box."
+    with pytest.raises(ValueError, match=message):
+        Circuit().add_verbatim_box(Circuit().x(0).x(1).measure(0))
+
+
+def test_measure_qubits_out_of_range():
+    circ = Circuit().h(0).cnot(0, 1).measure(4)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 4))
+    )
+    assert circ == expected
+
+
+def test_measure_empty_circuit():
+    circ = Circuit().measure([0, 1, 2])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 2))
+    )
+    assert circ == expected
+
+
+def test_measure_target_input():
+    message = "Supplied qubit index, 1.1, must be an integer."
+    with pytest.raises(TypeError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(1.1)
+
+    message = "Supplied qubit index, a, must be an integer."
+    with pytest.raises(TypeError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(FreeParameter("a"))
+
+
+def test_measure_with_result_types():
+    message = "a circuit cannot contain both measure instructions and result types."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).sample(observable=Observable.Z(), target=0).measure(0)
+
+
+def test_result_type_with_measure():
+    message = "cannot add a result type to a circuit which already contains a measure instruction."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).measure(0).sample(observable=Observable.Z(), target=0)
+
+
+def test_measure_with_multiple_measures():
+    circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1]).measure(2)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.H(), 2))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 2))
+    )
+    assert circ == expected
+
+
+def test_measure_same_qubit_twice():
+    # message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(0).measure(1).measure(0)
+
+
+def test_measure_same_qubit_twice_with_list():
+    # message = "cannot measure the same qubit\\(s\\) Qubit\\(0\\) more than once."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure(0).measure([0, 1])
+
+
+def test_measure_same_qubit_twice_with_one_measure():
+    message = "cannot repeat qubit\\(s\\) 0 in the same measurement."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).measure([0, 0, 0])
+
+
+def test_measure_gate_after():
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).measure(0).h([0, 1])
+
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        instr = Instruction(Gate.CNot(), [0, 1])
+        Circuit().measure([0, 1]).add_instruction(instr, target_mapping={0: 0, 1: 1})
+
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        instr = Instruction(Gate.CNot(), [0, 1])
+        Circuit().h(0).measure(0).add_instruction(instr, target=[0, 1])
+
+
+def test_measure_noise_after():
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(1).h(1).h(2).h(5).h(4).h(3).cnot(1, 2).measure([0, 1, 2, 3, 4]).kraus(
+            targets=[0], matrices=[np.array([[1, 0], [0, 1]])]
+        )
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+    )
+    assert circ == expected
+
+
+def test_measure_gate_after_with_target_mapping():
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(
+            instr, target_mapping={0: 10, 1: 11}
+        )
+
+
+def test_measure_gate_after_with_target():
+    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    message = "cannot apply instruction to measured qubits."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    with pytest.raises(ValueError, match=message):
+        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(instr, target=[10, 11])
+
+
+def test_measure_gate_after_measurement():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).h(2)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Gate.H(), 2))
+    )
+    assert circ == expected
+
+
+def test_to_ir_with_measure():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 2])
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[3] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "cnot q[1], q[2];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[2];",
+            ]
+        ),
+        inputs={},
+    )
+    assert circ.to_ir("OPENQASM") == expected_ir
+
+
+def test_from_ir_with_measure():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[3] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "cnot q[1], q[2];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[2];",
+            ]
+        ),
+        inputs={},
+    )
+    expected_circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).measure(2)
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
+
+
+def test_from_ir_with_single_measure():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b = measure q;",
+            ]
+        ),
+        inputs={},
+    )
+    expected_circ = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circ
+
+
+def test_from_ir_round_trip_transformation():
+    circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b = measure q;",
+            ]
+        ),
+        inputs={},
+    )
+
+    assert Circuit.from_ir(ir) == Circuit.from_ir(circuit.to_ir("OPENQASM"))
+    assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
 
 
 def test_add_with_instruction_with_default(cnot_instr):
@@ -1268,7 +1589,7 @@ def test_circuit_user_gate(pulse_sequence_2):
     "expected_circuit, ir",
     [
         (
-            Circuit().h(0, control=1, control_state=0),
+            Circuit().h(0, control=1, control_state=0).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1284,7 +1605,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cnot(target=0, control=1),
+            Circuit().cnot(target=0, control=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1300,7 +1621,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().x(0, control=[1], control_state=[0]),
+            Circuit().x(0, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1316,7 +1637,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, 0.15, control=1, control_state=1),
+            Circuit().rx(0, 0.15, control=1, control_state=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1332,7 +1653,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().ry(0, 0.2, control=1, control_state=1),
+            Circuit().ry(0, 0.2, control=1, control_state=1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1348,7 +1669,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rz(0, 0.25, control=[1], control_state=[0]),
+            Circuit().rz(0, 0.25, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1364,7 +1685,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().s(target=0, control=[1], control_state=[0]),
+            Circuit().s(target=0, control=[1], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1380,7 +1701,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().t(target=1, control=[0], control_state=[0]),
+            Circuit().t(target=1, control=[0], control_state=[0]).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1396,7 +1717,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cphaseshift(target=0, control=1, angle=0.15),
+            Circuit().cphaseshift(target=0, control=1, angle=0.15).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1412,7 +1733,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().ccnot(*[0, 1], target=2),
+            Circuit().ccnot(*[0, 1], target=2).measure(0).measure(1).measure(2),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1499,7 +1820,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().bit_flip(0, 0.1),
+            Circuit().bit_flip(0, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1514,7 +1835,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().generalized_amplitude_damping(0, 0.1, 0.1),
+            Circuit().generalized_amplitude_damping(0, 0.1, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1529,7 +1850,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().phase_flip(0, 0.2),
+            Circuit().phase_flip(0, 0.2).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1544,7 +1865,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().depolarizing(0, 0.5),
+            Circuit().depolarizing(0, 0.5).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1559,7 +1880,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().amplitude_damping(0, 0.8),
+            Circuit().amplitude_damping(0, 0.8).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1574,7 +1895,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().phase_damping(0, 0.1),
+            Circuit().phase_damping(0, 0.1).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1606,7 +1927,12 @@ def test_circuit_user_gate(pulse_sequence_2):
             Circuit()
             .rx(0, 0.15, control=2, control_state=0)
             .rx(1, 0.3, control=[2, 3])
-            .cnot(target=0, control=[2, 3, 4]),
+            .cnot(target=0, control=[2, 3, 4])
+            .measure(0)
+            .measure(1)
+            .measure(2)
+            .measure(3)
+            .measure(4),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1627,7 +1953,17 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().cnot(0, 1).cnot(target=2, control=3).cnot(target=4, control=[5, 6]),
+            Circuit()
+            .cnot(0, 1)
+            .cnot(target=2, control=3)
+            .cnot(target=4, control=[5, 6])
+            .measure(0)
+            .measure(1)
+            .measure(2)
+            .measure(3)
+            .measure(4)
+            .measure(5)
+            .measure(6),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1650,7 +1986,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().h(0, power=-2.5).h(0, power=0),
+            Circuit().h(0, power=-2.5).h(0, power=0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1666,7 +2002,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]),
+            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1681,7 +2017,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3),
+            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1696,7 +2032,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_depolarizing(0, 1, probability=0.1),
+            Circuit().two_qubit_depolarizing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1712,7 +2048,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1728,7 +2064,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1787,13 +2123,15 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().kraus(
+            Circuit()
+            .kraus(
                 [0],
                 matrices=[
                     np.array([[0.9486833j, 0], [0, 0.9486833j]]),
                     np.array([[0, 0.31622777], [0.31622777, 0]]),
                 ],
-            ),
+            )
+            .measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1810,7 +2148,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, FreeParameter("theta")),
+            Circuit().rx(0, FreeParameter("theta")).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1826,7 +2164,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, np.pi),
+            Circuit().rx(0, np.pi).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1841,7 +2179,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().rx(0, 2 * np.pi),
+            Circuit().rx(0, 2 * np.pi).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1856,7 +2194,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().gphase(0.15).x(0),
+            Circuit().gphase(0.15).x(0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1879,7 +2217,7 @@ def test_from_ir(expected_circuit, ir):
 
 
 def test_from_ir_inputs_updated():
-    circuit = Circuit().rx(0, 0.2).ry(0, 0.1)
+    circuit = Circuit().rx(0, 0.2).ry(0, 0.1).measure(0)
     openqasm = OpenQasmProgram(
         source="\n".join(
             [
@@ -1902,7 +2240,7 @@ def test_from_ir_inputs_updated():
     "expected_circuit, ir",
     [
         (
-            Circuit().h(0).cnot(0, 1),
+            Circuit().h(0).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1922,7 +2260,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1),
+            Circuit().h(0).h(1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1942,7 +2280,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1).cnot(0, 1),
+            Circuit().h(0).h(1).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1961,7 +2299,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().h(0).h(1).cnot(0, 1),
+            Circuit().h(0).h(1).cnot(0, 1).measure(0).measure(1),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1980,7 +2318,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().x(0),
+            Circuit().x(0).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -1998,7 +2336,7 @@ def test_from_ir_inputs_updated():
             ),
         ),
         (
-            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")),
+            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")).measure(0),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -2196,6 +2534,7 @@ def test_to_unitary_with_global_phase():
         (Circuit().cphaseshift00(0, 1, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
         (Circuit().cphaseshift01(0, 1, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
         (Circuit().cphaseshift10(0, 1, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
+        (Circuit().prx(0, 1, 0.15), gates.PRx(1, 0.15).to_matrix()),
         (Circuit().cy(0, 1), gates.CY().to_matrix()),
         (Circuit().cz(0, 1), gates.CZ().to_matrix()),
         (Circuit().xx(0, 1, 0.15), gates.XX(0.15).to_matrix()),
@@ -2878,9 +3217,7 @@ def test_add_parameterized_check_true():
         .ry(angle=theta, target=2)
         .ry(angle=theta, target=3)
     )
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -2890,10 +3227,7 @@ def test_add_parameterized_instr_parameterized_circ_check_true():
     alpha2 = FreeParameter("alpha")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=alpha2, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
-    expected = set()
-    expected.add(theta)
-    expected.add(alpha)
-
+    expected = {theta, alpha}
     assert circ.parameters == expected
 
 
@@ -2901,9 +3235,7 @@ def test_add_non_parameterized_instr_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(0.1), 3))
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -2911,9 +3243,7 @@ def test_add_circ_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
 
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -2921,9 +3251,7 @@ def test_add_circ_not_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).add_circuit(Circuit().ry(angle=0.1, target=0))
 
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -2944,9 +3272,7 @@ def test_parameterized_check_false(input_circ):
 def test_parameters():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    expected = set()
-    expected.add(theta)
-
+    expected = {theta}
     assert circ.parameters == expected
 
 
@@ -3004,9 +3330,7 @@ def test_make_bound_circuit_partial_bind():
     expected_circ = (
         Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=alpha, target=2)
     )
-    expected_parameters = set()
-    expected_parameters.add(alpha)
-
+    expected_parameters = {alpha}
     assert circ_new == expected_circ and circ_new.parameters == expected_parameters
 
 
@@ -3211,7 +3535,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
         Circuit().rx(angle=theta, target=0).pulse_gate(pulse_sequence=pulse_sequence, targets=1)
     )
 
-    assert circuit.parameters == set([frequency_parameter, length, theta])
+    assert circuit.parameters == {frequency_parameter, length, theta}
 
     bound_half = circuit(theta=0.5, length=1e-5)
     assert bound_half.to_ir(

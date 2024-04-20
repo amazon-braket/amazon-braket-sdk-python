@@ -44,9 +44,7 @@ def get_input_data_dir(channel: str = "input") -> str:
         str: The input directory, defaulting to current working directory.
     """
     input_dir = os.getenv("AMZN_BRAKET_INPUT_DIR", ".")
-    if input_dir != ".":
-        return f"{input_dir}/{channel}"
-    return input_dir
+    return f"{input_dir}/{channel}" if input_dir != "." else input_dir
 
 
 def get_results_dir() -> str:

@@ -53,9 +53,7 @@ class CwlMetricsFetcher:
         Returns:
             bool: True if the given message is designated as containing Metrics; False otherwise.
         """
-        if message:
-            return "Metrics -" in message
-        return False
+        return "Metrics -" in message if message else False
 
     def _parse_metrics_from_log_stream(
         self,
@@ -105,21 +103,19 @@ class CwlMetricsFetcher:
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
-            "logStreamNamePrefix": job_name + "/algo-",
+            "logStreamNamePrefix": f"{job_name}/algo-",
         }
         log_streams = []
         while time.time() < timeout_time:
             response = self._logs_client.describe_log_streams(**kwargs)
-            streams = response.get("logStreams")
-            if streams:
+            if streams := response.get("logStreams"):
                 for stream in streams:
-                    name = stream.get("logStreamName")
-                    if name:
+                    if name := stream.get("logStreamName"):
                         log_streams.append(name)
-            next_token = response.get("nextToken")
-            if not next_token:
+            if next_token := response.get("nextToken"):
+                kwargs["nextToken"] = next_token
+            else:
                 return log_streams
-            kwargs["nextToken"] = next_token
         self._logger.warning("Timed out waiting for all metrics. Data may be incomplete.")
         return log_streams
 

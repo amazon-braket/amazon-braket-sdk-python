@@ -20,6 +20,7 @@ import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.moments import MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.result_type import ResultType
@@ -102,14 +103,15 @@ def _compute_moment_global_phase(
     Returns:
         float | None: The updated integrated phase.
     """
-    moment_phase = 0
-    for item in items:
+    moment_phase = sum(
+        item.operator.angle
+        for item in items
         if (
             isinstance(item, Instruction)
             and isinstance(item.operator, Gate)
             and item.operator.name == "GPhase"
-        ):
-            moment_phase += item.operator.angle
+        )
+    )
     return global_phase + moment_phase if global_phase is not None else None
 
 
@@ -129,9 +131,9 @@ def _group_items(
     """
     groupings = []
     for item in items:
-        # Can only print Gate and Noise operators for instructions at the moment
+        # Can only print Gate, Noise and Measure operators for instructions at the moment
         if isinstance(item, Instruction) and not isinstance(
-            item.operator, (Gate, Noise, CompilerDirective)
+            item.operator, (Gate, Noise, CompilerDirective, Measure)
         ):
             continue
 

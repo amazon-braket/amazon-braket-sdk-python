@@ -23,7 +23,7 @@ from braket.ahs.analog_hamiltonian_simulation import (
     AtomArrangement,
     DiscretizationError,
     DrivingField,
-    ShiftingField,
+    LocalDetuning,
     SiteType,
 )
 from braket.ahs.atom_arrangement import AtomArrangementItem
@@ -61,8 +61,8 @@ def driving_field():
 
 
 @pytest.fixture
-def shifting_field():
-    return ShiftingField(
+def local_detuning():
+    return LocalDetuning(
         Field(
             TimeSeries().put(0.0, -1.25664e8).put(3.0e-6, 1.25664e8),
             Pattern([0.5, 1.0, 0.5, 0.5, 0.5, 0.5]),
@@ -78,8 +78,8 @@ def test_create():
     assert mock1 == ahs.hamiltonian
 
 
-def test_to_ir(register, driving_field, shifting_field):
-    hamiltonian = driving_field + shifting_field
+def test_to_ir(register, driving_field, local_detuning):
+    hamiltonian = driving_field + local_detuning
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     problem = ahs.to_ir()
     assert Program.parse_raw(problem.json()) == problem
@@ -123,8 +123,8 @@ def test_invalid_action_name():
     AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
 
 
-def test_discretize(register, driving_field, shifting_field):
-    hamiltonian = driving_field + shifting_field
+def test_discretize(register, driving_field, local_detuning):
+    hamiltonian = driving_field + local_detuning
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
 
     action = Mock()
@@ -141,8 +141,6 @@ def test_discretize(register, driving_field, shifting_field):
     device.properties.paradigm.rydberg.rydbergGlobal.phaseResolution = Decimal("5E-7")
 
     device.properties.paradigm.rydberg.rydbergLocal.timeResolution = Decimal("1E-9")
-    device.properties.paradigm.rydberg.rydbergLocal.commonDetuningResolution = Decimal("2000.0")
-    device.properties.paradigm.rydberg.rydbergLocal.localDetuningResolution = Decimal("0.01")
 
     discretized_ahs = ahs.discretize(device)
     discretized_ir = discretized_ahs.to_ir()
@@ -177,11 +175,12 @@ def test_discretize(register, driving_field, shifting_field):
             "values": ["-125664000.0", "-125664000.0", "125664000.0", "125664000.0"],
         },
     }
-    assert discretized_json["hamiltonian"]["shiftingFields"][0]["magnitude"] == {
-        "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
+    local_detuning = discretized_json["hamiltonian"]["localDetuning"][0]["magnitude"]
+    assert local_detuning == {
+        "pattern": ["0.5", "1", "0.5", "0.5", "0.5", "0.5"],
         "time_series": {
             "times": ["0E-9", "0.000003000"],
-            "values": ["-125664000.0", "125664000.0"],
+            "values": ["-125664000", "125664000"],
         },
     }
 

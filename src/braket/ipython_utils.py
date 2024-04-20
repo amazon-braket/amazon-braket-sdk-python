@@ -23,8 +23,6 @@ def running_in_jupyter() -> bool:
         bool: True if running in Jupyter, else False.
     """
     in_ipython = False
-    in_ipython_kernel = False
-
     # if IPython hasn't been imported, there's nothing to check
     if "IPython" in sys.modules:
         get_ipython = sys.modules["IPython"].__dict__["get_ipython"]
@@ -32,7 +30,4 @@ def running_in_jupyter() -> bool:
         ip = get_ipython()
         in_ipython = ip is not None
 
-    if in_ipython:
-        in_ipython_kernel = getattr(ip, "kernel", None) is not None
-
-    return in_ipython_kernel
+    return getattr(ip, "kernel", None) is not None if in_ipython else False

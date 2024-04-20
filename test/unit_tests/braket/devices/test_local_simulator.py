@@ -14,11 +14,11 @@
 import json
 import textwrap
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from unittest.mock import Mock, patch
 
 import pytest
-from pydantic import create_model  # This is temporary for defining properties below
+from pydantic.v1 import create_model  # This is temporary for defining properties below
 
 import braket.ir as ir
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
@@ -116,10 +116,10 @@ class DummyCircuitSimulator(BraketSimulator):
         program: ir.jaqcd.Program,
         qubits: int,
         shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
+        inputs: Optional[dict[str, float]],
         *args,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
@@ -156,7 +156,7 @@ class DummyCircuitSimulator(BraketSimulator):
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
         self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
         self._shots = shots
@@ -253,7 +253,7 @@ class DummyProgramSimulator(BraketSimulator):
 class DummyProgramDensityMatrixSimulator(BraketSimulator):
     def run(
         self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         return GATE_MODEL_RESULT
 

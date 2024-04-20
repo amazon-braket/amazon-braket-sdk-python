@@ -953,9 +953,10 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        probabilities = {}
-        for pauli_string, prob in noise["probabilities"].items():
-            probabilities[pauli_string] = _parameter_from_dict(prob)
+        probabilities = {
+            pauli_string: _parameter_from_dict(prob)
+            for pauli_string, prob in noise["probabilities"].items()
+        }
         return TwoQubitPauliChannel(probabilities=probabilities)
 
 
@@ -1327,7 +1328,7 @@ class Kraus(Noise):
         """
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
-            if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
+            if int(np.log2(matrix.shape[0])) != int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         self._display_name = display_name
@@ -1449,11 +1450,10 @@ def _ascii_representation(
     Returns:
         str: The ascii representation of the noise.
     """
-    param_list = []
-    for param in parameters:
-        param_list.append(
-            str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}"
-        )
+    param_list = [
+        (str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}")
+        for param in parameters
+    ]
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"
 

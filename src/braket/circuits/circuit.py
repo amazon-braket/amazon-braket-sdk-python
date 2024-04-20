@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable, Iterable
 from numbers import Number
 from typing import Any, Optional, TypeVar, Union
@@ -26,6 +27,7 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import (
@@ -148,6 +150,7 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
+        self._measure_targets = None
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -161,11 +164,9 @@ class Circuit:
     def global_phase(self) -> float:
         """float: Get the global phase of the circuit."""
         return sum(
-            [
-                instr.operator.angle
-                for moment, instr in self._moments.items()
-                if moment.moment_type == MomentType.GLOBAL_PHASE
-            ]
+            instr.operator.angle
+            for moment, instr in self._moments.items()
+            if moment.moment_type == MomentType.GLOBAL_PHASE
         )
 
     @property
@@ -193,8 +194,7 @@ class Circuit:
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
         basis_rotation_instructions = []
-        all_qubit_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
-        if all_qubit_observable:
+        if all_qubit_observable := self._qubit_observable_mapping.get(Circuit._ALL_QUBITS):
             for target in self.qubits:
                 basis_rotation_instructions += Circuit._observable_to_instruction(
                     all_qubit_observable, target
@@ -273,6 +273,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If a measure instruction exists on the current circuit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -297,6 +298,12 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        if self._measure_targets:
+            raise ValueError(
+                "cannot add a result type to a circuit which already contains a "
+                "measure instruction."
+            )
 
         if not target_mapping and not target:
             # Nothing has been supplied, add result_type
@@ -407,6 +414,41 @@ class Circuit:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
 
+    def _check_if_qubit_measured(
+        self,
+        instruction: Instruction,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> None:
+        """Checks if the target qubits are measured. If the qubit is already measured
+        the instruction will not be added to the Circuit.
+
+        Args:
+            instruction (Instruction): `Instruction` to add into `self`.
+            target (QubitSetInput | None): Target qubits for the
+                `instruction`. If a single qubit gate, an instruction is created for every index
+                in `target`.
+                Default = `None`.
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
+                qubit mappings to apply to the `instruction.target`. Key is the qubit in
+                `instruction.target` and the value is what the key will be changed to.
+                Default = `None`.
+
+        Raises:
+            ValueError: If adding a gate or noise operation after a measure instruction.
+        """
+        if self._measure_targets:
+            measure_on_target_mapping = target_mapping and any(
+                targ in self._measure_targets for targ in target_mapping.values()
+            )
+            if (
+                # check if there is a measure instruction on the targeted qubit(s)
+                measure_on_target_mapping
+                or any(tar in self._measure_targets for tar in QubitSet(target))
+                or any(tar in self._measure_targets for tar in QubitSet(instruction.target))
+            ):
+                raise ValueError("cannot apply instruction to measured qubits.")
+
     def add_instruction(
         self,
         instruction: Instruction,
@@ -431,6 +473,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If adding a gate or noise after a measure instruction.
 
         Examples:
             >>> instr = Instruction(Gate.CNot(), [0, 1])
@@ -457,6 +500,9 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        # Check if there is a measure instruction on the circuit
+        self._check_if_qubit_measured(instruction, target, target_mapping)
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -635,12 +681,81 @@ class Circuit:
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
 
+        if verbatim_circuit._measure_targets:
+            raise ValueError("cannot measure a subcircuit inside a verbatim box.")
+
         if verbatim_circuit.instructions:
             self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
             self._has_compiler_directives = True
+        return self
+
+    def _add_measure(self, target_qubits: QubitSetInput) -> None:
+        """Adds a measure instruction to the the circuit
+
+        Args:
+            target_qubits (QubitSetInput): target qubits to measure.
+        """
+        for idx, target in enumerate(target_qubits):
+            num_qubits_measured = (
+                len(self._measure_targets)
+                if self._measure_targets and len(target_qubits) == 1
+                else 0
+            )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(index=idx + num_qubits_measured),
+                    target=target,
+                )
+            )
+            if self._measure_targets:
+                self._measure_targets.append(target)
+            else:
+                self._measure_targets = [target]
+
+    def measure(self, target_qubits: QubitSetInput) -> Circuit:
+        """
+        Add a `measure` operator to `self` ensuring only the target qubits are measured.
+
+        Args:
+            target_qubits (QubitSetInput): target qubits to measure.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            IndexError: If `self` has no qubits.
+            IndexError: If target qubits are not within the range of the current circuit.
+            ValueError: If the current circuit contains any result types.
+            ValueError: If the target qubit is already measured.
+
+        Examples:
+            >>> circ = Circuit.h(0).cnot(0, 1).measure([0])
+            >>> circ.print(list(circ.instructions))
+            [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]),
+            Instruction('operator': CNot('qubit_count': 2), 'target': QubitSet([Qubit(0),
+                Qubit(1)]),
+            Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(2)]),
+            Instruction('operator': Measure, 'target': QubitSet([Qubit(0)])]
+        """
+        if not isinstance(target_qubits, Iterable):
+            target_qubits = QubitSet(target_qubits)
+
+        # Check if result types are added on the circuit
+        if self.result_types:
+            raise ValueError("a circuit cannot contain both measure instructions and result types.")
+
+        # Check if there are repeated qubits in the same measurement
+        if len(target_qubits) != len(set(target_qubits)):
+            intersection = [qubit for qubit, count in Counter(target_qubits).items() if count > 1]
+            raise ValueError(
+                f"cannot repeat qubit(s) {', '.join(map(str, intersection))} "
+                "in the same measurement."
+            )
+        self._add_measure(target_qubits=target_qubits)
+
         return self
 
     def apply_gate_noise(
@@ -762,8 +877,11 @@ class Circuit:
 
         # check target_qubits
         target_qubits = check_noise_target_qubits(self, target_qubits)
-        if not all(qubit in self.qubits for qubit in target_qubits):
+        if any(qubit not in self.qubits for qubit in target_qubits):
             raise IndexError("target_qubits must be within the range of the current circuit.")
+
+        # Check if there is a measure instruction on the circuit
+        self._check_if_qubit_measured(instruction=noise, target=target_qubits)
 
         # make noise a list
         noise = wrap_with_list(noise)
@@ -886,9 +1004,7 @@ class Circuit:
             ValueError: If there are no parameters that match the key for the arg
                 param_values.
         """
-        parameter_strings = set()
-        for parameter in self.parameters:
-            parameter_strings.add(str(parameter))
+        parameter_strings = {str(parameter) for parameter in self.parameters}
         for param in parameter_values:
             if param not in parameter_strings:
                 raise ValueError(f"No parameter in the circuit named: {param}")
@@ -995,7 +1111,7 @@ class Circuit:
                 target_qubits = [target_qubits]
             if not all(isinstance(q, int) for q in target_qubits):
                 raise TypeError("target_qubits must be integer(s)")
-            if not all(q >= 0 for q in target_qubits):
+            if any(q < 0 for q in target_qubits):
                 raise ValueError("target_qubits must contain only non-negative integers.")
             target_qubits = QubitSet(target_qubits)
 
@@ -1208,7 +1324,8 @@ class Circuit:
                     for result_type in self.result_types
                 ]
             )
-        else:
+        # measure all the qubits if a measure instruction is not provided
+        elif self._measure_targets is None:
             qubits = (
                 sorted(self.qubits)
                 if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL
@@ -1227,10 +1344,14 @@ class Circuit:
     ) -> list[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
-        for parameter in self.parameters:
-            ir_instructions.append(f"input float {parameter};")
+        ir_instructions.extend(f"input float {parameter};" for parameter in self.parameters)
         if not self.result_types:
-            ir_instructions.append(f"bit[{self.qubit_count}] b;")
+            bit_count = (
+                len(self._measure_targets)
+                if self._measure_targets is not None
+                else self.qubit_count
+            )
+            ir_instructions.append(f"bit[{bit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
@@ -1251,7 +1372,7 @@ class Circuit:
         frames: dict[str, Frame],
         waveforms: dict[str, Waveform],
     ) -> None:
-        for _key, calibration in gate_definitions.items():
+        for calibration in gate_definitions.values():
             for frame in calibration._frames.values():
                 _validate_uniqueness(frames, frame)
                 frames[frame.id] = frame
@@ -1339,7 +1460,7 @@ class Circuit:
                 fixed_argument_calibrations = self._add_fixed_argument_calibrations(
                     gate_definitions, instruction
                 )
-                gate_definitions.update(fixed_argument_calibrations)
+                gate_definitions |= fixed_argument_calibrations
         return frames, waveforms
 
     def _add_fixed_argument_calibrations(
@@ -1382,7 +1503,7 @@ class Circuit:
                 instruction.operator.parameters
             ) == len(gate.parameters):
                 free_parameter_number = sum(
-                    [isinstance(p, FreeParameterExpression) for p in gate.parameters]
+                    isinstance(p, FreeParameterExpression) for p in gate.parameters
                 )
                 if free_parameter_number == 0:
                     continue
@@ -1436,10 +1557,10 @@ class Circuit:
                    [ 0.70710678+0.j,  0.        +0.j, -0.70710678+0.j,
                      0.        +0.j]])
         """
-        qubits = self.qubits
-        if not qubits:
+        if qubits := self.qubits:
+            return calculate_unitary_big_endian(self.instructions, qubits)
+        else:
             return np.zeros(0, dtype=complex)
-        return calculate_unitary_big_endian(self.instructions, qubits)
 
     @property
     def qubits_frozen(self) -> bool:

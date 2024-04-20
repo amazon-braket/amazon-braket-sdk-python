@@ -31,20 +31,20 @@ def test_default_input():
 
 
 def test_with_single():
-    assert QubitSet(0) == tuple([Qubit(0)])
+    assert QubitSet(0) == (Qubit(0),)
 
 
 def test_with_iterable():
-    assert QubitSet([0, 1]) == tuple([Qubit(0), Qubit(1)])
+    assert QubitSet([0, 1]) == (Qubit(0), Qubit(1))
 
 
 def test_with_nested_iterable():
-    assert QubitSet([0, 1, [2, 3]]) == tuple([Qubit(0), Qubit(1), Qubit(2), Qubit(3)])
+    assert QubitSet([0, 1, [2, 3]]) == (Qubit(0), Qubit(1), Qubit(2), Qubit(3))
 
 
 def test_with_qubit_set():
     qubits = QubitSet([0, 1])
-    assert QubitSet([qubits, [2, 3]]) == tuple([Qubit(0), Qubit(1), Qubit(2), Qubit(3)])
+    assert QubitSet([qubits, [2, 3]]) == (Qubit(0), Qubit(1), Qubit(2), Qubit(3))
 
 
 def test_flattening_does_not_recurse_infinitely():

@@ -766,10 +766,9 @@ def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
         "gaussian": GaussianWaveform._from_calibration_schema,
         "constant": ConstantWaveform._from_calibration_schema,
     }
-    if "amplitudes" in waveform.keys():
+    if "amplitudes" in waveform:
         waveform["name"] = "arbitrary"
     if waveform["name"] in waveform_names:
         return waveform_names[waveform["name"]](waveform)
-    else:
-        id = waveform["waveformId"]
-        raise ValueError(f"The waveform {id} of cannot be constructed")
+    waveform_id = waveform["waveformId"]
+    raise ValueError(f"The waveform {waveform_id} of cannot be constructed")

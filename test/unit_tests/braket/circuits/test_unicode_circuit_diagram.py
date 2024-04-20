@@ -19,6 +19,7 @@ from braket.circuits import (
     FreeParameter,
     Gate,
     Instruction,
+    Noise,
     Observable,
     Operator,
     UnicodeCircuitDiagram,
@@ -1017,5 +1018,104 @@ def test_unbalanced_ascii_symbols():
         "q3 : ─┤ FOO^4 ├──",
         "      └───────┘  ",
         "T  : │    0     │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2, 3])
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │",
+        "      ┌───┐                   ┌───┐ ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├─",
+        "      └───┘   │               └───┘ ",
+        "            ┌─┴─┐                   ",
+        "q1 : ───────┤ X ├───●───────────────",
+        "            └───┘   │               ",
+        "                  ┌─┴─┐       ┌───┐ ",
+        "q2 : ─────────────┤ X ├───●───┤ M ├─",
+        "                  └───┘   │   └───┘ ",
+        "                        ┌─┴─┐ ┌───┐ ",
+        "q3 : ───────────────────┤ X ├─┤ M ├─",
+        "                        └───┘ └───┘ ",
+        "T  : │  0  │  1  │  2  │  3  │  4  │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_multiple_measures():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 2]).measure(3).measure(1)
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │",
+        "      ┌───┐                   ┌───┐ ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├─",
+        "      └───┘   │               └───┘ ",
+        "            ┌─┴─┐             ┌───┐ ",
+        "q1 : ───────┤ X ├───●─────────┤ M ├─",
+        "            └───┘   │         └───┘ ",
+        "                  ┌─┴─┐       ┌───┐ ",
+        "q2 : ─────────────┤ X ├───●───┤ M ├─",
+        "                  └───┘   │   └───┘ ",
+        "                        ┌─┴─┐ ┌───┐ ",
+        "q3 : ───────────────────┤ X ├─┤ M ├─",
+        "                        └───┘ └───┘ ",
+        "T  : │  0  │  1  │  2  │  3  │  4  │",
+    )
+    _assert_correct_diagram(circ, expected)
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_multiple_instructions_after():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .measure(0)
+        .measure(1)
+        .h(3)
+        .cnot(3, 4)
+        .measure([2, 3])
+    )
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │  5  │  6  │",
+        "      ┌───┐                   ┌───┐             ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├─────────────",
+        "      └───┘   │               └───┘             ",
+        "            ┌─┴─┐             ┌───┐             ",
+        "q1 : ───────┤ X ├───●─────────┤ M ├─────────────",
+        "            └───┘   │         └───┘             ",
+        "                  ┌─┴─┐                   ┌───┐ ",
+        "q2 : ─────────────┤ X ├───●───────────────┤ M ├─",
+        "                  └───┘   │               └───┘ ",
+        "                        ┌─┴─┐ ┌───┐       ┌───┐ ",
+        "q3 : ───────────────────┤ X ├─┤ H ├───●───┤ M ├─",
+        "                        └───┘ └───┘   │   └───┘ ",
+        "                                    ┌─┴─┐       ",
+        "q4 : ───────────────────────────────┤ X ├───────",
+        "                                    └───┘       ",
+        "T  : │  0  │  1  │  2  │  3  │  4  │  5  │  6  │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        "T  : │  0  │        1        │  2  │",
+        "      ┌───┐                   ┌───┐ ",
+        "q0 : ─┤ H ├───●───────────────┤ M ├─",
+        "      └───┘   │               └───┘ ",
+        "            ┌─┴─┐ ┌─────────┐ ┌───┐ ",
+        "q1 : ───────┤ X ├─┤ BF(0.1) ├─┤ M ├─",
+        "            └───┘ └─────────┘ └───┘ ",
+        "T  : │  0  │        1        │  2  │",
     )
     _assert_correct_diagram(circ, expected)
