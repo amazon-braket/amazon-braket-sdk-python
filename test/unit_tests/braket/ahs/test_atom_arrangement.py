@@ -52,9 +52,7 @@ def test_iteration():
     atom_arrangement = AtomArrangement()
     for value in values:
         atom_arrangement.add(value)
-    returned_values = []
-    for site in atom_arrangement:
-        returned_values.append(site.coordinate)
+    returned_values = [site.coordinate for site in atom_arrangement]
     assert values == returned_values
 
 

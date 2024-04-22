@@ -128,8 +128,6 @@ def test_get_metrics_timeout(mock_add_metrics, mock_get_metrics, aws_session):
 
 
 def get_log_events_forever(*args, **kwargs):
-    next_token = "1"
     token = kwargs.get("nextToken")
-    if token and token == "1":
-        next_token = "2"
+    next_token = "2" if token and token == "1" else "1"
     return {"events": EXAMPLE_METRICS_LOG_LINES, "nextForwardToken": next_token}

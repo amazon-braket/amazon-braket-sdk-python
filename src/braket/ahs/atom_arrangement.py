@@ -126,4 +126,4 @@ class AtomArrangement:
                 discretized_arrangement.add(new_coordinates, site.site_type)
             return discretized_arrangement
         except Exception as e:
-            raise DiscretizationError(f"Failed to discretize register {e}")
+            raise DiscretizationError(f"Failed to discretize register {e}") from e

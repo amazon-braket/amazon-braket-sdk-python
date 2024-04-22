@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Set
 
 import pytest
 
@@ -108,15 +107,14 @@ def _get_device_name(device: AwsDevice) -> str:
     return device_name
 
 
-def _get_active_providers(aws_devices: List[AwsDevice]) -> Set[str]:
-    active_providers = set()
-    for device in aws_devices:
-        if device.status != "RETIRED":
-            active_providers.add(_get_provider_name(device))
+def _get_active_providers(aws_devices: list[AwsDevice]) -> set[str]:
+    active_providers = {
+        _get_provider_name(device) for device in aws_devices if device.status != "RETIRED"
+    }
     return active_providers
 
 
-def _validate_device(device: AwsDevice, active_providers: Set[str]):
+def _validate_device(device: AwsDevice, active_providers: set[str]):
     provider_name = _get_provider_name(device)
     if provider_name not in active_providers:
         provider_name = f"_{provider_name}"

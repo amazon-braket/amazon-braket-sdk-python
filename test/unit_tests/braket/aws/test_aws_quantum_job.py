@@ -364,7 +364,7 @@ def test_download_result_when_extract_path_not_provided(
     job_name = job_metadata["jobName"]
     quantum_job.download_result()
 
-    with open(f"{job_name}/results.json", "r") as file:
+    with open(f"{job_name}/results.json") as file:
         actual_data = json.loads(file.read())["dataDictionary"]
         assert expected_saved_data == actual_data
 
@@ -382,7 +382,7 @@ def test_download_result_when_extract_path_provided(
     with tempfile.TemporaryDirectory() as temp_dir:
         quantum_job.download_result(temp_dir)
 
-        with open(f"{temp_dir}/{job_name}/results.json", "r") as file:
+        with open(f"{temp_dir}/{job_name}/results.json") as file:
             actual_data = json.loads(file.read())["dataDictionary"]
             assert expected_saved_data == actual_data
 

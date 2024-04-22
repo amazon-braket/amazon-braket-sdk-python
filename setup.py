@@ -13,7 +13,7 @@
 
 from setuptools import find_namespace_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 with open("src/braket/_sdk/_version.py") as f:
