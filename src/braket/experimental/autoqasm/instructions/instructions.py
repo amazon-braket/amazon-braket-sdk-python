@@ -22,6 +22,7 @@ from typing import Any
 import oqpy
 
 from braket.experimental.autoqasm import program as aq_program
+from braket.experimental.autoqasm import types as aq_types
 from braket.experimental.autoqasm.instructions.qubits import _qubit
 from braket.experimental.autoqasm.types import QubitIdentifierType
 
@@ -57,14 +58,14 @@ def _qubit_instruction(
 def _get_pos_neg_control(
     control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
     control_state: str | None = None,
-) -> tuple[Iterable[oqpy.Qubit], Iterable[oqpy.Qubit]]:
+) -> tuple[list[oqpy.Qubit], list[oqpy.Qubit]]:
     if control is None and control_state is not None:
         raise ValueError(control_state, "control_state provided without control qubits")
 
     if control is None:
         return None, None
 
-    if isinstance(control, str) or not isinstance(control, Iterable):
+    if aq_types.is_qubit_identifier_type(control):
         control = [control]
 
     if control_state is not None and len(control) != len(control_state):
