@@ -250,21 +250,20 @@ valid_subroutine_switcher = dict(
 def create_valid_ir_input(irsubclasses):
     input = {}
     for subclass in irsubclasses:
-        input.update(valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
+        input |= valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")()
     return input
 
 
 def create_valid_subroutine_input(irsubclasses, **kwargs):
     input = {}
     for subclass in irsubclasses:
-        input.update(
-            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(**kwargs)
+        input |= valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(
+            **kwargs
         )
     return input
 
 
 def create_valid_target_input(irsubclasses):
-    input = {}
     qubit_set = []
     control_qubit_set = []
     control_state = None
@@ -285,11 +284,9 @@ def create_valid_target_input(irsubclasses):
             control_state = list(single_neg_control_valid_input()["control_state"])
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
-            pass
-        else:
+        elif subclass not in (Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
             raise ValueError("Invalid subclass")
-    input["target"] = QubitSet(qubit_set)
+    input = {"target": QubitSet(qubit_set)}
     input["control"] = QubitSet(control_qubit_set)
     input["control_state"] = control_state
     return input
@@ -327,9 +324,13 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass in (NoTarget, Angle, TwoDimensionalMatrix, DoubleAngle, TripleAngle):
-            pass
-        else:
+        elif subclass not in (
+            NoTarget,
+            Angle,
+            TwoDimensionalMatrix,
+            DoubleAngle,
+            TripleAngle,
+        ):
             raise ValueError("Invalid subclass")
     return qubit_count
 
@@ -916,14 +917,13 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
     )
     if qubit_count == 1:
         multi_targets = [0, 1, 2]
-        instruction_list = []
-        for target in multi_targets:
-            instruction_list.append(
-                Instruction(
-                    operator=testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)),
-                    target=target,
-                )
+        instruction_list = [
+            Instruction(
+                operator=testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)),
+                target=target,
             )
+            for target in multi_targets
+        ]
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
         if Angle in irsubclasses:

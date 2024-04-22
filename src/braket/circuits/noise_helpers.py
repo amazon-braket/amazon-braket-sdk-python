@@ -36,7 +36,7 @@ def no_noise_applied_warning(noise_applied: bool) -> None:
     Args:
         noise_applied (bool): True if the noise has been applied.
     """
-    if noise_applied is False:
+    if not noise_applied:
         warnings.warn(
             "Noise is not applied to any gate, as there is no eligible gate in the circuit"
             " with the input criteria or there is no multi-qubit gate to apply"
@@ -122,7 +122,7 @@ def check_noise_target_qubits(
         target_qubits = wrap_with_list(target_qubits)
         if not all(isinstance(q, int) for q in target_qubits):
             raise TypeError("target_qubits must be integer(s)")
-        if not all(q >= 0 for q in target_qubits):
+        if any(q < 0 for q in target_qubits):
             raise ValueError("target_qubits must contain only non-negative integers.")
 
         target_qubits = QubitSet(target_qubits)

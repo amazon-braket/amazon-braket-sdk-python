@@ -304,10 +304,10 @@ def test_discretize_values(default_time_series, value_res, expected_values):
     [
         (TimeSeries(), TimeSeries(), True),
         (TimeSeries().put(0.1, 0.2), TimeSeries(), False),
-        (TimeSeries().put(float(0.1), float(0.2)), TimeSeries().put(float(0.1), float(0.2)), True),
-        (TimeSeries().put(float(1), float(0.2)), TimeSeries().put(int(1), float(0.2)), True),
-        (TimeSeries().put(float(0.1), float(0.2)), TimeSeries().put(float(0.2), float(0.2)), False),
-        (TimeSeries().put(float(0.1), float(0.3)), TimeSeries().put(float(0.1), float(0.2)), False),
+        (TimeSeries().put(0.1, 0.2), TimeSeries().put(0.1, 0.2), True),
+        (TimeSeries().put(float(1), 0.2), TimeSeries().put(1, 0.2), True),
+        (TimeSeries().put(0.1, 0.2), TimeSeries().put(0.2, 0.2), False),
+        (TimeSeries().put(0.1, 0.3), TimeSeries().put(0.1, 0.2), False),
     ],
 )
 def test_all_close(first_series, second_series, expected_result):

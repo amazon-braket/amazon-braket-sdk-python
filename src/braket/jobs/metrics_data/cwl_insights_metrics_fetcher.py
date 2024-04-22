@@ -105,8 +105,7 @@ class CwlInsightsMetricsFetcher:
                 and other metadata that we (currently) do not use.
             parser (LogMetricsParser) : The CWL metrics parser.
         """
-        message = self._get_element_from_log_line("@message", result_entry)
-        if message:
+        if message := self._get_element_from_log_line("@message", result_entry):
             timestamp = self._get_element_from_log_line("@timestamp", result_entry)
             parser.parse_log_message(timestamp, message)
 

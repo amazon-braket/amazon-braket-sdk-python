@@ -3702,9 +3702,7 @@ class Unitary(Gate):
         return f"#pragma braket unitary({formatted_matrix}) {', '.join(qubits)}"
 
     def __eq__(self, other: Unitary):
-        if isinstance(other, Unitary):
-            return self.matrix_equivalence(other)
-        return False
+        return self.matrix_equivalence(other) if isinstance(other, Unitary) else False
 
     def __hash__(self):
         return hash((self.name, str(self._matrix), self.qubit_count))
@@ -3859,11 +3857,10 @@ def format_complex(number: complex) -> str:
         str: The formatted string.
     """
     if number.real:
-        if number.imag:
-            imag_sign = "+" if number.imag > 0 else "-"
-            return f"{number.real} {imag_sign} {abs(number.imag)}im"
-        else:
+        if not number.imag:
             return f"{number.real}"
+        imag_sign = "+" if number.imag > 0 else "-"
+        return f"{number.real} {imag_sign} {abs(number.imag)}im"
     elif number.imag:
         return f"{number.imag}im"
     else:

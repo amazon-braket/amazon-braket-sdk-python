@@ -206,8 +206,7 @@ class AwsQuantumTask(QuantumTask):
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
-            unbounded_parameters = param_names - set(inputs.keys())
-            if unbounded_parameters:
+            if unbounded_parameters := param_names - set(inputs.keys()):
                 raise ValueError(
                     f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                 )
@@ -295,11 +294,9 @@ class AwsQuantumTask(QuantumTask):
 
     def _cancel_future(self) -> None:
         """Cancel the future if it exists. Else, create a cancelled future."""
-        if hasattr(self, "_future"):
-            self._future.cancel()
-        else:
+        if not hasattr(self, "_future"):
             self._future = asyncio.Future()
-            self._future.cancel()
+        self._future.cancel()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the quantum task in Amazon
@@ -510,10 +507,10 @@ class AwsQuantumTask(QuantumTask):
         return None
 
     def _has_reservation_arn_from_metadata(self, current_metadata: dict[str, Any]) -> bool:
-        for association in current_metadata.get("associations", []):
-            if association.get("type") == "RESERVATION_TIME_WINDOW_ARN":
-                return True
-        return False
+        return any(
+            association.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for association in current_metadata.get("associations", [])
+        )
 
     def _download_result(
         self,
@@ -545,9 +542,7 @@ class AwsQuantumTask(QuantumTask):
         return f"AwsQuantumTask('id/taskArn':'{self.id}')"
 
     def __eq__(self, other: AwsQuantumTask) -> bool:
-        if isinstance(other, AwsQuantumTask):
-            return self.id == other.id
-        return False
+        return self.id == other.id if isinstance(other, AwsQuantumTask) else False
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -584,10 +579,10 @@ def _(
 ) -> AwsQuantumTask:
     openqasm_program = OpenQASMProgram(
         source=pulse_sequence.to_ir(),
-        inputs=inputs if inputs else {},
+        inputs=inputs or {},
     )
 
-    create_task_kwargs.update({"action": openqasm_program.json()})
+    create_task_kwargs["action"] = openqasm_program.json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -612,7 +607,7 @@ def _(
             source=openqasm_program.source,
             inputs=inputs_copy,
         )
-    create_task_kwargs.update({"action": openqasm_program.json()})
+    create_task_kwargs["action"] = openqasm_program.json()
     if device_parameters:
         final_device_parameters = (
             _circuit_device_params_from_dict(
@@ -623,9 +618,7 @@ def _(
             if isinstance(device_parameters, dict)
             else device_parameters
         )
-        create_task_kwargs.update(
-            {"deviceParameters": final_device_parameters.json(exclude_none=True)}
-        )
+        create_task_kwargs["deviceParameters"] = final_device_parameters.json(exclude_none=True)
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
@@ -674,7 +667,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": blackbird_program.json()})
+    create_task_kwargs["action"] = blackbird_program.json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -732,12 +725,10 @@ def _(
             inputs=inputs_copy,
         )
 
-    create_task_kwargs.update(
-        {
-            "action": openqasm_program.json(),
-            "deviceParameters": final_device_parameters.json(exclude_none=True),
-        }
-    )
+    create_task_kwargs |= {
+        "action": openqasm_program.json(),
+        "deviceParameters": final_device_parameters.json(exclude_none=True),
+    }
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -761,12 +752,10 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     device_params = _create_annealing_device_params(device_parameters, device_arn)
-    create_task_kwargs.update(
-        {
-            "action": problem.to_ir().json(),
-            "deviceParameters": device_params.json(exclude_none=True),
-        }
-    )
+    create_task_kwargs |= {
+        "action": problem.to_ir().json(),
+        "deviceParameters": device_params.json(exclude_none=True),
+    }
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
@@ -785,7 +774,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
+    create_task_kwargs["action"] = analog_hamiltonian_simulation.to_ir().json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 

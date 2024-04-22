@@ -173,9 +173,8 @@ class LocalSimulator(Device):
 
         single_input = isinstance(inputs, dict)
 
-        if not single_task and not single_input:
-            if len(task_specifications) != len(inputs):
-                raise ValueError("Multiple inputs and task specifications must be equal in number.")
+        if not single_task and not single_input and len(task_specifications) != len(inputs):
+            raise ValueError("Multiple inputs and task specifications must be equal in number.")
         if single_task:
             task_specifications = repeat(task_specifications)
 
@@ -192,8 +191,7 @@ class LocalSimulator(Device):
         for task_specification, input_map in tasks_and_inputs:
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
-                unbounded_parameters = param_names - set(input_map.keys())
-                if unbounded_parameters:
+                if unbounded_parameters := param_names - set(input_map.keys()):
                     raise ValueError(
                         f"Cannot execute circuit with unbound parameters: "
                         f"{unbounded_parameters}"
@@ -246,13 +244,12 @@ class LocalSimulator(Device):
 
     @_get_simulator.register
     def _(self, backend_name: str):
-        if backend_name in _simulator_devices:
-            device_class = _simulator_devices[backend_name].load()
-            return device_class()
-        else:
+        if backend_name not in _simulator_devices:
             raise ValueError(
                 f"Only the following devices are available {_simulator_devices.keys()}"
             )
+        device_class = _simulator_devices[backend_name].load()
+        return device_class()
 
     @_get_simulator.register
     def _(self, backend_impl: BraketSimulator):

@@ -99,7 +99,7 @@ def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     Returns:
         bool: If the matrices define a CPTP map.
     """
-    E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
+    E = sum(np.dot(matrix.T.conjugate(), matrix) for matrix in matrices)
     return np.allclose(E, np.eye(*E.shape))
 
 
