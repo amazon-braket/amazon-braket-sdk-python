@@ -211,7 +211,9 @@ def test_gate_modifiers(gate, qubits, params, control, control_state, power, exp
 def test_invalid_gate_modifiers() -> None:
     """Tests quantum gate modifiers."""
     with aq.build_program() as _:
-        with pytest.raises(ValueError, match="control_state provided without control qubits"):
+        with pytest.raises(ValueError, match="length greater than the specified number of qubits"):
             x(1, control=None, control_state="00")
-        with pytest.raises(ValueError, match="control and control_state must have same length"):
+        with pytest.raises(ValueError, match="length greater than the specified number of qubits"):
             x(1, control=0, control_state="00")
+        with pytest.raises(ValueError, match="length greater than the specified number of qubits"):
+            x(1, control=0, control_state=3)

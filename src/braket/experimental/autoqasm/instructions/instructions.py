@@ -60,22 +60,15 @@ def _get_pos_neg_control(
     control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
     control_state: BasisStateInput | None = None,
 ) -> tuple[list[oqpy.Qubit], list[oqpy.Qubit]]:
-    if control is None and control_state is not None:
-        raise ValueError(control_state, "control_state provided without control qubits")
-
     if control is None:
-        return None, None
-
-    if aq_types.is_qubit_identifier_type(control):
+        control = []
+    elif aq_types.is_qubit_identifier_type(control):
         control = [control]
 
     if control_state is None:
-        return [_qubit(q) for q in control], []
-
-    control_state = BasisState(control_state).as_tuple
-
-    if len(control) != len(control_state):
-        raise ValueError(control_state, "control and control_state must have same length")
+        control_state = [1] * len(control)
+    else:
+        control_state = BasisState(control_state, len(control)).as_tuple
 
     pos_control = [_qubit(q) for i, q in enumerate(control) if control_state[i] == 1]
     neg_control = [_qubit(q) for i, q in enumerate(control) if control_state[i] == 0]
