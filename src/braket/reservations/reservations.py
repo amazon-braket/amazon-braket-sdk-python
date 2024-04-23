@@ -50,13 +50,13 @@ class DirectReservation(AbstractContextManager):
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
 
-    def __init__(self, device_arn: AwsDevice | str, reservation_arn: str | None):
-        if isinstance(device_arn, AwsDevice):
-            self.device_arn = device_arn._arn
-        elif isinstance(device_arn, str):
-            self.device_arn = device_arn
+    def __init__(self, device: AwsDevice | str, reservation_arn: str | None):
+        if isinstance(device, AwsDevice):
+            self.device_arn = device.arn
+        elif isinstance(device, str):
+            self.device_arn = device
         else:
-            raise ValueError("Device ARN must be an AwsDevice or string.")
+            raise ValueError("device must be an AwsDevice or its ARN.")
 
         self.reservation_arn = reservation_arn
         self.context_active = False
@@ -80,7 +80,6 @@ class DirectReservation(AbstractContextManager):
         """Stop the reservation context."""
         if not self.context_active:
             raise RuntimeError("Context is not active")
-
         os.environ.pop("AMZN_BRAKET_DEVICE_ARN_TEMP", None)
         os.environ.pop("AMZN_BRAKET_RESERVATION_ARN_TEMP", None)
         self.context_active = False
