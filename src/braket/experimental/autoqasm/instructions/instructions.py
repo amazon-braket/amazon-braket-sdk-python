@@ -21,6 +21,7 @@ from typing import Any
 
 import oqpy
 
+from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm import types as aq_types
 from braket.experimental.autoqasm.instructions.qubits import _qubit
@@ -33,7 +34,7 @@ def _qubit_instruction(
     *args: Any,
     is_unitary: bool = True,
     control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
-    control_state: str | None = None,
+    control_state: BasisStateInput | None = None,
     power: float | None = None,
 ) -> None:
     program_conversion_context = aq_program.get_program_conversion_context()
@@ -57,7 +58,7 @@ def _qubit_instruction(
 
 def _get_pos_neg_control(
     control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
-    control_state: str | None = None,
+    control_state: BasisStateInput | None = None,
 ) -> tuple[list[oqpy.Qubit], list[oqpy.Qubit]]:
     if control is None and control_state is not None:
         raise ValueError(control_state, "control_state provided without control qubits")
@@ -68,17 +69,16 @@ def _get_pos_neg_control(
     if aq_types.is_qubit_identifier_type(control):
         control = [control]
 
-    if control_state is not None and len(control) != len(control_state):
+    if control_state is None:
+        return [_qubit(q) for q in control], []
+
+    control_state = BasisState(control_state).as_tuple
+
+    if len(control) != len(control_state):
         raise ValueError(control_state, "control and control_state must have same length")
 
-    pos_control = [
-        _qubit(q) for i, q in enumerate(control) if control_state is None or control_state[i] == "1"
-    ]
-    neg_control = [
-        _qubit(q)
-        for i, q in enumerate(control)
-        if control_state is not None and control_state[i] == "0"
-    ]
+    pos_control = [_qubit(q) for i, q in enumerate(control) if control_state[i] == 1]
+    neg_control = [_qubit(q) for i, q in enumerate(control) if control_state[i] == 0]
     return pos_control, neg_control
 
 

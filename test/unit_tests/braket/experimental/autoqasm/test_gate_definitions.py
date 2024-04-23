@@ -157,12 +157,14 @@ def test_gates(gate, qubits, params, expected_qasm) -> None:
         (x, [1], [], [0], None, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
         (x, [1], [], 0, "1", None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
         (x, [1], [], [0], "0", None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
+        (x, [1], [], [0], 0, None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
+        (x, [1], [], [0], [0], None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
         (
             x,
             [2],
             [],
             [0, 1],
-            "11",
+            "11",  # BasisStateInput as str
             None,
             "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
         ),
@@ -171,7 +173,25 @@ def test_gates(gate, qubits, params, expected_qasm) -> None:
             [2],
             [],
             [0, 1],
-            "10",
+            [1, 1],  # BasisStateInput as list[int]
+            None,
+            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
+        ),
+        (
+            x,
+            [2],
+            [],
+            [0, 1],
+            3,  # BasisStateInput as int
+            None,
+            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
+        ),
+        (
+            x,
+            [2],
+            [],
+            [0, 1],
+            "10",  # BasisStateInput as str
             None,
             "\nctrl @ negctrl @ x __qubits__[0], __qubits__[1], __qubits__[2];",
         ),
