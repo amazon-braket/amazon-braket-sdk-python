@@ -112,6 +112,11 @@ class MainProgram(SerializableProgram):
         Returns:
             Program: The generated AutoQASM program.
         """
+        if in_active_program_conversion_context():
+            raise errors.NestedMainProgramError(
+                "Cannot build an AutoQASM program from within another AutoQASM program."
+            )
+
         if isinstance(device, str):
             device = AwsDevice(device)
 
@@ -440,13 +445,13 @@ class ProgramConversionContext:
     def register_input_parameter(
         self,
         name: str,
-        type_: float | int | bool = float,
+        param_type: float | int | bool = float,
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
         Args:
             name (str): The name of the parameter to register with the program.
-            type_ (float | int | bool): The type of the parameter to register
+            param_type (float | int | bool): The type of the parameter to register
                 with the program. Default: float.
 
         Raises:
@@ -454,9 +459,9 @@ class ProgramConversionContext:
         """
         # TODO (#814): add type validation against existing inputs
         if name not in self._input_parameters:
-            aq_type = aq_types.map_parameter_type(type_)
+            aq_type = aq_types.map_parameter_type(param_type)
             if aq_type not in [oqpy.FloatVar, oqpy.IntVar, oqpy.BoolVar]:
-                raise NotImplementedError(type_)
+                raise NotImplementedError(param_type)
 
             # In case a FreeParameter has already created a FloatVar somewhere else,
             # we use need_declaration=False to avoid OQPy raising name conflict errors.
