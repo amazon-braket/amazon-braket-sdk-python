@@ -236,10 +236,15 @@ class AwsSession:
             str: The ARN of the quantum task.
         """
         # Add reservation arn if available and device is correct.
-        device_arn = os.getenv("AMZN_BRAKET_DEVICE_ARN_TEMP")
-        reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_ARN_TEMP")
+        device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
         if device_arn == boto3_kwargs["deviceArn"] and reservation_arn:
-            boto3_kwargs["reservation_arn"] = reservation_arn
+            boto3_kwargs["associations"] = [
+                {
+                    "arn": reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
 
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")

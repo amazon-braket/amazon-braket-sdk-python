@@ -17,19 +17,20 @@ import os
 from contextlib import AbstractContextManager
 
 from braket.aws import AwsDevice
+from braket.devices import Device
 
 
 class DirectReservation(AbstractContextManager):
     """
-    Modify AwsQuantumTasks created within this context to run on a device with a reservation
-    ARN.This is useful for ensuring that all quantum task
+    Context manager that modifies AwsQuantumTasks created within the context to use a reservation
+    ARN for all tasks targeting the specified device.
 
     Reservations are AWS account and device specific. Only the AWS account that created the
     reservation can use your reservation ARN. Additionally, the reservation ARN is only valid on the
     reserved device at the chosen start and end times.
 
     Args:
-        device (AwsDevice | str): The Braket device for which you have a reservation ARN, or
+        device (Device | str): The Braket device for which you have a reservation ARN, or
             optionally the device ARN.
         reservation_arn (str | None): The Braket Direct reservation ARN to be applied to all
             quantum tasks run within the context.
@@ -50,11 +51,13 @@ class DirectReservation(AbstractContextManager):
     [1] https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html
     """
 
-    def __init__(self, device: AwsDevice | str, reservation_arn: str | None):
+    def __init__(self, device: Device | str, reservation_arn: str | None):
         if isinstance(device, AwsDevice):
             self.device_arn = device.arn
         elif isinstance(device, str):
             self.device_arn = device
+        elif isinstance(device, Device):  # LocalSimulator
+            self.device_arn = ""  # instead of None, use empty string
         else:
             raise ValueError("device must be an AwsDevice or its ARN.")
 
@@ -71,15 +74,17 @@ class DirectReservation(AbstractContextManager):
     def start(self) -> None:
         """Start the reservation context."""
         if self.context_active:
-            raise RuntimeError("Context is already active")
-        os.environ["AMZN_BRAKET_DEVICE_ARN_TEMP"] = self.device_arn
-        os.environ["AMZN_BRAKET_RESERVATION_ARN_TEMP"] = self.reservation_arn
+            raise RuntimeError("Reservation context is already active.")
+
+        os.environ["AMZN_BRAKET_RESERVATION_DEVICE_ARN"] = self.device_arn
+        if self.reservation_arn:
+            os.environ["AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN"] = self.reservation_arn
         self.context_active = True
 
     def stop(self) -> None:
         """Stop the reservation context."""
         if not self.context_active:
-            raise RuntimeError("Context is not active")
-        os.environ.pop("AMZN_BRAKET_DEVICE_ARN_TEMP", None)
-        os.environ.pop("AMZN_BRAKET_RESERVATION_ARN_TEMP", None)
+            raise RuntimeError("Reservation context is not active.")
+        os.environ.pop("AMZN_BRAKET_RESERVATION_DEVICE_ARN", None)
+        os.environ.pop("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN", None)
         self.context_active = False

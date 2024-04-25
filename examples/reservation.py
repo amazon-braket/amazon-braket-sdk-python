@@ -21,11 +21,15 @@ device = AwsDevice(Devices.IonQ.Aria1)
 
 # To run a task in a device reservation, change the device to the one you reserved
 # and fill in your reservation ARN.
-with DirectReservation(device, reservation_arn="reservation ARN"):
+with DirectReservation(device, reservation_arn="<my_reservation_arn>"):
     task = device.run(bell, shots=100)
 print(task.result().measurement_counts)
 
 # Alternatively, you may start the reservation globally
-DirectReservation(device, reservation_arn="reservation ARN").start()
-task = device.run(bell, shots=100, reservation_arn="reservation ARN")
+DirectReservation(device, reservation_arn="<my_reservation_arn>").start()
+task = device.run(bell, shots=100)
+print(task.result().measurement_counts)
+
+# Lastly, you may pass the reservation ARN directly to a quantum task
+task = device.run(bell, shots=100, reservation_arn="<my_reservation_arn>")
 print(task.result().measurement_counts)

@@ -21,6 +21,7 @@ from braket.aws import AwsDevice
 from braket.circuits import Circuit
 from braket.devices import Devices
 from braket.jobs import get_job_device_arn, hybrid_job
+from braket.reservations import DirectReservation
 
 
 @pytest.fixture
@@ -36,11 +37,11 @@ def test_create_task_via_invalid_reservation_arn_on_qpu(reservation_arn):
     device = AwsDevice(Devices.IonQ.Harmony)
 
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
-        device.run(
-            circuit,
-            shots=10,
-            reservation_arn=reservation_arn,
-        )
+        device.run(circuit, shots=10, reservation_arn=reservation_arn)
+
+    with pytest.raises(ClientError, match="Reservation arn is invalid"):
+        with DirectReservation(device, reservation_arn=reservation_arn):
+            device.run(circuit, shots=10)
 
 
 def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
@@ -48,11 +49,11 @@ def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
     device = AwsDevice(Devices.Amazon.SV1)
 
     with pytest.raises(ClientError, match="Braket Direct is not supported for"):
-        device.run(
-            circuit,
-            shots=10,
-            reservation_arn=reservation_arn,
-        )
+        device.run(circuit, shots=10, reservation_arn=reservation_arn)
+
+    with pytest.raises(ClientError, match="Braket Direct is not supported for"):
+        with DirectReservation(device, reservation_arn=reservation_arn):
+            device.run(circuit, shots=10)
 
 
 @pytest.mark.xfail(
