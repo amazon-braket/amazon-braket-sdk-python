@@ -27,6 +27,9 @@ class Devices:
         _Advantage6 = "arn:aws:braket:us-west-2::device/qpu/d-wave/Advantage_system6"
         _DW2000Q6 = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
 
+    class _IQM(str, Enum):
+        Garnet = "arn:aws:braket:eu-north-1::device/qpu/IQM/Garnet"
+
     class _IonQ(str, Enum):
         Harmony = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
         Aria1 = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
@@ -54,6 +57,7 @@ class Devices:
     Amazon = _Amazon
     # DWave = _DWave
     IonQ = _IonQ
+    IQM = _IQM
     OQC = _OQC
     QuEra = _QuEra
     Rigetti = _Rigetti
