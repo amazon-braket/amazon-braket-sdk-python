@@ -20,70 +20,77 @@ from braket.aws import AwsDevice, AwsSession
 from braket.devices import LocalSimulator
 from braket.reservations import DirectReservation
 
+RESERVATION_ARN = "arn:aws:braket:us-east-1:1234:reservation/uuid"
+DEVICE_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1"
+VALUE_ERROR_MESSAGE = "Device must be an AwsDevice or its ARN, or a local simulator device."
+RUNTIME_ERROR_MESSAGE = "Another reservation is already active."
+
 
 @pytest.fixture
 def aws_device():
     mock_device = MagicMock(spec=AwsDevice)
-    mock_device.arn = "device_arn_example"
+    mock_device.arn = DEVICE_ARN
     return mock_device
 
 
-def test_direct_reservation_with_device_object(aws_device):
-    with DirectReservation(aws_device, "reservation_arn_example") as reservation:
-        assert reservation.device_arn == "device_arn_example"
-        assert reservation.reservation_arn == "reservation_arn_example"
+def test_direct_reservation_aws_device(aws_device):
+    with DirectReservation(aws_device, RESERVATION_ARN) as reservation:
+        assert reservation.device_arn == DEVICE_ARN
+        assert reservation.reservation_arn == RESERVATION_ARN
+        assert reservation._is_active
 
 
-def test_direct_reservation_with_string():
-    with DirectReservation("my:string:arn", "reservation_arn_example") as reservation:
-        assert reservation.device_arn == "my:string:arn"
-        assert reservation.reservation_arn == "reservation_arn_example"
-
-
-def test_reservation_local_device():
+def test_direct_reservation_local_simulator():
     mock_device = MagicMock(spec=LocalSimulator)
-    with DirectReservation(mock_device, "reservation_arn_example"):
-        os.environ["AMZN_BRAKET_RESERVATION_DEVICE_ARN"] = ""
+    with pytest.warns(UserWarning):
+        with DirectReservation(mock_device, RESERVATION_ARN) as reservation:
+            assert os.environ["AMZN_BRAKET_RESERVATION_DEVICE_ARN"] == ""
+            assert os.environ["AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN"] == RESERVATION_ARN
+            assert reservation._is_active is True
 
 
-def test_direct_reservation_with_invalid_type():
-    """Test initialization with an invalid type should raise ValueError."""
-    with pytest.raises(ValueError, match="device must be an AwsDevice or its ARN."):
-        DirectReservation(123, "reservation_arn_example")
+@pytest.mark.parametrize("device", [123, False, [aws_device], {"a": 1}])
+def test_direct_reservation_invalid_inputs(device):
+    with pytest.raises(TypeError):
+        DirectReservation(device, RESERVATION_ARN)
+
+
+def test_direct_reservation_local_no_reservation():
+    mock_device = MagicMock(spec=LocalSimulator)
+    mock_device.create_quantum_task = MagicMock()
+    kwargs = {
+        "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
+        "shots": 1,
+    }
+    with DirectReservation(mock_device, None):
+        mock_device.create_quantum_task(**kwargs)
+        mock_device.create_quantum_task.assert_called_once_with(**kwargs)
 
 
 def test_context_management(aws_device):
-    """Test the context manager functionality."""
-    with DirectReservation(aws_device, "reservation_arn_example"):
-        assert os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN") == "device_arn_example"
-        assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") == "reservation_arn_example"
+    with DirectReservation(aws_device, RESERVATION_ARN):
+        assert os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN") == DEVICE_ARN
+        assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") == RESERVATION_ARN
     assert os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN") is None
     assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") is None
 
 
 def test_start_reservation_already_active(aws_device):
-    """Test starting an already active context raises RuntimeError."""
-    reservation = DirectReservation(aws_device, "reservation_arn_example")
+    reservation = DirectReservation(aws_device, RESERVATION_ARN)
     reservation.start()
-    with pytest.raises(RuntimeError, match="Reservation context is already active."):
+    with pytest.raises(RuntimeError, match=RUNTIME_ERROR_MESSAGE):
         reservation.start()
     reservation.stop()
 
 
 def test_stop_reservation_not_active(aws_device):
-    """Test stopping a non-active context raises RuntimeError."""
-    reservation = DirectReservation(aws_device, "reservation_arn_example")
-    with pytest.raises(RuntimeError, match="Reservation context is not active."):
+    reservation = DirectReservation(aws_device, RESERVATION_ARN)
+    with pytest.warns(UserWarning):
         reservation.stop()
 
 
-def test_start_without_device_arn():
-    with pytest.raises(ValueError, match="device must be an AwsDevice or its ARN."):
-        DirectReservation(None, "reservation_arn_example")
-
-
 def test_multiple_start_stop_cycles(aws_device):
-    reservation = DirectReservation(aws_device, "reservation_arn_example")
+    reservation = DirectReservation(aws_device, RESERVATION_ARN)
     reservation.start()
     reservation.stop()
     reservation.start()
@@ -92,39 +99,54 @@ def test_multiple_start_stop_cycles(aws_device):
     assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") is None
 
 
-def test_stop(aws_device):
-    with pytest.raises(RuntimeError, match="Reservation context is not active."):
-        DirectReservation(aws_device, "reservation_arn_example").stop()
+def test_two_direct_reservations(aws_device):
+    with pytest.raises(RuntimeError, match=RUNTIME_ERROR_MESSAGE):
+        with DirectReservation(aws_device, RESERVATION_ARN):
+            with DirectReservation(aws_device, "reservation_arn_example_2"):
+                pass
 
 
-def test_reservation_none(aws_device):
-    DirectReservation(aws_device, reservation_arn=None).start()
+def test_direct_reservation_device_arn(aws_device):
+    mock_client = MagicMock()
+    aws_session = AwsSession(braket_client=mock_client)
+    aws_session.get_device = MagicMock(return_value=aws_device)
+    with DirectReservation(aws_device.arn, RESERVATION_ARN) as reservation:
+        assert reservation.device_arn == DEVICE_ARN
+        assert reservation.reservation_arn == RESERVATION_ARN
+        assert reservation._is_active
 
 
 def test_create_quantum_task_with_correct_device_and_reservation():
-    device_arn = "foo:bar:device_arn"
-    reservation_arn = "my:reservation_arn:example"
-    kwargs = {
-        "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
-        "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
-        "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-bar-1/output.json",
-        "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
-        "shots": 1,
-        "deviceArn": device_arn,
-    }
-    "example_quantum_task_arn"
-
+    kwargs = {"deviceArn": DEVICE_ARN, "shots": 1}
     with patch("boto3.client"):
         mock_client = MagicMock()
         aws_session = AwsSession(braket_client=mock_client)
-
-        with DirectReservation(device_arn, reservation_arn):
+        with DirectReservation(DEVICE_ARN, RESERVATION_ARN):
             aws_session.create_quantum_task(**kwargs)
-
             kwargs["associations"] = [
                 {
-                    "arn": reservation_arn,
+                    "arn": RESERVATION_ARN,
                     "type": "RESERVATION_TIME_WINDOW_ARN",
                 }
             ]
             mock_client.create_quantum_task.assert_called_once_with(**kwargs)
+
+
+def test_reservation_and_task_arns(aws_device):
+    kwargs = {
+        "deviceArn": DEVICE_ARN,
+        "shots": 1,
+        "associations": [
+            {
+                "arn": RESERVATION_ARN,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ],
+    }
+    with patch("boto3.client"):
+        mock_client = MagicMock()
+        aws_session = AwsSession(braket_client=mock_client)
+        aws_session.get_device = MagicMock(return_value=aws_device)
+        with pytest.warns(UserWarning):
+            with DirectReservation(DEVICE_ARN, RESERVATION_ARN):
+                aws_session.create_quantum_task(**kwargs)
