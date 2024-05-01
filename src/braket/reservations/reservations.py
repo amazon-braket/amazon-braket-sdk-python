@@ -58,7 +58,7 @@ class DirectReservation(AbstractContextManager):
         if isinstance(device, AwsDevice):
             self.device_arn = device.arn
         elif isinstance(device, str):
-            self.device_arn = AwsDevice(device).arn  # validate ARN early
+            self.device_arn = device  # AwsDevice(device).arn  # validate ARN early
         elif isinstance(device, Device) or device is None:  # LocalSimulator
             warnings.warn(
                 "Using a local simulator with the reservation. For a reservation on a QPU, please "
