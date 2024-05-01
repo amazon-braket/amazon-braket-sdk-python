@@ -29,7 +29,8 @@ RUNTIME_ERROR_MESSAGE = "Another reservation is already active."
 @pytest.fixture
 def aws_device():
     mock_device = MagicMock(spec=AwsDevice)
-    mock_device.arn = DEVICE_ARN
+    mock_device._arn = DEVICE_ARN
+    type(mock_device).arn = property(lambda x: DEVICE_ARN)
     return mock_device
 
 
@@ -41,10 +42,16 @@ def test_direct_reservation_aws_device(aws_device):
 
 
 def test_direct_reservation_device_str(aws_device):
-    with DirectReservation(DEVICE_ARN, RESERVATION_ARN) as reservation:
-        assert reservation.device_arn == DEVICE_ARN
-        assert reservation.reservation_arn == RESERVATION_ARN
-        assert reservation._is_active
+    with patch(
+        "braket.aws.AwsDevice.__init__",
+        side_effect=lambda self, *args, **kwargs: setattr(self, "_arn", DEVICE_ARN),
+        autospec=True,
+    ):
+        with patch("braket.aws.AwsDevice", return_value=aws_device, autospec=True):
+            with DirectReservation(DEVICE_ARN, RESERVATION_ARN) as reservation:
+                assert reservation.device_arn == DEVICE_ARN
+                assert reservation.reservation_arn == RESERVATION_ARN
+                assert reservation._is_active
 
 
 def test_direct_reservation_local_simulator():
@@ -78,8 +85,8 @@ def test_context_management(aws_device):
     with DirectReservation(aws_device, RESERVATION_ARN):
         assert os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN") == DEVICE_ARN
         assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") == RESERVATION_ARN
-    assert os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN") is None
-    assert os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN") is None
+    assert not os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+    assert not os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
 
 
 def test_start_reservation_already_active(aws_device):
@@ -129,8 +136,18 @@ def test_create_quantum_task_with_correct_device_and_reservation(aws_device):
             mock_client.create_quantum_task.assert_called_once_with(**kwargs)
 
 
-def test_reservation_and_task_arns(aws_device):
+def test_warning_for_overridden_reservation_arn(aws_device):
     kwargs = {
+        "deviceArn": DEVICE_ARN,
+        "shots": 1,
+        "associations": [
+            {
+                "arn": "task_reservation_arn",
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ],
+    }
+    correct_kwargs = {
         "deviceArn": DEVICE_ARN,
         "shots": 1,
         "associations": [
@@ -143,7 +160,10 @@ def test_reservation_and_task_arns(aws_device):
     with patch("boto3.client"):
         mock_client = MagicMock()
         aws_session = AwsSession(braket_client=mock_client)
-        aws_session.get_device = MagicMock(return_value=aws_device)
-        with pytest.warns(UserWarning):
+        with pytest.warns(
+            UserWarning,
+            match="A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden",
+        ):
             with DirectReservation(aws_device, RESERVATION_ARN):
                 aws_session.create_quantum_task(**kwargs)
+                mock_client.create_quantum_task.assert_called_once_with(**correct_kwargs)
