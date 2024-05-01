@@ -38,6 +38,7 @@ def pytest_configure_node(node):
     node.workerinput["JOB_FAILED_NAME"] = job_fail_name
     if endpoint := os.getenv("BRAKET_ENDPOINT"):
         node.workerinput["BRAKET_ENDPOINT"] = endpoint
+    node.workerinput["AWS_REGION"] = os.getenv("AWS_REGION")
 
 
 def pytest_xdist_node_collection_finished(ids):
@@ -48,8 +49,9 @@ def pytest_xdist_node_collection_finished(ids):
     """
     run_jobs = any("job" in test for test in ids)
     profile_name = os.environ["AWS_PROFILE"]
-    aws_session = AwsSession(boto3.session.Session(profile_name=profile_name))
-    if run_jobs and os.getenv("JOBS_STARTED") is None:
+    region_name = os.getenv("AWS_REGION")
+    aws_session = AwsSession(boto3.session.Session(profile_name=profile_name, region_name=region_name))
+    if run_jobs and os.getenv("JOBS_STARTED") is None and region_name != "eu-north-1":
         AwsQuantumJob.create(
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             job_name=job_fail_name,
@@ -72,9 +74,10 @@ def pytest_xdist_node_collection_finished(ids):
 
 
 @pytest.fixture(scope="session")
-def boto_session():
+def boto_session(request):
     profile_name = os.environ["AWS_PROFILE"]
-    return boto3.session.Session(profile_name=profile_name)
+    region_name = request.config.workerinput["AWS_REGION"]
+    return boto3.session.Session(profile_name=profile_name, region_name=region_name)
 
 
 @pytest.fixture(scope="session")
@@ -139,7 +142,7 @@ def s3_destination_folder(s3_bucket, s3_prefix):
 def braket_simulators(aws_session):
     return {
         simulator_arn: AwsDevice(simulator_arn, aws_session) for simulator_arn in SIMULATOR_ARNS
-    }
+    } if aws_session.region != "eu-north-1" else None
 
 
 @pytest.fixture(scope="session")
@@ -168,9 +171,9 @@ def completed_quantum_job(job_completed_name):
         job["jobArn"]
         for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
         if job["jobName"] == job_completed_name
-    ][0]
+    ][0] if os.getenv("JOBS_STARTED") else None
 
-    return AwsQuantumJob(arn=job_arn)
+    return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -179,6 +182,6 @@ def failed_quantum_job(job_failed_name):
         job["jobArn"]
         for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
         if job["jobName"] == job_failed_name
-    ][0]
+    ][0] if os.getenv("JOBS_STARTED") else None
 
-    return AwsQuantumJob(arn=job_arn)
+    return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
