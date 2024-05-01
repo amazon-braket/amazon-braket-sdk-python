@@ -167,3 +167,16 @@ def test_warning_for_overridden_reservation_arn(aws_device):
             with DirectReservation(aws_device, RESERVATION_ARN):
                 aws_session.create_quantum_task(**kwargs)
                 mock_client.create_quantum_task.assert_called_once_with(**correct_kwargs)
+
+
+def test_warning_not_triggered_wrong_association_type():
+    kwargs = {
+        "deviceArn": DEVICE_ARN,
+        "shots": 1,
+        "associations": [{"type": "OTHER_TYPE"}],
+    }
+    with patch("boto3.client"):
+        mock_client = MagicMock()
+        aws_session = AwsSession(braket_client=mock_client)
+        aws_session.create_quantum_task(**kwargs)
+        mock_client.create_quantum_task.assert_called_once_with(**kwargs)
