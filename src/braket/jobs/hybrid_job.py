@@ -42,6 +42,12 @@ from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
+import inspect, itertools
+
+from copy import deepcopy
+
+## Caveat: Need to import the functions in the "entry_point"
+from braket.devices import LocalSimulator
 
 def hybrid_job(
     *,
@@ -65,6 +71,7 @@ def hybrid_job(
     logger: Logger = getLogger(__name__),
     quiet: bool | None = None,
     reservation_arn: str | None = None,
+    emulation: bool = False,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.
@@ -161,12 +168,37 @@ def hybrid_job(
             Direct to reserve exclusive usage for the device to run the hybrid job on.
             Default: None.
 
+        emulation (bool): If set to be True, run the classical emulation of the device
+            Default: False.
+
     Returns:
         Callable: the callable for creating a Hybrid Job.
     """
     _validate_python_version(image_uri, aws_session)
 
-    def _hybrid_job(entry_point: Callable) -> Callable:
+    if emulation is True:
+        if ("Aquila" not in device):
+            raise ValueError("Device emulation is only implemented for Aquila.")
+        else:
+            device = "local:braket/Aquila_emulator"
+            
+    def _hybrid_job(entry_point: Callable) -> Callable:    
+        
+        def decorate(entry_point):
+            entry_point_source = inspect.getsource(entry_point)
+            print(entry_point_source)
+            entry_point_source = entry_point_source.replace("arn:aws:braket:us-east-1::device/qpu/quera/Aquila", "braket_ahs_noisy")
+            entry_point_source = entry_point_source.replace("AwsDevice", "LocalSimulator")
+            print(entry_point_source)
+            
+            # Copied from the last answer from https://stackoverflow.com/questions/31078439/modify-function-in-decorator
+            source = itertools.dropwhile(lambda line: line.startswith('@'), entry_point_source.splitlines())
+            exec('\n'.join(source))
+            return eval(entry_point.__name__)
+        
+        if emulation is True:
+            entry_point = decorate(entry_point)
+        
         @functools.wraps(entry_point)
         def job_wrapper(*args: Any, **kwargs: Any) -> Callable:
             """The job wrapper.
@@ -178,11 +210,13 @@ def hybrid_job(
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """
+
             with _IncludeModules(include_modules), tempfile.TemporaryDirectory(
                 dir="", prefix="decorator_job_"
             ) as temp_dir:
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
+                
                 with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
                     template = "\n".join(
                         [
@@ -191,7 +225,7 @@ def hybrid_job(
                         ]
                     )
                     entry_point_file.write(template)
-
+                
                 if dependencies:
                     _process_dependencies(dependencies, temp_dir_path)
 
