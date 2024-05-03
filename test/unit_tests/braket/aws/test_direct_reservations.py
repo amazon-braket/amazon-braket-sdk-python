@@ -16,9 +16,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from braket.aws import AwsDevice, AwsSession
+from braket.aws import AwsDevice, AwsSession, DirectReservation
 from braket.devices import LocalSimulator
-from braket.reservations import DirectReservation
 
 RESERVATION_ARN = "arn:aws:braket:us-east-1:123456789:reservation/uuid"
 DEVICE_ARN = "arn:aws:braket:us-east-1:123456789:device/qpu/ionq/Forte-1"

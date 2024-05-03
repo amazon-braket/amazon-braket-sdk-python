@@ -16,11 +16,10 @@ import sys
 import pytest
 from botocore.exceptions import ClientError
 
-from braket.aws import AwsDevice
+from braket.aws import AwsDevice, DirectReservation
 from braket.circuits import Circuit
 from braket.devices import Devices
 from braket.jobs import get_job_device_arn, hybrid_job
-from braket.reservations import DirectReservation
 from braket.test.integ_tests.test_create_quantum_job import decorator_python_version
 
 

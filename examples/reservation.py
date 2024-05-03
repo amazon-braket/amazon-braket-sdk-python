@@ -11,10 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws import AwsDevice
+from braket.aws import AwsDevice, DirectReservation
 from braket.circuits import Circuit
 from braket.devices import Devices
-from braket.reservations import DirectReservation
 
 bell = Circuit().h(0).cnot(0, 1)
 device = AwsDevice(Devices.IonQ.Aria1)
@@ -26,9 +25,10 @@ with DirectReservation(device, reservation_arn="<my_reservation_arn>"):
 print(task.result().measurement_counts)
 
 # Alternatively, you may start the reservation globally
-DirectReservation(device, reservation_arn="<my_reservation_arn>").start()
+reservation = DirectReservation(device, reservation_arn="<my_reservation_arn>").start()
 task = device.run(bell, shots=100)
 print(task.result().measurement_counts)
+reservation.stop()  # stop creating tasks in the reservation
 
 # Lastly, you may pass the reservation ARN directly to a quantum task
 task = device.run(bell, shots=100, reservation_arn="<my_reservation_arn>")

@@ -17,14 +17,15 @@ import os
 import warnings
 from contextlib import AbstractContextManager
 
-from braket.aws import AwsDevice
+from braket.aws.aws_device import AwsDevice
 from braket.devices import Device
 
 
 class DirectReservation(AbstractContextManager):
     """
     Context manager that modifies AwsQuantumTasks created within the context to use a reservation
-    ARN for all tasks targeting the specified device.
+    ARN for all tasks targeting the specified device. Note: this context manager only allows for
+    one reservation at a time.
 
     Reservations are AWS account and device specific. Only the AWS account that created the
     reservation can use your reservation ARN. Additionally, the reservation ARN is only valid on the
