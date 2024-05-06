@@ -17,6 +17,7 @@ import itertools
 import os
 import os.path
 import re
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple, Optional
@@ -235,6 +236,32 @@ class AwsSession:
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add reservation arn if available and device is correct.
+        context_device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        context_reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
+
+        # if the task has a reservation_arn and also context does, raise a warning
+        # Raise warning if reservation ARN is found in both context and task parameters
+        task_has_reservation = any(
+            item.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for item in boto3_kwargs.get("associations", [])
+        )
+        if task_has_reservation and context_reservation_arn:
+            warnings.warn(
+                "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
+                "by a 'DirectReservation' context. If this was not intended, please review your "
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called."
+            )
+
+        # Ensure reservation only applies to specific device
+        if context_device_arn == boto3_kwargs["deviceArn"] and context_reservation_arn:
+            boto3_kwargs["associations"] = [
+                {
+                    "arn": context_reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
+
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
