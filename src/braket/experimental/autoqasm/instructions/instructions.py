@@ -37,6 +37,28 @@ def _qubit_instruction(
     control_state: BasisStateInput | None = None,
     power: float | None = None,
 ) -> None:
+    """Adds an instruction to the program which acts on a specified set of qubits.
+
+    Args:
+        name (str): The name of the instruction.
+        qubits (Iterable[QubitIdentifierType]): The qubits on which the instruction acts.
+        is_unitary (bool): Whether the instruction represents a unitary operation. Defaults to True.
+        control (QubitIdentifierType | Iterable[QubitIdentifierType] | None): The qubit or
+            list of qubits which are being used as the control qubits. If None, an empty list is
+            used, and the gate will not be controlled on any qubits. Defaults to None.
+        control_state (BasisStateInput | None): The basis state of the control qubits
+            that is required in order for the controlled gate to be performed. The order of the
+            bits in this basis state corresponds to the order of the qubits provided in `control`.
+            If None, the control state is assumed to be a bitstring of all 1s. Defaults to None.
+        power (float | None): The power to which the gate should be raised. If None, the gate
+            will not be raised to any power. Defaults to None.
+
+    Note:
+        The params `control`, `control_state`, and `power` are frequently passed as kwargs
+        to this function from built-in gates defined in the `gates` module. This allows the
+        signatures and docstrings for each built-in gate to be more concise, though at the cost
+        of not having these gate modifier params explicitly documented for each gate.
+    """
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context.validate_gate_targets(qubits, args)
 
@@ -60,6 +82,25 @@ def _get_pos_neg_control(
     control: QubitIdentifierType | Iterable[QubitIdentifierType] | None = None,
     control_state: BasisStateInput | None = None,
 ) -> tuple[list[oqpy.Qubit], list[oqpy.Qubit]]:
+    """Constructs the list of positive-control and negative-control qubits given
+    the list of control qubits and the corresponding control state. For the controlled gate
+    to be performed, all of the positive-control qubits must be in the 1 state, and all of the
+    negative-control qubits must be in the 0 state.
+
+    Args:
+        control (QubitIdentifierType | Iterable[QubitIdentifierType] | None): The qubit
+            or list of qubits which are being used as the control qubits. If None, an empty list is
+            used. Defaults to None.
+        control_state (BasisStateInput | None): The basis state of the control qubits
+            that is required in order for the controlled gate to be performed. The order of the
+            bits in this basis state corresponds to the order of the qubits provided in `control`.
+            If None, the control state is assumed to be a bitstring of all 1s. Defaults to None.
+
+    Returns:
+        tuple[list[Qubit], list[Qubit]]: A tuple of lists of `Qubit` objects, where the first list
+        contains the positive-control qubits, and the second list contains the negative-control
+        qubits. The union of the two lists is the same as the list of control qubits.
+    """
     if control is None:
         control = []
     elif aq_types.is_qubit_identifier_type(control):

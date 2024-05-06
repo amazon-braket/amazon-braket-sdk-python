@@ -151,65 +151,65 @@ def test_gates(gate, qubits, params, expected_qasm) -> None:
 
 
 @pytest.mark.parametrize(
-    "gate,qubits,params,control,control_state,power,expected_qasm",
+    "control,control_state,expected_qasm",
     [
-        (x, [1], [], 0, None, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
-        (x, [1], [], [0], None, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
-        (x, [1], [], 0, "1", None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
-        (x, [1], [], [0], "0", None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
-        (x, [1], [], [0], 0, None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
-        (x, [1], [], [0], [0], None, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
-        (
-            x,
-            [2],
-            [],
-            [0, 1],
-            "11",  # BasisStateInput as str
-            None,
-            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
-        ),
-        (
-            x,
-            [2],
-            [],
-            [0, 1],
-            [1, 1],  # BasisStateInput as list[int]
-            None,
-            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
-        ),
-        (
-            x,
-            [2],
-            [],
-            [0, 1],
-            3,  # BasisStateInput as int
-            None,
-            "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];",
-        ),
-        (
-            x,
-            [2],
-            [],
-            [0, 1],
-            "10",  # BasisStateInput as str
-            None,
-            "\nctrl @ negctrl @ x __qubits__[0], __qubits__[1], __qubits__[2];",
-        ),
-        (x, [1], [], None, None, -2.0, "\npow(-2.0) @ x __qubits__[1];"),
-        (x, [1], [], [0], "1", 0.5, "\nctrl @ pow(0.5) @ x __qubits__[0], __qubits__[1];"),
-        (x, ["$1"], [], "$0", "1", None, "\nctrl @ x $0, $1;"),
+        (0, None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        ([0], None, "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        (0, "1", "\nctrl @ x __qubits__[0], __qubits__[1];"),
+        ([0], "0", "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
+        ([0], 0, "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
+        ([0], [0], "\nnegctrl @ x __qubits__[0], __qubits__[1];"),
     ],
 )
-def test_gate_modifiers(gate, qubits, params, control, control_state, power, expected_qasm) -> None:
-    """Tests quantum gate modifiers."""
+def test_gate_modifiers_single_control(control, control_state, expected_qasm) -> None:
+    """Tests quantum gate modifiers to create a singly-controlled X gate."""
     with aq.build_program() as program_conversion_context:
-        gate(*qubits, *params, control=control, control_state=control_state, power=power)
+        x(1, control=control, control_state=control_state)
 
     assert expected_qasm in program_conversion_context.make_program().to_ir()
 
 
+@pytest.mark.parametrize(
+    "control,control_state,expected_qasm",
+    [
+        ([0, 1], "11", "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];"),
+        ([0, 1], [1, 1], "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];"),
+        ([0, 1], 3, "\nctrl(2) @ x __qubits__[0], __qubits__[1], __qubits__[2];"),
+        ([0, 1], "10", "\nctrl @ negctrl @ x __qubits__[0], __qubits__[1], __qubits__[2];"),
+    ],
+)
+def test_gate_modifiers_multi_control(control, control_state, expected_qasm) -> None:
+    """Tests quantum gate modifiers to create a multiply-controlled X gate."""
+    with aq.build_program() as program_conversion_context:
+        x(2, control=control, control_state=control_state)
+
+    assert expected_qasm in program_conversion_context.make_program().to_ir()
+
+
+@pytest.mark.parametrize(
+    "control,control_state,power,expected_qasm",
+    [
+        (None, None, -2.0, "\npow(-2.0) @ x __qubits__[1];"),
+        ([0], "1", 0.5, "\nctrl @ pow(0.5) @ x __qubits__[0], __qubits__[1];"),
+    ],
+)
+def test_gate_modifiers_power(control, control_state, power, expected_qasm) -> None:
+    """Tests quantum gate modifiers to create gates raised to powers."""
+    with aq.build_program() as program_conversion_context:
+        x(1, control=control, control_state=control_state, power=power)
+
+    assert expected_qasm in program_conversion_context.make_program().to_ir()
+
+
+def test_gate_modifiers_physical_qubits() -> None:
+    with aq.build_program() as program_conversion_context:
+        x("$1", control="$0")
+
+    assert "\nctrl @ x $0, $1;" in program_conversion_context.make_program().to_ir()
+
+
 def test_invalid_gate_modifiers() -> None:
-    """Tests quantum gate modifiers."""
+    """Tests invalid quantum gate modifiers."""
     with aq.build_program() as _:
         with pytest.raises(ValueError, match="length greater than the specified number of qubits"):
             x(1, control=None, control_state="00")
