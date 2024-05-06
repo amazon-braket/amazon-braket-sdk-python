@@ -118,3 +118,7 @@ class UnsupportedSubroutineReturnType(AutoQasmError):
 
 class NameConflict(AutoQasmError):
     """Name conflict between user-named variables."""
+
+
+class NestedMainProgramError(AutoQasmError):
+    """Main program nested inside another main program."""

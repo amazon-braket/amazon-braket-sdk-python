@@ -1055,9 +1055,8 @@ def test_direct_subroutine_call_no_args():
         bell()
 
 
-@pytest.mark.xfail(reason="(#809) will fix by adding a checker to the transpiler")
 def test_main_from_main():
-    """Can't call main from main!"""
+    """Can't build main from within another main!"""
 
     @aq.main(num_qubits=2)
     def bell(q0: int, q1: int) -> None:
@@ -1066,9 +1065,9 @@ def test_main_from_main():
 
     @aq.main
     def main():
-        bell(0, 1)
+        bell.build()
 
-    with pytest.raises(errors.AutoQasmTypeError):
+    with pytest.raises(errors.NestedMainProgramError):
         main.build()
 
 
