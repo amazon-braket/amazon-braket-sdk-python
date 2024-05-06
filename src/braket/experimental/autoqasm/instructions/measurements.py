@@ -28,7 +28,11 @@ from collections.abc import Iterable
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
-from braket.experimental.autoqasm.instructions.qubits import _qubit, global_qubit_register
+from braket.experimental.autoqasm.instructions.qubits import (
+    GlobalQubitRegister,
+    _qubit,
+    global_qubit_register,
+)
 
 
 def measure(
@@ -47,7 +51,7 @@ def measure(
     if qubits is None:
         qubits = global_qubit_register()
 
-    if isinstance(qubits, str) or not isinstance(qubits, Iterable):
+    if aq_types.is_qubit_identifier_type(qubits) and not isinstance(qubits, GlobalQubitRegister):
         qubits = [qubits]
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()

@@ -358,3 +358,24 @@ subroutine(0, 1);
 subroutine(2, 3);"""
 
     assert main.build().to_ir() == expected
+
+
+def test_gate_modifiers() -> None:
+    @aq.gate
+    def t(q: aq.Qubit):
+        rz(q, np.pi / 4)
+
+    @aq.main(num_qubits=4)
+    def main():
+        t(1, control=0)
+        t(2, control=[0, 1], control_state="10", power=0.123)
+
+    expected = """OPENQASM 3.0;
+gate t q {
+    rz(0.7853981633974483) q;
+}
+qubit[4] __qubits__;
+ctrl @ t __qubits__[0], __qubits__[1];
+ctrl @ negctrl @ pow(0.123) @ t __qubits__[0], __qubits__[1], __qubits__[2];"""
+
+    assert main.build().to_ir() == expected
