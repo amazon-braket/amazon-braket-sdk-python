@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.79.0 (2024-05-06)
+
+### Features
+
+ * Direct Reservation context manager
+
+### Documentation Changes
+
+ * correct the example in the measure docstring
+
 ## v1.78.0 (2024-04-18)
 
 ### Features
