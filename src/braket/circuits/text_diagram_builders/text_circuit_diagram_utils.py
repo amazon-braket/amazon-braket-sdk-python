@@ -103,14 +103,15 @@ def _compute_moment_global_phase(
     Returns:
         float | None: The updated integrated phase.
     """
-    moment_phase = 0
-    for item in items:
+    moment_phase = sum(
+        item.operator.angle
+        for item in items
         if (
             isinstance(item, Instruction)
             and isinstance(item.operator, Gate)
             and item.operator.name == "GPhase"
-        ):
-            moment_phase += item.operator.angle
+        )
+    )
     return global_phase + moment_phase if global_phase is not None else None
 
 

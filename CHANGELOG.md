@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.78.0 (2024-04-18)
+
+### Features
+
+ * add phase RX gate
+
+## v1.77.6 (2024-04-17)
+
+### Bug Fixes and Other Changes
+
+ * if rydberg local is not pulled, pass in None
+
 ## v1.77.5 (2024-04-16)
 
 ### Bug Fixes and Other Changes

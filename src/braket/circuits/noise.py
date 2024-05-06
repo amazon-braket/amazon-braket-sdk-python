@@ -137,9 +137,7 @@ class Noise(QuantumOperator):
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
     def __eq__(self, other: Noise):
-        if isinstance(other, Noise):
-            return self.name == other.name
-        return False
+        return self.name == other.name if isinstance(other, Noise) else False
 
     def __repr__(self):
         return f"{self.name}('qubit_count': {self.qubit_count})"
@@ -468,9 +466,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             dict: A dictionary object that represents this object. It can be converted back
             into this object using the `from_dict()` method.
         """
-        probabilities = {}
-        for pauli_string, prob in self._probabilities.items():
-            probabilities[pauli_string] = _parameter_to_dict(prob)
+        probabilities = {
+            pauli_string: _parameter_to_dict(prob)
+            for pauli_string, prob in self._probabilities.items()
+        }
         return {
             "__class__": self.__class__.__name__,
             "probabilities": probabilities,
@@ -537,9 +536,8 @@ class PauliNoise(Noise, Parameterizable):
         """
         if isinstance(param, FreeParameterExpression):
             return 0
-        else:
-            _validate_param_value(param, param_name)
-            return float(param)
+        _validate_param_value(param, param_name)
+        return float(param)
 
     @property
     def probX(self) -> Union[FreeParameterExpression, float]:

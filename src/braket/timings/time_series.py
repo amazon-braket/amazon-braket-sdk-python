@@ -312,7 +312,7 @@ class TimeSeries:
         Returns:
             TimeSeries: A new periodic time series.
         """
-        if not (values[0] == values[-1]):
+        if values[0] != values[-1]:
             raise ValueError("The first and last values must coincide to guarantee periodicity")
         new_time_series = TimeSeries()
 

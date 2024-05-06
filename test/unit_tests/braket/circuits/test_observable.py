@@ -130,7 +130,7 @@ def test_eigenvalue_not_implemented_by_default(observable):
 
 
 def test_str(observable):
-    expected = "{}('qubit_count': {})".format(observable.name, observable.qubit_count)
+    expected = f"{observable.name}('qubit_count': {observable.qubit_count})"
     assert str(observable) == expected
     assert observable.coefficient == 1
 
