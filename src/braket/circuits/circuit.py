@@ -737,7 +737,6 @@ class Circuit:
             [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]),
             Instruction('operator': CNot('qubit_count': 2), 'target': QubitSet([Qubit(0),
                 Qubit(1)]),
-            Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(2)]),
             Instruction('operator': Measure, 'target': QubitSet([Qubit(0)])]
         """
         if not isinstance(target_qubits, Iterable):
