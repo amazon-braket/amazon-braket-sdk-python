@@ -28,13 +28,12 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.21.3",
-        "amazon-braket-default-simulator @ git+https://github.com/amazon-braket/amazon-braket-default-simulator-python.git@ab068c860963c29842d7649c741f88da669597eb#egg=amazon-braket-default-simulator",  # noqa E501
+        "amazon-braket-default-simulator>=1.21.4",
         "oqpy~=0.3.5",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
         "cloudpickle==2.2.1",
-        "diastatic-malt",
         "nest-asyncio",
         "networkx",
         "numpy<2",
@@ -42,10 +41,6 @@ setup(
         "openqasm3",
         "sympy",
         "backports.entry-points-selectable",
-        "astunparse",
-        "gast",
-        "termcolor",
-        "openqasm_pygments",
     ],
     extras_require={
         "test": [
@@ -64,7 +59,7 @@ setup(
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
             "tox",
-        ],
+        ]
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",
