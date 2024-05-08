@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.79.1 (2024-05-08)
+
+### Bug Fixes and Other Changes
+
+ * check the qubit set length against observables
+
 ## v1.79.0 (2024-05-06)
 
 ### Features
