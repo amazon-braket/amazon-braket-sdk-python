@@ -286,6 +286,17 @@ class AwsQuantumJob(QuantumJob):
         """str: The name of the quantum job."""
         return self.metadata(use_cached_value=True).get("jobName")
 
+    @property
+    def _logs_prefix(self) -> str:
+        """str: the prefix for the job logs."""
+        # jobs ARNs used to contain the job name and use a log prefix of `job-name`
+        # now job ARNs use a UUID and a log prefix of `job-name/UUID`
+        return (
+            f"{self.name}"
+            if self.arn.endswith(self.name)
+            else f"{self.name}/{self.arn.split('/')[-1]}"
+        )
+
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum hybrid job.
 
@@ -381,7 +392,6 @@ class AwsQuantumJob(QuantumJob):
         )
 
         log_group = AwsQuantumJob.LOG_GROUP
-        stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
         instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
@@ -395,14 +405,14 @@ class AwsQuantumJob(QuantumJob):
             has_streams = logs.flush_log_streams(
                 self._aws_session,
                 log_group,
-                stream_prefix,
+                self._logs_prefix,
                 stream_names,
                 positions,
                 instance_count,
                 has_streams,
                 color_wrap,
                 [previous_state, current_state],
-                self.queue_position().queue_position if not self._quiet else None,
+                None if self._quiet else self.queue_position().queue_position,
             )
             previous_state = current_state
 
@@ -455,14 +465,15 @@ class AwsQuantumJob(QuantumJob):
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
-        job_name = metadata["jobName"]
         job_start = None
         job_end = None
         if "startedAt" in metadata:
             job_start = int(metadata["startedAt"].timestamp())
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
             job_end = int(math.ceil(metadata["endedAt"].timestamp()))
-        return fetcher.get_metrics_for_job(job_name, metric_type, statistic, job_start, job_end)
+        return fetcher.get_metrics_for_job(
+            self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
+        )
 
     def cancel(self) -> str:
         """Cancels the job.
@@ -564,17 +575,16 @@ class AwsQuantumJob(QuantumJob):
                 s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                exception_response = {
-                    "Error": {
-                        "Code": "404",
-                        "Message": f"Error retrieving results, "
-                        f"could not find results at '{output_s3_path}'",
-                    }
-                }
-                raise ClientError(exception_response, "HeadObject") from e
-            else:
+            if e.response["Error"]["Code"] != "404":
                 raise e
+            exception_response = {
+                "Error": {
+                    "Code": "404",
+                    "Message": f"Error retrieving results, "
+                    f"could not find results at '{output_s3_path}'",
+                }
+            }
+            raise ClientError(exception_response, "HeadObject") from e
 
     @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
@@ -585,9 +595,7 @@ class AwsQuantumJob(QuantumJob):
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
     def __eq__(self, other: AwsQuantumJob) -> bool:
-        if isinstance(other, AwsQuantumJob):
-            return self.arn == other.arn
-        return False
+        return self.arn == other.arn if isinstance(other, AwsQuantumJob) else False
 
     def __hash__(self) -> int:
         return hash(self.arn)
@@ -621,7 +629,7 @@ class AwsQuantumJob(QuantumJob):
                 ValueError(f"'{device}' not found.")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
-            )
+            ) from e
 
     @staticmethod
     def _initialize_non_regional_device_session(
@@ -632,12 +640,11 @@ class AwsQuantumJob(QuantumJob):
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if "qpu" not in device:
-                    raise ValueError(f"Simulator '{device}' not found in '{original_region}'")
-            else:
+            if e.response["Error"]["Code"] != "ResourceNotFoundException":
                 raise e
 
+            if "qpu" not in device:
+                raise ValueError(f"Simulator '{device}' not found in '{original_region}'") from e
         for region in frozenset(AwsDevice.REGIONS) - {original_region}:
             device_session = aws_session.copy_session(region=region)
             try:

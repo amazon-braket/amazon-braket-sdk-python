@@ -93,7 +93,8 @@ Many quantum algorithms need to run multiple independent circuits, and submittin
 ```python
 circuits = [bell for _ in range(5)]
 batch = device.run_batch(circuits, shots=100)
-print(batch.results()[0].measurement_counts)  # The result of the first quantum task in the batch
+# The result of the first quantum task in the batch
+print(batch.results()[0].measurement_counts)  
 ```
 
 ### Running a hybrid job
@@ -139,14 +140,14 @@ from braket.aws import AwsDevice
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell) 
+task = device.run(bell)
 print(task.result().measurement_counts)
 ```
 
 When you execute your task, Amazon Braket polls for a result. By default, Braket polls for 5 days; however, it is possible to change this by modifying the `poll_timeout_seconds` parameter in `AwsDevice.run`, as in the example below. Keep in mind that if your polling timeout is too short, results may not be returned within the polling time, such as when a QPU is unavailable, and a local timeout error is returned. You can always restart the polling by using `task.result()`.
 
 ```python
-task = device.run(bell, poll_timeout_seconds=86400)  # 1 day 
+task = device.run(bell, poll_timeout_seconds=86400)  # 1 day
 print(task.result().measurement_counts)
 ```
 
@@ -205,6 +206,12 @@ To run linters and doc generators and unit tests:
 tox
 ```
 
+or if your machine can handle multithreaded workloads, run them in parallel with:
+
+```bash
+tox -p auto
+```
+
 ### Integration Tests
 
 First, configure a profile to use your account to interact with AWS. To learn more, see [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
@@ -232,15 +239,15 @@ tox -e integ-tests -- your-arguments
 
 ### Issues and Bug Reports
 
-If you encounter bugs or face issues while using the SDK, please let us know by posting 
-the issue on our [Github issue tracker](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/).  
+If you encounter bugs or face issues while using the SDK, please let us know by posting
+the issue on our [Github issue tracker](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/).
 For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask?Tags=amazon-braket).
 
 ### Feedback and Feature Requests
 
-If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!  
-[Github issues](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
-to engage in the conversation, and +1 issues to help drive priority. 
+If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!
+[Github issues](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users
+to engage in the conversation, and +1 issues to help drive priority.
 
 ### Code contributors
 

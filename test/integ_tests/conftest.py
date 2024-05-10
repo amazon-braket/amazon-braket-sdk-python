@@ -36,6 +36,8 @@ def pytest_configure_node(node):
     """xdist hook"""
     node.workerinput["JOB_COMPLETED_NAME"] = job_complete_name
     node.workerinput["JOB_FAILED_NAME"] = job_fail_name
+    if endpoint := os.getenv("BRAKET_ENDPOINT"):
+        node.workerinput["BRAKET_ENDPOINT"] = endpoint
 
 
 def pytest_xdist_node_collection_finished(ids):
@@ -161,16 +163,22 @@ def job_failed_name(request):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def completed_quantum_job(aws_session, job_completed_name):
-    account = boto3.client("sts").get_caller_identity().get("Account")
-    region = aws_session.region
-    job = AwsQuantumJob(arn=f"arn:aws:braket:{region}:{account}:job/{job_completed_name}")
-    return job
+def completed_quantum_job(job_completed_name):
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_completed_name
+    ][0]
+
+    return AwsQuantumJob(arn=job_arn)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def failed_quantum_job(aws_session, job_failed_name):
-    account = boto3.client("sts").get_caller_identity().get("Account")
-    region = aws_session.region
-    job = AwsQuantumJob(arn=f"arn:aws:braket:{region}:{account}:job/{job_failed_name}")
-    return job
+def failed_quantum_job(job_failed_name):
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_failed_name
+    ][0]
+
+    return AwsQuantumJob(arn=job_arn)

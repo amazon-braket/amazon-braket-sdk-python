@@ -21,9 +21,15 @@ def free_parameter():
     return FreeParameter("theta")
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_bad_input():
-    FreeParameter(6)
+    with pytest.raises(ValueError, match="FreeParameter names must be non empty"):
+        FreeParameter("")
+    with pytest.raises(TypeError, match="FreeParameter names must be strings"):
+        FreeParameter(6)
+    with pytest.raises(
+        ValueError, match="FreeParameter names must start with a letter or an underscore"
+    ):
+        FreeParameter(".2")
 
 
 def test_is_free_param(free_parameter):

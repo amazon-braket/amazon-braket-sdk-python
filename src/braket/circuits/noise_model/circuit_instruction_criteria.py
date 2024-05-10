@@ -53,6 +53,4 @@ class CircuitInstructionCriteria(Criteria):
         if qubits is None:
             return True
         target = [int(item) for item in target]
-        if len(target) == 1:
-            return target[0] in qubits
-        return tuple(target) in qubits
+        return target[0] in qubits if len(target) == 1 else tuple(target) in qubits

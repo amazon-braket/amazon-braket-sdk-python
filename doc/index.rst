@@ -2,7 +2,7 @@
 Amazon Braket Python SDK
 ########################
 
-The Amazon Braket Python SDK is an open source library to design and build quantum circuits, 
+The Amazon Braket Python SDK is an open source library to design and build quantum circuits,
 submit them to Amazon Braket devices as quantum tasks, and monitor their execution.
 
 This documentation provides information about the Amazon Braket Python SDK library. The project
@@ -29,7 +29,7 @@ Explore Amazon Braket examples.
     :maxdepth: 3
 
     examples.rst
-   
+
 
 ***************
 Python SDK APIs
@@ -39,6 +39,5 @@ The Amazon Braket Python SDK APIs:
 
 .. toctree::
     :maxdepth: 2
-    
-    _apidoc/modules
 
+    _apidoc/modules

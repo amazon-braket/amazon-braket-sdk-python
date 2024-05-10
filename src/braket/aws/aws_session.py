@@ -17,6 +17,7 @@ import itertools
 import os
 import os.path
 import re
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple, Optional
@@ -85,7 +86,6 @@ class AwsSession:
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
-
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
@@ -101,6 +101,7 @@ class AwsSession:
         self._sts = None
         self._logs = None
         self._ecr = None
+        self._account_id = None
 
     @property
     def region(self) -> str:
@@ -108,7 +109,14 @@ class AwsSession:
 
     @property
     def account_id(self) -> str:
-        return self.sts_client.get_caller_identity()["Account"]
+        """Gets the caller's account number.
+
+        Returns:
+            str: The account number of the caller.
+        """
+        if not self._account_id:
+            self._account_id = self.sts_client.get_caller_identity()["Account"]
+        return self._account_id
 
     @property
     def iam_client(self) -> client:
@@ -228,10 +236,36 @@ class AwsSession:
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add reservation arn if available and device is correct.
+        context_device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        context_reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
+
+        # if the task has a reservation_arn and also context does, raise a warning
+        # Raise warning if reservation ARN is found in both context and task parameters
+        task_has_reservation = any(
+            item.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for item in boto3_kwargs.get("associations", [])
+        )
+        if task_has_reservation and context_reservation_arn:
+            warnings.warn(
+                "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
+                "by a 'DirectReservation' context. If this was not intended, please review your "
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called."
+            )
+
+        # Ensure reservation only applies to specific device
+        if context_device_arn == boto3_kwargs["deviceArn"] and context_reservation_arn:
+            boto3_kwargs["associations"] = [
+                {
+                    "arn": context_reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
+
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
-            boto3_kwargs.update({"jobToken": job_token})
+            boto3_kwargs["jobToken"] = job_token
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(
@@ -395,7 +429,7 @@ class AwsSession:
             relative_prefix = str(Path(local_prefix).relative_to(base_dir))
         else:
             base_dir = Path()
-            relative_prefix = str(local_prefix)
+            relative_prefix = local_prefix
         for file in itertools.chain(
             # files that match the prefix
             base_dir.glob(f"{relative_prefix}*"),
@@ -572,7 +606,12 @@ class AwsSession:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
 
-            if error_code == "BucketAlreadyOwnedByYou":
+            if (
+                error_code == "BucketAlreadyOwnedByYou"
+                or error_code != "BucketAlreadyExists"
+                and error_code == "OperationAborted"
+                and "conflicting conditional operation" in message
+            ):
                 pass
             elif error_code == "BucketAlreadyExists":
                 raise ValueError(
@@ -580,12 +619,6 @@ class AwsSession:
                     f"for another account. Please supply alternative "
                     f"bucket name via AwsSession constructor `AwsSession()`."
                 ) from None
-            elif (
-                error_code == "OperationAborted" and "conflicting conditional operation" in message
-            ):
-                # If this bucket is already being concurrently created, we don't need to create
-                # it again.
-                pass
             else:
                 raise
 
@@ -684,8 +717,8 @@ class AwsSession:
                 raise AssertionError
             bucket, key = s3_uri_match.groups()
             return bucket, key
-        except (AssertionError, ValueError):
-            raise ValueError(f"Not a valid S3 uri: {s3_uri}")
+        except (AssertionError, ValueError) as e:
+            raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
 
     @staticmethod
     def construct_s3_uri(bucket: str, *dirs: str) -> str:
@@ -724,7 +757,7 @@ class AwsSession:
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing logStreams and nextToken
+            dict[str, Any]: Dictionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -733,10 +766,10 @@ class AwsSession:
         }
 
         if limit:
-            log_stream_args.update({"limit": limit})
+            log_stream_args["limit"] = limit
 
         if next_token:
-            log_stream_args.update({"nextToken": next_token})
+            log_stream_args["nextToken"] = next_token
 
         return self.logs_client.describe_log_streams(**log_stream_args)
 
@@ -760,7 +793,7 @@ class AwsSession:
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            dict[str, Any]: Dictionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,
@@ -770,7 +803,7 @@ class AwsSession:
         }
 
         if next_token:
-            log_events_args.update({"nextToken": next_token})
+            log_events_args["nextToken"] = next_token
 
         return self.logs_client.get_log_events(**log_events_args)
 

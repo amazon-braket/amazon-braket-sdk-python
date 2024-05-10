@@ -364,7 +364,7 @@ def test_download_result_when_extract_path_not_provided(
     job_name = job_metadata["jobName"]
     quantum_job.download_result()
 
-    with open(f"{job_name}/results.json", "r") as file:
+    with open(f"{job_name}/results.json") as file:
         actual_data = json.loads(file.read())["dataDictionary"]
         assert expected_saved_data == actual_data
 
@@ -382,7 +382,7 @@ def test_download_result_when_extract_path_provided(
     with tempfile.TemporaryDirectory() as temp_dir:
         quantum_job.download_result(temp_dir)
 
-        with open(f"{temp_dir}/{job_name}/results.json", "r") as file:
+        with open(f"{temp_dir}/{job_name}/results.json") as file:
             actual_data = json.loads(file.read())["dataDictionary"]
             assert expected_saved_data == actual_data
 
@@ -1104,3 +1104,26 @@ def test_bad_device_arn_format(aws_session):
 
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
+
+
+def test_logs_prefix(job_region, quantum_job_name, aws_session, generate_get_job_response):
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
+
+    # old jobs with the `arn:.../job-name` style ARN use `job-name/` as the logs prefix
+    name_arn = f"arn:aws:braket:{job_region}:875981177017:job/{quantum_job_name}"
+    quantum_job = AwsQuantumJob(name_arn, aws_session)
+    assert quantum_job._logs_prefix == f"{quantum_job_name}"
+
+    # jobs with the `arn:.../uuid` style ARN use `job-name/uuid/` as the logs prefix
+    uuid_1 = "UUID-123456789"
+    uuid_2 = "UUID-987654321"
+    uuid_arn_1 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_1}"
+    uuid_job_1 = AwsQuantumJob(uuid_arn_1, aws_session)
+    uuid_arn_2 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_2}"
+    uuid_job_2 = AwsQuantumJob(uuid_arn_2, aws_session)
+    assert (
+        uuid_job_1._logs_prefix
+        == f"{quantum_job_name}/{uuid_1}"
+        != uuid_job_2._logs_prefix
+        == f"{quantum_job_name}/{uuid_2}"
+    )

@@ -20,6 +20,7 @@ from typing import Any, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
+from sympy import Expr
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -330,7 +331,9 @@ class PulseSequence:
         self,
         parameter: Union[float, FreeParameterExpression],
     ) -> None:
-        if isinstance(parameter, FreeParameterExpression):
+        if isinstance(parameter, FreeParameterExpression) and isinstance(
+            parameter.expression, Expr
+        ):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
 
@@ -342,7 +345,7 @@ class PulseSequence:
             "waveform": waveforms.get,
             "expr": FreeParameterExpression,
         }
-        if argument["type"] in nonprimitive_arg_type.keys():
+        if argument["type"] in nonprimitive_arg_type:
             return nonprimitive_arg_type[argument["type"]](argument["value"])
         else:
             return getattr(builtins, argument["type"])(argument["value"])
@@ -366,40 +369,37 @@ class PulseSequence:
         """
         calibration_sequence = cls()
         for instr in calibration:
-            if hasattr(PulseSequence, f"{instr['name']}"):
-                instr_function = getattr(calibration_sequence, instr["name"])
-                instr_args_keys = signature(instr_function).parameters.keys()
-                instr_args = {}
-                if instr["arguments"] is not None:
-                    for argument in instr["arguments"]:
-                        if argument["name"] in {"qubit", "frame"} and instr["name"] in {
-                            "barrier",
-                            "delay",
-                        }:
-                            argument_value = (
-                                [frames[argument["value"]]]
-                                if argument["name"] == "frame"
-                                else instr_args.get("qubits_or_frames", QubitSet())
-                            )
-                            # QubitSet is an IndexedSet so the ordering matters
-                            if argument["name"] == "frame":
-                                argument_value = (
-                                    instr_args.get("qubits_or_frames", []) + argument_value
-                                )
-                            else:
-                                argument_value.update(QubitSet(int(argument["value"])))
-                            instr_args["qubits_or_frames"] = argument_value
-                        elif argument["name"] in instr_args_keys:
-                            instr_args[argument["name"]] = (
-                                calibration_sequence._parse_arg_from_calibration_schema(
-                                    argument, waveforms, frames
-                                )
-                            )
-                else:
-                    instr_args["qubits_or_frames"] = []
-                instr_function(**instr_args)
-            else:
+            if not hasattr(PulseSequence, f"{instr['name']}"):
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
+            instr_function = getattr(calibration_sequence, instr["name"])
+            instr_args_keys = signature(instr_function).parameters.keys()
+            instr_args = {}
+            if instr["arguments"] is not None:
+                for argument in instr["arguments"]:
+                    if argument["name"] in {"qubit", "frame"} and instr["name"] in {
+                        "barrier",
+                        "delay",
+                    }:
+                        argument_value = (
+                            [frames[argument["value"]]]
+                            if argument["name"] == "frame"
+                            else instr_args.get("qubits_or_frames", QubitSet())
+                        )
+                        # QubitSet is an IndexedSet so the ordering matters
+                        if argument["name"] == "frame":
+                            argument_value = instr_args.get("qubits_or_frames", []) + argument_value
+                        else:
+                            argument_value.update(QubitSet(int(argument["value"])))
+                        instr_args["qubits_or_frames"] = argument_value
+                    elif argument["name"] in instr_args_keys:
+                        instr_args[argument["name"]] = (
+                            calibration_sequence._parse_arg_from_calibration_schema(
+                                argument, waveforms, frames
+                            )
+                        )
+            else:
+                instr_args["qubits_or_frames"] = []
+            instr_function(**instr_args)
         return calibration_sequence
 
     def __call__(

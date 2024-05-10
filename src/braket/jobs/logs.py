@@ -210,9 +210,9 @@ def flush_log_streams(  # noqa C901
                 if s["logStreamName"] not in stream_names
             ]
             stream_names.extend(new_streams)
-            positions.update(
-                [(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions]
-            )
+            positions |= [
+                (s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions
+            ]
         except ClientError as e:
             # On the very first training job run on an account, there's no
             # log group until the container starts logging, so ignore any
@@ -221,7 +221,7 @@ def flush_log_streams(  # noqa C901
             if err.get("Code") != "ResourceNotFoundException":
                 raise
 
-    if len(stream_names) > 0:
+    if stream_names:
         if not has_streams:
             print()
             has_streams = True

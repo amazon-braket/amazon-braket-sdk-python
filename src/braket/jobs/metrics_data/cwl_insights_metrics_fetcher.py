@@ -105,8 +105,7 @@ class CwlInsightsMetricsFetcher:
                 and other metadata that we (currently) do not use.
             parser (LogMetricsParser) : The CWL metrics parser.
         """
-        message = self._get_element_from_log_line("@message", result_entry)
-        if message:
+        if message := self._get_element_from_log_line("@message", result_entry):
             timestamp = self._get_element_from_log_line("@timestamp", result_entry)
             parser.parse_log_message(timestamp, message)
 
@@ -137,6 +136,7 @@ class CwlInsightsMetricsFetcher:
         statistic: MetricStatistic = MetricStatistic.MAX,
         job_start_time: int | None = None,
         job_end_time: int | None = None,
+        stream_prefix: str | None = None,
     ) -> dict[str, list[Union[str, float, int]]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
@@ -150,6 +150,8 @@ class CwlInsightsMetricsFetcher:
                 Default: 3 hours before job_end_time.
             job_end_time (int | None): If the hybrid job is complete, this should be the time at
                 which the hybrid job finished. Default: current time.
+            stream_prefix (str | None): If a logs prefix is provided, it will be used instead
+                of the job name.
 
         Returns:
             dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
@@ -166,11 +168,11 @@ class CwlInsightsMetricsFetcher:
         query_end_time = job_end_time or int(time.time())
         query_start_time = job_start_time or query_end_time - self.QUERY_DEFAULT_JOB_DURATION
 
-        # The hybrid job name needs to be unique to prevent jobs with similar names from being
-        # conflated.
+        stream_prefix = (stream_prefix or job_name).replace("/", "\\/")
+
         query = (
             f"fields @timestamp, @message "
-            f"| filter @logStream like /^{job_name}\\// "
+            f"| filter @logStream like /^{stream_prefix}\\// "
             f"| filter @message like /Metrics - /"
         )
 

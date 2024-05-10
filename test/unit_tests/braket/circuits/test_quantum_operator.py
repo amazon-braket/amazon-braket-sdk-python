@@ -138,5 +138,5 @@ def test_matrix_equivalence_non_quantum_operator():
 
 
 def test_str(quantum_operator):
-    expected = "{}('qubit_count': {})".format(quantum_operator.name, quantum_operator.qubit_count)
+    expected = f"{quantum_operator.name}('qubit_count': {quantum_operator.qubit_count})"
     assert str(quantum_operator) == expected

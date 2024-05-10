@@ -27,7 +27,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class GateCalibrations:
-    """An object containing gate calibration data. The data respresents the mapping on a particular gate
+    """An object containing gate calibration data. The data represents the mapping on a particular gate
     on a set of qubits to its calibration to be used by a quantum device. This is represented by a dictionary
     with keys of `Tuple(Gate, QubitSet)` mapped to a `PulseSequence`.
     """  # noqa: E501

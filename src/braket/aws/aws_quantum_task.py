@@ -105,7 +105,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         quiet: bool = False,
         reservation_arn: str | None = None,
         *args,
@@ -148,10 +148,9 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None):
-                A `Dict` for user defined gate calibration. The calibration is defined for
-                for a particular `Gate` on a particular `QubitSet` and is represented by
-                a `PulseSequence`.
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A `dict`
+                of user defined gate calibrations. Each calibration is defined for a particular
+                `Gate` on a particular `QubitSet` and is represented by a `PulseSequence`.
                 Default: None.
 
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
@@ -190,6 +189,7 @@ class AwsQuantumTask(QuantumTask):
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
         inputs = inputs or {}
+        gate_definitions = gate_definitions or {}
 
         if reservation_arn:
             create_task_kwargs.update(
@@ -205,8 +205,7 @@ class AwsQuantumTask(QuantumTask):
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
-            unbounded_parameters = param_names - set(inputs.keys())
-            if unbounded_parameters:
+            if unbounded_parameters := param_names - set(inputs.keys()):
                 raise ValueError(
                     f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                 )
@@ -294,11 +293,9 @@ class AwsQuantumTask(QuantumTask):
 
     def _cancel_future(self) -> None:
         """Cancel the future if it exists. Else, create a cancelled future."""
-        if hasattr(self, "_future"):
-            self._future.cancel()
-        else:
+        if not hasattr(self, "_future"):
             self._future = asyncio.Future()
-            self._future.cancel()
+        self._future.cancel()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the quantum task in Amazon
@@ -320,7 +317,7 @@ class AwsQuantumTask(QuantumTask):
             dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
             retrieved value is used, unless `GetQuantumTask` was never called, in which case
-            it wil still be called to populate the metadata for the first time.
+            it will still be called to populate the metadata for the first time.
         """
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_quantum_task(self._arn)
@@ -509,10 +506,10 @@ class AwsQuantumTask(QuantumTask):
         return None
 
     def _has_reservation_arn_from_metadata(self, current_metadata: dict[str, Any]) -> bool:
-        for association in current_metadata.get("associations", []):
-            if association.get("type") == "RESERVATION_TIME_WINDOW_ARN":
-                return True
-        return False
+        return any(
+            association.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for association in current_metadata.get("associations", [])
+        )
 
     def _download_result(
         self,
@@ -544,9 +541,7 @@ class AwsQuantumTask(QuantumTask):
         return f"AwsQuantumTask('id/taskArn':'{self.id}')"
 
     def __eq__(self, other: AwsQuantumTask) -> bool:
-        if isinstance(other, AwsQuantumTask):
-            return self.id == other.id
-        return False
+        return self.id == other.id if isinstance(other, AwsQuantumTask) else False
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -561,7 +556,7 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -577,16 +572,16 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     openqasm_program = OpenQASMProgram(
         source=pulse_sequence.to_ir(),
-        inputs=inputs if inputs else {},
+        inputs=inputs or {},
     )
 
-    create_task_kwargs.update({"action": openqasm_program.json()})
+    create_task_kwargs["action"] = openqasm_program.json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -600,7 +595,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -611,7 +606,7 @@ def _(
             source=openqasm_program.source,
             inputs=inputs_copy,
         )
-    create_task_kwargs.update({"action": openqasm_program.json()})
+    create_task_kwargs["action"] = openqasm_program.json()
     if device_parameters:
         final_device_parameters = (
             _circuit_device_params_from_dict(
@@ -622,9 +617,7 @@ def _(
             if isinstance(device_parameters, dict)
             else device_parameters
         )
-        create_task_kwargs.update(
-            {"deviceParameters": final_device_parameters.json(exclude_none=True)}
-        )
+        create_task_kwargs["deviceParameters"] = final_device_parameters.json(exclude_none=True)
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
@@ -639,11 +632,11 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": blackbird_program.json()})
+    create_task_kwargs["action"] = blackbird_program.json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -657,7 +650,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -678,7 +671,7 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
-        or gate_definitions is not None
+        or gate_definitions
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
@@ -701,12 +694,10 @@ def _(
             inputs=inputs_copy,
         )
 
-    create_task_kwargs.update(
-        {
-            "action": openqasm_program.json(),
-            "deviceParameters": final_device_parameters.json(exclude_none=True),
-        }
-    )
+    create_task_kwargs |= {
+        "action": openqasm_program.json(),
+        "deviceParameters": final_device_parameters.json(exclude_none=True),
+    }
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -730,12 +721,10 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     device_params = _create_annealing_device_params(device_parameters, device_arn)
-    create_task_kwargs.update(
-        {
-            "action": problem.to_ir().json(),
-            "deviceParameters": device_params.json(exclude_none=True),
-        }
-    )
+    create_task_kwargs |= {
+        "action": problem.to_ir().json(),
+        "deviceParameters": device_params.json(exclude_none=True),
+    }
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
@@ -754,7 +743,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
+    create_task_kwargs["action"] = analog_hamiltonian_simulation.to_ir().json()
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
