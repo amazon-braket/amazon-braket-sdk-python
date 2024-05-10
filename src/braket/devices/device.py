@@ -124,8 +124,7 @@ class Device(ABC):
                 execution. Noise model can only be added to the devices that support noise
                 simulation.
         """
-        if noise_model:
-            self._validate_device_noise_model_support(noise_model)
+        self._validate_device_noise_model_support(noise_model)
         self._noise_model = noise_model
 
     def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:

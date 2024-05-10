@@ -113,7 +113,7 @@ class AwsDevice(Device):
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
         self._ports = None
         self._frames = None
-        self.set_noise_model(noise_model)
+        self._noise_model = noise_model
 
     def run(
         self,
