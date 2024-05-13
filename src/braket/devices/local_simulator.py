@@ -318,7 +318,6 @@ class LocalSimulator(Device):
         program: OpenQASMProgram,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
-        return_raw_results: bool = False,
         *args,
         **kwargs,
     ):
@@ -335,7 +334,7 @@ class LocalSimulator(Device):
 
         results = simulator.run(program, shots, *args, **kwargs)
 
-        if return_raw_results:
+        if isinstance(results, GateModelQuantumTaskResult):
             return results
 
         return GateModelQuantumTaskResult.from_object(results)
@@ -352,7 +351,7 @@ class LocalSimulator(Device):
         program = OpenQASMProgram(
             source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
         )
-        return self._run_internal(program, shots, inputs, return_raw_results=True, *args, **kwargs)
+        return self._run_internal(program, shots, inputs, *args, **kwargs)
 
     @_run_internal.register
     def _(
