@@ -318,6 +318,7 @@ class LocalSimulator(Device):
         program: OpenQASMProgram,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
+        return_raw_results: bool = False,
         *args,
         **kwargs,
     ):
@@ -332,7 +333,6 @@ class LocalSimulator(Device):
                 inputs=inputs_copy,
             )
 
-        return_raw_results = kwargs.pop("return_raw_results", False)
         results = simulator.run(program, shots, *args, **kwargs)
 
         if return_raw_results:
