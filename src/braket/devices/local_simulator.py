@@ -29,7 +29,7 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.ir.ahs import Program as AHSProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.simulator import BraketSimulator
 from braket.task_result import AdditionalMetadata, TaskMetadata
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -82,7 +82,7 @@ class LocalSimulator(Device):
     def run(
         self,
         task_specification: Union[
-            Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
+            Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: int = 0,
         inputs: Optional[dict[str, float]] = None,
@@ -92,7 +92,7 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
+            task_specification (Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
                 The task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
@@ -126,13 +126,13 @@ class LocalSimulator(Device):
         self,
         task_specifications: Union[
             Union[
-                Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
+                Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram
             ],
             list[
                 Union[
                     Circuit,
                     Problem,
-                    OpenQasmProgram,
+                    OpenQASMProgram,
                     AnalogHamiltonianSimulation,
                     SerializableProgram,
                 ]
@@ -147,7 +147,7 @@ class LocalSimulator(Device):
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
+            task_specifications (Union[Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
                 Single instance or list of quantum task specification.
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
@@ -176,7 +176,7 @@ class LocalSimulator(Device):
 
         single_task = isinstance(
             task_specifications,
-            (Circuit, OpenQasmProgram, Problem, AnalogHamiltonianSimulation),
+            (Circuit, OpenQASMProgram, Problem, AnalogHamiltonianSimulation),
         )
 
         single_input = isinstance(inputs, dict)
@@ -234,7 +234,7 @@ class LocalSimulator(Device):
     def _run_internal_wrap(
         self,
         task_specification: Union[
-            Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
+            Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
@@ -267,7 +267,7 @@ class LocalSimulator(Device):
         task_specification: Union[
             Circuit,
             Problem,
-            OpenQasmProgram,
+            OpenQASMProgram,
             AnalogHamiltonianSimulation,
             AHSProgram,
             SerializableProgram,
@@ -316,7 +316,7 @@ class LocalSimulator(Device):
     @_run_internal.register
     def _(
         self,
-        program: OpenQasmProgram,
+        program: OpenQASMProgram,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
         *args,
@@ -328,7 +328,7 @@ class LocalSimulator(Device):
         if inputs:
             inputs_copy = program.inputs.copy() if program.inputs is not None else {}
             inputs_copy.update(inputs)
-            program = OpenQasmProgram(
+            program = OpenQASMProgram(
                 source=program.source,
                 inputs=inputs_copy,
             )
@@ -347,13 +347,13 @@ class LocalSimulator(Device):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-        program = OpenQasmProgram(
+        program = OpenQASMProgram(
             source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
         )
         if inputs:
             inputs_copy = program.inputs.copy() if program.inputs is not None else {}
             inputs_copy.update(inputs)
-            program = OpenQasmProgram(
+            program = OpenQASMProgram(
                 source=program.source,
                 inputs=inputs_copy,
             )
