@@ -31,7 +31,6 @@ from braket.devices.device import Device
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.simulator import BraketSimulator
-from braket.task_result import AdditionalMetadata, TaskMetadata
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
@@ -332,7 +331,13 @@ class LocalSimulator(Device):
                 source=program.source,
                 inputs=inputs_copy,
             )
+
+        return_raw_results = kwargs.pop("return_raw_results", False)
         results = simulator.run(program, shots, *args, **kwargs)
+
+        if return_raw_results:
+            return results
+
         return GateModelQuantumTaskResult.from_object(results)
 
     @_run_internal.register
@@ -344,25 +349,10 @@ class LocalSimulator(Device):
         *args,
         **kwargs,
     ):
-        simulator = self._delegate
-        if DeviceActionType.OPENQASM not in simulator.properties.action:
-            raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
         program = OpenQASMProgram(
             source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
         )
-        if inputs:
-            inputs_copy = program.inputs.copy() if program.inputs is not None else {}
-            inputs_copy.update(inputs)
-            program = OpenQASMProgram(
-                source=program.source,
-                inputs=inputs_copy,
-            )
-        results = simulator.run(program, shots, *args, **kwargs)
-        return GateModelQuantumTaskResult(
-            task_metadata=TaskMetadata.construct(id=""),
-            additional_metadata=AdditionalMetadata.construct(),
-            measurements=results,
-        )
+        return self._run_internal(program, shots, inputs, return_raw_results=True, *args, **kwargs)
 
     @_run_internal.register
     def _(
