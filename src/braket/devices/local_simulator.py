@@ -29,7 +29,7 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.ir.ahs import Program as AHSProgram
-from braket.ir.openqasm import Program
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.simulator import BraketSimulator
 from braket.task_result import AdditionalMetadata, TaskMetadata
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -82,7 +82,7 @@ class LocalSimulator(Device):
     def run(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
+            Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: int = 0,
         inputs: Optional[dict[str, float]] = None,
@@ -92,7 +92,7 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
                 The task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
@@ -125,9 +125,17 @@ class LocalSimulator(Device):
     def run_batch(  # noqa: C901
         self,
         task_specifications: Union[
-            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram],
+            Union[
+                Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
+            ],
             list[
-                Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]
+                Union[
+                    Circuit,
+                    Problem,
+                    OpenQasmProgram,
+                    AnalogHamiltonianSimulation,
+                    SerializableProgram,
+                ]
             ],
         ],
         shots: Optional[int] = 0,
@@ -139,7 +147,7 @@ class LocalSimulator(Device):
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
+            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
                 Single instance or list of quantum task specification.
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
@@ -168,7 +176,7 @@ class LocalSimulator(Device):
 
         single_task = isinstance(
             task_specifications,
-            (Circuit, Program, Problem, AnalogHamiltonianSimulation),
+            (Circuit, OpenQasmProgram, Problem, AnalogHamiltonianSimulation),
         )
 
         single_input = isinstance(inputs, dict)
@@ -226,17 +234,15 @@ class LocalSimulator(Device):
     def _run_internal_wrap(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
+            Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:  # pragma: no cover
         """Wraps _run_interal for pickle dump"""
-        return self._run_internal(
-            task_specification, shots, inputs=inputs, *args, **kwargs
-        )  # pragma: no cover (this line sometimes doesn't get detected by codecov)
+        return self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
 
     @singledispatchmethod
     def _get_simulator(self, simulator: Union[str, BraketSimulator]) -> LocalSimulator:
@@ -259,7 +265,12 @@ class LocalSimulator(Device):
     def _run_internal(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram, SerializableProgram
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            AnalogHamiltonianSimulation,
+            AHSProgram,
+            SerializableProgram,
         ],
         shots: Optional[int] = None,
         *args,
@@ -305,7 +316,7 @@ class LocalSimulator(Device):
     @_run_internal.register
     def _(
         self,
-        program: Program,
+        program: OpenQasmProgram,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
         *args,
@@ -317,7 +328,7 @@ class LocalSimulator(Device):
         if inputs:
             inputs_copy = program.inputs.copy() if program.inputs is not None else {}
             inputs_copy.update(inputs)
-            program = Program(
+            program = OpenQasmProgram(
                 source=program.source,
                 inputs=inputs_copy,
             )
@@ -336,18 +347,16 @@ class LocalSimulator(Device):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-        program = Program(source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True))
+        program = OpenQasmProgram(
+            source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
+        )
         if inputs:
             inputs_copy = program.inputs.copy() if program.inputs is not None else {}
             inputs_copy.update(inputs)
-            program = Program(
+            program = OpenQasmProgram(
                 source=program.source,
                 inputs=inputs_copy,
             )
-        # Pass mcm=True to the simulator to enable mid-circuit measurement simulation.
-        # When setting mcm=True, the simulator returns only the measurement results,
-        # which we then wrap into a GateModelQuantumTaskResult object to return.
-        kwargs["mcm"] = True
         results = simulator.run(program, shots, *args, **kwargs)
         return GateModelQuantumTaskResult(
             task_metadata=TaskMetadata.construct(id=""),
