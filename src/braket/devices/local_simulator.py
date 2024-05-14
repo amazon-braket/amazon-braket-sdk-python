@@ -92,7 +92,7 @@ class LocalSimulator(Device):
 
         Args:
             task_specification (Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
-                The task specification.
+                The quantum task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the quantum task specification.
