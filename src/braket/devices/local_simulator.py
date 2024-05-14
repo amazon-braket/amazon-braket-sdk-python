@@ -349,7 +349,7 @@ class LocalSimulator(Device):
         **kwargs,
     ):
         program = OpenQASMProgram(
-            source=program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
+            source=program.to_ir(ir_type=IRType.OPENQASM, build_if_necessary=True)
         )
         return self._run_internal(program, shots, inputs, *args, **kwargs)
 

@@ -638,7 +638,7 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     openqasm_program = OpenQASMProgram(
-        source=serializable_program.to_ir(ir_type=IRType.OPENQASM, allow_implicit_build=True)
+        source=serializable_program.to_ir(ir_type=IRType.OPENQASM, build_if_necessary=True)
     )
     return _create_internal(
         openqasm_program,
