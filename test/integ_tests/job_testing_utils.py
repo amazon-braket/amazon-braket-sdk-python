@@ -11,8 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-Version number (major.minor.patch[-label])
-"""
+import re
 
-__version__ = "1.79.2.dev0"
+from braket.aws import AwsSession
+from braket.jobs import Framework, retrieve_image
+
+
+def decorator_python_version():
+    aws_session = AwsSession()
+    image_uri = retrieve_image(Framework.BASE, aws_session.region)
+    tag = aws_session.get_full_image_tag(image_uri)
+    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+    return int(major_version), int(minor_version)
