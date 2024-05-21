@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
@@ -30,6 +31,26 @@ class QubitReferenceType(str, Enum):
 
     VIRTUAL = "VIRTUAL"
     PHYSICAL = "PHYSICAL"
+
+
+class SerializableProgram(ABC):
+    @abstractmethod
+    def to_ir(
+        self,
+        ir_type: IRType = IRType.OPENQASM,
+    ) -> str:
+        """Serializes the program into an intermediate representation.
+
+        Args:
+            ir_type (IRType): The IRType to use for converting the program to its
+                IR representation. Defaults to IRType.OPENQASM.
+
+        Raises:
+            ValueError: Raised if the supplied `ir_type` is not supported.
+
+        Returns:
+            str: A representation of the program in the `ir_type` format.
+        """
 
 
 @dataclass
