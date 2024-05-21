@@ -255,7 +255,7 @@ class DummySerializableProgram(SerializableProgram):
     def __init__(self, source: str):
         self.source = source
 
-    def to_ir(self, ir_type: IRType = IRType.OPENQASM, build_if_necessary: bool = False) -> str:
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
         return self.source
 
 

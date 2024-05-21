@@ -38,20 +38,15 @@ class SerializableProgram(ABC):
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
-        build_if_necessary: bool = False,
     ) -> str:
         """Serializes the program into an intermediate representation.
 
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
-            build_if_necessary (bool): Whether to allow the program to be implicitly
-                built as a side effect of calling this function. Defaults to False.
 
         Raises:
             ValueError: Raised if the supplied `ir_type` is not supported.
-            RuntimeError: Raised if the program has not already been built and
-                `build_if_necessary` is False.
 
         Returns:
             str: A representation of the program in the `ir_type` format.
