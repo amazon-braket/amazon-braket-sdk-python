@@ -637,9 +637,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    openqasm_program = OpenQASMProgram(
-        source=serializable_program.to_ir(ir_type=IRType.OPENQASM, build_if_necessary=True)
-    )
+    openqasm_program = OpenQASMProgram(source=serializable_program.to_ir(ir_type=IRType.OPENQASM))
     return _create_internal(
         openqasm_program,
         aws_session,
