@@ -171,29 +171,21 @@ def job_failed_name(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(job_completed_name):
-    job_arn = (
-        [
-            job["jobArn"]
-            for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
-            if job["jobName"] == job_completed_name
-        ][0]
-        if os.getenv("JOBS_STARTED")
-        else None
-    )
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_completed_name
+    ][0]
 
-    return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
+    return AwsQuantumJob(arn=job_arn)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(job_failed_name):
-    job_arn = (
-        [
-            job["jobArn"]
-            for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
-            if job["jobName"] == job_failed_name
-        ][0]
-        if os.getenv("JOBS_STARTED")
-        else None
-    )
+    job_arn = [
+        job["jobArn"]
+        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+        if job["jobName"] == job_failed_name
+    ][0]
 
-    return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
+    return AwsQuantumJob(arn=job_arn)
