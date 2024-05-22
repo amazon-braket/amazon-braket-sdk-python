@@ -1,0 +1,23 @@
+domain: amazon-braket.github.io
+title: The Fast Track to Amazon Braket
+description: "The Fast Track to Amazon Braket - Braket Cheat Sheet"
+github_username: amazon-braket
+markdown: kramdown
+
+t:
+  en:
+    name: "English"
+    fast-track: "The Fast Track to Amazon Braket"
+    github-1: "This page's source is"
+    github-2: "located here"
+    github-3: "Pull requests are welcome!"
+    github-4: "This cheat sheet is inspired by"
+    translate: "Help translate!" # Not used for `en`
+  fr:
+    name: "Français"
+    fast-track: "Aide-mémoire"
+    github-1: "Les sources de cette page sont"
+    github-2: "disponibles ici"
+    github-3: "Pull Requests bienvenues !"
+    github-4: "Cet aide-memoire est inspiré de"
+    translate: "Aidez à traduire !" # Not used for `en`

@@ -1,0 +1,5 @@
+|                      |                                                       |
+| -------------------- | ----------------------------------------------------- |
+| Create a job | job = AwsQuantumJob.create(arn, source_module="algorithm_script.py", entry_point="algorithm_script:start_here", wait_until_complete=True) |
+| Queue position | job.queue_position() |
+| Job decorator | @hybrid_job(device=None, local=True) |
