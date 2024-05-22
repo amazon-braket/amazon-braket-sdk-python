@@ -1,8 +1,6 @@
-
 from braket.aws import AwsDevice, AwsSession
-from braket.devices import Devices
 from braket.circuits import Circuit
-
+from braket.devices import Devices
 
 circ = Circuit().h(0)
 dev = AwsDevice(Devices.IQM.Garnet)

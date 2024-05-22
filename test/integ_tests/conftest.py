@@ -50,7 +50,9 @@ def pytest_xdist_node_collection_finished(ids):
     run_jobs = any("job" in test for test in ids)
     profile_name = os.environ["AWS_PROFILE"]
     region_name = os.getenv("AWS_REGION")
-    aws_session = AwsSession(boto3.session.Session(profile_name=profile_name, region_name=region_name))
+    aws_session = AwsSession(
+        boto3.session.Session(profile_name=profile_name, region_name=region_name)
+    )
     if run_jobs and os.getenv("JOBS_STARTED") is None and region_name != "eu-north-1":
         AwsQuantumJob.create(
             "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
@@ -140,9 +142,11 @@ def s3_destination_folder(s3_bucket, s3_prefix):
 
 @pytest.fixture(scope="session")
 def braket_simulators(aws_session):
-    return {
-        simulator_arn: AwsDevice(simulator_arn, aws_session) for simulator_arn in SIMULATOR_ARNS
-    } if aws_session.region != "eu-north-1" else None
+    return (
+        {simulator_arn: AwsDevice(simulator_arn, aws_session) for simulator_arn in SIMULATOR_ARNS}
+        if aws_session.region != "eu-north-1"
+        else None
+    )
 
 
 @pytest.fixture(scope="session")
@@ -167,21 +171,29 @@ def job_failed_name(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(job_completed_name):
-    job_arn = [
-        job["jobArn"]
-        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
-        if job["jobName"] == job_completed_name
-    ][0] if os.getenv("JOBS_STARTED") else None
+    job_arn = (
+        [
+            job["jobArn"]
+            for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+            if job["jobName"] == job_completed_name
+        ][0]
+        if os.getenv("JOBS_STARTED")
+        else None
+    )
 
     return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
 
 
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(job_failed_name):
-    job_arn = [
-        job["jobArn"]
-        for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
-        if job["jobName"] == job_failed_name
-    ][0] if os.getenv("JOBS_STARTED") else None
+    job_arn = (
+        [
+            job["jobArn"]
+            for job in boto3.client("braket").search_jobs(filters=[])["jobs"]
+            if job["jobName"] == job_failed_name
+        ][0]
+        if os.getenv("JOBS_STARTED")
+        else None
+    )
 
     return AwsQuantumJob(arn=job_arn) if os.getenv("JOBS_STARTED") else None
