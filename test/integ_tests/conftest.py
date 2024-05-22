@@ -179,6 +179,7 @@ def completed_quantum_job(job_completed_name):
 
     return AwsQuantumJob(arn=job_arn)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(job_failed_name):
     job_arn = [
@@ -188,4 +189,3 @@ def failed_quantum_job(job_failed_name):
     ][0]
 
     return AwsQuantumJob(arn=job_arn)
-
