@@ -11,9 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws.aws_device import AwsDevice, AwsDeviceType  # noqa: F401
-from braket.aws.aws_quantum_job import AwsQuantumJob  # noqa: F401
-from braket.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
-from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch  # noqa: F401
-from braket.aws.aws_session import AwsSession  # noqa: F401
-from braket.aws.direct_reservations import DirectReservation  # noqa: F401
+import re
+
+from braket.aws import AwsSession
+from braket.jobs import Framework, retrieve_image
+
+
+def decorator_python_version():
+    aws_session = AwsSession()
+    image_uri = retrieve_image(Framework.BASE, aws_session.region)
+    tag = aws_session.get_full_image_tag(image_uri)
+    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+    return int(major_version), int(minor_version)

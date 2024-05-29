@@ -1753,6 +1753,16 @@ def test_get_devices(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1763,7 +1773,7 @@ def test_get_devices(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN, OQC_ARN],
         provider_names=["Amazon Braket", "D-Wave", "IonQ", "OQC"],
@@ -1858,6 +1868,16 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1867,7 +1887,7 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         statuses=["ONLINE"],
         aws_session=aws_session,

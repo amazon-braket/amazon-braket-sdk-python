@@ -33,6 +33,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters, error_mitigation
 from braket.device_schema.dwave import (
@@ -121,6 +122,19 @@ def problem():
 @pytest.fixture
 def openqasm_program():
     return OpenQASMProgram(source="OPENQASM 3.0; h $0;")
+
+
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+@pytest.fixture
+def serializable_program():
+    return DummySerializableProgram(source="OPENQASM 3.0; h $0;")
 
 
 @pytest.fixture
@@ -611,6 +625,20 @@ def test_create_openqasm_program_em_serialized(aws_session, arn, openqasm_progra
             paradigmParameters=GateModelParameters(qubitCount=0),
             errorMitigation=[error_mitigation.Debias()],
         ),
+    )
+
+
+def test_create_serializable_program(aws_session, arn, serializable_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, serializable_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        OpenQASMProgram(source=serializable_program.to_ir()).json(),
+        S3_TARGET,
+        shots,
     )
 
 
