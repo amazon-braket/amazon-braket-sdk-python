@@ -58,65 +58,6 @@ To add a new gate:
 
 
 # Single qubit gates #
-
-class Barrier(Gate):
-    r"""Barrier gate.
-    """
-    def __init__(self, qubit_count):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"||" for i in range(qubit_count)])
-
-    def bind_values(self, **kwargs):
-        raise NotImplementedError
-
-    @property
-    def _qasm_name(self):
-        return f"barrier"
-
-    def __hash__(self):
-        return hash((self.name, self.qubit_count, self.qubit_count))
-
-    @staticmethod
-    @circuit.subroutine(register=True)
-    def barrier(target):
-        r"""Barrier gate.
-        Args:
-            target: Target qubit(s)
-        """
-        return Instruction(Barrier(len(target)), target=target)
-    
-
-Gate.register_gate(Barrier)
-
-class Delay(Gate):
-    r"""Delay gate. Applies delay in ns.
-    """
-    def __init__(self, qubit_count, delay_ns):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"d" for i in range(qubit_count)])
-        self.delay_ns = delay_ns
-
-    def bind_values(self, **kwargs):
-        raise NotImplementedError
-
-    @property
-    def _qasm_name(self):
-        return f"delay[{self.delay_ns} ns]"
-
-    def __hash__(self):
-        return hash((self.name, self.qubit_count, self.qubit_count))
-
-    @staticmethod
-    @circuit.subroutine(register=True)
-    def delay(target, delay_ns):
-        r"""Delay gate. Applies delay in ns.
-        Args:
-            target: Target qubit(s)
-            delay_ns: Delay in ns.
-        """
-        return Instruction(Delay(len(target), delay_ns), target=target)
-Gate.register_gate(Delay)
-
-
-
 class H(Gate):
     r"""Hadamard gate.
 
@@ -3903,6 +3844,61 @@ class PulseGate(Gate, Parameterizable):
 
 Gate.register_gate(PulseGate)
 
+class Barrier(Gate):
+    r"""Barrier gate.
+    """
+    def __init__(self, qubit_count):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"||" for i in range(qubit_count)])
+
+    def bind_values(self, **kwargs):
+        raise NotImplementedError
+
+    @property
+    def _qasm_name(self):
+        return f"barrier"
+
+    def __hash__(self):
+        return hash((self.name, self.qubit_count, self.qubit_count))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def barrier(target):
+        r"""Barrier gate.
+        Args:
+            target: Target qubit(s)
+        """
+        return Instruction(Barrier(len(target)), target=target)
+    
+
+Gate.register_gate(Barrier)
+
+class Delay(Gate):
+    r"""Delay gate. Applies delay in seconds.
+    """
+    def __init__(self, qubit_count, duration):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"d" for i in range(qubit_count)])
+        self.duration = duration
+
+    def bind_values(self, **kwargs):
+        raise NotImplementedError
+
+    @property
+    def _qasm_name(self):
+        return f"delay[{self.duration} ns]"
+
+    def __hash__(self):
+        return hash((self.name, self.qubit_count, self.qubit_count))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def delay(target, duration : float):
+        r"""Delay gate. Applies delay in ns.
+        Args:
+            target: Target qubit(s)
+            duration: Delay(in seconds).
+        """
+        return Instruction(Delay(len(target), duration), target=target)
+Gate.register_gate(Delay)
 
 def format_complex(number: complex) -> str:
     """Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
