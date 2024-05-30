@@ -41,7 +41,7 @@ from braket.circuits.quantum_operator_helpers import (
     is_unitary,
     verify_quantum_operator_matrix_dimensions,
 )
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.circuits.serialization import OpenQASMSerializationProperties
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit import QubitInput
