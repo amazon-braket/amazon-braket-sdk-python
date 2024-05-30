@@ -60,6 +60,8 @@ To add a new gate:
 # Single qubit gates #
 
 class Barrier(Gate):
+    r"""Barrier gate.
+    """
     def __init__(self, qubit_count):
         super().__init__(qubit_count=qubit_count, ascii_symbols=[f"||" for i in range(qubit_count)])
 
@@ -76,12 +78,18 @@ class Barrier(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def barrier(target):
+        r"""Barrier gate.
+        Args:
+            target: Target qubit(s)
+        """
         return Instruction(Barrier(len(target)), target=target)
     
 
 Gate.register_gate(Barrier)
 
 class Delay(Gate):
+    r"""Delay gate. Applies delay in ns.
+    """
     def __init__(self, qubit_count, delay_ns):
         super().__init__(qubit_count=qubit_count, ascii_symbols=[f"d" for i in range(qubit_count)])
         self.delay_ns = delay_ns
@@ -99,6 +107,11 @@ class Delay(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def delay(target, delay_ns):
+        r"""Delay gate. Applies delay in ns.
+        Args:
+            target: Target qubit(s)
+            delay_ns: Delay in ns.
+        """
         return Instruction(Delay(len(target), delay_ns), target=target)
 Gate.register_gate(Delay)
 
