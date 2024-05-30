@@ -41,7 +41,7 @@ from braket.circuits.quantum_operator_helpers import (
     is_unitary,
     verify_quantum_operator_matrix_dimensions,
 )
-from braket.circuits.serialization import OpenQASMSerializationProperties
+from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit import QubitInput
@@ -58,6 +58,50 @@ To add a new gate:
 
 
 # Single qubit gates #
+
+class Barrier(Gate):
+    def __init__(self, qubit_count):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"||" for i in range(qubit_count)])
+
+    def bind_values(self, **kwargs):
+        raise NotImplementedError
+
+    @property
+    def _qasm_name(self):
+        return f"barrier"
+
+    def __hash__(self):
+        return hash((self.name, self.qubit_count, self.qubit_count))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def barrier(target):
+        return Instruction(Barrier(len(target)), target=target)
+    
+
+Gate.register_gate(Barrier)
+
+class Delay(Gate):
+    def __init__(self, qubit_count, delay_ns):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"d" for i in range(qubit_count)])
+        self.delay_ns = delay_ns
+
+    def bind_values(self, **kwargs):
+        raise NotImplementedError
+
+    @property
+    def _qasm_name(self):
+        return f"delay[{self.delay_ns} ns]"
+
+    def __hash__(self):
+        return hash((self.name, self.qubit_count, self.qubit_count))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def delay(target, delay_ns):
+        return Instruction(Delay(len(target), delay_ns), target=target)
+Gate.register_gate(Delay)
+
 
 
 class H(Gate):
