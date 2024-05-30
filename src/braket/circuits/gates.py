@@ -3844,61 +3844,69 @@ class PulseGate(Gate, Parameterizable):
 
 Gate.register_gate(PulseGate)
 
-class Barrier(Gate):
-    r"""Barrier gate.
-    """
-    def __init__(self, qubit_count):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"||" for i in range(qubit_count)])
 
-    def bind_values(self, **kwargs):
+class Barrier(Gate):
+    r"""Barrier gate."""
+
+    def __init__(self, qubit_count):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=["||" for i in range(qubit_count)])
+
+    def bind_values(self, **kwargs) -> Any:
         raise NotImplementedError
 
     @property
-    def _qasm_name(self):
-        return f"barrier"
+    def _qasm_name(self) -> str:
+        return "barrier"
 
     def __hash__(self):
         return hash((self.name, self.qubit_count, self.qubit_count))
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def barrier(target):
+    def barrier(target: QubitSetInput) -> Instruction:
         r"""Barrier gate.
         Args:
-            target: Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
         """
         return Instruction(Barrier(len(target)), target=target)
-    
+
 
 Gate.register_gate(Barrier)
 
+
 class Delay(Gate):
-    r"""Delay gate. Applies delay in seconds.
-    """
+    r"""Delay gate. Applies delay in seconds."""
+
     def __init__(self, qubit_count, duration):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[f"d" for i in range(qubit_count)])
+        super().__init__(
+            qubit_count=qubit_count,
+            ascii_symbols=[f"delay({duration})" for i in range(qubit_count)],
+        )
         self.duration = duration
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> Any:
         raise NotImplementedError
 
     @property
-    def _qasm_name(self):
-        return f"delay[{self.duration} ns]"
+    def _qasm_name(self) -> str:
+        return f"delay[{self.duration} s]"
 
     def __hash__(self):
         return hash((self.name, self.qubit_count, self.qubit_count))
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def delay(target, duration : float):
+    def delay(target: QubitSetInput, duration: float) -> Instruction:
         r"""Delay gate. Applies delay in ns.
         Args:
-            target: Target qubit(s)
-            duration: Delay(in seconds).
+            target (QubitSetInput): Target qubit(s)
+            duration (float): Delay(in seconds).
         """
         return Instruction(Delay(len(target), duration), target=target)
+
+
 Gate.register_gate(Delay)
+
 
 def format_complex(number: complex) -> str:
     """Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
