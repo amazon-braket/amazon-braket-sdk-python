@@ -20,9 +20,12 @@ import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.driving_field import DrivingField
+from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.local_detuning import LocalDetuning
+from braket.ahs.pattern import Pattern
 from braket.device_schema import DeviceActionType
+from braket.timings.time_series import TimeSeries
 
 
 class AnalogHamiltonianSimulation:
@@ -48,6 +51,81 @@ class AnalogHamiltonianSimulation:
     def hamiltonian(self) -> Hamiltonian:
         """Hamiltonian: The hamiltonian to simulate."""
         return self._hamiltonian
+
+    @staticmethod
+    def from_ir(source: ir.Program) -> AnalogHamiltonianSimulation:
+        """Converts the canonical intermediate representation into
+        the Analog Hamiltonian Simulation.
+
+        Args:
+            source (ir.Program): The IR representation of the circuit.
+
+        Returns:
+            AnalogHamiltonianSimulation: The Analog Hamiltonian Simulation.
+        """
+        atom_arrangement = AtomArrangement()
+        for site, fill in zip(source.setup.ahs_register.sites, source.setup.ahs_register.filling):
+            atom_arrangement.add(
+                coordinate=site, site_type=SiteType.FILLED if fill == 1 else SiteType.VACANT
+            )
+        hamiltonian = Hamiltonian()
+        for term in source.hamiltonian.drivingFields:
+            amplitude = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.amplitude.time_series.times, term.amplitude.time_series.values
+                    ),
+                    pattern=term.amplitude.pattern,
+                )
+                if term.amplitude.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.amplitude.time_series.times, term.amplitude.time_series.values
+                )
+            )
+            phase = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.phase.time_series.times, term.phase.time_series.values
+                    ),
+                    pattern=term.phase.pattern,
+                )
+                if term.phase.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.phase.time_series.times, term.phase.time_series.values
+                )
+            )
+            detuning = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.detuning.time_series.times, term.detuning.time_series.values
+                    ),
+                    pattern=term.detuning.pattern,
+                )
+                if term.detuning.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.detuning.time_series.times, term.detuning.time_series.values
+                )
+            )
+            hamiltonian += DrivingField(
+                amplitude=amplitude,
+                phase=phase,
+                detuning=detuning,
+            )
+        for term in source.hamiltonian.localDetuning:
+            magnitude = Field(
+                time_series=TimeSeries.from_lists(
+                    times=term.magnitude.time_series.times,
+                    values=term.magnitude.time_series.values,
+                ),
+                pattern=Pattern(term.magnitude.pattern),
+            )
+            hamiltonian += LocalDetuning(
+                magnitude=magnitude,
+            )
+        return AnalogHamiltonianSimulation(
+            register=atom_arrangement,
+            hamiltonian=hamiltonian,
+        )
 
     def to_ir(self) -> ir.Program:
         """Converts the Analog Hamiltonian Simulation into the canonical intermediate
