@@ -103,6 +103,21 @@ def test_to_ir_invalid_hamiltonian(register):
     ahs.to_ir()
 
 
+def test_from_ir(register, driving_field, local_detuning):
+    hamiltonian = driving_field + local_detuning
+    ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
+    problem = json.loads(ahs.to_ir().json())
+    assert ahs == AnalogHamiltonianSimulation.from_ir(Program(setup=problem['setup'], hamiltonian=problem['hamiltonian']))
+
+
+def test_from_ir_empty():
+    hamiltonian = Mock()
+    hamiltonian.terms = []
+    ahs = AnalogHamiltonianSimulation(register=AtomArrangement(), hamiltonian=hamiltonian)
+    problem = json.loads(ahs.to_ir().json())
+    assert ahs == AnalogHamiltonianSimulation.from_ir(Program(setup=problem['setup'], hamiltonian=problem['hamiltonian']))
+
+
 @pytest.mark.xfail(raises=DiscretizationError)
 def test_invalid_action():
     action = Mock()

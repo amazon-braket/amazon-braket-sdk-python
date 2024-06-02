@@ -23,6 +23,9 @@ from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.local_detuning import LocalDetuning
 from braket.device_schema import DeviceActionType
+from braket.ahs.field import Field
+from braket.ahs.pattern import Pattern
+from braket.timings.time_series import TimeSeries
 
 
 class AnalogHamiltonianSimulation:
@@ -38,6 +41,16 @@ class AnalogHamiltonianSimulation:
         """
         self._register = register
         self._hamiltonian = hamiltonian
+
+    def __eq__(self, other: AnalogHamiltonianSimulation):
+        if isinstance(other, AnalogHamiltonianSimulation):
+            for item1, item2 in zip(self.register, other.register):
+                coordinate1 = (float(item1.coordinate[0]), float(item1.coordinate[1]))
+                coordinate2 = (float(item2.coordinate[0]), float(item2.coordinate[1]))
+                if coordinate1 != coordinate2:
+                    return False
+            return True
+        return NotImplemented
 
     @property
     def register(self) -> AtomArrangement:
@@ -76,6 +89,91 @@ class AnalogHamiltonianSimulation:
             drivingFields=terms[AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY],
             localDetuning=terms[AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY],
         )
+
+    @staticmethod
+    def from_ir(source: ir.Program) -> AnalogHamiltonianSimulation:
+        """Converts the canonical intermediate representation into the AnalogHamiltonianSimulation
+		object.
+        Args:
+            source (ir.Program): Program object.
+
+        Returns:
+            AnalogHamiltonianSimulation: Braket AnalogHamiltonianSimulation implementing the Program object.
+		"""
+        return AnalogHamiltonianSimulation(
+            register=AnalogHamiltonianSimulation._register_from_ir(source),
+            hamiltonian=AnalogHamiltonianSimulation._hamiltonian_from_ir(source)
+        )
+    
+    def _register_from_ir(source: ir.Program) -> AtomArrangement:
+        atom_arr = AtomArrangement()
+        for site, fill in zip(source.setup.ahs_register.sites, source.setup.ahs_register.filling):
+            atom_arr.add(
+                coordinate=site,
+				site_type=SiteType.FILLED if fill == 1 else SiteType.VACANT
+            )
+        return atom_arr
+	
+    def _hamiltonian_from_ir(source: ir.program) -> Hamiltonian:
+        hamiltonian = Hamiltonian()
+        for term in source.hamiltonian.drivingFields:
+            amplitude = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.amplitude.time_series.times,
+                        term.amplitude.time_series.values
+                    ),
+                    pattern=term.amplitude.pattern,
+                )
+                if term.amplitude.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.amplitude.time_series.times,
+                    term.amplitude.time_series.values
+                )
+            )
+            phase = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.phase.time_series.times,
+                        term.phase.time_series.values
+                    ),
+                    pattern=term.phase.pattern,
+                )
+                if term.phase.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.phase.time_series.times,
+                    term.phase.time_series.values
+                )
+            )
+            detuning = (
+                Field(
+                    time_series=TimeSeries.from_lists(
+                        term.detuning.time_series.times,
+                        term.detuning.time_series.values
+                    ),
+                    pattern=term.detuning.pattern,
+                )
+                if term.detuning.pattern != "uniform"
+                else TimeSeries.from_lists(
+                    term.detuning.time_series.times,
+                    term.detuning.time_series.values
+                )
+            )
+            hamiltonian += DrivingField(
+                amplitude=amplitude,
+                phase=phase,
+                detuning=detuning,
+            )
+        for term in source.hamiltonian.localDetuning:
+            magnitude = Field(
+                time_series=TimeSeries.from_lists(
+                    times=term.magnitude.time_series.times,
+                    values=term.magnitude.time_series.values,
+                ),
+                pattern=Pattern(term.magnitude.pattern),
+            )
+            hamiltonian += LocalDetuning(magnitude=magnitude,)
+        return hamiltonian
 
     def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
