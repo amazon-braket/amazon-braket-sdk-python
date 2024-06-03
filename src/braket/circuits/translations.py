@@ -15,10 +15,9 @@ from functools import reduce, singledispatch
 from typing import Union
 
 import braket.circuits.gates as braket_gates
-import braket.circuits.noises as noises
-import braket.circuits.result_types as ResultTypes
+import braket.circuits.result_types as ResultTypes  # noqa: N812
 import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Observable, observables
+from braket.circuits import Observable, noises, observables
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -68,6 +67,7 @@ BRAKET_GATES = {
     "cswap": braket_gates.CSwap,
     "gpi": braket_gates.GPi,
     "gpi2": braket_gates.GPi2,
+    "prx": braket_gates.PRx,
     "ms": braket_gates.MS,
     "unitary": braket_gates.Unitary,
 }
@@ -84,8 +84,29 @@ one_prob_noise_map = {
     "phase_damping": noises.PhaseDamping,
 }
 
+SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
+    "braket_noise_bit_flip": noises.BitFlip,
+    "braket_noise_phase_flip": noises.PhaseFlip,
+    "braket_noise_pauli_channel": noises.PauliChannel,
+    "braket_noise_depolarizing": noises.Depolarizing,
+    "braket_noise_two_qubit_depolarizing": noises.TwoQubitDepolarizing,
+    "braket_noise_two_qubit_dephasing": noises.TwoQubitDephasing,
+    "braket_noise_amplitude_damping": noises.AmplitudeDamping,
+    "braket_noise_generalized_amplitude_damping": noises.GeneralizedAmplitudeDamping,
+    "braket_noise_phase_damping": noises.PhaseDamping,
+    "braket_noise_kraus": noises.Kraus,
+}
+
 
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
+    """Gets the observable.
+
+    Args:
+        obs (Union[Observable, list]): The observable(s) to get translated.
+
+    Returns:
+        Observable: The translated observable.
+    """
     return _get_observable(obs)
 
 
@@ -127,39 +148,39 @@ def braket_result_to_result_type(result: Results) -> None:
 
 
 @_braket_result_to_result_type.register(Amplitude)
-def _(result):
+def _(result: Results) -> Amplitude:
     return ResultTypes.Amplitude(state=result.states)
 
 
 @_braket_result_to_result_type.register(Expectation)
-def _(result):
+def _(result: Results) -> Expectation:
     tensor_product = get_tensor_product(result.observable)
 
     return ResultTypes.Expectation(observable=tensor_product, target=result.targets)
 
 
 @_braket_result_to_result_type.register(Probability)
-def _(result):
+def _(result: Results) -> Probability:
     return ResultTypes.Probability(result.targets)
 
 
 @_braket_result_to_result_type.register(Sample)
-def _(result):
+def _(result: Results) -> Sample:
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Sample(observable=tensor_product, target=result.targets)
 
 
 @_braket_result_to_result_type.register(StateVector)
-def _(result):
+def _(result: Results) -> StateVector:
     return ResultTypes.StateVector()
 
 
 @_braket_result_to_result_type.register(DensityMatrix)
-def _(result):
+def _(result: Results):
     return ResultTypes.DensityMatrix(target=result.targets)
 
 
 @_braket_result_to_result_type.register(Variance)
-def _(result):
+def _(result: Results):
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Variance(observable=tensor_product, target=result.targets)

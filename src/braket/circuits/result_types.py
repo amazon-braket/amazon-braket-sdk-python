@@ -41,8 +41,7 @@ To add a new result type:
 
 
 class StateVector(ResultType):
-    """
-    The full state vector as a requested result type.
+    """The full state vector as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
@@ -68,10 +67,8 @@ class StateVector(ResultType):
         """
         return ResultType.StateVector()
 
-    def __eq__(self, other) -> bool:
-        if isinstance(other, StateVector):
-            return True
-        return False
+    def __eq__(self, other: StateVector) -> bool:
+        return isinstance(other, StateVector)
 
     def __copy__(self) -> StateVector:
         return type(self)()
@@ -86,13 +83,13 @@ ResultType.register_result_type(StateVector)
 
 
 class DensityMatrix(ResultType):
-    """
-    The full density matrix as a requested result type.
+    """The full density matrix as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
     def __init__(self, target: QubitSetInput | None = None):
-        """
+        """Inits a `DensityMatrix`.
+
         Args:
             target (QubitSetInput | None): The target qubits
                 of the reduced density matrix. Default is `None`, and the
@@ -112,6 +109,7 @@ class DensityMatrix(ResultType):
     @target.setter
     def target(self, target: QubitSetInput) -> None:
         """Sets the target qubit set.
+
         Args:
             target (QubitSetInput): The target qubit set.
         """
@@ -136,6 +134,7 @@ class DensityMatrix(ResultType):
     @circuit.subroutine(register=True)
     def density_matrix(target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
+
         Args:
             target (QubitSetInput | None): The target qubits
                 of the reduced density matrix. Default is `None`, and the
@@ -149,7 +148,7 @@ class DensityMatrix(ResultType):
         """
         return ResultType.DensityMatrix(target=target)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: DensityMatrix) -> bool:
         if isinstance(other, DensityMatrix):
             return self.target == other.target
         return False
@@ -170,8 +169,7 @@ ResultType.register_result_type(DensityMatrix)
 
 
 class AdjointGradient(ObservableParameterResultType):
-    """
-    The gradient of the expectation value of the provided observable, applied to target,
+    """The gradient of the expectation value of the provided observable, applied to target,
     with respect to the given parameter.
     """
 
@@ -181,7 +179,8 @@ class AdjointGradient(ObservableParameterResultType):
         target: list[QubitSetInput] | None = None,
         parameters: list[Union[str, FreeParameter]] | None = None,
     ):
-        """
+        """Inits an `AdjointGradient`.
+
         Args:
             observable (Observable): The expectation value of this observable is the function
                 against which parameters in the gradient are differentiated.
@@ -197,6 +196,7 @@ class AdjointGradient(ObservableParameterResultType):
             ValueError: If the observable's qubit count does not equal the number of target
                 qubits, or if `target=None` and the observable's qubit count is not 1.
 
+
         Examples:
             >>> ResultType.AdjointGradient(observable=Observable.Z(),
                                         target=0, parameters=["alpha", "beta"])
@@ -209,7 +209,6 @@ class AdjointGradient(ObservableParameterResultType):
             >>>     parameters=["alpha", "beta"],
             >>> )
         """
-
         if isinstance(observable, Sum):
             target_qubits = reduce(QubitSet.union, map(QubitSet, target), QubitSet())
         else:
@@ -274,13 +273,13 @@ ResultType.register_result_type(AdjointGradient)
 
 
 class Amplitude(ResultType):
-    """
-    The amplitude of the specified quantum states as a requested result type.
+    """The amplitude of the specified quantum states as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
     def __init__(self, state: list[str]):
-        """
+        """Initializes an `Amplitude`.
+
         Args:
             state (list[str]): list of quantum states as strings with "0" and "1"
 
@@ -332,10 +331,8 @@ class Amplitude(ResultType):
         """
         return ResultType.Amplitude(state=state)
 
-    def __eq__(self, other):
-        if isinstance(other, Amplitude):
-            return self.state == other.state
-        return False
+    def __eq__(self, other: Amplitude):
+        return self.state == other.state if isinstance(other, Amplitude) else False
 
     def __repr__(self):
         return f"Amplitude(state={self.state})"
@@ -362,7 +359,8 @@ class Probability(ResultType):
     """
 
     def __init__(self, target: QubitSetInput | None = None):
-        """
+        """Inits a `Probability`.
+
         Args:
             target (QubitSetInput | None): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
@@ -382,6 +380,7 @@ class Probability(ResultType):
     @target.setter
     def target(self, target: QubitSetInput) -> None:
         """Sets the target qubit set.
+
         Args:
             target (QubitSetInput): The target qubit set.
         """
@@ -420,10 +419,8 @@ class Probability(ResultType):
         """
         return ResultType.Probability(target=target)
 
-    def __eq__(self, other) -> bool:
-        if isinstance(other, Probability):
-            return self.target == other.target
-        return False
+    def __eq__(self, other: Probability) -> bool:
+        return self.target == other.target if isinstance(other, Probability) else False
 
     def __repr__(self) -> str:
         return f"Probability(target={self.target})"
@@ -452,16 +449,14 @@ class Expectation(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput | None = None):
-        """
+        """Inits an `Expectation`.
+
         Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
-        Raises:
-            ValueError: If the observable's qubit count does not equal the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Expectation(observable=Observable.Z(), target=0)
@@ -527,16 +522,13 @@ class Sample(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput | None = None):
-        """
+        """Inits a `Sample`.
+
         Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
-
-        Raises:
-            ValueError: If the observable's qubit count is not equal to the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Sample(observable=Observable.Z(), target=0)
@@ -603,7 +595,8 @@ class Variance(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput | None = None):
-        """
+        """Inits a `Variance`.
+
         Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput | None): Target qubits that the

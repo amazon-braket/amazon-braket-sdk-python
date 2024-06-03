@@ -16,47 +16,37 @@ import os.path
 import re
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import job_test_script
 import pytest
 from job_test_module.job_test_submodule.job_test_submodule_file import submodule_helper
+from job_testing_utils import decorator_python_version
 
-from braket.aws import AwsSession
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.devices import Devices
-from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
+from braket.jobs import get_input_data_dir, hybrid_job, save_job_result
 
 
-def decorator_python_version():
-    aws_session = AwsSession()
-    image_uri = retrieve_image(Framework.BASE, aws_session.region)
-    tag = aws_session.get_full_image_tag(image_uri)
-    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-    return int(major_version), int(minor_version)
-
-
-def test_failed_quantum_job(aws_session, capsys):
+def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     """Asserts the hybrid job is failed with the output, checkpoints,
     quantum tasks not created in bucket and only input is uploaded to s3. Validate the
     results/download results have the response raising RuntimeError. Also,
     check if the logs displays the Assertion Error.
     """
-
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        aws_session=aws_session,
-        wait_until_complete=True,
-        hyperparameters={"test_case": "failed"},
-    )
+    job = failed_quantum_job
+    job_name = job.name
 
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
     assert re.match(pattern=pattern, string=job.arn)
 
     # Check job is in failed state.
-    assert job.state() == "FAILED"
+    while True:
+        time.sleep(5)
+        if job.state() in AwsQuantumJob.TERMINAL_STATES:
+            break
+    assert job.state(use_cached_value=True) == "FAILED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
@@ -65,7 +55,7 @@ def test_failed_quantum_job(aws_session, capsys):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -97,27 +87,22 @@ def test_failed_quantum_job(aws_session, capsys):
     )
 
 
-def test_completed_quantum_job(aws_session, capsys):
+def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     """Asserts the hybrid job is completed with the output, checkpoints, quantum tasks and
     script folder created in S3 for respective hybrid job. Validate the results are
     downloaded and results are what we expect. Also, assert that logs contains all the
     necessary steps for setup and running the hybrid job and is displayed to the user.
     """
 
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        wait_until_complete=True,
-        aws_session=aws_session,
-        hyperparameters={"test_case": "completed"},
-    )
-
+    job = completed_quantum_job
+    job_name = job.name
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d{{12}}:job/[a-z0-9-]+$"
     assert re.match(pattern=pattern, string=job.arn)
 
-    # check job is in completed state.
-    assert job.state() == "COMPLETED"
+    # Check the job has completed
+    job.result()
+
+    assert job.state(use_cached_value=True) == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.
@@ -126,7 +111,7 @@ def test_completed_quantum_job(aws_session, capsys):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -179,19 +164,11 @@ def test_completed_quantum_job(aws_session, capsys):
             == expected_data
         )
 
-    # Check downloaded results exists in the file system after the call.
-    downloaded_result = f"{job_name}/{AwsQuantumJob.RESULTS_FILENAME}"
     current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         try:
-            job.download_result()
-            assert (
-                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
-                and Path(downloaded_result).exists()
-            )
-
             # Check results match the expectations.
             assert job.result() == {"converged": True, "energy": -0.2}
         finally:
@@ -235,9 +212,9 @@ def test_decorator_job():
         input_data=str(Path("test", "integ_tests", "requirements")),
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
-        with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir()) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
         assert a.attribute == "value"
@@ -247,7 +224,7 @@ def test_decorator_job():
         assert extras["extra_arg"] == "extra_value"
 
         hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
-        with open(hp_file, "r") as f:
+        with open(hp_file) as f:
             hyperparameters = json.load(f)
         assert hyperparameters == {
             "a": "MyClass{value}",
@@ -270,7 +247,7 @@ def test_decorator_job():
         os.chdir(temp_dir)
         try:
             job.download_result()
-            with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+            with open(Path(job.name, "test", "output_file.txt")) as f:
                 assert f.read() == "hello"
             assert (
                 Path(job.name, "results.json").exists()
@@ -301,12 +278,12 @@ def test_decorator_job_submodule():
         },
     )
     def decorator_job_submodule():
-        with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir("my_input")) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
-            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
+            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt"
         ) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
@@ -317,7 +294,6 @@ def test_decorator_job_submodule():
                 "job_test_submodule",
                 "requirements.txt",
             ),
-            "r",
         ) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)

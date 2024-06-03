@@ -18,6 +18,7 @@ from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
+from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
@@ -31,7 +32,8 @@ from braket.parametric import FreeParameterExpression
 
 class BraketProgramContext(AbstractProgramContext):
     def __init__(self, circuit: Optional[Circuit] = None):
-        """
+        """Inits a `BraketProgramContext`.
+
         Args:
             circuit (Optional[Circuit]): A partially-built circuit to continue building with this
                 context. Default: None.
@@ -133,8 +135,7 @@ class BraketProgramContext(AbstractProgramContext):
         self._circuit.add_instruction(instruction)
 
     def add_result(self, result: Results) -> None:
-        """
-        Abstract method to add result type to the circuit
+        """Abstract method to add result type to the circuit
 
         Args:
             result (Results): The result object representing the measurement results
@@ -159,3 +160,17 @@ class BraketProgramContext(AbstractProgramContext):
                 return evaluated_value
             return FreeParameterExpression(evaluated_value)
         return value
+
+    def add_measure(self, target: tuple[int]) -> None:
+        """Add a measure instruction to the circuit
+
+        Args:
+            target (tuple[int]): the target qubits to be measured.
+        """
+        for index, qubit in enumerate(target):
+            instruction = Instruction(Measure(index=index), qubit)
+            self._circuit.add_instruction(instruction)
+            if self._circuit._measure_targets:
+                self._circuit._measure_targets.append(qubit)
+            else:
+                self._circuit._measure_targets = [qubit]

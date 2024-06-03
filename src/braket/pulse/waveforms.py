@@ -21,7 +21,6 @@ from typing import Optional, Union
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
-from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -29,15 +28,13 @@ from braket.parametric.free_parameter_expression import (
     subs_if_free_parameter,
 )
 from braket.parametric.parameterizable import Parameterizable
-from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
 
 
 class Waveform(ABC):
-    """
-    A waveform is a time-dependent envelope that can be used to emit signals on an output port
+    """A waveform is a time-dependent envelope that can be used to emit signals on an output port
     or receive signals from an input port. As such, when transmitting signals to the qubit, a
     frame determines time at which the waveform envelope is emitted, its carrier frequency, and
-    it’s phase offset. When capturing signals from a qubit, at minimum a frame determines the
+    it's phase offset. When capturing signals from a qubit, at minimum a frame determines the
     time at which the signal is captured. See https://openqasm.com/language/openpulse.html#waveforms
     for more details.
     """
@@ -49,32 +46,35 @@ class Waveform(ABC):
     @abstractmethod
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
         Args:
             dt (float): The time resolution.
+
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
 
     @staticmethod
     @abstractmethod
     def _from_calibration_schema(waveform_json: dict) -> Waveform:
-        """
-        Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
+        """Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104 # noqa: E501
 
         Args:
             waveform_json (dict): A JSON object with the needed parameters for making the Waveform.
 
         Returns:
             Waveform: A Waveform object parsed from the supplied JSON.
-        """  # noqa: E501
+        """
 
 
 class ArbitraryWaveform(Waveform):
     """An arbitrary waveform with amplitudes at each timestep explicitly specified using
-    an array."""
+    an array.
+    """
 
     def __init__(self, amplitudes: list[complex], id: Optional[str] = None):
-        """
+        """Initializes an `ArbitraryWaveform`.
+
         Args:
             amplitudes (list[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
@@ -85,7 +85,10 @@ class ArbitraryWaveform(Waveform):
         self.amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
 
-    def __eq__(self, other):
+    def __repr__(self) -> str:
+        return f"ArbitraryWaveform('id': {self.id}, 'amplitudes': {self.amplitudes})"
+
+    def __eq__(self, other: ArbitraryWaveform):
         return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
             other.amplitudes,
             other.id,
@@ -93,6 +96,7 @@ class ArbitraryWaveform(Waveform):
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
+
         Returns:
             OQPyExpression: The OQPyExpression.
         """
@@ -100,10 +104,15 @@ class ArbitraryWaveform(Waveform):
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
         Args:
             dt (float): The time resolution.
+
+        Raises:
+            NotImplementedError: This class does not implement sample.
+
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         raise NotImplementedError
 
@@ -116,12 +125,14 @@ class ArbitraryWaveform(Waveform):
 
 class ConstantWaveform(Waveform, Parameterizable):
     """A constant waveform which holds the supplied `iq` value as its amplitude for the
-    specified length."""
+    specified length.
+    """
 
     def __init__(
         self, length: Union[float, FreeParameterExpression], iq: complex, id: Optional[str] = None
     ):
-        """
+        """Initializes a `ConstantWaveform`.
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
                 specifying the duration of the waveform.
@@ -133,15 +144,25 @@ class ConstantWaveform(Waveform, Parameterizable):
         self.iq = iq
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
-        expressions or bound values."""
+        expressions or bound values.
+
+        Returns:
+            list[Union[FreeParameterExpression, FreeParameter, float]]: a list of parameters.
+        """
         return [self.length]
 
-    def bind_values(self, **kwargs) -> ConstantWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ConstantWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             ConstantWaveform: A copy of this waveform with the requested parameters bound.
@@ -153,7 +174,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         }
         return ConstantWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: ConstantWaveform):
         return isinstance(other, ConstantWaveform) and (self.length, self.iq, self.id) == (
             other.length,
             other.iq,
@@ -162,6 +183,7 @@ class ConstantWaveform(Waveform, Parameterizable):
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
+
         Returns:
             OQPyExpression: The OQPyExpression.
         """
@@ -169,16 +191,18 @@ class ConstantWaveform(Waveform, Parameterizable):
             "constant", [("length", duration), ("iq", complex128)]
         )
         return WaveformVar(
-            init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
+            init_expression=constant_generator(self.length, self.iq),
             name=self.id,
         )
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
         Args:
             dt (float): The time resolution.
+
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         # Amplitudes should be gated by [0:self.length]
         sample_range = np.arange(0, self.length, dt)
@@ -217,7 +241,8 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
-        """
+        """Initializes a `DragGaussianWaveform`.
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
                 specifying the duration of the waveform.
@@ -238,15 +263,26 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return (
+            f"DragGaussianWaveform('id': {self.id}, 'length': {self.length}, "
+            f"'sigma': {self.sigma}, 'beta': {self.beta}, 'amplitude': {self.amplitude}, "
+            f"'zero_at_edges': {self.zero_at_edges})"
+        )
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
-        expressions or bound values."""
+        expressions or bound values.
+        """
         return [self.length, self.sigma, self.beta, self.amplitude]
 
-    def bind_values(self, **kwargs) -> DragGaussianWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> DragGaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             DragGaussianWaveform: A copy of this waveform with the requested parameters bound.
@@ -261,7 +297,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         }
         return DragGaussianWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: DragGaussianWaveform):
         return isinstance(other, DragGaussianWaveform) and (
             self.length,
             self.sigma,
@@ -273,6 +309,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
+
         Returns:
             OQPyExpression: The OQPyExpression.
         """
@@ -288,10 +325,10 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.beta),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.beta,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -299,10 +336,12 @@ class DragGaussianWaveform(Waveform, Parameterizable):
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
         Args:
             dt (float): The time resolution.
+
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2
@@ -343,7 +382,8 @@ class GaussianWaveform(Waveform, Parameterizable):
         zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
-        """
+        """Initializes a `GaussianWaveform`.
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds) specifying the
                 duration of the waveform.
@@ -362,15 +402,25 @@ class GaussianWaveform(Waveform, Parameterizable):
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return (
+            f"GaussianWaveform('id': {self.id}, 'length': {self.length}, 'sigma': {self.sigma}, "
+            f"'amplitude': {self.amplitude}, 'zero_at_edges': {self.zero_at_edges})"
+        )
+
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
-        expressions or bound values."""
+        expressions or bound values.
+        """
         return [self.length, self.sigma, self.amplitude]
 
-    def bind_values(self, **kwargs) -> GaussianWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> GaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             GaussianWaveform: A copy of this waveform with the requested parameters bound.
@@ -384,7 +434,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         }
         return GaussianWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: GaussianWaveform):
         return isinstance(other, GaussianWaveform) and (
             self.length,
             self.sigma,
@@ -395,6 +445,7 @@ class GaussianWaveform(Waveform, Parameterizable):
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
+
         Returns:
             OQPyExpression: The OQPyExpression.
         """
@@ -409,9 +460,9 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=gaussian_generator(
-                _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma, True),
-                _map_to_oqpy_type(self.amplitude),
+                self.length,
+                self.sigma,
+                self.amplitude,
                 self.zero_at_edges,
             ),
             name=self.id,
@@ -419,10 +470,12 @@ class GaussianWaveform(Waveform, Parameterizable):
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
         Args:
             dt (float): The time resolution.
+
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2
@@ -449,19 +502,7 @@ class GaussianWaveform(Waveform, Parameterizable):
 
 
 def _make_identifier_name() -> str:
-    return "".join([random.choice(string.ascii_letters) for _ in range(10)])
-
-
-def _map_to_oqpy_type(
-    parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
-    if isinstance(parameter, FreeParameterExpression):
-        return (
-            OQDurationLiteral(parameter)
-            if is_duration_type
-            else _FreeParameterExpressionIdentifier(parameter)
-        )
-    return parameter
+    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa S311
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
@@ -471,10 +512,9 @@ def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
         "gaussian": GaussianWaveform._from_calibration_schema,
         "constant": ConstantWaveform._from_calibration_schema,
     }
-    if "amplitudes" in waveform.keys():
+    if "amplitudes" in waveform:
         waveform["name"] = "arbitrary"
     if waveform["name"] in waveform_names:
         return waveform_names[waveform["name"]](waveform)
-    else:
-        id = waveform["waveformId"]
-        raise ValueError(f"The waveform {id} of cannot be constructed")
+    waveform_id = waveform["waveformId"]
+    raise ValueError(f"The waveform {waveform_id} of cannot be constructed")

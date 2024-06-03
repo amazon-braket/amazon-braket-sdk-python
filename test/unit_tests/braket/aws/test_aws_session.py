@@ -58,7 +58,6 @@ def aws_session(boto_session, braket_client, account_id):
     _aws_session._sts.get_caller_identity.return_value = {
         "Account": account_id,
     }
-
     _aws_session._s3 = Mock()
     return _aws_session
 
@@ -411,7 +410,7 @@ def test_create_quantum_task_with_job_token(aws_session):
     }
     with patch.dict(os.environ, {"AMZN_BRAKET_JOB_TOKEN": job_token}):
         assert aws_session.create_quantum_task(**kwargs) == arn
-        kwargs.update({"jobToken": job_token})
+        kwargs["jobToken"] = job_token
         aws_session.braket_client.create_quantum_task.assert_called_with(**kwargs)
 
 
@@ -998,6 +997,12 @@ def test_upload_to_s3(aws_session):
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
 
 
+def test_account_id_idempotency(aws_session, account_id):
+    acc_id = aws_session.account_id
+    assert acc_id == aws_session.account_id
+    assert acc_id == account_id
+
+
 def test_upload_local_data(aws_session):
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
@@ -1279,10 +1284,10 @@ def test_describe_log_streams(aws_session, limit, next_token):
     }
 
     if limit:
-        describe_log_stream_args.update({"limit": limit})
+        describe_log_stream_args["limit"] = limit
 
     if next_token:
-        describe_log_stream_args.update({"nextToken": next_token})
+        describe_log_stream_args["nextToken"] = next_token
 
     aws_session.describe_log_streams(log_group, log_stream_prefix, limit, next_token)
 
@@ -1309,7 +1314,7 @@ def test_get_log_events(aws_session, next_token):
     }
 
     if next_token:
-        log_events_args.update({"nextToken": next_token})
+        log_events_args["nextToken"] = next_token
 
     aws_session.get_log_events(log_group, log_stream_name, start_time, start_from_head, next_token)
 

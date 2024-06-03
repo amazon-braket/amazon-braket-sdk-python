@@ -19,10 +19,9 @@ from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(
-    operators: Union[QuantumOperator, Iterable[QuantumOperator]]
+    operators: Union[QuantumOperator, Iterable[QuantumOperator]],
 ) -> Optional[set[QuantumOperator]]:
-    """
-    Processes the quantum operator input to __init__ to validate and return a set of
+    """Processes the quantum operator input to __init__ to validate and return a set of
     QuantumOperators.
 
     Args:
@@ -49,8 +48,7 @@ def parse_operator_input(
 def parse_qubit_input(
     qubits: Optional[QubitSetInput], expected_qubit_count: Optional[int] = 0
 ) -> Optional[set[Union[int, tuple[int]]]]:
-    """
-    Processes the qubit input to __init__ to validate and return a set of qubit targets.
+    """Processes the qubit input to __init__ to validate and return a set of qubit targets.
 
     Args:
         qubits (Optional[QubitSetInput]): Qubit input.
@@ -86,6 +84,4 @@ def parse_qubit_input(
         if qubit_count == 1:
             return {item[0] for item in qubits}
         return {tuple(item) for item in qubits}
-    if qubit_count > 1:
-        return {tuple(qubits)}
-    return set(qubits)
+    return {tuple(qubits)} if qubit_count > 1 else set(qubits)

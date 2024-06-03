@@ -36,8 +36,7 @@ T = TypeVar("T")
 
 @dataclass
 class GateModelQuantumTaskResult:
-    """
-    Result of a gate model quantum task execution. This class is intended
+    """Result of a gate model quantum task execution. This class is intended
     to be initialized by a QuantumTask class.
 
     Args:
@@ -96,16 +95,15 @@ class GateModelQuantumTaskResult:
 
     def __post_init__(self):
         if self.result_types is not None:
-            self._result_types_indices = dict(
-                (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+            self._result_types_indices = {
+                GateModelQuantumTaskResult._result_type_hash(rt.type): i
                 for i, rt in enumerate(self.result_types)
-            )
+            }
         else:
             self._result_types_indices = {}
 
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
-        """
-        Get value by result type. The result type must have already been
+        """Get value by result type. The result type must have already been
         requested in the circuit sent to the device for this quantum task result.
 
         Args:
@@ -123,20 +121,19 @@ class GateModelQuantumTaskResult:
             rt_hash = GateModelQuantumTaskResult._result_type_hash(rt_ir)
             result_type_index = self._result_types_indices[rt_hash]
             return self.values[result_type_index]
-        except KeyError:
+        except KeyError as e:
             raise ValueError(
                 "Result type not found in result. "
-                + "Result types must be added to circuit before circuit is run on device."
-            )
+                "Result types must be added to circuit before circuit is run on device."
+            ) from e
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: GateModelQuantumTaskResult) -> bool:
         if isinstance(other, GateModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
 
     def get_compiled_circuit(self) -> Optional[str]:
-        """
-        Get the compiled circuit, if one is available.
+        """Get the compiled circuit, if one is available.
 
         Returns:
             Optional[str]: The compiled circuit or None.
@@ -153,27 +150,25 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
-        """
-        Creates measurement counts from measurements
+        """Creates measurement counts from measurements
 
         Args:
-            measurements (ndarray): 2d array - row is shot and column is qubit.
+            measurements (np.ndarray): 2d array - row is shot and column is qubit.
 
         Returns:
             Counter: A Counter of measurements. Key is the measurements in a big endian binary
             string. Value is the number of times that measurement occurred.
         """
-        bitstrings = []
-        for j in range(len(measurements)):
-            bitstrings.append("".join([str(element) for element in measurements[j]]))
+        bitstrings = [
+            "".join([str(element) for element in measurements[j]]) for j in range(len(measurements))
+        ]
         return Counter(bitstrings)
 
     @staticmethod
     def measurement_probabilities_from_measurement_counts(
         measurement_counts: Counter,
     ) -> dict[str, float]:
-        """
-        Creates measurement probabilities from measurement counts
+        """Creates measurement probabilities from measurement counts
 
         Args:
             measurement_counts (Counter): A Counter of measurements. Key is the measurements
@@ -184,19 +179,18 @@ class GateModelQuantumTaskResult:
             dict[str, float]: A dictionary of probabilistic results. Key is the measurements
             in a big endian binary string. Value is the probability the measurement occurred.
         """
-        measurement_probabilities = {}
         shots = sum(measurement_counts.values())
 
-        for key, count in measurement_counts.items():
-            measurement_probabilities[key] = count / shots
+        measurement_probabilities = {
+            key: count / shots for key, count in measurement_counts.items()
+        }
         return measurement_probabilities
 
     @staticmethod
     def measurements_from_measurement_probabilities(
         measurement_probabilities: dict[str, float], shots: int
     ) -> np.ndarray:
-        """
-        Creates measurements from measurement probabilities.
+        """Creates measurements from measurement probabilities.
 
         Args:
             measurement_probabilities (dict[str, float]): A dictionary of probabilistic results.
@@ -205,7 +199,7 @@ class GateModelQuantumTaskResult:
             shots (int): number of iterations on device.
 
         Returns:
-            ndarray: A dictionary of probabilistic results.
+            np.ndarray: A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
         """
@@ -220,8 +214,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def from_object(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
-        """
-        Create GateModelQuantumTaskResult from GateModelTaskResult object.
+        """Create GateModelQuantumTaskResult from GateModelTaskResult object.
 
         Args:
             result (GateModelTaskResult): GateModelTaskResult object
@@ -237,8 +230,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def from_string(result: str) -> GateModelQuantumTaskResult:
-        """
-        Create GateModelQuantumTaskResult from string.
+        """Create GateModelQuantumTaskResult from string.
 
         Args:
             result (str): JSON object string, with GateModelQuantumTaskResult attributes as keys.
@@ -294,11 +286,6 @@ class GateModelQuantumTaskResult:
                 " the result obj",
             )
         measured_qubits = result.measuredQubits
-        if len(measured_qubits) != measurements.shape[1]:
-            raise ValueError(
-                f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
-                + f"{measurements.shape[1]} in measurements"
-            )
         if result.resultTypes:
             # Jaqcd does not return anything in the resultTypes schema field since the
             # result types are easily parsable from the IR. However, an OpenQASM program
@@ -350,8 +337,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def cast_result_types(gate_model_task_result: GateModelTaskResult) -> None:
-        """
-        Casts the result types to the types expected by the SDK.
+        """Casts the result types to the types expected by the SDK.
 
         Args:
             gate_model_task_result (GateModelTaskResult): GateModelTaskResult representing the
@@ -360,13 +346,14 @@ class GateModelQuantumTaskResult:
         if gate_model_task_result.resultTypes:
             for result_type in gate_model_task_result.resultTypes:
                 type = result_type.type.type
-                if type == "probability":
+                if type == "amplitude":
+                    for state in result_type.value:
+                        result_type.value[state] = complex(*result_type.value[state])
+
+                elif type == "probability":
                     result_type.value = np.array(result_type.value)
                 elif type == "statevector":
                     result_type.value = np.array([complex(*value) for value in result_type.value])
-                elif type == "amplitude":
-                    for state in result_type.value:
-                        result_type.value[state] = complex(*result_type.value[state])
 
     @staticmethod
     def _calculate_result_types(

@@ -117,6 +117,9 @@ class LocalQuantumJob(QuantumJob):
                 container image. Optional.
                 Default: True.
 
+        Raises:
+            ValueError: Local directory with the job name already exists.
+
         Returns:
             LocalQuantumJob: The representation of a local Braket Hybrid Job.
         """
@@ -166,11 +169,15 @@ class LocalQuantumJob(QuantumJob):
         return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
     def __init__(self, arn: str, run_log: str | None = None):
-        """
+        """Initializes a `LocalQuantumJob`.
+
         Args:
             arn (str): The ARN of the hybrid job.
-            run_log (str | None): The container output log of running the hybrid job with the
-                given arn.
+            run_log (str | None): The container output log of running the hybrid job with the given
+                arn.
+
+        Raises:
+            ValueError: Local job is not found.
         """
         if not arn.startswith("local:job/"):
             raise ValueError(f"Arn {arn} is not a valid local job arn")
@@ -194,24 +201,31 @@ class LocalQuantumJob(QuantumJob):
     def run_log(self) -> str:
         """Gets the run output log from running the hybrid job.
 
+        Raises:
+            ValueError: The log file is not found.
+
         Returns:
             str:  The container output log from running the hybrid job.
         """
         if not self._run_log:
             try:
-                with open(os.path.join(self.name, "log.txt"), "r") as log_file:
+                with open(os.path.join(self.name, "log.txt")) as log_file:
                     self._run_log = log_file.read()
-            except FileNotFoundError:
-                raise ValueError(f"Unable to find logs in the local job directory {self.name}.")
+            except FileNotFoundError as e:
+                raise ValueError(
+                    f"Unable to find logs in the local job directory {self.name}."
+                ) from e
         return self._run_log
 
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the hybrid job.
+
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: Returns "COMPLETED".
         """
@@ -219,22 +233,23 @@ class LocalQuantumJob(QuantumJob):
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """When running the hybrid job in local mode, the metadata is not available.
+
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: None
         """
-        pass
 
     def cancel(self) -> str:
         """When running the hybrid job in local mode, the cancelling a running is not possible.
+
         Returns:
             str: None
         """
-        pass
 
     def download_result(
         self,
@@ -253,14 +268,13 @@ class LocalQuantumJob(QuantumJob):
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
         """
-        pass
 
     def result(
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using save_job_result() function.
+        """Retrieves the `LocalQuantumJob` result persisted using `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -268,18 +282,23 @@ class LocalQuantumJob(QuantumJob):
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
 
+        Raises:
+            ValueError: The local job directory does not exist.
+
         Returns:
             dict[str, Any]: Dict specifying the hybrid job results.
         """
         try:
-            with open(os.path.join(self.name, "results.json"), "r") as f:
+            with open(os.path.join(self.name, "results.json")) as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
                 deserialized_data = deserialize_values(
                     persisted_data.dataDictionary, persisted_data.dataFormat
                 )
                 return deserialized_data
-        except FileNotFoundError:
-            raise ValueError(f"Unable to find results in the local job directory {self.name}.")
+        except FileNotFoundError as e:
+            raise ValueError(
+                f"Unable to find results in the local job directory {self.name}."
+            ) from e
 
     def metrics(
         self,

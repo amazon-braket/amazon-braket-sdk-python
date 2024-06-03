@@ -21,6 +21,7 @@ RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 XANADU_ARN = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
 
@@ -221,7 +222,7 @@ def run_and_assert(
         run_args.append(inputs)
     if gate_definitions is not None:
         run_args.append(gate_definitions)
-    run_args += extra_args if extra_args else []
+    run_args += extra_args or []
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
         run_kwargs.update({"reservation_arn": reservation_arn})
@@ -294,7 +295,7 @@ def run_batch_and_assert(
         run_args.append(inputs)
     if gate_definitions is not None:
         run_args.append(gate_definitions)
-    run_args += extra_args if extra_args else []
+    run_args += extra_args or []
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
         run_kwargs.update({"reservation_arn": reservation_arn})
@@ -349,7 +350,7 @@ def _create_task_args_and_kwargs(
         s3_folder if s3_folder is not None else default_s3_folder,
         shots if shots is not None else default_shots,
     ]
-    create_args += extra_args if extra_args else []
+    create_args += extra_args or []
     create_kwargs = extra_kwargs or {}
     create_kwargs.update(
         {

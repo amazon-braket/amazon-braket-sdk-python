@@ -1,14 +1,13 @@
 """Sphinx configuration."""
 
 import datetime
-
-import pkg_resources
+from importlib.metadata import version
 
 # Sphinx configuration below.
 project = "amazon-braket-sdk"
-version = pkg_resources.require(project)[0].version
+version = version(project)
 release = version
-copyright = "{}, Amazon.com".format(datetime.datetime.now().year)
+copyright = f"{datetime.datetime.now().year}, Amazon.com"
 
 extensions = [
     "sphinxcontrib.apidoc",
@@ -30,7 +29,7 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "prev_next_buttons_location": "both",
 }
-htmlhelp_basename = "{}doc".format(project)
+htmlhelp_basename = f"{project}doc"
 
 language = "en"
 

@@ -18,8 +18,7 @@ from openqasm3.visitor import QASMTransformer
 
 
 class _IRQASMTransformer(QASMTransformer):
-    """
-    QASMTransformer which walks the AST and makes the necessary modifications needed
+    """QASMTransformer which walks the AST and makes the necessary modifications needed
     for IR generation. Currently, it performs the following operations:
       * Replaces capture_v0 function calls with assignment statements, assigning the
         readout value to a bit register element.
@@ -32,28 +31,29 @@ class _IRQASMTransformer(QASMTransformer):
 
     def visit_ExpressionStatement(self, expression_statement: ast.ExpressionStatement) -> Any:
         """Visit an Expression.
+
         Args:
             expression_statement (ast.ExpressionStatement): The expression statement.
+
         Returns:
             Any: The expression statement.
         """
         if (
-            isinstance(expression_statement.expression, ast.FunctionCall)
-            and expression_statement.expression.name.name == "capture_v0"
-            and self._register_identifier
+            not isinstance(expression_statement.expression, ast.FunctionCall)
+            or expression_statement.expression.name.name != "capture_v0"
+            or not self._register_identifier
         ):
-            # For capture_v0 nodes, it replaces it with classical assignment statements
-            # of the form:
-            # b[0] = capture_v0(...)
-            # b[1] = capture_v0(...)
-            new_val = ast.ClassicalAssignment(
-                # Ideally should use IndexedIdentifier here, but this works since it is just
-                # for printing.
-                ast.Identifier(name=f"{self._register_identifier}[{self._capture_v0_count}]"),
-                ast.AssignmentOperator["="],
-                expression_statement.expression,
-            )
-            self._capture_v0_count += 1
-            return new_val
-        else:
             return expression_statement
+        # For capture_v0 nodes, it replaces it with classical assignment statements
+        # of the form:
+        # b[0] = capture_v0(...)
+        # b[1] = capture_v0(...)
+        new_val = ast.ClassicalAssignment(
+            # Ideally should use IndexedIdentifier here, but this works since it is just
+            # for printing.
+            ast.Identifier(name=f"{self._register_identifier}[{self._capture_v0_count}]"),
+            ast.AssignmentOperator["="],
+            expression_statement.expression,
+        )
+        self._capture_v0_count += 1
+        return new_val

@@ -73,6 +73,7 @@ class AtomArrangement:
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
+
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
@@ -109,6 +110,9 @@ class AtomArrangement:
             properties (DiscretizationProperties): Capabilities of a device that represent the
                 resolution with which the device can implement the parameters.
 
+        Raises:
+            DiscretizationError: If unable to discretize the program.
+
         Returns:
             AtomArrangement: A new discretized atom arrangement.
         """
@@ -117,9 +121,9 @@ class AtomArrangement:
             discretized_arrangement = AtomArrangement()
             for site in self._sites:
                 new_coordinates = tuple(
-                    (round(Decimal(c) / position_res) * position_res for c in site.coordinate)
+                    round(Decimal(c) / position_res) * position_res for c in site.coordinate
                 )
                 discretized_arrangement.add(new_coordinates, site.site_type)
             return discretized_arrangement
         except Exception as e:
-            raise DiscretizationError(f"Failed to discretize register {e}")
+            raise DiscretizationError(f"Failed to discretize register {e}") from e

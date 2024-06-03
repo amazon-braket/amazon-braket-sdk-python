@@ -17,6 +17,7 @@ import itertools
 import os
 import os.path
 import re
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple, Optional
@@ -33,10 +34,14 @@ from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
-class AwsSession(object):
+class AwsSession:
     """Manage interactions with AWS services."""
 
-    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", str)])
+    class S3DestinationFolder(NamedTuple):
+        """A `NamedTuple` for an S3 bucket and object key."""
+
+        bucket: str
+        key: str
 
     def __init__(
         self,
@@ -45,12 +50,16 @@ class AwsSession(object):
         config: Config | None = None,
         default_bucket: str | None = None,
     ):
-        """
+        """Initializes an `AwsSession`.
+
         Args:
-            boto_session (Session | None): A boto3 session object.
+            boto_session (boto3.Session | None): A boto3 session object.
             braket_client (client | None): A boto3 Braket client.
             config (Config | None): A botocore Config object.
             default_bucket (str | None): The name of the default bucket of the AWS Session.
+
+        Raises:
+            ValueError: invalid boto_session or braket_client.
         """
         if (
             boto_session
@@ -77,7 +86,6 @@ class AwsSession(object):
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
-
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
@@ -93,6 +101,7 @@ class AwsSession(object):
         self._sts = None
         self._logs = None
         self._ecr = None
+        self._account_id = None
 
     @property
     def region(self) -> str:
@@ -100,7 +109,14 @@ class AwsSession(object):
 
     @property
     def account_id(self) -> str:
-        return self.sts_client.get_caller_identity()["Account"]
+        """Gets the caller's account number.
+
+        Returns:
+            str: The account number of the caller.
+        """
+        if not self._account_id:
+            self._account_id = self.sts_client.get_caller_identity()["Account"]
+        return self._account_id
 
     @property
     def iam_client(self) -> client:
@@ -158,8 +174,7 @@ class AwsSession(object):
         return self._ecr
 
     def _update_user_agent(self) -> None:
-        """
-        Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
+        """Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
         braket-schemas and the notebook instance version. The header is a string of space delimited
         values (For example: "Boto3/1.14.43 Python/3.7.9 Botocore/1.17.44").
         """
@@ -176,8 +191,7 @@ class AwsSession(object):
         )
 
     def add_braket_user_agent(self, user_agent: str) -> None:
-        """
-        Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the
+        """Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the
         header. This method is typically only relevant for libraries integrating with the
         Amazon Braket SDK.
 
@@ -204,8 +218,7 @@ class AwsSession(object):
     # Quantum Tasks
     #
     def cancel_quantum_task(self, arn: str) -> None:
-        """
-        Cancel the quantum task.
+        """Cancel the quantum task.
 
         Args:
             arn (str): The ARN of the quantum task to cancel.
@@ -214,20 +227,45 @@ class AwsSession(object):
         broadcast_event(_TaskStatusEvent(arn=arn, status=response["cancellationStatus"]))
 
     def create_quantum_task(self, **boto3_kwargs) -> str:
-        """
-        Create a quantum task.
+        """Create a quantum task.
 
         Args:
-            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateQuantumTask`
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateQuantumTask`
                 operation.
 
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add reservation arn if available and device is correct.
+        context_device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        context_reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
+
+        # if the task has a reservation_arn and also context does, raise a warning
+        # Raise warning if reservation ARN is found in both context and task parameters
+        task_has_reservation = any(
+            item.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for item in boto3_kwargs.get("associations", [])
+        )
+        if task_has_reservation and context_reservation_arn:
+            warnings.warn(
+                "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
+                "by a 'DirectReservation' context. If this was not intended, please review your "
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called."
+            )
+
+        # Ensure reservation only applies to specific device
+        if context_device_arn == boto3_kwargs["deviceArn"] and context_reservation_arn:
+            boto3_kwargs["associations"] = [
+                {
+                    "arn": context_reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
+
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
-            boto3_kwargs.update({"jobToken": job_token})
+            boto3_kwargs["jobToken"] = job_token
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(
@@ -240,11 +278,10 @@ class AwsSession(object):
         return response["quantumTaskArn"]
 
     def create_job(self, **boto3_kwargs) -> str:
-        """
-        Create a quantum hybrid job.
+        """Create a quantum hybrid job.
 
         Args:
-            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateJob` operation.
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
             str: The ARN of the hybrid job.
@@ -271,8 +308,7 @@ class AwsSession(object):
         giveup=_should_giveup.__func__,
     )
     def get_quantum_task(self, arn: str) -> dict[str, Any]:
-        """
-        Gets the quantum task.
+        """Gets the quantum task.
 
         Args:
             arn (str): The ARN of the quantum task to get.
@@ -287,9 +323,8 @@ class AwsSession(object):
         return response
 
     def get_default_jobs_role(self) -> str:
-        """
-        Returns the role ARN for the default hybrid jobs role created in the Amazon Braket Console.
-        It will pick the first role it finds with the `RoleName` prefix
+        """This returns the role ARN for the default hybrid jobs role created in the Amazon Braket
+        Console. It will pick the first role it finds with the `RoleName` prefix
         `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
         Returns:
@@ -298,7 +333,7 @@ class AwsSession(object):
 
         Raises:
             RuntimeError: If no roles can be found with the prefix
-            `/service-role/AmazonBraketJobsExecutionRole`.
+                `/service-role/AmazonBraketJobsExecutionRole`.
         """
         roles_paginator = self.iam_client.get_paginator("list_roles")
         for page in roles_paginator.paginate(PathPrefix="/service-role/"):
@@ -318,8 +353,7 @@ class AwsSession(object):
         giveup=_should_giveup.__func__,
     )
     def get_job(self, arn: str) -> dict[str, Any]:
-        """
-        Gets the hybrid job.
+        """Gets the hybrid job.
 
         Args:
             arn (str): The ARN of the hybrid job to get.
@@ -330,8 +364,7 @@ class AwsSession(object):
         return self.braket_client.get_job(jobArn=arn, additionalAttributeNames=["QueueInfo"])
 
     def cancel_job(self, arn: str) -> dict[str, Any]:
-        """
-        Cancel the hybrid job.
+        """Cancel the hybrid job.
 
         Args:
             arn (str): The ARN of the hybrid job to cancel.
@@ -342,8 +375,7 @@ class AwsSession(object):
         return self.braket_client.cancel_job(jobArn=arn)
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
-        """
-        Retrieve the S3 object body.
+        """Retrieve the S3 object body.
 
         Args:
             s3_bucket (str): The S3 bucket name.
@@ -367,8 +399,7 @@ class AwsSession(object):
         self.s3_client.upload_file(filename, bucket, key)
 
     def upload_local_data(self, local_prefix: str, s3_prefix: str) -> None:
-        """
-        Upload local data matching a prefix to a corresponding location in S3
+        """Upload local data matching a prefix to a corresponding location in S3
 
         Args:
             local_prefix (str): a prefix designating files to be uploaded to S3. All files
@@ -398,7 +429,7 @@ class AwsSession(object):
             relative_prefix = str(Path(local_prefix).relative_to(base_dir))
         else:
             base_dir = Path()
-            relative_prefix = str(local_prefix)
+            relative_prefix = local_prefix
         for file in itertools.chain(
             # files that match the prefix
             base_dir.glob(f"{relative_prefix}*"),
@@ -410,8 +441,7 @@ class AwsSession(object):
                 self.upload_to_s3(str(file), s3_uri)
 
     def download_from_s3(self, s3_uri: str, filename: str) -> None:
-        """
-         Download file from S3
+        """Download file from S3
 
         Args:
             s3_uri (str): The S3 uri from where the file will be downloaded.
@@ -421,8 +451,7 @@ class AwsSession(object):
         self.s3_client.download_file(bucket, key, filename)
 
     def copy_s3_object(self, source_s3_uri: str, destination_s3_uri: str) -> None:
-        """
-        Copy object from another location in s3. Does nothing if source and
+        """Copy object from another location in s3. Does nothing if source and
         destination URIs are the same.
 
         Args:
@@ -445,8 +474,7 @@ class AwsSession(object):
         )
 
     def copy_s3_directory(self, source_s3_path: str, destination_s3_path: str) -> None:
-        """
-        Copy all objects from a specified directory in S3. Does nothing if source and
+        """Copy all objects from a specified directory in S3. Does nothing if source and
         destination URIs are the same. Preserves nesting structure, will not overwrite
         other files in the destination location unless they share a name with a file
         being copied.
@@ -475,8 +503,7 @@ class AwsSession(object):
             )
 
     def list_keys(self, bucket: str, prefix: str) -> list[str]:
-        """
-        Lists keys matching prefix in bucket.
+        """Lists keys matching prefix in bucket.
 
         Args:
             bucket (str): Bucket to be queried.
@@ -501,8 +528,7 @@ class AwsSession(object):
         return keys
 
     def default_bucket(self) -> str:
-        """
-        Returns the name of the default bucket of the AWS Session. In the following order
+        """Returns the name of the default bucket of the AWS Session. In the following order
         of priority, it will return either the parameter `default_bucket` set during
         initialization of the AwsSession (if not None), the bucket being used by the
         currently running Braket Hybrid Job (if evoked inside of a Braket Hybrid Job), or a default
@@ -580,7 +606,12 @@ class AwsSession(object):
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
 
-            if error_code == "BucketAlreadyOwnedByYou":
+            if (
+                error_code == "BucketAlreadyOwnedByYou"
+                or error_code != "BucketAlreadyExists"
+                and error_code == "OperationAborted"
+                and "conflicting conditional operation" in message
+            ):
                 pass
             elif error_code == "BucketAlreadyExists":
                 raise ValueError(
@@ -588,18 +619,11 @@ class AwsSession(object):
                     f"for another account. Please supply alternative "
                     f"bucket name via AwsSession constructor `AwsSession()`."
                 ) from None
-            elif (
-                error_code == "OperationAborted" and "conflicting conditional operation" in message
-            ):
-                # If this bucket is already being concurrently created, we don't need to create
-                # it again.
-                pass
             else:
                 raise
 
     def get_device(self, arn: str) -> dict[str, Any]:
-        """
-        Calls the Amazon Braket `get_device` API to retrieve device metadata.
+        """Calls the Amazon Braket `get_device` API to retrieve device metadata.
 
         Args:
             arn (str): The ARN of the device.
@@ -617,8 +641,7 @@ class AwsSession(object):
         statuses: Optional[list[str]] = None,
         provider_names: Optional[list[str]] = None,
     ) -> list[dict[str, Any]]:
-        """
-        Get devices based on filters. The result is the AND of
+        """Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
@@ -657,6 +680,7 @@ class AwsSession(object):
     @staticmethod
     def is_s3_uri(string: str) -> bool:
         """Determines if a given string is an S3 URI.
+
         Args:
             string (str): the string to check.
 
@@ -671,8 +695,7 @@ class AwsSession(object):
 
     @staticmethod
     def parse_s3_uri(s3_uri: str) -> tuple[str, str]:
-        """
-        Parse S3 URI to get bucket and key
+        """Parse S3 URI to get bucket and key
 
         Args:
             s3_uri (str): S3 URI.
@@ -690,12 +713,12 @@ class AwsSession(object):
             s3_uri_match = re.match(r"^https://([^./]+)\.[sS]3\.[^/]+/(.+)$", s3_uri) or re.match(
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
-            assert s3_uri_match
+            if s3_uri_match is None:
+                raise AssertionError
             bucket, key = s3_uri_match.groups()
-            assert bucket and key
             return bucket, key
-        except (AssertionError, ValueError):
-            raise ValueError(f"Not a valid S3 uri: {s3_uri}")
+        except (AssertionError, ValueError) as e:
+            raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
 
     @staticmethod
     def construct_s3_uri(bucket: str, *dirs: str) -> str:
@@ -703,7 +726,7 @@ class AwsSession(object):
 
         Args:
             bucket (str): S3 URI.
-            ``*dirs`` (str): directories to be appended in the resulting S3 URI
+            *dirs (str): directories to be appended in the resulting S3 URI
 
         Returns:
             str: S3 URI
@@ -723,8 +746,7 @@ class AwsSession(object):
         limit: Optional[int] = None,
         next_token: Optional[str] = None,
     ) -> dict[str, Any]:
-        """
-        Describes CloudWatch log streams in a log group with a given prefix.
+        """Describes CloudWatch log streams in a log group with a given prefix.
 
         Args:
             log_group (str): Name of the log group.
@@ -735,7 +757,7 @@ class AwsSession(object):
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing logStreams and nextToken
+            dict[str, Any]: Dictionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -744,10 +766,10 @@ class AwsSession(object):
         }
 
         if limit:
-            log_stream_args.update({"limit": limit})
+            log_stream_args["limit"] = limit
 
         if next_token:
-            log_stream_args.update({"nextToken": next_token})
+            log_stream_args["nextToken"] = next_token
 
         return self.logs_client.describe_log_streams(**log_stream_args)
 
@@ -759,8 +781,7 @@ class AwsSession(object):
         start_from_head: bool = True,
         next_token: Optional[str] = None,
     ) -> dict[str, Any]:
-        """
-        Gets CloudWatch log events from a given log stream.
+        """Gets CloudWatch log events from a given log stream.
 
         Args:
             log_group (str): Name of the log group.
@@ -772,7 +793,7 @@ class AwsSession(object):
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            dict[str, Any]: Dictionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,
@@ -782,7 +803,7 @@ class AwsSession(object):
         }
 
         if next_token:
-            log_events_args.update({"nextToken": next_token})
+            log_events_args["nextToken"] = next_token
 
         return self.logs_client.get_log_events(**log_events_args)
 
@@ -791,8 +812,7 @@ class AwsSession(object):
         region: Optional[str] = None,
         max_connections: Optional[int] = None,
     ) -> AwsSession:
-        """
-        Creates a new AwsSession based on the region.
+        """Creates a new AwsSession based on the region.
 
         Args:
             region (Optional[str]): Name of the region. Default = `None`.
@@ -805,6 +825,11 @@ class AwsSession(object):
         config = Config(max_pool_connections=max_connections) if max_connections else None
         session_region = self.boto_session.region_name
         new_region = region or session_region
+
+        # note that this method does not copy a custom Braket endpoint URL, since those are
+        # region-specific. If you have an endpoint that you wish to be used by copied AwsSessions
+        # (i.e. for task batching), please use the `BRAKET_ENDPOINT` environment variable.
+
         creds = self.boto_session.get_credentials()
         default_bucket = self._default_bucket if self._custom_default_bucket else None
         profile_name = self.boto_session.profile_name
@@ -833,8 +858,7 @@ class AwsSession(object):
 
     @cache
     def get_full_image_tag(self, image_uri: str) -> str:
-        """
-        Get verbose image tag from image uri.
+        """Get verbose image tag from image uri.
 
         Args:
             image_uri (str): Image uri to get tag for.

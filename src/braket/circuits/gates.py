@@ -24,6 +24,7 @@ import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
     AngledGate,
+    DoubleAngledGate,
     TripleAngledGate,
     _get_angles,
     _multi_angled_ascii_characters,
@@ -137,7 +138,7 @@ class H(Gate):
 Gate.register_gate(H)
 
 
-class I(Gate):  # noqa: E742, E261
+class I(Gate):  # noqa: E742
     r"""Identity gate.
 
     Unitary matrix:
@@ -220,10 +221,14 @@ class GPhase(AngledGate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+        .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I_1 = \begin{bmatrix}
+                    e^{i \gamma} \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
+
+    Raises:
+        ValueError: If `angle` is not present
     """
 
     def __init__(self, angle: Union[FreeParameterExpression, float]):
@@ -274,7 +279,8 @@ class GPhase(AngledGate):
 
         Unitary matrix:
 
-            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
+            .. math:: \mathtt{gphase}(\gamma) = e^{i \gamma} I_1 = \begin{bmatrix}
+                        e^{i \gamma} \end{bmatrix}.
 
         Args:
             angle (Union[FreeParameterExpression, float]): Phase in radians.
@@ -1066,8 +1072,9 @@ class Rx(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -1158,8 +1165,9 @@ class Ry(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -1435,8 +1443,9 @@ class U(TripleAngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         _theta = self.angle_1
         _phi = self.angle_2
@@ -1928,8 +1937,9 @@ class XY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -2694,8 +2704,9 @@ class XX(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -2806,8 +2817,9 @@ class YY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         r"""Returns a matrix representation of this gate.
+
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -3287,12 +3299,130 @@ class GPi(AngledGate):
 Gate.register_gate(GPi)
 
 
+class PRx(DoubleAngledGate):
+    r"""Phase Rx gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
+                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
+                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
+            \end{bmatrix}.
+
+    Args:
+        angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
+            radians or expression representation.
+        angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
+            radians or expression representation.
+    """
+
+    def __init__(
+        self,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+    ):
+        super().__init__(
+            angle_1=angle_1,
+            angle_2=angle_2,
+            qubit_count=None,
+            ascii_symbols=[_multi_angled_ascii_characters("PRx", angle_1, angle_2)],
+        )
+
+    @property
+    def _qasm_name(self) -> str:
+        return "prx"
+
+    def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+
+        Returns:
+            np.ndarray: The matrix representation of this gate.
+        """
+        theta = self.angle_1
+        phi = self.angle_2
+        return np.array(
+            [
+                [
+                    np.cos(theta / 2),
+                    -1j * np.exp(-1j * phi) * np.sin(theta / 2),
+                ],
+                [
+                    -1j * np.exp(1j * phi) * np.sin(theta / 2),
+                    np.cos(theta / 2),
+                ],
+            ]
+        )
+
+    def adjoint(self) -> list[Gate]:
+        return [PRx(-self.angle_1, self.angle_2)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs) -> PRx:
+        return _get_angles(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def prx(
+        target: QubitSetInput,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
+        r"""PhaseRx gate.
+
+        .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
+                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
+                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
+            \end{bmatrix}.
+
+        Args:
+            target (QubitSetInput): Target qubit(s).
+            angle_1 (Union[FreeParameterExpression, float]): First angle in radians.
+            angle_2 (Union[FreeParameterExpression, float]): Second angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
+
+        Returns:
+            Iterable[Instruction]: PhaseRx instruction.
+
+        Examples:
+            >>> circ = Circuit().prx(0, 0.15, 0.25)
+        """
+        return [
+            Instruction(
+                PRx(angle_1, angle_2),
+                target=qubit,
+                control=control,
+                control_state=control_state,
+                power=power,
+            )
+            for qubit in QubitSet(target)
+        ]
+
+
+Gate.register_gate(PRx)
+
+
 class GPi2(AngledGate):
     r"""IonQ GPi2 gate.
 
     Unitary matrix:
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
@@ -3342,7 +3472,7 @@ class GPi2(AngledGate):
     ) -> Iterable[Instruction]:
         r"""IonQ GPi2 gate.
 
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+        .. math:: \mathtt{GPi2}(\phi) = \frac{1}{\sqrt{2}}  \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
             \end{bmatrix}.
@@ -3398,7 +3528,7 @@ class MS(TripleAngledGate):
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
         angle_3 (Union[FreeParameterExpression, float]): angle in radians.
-        Default value is angle_3=pi/2.
+            Default value is angle_3=pi/2.
     """
 
     def __init__(
@@ -3554,7 +3684,7 @@ class Unitary(Gate):
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Unitary.construct(
-            targets=[qubit for qubit in target],
+            targets=list(target),
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
@@ -3571,10 +3701,8 @@ class Unitary(Gate):
 
         return f"#pragma braket unitary({formatted_matrix}) {', '.join(qubits)}"
 
-    def __eq__(self, other):
-        if isinstance(other, Unitary):
-            return self.matrix_equivalence(other)
-        return False
+    def __eq__(self, other: Unitary):
+        return self.matrix_equivalence(other) if isinstance(other, Unitary) else False
 
     def __hash__(self):
         return hash((self.name, str(self._matrix), self.qubit_count))
@@ -3647,8 +3775,7 @@ class PulseGate(Gate, Parameterizable):
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
-        """
-        Takes in parameters and returns an object with specified parameters
+        """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Returns:
@@ -3681,7 +3808,7 @@ class PulseGate(Gate, Parameterizable):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+        r"""Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
 
         Args:
@@ -3721,8 +3848,7 @@ Gate.register_gate(PulseGate)
 
 
 def format_complex(number: complex) -> str:
-    """
-    Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
+    """Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
 
     Args:
         number (complex): A complex number.
@@ -3731,13 +3857,11 @@ def format_complex(number: complex) -> str:
         str: The formatted string.
     """
     if number.real:
-        if number.imag:
-            imag_sign = "+" if number.imag > 0 else "-"
-            return f"{number.real} {imag_sign} {abs(number.imag)}im"
-        else:
+        if not number.imag:
             return f"{number.real}"
+        imag_sign = "+" if number.imag > 0 else "-"
+        return f"{number.real} {imag_sign} {abs(number.imag)}im"
+    elif number.imag:
+        return f"{number.imag}im"
     else:
-        if number.imag:
-            return f"{number.imag}im"
-        else:
-            return "0"
+        return "0"

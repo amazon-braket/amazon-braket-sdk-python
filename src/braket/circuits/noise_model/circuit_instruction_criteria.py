@@ -29,6 +29,9 @@ class CircuitInstructionCriteria(Criteria):
         Args:
             instruction (Instruction): An Instruction to match.
 
+        Raises:
+            NotImplementedError: Not implemented.
+
         Returns:
             bool: True if an Instruction matches the criteria.
         """
@@ -38,8 +41,7 @@ class CircuitInstructionCriteria(Criteria):
     def _check_target_in_qubits(
         qubits: Optional[set[Union[int, tuple[int]]]], target: QubitSetInput
     ) -> bool:
-        """
-        Returns true if the given targets of an instruction match the given qubit input set.
+        """Returns true if the given targets of an instruction match the given qubit input set.
 
         Args:
             qubits (Optional[set[Union[int, tuple[int]]]]): The qubits provided to the criteria.
@@ -51,6 +53,4 @@ class CircuitInstructionCriteria(Criteria):
         if qubits is None:
             return True
         target = [int(item) for item in target]
-        if len(target) == 1:
-            return target[0] in qubits
-        return tuple(target) in qubits
+        return target[0] in qubits if len(target) == 1 else tuple(target) in qubits

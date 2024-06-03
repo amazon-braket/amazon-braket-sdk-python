@@ -20,8 +20,8 @@ from typing import Any, Union
 
 
 class CriteriaKey(str, Enum):
-    """
-    Specifies the types of keys that a criteria may use to match an instruction, observable, etc.
+    """Specifies the types of keys that a criteria may use to match an instruction,
+    observable, etc.
     """
 
     QUBIT = "QUBIT"
@@ -31,8 +31,7 @@ class CriteriaKey(str, Enum):
 
 
 class CriteriaKeyResult(str, Enum):
-    """
-    The get_keys() method may return this enum instead of actual keys for
+    """The get_keys() method may return this enum instead of actual keys for
     a given criteria key type.
     """
 
@@ -74,10 +73,10 @@ class Criteria(ABC):
             return NotImplemented
         if self.applicable_key_types() != other.applicable_key_types():
             return False
-        for key_type in self.applicable_key_types():
-            if self.get_keys(key_type) != other.get_keys(key_type):
-                return False
-        return True
+        return all(
+            self.get_keys(key_type) == other.get_keys(key_type)
+            for key_type in self.applicable_key_types()
+        )
 
     @abstractmethod
     def to_dict(self) -> dict:
@@ -90,8 +89,8 @@ class Criteria(ABC):
 
     @classmethod
     def from_dict(cls, criteria: dict) -> Criteria:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this
+        class.
 
         Args:
             criteria (dict): A dictionary representation of an object of this class.
