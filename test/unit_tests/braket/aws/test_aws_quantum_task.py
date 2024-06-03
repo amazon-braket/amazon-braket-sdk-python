@@ -33,6 +33,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters, error_mitigation
 from braket.device_schema.dwave import (
@@ -123,6 +124,19 @@ def openqasm_program():
     return OpenQASMProgram(source="OPENQASM 3.0; h $0;")
 
 
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+@pytest.fixture
+def serializable_program():
+    return DummySerializableProgram(source="OPENQASM 3.0; h $0;")
+
+
 @pytest.fixture
 def blackbird_program():
     return BlackbirdProgram(source="Vac | q[0]")
@@ -172,7 +186,7 @@ def test_equality(arn, aws_session):
 
 
 def test_str(quantum_task):
-    expected = "AwsQuantumTask('id/taskArn':'{}')".format(quantum_task.id)
+    expected = f"AwsQuantumTask('id/taskArn':'{quantum_task.id}')"
     assert str(quantum_task) == expected
 
 
@@ -611,6 +625,20 @@ def test_create_openqasm_program_em_serialized(aws_session, arn, openqasm_progra
             paradigmParameters=GateModelParameters(qubitCount=0),
             errorMitigation=[error_mitigation.Debias()],
         ),
+    )
+
+
+def test_create_serializable_program(aws_session, arn, serializable_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, serializable_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        OpenQASMProgram(source=serializable_program.to_ir()).json(),
+        S3_TARGET,
+        shots,
     )
 
 
@@ -1216,20 +1244,16 @@ def _assert_create_quantum_task_called_with(
     }
 
     if device_parameters is not None:
-        test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
+        test_kwargs["deviceParameters"] = device_parameters.json(exclude_none=True)
     if tags is not None:
-        test_kwargs.update({"tags": tags})
+        test_kwargs["tags"] = tags
     if reservation_arn:
-        test_kwargs.update(
+        test_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

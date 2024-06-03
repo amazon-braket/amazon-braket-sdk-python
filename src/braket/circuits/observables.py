@@ -67,7 +67,7 @@ class H(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Ry(-math.pi / 4)])  # noqa: C409
+        return (Gate.Ry(-math.pi / 4),)
 
 
 Observable.register_observable(H)
@@ -155,7 +155,7 @@ class X(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.H()])  # noqa: C409
+        return (Gate.H(),)
 
 
 Observable.register_observable(X)
@@ -193,7 +193,7 @@ class Y(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Z(), Gate.S(), Gate.H()])  # noqa: C409
+        return Gate.Z(), Gate.S(), Gate.H()
 
 
 Observable.register_observable(Y)
@@ -266,15 +266,14 @@ class TensorProduct(Observable):
         flattened_observables = []
         for obs in observables:
             if isinstance(obs, TensorProduct):
-                for nested_obs in obs.factors:
-                    flattened_observables.append(nested_obs)
+                flattened_observables.extend(iter(obs.factors))
                 # make sure you don't lose coefficient of tensor product
                 flattened_observables[-1] *= obs.coefficient
             elif isinstance(obs, Sum):
                 raise TypeError("Sum observables not allowed in TensorProduct")
             else:
                 flattened_observables.append(obs)
-        qubit_count = sum([obs.qubit_count for obs in flattened_observables])
+        qubit_count = sum(obs.qubit_count for obs in flattened_observables)
         # aggregate all coefficients for the product, since aX @ bY == ab * X @ Y
         coefficient = np.prod([obs.coefficient for obs in flattened_observables])
         unscaled_factors = tuple(obs._unscaled() for obs in flattened_observables)
@@ -447,8 +446,7 @@ class Sum(Observable):
         flattened_observables = []
         for obs in observables:
             if isinstance(obs, Sum):
-                for nested_obs in obs.summands:
-                    flattened_observables.append(nested_obs)
+                flattened_observables.extend(iter(obs.summands))
             else:
                 flattened_observables.append(obs)
 
@@ -661,9 +659,8 @@ def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]])
     """
     if len(ir_observable) == 1:
         return _observable_from_ir_list_item(ir_observable[0])
-    else:
-        observable = TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
-        return observable
+    observable = TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
+    return observable
 
 
 def _observable_from_ir_list_item(observable: Union[str, list[list[list[float]]]]) -> Observable:
@@ -684,4 +681,4 @@ def _observable_from_ir_list_item(observable: Union[str, list[list[list[float]]]
             )
             return Hermitian(matrix)
         except Exception as e:
-            raise ValueError(f"Invalid observable specified: {observable} error: {e}")
+            raise ValueError(f"Invalid observable specified: {observable} error: {e}") from e

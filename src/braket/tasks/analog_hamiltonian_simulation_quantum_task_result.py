@@ -116,7 +116,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         Returns:
             dict[str, int]: number of times each state configuration is measured.
             Returns None if none of shot measurements are successful.
-            Only succesful shots contribute to the state count.
+            Only successful shots contribute to the state count.
         """
         state_counts = Counter()
         states = ["e", "r", "g"]
@@ -129,7 +129,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                     0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
                 ]
                 state = "".join(states[s_idx] for s_idx in state_idx)
-                state_counts.update((state,))
+                state_counts.update([state])
 
         return dict(state_counts)
 

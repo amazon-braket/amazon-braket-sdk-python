@@ -83,7 +83,7 @@ def test_save_job_checkpoint(
             if file_suffix
             else f"{tmp_dir}/{job_name}.json"
         )
-        with open(expected_file_location, "r") as expected_file:
+        with open(expected_file_location) as expected_file:
             assert expected_file.read() == expected_saved_data
 
 
@@ -267,7 +267,7 @@ def test_save_job_result(data_format, result_data, expected_saved_data):
             save_job_result(result_data, data_format)
 
         expected_file_location = f"{tmp_dir}/results.json"
-        with open(expected_file_location, "r") as expected_file:
+        with open(expected_file_location) as expected_file:
             assert expected_file.read() == expected_saved_data
 
 

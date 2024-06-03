@@ -10,4 +10,3 @@ updates:
       interval: "monthly"
     commit-message:
       prefix: infra
-

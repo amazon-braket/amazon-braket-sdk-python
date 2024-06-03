@@ -433,26 +433,27 @@ def get_angle(gate: AngledGate, **kwargs: FreeParameterExpression | str) -> Angl
 
 
 def _get_angles(
-    gate: TripleAngledGate, **kwargs: FreeParameterExpression | str
-) -> TripleAngledGate:
+    gate: DoubleAngledGate | TripleAngledGate, **kwargs: FreeParameterExpression | str
+) -> DoubleAngledGate | TripleAngledGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:
-        gate (TripleAngledGate): The subclass of TripleAngledGate for which the angle is being
-            obtained.
+        gate (DoubleAngledGate | TripleAngledGate): The subclass of multi angle AngledGate for
+            which the angle is being obtained.
         **kwargs (FreeParameterExpression | str): The named parameters that are being filled
             for a particular gate.
 
     Returns:
-        TripleAngledGate: A new gate of the type of the AngledGate originally used with all angles
-        updated.
+        DoubleAngledGate | TripleAngledGate: A new gate of the type of the AngledGate
+        originally used with all angles updated.
     """
-    new_angles = [
-        (
+    angles = [f"angle_{i + 1}" for i in range(len(gate._parameters))]
+    new_angles_args = {
+        angle: (
             getattr(gate, angle).subs(kwargs)
             if isinstance(getattr(gate, angle), FreeParameterExpression)
             else getattr(gate, angle)
         )
-        for angle in ("angle_1", "angle_2", "angle_3")
-    ]
-    return type(gate)(angle_1=new_angles[0], angle_2=new_angles[1], angle_3=new_angles[2])
+        for angle in angles
+    }
+    return type(gate)(**new_angles_args)

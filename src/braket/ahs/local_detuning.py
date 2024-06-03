@@ -136,7 +136,7 @@ class LocalDetuning(Hamiltonian):
                 stitch_ts.times() = [0, 0.1, 0.3]
                 stitch_ts.values() = [1, 4, 5]
         """
-        if not (self.magnitude.pattern.series == other.magnitude.pattern.series):
+        if self.magnitude.pattern.series != other.magnitude.pattern.series:
             raise ValueError("The LocalDetuning pattern for both fields must be equal.")
 
         new_ts = self.magnitude.time_series.stitch(other.magnitude.time_series, boundary)
@@ -152,10 +152,11 @@ class LocalDetuning(Hamiltonian):
         Returns:
             LocalDetuning: A new discretized LocalDetuning.
         """
-        shifting_parameters = properties.rydberg.rydbergLocal
+        local_detuning_parameters = properties.rydberg.rydbergLocal
+        time_resolution = (
+            local_detuning_parameters.timeResolution if local_detuning_parameters else None
+        )
         discretized_magnitude = self.magnitude.discretize(
-            time_resolution=shifting_parameters.timeResolution,
-            value_resolution=shifting_parameters.commonDetuningResolution,
-            pattern_resolution=shifting_parameters.localDetuningResolution,
+            time_resolution=time_resolution,
         )
         return LocalDetuning(discretized_magnitude)

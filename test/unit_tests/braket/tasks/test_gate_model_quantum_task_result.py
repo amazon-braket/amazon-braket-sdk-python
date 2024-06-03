@@ -405,7 +405,7 @@ def test_from_string_measurement_probabilities(result_str_3):
     measurement_list = [list("011000") for _ in range(shots)]
     expected_measurements = np.asarray(measurement_list, dtype=int)
     assert np.allclose(task_result.measurements, expected_measurements)
-    assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
+    assert task_result.measurement_counts == Counter(["011000" for _ in range(shots)])
     assert not task_result.measurement_counts_copied_from_device
     assert task_result.measurement_probabilities_copied_from_device
     assert not task_result.measurements_copied_from_device

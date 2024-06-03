@@ -33,10 +33,10 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
     ],
 )
 def test_arbitrary_waveform(amps):
-    id = "arb_wf_x"
-    wf = ArbitraryWaveform(amps, id)
+    waveform_id = "arb_wf_x"
+    wf = ArbitraryWaveform(amps, waveform_id)
     assert wf.amplitudes == list(amps)
-    assert wf.id == id
+    assert wf.id == waveform_id
     oq_exp = wf._to_oqpy_expression()
     assert oq_exp.init_expression == list(amps)
     assert oq_exp.name == wf.id
@@ -44,8 +44,8 @@ def test_arbitrary_waveform(amps):
 
 def test_arbitrary_waveform_repr():
     amps = [1, 4, 5]
-    id = "arb_wf_x"
-    wf = ArbitraryWaveform(amps, id)
+    waveform_id = "arb_wf_x"
+    wf = ArbitraryWaveform(amps, waveform_id)
     expected = f"ArbitraryWaveform('id': {wf.id}, 'amplitudes': {wf.amplitudes})"
     assert repr(wf) == expected
 

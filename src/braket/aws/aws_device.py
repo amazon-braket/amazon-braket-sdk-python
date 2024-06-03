@@ -62,7 +62,7 @@ class AwsDevice(Device):
     device.
     """
 
-    REGIONS = ("us-east-1", "us-west-1", "us-west-2", "eu-west-2")
+    REGIONS = ("us-east-1", "us-west-1", "us-west-2", "eu-west-2", "eu-north-1")
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
@@ -354,7 +354,7 @@ class AwsDevice(Device):
                 ValueError(f"'{self._arn}' not found")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
-            )
+            ) from e
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
@@ -362,11 +362,10 @@ class AwsDevice(Device):
             self._populate_properties(session)
             return session
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if "qpu" not in self._arn:
-                    raise ValueError(f"Simulator '{self._arn}' not found in '{current_region}'")
-            else:
+            if e.response["Error"]["Code"] != "ResourceNotFoundException":
                 raise e
+            if "qpu" not in self._arn:
+                raise ValueError(f"Simulator '{self._arn}' not found in '{current_region}'") from e
         # Search remaining regions for QPU
         for region in frozenset(AwsDevice.REGIONS) - {current_region}:
             region_session = AwsSession.copy_session(session, region)
@@ -623,7 +622,7 @@ class AwsDevice(Device):
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
             )
         types = frozenset(types or AwsDeviceType)
-        aws_session = aws_session if aws_session else AwsSession()
+        aws_session = aws_session or AwsSession()
         device_map = {}
         session_region = aws_session.boto_session.region_name
         search_regions = (
@@ -650,13 +649,11 @@ class AwsDevice(Device):
                         provider_names=provider_names,
                     )
                 ]
-                device_map.update(
-                    {
-                        arn: AwsDevice(arn, session_for_region)
-                        for arn in region_device_arns
-                        if arn not in device_map
-                    }
-                )
+                device_map |= {
+                    arn: AwsDevice(arn, session_for_region)
+                    for arn in region_device_arns
+                    if arn not in device_map
+                }
             except ClientError as e:
                 error_code = e.response["Error"]["Code"]
                 warnings.warn(
@@ -671,29 +668,29 @@ class AwsDevice(Device):
         return devices
 
     def _update_pulse_properties(self) -> None:
-        if hasattr(self.properties, "pulse") and isinstance(
+        if not hasattr(self.properties, "pulse") or not isinstance(
             self.properties.pulse, PulseDeviceActionProperties
         ):
-            if self._ports is None:
-                self._ports = {}
-                port_data = self.properties.pulse.ports
-                for port_id, port in port_data.items():
-                    self._ports[port_id] = Port(
-                        port_id=port_id, dt=port.dt, properties=json.loads(port.json())
+            return
+        if self._ports is None:
+            self._ports = {}
+            port_data = self.properties.pulse.ports
+            for port_id, port in port_data.items():
+                self._ports[port_id] = Port(
+                    port_id=port_id, dt=port.dt, properties=json.loads(port.json())
+                )
+        if self._frames is None:
+            self._frames = {}
+            if frame_data := self.properties.pulse.frames:
+                for frame_id, frame in frame_data.items():
+                    self._frames[frame_id] = Frame(
+                        frame_id=frame_id,
+                        port=self._ports[frame.portId],
+                        frequency=frame.frequency,
+                        phase=frame.phase,
+                        is_predefined=True,
+                        properties=json.loads(frame.json()),
                     )
-            if self._frames is None:
-                self._frames = {}
-                frame_data = self.properties.pulse.frames
-                if frame_data:
-                    for frame_id, frame in frame_data.items():
-                        self._frames[frame_id] = Frame(
-                            frame_id=frame_id,
-                            port=self._ports[frame.portId],
-                            frequency=frame.frequency,
-                            phase=frame.phase,
-                            is_predefined=True,
-                            properties=json.loads(frame.json()),
-                        )
 
     @staticmethod
     def get_device_region(device_arn: str) -> str:
@@ -710,11 +707,11 @@ class AwsDevice(Device):
         """
         try:
             return device_arn.split(":")[3]
-        except IndexError:
+        except IndexError as e:
             raise ValueError(
                 f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
-            )
+            ) from e
 
     def queue_depth(self) -> QueueDepthInfo:
         """Task queue depth refers to the total number of quantum tasks currently waiting
@@ -788,10 +785,10 @@ class AwsDevice(Device):
                         json.loads(f.read().decode("utf-8"))
                     )
                     return GateCalibrations(json_calibration_data)
-            except urllib.error.URLError:
+            except urllib.error.URLError as e:
                 raise urllib.error.URLError(
                     f"Unable to reach {self.properties.pulse.nativeGateCalibrationsRef}"
-                )
+                ) from e
         else:
             return None
 
@@ -819,7 +816,7 @@ class AwsDevice(Device):
 
         Returns:
             dict[tuple[Gate, QubitSet], PulseSequence]: The
-            structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration repesented as a
+            structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration represented as a
             `PulseSequence`.
 
         """  # noqa: E501

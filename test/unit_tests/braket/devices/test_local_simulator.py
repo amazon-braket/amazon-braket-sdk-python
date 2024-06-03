@@ -14,7 +14,7 @@
 import json
 import textwrap
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,6 +27,7 @@ from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit, FreeParameter, Gate, Noise
 from braket.circuits.noise_model import GateCriteria, NoiseModel, NoiseModelInstruction
+from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.devices import LocalSimulator, local_simulator
@@ -116,10 +117,10 @@ class DummyCircuitSimulator(BraketSimulator):
         program: ir.jaqcd.Program,
         qubits: int,
         shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
+        inputs: Optional[dict[str, float]],
         *args,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
@@ -156,7 +157,7 @@ class DummyCircuitSimulator(BraketSimulator):
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
         self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
         self._shots = shots
@@ -250,10 +251,28 @@ class DummyProgramSimulator(BraketSimulator):
         return device_properties
 
 
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+class DummySerializableProgramSimulator(DummyProgramSimulator):
+    def run(
+        self,
+        program: SerializableProgram,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelQuantumTaskResult:
+        return GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
 class DummyProgramDensityMatrixSimulator(BraketSimulator):
     def run(
         self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         return GATE_MODEL_RESULT
 
@@ -542,6 +561,25 @@ def test_run_program_model():
     sim = LocalSimulator(dummy)
     task = sim.run(
         Program(
+            source="""
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cnot q[0], q[1];
+
+c = measure q;
+"""
+        )
+    )
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_serializable_program_model():
+    dummy = DummySerializableProgramSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(
+        DummySerializableProgram(
             source="""
 qubit[2] q;
 bit[2] c;

@@ -88,7 +88,7 @@ def is_unitary(matrix: np.ndarray) -> bool:
 
 
 def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
-    """Whether a transformation defined by these matrics as Kraus operators is a
+    """Whether a transformation defined by these matrices as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
     a transformation to be a quantum channel.
     Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
@@ -99,7 +99,7 @@ def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     Returns:
         bool: If the matrices define a CPTP map.
     """
-    E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
+    E = sum(np.dot(matrix.T.conjugate(), matrix) for matrix in matrices)
     return np.allclose(E, np.eye(*E.shape))
 
 

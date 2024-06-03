@@ -412,7 +412,7 @@ class AwsQuantumJob(QuantumJob):
                 has_streams,
                 color_wrap,
                 [previous_state, current_state],
-                self.queue_position().queue_position if not self._quiet else None,
+                None if self._quiet else self.queue_position().queue_position,
             )
             previous_state = current_state
 
@@ -575,17 +575,16 @@ class AwsQuantumJob(QuantumJob):
                 s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                exception_response = {
-                    "Error": {
-                        "Code": "404",
-                        "Message": f"Error retrieving results, "
-                        f"could not find results at '{output_s3_path}'",
-                    }
-                }
-                raise ClientError(exception_response, "HeadObject") from e
-            else:
+            if e.response["Error"]["Code"] != "404":
                 raise e
+            exception_response = {
+                "Error": {
+                    "Code": "404",
+                    "Message": f"Error retrieving results, "
+                    f"could not find results at '{output_s3_path}'",
+                }
+            }
+            raise ClientError(exception_response, "HeadObject") from e
 
     @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
@@ -596,9 +595,7 @@ class AwsQuantumJob(QuantumJob):
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
     def __eq__(self, other: AwsQuantumJob) -> bool:
-        if isinstance(other, AwsQuantumJob):
-            return self.arn == other.arn
-        return False
+        return self.arn == other.arn if isinstance(other, AwsQuantumJob) else False
 
     def __hash__(self) -> int:
         return hash(self.arn)
@@ -632,7 +629,7 @@ class AwsQuantumJob(QuantumJob):
                 ValueError(f"'{device}' not found.")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
-            )
+            ) from e
 
     @staticmethod
     def _initialize_non_regional_device_session(
@@ -643,12 +640,11 @@ class AwsQuantumJob(QuantumJob):
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if "qpu" not in device:
-                    raise ValueError(f"Simulator '{device}' not found in '{original_region}'")
-            else:
+            if e.response["Error"]["Code"] != "ResourceNotFoundException":
                 raise e
 
+            if "qpu" not in device:
+                raise ValueError(f"Simulator '{device}' not found in '{original_region}'") from e
         for region in frozenset(AwsDevice.REGIONS) - {original_region}:
             device_session = aws_session.copy_session(region=region)
             try:

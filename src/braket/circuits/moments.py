@@ -238,7 +238,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             time = 0
 
         while MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
-            noise_index = noise_index + 1
+            noise_index += 1
 
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
@@ -290,7 +290,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._max_times.get(qubit, -1)
 
     #
-    # Implement abstract methods, default to calling selfs underlying dictionary
+    # Implement abstract methods, default to calling `self`'s underlying dictionary
     #
 
     def keys(self) -> KeysView[MomentsKey]:
@@ -341,9 +341,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def __ne__(self, other: Moments):
         result = self.__eq__(other)
-        if result is not NotImplemented:
-            return not result
-        return NotImplemented
+        return not result if result is not NotImplemented else NotImplemented
 
     def __repr__(self):
         return self._moments.__repr__()
