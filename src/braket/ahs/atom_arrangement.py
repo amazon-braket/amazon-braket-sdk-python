@@ -23,18 +23,24 @@ from typing import Union
 import numpy as np
 
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
+from typing import Union, Tuple, List, Iterator
+from dataclasses import dataclass
+import numpy as np
+from decimal import Decimal
+from enum import Enum
+from numbers import Number
 
 
+# Define SiteType enum
 class SiteType(Enum):
-    VACANT = "Vacant"
-    FILLED = "Filled"
+    FILLED = "filled"
+    VACANT = "vacant"
 
 
 @dataclass
 class AtomArrangementItem:
     """Represents an item (coordinate and metadata) in an atom arrangement."""
-
-    coordinate: tuple[Number, Number]
+    coordinate: Tuple[Number, Number]
     site_type: SiteType
 
     def _validate_coordinate(self) -> None:
@@ -63,32 +69,27 @@ class AtomArrangement:
 
     def add(
         self,
-        coordinate: Union[tuple[Number, Number], np.ndarray],
+        coordinate: Union[Tuple[Number, Number], np.ndarray],
         site_type: SiteType = SiteType.FILLED,
-    ) -> AtomArrangement:
+    ) -> "AtomArrangement":
         """Add a coordinate to the atom arrangement.
-
         Args:
             coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
-
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
         self._sites.append(AtomArrangementItem(tuple(coordinate), site_type))
         return self
 
-    def coordinate_list(self, coordinate_index: Number) -> list[Number]:
+    def coordinate_list(self, coordinate_index: Number) -> List[Number]:
         """Returns all the coordinates at the given index.
-
         Args:
             coordinate_index (Number): The index to get for each coordinate.
-
         Returns:
-            list[Number]:The list of coordinates at the given index.
-
+            List[Number]: The list of coordinates at the given index.
         Example:
             To get a list of all x-coordinates: coordinate_list(0)
             To get a list of all y-coordinates: coordinate_list(1)
@@ -96,23 +97,18 @@ class AtomArrangement:
         return [site.coordinate[coordinate_index] for site in self._sites]
 
     def __iter__(self) -> Iterator:
-        return self._sites.__iter__()
+        return iter(self._sites)
 
     def __len__(self):
-        return self._sites.__len__()
+        return len(self._sites)
 
-    def discretize(self, properties: DiscretizationProperties) -> AtomArrangement:
-        """Creates a discretized version of the atom arrangement,
-        rounding all site coordinates to the closest multiple of the
-        resolution. The types of the sites are unchanged.
-
+    def discretize(self, properties: 'DiscretizationProperties') -> "AtomArrangement":
+        """Creates a discretized version of the atom arrangement, rounding all site coordinates to the closest multiple of the resolution. The types of the sites are unchanged.
         Args:
             properties (DiscretizationProperties): Capabilities of a device that represent the
                 resolution with which the device can implement the parameters.
-
         Raises:
             DiscretizationError: If unable to discretize the program.
-
         Returns:
             AtomArrangement: A new discretized atom arrangement.
         """
@@ -127,3 +123,49 @@ class AtomArrangement:
             return discretized_arrangement
         except Exception as e:
             raise DiscretizationError(f"Failed to discretize register {e}") from e
+
+    # Factory methods for lattice structures
+    @classmethod
+    def from_square_lattice(
+        cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]
+    ) -> "AtomArrangement":
+        """Create an atom arrangement with a square lattice."""
+        arrangement = cls()
+        x_min, y_min = canvas_boundary_points[0]
+        x_max, y_max = canvas_boundary_points[2]
+        x_range = np.arange(x_min, x_max, lattice_constant)
+        y_range = np.arange(y_min, y_max, lattice_constant)
+        for x in x_range:
+            for y in y_range:
+                arrangement.add((x, y))
+        return arrangement
+
+    @classmethod
+    def from_rectangular_lattice(
+        cls, dx: float, dy: float, canvas_boundary_points: List[Tuple[float, float]]
+    ) -> "AtomArrangement":
+        """Create an atom arrangement with a rectangular lattice."""
+        arrangement = cls()
+        x_min, y_min = canvas_boundary_points[0]
+        x_max, y_max = canvas_boundary_points[2]
+        for x in np.arange(x_min, x_max, dx):
+            for y in np.arange(y_min, y_max, dy):
+                arrangement.add((x, y))
+        return arrangement
+
+# Define DiscretizationProperties and DiscretizationError for completeness
+@dataclass
+class LatticeGeometry:
+    positionResolution: Decimal
+
+@dataclass
+class DiscretizationProperties:
+    lattice: LatticeGeometry
+
+class DiscretizationError(Exception):
+    pass
+
+# Example usage
+canvas_boundary_points = [(0, 0), (7.5e-5, 0), (0, 7.5e-5), (7.5e-5, 7.5e-5)]
+canvas = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+
