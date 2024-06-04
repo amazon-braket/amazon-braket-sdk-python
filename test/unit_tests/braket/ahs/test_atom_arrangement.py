@@ -18,6 +18,12 @@ import pytest
 
 from braket.ahs.analog_hamiltonian_simulation import DiscretizationError
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
+from decimal import Decimal
+from unittest.mock import Mock
+
+import pytest
+
+from braket.ahs.atom_arrangement import AtomArrangement, SiteType, DiscretizationProperties, DiscretizationError
 
 
 @pytest.fixture
@@ -111,3 +117,4 @@ def test_discretize(default_atom_arrangement, position_res, expected_x, expected
 def test_invalid_discretization_properties(default_atom_arrangement):
     properties = "not-a-valid-discretization-property"
     default_atom_arrangement.discretize(properties)
+
