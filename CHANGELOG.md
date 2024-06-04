@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.80.0 (2024-05-22)
+
+### Features
+
+ * add support for the ARN region
+ * Add support for SerializableProgram abstraction to Device interface
+
+### Bug Fixes and Other Changes
+
+ * job fixture for endpoint support
+
 ## v1.79.1 (2024-05-08)
 
 ### Bug Fixes and Other Changes
