@@ -3860,9 +3860,6 @@ class Barrier(Gate):
     def _qasm_name(self) -> str:
         return "barrier"
 
-    def __hash__(self):
-        return hash((self.name, self.qubit_count))
-
     @staticmethod
     @circuit.subroutine(register=True)
     def barrier(targets: QubitSetInput) -> Instruction:
