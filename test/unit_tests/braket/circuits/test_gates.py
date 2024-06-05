@@ -448,6 +448,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "h $4;",
         ),
         (
+            Gate.Barrier(1),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "barrier q[4];",
+        ),
+        (
+            Gate.Barrier(1),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "barrier $4;",
+        ),
+        (
             Gate.Barrier(3),
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -458,6 +470,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "barrier $3, $4, $5;",
+        ),
+        (
+            Gate.Delay(qubit_count=1, duration=30e-9),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "delay[3e-08s] q[4];",
+        ),
+        (
+            Gate.Delay(qubit_count=1, duration=30e-9),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "delay[3e-08s] $4;",
         ),
         (
             Gate.Delay(qubit_count=3, duration=30e-9),
