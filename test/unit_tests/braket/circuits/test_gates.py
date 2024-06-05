@@ -44,7 +44,7 @@ class Duration(BaseModel):
     duration: confloat(ge=0)
 
 
-class NoMatrix:
+class NoMatrixGeneration:
     pass
 
 
@@ -77,8 +77,8 @@ testdata = [
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
     (Gate.U, "u", None, [SingleTarget, TripleAngle], {}),
-    (Gate.Barrier, "barrier", None, [MultiTarget, NoMatrix], {}),
-    (Gate.Delay, "delay", None, [MultiTarget, Duration, NoMatrix], {}),
+    (Gate.Barrier, "barrier", None, [MultiTarget, NoMatrixGeneration], {}),
+    (Gate.Delay, "delay", None, [MultiTarget, Duration, NoMatrixGeneration], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
     (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
     (Gate.CCNot, "ccnot", ir.CCNot, [SingleTarget, DoubleControl], {}),
@@ -313,7 +313,7 @@ def create_valid_target_input(irsubclasses):
         elif subclass not in (
             Angle,
             Duration,
-            NoMatrix,
+            NoMatrixGeneration,
             TwoDimensionalMatrix,
             DoubleAngle,
             TripleAngle,
@@ -335,7 +335,7 @@ def create_valid_gate_class_input(irsubclasses, **kwargs):
         input.update(triple_angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
         input.update(two_dimensional_matrix_valid_input(**kwargs))
-    if NoMatrix in irsubclasses:
+    if NoMatrixGeneration in irsubclasses:
         input.update(no_matrix_valid_input(**kwargs))
     if Duration in irsubclasses:
         input.update(duration_valid_input(**kwargs))
@@ -365,7 +365,7 @@ def calculate_qubit_count(irsubclasses):
         #     qubit_count += 1
         elif subclass not in (
             NoTarget,
-            NoMatrix,
+            NoMatrixGeneration,
             Angle,
             Duration,
             TwoDimensionalMatrix,
@@ -1044,7 +1044,7 @@ def test_angle_gphase_is_none():
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    if NoMatrix not in irsubclasses:
+    if NoMatrixGeneration not in irsubclasses:
         gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
         matrices = [elem.to_matrix() for elem in gate.adjoint()]
         matrices.append(gate.to_matrix())
@@ -1054,7 +1054,7 @@ def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irs
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    if NoMatrix not in irsubclasses:
+    if NoMatrixGeneration not in irsubclasses:
         gate1 = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
         gate2 = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
         assert isinstance(gate1.to_matrix(), np.ndarray)
