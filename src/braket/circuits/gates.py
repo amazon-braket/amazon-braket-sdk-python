@@ -3867,8 +3867,12 @@ class Barrier(Gate):
     @circuit.subroutine(register=True)
     def barrier(targets: QubitSetInput) -> Instruction:
         r"""Barrier gate.
+
         Args:
             targets (QubitSetInput): Target qubit(s)
+
+        Examples:
+            >>> circ = Circuit().barrier(targets=[0, 1, 2])
         """
         return Instruction(Barrier(len(targets)), target=targets)
 
@@ -3899,10 +3903,13 @@ class Delay(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def delay(targets: QubitSetInput, duration: float) -> Instruction:
-        r"""Delay gate. Applies delay in ns.
+        r"""Delay gate. Applies delay in seconds.
         Args:
             targets (QubitSetInput): Target qubit(s)
             duration (float): Delay(in seconds).
+
+        Examples:
+            >>> circ = Circuit().delay(targets=[0, 1, 2], duration = 30)
         """
         return Instruction(Delay(len(targets), duration), target=targets)
 
