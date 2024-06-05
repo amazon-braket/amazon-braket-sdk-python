@@ -3861,7 +3861,7 @@ class Barrier(Gate):
         return "barrier"
 
     def __hash__(self):
-        return hash((self.name, self.qubit_count, self.qubit_count))
+        return hash((self.name, self.qubit_count))
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -3898,7 +3898,7 @@ class Delay(Gate):
         return f"delay[{self.duration} s]"
 
     def __hash__(self):
-        return hash((self.name, self.qubit_count, self.qubit_count))
+        return hash((self.name, self.qubit_count, self.duration))
 
     @staticmethod
     @circuit.subroutine(register=True)
