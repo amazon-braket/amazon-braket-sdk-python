@@ -3851,7 +3851,7 @@ class Barrier(Gate):
     r"""Barrier gate."""
 
     def __init__(self, qubit_count):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=["||" for i in range(qubit_count)])
+        super().__init__(qubit_count=qubit_count, ascii_symbols=["||"] * qubit_count)
 
     def bind_values(self, **kwargs) -> Any:
         raise NotImplementedError
@@ -3883,7 +3883,7 @@ class Delay(Gate):
     def __init__(self, qubit_count, duration):
         super().__init__(
             qubit_count=qubit_count,
-            ascii_symbols=[f"delay({duration})" for i in range(qubit_count)],
+            ascii_symbols=[f"delay({duration})"] * qubit_count,
         )
         self.duration = duration
 
