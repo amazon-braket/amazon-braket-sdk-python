@@ -24,7 +24,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
-from braket.ir.jaqcd.shared_models import (  # Duration,
+from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
     DoubleTarget,
@@ -361,8 +361,6 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        # elif subclass == Duration:
-        #     qubit_count += 1
         elif subclass not in (
             NoTarget,
             NoMatrixGeneration,
@@ -995,8 +993,6 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
             subroutine_input.update(double_angle_valid_input())
         if TripleAngle in irsubclasses:
             subroutine_input.update(triple_angle_valid_input())
-        # if Duration in irsubclasses:
-        #     subroutine_input.update(duration_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
