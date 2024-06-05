@@ -190,6 +190,10 @@ def no_matrix_valid_input(**kwargs):
     return {"qubit_count": qubit_count}
 
 
+def no_matrix_valid_ir_input(**kwargs):
+    return {}
+
+
 def single_target_valid_input(**kwargs):
     return {"target": 2}
 
@@ -249,7 +253,7 @@ def two_dimensional_matrix_valid_input(**kwargs):
 
 valid_ir_switcher = {
     "NoTarget": no_target_valid_input,
-    "NoMatrixGeneration": no_target_valid_input,
+    "NoMatrixGeneration": no_matrix_valid_ir_input,
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
