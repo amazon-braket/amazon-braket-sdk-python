@@ -3904,6 +3904,7 @@ class Delay(Gate):
     @circuit.subroutine(register=True)
     def delay(targets: QubitSetInput, duration: float) -> Instruction:
         r"""Delay gate. Applies delay in seconds.
+
         Args:
             targets (QubitSetInput): Target qubit(s)
             duration (float): Delay(in seconds).
