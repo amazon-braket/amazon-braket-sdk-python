@@ -14,7 +14,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from decimal import Decimal
 from functools import singledispatch
+from typing import Union
 
 import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
@@ -23,7 +25,6 @@ from braket.ahs.driving_field import DrivingField
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.local_detuning import LocalDetuning
-from braket.ahs.pattern import Pattern
 from braket.device_schema import DeviceActionType
 from braket.timings.time_series import TimeSeries
 
@@ -70,41 +71,20 @@ class AnalogHamiltonianSimulation:
             )
         hamiltonian = Hamiltonian()
         for term in source.hamiltonian.drivingFields:
-            amplitude = (
-                Field(
-                    time_series=TimeSeries.from_lists(
-                        term.amplitude.time_series.times, term.amplitude.time_series.values
-                    ),
-                    pattern=term.amplitude.pattern,
-                )
-                if term.amplitude.pattern != "uniform"
-                else TimeSeries.from_lists(
-                    term.amplitude.time_series.times, term.amplitude.time_series.values
-                )
+            amplitude = AnalogHamiltonianSimulation._field_or_time_series_from_ir(
+                times=term.amplitude.time_series.times,
+                values=term.amplitude.time_series.values,
+                pattern=term.amplitude.pattern,
             )
-            phase = (
-                Field(
-                    time_series=TimeSeries.from_lists(
-                        term.phase.time_series.times, term.phase.time_series.values
-                    ),
-                    pattern=term.phase.pattern,
-                )
-                if term.phase.pattern != "uniform"
-                else TimeSeries.from_lists(
-                    term.phase.time_series.times, term.phase.time_series.values
-                )
+            phase = AnalogHamiltonianSimulation._field_or_time_series_from_ir(
+                times=term.phase.time_series.times,
+                values=term.phase.time_series.values,
+                pattern=term.phase.pattern,
             )
-            detuning = (
-                Field(
-                    time_series=TimeSeries.from_lists(
-                        term.detuning.time_series.times, term.detuning.time_series.values
-                    ),
-                    pattern=term.detuning.pattern,
-                )
-                if term.detuning.pattern != "uniform"
-                else TimeSeries.from_lists(
-                    term.detuning.time_series.times, term.detuning.time_series.values
-                )
+            detuning = AnalogHamiltonianSimulation._field_or_time_series_from_ir(
+                times=term.detuning.time_series.times,
+                values=term.detuning.time_series.values,
+                pattern=term.detuning.pattern,
             )
             hamiltonian += DrivingField(
                 amplitude=amplitude,
@@ -112,20 +92,23 @@ class AnalogHamiltonianSimulation:
                 detuning=detuning,
             )
         for term in source.hamiltonian.localDetuning:
-            magnitude = Field(
-                time_series=TimeSeries.from_lists(
-                    times=term.magnitude.time_series.times,
-                    values=term.magnitude.time_series.values,
-                ),
-                pattern=Pattern(term.magnitude.pattern),
-            )
-            hamiltonian += LocalDetuning(
-                magnitude=magnitude,
+            hamiltonian += LocalDetuning.from_lists(
+                times=term.magnitude.time_series.times,
+                values=term.magnitude.time_series.values,
+                pattern=term.magnitude.pattern,
             )
         return AnalogHamiltonianSimulation(
             register=atom_arrangement,
             hamiltonian=hamiltonian,
         )
+
+    @staticmethod
+    def _field_or_time_series_from_ir(
+        times: list[Decimal], values: list[Decimal], pattern: Union[str, list[Decimal]]
+    ) -> Union[Field, TimeSeries]:
+        if not isinstance(pattern, str):
+            return Field.from_lists(times=times, values=values, pattern=pattern)
+        return TimeSeries.from_lists(times, values)
 
     def to_ir(self) -> ir.Program:
         """Converts the Analog Hamiltonian Simulation into the canonical intermediate

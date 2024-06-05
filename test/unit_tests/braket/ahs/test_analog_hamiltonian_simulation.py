@@ -230,18 +230,14 @@ def test_to_ir_empty():
 
 
 def test_from_ir(ir):
-    ahs = AnalogHamiltonianSimulation.from_ir(ir)
-    problem = ahs.to_ir()
-    assert Program.parse_raw(problem.json()) == problem
+    problem = AnalogHamiltonianSimulation.from_ir(ir).to_ir()
+    assert problem == ir
     assert problem == Program.parse_raw_schema(problem.json())
 
 
 def test_from_ir_empty():
-    hamiltonian = Mock()
-    hamiltonian.terms = []
-    ahs = AnalogHamiltonianSimulation.from_ir(
-        Program.parse_raw_schema(
-            """
+    empty_ir = Program.parse_raw_schema(
+        """
 {
   "braketSchemaHeader": {
     "name": "braket.ir.ahs.program",
@@ -259,10 +255,9 @@ def test_from_ir_empty():
   }
 }
 """
-        )
     )
-    problem = ahs.to_ir()
-    assert Program.parse_raw(problem.json()) == problem
+    problem = AnalogHamiltonianSimulation.from_ir(empty_ir).to_ir()
+    assert problem == empty_ir
     assert problem == Program.parse_raw_schema(problem.json())
 
 

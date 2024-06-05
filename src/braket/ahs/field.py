@@ -66,3 +66,30 @@ class Field:
             discretized_pattern = self.pattern.discretize(pattern_resolution)
         discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
         return discretized_field
+
+    @staticmethod
+    def from_lists(times: list[Decimal], values: list[Decimal], pattern: list[Decimal]) -> Field:
+        """Builds Field from lists of time points, values and pattern.
+
+        Args:
+            times (list[Decimal]): The time points of the field
+            values (list[Decimal]): The values of the field
+            pattern (list[Decimal]): The pattern of the field
+
+        Raises:
+            ValueError: If the length of times and values differs.
+
+        Returns:
+            Field: Field.
+        """
+        if not (len(times) == len(values)):
+            raise ValueError(
+                f"The lengths of the lists for times({len(times)}) and values({len(values)})\
+                are not equal"
+            )
+
+        time_series = TimeSeries.from_lists(times=times, values=values)
+
+        drive = Field(time_series=time_series, pattern=Pattern(pattern))
+
+        return drive
