@@ -95,10 +95,18 @@ You can also pass in various pytest arguments `tox -e integ-tests -- your-argume
 1. Run `tox`, to run all the unit tests, linters, and documentation creation, and verify that all checks and tests pass.
 1. If your changes include documentation changes, please see the [Documentation Guidelines](#documentation-guidelines).
 
+### Send a Pull Request
 
-### Commit Your Change
+GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
 
-We use commit messages to update the project version number and generate changelog entries, so it's important for them to follow the right format. Valid commit messages include a prefix, separated from the rest of the message by a colon and a space. Here are a few examples:
+Please remember to:
+* Use PR titles that follow the guidelines under [PR Title Format](#pr-title-format).
+* Send us a pull request, answering any default questions in the pull request interface.
+* Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+
+#### PR Title Format
+
+We use commit messages to update the project version number and generate changelog entries. The PR title is used as the commit message when merging a PR, so it's important for PR titles to follow the right format. Valid PR titles include a prefix, separated from the rest of the message by a colon and a space. Here are a few examples:
 
 ```
 feature: support new parameter for `xyz`
@@ -120,16 +128,6 @@ Valid prefixes are listed in the table below.
 Some of the prefixes allow abbreviation ; `break`, `feat`, `depr`, and `doc` are all valid. If you omit a prefix, the commit will be treated as a `change`.
 
 For the rest of the message, use imperative style and keep things concise but informative. See [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/) for guidance.
-
-
-### Send a Pull Request
-
-GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
-
-Please remember to:
-* Use commit messages (and PR titles) that follow the guidelines under [Commit Your Change](#commit-your-change).
-* Send us a pull request, answering any default questions in the pull request interface.
-* Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 
 ```mermaid
