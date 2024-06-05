@@ -370,7 +370,7 @@ def calculate_qubit_count(irsubclasses):
             DoubleAngle,
             TripleAngle,
         ):
-            raise ValueError(f"Invalid subclass: {subclass}")
+            raise ValueError("Invalid subclass")
     return qubit_count
 
 
