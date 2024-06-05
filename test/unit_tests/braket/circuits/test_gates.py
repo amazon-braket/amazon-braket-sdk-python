@@ -184,7 +184,7 @@ def no_target_valid_input(**kwargs):
 def no_matrix_valid_input(**kwargs):
     qubit_count = 1
 
-    if kwargs.get("target", None) is not None:
+    if kwargs.get("targets", None) is not None:
         qubit_count = len(kwargs.get("target"))
 
     return {"qubit_count": qubit_count}
@@ -249,7 +249,7 @@ def two_dimensional_matrix_valid_input(**kwargs):
 
 valid_ir_switcher = {
     "NoTarget": no_target_valid_input,
-    "NoMatrix": no_target_valid_input,
+    "NoMatrixGeneration": no_target_valid_input,
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
@@ -460,16 +460,16 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "barrier $3, $4, $5;",
         ),
         (
-            Gate.Delay(qubit_count=3, duration=30),
+            Gate.Delay(qubit_count=3, duration=30e-9),
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "delay[30 s] q[3], q[4], q[5];",
+            "delay[3e-08s] q[3], q[4], q[5];",
         ),
         (
-            Gate.Delay(qubit_count=3, duration=30),
+            Gate.Delay(qubit_count=3, duration=30e-9),
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "delay[30 s] $3, $4, $5;",
+            "delay[3e-08s] $3, $4, $5;",
         ),
         (
             Gate.Ry(angle=0.17),
