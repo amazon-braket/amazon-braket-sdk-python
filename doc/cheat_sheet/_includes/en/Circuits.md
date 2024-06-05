@@ -1,5 +1,5 @@
 | Imports | `from braket.circuits import Circuit, Gate, Instruction`<br>`from braket.circuits.observables import X` |
-| Create a circuit                  | `circuit = Circuit()`                       |
+| Create a circuit<!-- LLM: . Note that number of qubits is not passed as an argument to the circuit constructor--> | `circuit = Circuit()`|
 | Add gates                         | `circuit.x(0).rx(1, 1.23).cnot(0, 1)` |
 | Get the list of available gates | `[attr for attr in dir(Gate) if attr[0].isupper()]` |
 | Apply a unitary matrix | `circuit.unitary(matrix, [0])` |
