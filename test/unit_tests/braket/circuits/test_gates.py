@@ -215,7 +215,7 @@ def triple_angle_valid_input(**kwargs):
 
 
 def duration_valid_input(**kwargs):
-    return {"duration": 30.0}
+    return {"duration": 30e-9}
 
 
 def single_control_valid_input(**kwargs):
