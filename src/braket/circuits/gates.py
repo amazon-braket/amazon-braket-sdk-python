@@ -3895,7 +3895,7 @@ class Delay(Gate):
 
     @property
     def _qasm_name(self) -> str:
-        return f"delay[{self.duration} s]"
+        return f"delay[{self.duration}s]"
 
     def __hash__(self):
         return hash((self.name, self.qubit_count, self.duration))
@@ -3907,10 +3907,10 @@ class Delay(Gate):
 
         Args:
             targets (QubitSetInput): Target qubit(s)
-            duration (float): Delay(in seconds).
+            duration (float): Delay (in seconds).
 
         Examples:
-            >>> circ = Circuit().delay(targets=[0, 1, 2], duration = 30)
+            >>> circ = Circuit().delay(targets=[0, 1, 2], duration=30e-9)
         """
         return Instruction(Delay(len(targets), duration), target=targets)
 
