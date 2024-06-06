@@ -90,6 +90,6 @@ class Field:
 
         time_series = TimeSeries.from_lists(times=times, values=values)
 
-        drive = Field(time_series=time_series, pattern=Pattern(pattern))
+        field = Field(time_series=time_series, pattern=Pattern(pattern))
 
         return drive
