@@ -32,7 +32,12 @@ from braket.circuits.angled_gate import (
     get_angle,
 )
 from braket.circuits.basis_state import BasisState, BasisStateInput
-from braket.circuits.duration_gate import DurationGate, bind_duration, _duration_str, duration_ascii_characters
+from braket.circuits.duration_gate import (
+    DurationGate,
+    _duration_str,
+    bind_duration,
+    duration_ascii_characters,
+)
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -3886,7 +3891,7 @@ class Delay(DurationGate):
             qubit_count=qubit_count,
             duration=duration,
             ascii_symbols=[duration_ascii_characters("duration", duration)] * qubit_count,
-        )    
+        )
 
     def bind_values(self, **kwargs) -> DurationGate:
         return bind_duration(self, **kwargs)

@@ -15,18 +15,20 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from enum import Enum
 from functools import singledispatch
 from typing import Optional, Union
+
+from sympy import Float
 
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.parameterizable import Parameterizable
 
-from enum import Enum
-from sympy import Float
 
 class SiTimeUnit(Enum):
     """Possible Si unit time types"""
+
     s = "s"
     ms = "ms"
     us = "us"
@@ -34,9 +36,10 @@ class SiTimeUnit(Enum):
 
     def __str__(self):
         return self.value
-    
+
     def __repr__(self) -> str:
         return self.__str__()
+
 
 class DurationGate(Gate, Parameterizable):
     """Class `DurationGate` represents a quantum gate that operates on N qubits and a duration."""
@@ -92,7 +95,7 @@ class DurationGate(Gate, Parameterizable):
 
         Returns:
             Union[FreeParameterExpression, float]: The duration of the gate
-                in seconds.
+            in seconds.
         """
         return self._parameters[0]
 
@@ -133,13 +136,14 @@ def _durations_equal(
 def _(duration_1: FreeParameterExpression, duration_2: FreeParameterExpression):
     return duration_1 == duration_2
 
+
 def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
     """Returns the string represtntion of the duration of the gate.
 
     Returns:
-        duration (Union[FreeParameterExpression, float]) : The duration of the
-            gate in string representation to convienient SI units
-            in ("s", "ms", "us", "ns").
+        str : The duration of the gate in string
+        representation to convienient SI units
+        in ("s", "ms", "us", "ns").
 
     Note:
         This is used in ASCII and OPENQASM code generation, so please
@@ -150,7 +154,7 @@ def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
 
     """
     if isinstance(duration, FreeParameterExpression):
-        return (str(duration))
+        return str(duration)
     else:
         # Currently, duration is truncated to 2 decimal places.
         # Same as angle in AngledGate).
@@ -165,7 +169,10 @@ def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
         else:
             return f"{round(1e9 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ns}"
 
-def duration_ascii_characters(gate_name: str, duration: Union[FreeParameterExpression, float]) -> str:
+
+def duration_ascii_characters(
+    gate_name: str, duration: Union[FreeParameterExpression, float]
+) -> str:
     """Generates a formatted ascii representation of an angled gate.
 
     Args:

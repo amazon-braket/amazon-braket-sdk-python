@@ -18,6 +18,7 @@ from itertools import groupby
 from typing import Any, Optional
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
+
 # from braket.circuits.duration_gate import _duration_str
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.serialization import (
@@ -201,17 +202,9 @@ class Gate(QuantumOperator):
             else ""
         )
 
-        # duration_string = (
-        #     f"[{_duration_str(self.duration)}]"
-        #     if hasattr(self, "duration")
-        #     else ""
-        # )
-
-        duration_string = ""
-
         return (
             f"{inv_prefix}{power_prefix}{control_prefix}"
-            f"{self._qasm_name}{param_string}{duration_string}{','.join([f' {qubit}' for qubit in qubits])};"
+            f"{self._qasm_name}{param_string}{','.join([f' {qubit}' for qubit in qubits])};"
         )
 
     @property
