@@ -32,6 +32,7 @@ from braket.circuits.angled_gate import (
     get_angle,
 )
 from braket.circuits.basis_state import BasisState, BasisStateInput
+from braket.circuits.duration_gate import DurationGate, get_duration
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -3877,18 +3878,19 @@ class Barrier(Gate):
 Gate.register_gate(Barrier)
 
 
-class Delay(Gate):
+class Delay(DurationGate):
     r"""Delay gate. Applies delay in seconds."""
 
     def __init__(self, qubit_count, duration):
         super().__init__(
             qubit_count=qubit_count,
+            duration=duration,
             ascii_symbols=[f"delay({duration})"] * qubit_count,
         )
-        self.duration = duration
+        # self.duration = duration
 
-    def bind_values(self, **kwargs) -> Any:
-        raise NotImplementedError
+    def bind_values(self, **kwargs) -> DurationGate:
+        return get_duration(self, **kwargs)
 
     @property
     def _qasm_name(self) -> str:
@@ -3899,12 +3901,15 @@ class Delay(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def delay(target: QubitSetInput, duration: float) -> Instruction:
+    def delay(
+        target: QubitSetInput, duration: Union[FreeParameterExpression, float]
+    ) -> Instruction:
         r"""Delay gate. Applies delay in seconds.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            duration (float): Delay (in seconds).
+            duration (Union[FreeParameterExpression, float]):
+                Delay in seconds or in expression representation.
 
         Examples:
             >>> circ = Circuit().delay(target = [0, 1, 2], duration = 30e-9)

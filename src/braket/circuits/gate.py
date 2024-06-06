@@ -194,7 +194,9 @@ class Gate(QuantumOperator):
         inv_prefix = "inv @ " if power and power < 0 else ""
         power_prefix = f"pow({abs_power}) @ " if (abs_power := abs(power)) != 1 else ""
         param_string = (
-            f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
+            f"({', '.join(map(str, self.parameters))})"
+            if hasattr(self, "parameters") and not hasattr(self, "skip_parameters_in_qasm")
+            else ""
         )
 
         return (

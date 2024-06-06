@@ -150,6 +150,7 @@ parameterizable_gates = [
     Gate.Rz,
     Gate.U,
     Gate.PhaseShift,
+    Gate.Delay,
     Gate.PSwap,
     Gate.XX,
     Gate.XY,
@@ -1150,6 +1151,10 @@ def test_large_unitary():
     assert unitary.qubit_count == 4
 
 
+def duration_free_param_valid_input():
+    return {"duration": FreeParameter("theta_1"), "qubit_count": 1}
+
+
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
     double_angled = gate.__name__ in ["PRx"]
@@ -1160,11 +1165,21 @@ def test_bind_values(gate):
         num_params = 3
     elif double_angled:
         num_params = 2
-    thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
-    mapping = {f"theta_{i}": i for i in range(num_params)}
-    param_gate = gate(*thetas)
+    thetas = [FreeParameter(f"theta_{i+1}") for i in range(num_params)]
+    mapping = {f"theta_{i+1}": i + 1 for i in range(num_params)}
+    if duration:
+        gate_inputs = duration_free_param_valid_input()
+        param_gate = gate(**gate_inputs)
+        for (input, value) in gate_inputs.items():
+            if isinstance(value, FreeParameter):
+                gate_inputs[input] = mapping[value.name]
+        expected = gate(**gate_inputs)
+    else:
+        param_gate = gate(*thetas)
+        expected = gate(*range(1, num_params+1))
+
+
     new_gate = param_gate.bind_values(**mapping)
-    expected = gate(*range(num_params))
 
     assert type(new_gate) is type(param_gate) and new_gate == expected
     if triple_angled:
