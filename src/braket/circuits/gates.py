@@ -3908,8 +3908,8 @@ class Delay(DurationGate):
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            duration (Union[FreeParameterExpression, float]):
-                Delay in seconds or in expression representation.
+            duration (Union[FreeParameterExpression, float]): Delay in
+                seconds or in expression representation.
 
         Examples:
             >>> circ = Circuit().delay(target = [0, 1, 2], duration = 30e-9)

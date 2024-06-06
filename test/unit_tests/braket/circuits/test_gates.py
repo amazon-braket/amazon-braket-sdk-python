@@ -144,26 +144,26 @@ testdata = [
 ]
 
 parameterizable_gates = [
-    Gate.GPhase,
-    Gate.Rx,
-    Gate.Ry,
-    Gate.Rz,
-    Gate.U,
-    Gate.PhaseShift,
-    Gate.Delay,
-    Gate.PSwap,
-    Gate.XX,
-    Gate.XY,
-    Gate.YY,
-    Gate.ZZ,
-    Gate.CPhaseShift,
-    Gate.CPhaseShift00,
-    Gate.CPhaseShift01,
-    Gate.CPhaseShift10,
-    Gate.GPi,
-    Gate.GPi2,
-    Gate.PRx,
-    Gate.MS,
+    (Gate.GPhase, ["angle"]),
+    (Gate.Rx, ["angle"]),
+    (Gate.Ry, ["angle"]),
+    (Gate.Rz, ["angle"]),
+    (Gate.U, ["angle_1", "angle_2", "angle_3"]),
+    (Gate.PhaseShift, ["angle"]),
+    (Gate.Delay, ["duration"]),
+    (Gate.PSwap, ["angle"]),
+    (Gate.XX, ["angle"]),
+    (Gate.XY, ["angle"]),
+    (Gate.YY, ["angle"]),
+    (Gate.ZZ, ["angle"]),
+    (Gate.CPhaseShift, ["angle"]),
+    (Gate.CPhaseShift00, ["angle"]),
+    (Gate.CPhaseShift01, ["angle"]),
+    (Gate.CPhaseShift10, ["angle"]),
+    (Gate.GPi, ["angle"]),
+    (Gate.GPi2, ["angle"]),
+    (Gate.PRx, ["angle_1", "angle_2"]),
+    (Gate.MS, ["angle_1", "angle_2", "angle_3"]),
 ]
 
 
@@ -1155,43 +1155,32 @@ def duration_free_param_valid_input():
     return {"duration": FreeParameter("theta_1"), "qubit_count": 1}
 
 
-@pytest.mark.parametrize("gate", parameterizable_gates)
-def test_bind_values(gate):
-    double_angled = gate.__name__ in ["PRx"]
-    triple_angled = gate.__name__ in ("MS", "U")
+@pytest.mark.parametrize("gate,attributes", parameterizable_gates)
+def test_bind_values(gate, attributes):
+
     duration = gate.__name__ in ("Delay")
-    num_params = 1
-    if triple_angled:
-        num_params = 3
-    elif double_angled:
-        num_params = 2
-    thetas = [FreeParameter(f"theta_{i+1}") for i in range(num_params)]
-    mapping = {f"theta_{i+1}": i + 1 for i in range(num_params)}
+    num_params = len(attributes)
+
+    thetas = [FreeParameter(f"theta_{i + 1}") for i in range(num_params)]
+    mapping = {f"theta_{i + 1}": i + 1 for i in range(num_params)}
+
     if duration:
         gate_inputs = duration_free_param_valid_input()
         param_gate = gate(**gate_inputs)
-        for (input, value) in gate_inputs.items():
+        for input, value in gate_inputs.items():
             if isinstance(value, FreeParameter):
                 gate_inputs[input] = mapping[value.name]
         expected = gate(**gate_inputs)
     else:
         param_gate = gate(*thetas)
-        expected = gate(*range(1, num_params+1))
-
+        expected = gate(*range(1, num_params + 1))
 
     new_gate = param_gate.bind_values(**mapping)
 
     assert type(new_gate) is type(param_gate) and new_gate == expected
-    if triple_angled:
-        for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
-            assert isinstance(angle, float)
-    elif double_angled:
-        for angle in new_gate.angle_1, new_gate.angle_2:
-            assert isinstance(angle, float)
-    elif duration:
-        assert isinstance(new_gate.duration, float)
-    else:
-        assert isinstance(new_gate.angle, float)
+
+    for attr in attributes:
+        assert isinstance(getattr(new_gate, attr), float)
 
 
 def test_bind_values_pulse_gate():

@@ -13,13 +13,10 @@
 
 from __future__ import annotations
 
-import copy
 import math
 from collections.abc import Sequence
 from functools import singledispatch
 from typing import Optional, Union
-
-from sympy import Float
 
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -79,8 +76,10 @@ class DurationGate(Gate, Parameterizable):
         bound values.
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            bool: Whether to skip the free parameters population
+            in the generated QASM string. Currently, set to `True` always
+            because duration parameter is enclosed within [] but
+            angle is enclosed within ().
         """
         return True
 
@@ -131,30 +130,16 @@ def _(duration_1: FreeParameterExpression, duration_2: FreeParameterExpression):
     return duration_1 == duration_2
 
 
-def duration_ascii_characters(gate: str, duration: Union[FreeParameterExpression, float]) -> str:
-    """Generates a formatted ascii representation of an angled gate.
-
-    Args:
-        gate (str): The name of the gate.
-        angle (Union[FreeParameterExpression, float]): The angle for the gate.
-
-    Returns:
-        str: Returns the ascii representation for an angled gate.
-
-    """
-    return f'{gate}({duration:{".2f" if isinstance(duration, (float, Float)) else ""}})'
-
-
 def get_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -> DurationGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:
-        gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
+        gate (DurationGate): The subclass of AngledGate for which the angle is being obtained.
         **kwargs (FreeParameterExpression | str): The named parameters that are being filled
             for a particular gate.
 
     Returns:
-        AngledGate: A new gate of the type of the AngledGate originally used with all
+        DurationGate: A new gate of the type of the AngledGate originally used with all
         angles updated.
     """
     new_duration = (
