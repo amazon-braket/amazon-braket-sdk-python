@@ -10,7 +10,7 @@ from pytket.unit_id import Qubit, Bit
 from typing import Optional, Union, Any
 from sympy import Expr
 from braket.emulators.pytket_translator.translations import (
-    PYTKET_GATES, 
+    QASM_TO_PYTKET, 
     COMPOSED_GATES
 )
 import numpy as np
@@ -35,29 +35,25 @@ class PytketProgramContext(AbstractProgramContext):
 
     def is_builtin_gate(self, name: str) -> bool: 
         user_defined_gate = self.is_user_defined_gate(name)
-        result = (name in PYTKET_GATES or COMPOSED_GATES) and not user_defined_gate
+        result = (name in QASM_TO_PYTKET or COMPOSED_GATES) and not user_defined_gate
         return result
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int, ...], *params, ctrl_modifiers: list[int], power: int
     ): 
         self._check_and_update_qubits(target)
-        gate_name = self._get_tket_gate_name(gate_name)
-        if hasattr(OpType, gate_name):
-            op = getattr(OpType, gate_name)
+        if gate_name in QASM_TO_PYTKET:
+            op = QASM_TO_PYTKET[gate_name]
             if len(*params) > 0:
                 self._circuit.add_gate(op, *params, target)
             else:
                 self._circuit.add_gate(op, target)
-
         elif gate_name in COMPOSED_GATES:
             COMPOSED_GATES[gate_name](self._circuit, *params, target)
+        else:
+            raise ValueError(f"Gate {gate_name} is not supported in pytket translations.")
             
         
-    def _get_tket_gate_name(self, gate_name: str) -> str: 
-        gate_name = gate_name.lower()
-        return PYTKET_GATES.get(gate_name, gate_name)
-
     def _check_and_update_qubits(self, target: tuple[int, ...]):
         for qubit in target: 
             if qubit not in self._qubits_set:
