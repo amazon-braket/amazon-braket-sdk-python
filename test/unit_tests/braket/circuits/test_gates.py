@@ -480,25 +480,25 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             Gate.Delay(qubit_count=1, duration=30e-9),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "delay[3e-08s] q[4];",
+            "delay[30.0ns] q[4];",
         ),
         (
             Gate.Delay(qubit_count=1, duration=30e-9),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "delay[3e-08s] $4;",
+            "delay[30.0ns] $4;",
         ),
         (
             Gate.Delay(qubit_count=3, duration=30e-9),
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "delay[3e-08s] q[3], q[4], q[5];",
+            "delay[30.0ns] q[3], q[4], q[5];",
         ),
         (
             Gate.Delay(qubit_count=3, duration=30e-9),
             [3, 4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "delay[3e-08s] $3, $4, $5;",
+            "delay[30.0ns] $3, $4, $5;",
         ),
         (
             Gate.Ry(angle=0.17),
@@ -1400,6 +1400,17 @@ def test_gate_power(gate, target, power, expected_ir):
     )
 
 
+
 @pytest.mark.parametrize("gate", [Gate.Unitary(Gate.CCNot().to_matrix()), Gate.Delay(3, 30e-9)])
 def test_hash(gate):
     assert hash(gate) == hash(gate)
+
+@pytest.mark.parametrize(
+    "gate, ascii_symbols", 
+    (
+        (Gate.Barrier(3), ("||",)*3),
+        (Gate.Delay(3, 30e-9), ("delay(3e-08)",)*3),
+    ),
+)
+def test_ascii_characters(gate, ascii_symbols):
+    assert gate.ascii_symbols == ascii_symbols

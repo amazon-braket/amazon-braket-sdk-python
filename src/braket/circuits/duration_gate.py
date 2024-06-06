@@ -22,6 +22,21 @@ from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.parameterizable import Parameterizable
 
+from enum import Enum
+from sympy import Float
+
+class SiTimeUnit(Enum):
+    """Possible Si unit time types"""
+    s = "s"
+    ms = "ms"
+    us = "us"
+    ns = "ns"
+
+    def __str__(self):
+        return self.value
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
 class DurationGate(Gate, Parameterizable):
     """Class `DurationGate` represents a quantum gate that operates on N qubits and a duration."""
@@ -53,11 +68,12 @@ class DurationGate(Gate, Parameterizable):
         if duration is None:
             raise ValueError("duration must not be None")
         if isinstance(duration, FreeParameterExpression):
+            self._duration = duration
             self._parameters = [duration]
         else:
-            self._parameters = [
-                float(duration)
-            ]  # explicit casting in case duration is e.g. np.float32
+            # explicit casting in case duration is e.g. np.float32
+            self._duration = float(duration)
+            self._parameters = [float(duration)]
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
@@ -71,24 +87,12 @@ class DurationGate(Gate, Parameterizable):
         return self._parameters
 
     @property
-    def skip_parameters_in_qasm(self) -> bool:
-        """Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
-
-        Returns:
-            bool: Whether to skip the free parameters population
-            in the generated QASM string. Currently, set to `True` always
-            because duration parameter is enclosed within [] but
-            angle is enclosed within ().
-        """
-        return True
-
-    @property
     def duration(self) -> Union[FreeParameterExpression, float]:
         """Returns the angle of the gate
 
         Returns:
-            Union[FreeParameterExpression, float]: The angle of the gate in radians
+            Union[FreeParameterExpression, float]: The duration of the gate
+                in seconds.
         """
         return self._parameters[0]
 
@@ -129,17 +133,63 @@ def _durations_equal(
 def _(duration_1: FreeParameterExpression, duration_2: FreeParameterExpression):
     return duration_1 == duration_2
 
+def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
+    """Returns the string represtntion of the duration of the gate.
 
-def get_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -> DurationGate:
+    Returns:
+        duration (Union[FreeParameterExpression, float]) : The duration of the
+            gate in string representation to convienient SI units
+            in ("s", "ms", "us", "ns").
+
+    Note:
+        This is used in ASCII and OPENQASM code generation, so please
+        do not play around with whitespaces here.
+
+        >> delay[30ns] q[4]; # VALID QASM
+        >> delay[30 ns] q[4]; # INVALID QASM
+
+    """
+    if isinstance(duration, FreeParameterExpression):
+        return (str(duration))
+    else:
+        # Currently, duration is truncated to 2 decimal places.
+        # Same as angle in AngledGate).
+        DURATION_MAX_DIGITS = 2
+
+        if duration >= 1:
+            return f"{round(duration, DURATION_MAX_DIGITS)}{SiTimeUnit.s}"
+        elif duration >= 1e-3:
+            return f"{round(1e3 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ms}"
+        elif duration >= 1e-6:
+            return f"{round(1e6 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.us}"
+        else:
+            return f"{round(1e9 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ns}"
+
+def duration_ascii_characters(gate_name: str, duration: Union[FreeParameterExpression, float]) -> str:
+    """Generates a formatted ascii representation of an angled gate.
+
+    Args:
+        gate_name (str): The name of the gate.
+        duration (Union[FreeParameterExpression, float]): The duration
+            of the gate in seconds.
+
+    Returns:
+        str: Returns the ascii representation for a duration gate.
+
+    """
+    return f'{gate_name}({_duration_str(duration) if isinstance(duration, (float, Float)) else ""})'
+
+
+def bind_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -> DurationGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:
-        gate (DurationGate): The subclass of AngledGate for which the angle is being obtained.
+        gate (DurationGate): The subclass of DurationGate for which the duration is being obtained.
         **kwargs (FreeParameterExpression | str): The named parameters that are being filled
             for a particular gate.
 
     Returns:
-        DurationGate: A new gate of the type of the AngledGate originally used with all
+        DurationGate: A new gate of the type of the DurationGate originally used with all
         angles updated.
     """
     new_duration = (

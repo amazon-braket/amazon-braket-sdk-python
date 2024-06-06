@@ -18,6 +18,7 @@ from itertools import groupby
 from typing import Any, Optional
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
+# from braket.circuits.duration_gate import _duration_str
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.serialization import (
     IRType,
@@ -193,15 +194,24 @@ class Gate(QuantumOperator):
             control_prefix = ""
         inv_prefix = "inv @ " if power and power < 0 else ""
         power_prefix = f"pow({abs_power}) @ " if (abs_power := abs(power)) != 1 else ""
+
         param_string = (
             f"({', '.join(map(str, self.parameters))})"
-            if hasattr(self, "parameters") and not hasattr(self, "skip_parameters_in_qasm")
+            if hasattr(self, "parameters") and not hasattr(self, "duration")
             else ""
         )
 
+        # duration_string = (
+        #     f"[{_duration_str(self.duration)}]"
+        #     if hasattr(self, "duration")
+        #     else ""
+        # )
+
+        duration_string = ""
+
         return (
             f"{inv_prefix}{power_prefix}{control_prefix}"
-            f"{self._qasm_name}{param_string}{','.join([f' {qubit}' for qubit in qubits])};"
+            f"{self._qasm_name}{param_string}{duration_string}{','.join([f' {qubit}' for qubit in qubits])};"
         )
 
     @property
