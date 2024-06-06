@@ -77,8 +77,8 @@ testdata = [
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
     (Gate.U, "u", None, [SingleTarget, TripleAngle], {}),
-    (Gate.Barrier, "barrier", None, [MultiTarget, NoMatrixGeneration], {}),
-    (Gate.Delay, "delay", None, [MultiTarget, Duration, NoMatrixGeneration], {}),
+    (Gate.Barrier, "barrier", None, [SingleTarget, NoMatrixGeneration], {}),
+    (Gate.Delay, "delay", None, [SingleTarget, Duration, NoMatrixGeneration], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
     (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
     (Gate.CCNot, "ccnot", ir.CCNot, [SingleTarget, DoubleControl], {}),
@@ -184,7 +184,7 @@ def no_target_valid_input(**kwargs):
 def no_matrix_valid_input(**kwargs):
     qubit_count = 1
 
-    if kwargs.get("targets", None) is not None:
+    if kwargs.get("target", None) is not None:
         qubit_count = len(kwargs.get("target"))
 
     return {"qubit_count": qubit_count}
@@ -239,7 +239,7 @@ def double_control_valid_input(**kwargs):
 
 
 def multi_target_valid_input(**kwargs):
-    return {"targets": [5]}
+    return {"targets": [2, 3, 4, 5]}
 
 
 def two_dimensional_matrix_valid_ir_input(**kwargs):
@@ -1006,21 +1006,42 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
     )
     if qubit_count == 1:
         multi_targets = [0, 1, 2]
-        instruction_list = [
-            Instruction(
-                operator=testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)),
-                target=target,
-            )
-            for target in multi_targets
-        ]
+
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
+
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
         if DoubleAngle in irsubclasses:
             subroutine_input.update(double_angle_valid_input())
         if TripleAngle in irsubclasses:
             subroutine_input.update(triple_angle_valid_input())
+        if Duration in irsubclasses:
+            subroutine_input.update(duration_valid_input())
+
+        if NoMatrixGeneration in irsubclasses:
+            # Updating kwargs so that qubit_count attribute
+            # can be properly initialized
+            kwargs.update(subroutine_input)
+
+            # Accounting for delay and barrier gates here
+            # >>> circ = Circuit().barrier(targets=[0, 1, 2])
+            # Produces, barrier q[0], q[1], q[2];
+            instruction_list = [
+                Instruction(
+                    operator=testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)),
+                    target=multi_targets,
+                )
+            ]
+        else:
+            instruction_list = [
+                Instruction(
+                    operator=testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)),
+                    target=target,
+                )
+                for target in multi_targets
+            ]
+
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
@@ -1375,7 +1396,6 @@ def test_gate_power(gate, target, power, expected_ir):
     )
 
 
-def test_hash():
-    assert hash(Gate.Unitary(Gate.CCNot().to_matrix())) == hash(
-        Gate.Unitary(Gate.CCNot().to_matrix())
-    )
+@pytest.mark.parametrize("gate", [Gate.Unitary(Gate.CCNot().to_matrix()), Gate.Delay(3, 30e-9)])
+def test_hash(gate):
+    assert hash(gate) == hash(gate)
