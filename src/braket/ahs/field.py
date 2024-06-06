@@ -92,4 +92,4 @@ class Field:
 
         field = Field(time_series=time_series, pattern=Pattern(pattern))
 
-        return drive
+        return field
