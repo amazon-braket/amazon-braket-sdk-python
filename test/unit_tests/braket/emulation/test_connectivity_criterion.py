@@ -1,6 +1,6 @@
 import pytest
 
-from braket.emulators.criteria import ConnectivityCriterion
+from braket.emulators.emulator_passes.criteria import ConnectivityCriterion
 from braket.circuits import Circuit
 import networkx as nx
 import numpy as np

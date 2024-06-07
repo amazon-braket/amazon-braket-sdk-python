@@ -1,6 +1,6 @@
 from collections.abc import Iterator 
 from braket.circuits.gate import Gate
-from braket.emulators.criteria import EmulatorCriterion
+from braket.emulators.emulator_passes.criteria import EmulatorCriterion
 from braket.circuits import Circuit
 from braket.circuits.translations import BRAKET_GATES
 

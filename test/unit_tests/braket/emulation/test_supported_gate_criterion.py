@@ -1,6 +1,5 @@
 import pytest
-
-from braket.emulators.criteria import SupportedGateCriterion
+from braket.emulators.emulator_passes.criteria import SupportedGateCriterion
 from braket.circuits import Circuit
 import numpy as np
 

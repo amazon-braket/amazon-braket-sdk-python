@@ -1,4 +1,4 @@
-from braket.emulators.criteria import EmulatorCriterion
+from braket.emulators.emulator_passes.criteria import EmulatorCriterion
 from networkx import DiGraph, complete_graph, from_dict_of_lists
 from networkx.utils import graphs_equal
 from typing import Union, Dict

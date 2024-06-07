@@ -1,6 +1,6 @@
 import pytest
 
-from braket.emulators.criteria.native_gate_criterion import NativeGateCriterion
+from braket.emulators.emulator_passes.criteria import NativeGateCriterion
 from braket.circuits import Circuit, Gate, gates
 
 
