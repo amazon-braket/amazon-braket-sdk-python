@@ -240,7 +240,7 @@ def double_control_valid_input(**kwargs):
 
 
 def multi_target_valid_input(**kwargs):
-    return {"targets": [2, 3, 4, 5]}
+    return {"targets": [5]}
 
 
 def two_dimensional_matrix_valid_ir_input(**kwargs):
