@@ -19,8 +19,6 @@ from enum import Enum
 from functools import singledispatch
 from typing import Optional, Union
 
-from sympy import Float
-
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.parameterizable import Parameterizable
