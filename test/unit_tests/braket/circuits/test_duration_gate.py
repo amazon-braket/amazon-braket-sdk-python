@@ -11,11 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import re
-
-import numpy as np
 import pytest
-from pydantic.v1 import BaseModel
 
 from braket.circuits import FreeParameter, FreeParameterExpression, Gate
 from braket.circuits.duration_gate import DurationGate
@@ -51,10 +47,9 @@ def test_duration_setter(duration_gate):
         duration_gate.duration = 30e-9
 
 
-
 def test_equality(duration_gate):
     # return DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["delay"])
-    
+
     gate = DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["bar"])
     other_gate = DurationGate(duration=30e-6, qubit_count=1, ascii_symbols=["foo"])
     non_gate = "non gate"
@@ -89,7 +84,6 @@ def test_mixed_duration_equality():
     assert gate2 != gate1
 
 
-
 def test_bind_values():
     theta = FreeParameter("theta")
     gate = DurationGate(duration=theta, qubit_count=1, ascii_symbols=["bar"])
@@ -112,6 +106,3 @@ def test_angled_gate_with_expr():
 #     match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
 #     angle_value = float(match[1])
 #     assert angle_value == angled_gate.angle
-
-
-

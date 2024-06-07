@@ -184,7 +184,7 @@ def duration_ascii_characters(
         str: Returns the ascii representation for a duration gate.
 
     """
-    return f'{gate_name}({_duration_str(duration)})'
+    return f"{gate_name}({_duration_str(duration)})"
 
 
 def bind_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -> DurationGate:

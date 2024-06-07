@@ -159,8 +159,9 @@ def test_qubit_width():
     )
     _assert_correct_diagram(circ, expected)
 
+
 def test_barrier_circuit_visualization():
-    circ = Circuit().barrier(target=[0,100])
+    circ = Circuit().barrier(target=[0, 100])
     expected = (
         "T    : |0 |",
         "           ",
@@ -171,6 +172,7 @@ def test_barrier_circuit_visualization():
         "T    : |0 |",
     )
     _assert_correct_diagram(circ, expected)
+
 
 def test_delay_circuit_visualization():
     circ = Circuit().delay(target=[0, 100], duration=30e-9)
@@ -185,6 +187,7 @@ def test_delay_circuit_visualization():
     )
     _assert_correct_diagram(circ, expected)
 
+
 def test_delay_circuit_free_param_visualization():
     circ = Circuit().delay(target=[0, 100], duration=FreeParameter("td"))
     expected = (
@@ -195,7 +198,7 @@ def test_delay_circuit_free_param_visualization():
         "q100 : -delay(td)-",
         "",
         "T    : |    0    |",
-        "Unassigned parameters: [td]."
+        "Unassigned parameters: [td].",
     )
     _assert_correct_diagram(circ, expected)
 
