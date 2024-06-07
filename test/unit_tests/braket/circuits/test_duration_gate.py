@@ -17,11 +17,6 @@ from braket.circuits import FreeParameter, FreeParameterExpression, Gate
 from braket.circuits.duration_gate import DurationGate, SiTimeUnit, _duration_str
 
 
-@pytest.fixture
-def duration_gate():
-    return DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["delay"])
-
-
 @pytest.mark.parametrize(
     "si_unit, expected",
     (
@@ -44,12 +39,26 @@ def test_si_unit_str(si_unit, expected):
         (SiTimeUnit.ns, "ns"),
     ),
 )
-def test_repr(si_unit, expected):
+def test_si_repr(si_unit, expected):
     repr(si_unit) == expected
+
+
+@pytest.fixture
+def duration_gate():
+    return DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["delay"])
 
 
 def test_is_operator(duration_gate):
     assert isinstance(duration_gate, Gate)
+
+
+def test_repr(duration_gate):
+    assert repr(duration_gate) == "DurationGate('duration': 3e-08, 'qubit_count': 1)"
+
+
+def test_duration_setter(duration_gate):
+    with pytest.raises(AttributeError):
+        duration_gate.duration = 30e-9
 
 
 def test_duration_is_none():
@@ -68,22 +77,16 @@ def test_getters():
     assert gate.duration == duration
 
 
-def test_duration_setter(duration_gate):
-    with pytest.raises(AttributeError):
-        duration_gate.duration = 30e-9
-
-
-def test_equality(duration_gate):
-    # return DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["delay"])
-
-    gate = DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["bar"])
-    other_gate = DurationGate(duration=30e-6, qubit_count=1, ascii_symbols=["foo"])
+def test_equality():
+    gate1 = DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["delay"])
+    gate2 = DurationGate(duration=30e-9, qubit_count=1, ascii_symbols=["bar"])
+    gate3 = DurationGate(duration=30e-6, qubit_count=1, ascii_symbols=["foo"])
     non_gate = "non gate"
 
-    assert duration_gate == gate
-    assert duration_gate is not gate
-    assert duration_gate != other_gate
-    assert duration_gate != non_gate
+    assert gate1 == gate2
+    assert gate1 is not gate2
+    assert gate1 != gate3
+    assert gate1 != non_gate
 
 
 def test_symbolic_equality():

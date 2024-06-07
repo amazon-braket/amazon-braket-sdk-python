@@ -89,7 +89,7 @@ class DurationGate(Gate, Parameterizable):
 
     @property
     def duration(self) -> Union[FreeParameterExpression, float]:
-        """Returns the angle of the gate
+        """Returns the duration of the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The duration of the gate
@@ -171,7 +171,7 @@ def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
 def duration_ascii_characters(
     gate_name: str, duration: Union[FreeParameterExpression, float]
 ) -> str:
-    """Generates a formatted ascii representation of an angled gate.
+    """Generates a formatted ascii representation of a duration gate.
 
     Args:
         gate_name (str): The name of the gate.
@@ -186,7 +186,7 @@ def duration_ascii_characters(
 
 
 def bind_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -> DurationGate:
-    """Gets the angle with all values substituted in that are requested.
+    """Gets the duration with all values substituted in that are requested.
 
     Args:
         gate (DurationGate): The subclass of DurationGate for which the duration is being obtained.
@@ -195,7 +195,7 @@ def bind_duration(gate: DurationGate, **kwargs: FreeParameterExpression | str) -
 
     Returns:
         DurationGate: A new gate of the type of the DurationGate originally used with all
-        angles updated.
+        duration updated.
     """
     new_duration = (
         gate.duration.subs(kwargs)
