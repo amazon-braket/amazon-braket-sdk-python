@@ -41,6 +41,7 @@ class NoTarget:
 
 
 class Duration(BaseModel):
+    # TODO: deprecate this class when we deprecate jacqd
     duration: confloat(ge=0)
 
 

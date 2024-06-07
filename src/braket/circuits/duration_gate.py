@@ -69,11 +69,9 @@ class DurationGate(Gate, Parameterizable):
         if duration is None:
             raise ValueError("duration must not be None")
         if isinstance(duration, FreeParameterExpression):
-            self._duration = duration
             self._parameters = [duration]
         else:
             # explicit casting in case duration is e.g. np.float32
-            self._duration = float(duration)
             self._parameters = [float(duration)]
 
     @property
