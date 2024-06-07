@@ -198,6 +198,7 @@ def test_delay_circuit_free_param_visualization():
         "q100 : -delay(td)-",
         "",
         "T    : |    0    |",
+        "",
         "Unassigned parameters: [td].",
     )
     _assert_correct_diagram(circ, expected)
