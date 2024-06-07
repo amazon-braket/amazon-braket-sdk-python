@@ -1,6 +1,8 @@
 from braket.emulators.pytket_translator.composed_gates import ComposedGates
 from pytket.circuit import OpType 
 
+"""The measurement register identifier."""
+MEASUREMENT_REGISTER_NAME = "c"
 
 """
     OpenQASM-3.0 to Pytket Name Translations
