@@ -70,6 +70,140 @@ def local_detuning():
     )
 
 
+@pytest.fixture
+def ir():
+    return Program.parse_raw_schema(
+        """
+{
+  "braketSchemaHeader": {
+    "name": "braket.ir.ahs.program",
+    "version": "1"
+  },
+  "setup": {
+    "ahs_register": {
+      "sites": [
+        [
+          "0.0",
+          "0.0"
+        ],
+        [
+          "0.0",
+          "0.000003"
+        ],
+        [
+          "0.0",
+          "0.000006"
+        ],
+        [
+          "0.000003",
+          "0.0"
+        ],
+        [
+          "0.000003",
+          "0.000003"
+        ],
+        [
+          "0.000003",
+          "0.000003"
+        ],
+        [
+          "0.000003",
+          "0.000006"
+        ]
+      ],
+      "filling": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  },
+  "hamiltonian": {
+    "drivingFields": [
+      {
+        "amplitude": {
+          "time_series": {
+            "values": [
+              "0.0",
+              "25132700.0",
+              "25132700.0",
+              "0.0"
+            ],
+            "times": [
+              "0.0",
+              "3E-7",
+              "0.0000027",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        },
+        "phase": {
+          "time_series": {
+            "values": [
+              "0",
+              "0"
+            ],
+            "times": [
+              "0.0",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        },
+        "detuning": {
+          "time_series": {
+            "values": [
+              "-125664000.0",
+              "-125664000.0",
+              "125664000.0",
+              "125664000.0"
+            ],
+            "times": [
+              "0.0",
+              "3E-7",
+              "0.0000027",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        }
+      }
+    ],
+    "localDetuning": [
+      {
+        "magnitude": {
+          "time_series": {
+            "values": [
+              "-125664000.0",
+              "125664000.0"
+            ],
+            "times": [
+              "0.0",
+              "0.000003"
+            ]
+          },
+          "pattern": [
+            "0.5",
+            "1.0",
+            "0.5",
+            "0.5",
+            "0.5",
+            "0.5"
+          ]
+        }
+      }
+    ]
+  }
+}
+"""
+    )
+
+
 def test_create():
     mock0 = Mock()
     mock1 = Mock()
@@ -92,6 +226,38 @@ def test_to_ir_empty():
     ahs = AnalogHamiltonianSimulation(register=AtomArrangement(), hamiltonian=hamiltonian)
     problem = ahs.to_ir()
     assert Program.parse_raw(problem.json()) == problem
+    assert problem == Program.parse_raw_schema(problem.json())
+
+
+def test_from_ir(ir):
+    problem = AnalogHamiltonianSimulation.from_ir(ir).to_ir()
+    assert problem == ir
+    assert problem == Program.parse_raw_schema(problem.json())
+
+
+def test_from_ir_empty():
+    empty_ir = Program.parse_raw_schema(
+        """
+{
+  "braketSchemaHeader": {
+    "name": "braket.ir.ahs.program",
+    "version": "1"
+  },
+  "setup": {
+    "ahs_register": {
+      "sites": [],
+      "filling": []
+    }
+  },
+  "hamiltonian": {
+    "drivingFields": [],
+    "localDetuning": []
+  }
+}
+"""
+    )
+    problem = AnalogHamiltonianSimulation.from_ir(empty_ir).to_ir()
+    assert problem == empty_ir
     assert problem == Program.parse_raw_schema(problem.json())
 
 
