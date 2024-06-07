@@ -159,6 +159,46 @@ def test_qubit_width():
     )
     _assert_correct_diagram(circ, expected)
 
+def test_barrier_circuit_visualization():
+    circ = Circuit().barrier(target=[0,100])
+    expected = (
+        "T    : |0 |",
+        "           ",
+        "q0   : -||-",
+        "        |  ",
+        "q100 : -||-",
+        "",
+        "T    : |0 |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+def test_delay_circuit_visualization():
+    circ = Circuit().delay(target=[0, 100], duration=30e-9)
+    expected = (
+        "T    : |      0      |",
+        "                      ",
+        "q0   : -delay(30.0ns)-",
+        "        |             ",
+        "q100 : -delay(30.0ns)-",
+        "",
+        "T    : |      0      |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+def test_delay_circuit_free_param_visualization():
+    circ = Circuit().delay(target=[0, 100], duration=FreeParameter("td"))
+    expected = (
+        "T    : |    0    |",
+        "                  ",
+        "q0   : -delay(td)-",
+        "        |         ",
+        "q100 : -delay(td)-",
+        "",
+        "T    : |    0    |",
+        "Unassigned parameters: [td]."
+    )
+    _assert_correct_diagram(circ, expected)
+
 
 def test_gate_width():
     class Foo(Gate):

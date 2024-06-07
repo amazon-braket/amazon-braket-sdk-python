@@ -3890,7 +3890,7 @@ class Delay(DurationGate):
         super().__init__(
             qubit_count=qubit_count,
             duration=duration,
-            ascii_symbols=[duration_ascii_characters("duration", duration)] * qubit_count,
+            ascii_symbols=[duration_ascii_characters("delay", duration)] * qubit_count,
         )
 
     def bind_values(self, **kwargs) -> DurationGate:

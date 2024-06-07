@@ -1421,7 +1421,7 @@ def test_hash(gate):
     "gate, ascii_symbols",
     (
         (Gate.Barrier(3), ("||",) * 3),
-        (Gate.Delay(3, 30e-9), ("delay(3e-08)",) * 3),
+        (Gate.Delay(3, 30e-9), ("delay(30.0ns)",) * 3),
     ),
 )
 def test_ascii_characters(gate, ascii_symbols):
