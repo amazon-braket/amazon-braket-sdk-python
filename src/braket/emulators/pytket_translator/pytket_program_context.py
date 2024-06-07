@@ -14,6 +14,7 @@ from braket.emulators.pytket_translator.translations import (
     COMPOSED_GATES
 )
 import numpy as np
+from sympy import Symbol, pi
 
 
 class PytketProgramContext(AbstractProgramContext):
@@ -39,12 +40,14 @@ class PytketProgramContext(AbstractProgramContext):
         return result
 
     def add_gate_instruction(
-        self, gate_name: str, target: tuple[int, ...], *params, ctrl_modifiers: list[int], power: int
+        self, gate_name: str, target: tuple[int, ...], params, ctrl_modifiers: list[int], power: int
     ): 
         self._check_and_update_qubits(target)
+        # Convert from Braket's radians to TKET's half-turns
+        params = [param / pi for param in params]
         if gate_name in QASM_TO_PYTKET:
             op = QASM_TO_PYTKET[gate_name]
-            if len(*params) > 0:
+            if len(params) > 0:
                 self._circuit.add_gate(op, *params, target)
             else:
                 self._circuit.add_gate(op, target)
