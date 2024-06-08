@@ -4,7 +4,7 @@
 
 **Circuits**
 
-***Import Braket modules:***
+Import Braket modules:
 ```
 from braket.circuits import Circuit, Gate, Instruction
 from braket.circuits.observables import X, Y, Z
@@ -12,56 +12,57 @@ from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot
 from braket.circuits.instruction import Instruction
 ```
 
-***Create an empty circuit (default constructor):***
+Create an empty circuit (default constructor):
 
 `circuit = Circuit()`
 
-***Create an circuit with arbitrary number of qubits. Note that number of qubits is not passed as an argument to the circuit constructor:***
+Create an circuit with arbitrary number of qubits. Note that number of qubits is not passed as an argument to the circuit constructor:
 
 `circuit = Circuit()`
 
-***Add X gate to circuit at qubit 0:***
+Add X gate to circuit at qubit 0:
 
 `circuit.x(0)`
 
-***Add Rx gate to qubit 1 with a float angle 1.234	angle = 1.234:***
+Add Rx gate to qubit 1 with a float angle 1.234	angle = 1.234:
 
 `circuit.rx(1, angle)`
 
-***Add cnot gate to pair of qubits:***
+Add cnot gate to pair of qubits:
 
 `circuit.cnot(0, 1)`
 
-***Add gates sequentially: X gate, Rx gate, cnot gate:***
+Add gates sequentially: X gate, Rx gate, cnot gate:
 
 `circuit.x(0).rx(1, 1.23).cnot(0, 1)`
 
-***Get the list of available gates:***
+Get the list of available gates:
 
 `[attr for attr in dir(Gate) if attr[0].isupper()]`
 
-***Create a single qubit gate from unitary matrix:***
+Create a single qubit gate from unitary matrix:
 
 ```
 matrix = np.eye(2)
 G = Unitary(matrix)
 ```
 
-***Get the circuit unitary:***
+Get the circuit unitary:
+
 `circuit.to_unitary()`
 
-***Add a probability result type to qubit 0 (will return exact probabilities, corresponds to shots=0 case when running on a simulator):***
+Add a probability result type to qubit 0 (will return exact probabilities, corresponds to shots=0 case when running on a simulator):
 
 `circuit.probability(0)`
 
-***Add probability result type to all qubits. Add probability result type only when measuring exact probabilities:***
+Add probability result type to all qubits. Add probability result type only when measuring exact probabilities:
 
 ```	
 for i in range(len(circuit.qubits)):
     circuit.probability(i)
 ```
 
-***Show all result types attached to the circuit:***
+Show all result types attached to the circuit:
 
 `print(circuit._result_types)`
 
@@ -180,7 +181,7 @@ Quantum Task batching:
 ```
 n_batch = 5  # define circuit batch size
 circuits = [circuit for _ in range(n_batch)]  # Create a list of circuits in the batch
-batch = device.run_batch(circuits, s3_folder, shots=100)   # Submit batch of circuits
+batch = device.run_batch(circuits, s3_folder, shots=100)   # Submit batch of circuits with 100 shots
 print(batch.results()[0].measurement_counts)  # The result of the first quantum task in the batch
 ```
 
@@ -483,7 +484,7 @@ Run an AHS program:
 
 Debias:
 
-`device.run(circuit, shots=2500, device_parameters={"errorMitigation": Debias()})`
+`device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
 
 Sharpening (if debiasing used):
 
