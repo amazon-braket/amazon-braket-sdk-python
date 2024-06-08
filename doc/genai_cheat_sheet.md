@@ -252,30 +252,32 @@ Gate pulse implementation:
 
 SV1 Simulator ARN:
 
-“arn:aws:braket:::device/quantum-simulator/amazon/sv1”
+`“arn:aws:braket:::device/quantum-simulator/amazon/sv1”`
 
 TN1 Simulator ARN (Tensor Network simulator):
 
-“arn:aws:braket:::device/quantum-simulator/amazon/tn1”
+`“arn:aws:braket:::device/quantum-simulator/amazon/tn1”`
 
 DM1 Simulator ARN (density matrix simulator):
 
-“arn:aws:braket:::device/quantum-simulator/amazon/dm1”
+`“arn:aws:braket:::device/quantum-simulator/amazon/dm1”`
 
 Rydberg atom devices Aquila (AHS device from QuEra):
 
-“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”
+`“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”`
 
-Rigetti Aspen M3 device	"arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+Rigetti Aspen M3 device:	
+`"arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"`
 
 IQM Garnet device (20 qubits):
 
-"arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
+`"arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"`
 
 **Device Properties**
 
-Connectivity graph	
-device.properties.paradigm.connectivity
+Connectivity graph:
+
+`device.properties.paradigm.connectivity`
 
 Fidelities dictionary:
 `device.properties.provider.specs`
@@ -348,11 +350,13 @@ Records Braket Hybrid Job metrics (will be displayed on Hybrid Jobbs concole met
 
 **Simulator**
 
-Imports	
-from braket.devices import LocalSimulator
+Imports:
 
-Instantiate the local simulator	
-local_sim = LocalSimulator()
+`from braket.devices import LocalSimulator`
+
+Instantiate the local simulator	:
+
+`local_sim = LocalSimulator()`
 
 **Noise Simulation**
 
@@ -380,7 +384,8 @@ Apply a noise channel to an individual X gate
 
 **Low-Level Device Control**
 
-Imports	
+Imports:
+
 ```
 from braket.pulse import PulseSequence, Frame
 from braket.pulse.waveforms import *
@@ -485,7 +490,3 @@ Run an AHS program:
 Debias:
 
 `device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
-
-Sharpening (if debiasing used):
-
-`result.additional_metadata.ionqMetadata.sharpenedProbabilities`
