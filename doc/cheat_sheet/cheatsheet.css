@@ -1,0 +1,497 @@
+@import url('https://fonts.cdnfonts.com/css/amazon-ember');
+
+/*******************************************************************
+ * CSS reset adapted from http://meyerweb.com/eric/tools/css/reset *
+ *******************************************************************/
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+    text-decoration: none;
+}
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+}
+
+blockquote,
+q {
+    quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+}
+
+/******************
+ *   Variables    *
+ ******************/
+:root {
+    --box-width: 800px;
+}
+
+
+
+/******************
+ * Custom styling *
+ ******************/
+
+body {
+    font-family: 'Amazon Ember', sans-serif;
+    text-align: center;
+    color: #16191f;
+    background-color: #f2f3f3;
+    margin: 0;
+    font-size: 14px;
+    line-height: 22px;
+}
+
+h1 {
+    display: table-cell;
+    font-size: 200%;
+    font-weight: bold;
+    vertical-align: middle;
+    text-align: right;
+}
+
+h2 {
+    font-size: 1.2em;
+    margin: 8px 0px 8px 20px;
+    color: #545b64;
+    font-weight: bold;
+}
+
+#top h1 {
+    display: block;
+    text-align: right;
+}
+
+#top h2 {
+    font-family: 'Amazon Ember Cd RC', sans-serif;
+    font-size: 120%;
+    text-align: right;
+    font-weight: normal;
+}
+
+header {
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    background-color: #232f3e;
+    color: #ffffff;
+}
+
+footer {
+    width: 100%;
+    height: 30px;
+    line-height: 15px;
+    font-size: 80%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: #232f3e;
+    color: #ffffff;
+}
+
+#thanks:before {
+    content: "Thanks (alphabetically): ";
+    font-size: larger;
+}
+
+#top {
+    display: inline-flex;
+}
+
+#title {
+    margin: auto;
+}
+
+#version {
+    font-size: larger;
+    vertical-align: bottom;
+    margin-left: 0em;
+    margin-top: auto;
+    margin-bottom: 1.5em;
+}
+
+#contents {
+    -webkit-columns: 6 34em;
+    -moz-columns: 6 34em;
+    columns: 6 calc(var(--box-width) + 4px);
+    -webkit-column-gap: 0.25em;
+    -moz-column-gap: 0.25em;
+    column-gap: 0.25em;
+    padding-top: 54px;
+    padding-bottom: 30px;
+}
+
+
+/*
+ * Note: a coloured box title for a rounded box would require a hidden overflow to
+ * avoid colour spilling over the border. This, however, clashes with tooltips in
+ * all but the very first column due to the absolute positioning.
+ */
+
+.box {
+    display: inline-block;
+    position: relative;
+    border-top: 1px solid #eaeded;
+    box-shadow: 0 1px 1px 0 rgba(0, 28, 36, 0.3), 1px 1px 1px 0 rgba(0, 28, 36, 0.15), -1px 1px 1px 0 rgba(0, 28, 36, 0.15);
+    text-align: left;
+    background-color: #ffffff;
+    margin: 0.5em;
+    /* padding-bottom: 0.5em; */
+    width: var(--box-width);
+    word-wrap: break-word;
+}
+
+#contents>ol,
+ul {
+    list-style: none;
+}
+
+.box .title {
+    background: #fafafa;
+    border-bottom: 1px solid #eaeded;
+    padding: .5em;
+}
+
+.box h1 {
+    font-family: 'Amazon Ember V2', sans-serif;
+    font-size: 120%;
+    font-weight: bold;
+    padding: 5px;
+    color: 16191f;
+}
+
+.box p {
+    padding: 0.25em 0.5em 0.25em 0.5em;
+    text-align: justify;
+}
+
+.box em {
+    font-style: italic;
+}
+
+le .box table {
+    border-spacing: 0.1em;
+    border-collapse: collapse;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.box table {
+    width: var(--box-width);
+    table-layout: fixed;
+}
+
+.box table td {
+    padding: 0.1em 0.5em 0.1em 0.5em;
+    vertical-align: middle;
+    border: #eaeded;
+}
+
+.box table td:first-child {
+    width: calc(var(--box-width)/3);
+}
+
+/* .box table tr:nth-child(odd) {
+    background-color: #ffffff;
+} */
+
+.box table tr {
+    border-top: 1px solid #eaeded;
+}
+
+.box table tr:first-child {
+    border-top: none;
+}
+
+.box ul li {
+    list-style-type: square;
+    margin-left: 2em;
+}
+
+.centred {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.indented {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 32em;
+}
+
+pre {
+    font-family: 'Amazon Ember Mono', sans-serif;
+    color: #80ab5d;
+}
+
+code {
+    /* display: inline-block; */
+    white-space: pre-wrap;
+    font-family: 'Amazon Ember Mono', sans-serif;
+    color: darkgreen;
+}
+
+pre code {
+    margin-left: 20px;
+}
+
+a {
+    color: #0073bb;
+    text-decoration: #2a2a2e;
+}
+
+a:hover {
+    color: #0a4a74;
+    text-decoration: underline;
+}
+
+footer a {
+    color: #fff;
+}
+
+footer a:hover {
+    color: #ec7211;
+    text-decoration: none;
+}
+
+
+/********************************************************************
+ * Tooltip adapted from http://www.menucool.com/tooltip/css-tooltip *
+ ********************************************************************/
+
+a.tooltip {
+    outline: none;
+    color: #9e7abe;
+}
+
+a.tooltip:hover {
+    color: #6b458d;
+    text-decoration: none;
+    cursor: help;
+}
+
+a.tooltip span {
+    display: none;
+    max-width: 33.5em;
+    padding: 0.25em;
+    text-align: center;
+    color: #2a2a2a;
+}
+
+a.tooltip:hover span {
+    display: block;
+    position: absolute;
+    border: 1px solid #5d5d5d;
+    background: rgba(195, 195, 195, 0.9);
+}
+
+a.tooltip span {
+    border-radius: 0.25em;
+    box-shadow: 0.1em 0.1em 0.1em #909090;
+}
+
+.footer-text {
+    padding-top: 2em;
+    padding-bottom: 1em;
+}
+
+.individual-styling>.bold {
+    color: blue;
+}
+
+.github-info {
+    font-style: italic;
+    font-size: smaller;
+}
+
+small {
+    font-size: smaller;
+    font-style: italic;
+}
+
+.languages {
+    display: inline-block;
+    float: left;
+    left: 20px;
+    text-align: left;
+    position: absolute;
+    transition: 0.1s;
+}
+
+.language {
+    width: 32px;
+    padding: 3px;
+    vertical-align: middle;
+}
+
+.language-link {
+    font-size: 1.25em;
+    background: #e6f2ff;
+    padding: 5px;
+}
+
+.language-link:hover {
+    background: #fafcff;
+}
+
+.others {
+    border: 2px #4d64ae solid;
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    opacity: 0;
+    min-width: 260px;
+    transform: translateY(-2em);
+    transition: all 0.2s ease-in-out 0s, visibility 0s linear 0.2s;
+}
+
+.languages:hover .others {
+    visibility: visible;
+    transform: translateY(0em);
+    opacity: 1;
+    transition-delay: 0s, 0s;
+}
+
+.languages a {
+    text-decoration: none;
+    color: black;
+}
+
+/* @media(min-width:576px) {}
+
+@media(min-width:768px) {}
+
+@media(min-width:992px) {
+    .box {
+        width: 35em;
+    }
+}
+
+@media(min-width:1500px) {
+    .box {
+        width: 43em;
+    }
+}
+
+@media(min-width:1600px) {
+    .box {
+        width: 30em;
+    }
+} */
