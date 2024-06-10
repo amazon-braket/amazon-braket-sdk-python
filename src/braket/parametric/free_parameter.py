@@ -20,6 +20,62 @@ from sympy import Symbol
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 
+PREDEFINED_VARIABLE_NAMES = ["b", "q"]
+QASM_RESERVED_WORDS = [
+    "OPENQASM",
+    "include",
+    "defcalgrammar",
+    "def",
+    "cal",
+    "defcal",
+    "gate",
+    "extern",
+    "box",
+    "let",
+    "break",
+    "continue",
+    "if",
+    "else",
+    "end",
+    "return",
+    "for",
+    "while",
+    "in",
+    "pragma",
+    "input",
+    "output",
+    "const",
+    "readonly",
+    "mutable",
+    "qreg",
+    "qubit",
+    "creg",
+    "bool",
+    "bit",
+    "int",
+    "uint",
+    "float",
+    "angle",
+    "complex",
+    "array",
+    "void",
+    "duration",
+    "stretch",
+    "gphase",
+    "inv",
+    "pow",
+    "ctrl",
+    "negctrl",
+    "dim",
+    "durationof",
+    "delay",
+    "reset",
+    "measure",
+    "barrier",
+    "true",
+    "false",
+]
+
 
 class FreeParameter(FreeParameterExpression):
     """Class 'FreeParameter'
@@ -94,6 +150,14 @@ class FreeParameter(FreeParameterExpression):
             raise TypeError("FreeParameter names must be strings")
         if not name[0].isalpha() and name[0] != "_":
             raise ValueError("FreeParameter names must start with a letter or an underscore")
+        if name in PREDEFINED_VARIABLE_NAMES:
+            raise ValueError(
+                f"FreeParameter names must not be one of predefined variables: {PREDEFINED_VARIABLE_NAMES}."
+            )
+        if name in QASM_RESERVED_WORDS:
+            raise ValueError(
+                f"FreeParameter names must not be one of qasm reserved words: {QASM_RESERVED_WORDS}."
+            )
         self._name = Symbol(name)
 
     def to_dict(self) -> dict:

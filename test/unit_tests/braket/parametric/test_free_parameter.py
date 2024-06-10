@@ -67,3 +67,19 @@ def test_sub_successful(free_parameter):
 
 def test_sub_wrong_param(free_parameter):
     assert free_parameter.subs({"alpha": 1}) == FreeParameter("theta")
+
+
+@pytest.mark.parametrize("param_name", ["for", "qubit"])
+def test_error_raised_when_reserved_keyword_used(param_name):
+    with pytest.raises(
+        ValueError, match="FreeParameter names must not be one of qasm reserved words:"
+    ):
+        FreeParameter(param_name)
+
+
+@pytest.mark.parametrize("param_name", ["b", "q"])
+def test_error_raised_when_predefined_variable_used(param_name):
+    with pytest.raises(
+        ValueError, match="FreeParameter names must not be one of predefined variables:"
+    ):
+        FreeParameter(param_name)
