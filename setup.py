@@ -28,7 +28,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.21.3",
-        "amazon-braket-default-simulator>=1.21.4",
+        "amazon-braket-default-simulator @ git+https://github.com/amazon-braket/amazon-braket-default-simulator-python.git@multi#egg=amazon-braket-default-simulator",  # noqa E501",
         "oqpy~=0.3.5",
         "backoff",
         "boltons",
