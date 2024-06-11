@@ -1,4 +1,3 @@
-
 # Updated 
 # Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
@@ -13,6 +12,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""A module for representing and manipulating atom arrangements for Analog Hamiltonian Simulation.
+
+This module provides classes and functions to create and handle atom arrangements,
+including different lattice structures such as square, rectangular, decorated Bravais,
+and honeycomb lattices.
+
+Typical usage example-
+
+  canvas_boundary_points = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.5e-5), (0, 7.5e-5)]
+  square_lattice = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+"""
+
 from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -21,12 +32,12 @@ from enum import Enum
 from numbers import Number
 from typing import Union, Tuple, List
 import numpy as np
-from shapely.geometry import Point, Polygon
 
 
 class SiteType(Enum):
     VACANT = "Vacant"
     FILLED = "Filled"
+
 
 @dataclass
 class AtomArrangementItem:
@@ -50,16 +61,19 @@ class AtomArrangementItem:
         self._validate_coordinate()
         self._validate_site_type()
 
+
 class AtomArrangement:
+    """Represents a set of coordinates that can be used as a register to an AnalogHamiltonianSimulation."""
     def __init__(self):
-        """Represents a set of coordinates that can be used as a register to an AnalogHamiltonianSimulation."""
         self._sites = []
 
     def add(self, coordinate: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
+        
         Args:
             coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the atom (in meters).
             site_type (SiteType): The type of site. Optional. Default is FILLED.
+        
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
@@ -68,10 +82,13 @@ class AtomArrangement:
 
     def coordinate_list(self, coordinate_index: Number) -> List[Number]:
         """Returns all the coordinates at the given index.
+        
         Args:
             coordinate_index (Number): The index to get for each coordinate.
+        
         Returns:
             List[Number]: The list of coordinates at the given index.
+        
         Example:
             To get a list of all x-coordinates: coordinate_list(0)
             To get a list of all y-coordinates: coordinate_list(1)
@@ -84,18 +101,21 @@ class AtomArrangement:
     def __len__(self):
         return len(self._sites)
 
-    def discretize(self, properties: 'DiscretizationProperties') -> AtomArrangement:
+    def discretize(self, properties: DiscretizationProperties) -> AtomArrangement:
         """Creates a discretized version of the atom arrangement, rounding all site coordinates to the closest multiple of the resolution. The types of the sites are unchanged.
+        
         Args:
             properties (DiscretizationProperties): Capabilities of a device that represent the
                 resolution with which the device can implement the parameters.
+        
         Raises:
             DiscretizationError: If unable to discretize the program.
+        
         Returns:
             AtomArrangement: A new discretized atom arrangement.
         """
         try:
-            position_res = properties.lattice.geometry.positionResolution
+            position_res = properties.lattice.positionResolution
             discretized_arrangement = AtomArrangement()
             for site in self._sites:
                 new_coordinates = tuple(
@@ -133,6 +153,7 @@ class AtomArrangement:
 
     @classmethod
     def from_decorated_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], decoration_points: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
+        """Create an atom arrangement with a decorated Bravais lattice."""
         arrangement = cls()
         vec_a, vec_b = np.array(lattice_vectors[0]), np.array(lattice_vectors[1])
         x_min, y_min = canvas_boundary_points[0]
@@ -152,6 +173,7 @@ class AtomArrangement:
 
     @classmethod
     def from_honeycomb_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
+        """Create an atom arrangement with a honeycomb lattice."""
         a1 = (lattice_constant, 0)
         a2 = (lattice_constant / 2, lattice_constant * np.sqrt(3) / 2)
         decoration_points = [(0, 0), (lattice_constant / 2, lattice_constant * np.sqrt(3) / 6)]
@@ -159,30 +181,40 @@ class AtomArrangement:
 
     @classmethod
     def from_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
+        """Create an atom arrangement with a Bravais lattice."""
         return cls.from_decorated_bravais_lattice(lattice_vectors, [(0, 0)], canvas_boundary_points)
+
 
 @dataclass
 class LatticeGeometry:
+    """Represents the geometry of a lattice with its position resolution."""
     positionResolution: Decimal
+
 
 @dataclass
 class DiscretizationProperties:
+    """Represents the discretization properties of a device."""
     lattice: LatticeGeometry
 
+
 class DiscretizationError(Exception):
+    """Exception raised for errors in the discretization process."""
     pass
 
-# RectangularCanvas class
+
 class RectangularCanvas:
+    """Represents a rectangular canvas boundary."""
     def __init__(self, bottom_left: Tuple[float, float], top_right: Tuple[float, float]):
         self.bottom_left = bottom_left
         self.top_right = top_right
 
     def is_within(self, point: Tuple[float, float]) -> bool:
+        """Check if a point is within the canvas boundaries."""
         x_min, y_min = self.bottom_left
         x_max, y_max = self.top_right
         x, y = point
         return x_min <= x <= x_max and y_min <= y <= y_max
+
 
 # Example usage
 if __name__ == "__main__":
