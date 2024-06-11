@@ -152,11 +152,13 @@ class FreeParameter(FreeParameterExpression):
             raise ValueError("FreeParameter names must start with a letter or an underscore")
         if name in PREDEFINED_VARIABLE_NAMES:
             raise ValueError(
-                f"FreeParameter names must not be one of predefined variables: {PREDEFINED_VARIABLE_NAMES}."
+                f"FreeParameter names must not be one of predefined variables: "
+                f"{PREDEFINED_VARIABLE_NAMES}."
             )
         if name in QASM_RESERVED_WORDS:
             raise ValueError(
-                f"FreeParameter names must not be one of qasm reserved words: {QASM_RESERVED_WORDS}."
+                f"FreeParameter names must not be one of qasm reserved words: "
+                f"{QASM_RESERVED_WORDS}."
             )
         self._name = Symbol(name)
 
