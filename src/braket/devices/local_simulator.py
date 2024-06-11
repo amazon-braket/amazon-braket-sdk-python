@@ -204,9 +204,8 @@ class LocalSimulator(Device):
                         f"{unbounded_parameters}"
                     )
 
-        if isinstance(simulator := self._delegate, MultiSimulator):
-            all_tasks, all_inputs = tuple(zip(*tasks_and_inputs))
-            results = simulator.run_multiple(all_tasks, shots, inputs=all_inputs, *args, **kwargs)
+        if isinstance(self._delegate, MultiSimulator):
+            results = self._run_multiple_internal(tasks_and_inputs, shots, *args, **kwargs)
         else:
             with Pool(min(max_parallel, len(tasks_and_inputs))) as pool:
                 param_list = [(task, shots, inp, *args, *kwargs) for task, inp in tasks_and_inputs]
@@ -278,7 +277,11 @@ class LocalSimulator(Device):
         shots: Optional[int] = None,
         *args,
         **kwargs,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    ) -> Union[
+        GateModelQuantumTaskResult,
+        AnnealingQuantumTaskResult,
+        AnalogHamiltonianSimulationQuantumTaskResult,
+    ]:
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_run_internal.register
@@ -386,3 +389,174 @@ class LocalSimulator(Device):
             )
         results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+
+    @singledispatchmethod
+    def _run_multiple_internal(
+        self,
+        task_specifications: list[
+            tuple[
+                Union[
+                    Circuit,
+                    Problem,
+                    OpenQASMProgram,
+                    AnalogHamiltonianSimulation,
+                    AHSProgram,
+                    SerializableProgram,
+                ],
+                dict[str, float],
+            ]
+        ],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[
+        Union[
+            GateModelQuantumTaskResult,
+            AnnealingQuantumTaskResult,
+            AnalogHamiltonianSimulationQuantumTaskResult,
+        ]
+    ]:
+        assert isinstance(self._delegate, MultiSimulator)
+
+        dispatch = {
+            Circuit: self._run_multiple_internal_circuit,
+            Problem: self._run_multiple_internal_problem,
+            OpenQASMProgram: self._run_multiple_internal_openqasm_program,
+            SerializableProgram: self._run_multiple_internal_serializable_program,
+            AnalogHamiltonianSimulation: self._run_multiple_internal_ahs,
+            AHSProgram: self._run_multiple_internal_ahs_program,
+        }
+
+        task_type = type(task_specifications[0][0])
+        if task_type not in dispatch:
+            raise NotImplementedError(f"Unsupported task type {task_type}")
+
+        return dispatch[task_type](task_specifications, shots, *args, **kwargs)
+
+    def _run_multiple_internal_circuit(
+        self,
+        circuits_and_inputs: list[tuple[Circuit, dict[str, float]]],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[GateModelQuantumTaskResult]:
+        simulator = self._delegate
+        if DeviceActionType.OPENQASM not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support qubit gate-based programs"
+            )
+        programs = []
+        for circuit, inputs in circuits_and_inputs:
+            validate_circuit_and_shots(circuit, shots)
+            program = circuit.to_ir(ir_type=IRType.OPENQASM)
+            program.inputs.update(inputs or {})
+            programs.append(program)
+        results = simulator.run_multiple(programs, shots, *args, **kwargs)
+        return [GateModelQuantumTaskResult.from_object(result) for result in results]
+
+    def _run_multiple_internal_problem(
+        self,
+        problems_and_inputs: list[tuple[Problem, dict[str, float]]],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[AnnealingQuantumTaskResult]:
+        simulator = self._delegate
+        assert isinstance(simulator, MultiSimulator)
+        if DeviceActionType.ANNEALING not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support quantum annealing problems"
+            )
+        problems = []
+        for problem, _ in problems_and_inputs:
+            problems.append(problem.to_ir())
+        results = simulator.run_multiple(problems, shots, *args, *kwargs)
+        return [AnnealingQuantumTaskResult.from_object(result) for result in results]
+
+    def _run_multiple_internal_openqasm_program(
+        self,
+        programs_and_inputs: list[tuple[OpenQASMProgram, dict[str, float]]],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[GateModelQuantumTaskResult]:
+        simulator = self._delegate
+        assert isinstance(simulator, MultiSimulator)
+        if DeviceActionType.OPENQASM not in simulator.properties.action:
+            raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
+        programs = []
+        for program, inputs in programs_and_inputs:
+            if inputs:
+                inputs_copy = program.inputs.copy() if program.inputs is not None else {}
+                inputs_copy.update(inputs)
+                program = OpenQASMProgram(
+                    source=program.source,
+                    inputs=inputs_copy,
+                )
+                programs.append(program)
+
+        results = simulator.run_multiple(programs, shots, *args, **kwargs)
+        return [
+            (
+                result
+                if isinstance(result, GateModelQuantumTaskResult)
+                else GateModelQuantumTaskResult.from_object(result)
+            )
+            for result in results
+        ]
+
+    def _run_multiple_internal_serializable_program(
+        self,
+        programs_and_inputs: list[tuple[SerializableProgram, dict[str, float]]],
+        shots: Optional[int] = None,
+        inputs: Optional[dict[str, float]] = None,
+        *args,
+        **kwargs,
+    ) -> list[GateModelQuantumTaskResult]:
+        for program_and_input in programs_and_inputs:
+            program_and_input[0] = OpenQASMProgram(
+                source=program_and_input[0].to_ir(ir_type=IRType.OPENQASM)
+            )
+        return self._run_multiple_internal(programs_and_inputs, shots, *args, **kwargs)
+
+    def _run_multiple_internal_ahs(
+        self,
+        programs_and_inputs: list[tuple[AnalogHamiltonianSimulation, dict[str, float]]],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[AnalogHamiltonianSimulationQuantumTaskResult]:
+        simulator = self._delegate
+        assert isinstance(simulator, MultiSimulator)
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        programs = []
+        for program, _ in programs_and_inputs:
+            programs.append(program.to_ir())
+        results = simulator.run_multiple(programs, shots, *args, **kwargs)
+        return [
+            AnalogHamiltonianSimulationQuantumTaskResult.from_object(result) for result in results
+        ]
+
+    def _run_multiple_internal_ahs_program(
+        self,
+        programs_and_inputs: list[tuple[AHSProgram, dict[str, float]]],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> list[AnalogHamiltonianSimulationQuantumTaskResult]:
+        simulator = self._delegate
+        assert isinstance(simulator, MultiSimulator)
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        programs = []
+        for program, _ in programs_and_inputs:
+            programs.append(program)
+        results = simulator.run_multiple(programs, shots, *args, **kwargs)
+        return [
+            AnalogHamiltonianSimulationQuantumTaskResult.from_object(result) for result in results
+        ]

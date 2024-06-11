@@ -461,7 +461,7 @@ def test_batch_with_multi():
     batch = device.run_batch(circuits, shots=10)
     assert len(batch.results()) == num_tasks
     for x in batch.results():
-        assert x == GATE_MODEL_RESULT
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_batch_with_annealing_problems():
