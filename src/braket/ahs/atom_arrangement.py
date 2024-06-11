@@ -124,61 +124,31 @@ class AtomArrangement:
         except Exception as e:
             raise DiscretizationError(f"Failed to discretize register {e}") from e
 
-    # Factory methods for lattice structures
-    @classmethod
-    def from_square_lattice(
-        cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]
-    ) -> "AtomArrangement":
-        """Create an atom arrangement with a square lattice."""
-        arrangement = cls()
-        x_min, y_min = canvas_boundary_points[0]
-        x_max, y_max = canvas_boundary_points[2]
-        x_range = np.arange(x_min, x_max, lattice_constant)
-        y_range = np.arange(y_min, y_max, lattice_constant)
-        for x in x_range:
-            for y in y_range:
-                arrangement.add((x, y))
-        return arrangement
+# Updated 
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
 
-    @classmethod
-    def from_rectangular_lattice(
-        cls, dx: float, dy: float, canvas_boundary_points: List[Tuple[float, float]]
-    ) -> "AtomArrangement":
-        """Create an atom arrangement with a rectangular lattice."""
-        arrangement = cls()
-        x_min, y_min = canvas_boundary_points[0]
-        x_max, y_max = canvas_boundary_points[2]
-        for x in np.arange(x_min, x_max, dx):
-            for y in np.arange(y_min, y_max, dy):
-                arrangement.add((x, y))
-        return arrangement
-
-# Define DiscretizationProperties and DiscretizationError for completeness
-@dataclass
-class LatticeGeometry:
-    positionResolution: Decimal
-
-@dataclass
-class DiscretizationProperties:
-    lattice: LatticeGeometry
-
-class DiscretizationError(Exception):
-    pass
-
-# Example usage
-canvas_boundary_points = [(0, 0), (7.5e-5, 0), (0, 7.5e-5), (7.5e-5, 7.5e-5)]
-canvas = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
-
-
+from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Union, List, Tuple
-
+from typing import Union, Tuple, List
 import numpy as np
+from shapely.geometry import Point, Polygon
 
+# Define SiteType enum
 class SiteType(Enum):
     VACANT = "Vacant"
     FILLED = "Filled"
@@ -186,7 +156,7 @@ class SiteType(Enum):
 @dataclass
 class AtomArrangementItem:
     """Represents an item (coordinate and metadata) in an atom arrangement."""
-    coordinate: tuple[Number, Number]
+    coordinate: Tuple[Number, Number]
     site_type: SiteType
 
     def _validate_coordinate(self) -> None:
@@ -210,7 +180,7 @@ class AtomArrangement:
         """Represents a set of coordinates that can be used as a register to an AnalogHamiltonianSimulation."""
         self._sites = []
 
-    def add(self, coordinate: Union[tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> "AtomArrangement":
+    def add(self, coordinate: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> "AtomArrangement":
         """Add a coordinate to the atom arrangement.
         Args:
             coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the atom (in meters).
@@ -221,12 +191,12 @@ class AtomArrangement:
         self._sites.append(AtomArrangementItem(tuple(coordinate), site_type))
         return self
 
-    def coordinate_list(self, coordinate_index: Number) -> list[Number]:
+    def coordinate_list(self, coordinate_index: Number) -> List[Number]:
         """Returns all the coordinates at the given index.
         Args:
             coordinate_index (Number): The index to get for each coordinate.
         Returns:
-            list[Number]: The list of coordinates at the given index.
+            List[Number]: The list of coordinates at the given index.
         Example:
             To get a list of all x-coordinates: coordinate_list(0)
             To get a list of all y-coordinates: coordinate_list(1)
@@ -239,10 +209,8 @@ class AtomArrangement:
     def __len__(self):
         return len(self._sites)
 
-    def discretize(self, properties: "DiscretizationProperties") -> "AtomArrangement":
-        """Creates a discretized version of the atom arrangement,
-        rounding all site coordinates to the closest multiple of the resolution.
-        The types of the sites are unchanged.
+    def discretize(self, properties: 'DiscretizationProperties') -> "AtomArrangement":
+        """Creates a discretized version of the atom arrangement, rounding all site coordinates to the closest multiple of the resolution. The types of the sites are unchanged.
         Args:
             properties (DiscretizationProperties): Capabilities of a device that represent the
                 resolution with which the device can implement the parameters.
@@ -263,19 +231,37 @@ class AtomArrangement:
         except Exception as e:
             raise DiscretizationError(f"Failed to discretize register {e}") from e
 
+    # Factory methods for lattice structures
     @classmethod
-    def from_decorated_bravais_lattice(
-        cls,
-        lattice_vectors: List[Tuple[float, float]],
-        decoration_points: List[Tuple[float, float]],
-        canvas_boundary_points: List[Tuple[float, float]]
-    ) -> "AtomArrangement":
+    def from_square_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+        """Create an atom arrangement with a square lattice."""
         arrangement = cls()
-        vec_a, vec_b = np.array(lattice_vectors[0]), np.array(lattice_vectors[1])
-
         x_min, y_min = canvas_boundary_points[0]
         x_max, y_max = canvas_boundary_points[2]
+        x_range = np.arange(x_min, x_max, lattice_constant)
+        y_range = np.arange(y_min, y_max, lattice_constant)
+        for x in x_range:
+            for y in y_range:
+                arrangement.add((x, y))
+        return arrangement
 
+    @classmethod
+    def from_rectangular_lattice(cls, dx: float, dy: float, canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+        """Create an atom arrangement with a rectangular lattice."""
+        arrangement = cls()
+        x_min, y_min = canvas_boundary_points[0]
+        x_max, y_max = canvas_boundary_points[2]
+        for x in np.arange(x_min, x_max, dx):
+            for y in np.arange(y_min, y_max, dy):
+                arrangement.add((x, y))
+        return arrangement
+
+    @classmethod
+    def from_decorated_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], decoration_points: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+        arrangement = cls()
+        vec_a, vec_b = np.array(lattice_vectors[0]), np.array(lattice_vectors[1])
+        x_min, y_min = canvas_boundary_points[0]
+        x_max, y_max = canvas_boundary_points[2]
         i = 0
         while (origin := i * vec_a)[0] < x_max:
             j = 0
@@ -300,117 +286,16 @@ class AtomArrangement:
     def from_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
         return cls.from_decorated_bravais_lattice(lattice_vectors, [(0, 0)], canvas_boundary_points)
 
-# Example usage
-canvas_boundary_points = [(0, 0), (7.5e-5, 0), (0, 7.6e-5), (7.5e-5, 7.6e-5)]
-canvas = AtomArrangement.from_honeycomb_lattice(4e-6, canvas_boundary_points)
+@dataclass
+class LatticeGeometry:
+    positionResolution: Decimal
 
-from typing import Tuple
-
-class RectangularCanvas:
-    def __init__(self, bottom_left: Tuple[float, float], top_right: Tuple[float, float]):
-        """
-        Initializes the RectangularCanvas with bottom-left and top-right coordinates.
-        
-        Args:
-            bottom_left (Tuple[float, float]): The (x, y) coordinates of the bottom-left corner.
-            top_right (Tuple[float, float]): The (x, y) coordinates of the top-right corner.
-        """
-        self.bottom_left = bottom_left
-        self.top_right = top_right
-
-    def is_within(self, point: Tuple[float, float]) -> bool:
-        """
-        Checks if a point is within the rectangular canvas.
-        
-        Args:
-            point (Tuple[float, float]): The (x, y) coordinates of the point to check.
-        
-        Returns:
-            bool: True if the point is within the canvas, False otherwise.
-        """
-        x_min, y_min = self.bottom_left
-        x_max, y_max = self.top_right
-        x, y = point
-        return x_min <= x <= x_max and y_min <= y <= y_max
-
-# Example usage
-canvas = RectangularCanvas((0, 0), (7.5e-5, 7.6e-5))
-print(canvas.is_within((3e-5, 3e-5)))  # Should print True
-print(canvas.is_within((8e-5, 3e-5)))  # Should print False
-
-
-
-from enum import Enum
-from typing import Tuple, List, Iterator, Union
-from decimal import Decimal
-
-class SiteType(Enum):
-    FILLED = "filled"
-    EMPTY = "empty"
-
-class AtomArrangementItem:
-    def __init__(self, coordinate: Tuple[Union[int, float, Decimal], Union[int, float, Decimal]], site_type: SiteType):
-        self.coordinate = coordinate
-        self.site_type = site_type
+@dataclass
+class DiscretizationProperties:
+    lattice: LatticeGeometry
 
 class DiscretizationError(Exception):
     pass
-
-class Geometry:
-    def __init__(self, positionResolution: float):
-        self.positionResolution = positionResolution
-
-class Lattice:
-    def __init__(self, geometry: Geometry):
-        self.geometry = geometry
-
-class DiscretizationProperties:
-    def __init__(self, lattice: Lattice):
-        self.lattice = lattice
-
-class RectangularCanvas:
-    def __init__(self, bottom_left: Tuple[float, float], top_right: Tuple[float, float]):
-        self.bottom_left = bottom_left
-        self.top_right = top_right
-
-    def is_within(self, point: Tuple[float, float]) -> bool:
-        x_min, y_min = self.bottom_left
-        x_max, y_max = self.top_right
-        x, y = point
-        return x_min <= x <= x_max and y_min <= y <= y_max
-
-from enum import Enum
-from typing import Tuple, List, Iterator, Union
-from decimal import Decimal
-import numpy as np
-
-# Enum for SiteType
-class SiteType(Enum):
-    FILLED = "filled"
-    EMPTY = "empty"
-
-# Class for AtomArrangementItem
-class AtomArrangementItem:
-    def __init__(self, coordinate: Tuple[Union[int, float, Decimal], Union[int, float, Decimal]], site_type: SiteType):
-        self.coordinate = coordinate
-        self.site_type = site_type
-
-# Exception for discretization errors
-class DiscretizationError(Exception):
-    pass
-
-# Classes for discretization properties
-class Geometry:
-    def __init__(self, positionResolution: float):
-        self.positionResolution = positionResolution
-
-class Lattice:
-    def __init__(self, geometry: Geometry):
-        self.geometry = geometry
-
-class DiscretizationProperties:
-    def __init__(self, lattice: Lattice):
-        self.lattice = lattice
 
 # RectangularCanvas class
 class RectangularCanvas:
@@ -424,104 +309,36 @@ class RectangularCanvas:
         x, y = point
         return x_min <= x <= x_max and y_min <= y <= y_max
 
-# AtomArrangement class
-class AtomArrangement:
-    def __init__(self):
-        self._sites = []
-
-    def add(self, coordinate: Tuple[Union[int, float, Decimal], Union[int, float, Decimal]], site_type: SiteType = SiteType.FILLED) -> 'AtomArrangement':
-        self._sites.append(AtomArrangementItem(tuple(coordinate), site_type))
-        return self
-
-    def coordinate_list(self, coordinate_index: int) -> List[Union[int, float, Decimal]]:
-        return [site.coordinate[coordinate_index] for site in self._sites]
-
-    def __iter__(self) -> Iterator:
-        return iter(self._sites)
-
-    def __len__(self):
-        return len(self._sites)
-
-    def discretize(self, properties: DiscretizationProperties) -> 'AtomArrangement':
-        try:
-            position_res = properties.lattice.geometry.positionResolution
-            discretized_arrangement = AtomArrangement()
-            for site in self._sites:
-                new_coordinates = tuple(
-                    round(Decimal(c) / position_res) * position_res for c in site.coordinate
-                )
-                discretized_arrangement.add(new_coordinates, site.site_type)
-            return discretized_arrangement
-        except Exception as e:
-            raise DiscretizationError(f"Failed to discretize register {e}") from e
-
-    @classmethod
-    def from_decorated_bravais_lattice(
-        cls,
-        lattice_vectors: List[Tuple[float, float]],
-        decoration_points: List[Tuple[float, float]],
-        canvas: RectangularCanvas
-    ) -> 'AtomArrangement':
-        arrangement = cls()
-        vec_a, vec_b = np.array(lattice_vectors[0]), np.array(lattice_vectors[1])
-
-        i = 0
-        while (origin := i * vec_a)[0] < canvas.top_right[0]:
-            j = 0
-            while (point := origin + j * vec_b)[1] < canvas.top_right[1]:
-                if canvas.is_within(point):
-                    for dp in decoration_points:
-                        decorated_point = point + np.array(dp)
-                        if canvas.is_within(decorated_point):
-                            arrangement.add(tuple(decorated_point))
-                j += 1
-            i += 1
-        return arrangement
-
-    @classmethod
-    def from_honeycomb_lattice(cls, lattice_constant: float, canvas: RectangularCanvas) -> 'AtomArrangement':
-        a1 = (lattice_constant, 0)
-        a2 = (lattice_constant / 2, lattice_constant * np.sqrt(3) / 2)
-        decoration_points = [(0, 0), (lattice_constant / 2, lattice_constant * np.sqrt(3) / 6)]
-        return cls.from_decorated_bravais_lattice([a1, a2], decoration_points, canvas)
-
-    @classmethod
-    def from_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], canvas: RectangularCanvas) -> 'AtomArrangement':
-        return cls.from_decorated_bravais_lattice(lattice_vectors, [(0, 0)], canvas)
-
 # Example usage
-canvas = RectangularCanvas((0, 0), (7.5e-5, 7.6e-5))
-atom_arrangement = AtomArrangement.from_honeycomb_lattice(4e-6, canvas)
-print(len(atom_arrangement))  # Check the number of atoms arranged
+if __name__ == "__main__":
+    canvas_boundary_points = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.5e-5), (0, 7.5e-5)]
 
+    # Create lattice structures
+    square_lattice = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+    rectangular_lattice = AtomArrangement.from_rectangular_lattice(3e-6, 2e-6, canvas_boundary_points)
+    decorated_bravais_lattice = AtomArrangement.from_decorated_bravais_lattice([(4e-6, 0), (0, 4e-6)], [(1e-6, 1e-6)], canvas_boundary_points)
+    honeycomb_lattice = AtomArrangement.from_honeycomb_lattice(4e-6, canvas_boundary_points)
+    bravais_lattice = AtomArrangement.from_bravais_lattice([(4e-6, 0), (0, 4e-6)], canvas_boundary_points)
 
-from typing import List, Tuple
-from shapely.geometry import Point, Polygon
+    # Validation function
+    def validate_lattice(arrangement, lattice_type):
+        """Validate the lattice structure."""
+        num_sites = len(arrangement)
+        min_distance = None
+        for i, atom1 in enumerate(arrangement):
+            for j, atom2 in enumerate(arrangement):
+                if i != j:
+                    distance = np.linalg.norm(np.array(atom1.coordinate) - np.array(atom2.coordinate))
+                    if min_distance is None or distance < min_distance:
+                        min_distance = distance
+        print(f"Lattice Type: {lattice_type}")
+        print(f"Number of lattice points: {num_sites}")
+        print(f"Minimum distance between lattice points: {min_distance:.2e} meters")
+        print("-" * 40)
 
-class ArbitraryPolygonCanvas:
-    def __init__(self, vertices: List[Tuple[float, float]]):
-        """
-        Initializes the ArbitraryPolygonCanvas with a list of vertices.
-        
-        Args:
-            vertices (List[Tuple[float, float]]): The vertices of the polygon in order.
-        """
-        self.polygon = Polygon(vertices)
-
-    def is_within(self, point: Tuple[float, float]) -> bool:
-        """
-        Checks if a point is within the polygon canvas.
-        
-        Args:
-            point (Tuple[float, float]): The (x, y) coordinates of the point to check.
-        
-        Returns:
-            bool: True if the point is within the canvas, False otherwise.
-        """
-        return self.polygon.contains(Point(point))
-
-# Example usage
-vertices = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.6e-5), (0, 7.6e-5)]
-canvas = ArbitraryPolygonCanvas(vertices)
-print(canvas.is_within((3e-5, 3e-5)))  # Should print True
-print(canvas.is_within((8e-5, 3e-5)))  # Should print False
+    # Validate lattice structures
+    validate_lattice(square_lattice, "Square Lattice")
+    validate_lattice(rectangular_lattice, "Rectangular Lattice")
+    validate_lattice(decorated_bravais_lattice, "Decorated Bravais Lattice")
+    validate_lattice(honeycomb_lattice, "Honeycomb Lattice")
+    validate_lattice(bravais_lattice, "Bravais Lattice")
