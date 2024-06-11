@@ -1,6 +1,10 @@
 # Braket CheatSheet
 
-<!-- This comment will not show up in the rendered Markdown -->
+Installing Amazon Braket SDK:
+`pip install amazon-braket-sdk`
+
+To import modules from braket:
+`from braket import ...`
 
 **Circuits**
 
@@ -19,6 +23,9 @@ Create an empty circuit (default constructor):
 Create an circuit with arbitrary number of qubits. Note that number of qubits is not passed as an argument to the circuit constructor:
 
 `circuit = Circuit()`
+
+Please DO NOT pass number of qubits to the `Circuit()` constructor.
+
 
 Add X gate to circuit at qubit 0:
 
@@ -202,6 +209,13 @@ Task metadata: `task.metadata()`
 Task state (CREATED, COMPLETED, CANCELED, FAILED): `task.state()`
 Task position in the queue: `task.queue_position()`
 Get Task result dicitonary: `task.result()`
+
+**QAOA circuits**
+
+Decomposition of the ZZ gate (cost Hamiltonian) to Cnot:
+`ZZ(alpha, [i, j]) -> Cnot(i, j) Rz(alpha) Cnot(i, j)`
+
+The QAOA circuit consits of alternating layers of single qubit RX rotations (mixer term) and two-qubit ZZ gates (cost term).
 
 **Results**
 
