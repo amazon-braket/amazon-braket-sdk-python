@@ -55,7 +55,7 @@ class AtomArrangement:
         """Represents a set of coordinates that can be used as a register to an AnalogHamiltonianSimulation."""
         self._sites = []
 
-    def add(self, coordinate: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> "AtomArrangement":
+    def add(self, coordinate: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
         Args:
             coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the atom (in meters).
@@ -84,7 +84,7 @@ class AtomArrangement:
     def __len__(self):
         return len(self._sites)
 
-    def discretize(self, properties: 'DiscretizationProperties') -> "AtomArrangement":
+    def discretize(self, properties: 'DiscretizationProperties') -> AtomArrangement:
         """Creates a discretized version of the atom arrangement, rounding all site coordinates to the closest multiple of the resolution. The types of the sites are unchanged.
         Args:
             properties (DiscretizationProperties): Capabilities of a device that represent the
@@ -108,7 +108,7 @@ class AtomArrangement:
 
     # Factory methods for lattice structures
     @classmethod
-    def from_square_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+    def from_square_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
         """Create an atom arrangement with a square lattice."""
         arrangement = cls()
         x_min, y_min = canvas_boundary_points[0]
@@ -121,7 +121,7 @@ class AtomArrangement:
         return arrangement
 
     @classmethod
-    def from_rectangular_lattice(cls, dx: float, dy: float, canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+    def from_rectangular_lattice(cls, dx: float, dy: float, canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
         """Create an atom arrangement with a rectangular lattice."""
         arrangement = cls()
         x_min, y_min = canvas_boundary_points[0]
@@ -132,7 +132,7 @@ class AtomArrangement:
         return arrangement
 
     @classmethod
-    def from_decorated_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], decoration_points: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+    def from_decorated_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], decoration_points: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
         arrangement = cls()
         vec_a, vec_b = np.array(lattice_vectors[0]), np.array(lattice_vectors[1])
         x_min, y_min = canvas_boundary_points[0]
@@ -151,14 +151,14 @@ class AtomArrangement:
         return arrangement
 
     @classmethod
-    def from_honeycomb_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+    def from_honeycomb_lattice(cls, lattice_constant: float, canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
         a1 = (lattice_constant, 0)
         a2 = (lattice_constant / 2, lattice_constant * np.sqrt(3) / 2)
         decoration_points = [(0, 0), (lattice_constant / 2, lattice_constant * np.sqrt(3) / 6)]
         return cls.from_decorated_bravais_lattice([a1, a2], decoration_points, canvas_boundary_points)
 
     @classmethod
-    def from_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> "AtomArrangement":
+    def from_bravais_lattice(cls, lattice_vectors: List[Tuple[float, float]], canvas_boundary_points: List[Tuple[float, float]]) -> AtomArrangement:
         return cls.from_decorated_bravais_lattice(lattice_vectors, [(0, 0)], canvas_boundary_points)
 
 @dataclass
