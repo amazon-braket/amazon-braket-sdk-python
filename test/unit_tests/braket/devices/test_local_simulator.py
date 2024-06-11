@@ -32,7 +32,7 @@ from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
-from braket.simulator import BraketSimulator
+from braket.simulator import BraketSimulator, MultiSimulator
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.task_result.analog_hamiltonian_simulation_task_result_v1 import (
     AnalogHamiltonianSimulationTaskResult,
@@ -201,6 +201,8 @@ class DummyProgramSimulator(BraketSimulator):
         openqasm_ir: Program,
         shots: int = 0,
         batch_size: int = 1,
+        *args,
+        **kwargs,
     ) -> GateModelTaskResult:
         return GATE_MODEL_RESULT
 
@@ -249,6 +251,11 @@ class DummyProgramSimulator(BraketSimulator):
         )
         device_properties.action[DeviceActionType.OPENQASM] = oq3_action
         return device_properties
+
+
+class DummyMultiSimulator(MultiSimulator, DummyProgramSimulator):
+    def run_multiple(self, payloads: list[Program], *args, **kwargs) -> list[GateModelTaskResult]:
+        return [self.run(payload, *args, **kwargs) for payload in payloads]
 
 
 class DummySerializableProgram(SerializableProgram):
@@ -443,6 +450,18 @@ def test_batch_with_max_parallel():
     assert len(batch.results()) == num_tasks
     for x in batch.results():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_with_multi():
+    dummy = DummyMultiSimulator()
+    task = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    num_tasks = 3
+    circuits = [task for _ in range(num_tasks)]
+    batch = device.run_batch(circuits, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GATE_MODEL_RESULT
 
 
 def test_batch_with_annealing_problems():

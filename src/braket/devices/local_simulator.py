@@ -30,7 +30,7 @@ from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.simulator import BraketSimulator
+from braket.simulator import BraketSimulator, MultiSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
@@ -204,9 +204,13 @@ class LocalSimulator(Device):
                         f"{unbounded_parameters}"
                     )
 
-        with Pool(min(max_parallel, len(tasks_and_inputs))) as pool:
-            param_list = [(task, shots, inp, *args, *kwargs) for task, inp in tasks_and_inputs]
-            results = pool.starmap(self._run_internal_wrap, param_list)
+        if isinstance(simulator := self._delegate, MultiSimulator):
+            all_tasks, all_inputs = tuple(zip(*tasks_and_inputs))
+            results = simulator.run_multiple(all_tasks, shots, inputs=all_inputs, *args, **kwargs)
+        else:
+            with Pool(min(max_parallel, len(tasks_and_inputs))) as pool:
+                param_list = [(task, shots, inp, *args, *kwargs) for task, inp in tasks_and_inputs]
+                results = pool.starmap(self._run_internal_wrap, param_list)
 
         return LocalQuantumTaskBatch(results)
 
