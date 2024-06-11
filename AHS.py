@@ -23,8 +23,8 @@ from shapely.geometry import Point, Polygon
 
 # Define SiteType enum
 class SiteType(Enum):
-    FILLED = "filled"
-    VACANT = "vacant"
+    VACANT = "Vacant"
+    FILLED = "Filled"
 
 @dataclass
 class AtomArrangementItem:
@@ -183,5 +183,35 @@ class RectangularCanvas:
         return x_min <= x <= x_max and y_min <= y <= y_max
 
 # Example usage
-canvas_boundary_points = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.5e-5), (0, 7.5e-5)]
-canvas = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+if __name__ == "__main__":
+    canvas_boundary_points = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.5e-5), (0, 7.5e-5)]
+
+    # Create lattice structures
+    square_lattice = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+    rectangular_lattice = AtomArrangement.from_rectangular_lattice(3e-6, 2e-6, canvas_boundary_points)
+    decorated_bravais_lattice = AtomArrangement.from_decorated_bravais_lattice([(4e-6, 0), (0, 4e-6)], [(1e-6, 1e-6)], canvas_boundary_points)
+    honeycomb_lattice = AtomArrangement.from_honeycomb_lattice(4e-6, canvas_boundary_points)
+    bravais_lattice = AtomArrangement.from_bravais_lattice([(4e-6, 0), (0, 4e-6)], canvas_boundary_points)
+
+    # Validation function
+    def validate_lattice(arrangement, lattice_type):
+        """Validate the lattice structure."""
+        num_sites = len(arrangement)
+        min_distance = None
+        for i, atom1 in enumerate(arrangement):
+            for j, atom2 in enumerate(arrangement):
+                if i != j:
+                    distance = np.linalg.norm(np.array(atom1.coordinate) - np.array(atom2.coordinate))
+                    if min_distance is None or distance < min_distance:
+                        min_distance = distance
+        print(f"Lattice Type: {lattice_type}")
+        print(f"Number of lattice points: {num_sites}")
+        print(f"Minimum distance between lattice points: {min_distance:.2e} meters")
+        print("-" * 40)
+
+    # Validate lattice structures
+    validate_lattice(square_lattice, "Square Lattice")
+    validate_lattice(rectangular_lattice, "Rectangular Lattice")
+    validate_lattice(decorated_bravais_lattice, "Decorated Bravais Lattice")
+    validate_lattice(honeycomb_lattice, "Honeycomb Lattice")
+    validate_lattice(bravais_lattice, "Bravais Lattice")
