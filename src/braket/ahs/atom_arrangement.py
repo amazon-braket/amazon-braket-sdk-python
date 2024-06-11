@@ -23,7 +23,7 @@ from typing import Union, Tuple, List
 import numpy as np
 from shapely.geometry import Point, Polygon
 
-# Define SiteType enum
+
 class SiteType(Enum):
     VACANT = "Vacant"
     FILLED = "Filled"
