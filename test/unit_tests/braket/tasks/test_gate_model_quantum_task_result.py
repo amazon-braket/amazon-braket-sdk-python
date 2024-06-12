@@ -26,6 +26,7 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+from braket.task_result.iqm_metadata_v1 import IqmMetadata
 from braket.task_result.oqc_metadata_v1 import OqcMetadata
 from braket.task_result.rigetti_metadata_v1 import RigettiMetadata
 from braket.tasks import GateModelQuantumTaskResult
@@ -104,6 +105,22 @@ def additional_metadata_rigetti(quil_program):
 
 
 @pytest.fixture
+def additional_metadata_iqm():
+    source = """
+    OPENQASM 3.0;
+    bit[2] b;
+    h $0;
+    cnot $0, $7;
+    b[0] = measure $0;
+    b[1] = measure $7;
+    """
+    program = openqasm.Program(source=source)
+    iqm_metadata = IqmMetadata(compiledProgram=source)
+
+    return AdditionalMetadata(action=program, iqmMetadata=iqm_metadata)
+
+
+@pytest.fixture
 def qasm2_program():
     return """
     OPENQASM 2.0;
@@ -157,6 +174,13 @@ def result_rigetti(result_obj_1, additional_metadata_rigetti):
 def result_oqc(result_obj_1, additional_metadata_oqc):
     result = GateModelQuantumTaskResult.from_object(result_obj_1)
     result.additional_metadata = additional_metadata_oqc
+    return result
+
+
+@pytest.fixture
+def result_iqm(result_obj_1, additional_metadata_iqm):
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = additional_metadata_iqm
     return result
 
 
@@ -321,6 +345,11 @@ def test_get_compiled_circuit_rigetti(result_rigetti, quil_program):
 def test_get_compiled_circuit_oqc(result_oqc, qasm2_program):
     """Test get_compiled_circuit method."""
     assert result_oqc.get_compiled_circuit() == qasm2_program
+
+
+def test_get_compiled_circuit_iqm(result_iqm):
+    """Test get_compiled_circuit method."""
+    assert result_iqm.get_compiled_circuit() == result_iqm.additional_metadata.action.source
 
 
 def test_get_compiled_circuit_no_qhp_metadata(result_obj_1):
