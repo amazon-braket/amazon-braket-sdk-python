@@ -72,7 +72,8 @@ def test_sub_wrong_param(free_parameter):
 @pytest.mark.parametrize("param_name", ["for", "qubit"])
 def test_error_raised_when_reserved_keyword_used(param_name):
     with pytest.raises(
-        ValueError, match="FreeParameter names must not be one of qasm reserved words:"
+        ValueError,
+        match="FreeParameter names must not be one of the OpenQASM or OpenPulse keywords: ",
     ):
         FreeParameter(param_name)
 
@@ -80,6 +81,7 @@ def test_error_raised_when_reserved_keyword_used(param_name):
 @pytest.mark.parametrize("param_name", ["b", "q"])
 def test_error_raised_when_predefined_variable_used(param_name):
     with pytest.raises(
-        ValueError, match="FreeParameter names must not be one of predefined variables:"
+        ValueError,
+        match="FreeParameter names must not be one of the Braket reserved variable names: ",
     ):
         FreeParameter(param_name)

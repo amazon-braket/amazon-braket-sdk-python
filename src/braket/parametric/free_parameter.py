@@ -20,8 +20,8 @@ from sympy import Symbol
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 
-PREDEFINED_VARIABLE_NAMES = ["b", "q"]
-QASM_RESERVED_WORDS = [
+PREDEFINED_VARIABLE_NAMES = {"b", "q"}
+QASM_RESERVED_WORDS = {
     "OPENQASM",
     "include",
     "defcalgrammar",
@@ -74,7 +74,7 @@ QASM_RESERVED_WORDS = [
     "barrier",
     "true",
     "false",
-]
+}
 
 
 class FreeParameter(FreeParameterExpression):
@@ -152,12 +152,12 @@ class FreeParameter(FreeParameterExpression):
             raise ValueError("FreeParameter names must start with a letter or an underscore")
         if name in PREDEFINED_VARIABLE_NAMES:
             raise ValueError(
-                f"FreeParameter names must not be one of predefined variables: "
+                f"FreeParameter names must not be one of the Braket reserved variable names: "
                 f"{PREDEFINED_VARIABLE_NAMES}."
             )
         if name in QASM_RESERVED_WORDS:
             raise ValueError(
-                f"FreeParameter names must not be one of qasm reserved words: "
+                f"FreeParameter names must not be one of the OpenQASM or OpenPulse keywords: "
                 f"{QASM_RESERVED_WORDS}."
             )
         self._name = Symbol(name)
