@@ -21,6 +21,10 @@ from sympy import Symbol
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 PREDEFINED_VARIABLE_NAMES = {"b", "q"}
+
+# The reserved words are picked from below
+# https://github.com/openqasm/openqasm/blob/main/source/grammar/qasm3Lexer.g4
+# https://github.com/openqasm/openpulse-python/blob/main/source/grammar/openpulseLexer.g4
 QASM_RESERVED_WORDS = {
     "OPENQASM",
     "include",
@@ -74,6 +78,9 @@ QASM_RESERVED_WORDS = {
     "barrier",
     "true",
     "false",
+    "waveform",
+    "port",
+    "frame",
 }
 
 
