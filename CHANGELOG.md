@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
 ## v1.80.1 (2024-06-10)
 
 ### Bug Fixes and Other Changes
