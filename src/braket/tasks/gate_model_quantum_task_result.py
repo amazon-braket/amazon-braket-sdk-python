@@ -145,6 +145,8 @@ class GateModelQuantumTaskResult:
             return metadata.rigettiMetadata.compiledProgram
         elif metadata.oqcMetadata:
             return metadata.oqcMetadata.compiledProgram
+        elif metadata.iqmMetadata:
+            return metadata.iqmMetadata.compiledProgram
         else:
             return None
 
