@@ -7,6 +7,8 @@ from braket.circuits import Gate
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Devices
 from braket.aws import AwsDevice
+
+from braket.device_schema import DeviceCapabilities
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     StandardizedGateModelQpuDeviceProperties, OneQubitProperties, GateFidelity2Q, Fidelity1Q
 )
@@ -68,10 +70,10 @@ class GateDeviceCalibrationData:
     
 
 class GateDeviceNoiseModel(NoiseModel):
-    def __init__(self, arn: str, aws_device: AwsDevice = None):
+    def __init__(self, arn: str, device_properties: DeviceCapabilities):
         super().__init__()
         self._arn = arn
-        device_properties = (aws_device or AwsDevice(self._arn)).properties
+        device_properties = device_properties or AwsDevice(self._arn).properties
         self._gate_calibration_data = self._setup_device_calibration_data(device_properties)
         self._setup_basic_noise_model_strategy()
     
