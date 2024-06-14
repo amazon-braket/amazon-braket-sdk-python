@@ -15,11 +15,6 @@ from braket.circuits.noises import AmplitudeDamping, BitFlip, Depolarizing, Phas
 
 import numpy as np
 
-@dataclass
-class GateFidelity:
-    gate_name: str
-    fidelity:float
-    
     
 """
  The following gate duration values are not available through Braket device calibration data and must
@@ -38,8 +33,15 @@ QPU_GATE_DURATIONS = {
 
 GATE_NAME_TRANSLATIONS = {
     "CPHASE": "CPhaseShift", 
-    "GPI": "GPi"
+    "GPI": "GPi", 
+    "GPI2": "GPi2"
 }
+
+
+@dataclass
+class GateFidelity:
+    gate: Gate
+    fidelity:float
     
     
 @dataclass
@@ -119,10 +121,15 @@ class GateDeviceNoiseModel(NoiseModel):
         return one_qubit_fidelities
     
     def _create_edge_specs(self, edge_properties: List[GateFidelity2Q]) -> List[GateFidelity]:
-        return [
-            GateFidelity(GATE_NAME_TRANSLATIONS.get(gate_fidelity.gateName, gate_fidelity.gateName), gate_fidelity.fidelity)
-            for gate_fidelity in edge_properties
-        ]
+        edge_specs = []
+        for edge_property in edge_properties:
+            gate_name = GATE_NAME_TRANSLATIONS.get(edge_property.gateName, edge_property.gateName)
+            if hasattr(Gate, gate_name):
+                gate = getattr(Gate, gate_name)
+                edge_specs.append(GateFidelity(gate, edge_property.fidelity))
+            else:
+                logging.warning(f"Unsupported gate {gate_name}")
+        return edge_specs
     
     
     def _setup_ionq_device_calibration_data(self, device_properties):
@@ -147,9 +154,22 @@ class GateDeviceNoiseModel(NoiseModel):
         two_qubit_rb_fidelity = fidelity_data["2Q"]["mean"]
         average_readout_fidelity = fidelity_data["spam"]["mean"]
 
-        native_gate_fidelities = [
-            GateFidelity(GATE_NAME_TRANSLATIONS.get(native_gate, native_gate), two_qubit_rb_fidelity) for native_gate in native_gates
-        ]
+        native_gate_fidelities = []
+        for native_gate in native_gates:
+            gate_name = GATE_NAME_TRANSLATIONS.get(native_gate, native_gate)
+            if hasattr(Gate, gate_name):
+                gate = getattr(Gate, gate_name)
+                if gate.fixed_qubit_count() != 2:
+                    """
+                    The noise model does not consider any single-qubit gate specific fidelities and instead 
+                    applies depolarizing noise associated with the individual qubits themselves (RB/sRB fidelities). 
+                    This is a choice of this particular model to simplify the implementation as not all QHPs provide
+                    single-qubit gate fidelities. 
+                    """
+                    continue
+                native_gate_fidelities.append(GateFidelity(gate, two_qubit_rb_fidelity))
+            else:
+                logging.warning(f"Unsupported gate {native_gate}")
         
         single_qubit_specs = {}
         two_qubit_edge_specs = {}
@@ -214,13 +234,7 @@ class GateDeviceNoiseModel(NoiseModel):
         for edge, data in self._gate_calibration_data.two_qubit_edge_specs.items():
             for gate_fidelity in data:
                 rate = 1 - gate_fidelity.fidelity
-                gate_name = gate_fidelity.gate_name
-                if hasattr(Gate, gate_name):
-                    gate = getattr(Gate, gate_name)
-                else:
-                    # raise ValueError(f"Cannot find gate {gate_name}.")
-                    logging.warning(f"Cannot find gate {gate_name}.")
-                    continue
+                gate = gate_fidelity.gate
                 self.add_noise(TwoQubitDepolarizing(rate), GateCriteria(gate, [(edge[0], edge[1]), (edge[1], edge[0])]))
         
             
