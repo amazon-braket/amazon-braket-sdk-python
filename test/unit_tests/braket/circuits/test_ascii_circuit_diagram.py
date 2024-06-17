@@ -785,19 +785,19 @@ def test_noise_multi_probabilities():
 
 def test_noise_multi_probabilities_with_parameter():
     a = FreeParameter("a")
-    b = FreeParameter("b")
     c = FreeParameter("c")
-    circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
+    d = FreeParameter("d")
+    circ = Circuit().h(0).x(1).pauli_channel(1, a, c, d)
     expected = (
         "T  : |     0     |",
         "                  ",
         "q0 : -H-----------",
         "                  ",
-        "q1 : -X-PC(a,b,c)-",
+        "q1 : -X-PC(a,c,d)-",
         "",
         "T  : |     0     |",
         "",
-        "Unassigned parameters: [a, b, c].",
+        "Unassigned parameters: [a, c, d].",
     )
     _assert_correct_diagram(circ, expected)
 

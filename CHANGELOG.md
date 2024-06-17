@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
 ## v1.81.0 (2024-06-13)
 
 ### Features
