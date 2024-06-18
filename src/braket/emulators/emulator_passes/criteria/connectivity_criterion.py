@@ -77,7 +77,6 @@ class ConnectivityCriterion(EmulatorCriterion):
     def validate_instruction_connectivity(self, control_qubits: QubitSet, target_qubits: QubitSet): 
         #Create edges between each of the target qubits
         gate_connectivity_graph = DiGraph()
-        print(control_qubits, target_qubits)
         #Create an edge from each control bit to each target qubit
         if len(control_qubits) == 1 and len(target_qubits) == 1:
             gate_connectivity_graph.add_edge(control_qubits[0], target_qubits[0])
