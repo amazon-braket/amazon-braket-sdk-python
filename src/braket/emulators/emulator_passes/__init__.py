@@ -4,4 +4,6 @@ from braket.emulators.emulator_passes.criteria import (
     ConnectivityCriterion,
     SupportedGateCriterion,
     NativeGateCriterion,
+    GateConnectivityCriterion, 
+    QubitCountCriterion
 )

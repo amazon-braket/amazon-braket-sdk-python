@@ -51,6 +51,7 @@ from braket.schema_common import BraketSchemaBase
 
 from braket.emulators import Emulator
 from braket.aws.aws_emulator_helpers import (
+    create_qubit_count_criterion, 
     create_supported_gate_criterion, 
     create_native_gate_criterion, 
     create_connectivity_criterion, 
@@ -879,6 +880,7 @@ class AwsDevice(Device):
         emulator_noise_model = None
         self._emulator = Emulator(noise_model=emulator_noise_model)
         
+        self._emulator.add_pass(create_supported_gate_criterion(self.properties))
         self._emulator.add_pass(create_supported_gate_criterion(self.properties))
         self._emulator.add_pass(create_native_gate_criterion(self.properties))
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
