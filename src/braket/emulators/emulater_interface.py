@@ -40,6 +40,4 @@ class EmulatorInterface(ABC):
         elif isinstance(emulator_pass, EmulatorPass):
             self._emulator_passes.append(emulator_pass)
         else:
-            print(isinstance(emulator_pass, EmulatorPass))
-            print(type(emulator_pass))
             raise TypeError("emulator_pass must be an EmulatorPass or an iterable of EmulatorPass")

@@ -17,7 +17,7 @@ class NativeGateCriterion(EmulatorCriterion):
         if len(native_gates) == 0:
             raise ValueError("At least one native gate must be provided.")
         try:
-            self._native_gates = set(BRAKET_GATES[gate] for gate in native_gates) 
+            self._native_gates = set(BRAKET_GATES[gate.lower()] for gate in native_gates) 
         except KeyError as e:
             raise ValueError(f"Input {str(e)} is not a valid Braket gate name.")
 

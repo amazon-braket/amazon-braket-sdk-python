@@ -24,7 +24,7 @@ class Emulator(Device, EmulatorInterface):
         EmulatorInterface.__init__(self, emulator_passes)
         self._noise_model = noise_model
         if noise_model and backend == "default": 
-            logging.warning("Setting LocalSimulator backend to use 'braket_dm' because a NoiseModel was provided.")
+            logging.info("Setting LocalSimulator backend to use 'braket_dm' because a NoiseModel was provided.")
             backend = "braket_dm"
         
         self._backend = LocalSimulator(backend=backend, noise_model=noise_model)

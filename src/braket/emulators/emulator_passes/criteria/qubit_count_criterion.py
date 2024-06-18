@@ -1,4 +1,4 @@
-from braket.emulators.emulator_passes import EmulatorCriterion, ProgramType
+from braket.emulators.emulator_passes.criteria import EmulatorCriterion
 from braket.circuits import Circuit 
 
 

@@ -3,7 +3,8 @@ from braket.emulators.emulator_passes import (
     SupportedGateCriterion, 
     NativeGateCriterion, 
     ConnectivityCriterion,
-    GateConnectivityCriterion
+    GateConnectivityCriterion, 
+    QubitCountCriterion
 )
 from braket.device_schema import (
     DeviceActionType,
@@ -36,6 +37,10 @@ def create_supported_gate_criterion(properties: DeviceCapabilities) -> Supported
     supported_gates_criterion = SupportedGateCriterion(supported_gates)
     return supported_gates_criterion
     
+    
+def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
+    qubit_count = properties.paradigm.qubitCount
+    return QubitCountCriterion(qubit_count)
 
 def create_native_gate_criterion(properties: DeviceCapabilities) -> NativeGateCriterion:
     native_gates = properties.paradigm.nativeGateSet
@@ -66,7 +71,6 @@ def create_gate_connectivity_criterion(properties, connectivity_graph: DiGraph) 
 
 @create_gate_connectivity_criterion.register(RigettiDeviceCapabilities)
 def _(properties: RigettiDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion: 
-    print("Creating Rigetti Gate Connecitivity")
     """
     Rigetti provides device capabilities using a standardized properties schema for gate devices. 
     
@@ -89,7 +93,6 @@ def _(properties: RigettiDeviceCapabilities, connectivity_graph: DiGraph) -> Gat
     
 @create_gate_connectivity_criterion.register(IqmDeviceCapabilities)
 def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion: 
-    print("Creating IQM Gate Connecitivity")
     """
     IQM provides device capabilities using a standardized properties schema for gate devices. 
 
@@ -114,7 +117,6 @@ def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> GateCon
     
 @create_gate_connectivity_criterion.register(IonqDeviceCapabilities)
 def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion: 
-    print("Creating IonQ Gate Connecitivity")
     """
     Qubits in IonQ's trapped ion devices are all fully connected with identical gate-pair capabilities. 
     Thus, IonQ does not expliclty provide a set of edges for gate connectivity between qubit pairs in 
@@ -137,9 +139,10 @@ def get_qpu_gate_translation(properties: DeviceCapabilities, gate_name: Union[st
     Returns:
         Union[str, list[str]]: The translated gate name(s)
     """
-    if isinstance(gate_name, Iterable):
+    if isinstance(gate_name, str):
+        return _get_qpu_gate_translation(properties, gate_name)
+    else:
         return [_get_qpu_gate_translation(properties, name) for name in gate_name]
-    return _get_qpu_gate_translation(properties, gate_name)
 
 
 @singledispatch
