@@ -49,6 +49,14 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
 
 
+from braket.emulators import Emulator
+from braket.aws.aws_emulator_helpers import (
+    create_supported_gate_criterion, 
+    create_native_gate_criterion, 
+    create_connectivity_criterion, 
+    create_gate_connectivity_criterion
+)
+
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
 
@@ -855,3 +863,24 @@ class AwsDevice(Device):
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
+
+    @property
+    def emulator(self) -> Emulator:
+        if not hasattr(self, "_emulator"):
+            self._emulator = self._setup_emulator()
+        return self._emulator
+    
+    
+    def _setup_emulator(self) -> Emulator: 
+        """ 
+        Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a 
+        real QPU (not simulated). 
+        """
+        emulator_noise_model = None
+        self._emulator = Emulator(noise_model=emulator_noise_model)
+        
+        self._emulator.add_pass(create_supported_gate_criterion(self.properties))
+        self._emulator.add_pass(create_native_gate_criterion(self.properties))
+        self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
+        self._emulator.add_pass(create_gate_connectivity_criterion(self.properties, self.topology_graph))
+        return self._emulator
