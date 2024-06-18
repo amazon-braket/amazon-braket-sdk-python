@@ -40,6 +40,7 @@ from braket.device_schema.dwave import DwaveProviderProperties
 # TODO: Remove device_action module once this is added to init in the schemas repo
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.devices.device import Device
+from braket.devices import Devices
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
@@ -57,6 +58,7 @@ from braket.aws.aws_emulator_helpers import (
     create_connectivity_criterion, 
     create_gate_connectivity_criterion
 )
+from braket.aws.aws_noise_models import create_device_noise_model
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -867,6 +869,8 @@ class AwsDevice(Device):
 
     @property
     def emulator(self) -> Emulator:
+        if self._arn in Devices.Amazon:
+            raise ValueError("Creating an emulator from a Braket managed simulator is not supported.")
         if not hasattr(self, "_emulator"):
             self._emulator = self._setup_emulator()
         return self._emulator
@@ -877,8 +881,8 @@ class AwsDevice(Device):
         Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a 
         real QPU (not simulated). 
         """
-        emulator_noise_model = None
-        self._emulator = Emulator(noise_model=emulator_noise_model)
+        emulator_noise_model = create_device_noise_model(self.properties, self._arn)
+        self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm")
         
         self._emulator.add_pass(create_supported_gate_criterion(self.properties))
         self._emulator.add_pass(create_supported_gate_criterion(self.properties))
