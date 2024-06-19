@@ -36,7 +36,7 @@ setup(
         "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
-        "numpy<2",
+        "numpy",
         "openpulse",
         "openqasm3",
         "sympy",
