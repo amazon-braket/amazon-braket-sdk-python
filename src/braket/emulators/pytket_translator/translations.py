@@ -41,26 +41,20 @@ QASM_TO_PYTKET = {
     "unitary": OpType.U3,
     "gpi": OpType.GPI, 
     "gpi2": OpType.GPI2, 
-    "ms": OpType.AAMS
+    "ms": OpType.AAMS, 
+    "cphaseshift": OpType.CU1,
+    "prx": OpType.PhasedX
 }
 
 
 COMPOSED_GATES = {
-        "cphaseshift": ComposedGates.add_cphaseshift,
         "cphaseshift00": ComposedGates.add_cphaseshift00,
         "cphaseshift01": ComposedGates.add_cphaseshift01,
         "cphaseshift10": ComposedGates.add_cphaseshift10,
-        "pswap": ComposedGates.add_pswap,
-        "prx": ComposedGates.add_prx,
+        "pswap": ComposedGates.add_pswap
 }
 
 """
     Pytket to OpenQASM-3.0 Name Translations
 """
 PYTKET_TO_QASM = {optype: qasm_name for qasm_name, optype in QASM_TO_PYTKET.items()}
-
-# For gates which have multiple valid OpenQASM names, like "cx" and "CX", we overwrite
-# the values to make sure we use the preferred name.
-PYTKET_TO_QASM[OpType.CX] = "cx"  # prefer over "CX"
-PYTKET_TO_QASM[OpType.U3] = "u3"  # prefer over "U"
-PYTKET_TO_QASM[OpType.Rz] = "rz"  # prefer over "Rz"

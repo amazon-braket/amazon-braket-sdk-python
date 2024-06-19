@@ -1,5 +1,5 @@
 from braket.emulators.pytket_translator import PYTKET_TO_QASM
-from pytket.circuit import Circuit, OpType, Node
+from pytket.circuit import Circuit, OpType, Command, Node
 from sympy import Expr, pi, Symbol
 from typing import Dict, Union, List, Set, Optional
 from dataclasses import dataclass
@@ -15,15 +15,15 @@ class Qasm3:
     
 def tket_to_qasm3(
     circuit: Circuit, 
-    input_parameters: Dict[str, str]=None, 
-    gate_overrides: Dict[OpType, str]=None
+    input_parameters: Dict[str, str]=dict(), 
+    gate_overrides: Dict[OpType, str]=dict()
 ) -> Qasm3: 
     ticket_visitor = TketCircuitVisitor(QasmContext(input_parameters), gate_overrides)
     ticket_visitor.walk_circuit(circuit)
     return ticket_visitor.context
 
 class TketCircuitVisitor: 
-    def __init__(self, context, gate_overrides):
+    def __init__(self, context, gate_overrides: Dict[OpType, str]=dict()):
         self.context = context
         self.gate_overrides = gate_overrides
         self._measured_nodes: Set[Node] = set()
@@ -34,7 +34,7 @@ class TketCircuitVisitor:
         for command in circuit:
             self._visit_command(command)
 
-    def _visit_command(self, command: Node):
+    def _visit_command(self, command: Command):
         op = command.op
         self._validate_args_not_measured(command.args)
         optype = op.type
@@ -54,15 +54,15 @@ class TketCircuitVisitor:
                 )
                         
     
-    def _visit_box(self, command: Node, optype):
+    def _visit_box(self, command: Command, optype):
         circ = command.op.get_circuit()
         for command in circ:
             self._visit_command(command)
     
-    def _visit_measure(self, command: Node, optype):
+    def _visit_measure(self, command: Command, optype):
         qubit_node = command.args[0]
         qubit = qubit_node.index[0]
-        cbit = command.args[1].index
+        cbit = command.args[1].index[0]
         self.context.add_measurement(qubit, cbit)
         self._measured_nodes.add(qubit_node)
     
@@ -74,7 +74,7 @@ class TketCircuitVisitor:
     #     self._visit_gate(gate_name, command.op.params, command.args)
     
     
-    def _visit_gate(self, command: Node, optype): 
+    def _visit_gate(self, command: Command, optype): 
         """
         Check to see if this operation is a gate known by OpenQASM3.0; if it is, retrieve the appropriate translation
         and add the operation to the context. 
@@ -89,9 +89,14 @@ class TketCircuitVisitor:
         
         qubits = command.args
         params = command.op.params
-        print("args: ", params)
-        print("qubits: ", qubits)
-
+     
+        
+        #Look for any free parameters and add them to the context for initialization
+        for param in params:
+            if isinstance(param, Expr):
+                for symbol in param.free_symbols:
+                    if symbol != pi:
+                        self.context.add_parameter(str(symbol), "float")
         params = self._gate_angles_in_radians(params)
         qubits = [q.index[0] for q in qubits]
         self.context.add_gate(gate_name, params, qubits)

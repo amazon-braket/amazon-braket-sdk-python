@@ -48,11 +48,11 @@ class PytketProgramContext(AbstractProgramContext):
         if gate_name in QASM_TO_PYTKET:
             op = QASM_TO_PYTKET[gate_name]
             if len(params) > 0:
-                self._circuit.add_gate(op, *params, target)
+                self._circuit.add_gate(op, params, target)
             else:
                 self._circuit.add_gate(op, target)
         elif gate_name in COMPOSED_GATES:
-            COMPOSED_GATES[gate_name](self._circuit, *params, target)
+            COMPOSED_GATES[gate_name](self._circuit, params, target)
         else:
             raise ValueError(f"Gate {gate_name} is not supported in pytket translations.")
             

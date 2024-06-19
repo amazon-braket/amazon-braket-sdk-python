@@ -37,15 +37,3 @@ class ComposedGates:
         circ.add_gate(OpType.CX, [qubits[0], qubits[1]])
         circ.add_gate(OpType.CU1, arguments, [qubits[0], qubits[1]])
         circ.add_gate(OpType.CX, [qubits[0], qubits[1]])
-
-    @staticmethod
-    def add_cphaseshift(circ: Circuit, arguments, qubits: List[int]):
-        assert len(arguments) == 1
-        assert len(qubits) == 2
-        circ.add_gate(OpType.CU1, arguments, [qubits[0], qubits[1]])
-
-    @staticmethod
-    def add_prx(circ: Circuit, arguments, qubits: List[int]):
-        assert len(arguments) == 2
-        assert len(qubits) == 1
-        circ.add_gate(OpType.PhasedX, arguments, qubits)
