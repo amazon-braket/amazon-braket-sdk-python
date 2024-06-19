@@ -7,3 +7,4 @@ from braket.emulators.emulator_passes.criteria import (
     GateConnectivityCriterion, 
     QubitCountCriterion
 )
+from braket.emulators.emulator_passes.lexi_routing_pass import LexiRoutingPass
