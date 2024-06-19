@@ -54,25 +54,19 @@ class ConnectivityCriterion(EmulatorCriterion):
             Verifies that any verbatim box in a circuit is runnable with respect to the 
             device connectivity definied by this criteria. 
         """
+        #If any of the instructions are in verbatim mode, all qubit references must point to hardware qubits. Otherwise, this circuit need not be validated. 
+        if not any([isinstance(instruction.operator, StartVerbatimBox) for instruction in circuit.instructions]):
+            return 
         for idx in range(len(circuit.instructions)): 
             instruction = circuit.instructions[idx]
-            if isinstance(instruction.operator, StartVerbatimBox):
-                idx += 1
-                while idx < len(circuit.instructions) and not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
-                    instruction = circuit.instructions[idx]
-                    if isinstance(instruction.operator, Gate):
-                        if instruction.operator.qubit_count == 2: #Assuming only maximum 2-qubit native gates are supported
-                            self.validate_instruction_connectivity(instruction.control, instruction.target)
-                        else: 
-                            #just check that the target qubit exists in the connectivity graph
-                            target_qubit = instruction.target[0]
-                            if not target_qubit in self._connectivity_graph:
-                                raise ValueError(f"Qubit {target_qubit} does not exist in the device topology.")
-                    idx += 1
-
-                if not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
-                    raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
-                idx += 1
+            if isinstance(instruction.operator, Gate):
+                if instruction.operator.qubit_count == 2: #Assuming only maximum 2-qubit native gates are supported
+                    self.validate_instruction_connectivity(instruction.control, instruction.target)
+                else: 
+                    #just check that the target qubit exists in the connectivity graph
+                    target_qubit = instruction.target[0]
+                    if not target_qubit in self._connectivity_graph:
+                        raise ValueError(f"Qubit {target_qubit} does not exist in the device topology.")
 
     def validate_instruction_connectivity(self, control_qubits: QubitSet, target_qubits: QubitSet): 
         #Create edges between each of the target qubits
