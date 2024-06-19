@@ -59,6 +59,7 @@ from braket.aws.aws_emulator_helpers import (
     create_gate_connectivity_criterion, 
     create_lexi_mapping_routing_pass
 )
+from braket.tasks import QuantumTask
 from braket.aws.aws_noise_models import create_device_noise_model
 
 class AwsDeviceType(str, Enum):
@@ -877,19 +878,78 @@ class AwsDevice(Device):
         return self._emulator
     
     
-    def _setup_emulator(self) -> Emulator: 
+    def _setup_emulator(self, emulator_noise_model: NoiseModel = None) -> Emulator: 
         """ 
         Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a 
         real QPU (not simulated). 
         """
-        emulator_noise_model = create_device_noise_model(self.properties, self._arn)
+        if not emulator_noise_model:
+            emulator_noise_model = create_device_noise_model(self.properties, self._arn)
         self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm")
         
-        self.emulator.add_pass(create_qubit_count_criterion(self.properties))
-        self._emulator.add_pass(create_supported_gate_criterion(self.properties))
+        self._emulator.add_pass(create_qubit_count_criterion(self.properties))
         self._emulator.add_pass(create_supported_gate_criterion(self.properties))
         self._emulator.add_pass(create_native_gate_criterion(self.properties))
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_gate_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_lexi_mapping_routing_pass(self.properties, self.topology_graph))
         return self._emulator
+    
+    
+    def validate(self, task_specification: Union[
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            PulseSequence,
+            AnalogHamiltonianSimulation,
+        ]): 
+        """
+        Runs all non-modifying emulator passes on the input program and raises an 
+        error if any device-specific criterion are not met by the program. If the 
+        program meets all criterion, returns the input program without modification. 
+        """
+        self.emulator.run_validation_passes(task_specification)
+        return task_specification
+    
+    
+    def run_emulator_passes(self, task_specification: Union[
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            PulseSequence,
+            AnalogHamiltonianSimulation,
+        ]):
+        """
+        Runs all emulator passes and returns the modified program, which should be the same
+        type as the input program.
+        """
+        if isinstance(task_specification, Circuit):
+            task_specification = task_specification.copy()
+            
+        return self.emulator.run_program_passes(task_specification)
+    
+    
+    def emulate(
+        self,
+        task_specification: Union[
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            PulseSequence,
+            AnalogHamiltonianSimulation,
+        ],
+        shots: Optional[int] = None,
+        inputs: Optional[dict[str, float]] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+    ) -> QuantumTask:
+        
+        if isinstance(task_specification, Circuit):
+            task_specification = task_specification.copy()
+        
+        return self.emulator.run(
+            task_specification, shots=shots, inputs=inputs
+        )
+            

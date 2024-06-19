@@ -151,6 +151,7 @@ def _(properties: IonqDeviceCapabilities, arn: str) -> NoiseModel:
                 continue
             native_gate_fidelities.append(GateFidelity(gate, two_qubit_rb_fidelity))
         else:
+            continue
             logging.warning(f"Unsupported gate {native_gate}")
     
     single_qubit_specs = {}
