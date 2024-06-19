@@ -65,7 +65,6 @@ class GateConnectivityCriterion(EmulatorCriterion):
         if not self._gate_connectivity_graph.has_edge(*e):
             raise ValueError(f"{e[0]} is not connected to {e[1]} on this device.")
         supported_gates = self._gate_connectivity_graph[e[0]][e[1]]["supported_gates"]
-        print(gate_name, supported_gates)
         if gate_name not in supported_gates:
             raise ValueError(f"Qubit pair ({e[0]}, {e[1]}) does not support gate {gate_name} on this device.")
         
