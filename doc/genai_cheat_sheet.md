@@ -134,6 +134,21 @@ instruction = Instruction(CNot(), target=[target], control=[control])
 circuit.add(instruction)
 ```
 
+
+Create a random circuit:
+
+```
+from braket.experimental.auxiliary_functions import random_circuit
+
+# Code here
+local_simulator = LocalSimulator()
+gate_set = [CNot, Rx, Rz, CPhaseShift, XY]
+circuit = random_circuit(num_qubits=5, 
+                         num_gates=30,
+                         gate_set=gate_set,
+                         seed=42)
+```
+
 **FreeParameters (parametric gates)**
 
 Imports	
@@ -283,7 +298,7 @@ Rydberg atom devices Aquila (AHS device from QuEra):
 Rigetti Aspen M3 device:	
 `"arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"`
 
-IQM Garnet device (20 qubits):
+IQM Garnet device (20 qubits, superconducting QPU):
 
 `"arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"`
 
