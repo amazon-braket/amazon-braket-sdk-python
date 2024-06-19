@@ -5,6 +5,7 @@ from braket.emulators.pytket_translator import PytketProgramContext, tket_to_qas
 from braket.circuits.serialization import IRType
 from pytket.mapping import LexiLabellingMethod, LexiRouteRoutingMethod, MappingManager
 from pytket.architecture import Architecture
+from pytket import Circuit as PytketCircuit
 from typing import Union, Dict
 from collections.abc import Iterable
 from networkx import DiGraph
@@ -44,6 +45,11 @@ class LexiRoutingPass(EmulatorPass):
     @run.register
     def _(self, task_specification: OpenQasmProgram) -> OpenQasmProgram:
         pytket_circuit = Interpreter(PytketProgramContext()).build_circuit(task_specification.source)
-        self._mapping_manager.route_circuit(pytket_circuit, [self._lexi_label, self._lexi_route])
+        pytket_circuit = self.run(pytket_circuit)
         open_qasm_program_string = tket_to_qasm3(pytket_circuit)
         return OpenQasmProgram(source=open_qasm_program_string)
+    
+    @run.register
+    def _(self, task_specification: PytketCircuit) -> PytketCircuit:
+        self._mapping_manager.route_circuit(task_specification, [self._lexi_label, self._lexi_route])
+        return task_specification
