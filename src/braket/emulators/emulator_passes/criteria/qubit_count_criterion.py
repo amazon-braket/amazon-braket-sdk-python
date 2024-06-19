@@ -13,5 +13,8 @@ class QubitCountCriterion(EmulatorCriterion):
         
     def validate(self, circuit: Circuit) -> Circuit:
         if circuit.qubit_count > self._qubit_count:
-            raise ValueError(f"Circuit must use at most {self._qubit_count} qubits, \
-                             but uses {circuit.qubit_count} qubits.")
+            raise ValueError(f"Circuit must use at most {self._qubit_count} qubits, but uses {circuit.qubit_count} qubits.")
+
+    def __eq__(self, other: EmulatorCriterion) -> bool:
+        return isinstance(other, QubitCountCriterion) and \
+               self._qubit_count == other._qubit_count
