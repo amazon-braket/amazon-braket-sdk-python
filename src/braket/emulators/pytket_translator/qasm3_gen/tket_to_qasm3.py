@@ -5,7 +5,7 @@ from typing import Dict, Union, List, Set, Optional
 from dataclasses import dataclass
 from functools import singledispatchmethod
 from braket.emulators.pytket_translator.qasm3_gen.qasm_context import QasmContext
-
+from braket.emulators.pytket_translator.qasm3_gen.qasm_writer import BasicQasmWriter
 
 
 @dataclass
@@ -17,10 +17,11 @@ def tket_to_qasm3(
     circuit: Circuit, 
     input_parameters: Dict[str, str]=dict(), 
     gate_overrides: Dict[OpType, str]=dict()
-) -> Qasm3: 
+) -> str: 
     ticket_visitor = TketCircuitVisitor(QasmContext(input_parameters), gate_overrides)
     ticket_visitor.walk_circuit(circuit)
-    return ticket_visitor.context
+    writer = BasicQasmWriter(ticket_visitor.context)
+    return writer.get_program()
 
 class TketCircuitVisitor: 
     def __init__(self, context, gate_overrides: Dict[OpType, str]=dict()):
