@@ -72,7 +72,11 @@ class AtomArrangement:
     def __init__(self):
         self._sites = []
 
-    def add(self, coordinate: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED) -> AtomArrangement:
+     def add(
+        self,
+        coordinate: Union[tuple[Number, Number], np.ndarray],
+        site_type: SiteType = SiteType.FILLED,
+    ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
         
         Args:
