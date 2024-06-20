@@ -79,10 +79,12 @@ class AtomArrangement:
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
         
-        Args:
-            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate
-                of the atom (in meters).
+         Args:
+            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the
+                atom (in meters). The coordinates can be a numpy array of shape (2,)
+                or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
+
         
         Returns:
             AtomArrangement: returns self (to allow for chaining).
