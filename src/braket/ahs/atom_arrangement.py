@@ -1,4 +1,3 @@
-# Updated 
 # Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -12,16 +11,19 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""A module for representing and manipulating atom arrangements for Analog Hamiltonian Simulation.
+"""
+A module for representing and manipulating atom arrangements for Analog
+Hamiltonian Simulation.
 
-This module provides classes and functions to create and handle atom arrangements,
-including different lattice structures such as square, rectangular, decorated Bravais,
-and honeycomb lattices.
+This module provides classes and functions to create and handle atom
+arrangements, including different lattice structures such as square,
+rectangular, decorated Bravais, and honeycomb lattices.
 
-Typical usage example-
+Typical usage example:
 
   canvas_boundary_points = [(0, 0), (7.5e-5, 0), (7.5e-5, 7.5e-5), (0, 7.5e-5)]
-  square_lattice = AtomArrangement.from_square_lattice(4e-6, canvas_boundary_points)
+  square_lattice = AtomArrangement.from_square_lattice(4e-6,
+  canvas_boundary_points)
 """
 
 from __future__ import annotations
@@ -64,7 +66,9 @@ class AtomArrangementItem:
 
 
 class AtomArrangement:
-    """Represents a set of coordinates that can be used as a register to an AnalogHamiltonianSimulation."""
+    """Represents a set of coordinates that can be used as a register to an
+    Analog Hamiltonian Simulation.
+    """
     def __init__(self):
         self._sites = []
 
@@ -72,7 +76,8 @@ class AtomArrangement:
         """Add a coordinate to the atom arrangement.
         
         Args:
-            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the atom (in meters).
+            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate
+                of the atom (in meters).
             site_type (SiteType): The type of site. Optional. Default is FILLED.
         
         Returns:
@@ -103,11 +108,14 @@ class AtomArrangement:
         return len(self._sites)
 
     def discretize(self, properties: DiscretizationProperties) -> AtomArrangement:
-        """Creates a discretized version of the atom arrangement, rounding all site coordinates to the closest multiple of the resolution. The types of the sites are unchanged.
+        """Creates a discretized version of the atom arrangement, rounding all
+        site coordinates to the closest multiple of the resolution. The types
+        of the sites are unchanged.
         
         Args:
-            properties (DiscretizationProperties): Capabilities of a device that represent the
-                resolution with which the device can implement the parameters.
+            properties (DiscretizationProperties): Capabilities of a device
+                that represent the resolution with which the device can
+                implement the parameters.
         
         Raises:
             DiscretizationError: If unable to discretize the program.
@@ -250,3 +258,4 @@ if __name__ == "__main__":
     validate_lattice(decorated_bravais_lattice, "Decorated Bravais Lattice")
     validate_lattice(honeycomb_lattice, "Honeycomb Lattice")
     validate_lattice(bravais_lattice, "Bravais Lattice")
+
