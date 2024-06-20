@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from typing import Optional, Union
+from collections.abc import Iterable
 
 import numpy as np
 from sympy import Expr, Number
@@ -161,13 +162,14 @@ class BraketProgramContext(AbstractProgramContext):
             return FreeParameterExpression(evaluated_value)
         return value
 
-    def add_measure(self, target: tuple[int]) -> None:
+    def add_measure(self, target: tuple[int], classical_targets: Iterable[int] = None) -> None:
         """Add a measure instruction to the circuit
 
         Args:
             target (tuple[int]): the target qubits to be measured.
         """
-        for index, qubit in enumerate(target):
+        for iter, qubit in enumerate(target):
+            index = classical_targets[iter] if classical_targets else iter
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
             if self._circuit._measure_targets:
