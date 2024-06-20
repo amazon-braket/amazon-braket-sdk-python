@@ -32,6 +32,7 @@ from enum import Enum
 from numbers import Number
 from typing import Union, Tuple, List
 import numpy as np
+from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 
 
 class SiteType(Enum):
