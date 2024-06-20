@@ -8,6 +8,7 @@ from pytket.circuit import (
 )
 from pytket.unit_id import Qubit, Bit
 from typing import Optional, Union, Any
+from collections.abc import Iterable
 from sympy import Expr
 from braket.emulators.pytket_translator.translations import (
     QASM_TO_PYTKET, 
@@ -67,13 +68,14 @@ class PytketProgramContext(AbstractProgramContext):
     def add_phase_instruction(self, target, phase_value):
         self.add_gate_instruction("gphase", target, phase_value)
 
-    def add_measure(self, target: tuple[int]):
+    def add_measure(self, target: tuple[int], classical_targets: Iterable[int] = None):
         if len(target) == 0: 
             return
         self._check_and_update_qubits(target)
         for index, qubit in enumerate(target):
-            self._circuit.add_bit(Bit(qubit))
-            self._circuit.Measure(qubit, qubit)
+            target_bit = classical_targets[index] if classical_targets is not None else qubit
+            self._circuit.add_bit(Bit(target_bit))
+            self._circuit.Measure(qubit, target_bit)
 
     def add_custom_unitary(
         self,
