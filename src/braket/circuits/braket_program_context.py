@@ -172,7 +172,3 @@ class BraketProgramContext(AbstractProgramContext):
             index = classical_targets[iter] if classical_targets else iter
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
-            if self._circuit._measure_targets:
-                self._circuit._measure_targets.append(qubit)
-            else:
-                self._circuit._measure_targets = [qubit]
