@@ -197,7 +197,8 @@ def _create_edge_specs(properties: DeviceCapabilities, edge_properties: List[Gat
                 gate = getattr(Gate, gate_name)
                 edge_specs.append(GateFidelity(gate, edge_property.fidelity))
             else:
-                logging.warning(f"Unsupported gate {gate_name}")
+                continue
+                # logging.warning(f"Unsupported gate {gate_name}")
         return edge_specs
     
     

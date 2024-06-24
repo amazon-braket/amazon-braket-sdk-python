@@ -78,3 +78,9 @@ class Emulator(Device, EmulatorInterface):
     def noise_model(self, noise_model: NoiseModel):
         self._noise_model = noise_model
         self._backend = LocalSimulator(backend="braket_dm", noise_model=noise_model)
+        
+    def run_program_passes(self, task_specification: ProgramType, apply_noise_model=True) -> ProgramType:
+        program = super().run_program_passes(task_specification)
+        if apply_noise_model:
+            return self._noise_model.apply(program)
+        return program

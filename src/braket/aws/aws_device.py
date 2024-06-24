@@ -53,8 +53,7 @@ from braket.schema_common import BraketSchemaBase
 from braket.emulators import Emulator
 from braket.aws.aws_emulator_helpers import (
     create_qubit_count_criterion, 
-    create_supported_gate_criterion, 
-    create_native_gate_criterion, 
+    create_gate_criterion, 
     create_connectivity_criterion, 
     create_gate_connectivity_criterion, 
     create_lexi_mapping_routing_pass
@@ -888,8 +887,9 @@ class AwsDevice(Device):
         self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm")
         
         self._emulator.add_pass(create_qubit_count_criterion(self.properties))
-        self._emulator.add_pass(create_supported_gate_criterion(self.properties))
-        self._emulator.add_pass(create_native_gate_criterion(self.properties))
+        self._emulator.add_pass(create_gate_criterion(self.properties))
+        # self._emulator.add_pass(create_supported_gate_criterion(self.properties))
+        # self._emulator.add_pass(create_native_gate_criterion(self.properties))
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_gate_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_lexi_mapping_routing_pass(self.properties, self.topology_graph))
@@ -920,7 +920,7 @@ class AwsDevice(Device):
             BlackbirdProgram,
             PulseSequence,
             AnalogHamiltonianSimulation,
-        ]):
+        ], apply_noise_model=True):
         """
         Runs all emulator passes and returns the modified program, which should be the same
         type as the input program.
@@ -928,7 +928,7 @@ class AwsDevice(Device):
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
             
-        return self.emulator.run_program_passes(task_specification)
+        return self.emulator.run_program_passes(task_specification, apply_noise_model)
     
     
     def emulate(

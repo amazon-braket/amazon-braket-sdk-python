@@ -1,11 +1,10 @@
 from braket.emulators import Emulator
-from braket.emulators.emulator_passes import (
-    SupportedGateCriterion, 
-    NativeGateCriterion, 
+from braket.emulators.emulator_passes import ( 
     ConnectivityCriterion,
     GateConnectivityCriterion, 
     QubitCountCriterion, 
-    LexiRoutingPass
+    LexiRoutingPass, 
+    GateCriterion
 )
 from braket.device_schema import (
     DeviceActionType,
@@ -22,8 +21,13 @@ from collections.abc import Iterable
 from networkx import DiGraph
 
 
+    
+    
+def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
+    qubit_count = properties.paradigm.qubitCount
+    return QubitCountCriterion(qubit_count)
 
-def create_supported_gate_criterion(properties: DeviceCapabilities) -> SupportedGateCriterion: 
+def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
     supported_gates = properties.action[DeviceActionType.OPENQASM].supportedOperations
     """TODO: Issue in IQM Garnet Supported Operations: Includes "startVerbatimBox" and "endVerbatimBox" instructions in supported operations, 
     which are braket specific pragmas. Filter out explicitly until they are removed from device properties."""     
@@ -35,19 +39,9 @@ def create_supported_gate_criterion(properties: DeviceCapabilities) -> Supported
         except ValueError:
             pass
         
-    supported_gates_criterion = SupportedGateCriterion(supported_gates)
-    return supported_gates_criterion
-    
-    
-def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
-    qubit_count = properties.paradigm.qubitCount
-    return QubitCountCriterion(qubit_count)
-
-def create_native_gate_criterion(properties: DeviceCapabilities) -> NativeGateCriterion:
     native_gates = properties.paradigm.nativeGateSet
-    native_gate_criterion = NativeGateCriterion(native_gates)
-    return native_gate_criterion
-
+    
+    return GateCriterion(supported_gates=supported_gates, native_gates=native_gates)
 
 @singledispatch
 def create_connectivity_criterion(properties: DeviceCapabilities, connectivity_graph: DiGraph) -> ConnectivityCriterion: 
