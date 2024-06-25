@@ -32,7 +32,8 @@ class ConnectivityCriterion(EmulatorCriterion):
     def __init__(self,  connectivity_graph: Union[Dict[int, Iterable[int]], DiGraph] = None, 
                         fully_connected = False, 
                         num_qubits: int = None, 
-                        qubit_labels: Union[Iterable[int], QubitSet] = None):
+                        qubit_labels: Union[Iterable[int], QubitSet] = None,
+                        directed: bool = False):
         if not (connectivity_graph or fully_connected): 
             raise ValueError("Either the connectivity_graph must be provided or fully_connected must be True.")
 
@@ -48,6 +49,9 @@ class ConnectivityCriterion(EmulatorCriterion):
         else: 
             self._connectivity_graph = connectivity_graph    
 
+        if not directed:
+            for edge in self._connectivity_graph.edges:
+                self._connectivity_graph.add_edge(edge[1], edge[0])
 
     def validate(self, circuit: Circuit) -> None: 
         """

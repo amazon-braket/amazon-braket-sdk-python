@@ -4,7 +4,7 @@ from braket.emulators.emulator_passes.criteria import ConnectivityCriterion
 from braket.circuits import Circuit
 import networkx as nx
 import numpy as np
-
+from networkx.utils import graphs_equal
 
 @pytest.fixture
 def basic_2_node_complete_graph():
@@ -32,11 +32,11 @@ def five_node_digraph():
         Circuit().add_verbatim_box(
             Circuit()
         ),
-        Circuit().i(range(3)).cnot(3, 4), 
+        Circuit().i(range(2)).cnot(3, 4), 
         Circuit().add_verbatim_box(
             Circuit().h(0).h(1).cnot(0, 1).cnot(1, 0)
         ), 
-        Circuit().i(range(3)).add_verbatim_box(
+        Circuit().h(range(2)).add_verbatim_box(
             Circuit().swap(0, 1).phaseshift(1, np.pi/4).cphaseshift01(1, 0, np.pi/4)
         )
     ]
@@ -59,11 +59,12 @@ def test_basic_contiguous_circuits(basic_2_node_complete_graph, circuit):
         Circuit().add_verbatim_box(
             Circuit().h(1).h(10).cnot(1, 10).cnot(10, 1)
         ), 
-        Circuit().i(range(3)).add_verbatim_box(
+        Circuit().add_verbatim_box(
             Circuit().swap(1, 10).phaseshift(10, np.pi/4).cphaseshift01(10, 1, np.pi/4)
         )
     ]
 )
+
 def test_valid_discontiguous_circuits(basic_noncontig_qubits_2_node_complete_graph, circuit):
     """
         ConnectivityGateCriterion should not raise any errors when validating these circuits.
@@ -171,3 +172,22 @@ def test_equality_graph_created_with_dict(five_node_digraph):
 def test_invalid_constructors(connectivity_graph, fully_connected, num_qubits, qubit_labels):
     with pytest.raises(ValueError):
         ConnectivityCriterion(connectivity_graph, fully_connected, num_qubits, qubit_labels)
+
+
+@pytest.mark.parametrize(
+    "representation", 
+    [
+        {
+            1: [0, 2, 3], 
+            2: [3, 4], 
+            3: [6]
+        }, 
+        nx.from_edgelist([(1, 0), (1, 2), (1, 3), (2, 3), (2, 4), (3, 6)], create_using=nx.DiGraph)
+    ]
+)
+def test_undirected_graph_construction(representation): 
+    expected_digraph = nx.from_edgelist(
+        [(1, 0), (0, 1), (1, 2), (2, 1), (1, 3), (3, 1), (2, 3), (3, 2), (2, 4), (4, 2), (3, 6), (6, 3)], create_using=nx.DiGraph
+    )
+    cc = ConnectivityCriterion(representation, directed=False)
+    assert graphs_equal(cc._connectivity_graph, expected_digraph)
