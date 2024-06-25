@@ -45,7 +45,7 @@ class Emulator(Device, EmulatorInterface):
         This method validates the input program against the emulator's passes and applies any provided noise model before
         running the circuit.
         """
-        task_specification = self.run_program_passes(task_specification)
+        task_specification = self.run_program_passes(task_specification, apply_noise_model=False) #Don't apply noise model as the local simulator will automatically apply it. 
         return self._backend.run(task_specification, shots, inputs, *args, **kwargs)
 
 
