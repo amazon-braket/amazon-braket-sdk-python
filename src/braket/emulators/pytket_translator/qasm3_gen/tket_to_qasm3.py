@@ -52,8 +52,7 @@ class TketCircuitVisitor:
                 raise ValueError(
                     "Circuit QASM cannot be generated as circuit contains midcircuit "
                     f"measurements on qubit: {arg}"
-                )
-                        
+                )        
     
     def _visit_box(self, command: Command, optype):
         circ = command.op.get_circuit()
@@ -66,13 +65,6 @@ class TketCircuitVisitor:
         cbit = command.args[1].index[0]
         self.context.add_measurement(qubit, cbit)
         self._measured_nodes.add(qubit_node)
-    
-    # @_visit_op.register
-    # def _(self, command: Node, optype: OpType.CustomGate):
-    #     gate_name = command.op.gate.name
-    #     if gate_name not in SUPPORTED_CUSTOM_GATES:
-    #         raise ValueError(f"Encountered unsupported custom gate {gate_name}")
-    #     self._visit_gate(gate_name, command.op.params, command.args)
     
     
     def _visit_gate(self, command: Command, optype): 
@@ -101,10 +93,7 @@ class TketCircuitVisitor:
         params = self._gate_angles_in_radians(params)
         qubits = [q.index[0] for q in qubits]
         self.context.add_gate(gate_name, params, qubits)
-        
-        
-        
-        
+
     def _gate_angles_in_radians(self, params):
         return [self._tau_to_radians(param) for param in params]
     
