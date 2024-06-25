@@ -13,14 +13,26 @@ class GateConnectivityCriterion(EmulatorCriterion):
                  gate_connectivity_graph: Union[
                                                 Dict[Tuple[Any, Any], Iterable[str]],
                                                 DiGraph
-                                                ]):
+                                                ], 
+                 directed=True):
         super().__init__()
         if isinstance(gate_connectivity_graph, DiGraph):
             self._gate_connectivity_graph = gate_connectivity_graph
+            if not directed:
+                for edge in self._gate_connectivity_graph.edges:
+                    back_edge = (edge[1], edge[0])
+                    if back_edge not in self._gate_connectivity_graph.edges:
+                        supported_gates = self._gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"]
+                        self._gate_connectivity_graph.add_edge(*back_edge, supported_gates=supported_gates)
+                    
         elif isinstance(gate_connectivity_graph, dict):
             self._gate_connectivity_graph = DiGraph()
             for edge, supported_gates in gate_connectivity_graph.items():
-                self._gate_connectivity_graph.add_edge(*edge, supported_gates=supported_gates)
+                self._gate_connectivity_graph.add_edge(edge[0], edge[1], supported_gates=supported_gates)
+                if not directed:
+                    back_edge = (edge[1], edge[0])
+                    if back_edge not in gate_connectivity_graph:
+                        self._gate_connectivity_graph.add_edge(edge[1], edge[0], supported_gates=supported_gates)
         else:
             raise TypeError("gate_connectivity_graph must either be a dictionary of edges mapped to supported gates lists, or a DiGraph with supported \
                             gates provided as edge attributs. ")

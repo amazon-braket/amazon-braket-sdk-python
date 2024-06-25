@@ -33,7 +33,7 @@ def basic_discontiguous_4_node_graph():
     return G
     
 @pytest.fixture
-def basic_undirected_4_node_graph_as_dict():
+def basic_4_node_graph_as_dict():
     return {
         (0, 1): ["CNot", "Swap", "CX", "XX"], 
         (1, 2): ["CNot", "CZ", "ISwap", "XY"], 
@@ -83,6 +83,8 @@ def test_valid_basic_contiguous_circuits(basic_4_node_graph, circuit):
         ).cnot(0, 2).swap(4, 6)
     ]
 )
+
+
 def test_valid_basic_discontiguous_circuits(basic_discontiguous_4_node_graph, circuit):
     """
         ConnectivityGateCriterion should not raise any errors when validating these circuits.
@@ -110,7 +112,7 @@ def test_directed_graph_construction_from_dict():
         (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
         (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]})
     ])
-    gcc = GateConnectivityCriterion(dict_representation, directed=True)
+    gcc = GateConnectivityCriterion(dict_representation)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
     
     
@@ -120,7 +122,7 @@ def test_directed_graph_construction_from_dict():
     [
         Circuit(),
         Circuit().add_verbatim_box(
-            Circuit().cnot(0, 1).cnot(1, 0)
+            Circuit().cnot(0, 1)
         ), 
         Circuit().swap(0, 1).add_verbatim_box(
             Circuit().iswap(2, 1).pswap(3, 0, np.pi/2).pswap(0, 3, np.pi/2)
@@ -132,11 +134,11 @@ def test_directed_graph_construction_from_dict():
         )
     ]
 )    
-def test_undirected_criteria_with_valid_circuits(basic_undirected_4_node_graph_as_dict, circuit):
+def test_undirected_criteria_from_dict_with_valid_circuits(basic_4_node_graph_as_dict, circuit):
     """
         ConnectivityGateCriterion should not raise any errors when validating these circuits.
     """
-    gate_connectivity_criterion = GateConnectivityCriterion(basic_undirected_4_node_graph_as_dict, directed=False)
+    gate_connectivity_criterion = GateConnectivityCriterion(basic_4_node_graph_as_dict, directed=False)
     gate_connectivity_criterion.validate(circuit)
 
 
@@ -163,18 +165,46 @@ def test_undirected_graph_construction_from_dict():
         (2, 0, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
         (5, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}), 
     ])
-    gcc = GateConnectivityCriterion(dict_representation)
+    gcc = GateConnectivityCriterion(dict_representation, directed=False)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
     
 
+@pytest.mark.parametrize(
+    "representation", 
+    [
+        {
+            (0, 1): ["CNot", "CZ"], 
+            (1, 0): ["CZ, XX"], 
+            (2, 0): ["CNot, YY"]
+        },
+        nx.from_dict_of_dicts(
+            {
+                0: {1: {"supported_gates": ["CNot", "CZ"]}},
+                1: {0: {"supported_gates": ["CZ", "XX"]}}, 
+                2: {2: {"supported_gates": ["CNot", "YY"]}}
+            }
+        )
+    ]
+)
+def create_undirected_graph_with_exisiting_back_edges(representation):
+    """
+    Check that creating an undirected graph with a graph that 
+    contains forwards and backwards edges with different constraints
+    is created properly.
+    """
+    
+    gcc = GateConnectivityCriterion(representation, directed=False)
+    expected_digraph_representation = nx.DiGraph()
+    expected_digraph_representation.add_edges_from([
+        (0, 1, {"supported_gates": ["CNot", "CZ"]}), 
+        (1, 0, {"supported_gates": ["CZ", "XX"]}), 
+        (2, 0, {"supported_gates": ["CNot", "YY"]}),
+        (0, 2, {"supported_gates": ["CNot", "YY"]})
+    ])
+    
+    assert graphs_equal(gcc._gate_connectivity_graph, expected_digraph_representation)
 
-    # G.add_edges_from(
-    #     [
-    #         (0, 1, {"supported_gates": ["CNot", "CZ"]}), 
-    #         (1, 2, {"supported_gates": ["Swap", "CNot"]}),
-    #         (0, 3, {"supported_gates": ["XX", "XY"]})
-    #     ]
-    # )
+
 @pytest.mark.parametrize(
     "circuit", 
     [
