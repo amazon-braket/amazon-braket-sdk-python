@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
+## v1.80.1 (2024-06-10)
+
+### Bug Fixes and Other Changes
+
+ * docs: add stack exchange badge to the readme
+ * Implement `braket.ahs.AnalogHamiltonianSimulation.from_ir()`
+
 ## v1.80.0 (2024-05-22)
 
 ### Features

@@ -81,7 +81,7 @@ def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
 
 
 def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined_frame_2):
-    param = FreeParameter("a") + 2 * FreeParameter("b")
+    param = FreeParameter("a") + 2 * FreeParameter("c")
     pulse_sequence = (
         PulseSequence()
         .set_frequency(predefined_frame_1, param)
@@ -135,14 +135,14 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             " sigma_dg * 1s, 0.2, 1, false);",
             "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-            "    set_frequency(predefined_frame_1, a + 2.0 * b);",
-            "    shift_frequency(predefined_frame_1, a + 2.0 * b);",
-            "    set_phase(predefined_frame_1, a + 2.0 * b);",
-            "    shift_phase(predefined_frame_1, -1.0 * a + -2.0 * b);",
-            "    set_scale(predefined_frame_1, a + 2.0 * b);",
+            "    set_frequency(predefined_frame_1, a + 2.0 * c);",
+            "    shift_frequency(predefined_frame_1, a + 2.0 * c);",
+            "    set_phase(predefined_frame_1, a + 2.0 * c);",
+            "    shift_phase(predefined_frame_1, -1.0 * a + -2.0 * c);",
+            "    set_scale(predefined_frame_1, a + 2.0 * c);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[(a + 2.0 * b) * 1s] predefined_frame_1, predefined_frame_2;",
-            "    delay[(a + 2.0 * b) * 1s] predefined_frame_1;",
+            "    delay[(a + 2.0 * c) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 2.0 * c) * 1s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
@@ -156,7 +156,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     assert pulse_sequence.to_ir() == expected_str_unbound
     assert pulse_sequence.parameters == {
         FreeParameter("a"),
-        FreeParameter("b"),
+        FreeParameter("c"),
         FreeParameter("length_g"),
         FreeParameter("length_dg"),
         FreeParameter("sigma_g"),
@@ -164,9 +164,9 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         FreeParameter("length_c"),
     }
     b_bound = pulse_sequence.make_bound_pulse_sequence(
-        {"b": 2, "length_g": 1e-3, "length_dg": 3e-3, "sigma_dg": 0.4, "length_c": 4e-3}
+        {"c": 2, "length_g": 1e-3, "length_dg": 3e-3, "sigma_dg": 0.4, "length_c": 4e-3}
     )
-    b_bound_call = pulse_sequence(b=2, length_g=1e-3, length_dg=3e-3, sigma_dg=0.4, length_c=4e-3)
+    b_bound_call = pulse_sequence(c=2, length_g=1e-3, length_dg=3e-3, sigma_dg=0.4, length_c=4e-3)
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
