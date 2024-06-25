@@ -8,6 +8,8 @@ class QubitCountCriterion(EmulatorCriterion):
     than available on a device, as set during this criterion's instantiation.
     """
     def __init__(self, qubit_count: int):
+        if qubit_count <= 0:
+            raise ValueError(f"qubit_count ({qubit_count}) must be a positive integer.")
         self._qubit_count = qubit_count
         
         
