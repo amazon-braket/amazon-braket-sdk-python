@@ -888,8 +888,6 @@ class AwsDevice(Device):
         
         self._emulator.add_pass(create_qubit_count_criterion(self.properties))
         self._emulator.add_pass(create_gate_criterion(self.properties))
-        # self._emulator.add_pass(create_supported_gate_criterion(self.properties))
-        # self._emulator.add_pass(create_native_gate_criterion(self.properties))
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_gate_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(create_lexi_mapping_routing_pass(self.properties, self.topology_graph))
