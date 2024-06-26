@@ -3,7 +3,7 @@
 Installing Amazon Braket SDK:
 `pip install amazon-braket-sdk`
 
-To import modules from braket:
+To import modules from Braket:
 `from braket import ...`
 
 **Circuits**
