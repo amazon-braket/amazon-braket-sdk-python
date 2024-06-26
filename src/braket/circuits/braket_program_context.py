@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Optional, Union
 from collections.abc import Iterable
+from typing import Optional, Union
 
 import numpy as np
 from sympy import Expr, Number
@@ -162,11 +162,16 @@ class BraketProgramContext(AbstractProgramContext):
             return FreeParameterExpression(evaluated_value)
         return value
 
-    def add_measure(self, target: tuple[int], classical_targets: Iterable[int] = None) -> None:
+    def add_measure(
+        self, target: tuple[int], classical_targets: Iterable[int] | None = None
+    ) -> None:
         """Add a measure instruction to the circuit
 
         Args:
             target (tuple[int]): the target qubits to be measured.
+
+            classical_targets (Iterable[int] | None): the classical registers
+                to use in the qubit measurement.
         """
         for iter, qubit in enumerate(target):
             index = classical_targets[iter] if classical_targets else iter
