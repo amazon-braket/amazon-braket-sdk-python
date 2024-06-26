@@ -504,6 +504,11 @@ class Circuit:
         # Check if there is a measure instruction on the circuit
         self._check_if_qubit_measured(instruction, target, target_mapping)
 
+        # Update measure targets if instruction is a measurement
+        if isinstance(instruction.operator, Measure):
+            measure_target = target or instruction.target[0]
+            self._measure_targets = (self._measure_targets or []) + [measure_target]
+
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
             instructions_to_add = [instruction]
@@ -710,10 +715,6 @@ class Circuit:
                     target=target,
                 )
             )
-            if self._measure_targets:
-                self._measure_targets.append(target)
-            else:
-                self._measure_targets = [target]
 
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
         """
