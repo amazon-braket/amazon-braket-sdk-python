@@ -163,14 +163,14 @@ class BraketProgramContext(AbstractProgramContext):
         return value
 
     def add_measure(
-        self, target: tuple[int], classical_targets: Iterable[int] | None = None
+        self, target: tuple[int], classical_targets: Union[Iterable[int], None] = None
     ) -> None:
         """Add a measure instruction to the circuit
 
         Args:
             target (tuple[int]): the target qubits to be measured.
 
-            classical_targets (Iterable[int] | None): the classical registers
+            classical_targets (Union[Iterable[int], None]): the classical registers
                 to use in the qubit measurement.
         """
         for iter, qubit in enumerate(target):
