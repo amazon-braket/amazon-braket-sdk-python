@@ -169,7 +169,6 @@ class BraketProgramContext(AbstractProgramContext):
 
         Args:
             target (tuple[int]): the target qubits to be measured.
-
             classical_targets (Optional[Iterable[int]]): the classical registers
                 to use in the qubit measurement.
         """
