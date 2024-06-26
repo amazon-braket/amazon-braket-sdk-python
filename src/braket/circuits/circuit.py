@@ -164,11 +164,9 @@ class Circuit:
     def global_phase(self) -> float:
         """float: Get the global phase of the circuit."""
         return sum(
-            [
-                instr.operator.angle
-                for moment, instr in self._moments.items()
-                if moment.moment_type == MomentType.GLOBAL_PHASE
-            ]
+            instr.operator.angle
+            for moment, instr in self._moments.items()
+            if moment.moment_type == MomentType.GLOBAL_PHASE
         )
 
     @property
@@ -196,8 +194,7 @@ class Circuit:
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
         basis_rotation_instructions = []
-        all_qubit_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
-        if all_qubit_observable:
+        if all_qubit_observable := self._qubit_observable_mapping.get(Circuit._ALL_QUBITS):
             for target in self.qubits:
                 basis_rotation_instructions += Circuit._observable_to_instruction(
                     all_qubit_observable, target
@@ -276,7 +273,7 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
-            ValueError: If a meaure instruction exists on the current circuit.
+            ValueError: If a measure instruction exists on the current circuit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -740,7 +737,6 @@ class Circuit:
             [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]),
             Instruction('operator': CNot('qubit_count': 2), 'target': QubitSet([Qubit(0),
                 Qubit(1)]),
-            Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(2)]),
             Instruction('operator': Measure, 'target': QubitSet([Qubit(0)])]
         """
         if not isinstance(target_qubits, Iterable):
@@ -880,7 +876,7 @@ class Circuit:
 
         # check target_qubits
         target_qubits = check_noise_target_qubits(self, target_qubits)
-        if not all(qubit in self.qubits for qubit in target_qubits):
+        if any(qubit not in self.qubits for qubit in target_qubits):
             raise IndexError("target_qubits must be within the range of the current circuit.")
 
         # Check if there is a measure instruction on the circuit
@@ -1007,9 +1003,7 @@ class Circuit:
             ValueError: If there are no parameters that match the key for the arg
                 param_values.
         """
-        parameter_strings = set()
-        for parameter in self.parameters:
-            parameter_strings.add(str(parameter))
+        parameter_strings = {str(parameter) for parameter in self.parameters}
         for param in parameter_values:
             if param not in parameter_strings:
                 raise ValueError(f"No parameter in the circuit named: {param}")
@@ -1116,7 +1110,7 @@ class Circuit:
                 target_qubits = [target_qubits]
             if not all(isinstance(q, int) for q in target_qubits):
                 raise TypeError("target_qubits must be integer(s)")
-            if not all(q >= 0 for q in target_qubits):
+            if any(q < 0 for q in target_qubits):
                 raise ValueError("target_qubits must contain only non-negative integers.")
             target_qubits = QubitSet(target_qubits)
 
@@ -1349,8 +1343,7 @@ class Circuit:
     ) -> list[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
-        for parameter in self.parameters:
-            ir_instructions.append(f"input float {parameter};")
+        ir_instructions.extend(f"input float {parameter};" for parameter in self.parameters)
         if not self.result_types:
             bit_count = (
                 len(self._measure_targets)
@@ -1378,7 +1371,7 @@ class Circuit:
         frames: dict[str, Frame],
         waveforms: dict[str, Waveform],
     ) -> None:
-        for _key, calibration in gate_definitions.items():
+        for calibration in gate_definitions.values():
             for frame in calibration._frames.values():
                 _validate_uniqueness(frames, frame)
                 frames[frame.id] = frame
@@ -1466,7 +1459,7 @@ class Circuit:
                 fixed_argument_calibrations = self._add_fixed_argument_calibrations(
                     gate_definitions, instruction
                 )
-                gate_definitions.update(fixed_argument_calibrations)
+                gate_definitions |= fixed_argument_calibrations
         return frames, waveforms
 
     def _add_fixed_argument_calibrations(
@@ -1509,7 +1502,7 @@ class Circuit:
                 instruction.operator.parameters
             ) == len(gate.parameters):
                 free_parameter_number = sum(
-                    [isinstance(p, FreeParameterExpression) for p in gate.parameters]
+                    isinstance(p, FreeParameterExpression) for p in gate.parameters
                 )
                 if free_parameter_number == 0:
                     continue
@@ -1563,10 +1556,10 @@ class Circuit:
                    [ 0.70710678+0.j,  0.        +0.j, -0.70710678+0.j,
                      0.        +0.j]])
         """
-        qubits = self.qubits
-        if not qubits:
+        if qubits := self.qubits:
+            return calculate_unitary_big_endian(self.instructions, qubits)
+        else:
             return np.zeros(0, dtype=complex)
-        return calculate_unitary_big_endian(self.instructions, qubits)
 
     @property
     def qubits_frozen(self) -> bool:

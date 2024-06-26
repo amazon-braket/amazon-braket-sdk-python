@@ -68,9 +68,7 @@ class StateVector(ResultType):
         return ResultType.StateVector()
 
     def __eq__(self, other: StateVector) -> bool:
-        if isinstance(other, StateVector):
-            return True
-        return False
+        return isinstance(other, StateVector)
 
     def __copy__(self) -> StateVector:
         return type(self)()
@@ -334,9 +332,7 @@ class Amplitude(ResultType):
         return ResultType.Amplitude(state=state)
 
     def __eq__(self, other: Amplitude):
-        if isinstance(other, Amplitude):
-            return self.state == other.state
-        return False
+        return self.state == other.state if isinstance(other, Amplitude) else False
 
     def __repr__(self):
         return f"Amplitude(state={self.state})"
@@ -424,9 +420,7 @@ class Probability(ResultType):
         return ResultType.Probability(target=target)
 
     def __eq__(self, other: Probability) -> bool:
-        if isinstance(other, Probability):
-            return self.target == other.target
-        return False
+        return self.target == other.target if isinstance(other, Probability) else False
 
     def __repr__(self) -> str:
         return f"Probability(target={self.target})"

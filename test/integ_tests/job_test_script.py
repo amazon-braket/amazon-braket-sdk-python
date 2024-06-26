@@ -43,7 +43,7 @@ def completed_job_script():
     device = AwsDevice(get_job_device_arn())
 
     bell = Circuit().h(0).cnot(0, 1)
-    for count in range(3):
+    for _ in range(3):
         task = device.run(bell, shots=10)
         print(task.result().measurement_counts)
         save_job_result({"converged": True, "energy": -0.2})

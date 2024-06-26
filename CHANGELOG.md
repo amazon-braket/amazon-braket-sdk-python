@@ -1,5 +1,85 @@
 # Changelog
 
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
+## v1.80.1 (2024-06-10)
+
+### Bug Fixes and Other Changes
+
+ * docs: add stack exchange badge to the readme
+ * Implement `braket.ahs.AnalogHamiltonianSimulation.from_ir()`
+
+## v1.80.0 (2024-05-22)
+
+### Features
+
+ * add support for the ARN region
+ * Add support for SerializableProgram abstraction to Device interface
+
+### Bug Fixes and Other Changes
+
+ * job fixture for endpoint support
+
+## v1.79.1 (2024-05-08)
+
+### Bug Fixes and Other Changes
+
+ * check the qubit set length against observables
+
+## v1.79.0 (2024-05-06)
+
+### Features
+
+ * Direct Reservation context manager
+
+### Documentation Changes
+
+ * correct the example in the measure docstring
+
+## v1.78.0 (2024-04-18)
+
+### Features
+
+ * add phase RX gate
+
+## v1.77.6 (2024-04-17)
+
+### Bug Fixes and Other Changes
+
+ * if rydberg local is not pulled, pass in None
+
+## v1.77.5 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * remove optional discretization fields
+
+## v1.77.4 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * discretize method now takes None as an arg
+
+### Documentation Changes
+
+ * Correct miscellaneous spelling mistakes in docstrings
+
+## v1.77.3.post0 (2024-04-15)
+
+### Documentation Changes
+
+ * correct gphase matrix representation
+
 ## v1.77.3 (2024-04-11)
 
 ### Bug Fixes and Other Changes
@@ -38,7 +118,7 @@
 
 ### Bug Fixes and Other Changes
 
- * backwards compatiblity for local detuning
+ * backwards compatibility for local detuning
 
 ## v1.76.1 (2024-04-08)
 

@@ -41,7 +41,7 @@ def setup_container(
     logger = getLogger(__name__)
     _create_expected_paths(container, **creation_kwargs)
     run_environment_variables = {}
-    run_environment_variables.update(_get_env_credentials(aws_session, logger))
+    run_environment_variables |= _get_env_credentials(aws_session, logger)
     run_environment_variables.update(
         _get_env_script_mode_config(creation_kwargs["algorithmSpecification"]["scriptModeConfig"])
     )
@@ -222,8 +222,10 @@ def _download_input_data(
     found_item = False
     try:
         Path(download_dir, channel_name).mkdir()
-    except FileExistsError:
-        raise ValueError(f"Duplicate channel names not allowed for input data: {channel_name}")
+    except FileExistsError as e:
+        raise ValueError(
+            f"Duplicate channel names not allowed for input data: {channel_name}"
+        ) from e
     for s3_key in s3_keys:
         relative_key = Path(s3_key).relative_to(top_level)
         download_path = Path(download_dir, channel_name, relative_key)

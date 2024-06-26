@@ -45,7 +45,7 @@ class _LocalJobContainer:
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
-            force_update (bool): Try to update the container, if an update is availble.
+            force_update (bool): Try to update the container, if an update is available.
                 Default: False
         """
         self._aws_session = aws_session or AwsSession()
@@ -138,8 +138,8 @@ class _LocalJobContainer:
                 "Please pull down the container, or specify a valid ECR URL, "
                 "before proceeding."
             )
-        ecr_url = ecr_pattern_match.group(1)
-        account_id = ecr_pattern_match.group(2)
+        ecr_url = ecr_pattern_match[1]
+        account_id = ecr_pattern_match[2]
         self._login_to_ecr(account_id, ecr_url)
         self._logger.warning("Pulling docker container image. This may take a while.")
         subprocess.run(["docker", "pull", image_uri])

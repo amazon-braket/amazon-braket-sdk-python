@@ -209,8 +209,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
-                unbounded_parameters = param_names - set(input_map.keys())
-                if unbounded_parameters:
+                if unbounded_parameters := param_names - set(input_map.keys()):
                     raise ValueError(
                         f"Cannot execute circuit with unbound parameters: "
                         f"{unbounded_parameters}"
@@ -323,9 +322,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         # If the quantum task hits a terminal state before all quantum tasks have been created,
         # it can be returned immediately
-        while remaining:
-            if task.state() in AwsQuantumTask.TERMINAL_STATES:
-                break
+        while remaining and task.state() not in AwsQuantumTask.TERMINAL_STATES:
             time.sleep(poll_interval_seconds)
         return task
 
@@ -363,7 +360,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         retries = 0
         while self._unsuccessful and retries < max_retries:
             self.retry_unsuccessful_tasks()
-            retries = retries + 1
+            retries += 1
 
         if fail_unsuccessful and self._unsuccessful:
             raise RuntimeError(
@@ -432,7 +429,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
     @property
     def unfinished(self) -> set[str]:
-        """Gets all the IDs of all the quantum tasks in teh batch that have yet to complete.
+        """Gets all the IDs of all the quantum tasks in the batch that have yet to complete.
 
         Returns:
             set[str]: The IDs of all the quantum tasks in the batch that have yet to complete.

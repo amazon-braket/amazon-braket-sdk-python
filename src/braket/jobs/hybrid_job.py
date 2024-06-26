@@ -247,7 +247,7 @@ def _validate_python_version(image_uri: str | None, aws_session: AwsSession | No
         image_uri = image_uri or retrieve_image(Framework.BASE, aws_session.region)
         tag = aws_session.get_full_image_tag(image_uri)
         major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-        if not (sys.version_info.major, sys.version_info.minor) == (
+        if (sys.version_info.major, sys.version_info.minor) != (
             int(major_version),
             int(minor_version),
         ):
@@ -369,9 +369,7 @@ def _process_input_data(input_data: dict) -> list[str]:
         input_data = {"input": input_data}
 
     def matches(prefix: str) -> list[str]:
-        return [
-            str(path) for path in Path(prefix).parent.iterdir() if str(path).startswith(str(prefix))
-        ]
+        return [str(path) for path in Path(prefix).parent.iterdir() if str(path).startswith(prefix)]
 
     def is_prefix(path: str) -> bool:
         return len(matches(path)) > 1 or not Path(path).exists()
@@ -388,7 +386,7 @@ def _process_input_data(input_data: dict) -> list[str]:
                 f"the working directory. Use `get_input_data_dir({channel_arg})` to read "
                 f"input data from S3 source inside the job container."
             )
-        elif is_prefix(data):
+        elif is_prefix(str(data)):
             prefix_channels.add(channel)
         elif Path(data).is_dir():
             directory_channels.add(channel)

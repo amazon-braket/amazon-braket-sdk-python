@@ -13,7 +13,7 @@
 
 from setuptools import find_namespace_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 with open("src/braket/_sdk/_version.py") as f:
@@ -36,7 +36,7 @@ setup(
         "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
-        "numpy<2",
+        "numpy",
         "openpulse",
         "openqasm3",
         "sympy",
@@ -46,7 +46,7 @@ setup(
         "test": [
             "black",
             "botocore",
-            "flake8<=5.0.4",
+            "flake8",
             "isort",
             "jsonschema==3.2.0",
             "pre-commit",
