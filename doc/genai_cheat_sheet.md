@@ -31,13 +31,18 @@ Add X gate to circuit at qubit 0:
 
 `circuit.x(0)`
 
+Add H (Hadamard) gate to circuit at qubit 0:
+
+`circuit.h(0)`
+
 Add Rx gate to qubit 1 with a float angle 1.234	angle = 1.234:
 
 `circuit.rx(1, angle)`
 
 Add cnot gate to pair of qubits:
 
-`circuit.cnot(0, 1)`
+`circuit.cnot(0, 1)`.
+DO NOT use `cx` gate for CNot operation, always use `cnot` gate instead.
 
 Add gates sequentially: X gate, Rx gate, cnot gate:
 
@@ -127,18 +132,11 @@ Add an instruction to the circuit:
 
 `circuit.add(inst)`
 
-Sample random pairs of indexes (i, j) to generate random circuit:
-```
-(control, target) = random.sample(range(num_qubits), 2)
-instruction = Instruction(CNot(), target=[target], control=[control])
-circuit.add(instruction)
-```
-
-
 Create a random circuit:
 
 ```
 from braket.experimental.auxiliary_functions import random_circuit
+from braket.circuits.gates import CNot, Rx, Rz, CPhaseShift, XY
 
 # Code here
 local_simulator = LocalSimulator()
@@ -231,6 +229,7 @@ Decomposition of the ZZ gate (cost Hamiltonian) to Cnot:
 `ZZ(alpha, [i, j]) -> Cnot(i, j) Rz(alpha) Cnot(i, j)`
 
 The QAOA circuit consits of alternating layers of single qubit RX rotations (mixer term) and two-qubit ZZ gates (cost term).
+The initial layer should rotate qubits to |+> state by applying H (Hadamard) gate to all qubits. 
 
 **Results**
 
@@ -259,11 +258,17 @@ Get compiled circuit:
 Imports	
 
 ```
+from braket.devices import LocalSimulator
 from braket.aws import AwsDevice
 from braket.devices import Devices
 ```
 
-Instantiate a device:
+Instantiate Local simulator:
+
+`local_sim = LocalSimulator()`.
+Local simulator does not have ARN.
+
+Instantiate a device from ARN:
 
 `AwsDevice("<deviceARN>")`
 
@@ -279,28 +284,29 @@ Gate pulse implementation:
 
 `device.gate_calibrations`
 
-SV1 Simulator ARN:
+SV1 Simulator:
 
-`“arn:aws:braket:::device/quantum-simulator/amazon/sv1”`
+`AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/sv1”)`
 
-TN1 Simulator ARN (Tensor Network simulator):
+TN1 Simulator (Tensor Network simulator):
 
-`“arn:aws:braket:::device/quantum-simulator/amazon/tn1”`
+`AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/tn1”)`
 
-DM1 Simulator ARN (density matrix simulator):
+DM1 Simulator (density matrix simulator):
 
-`“arn:aws:braket:::device/quantum-simulator/amazon/dm1”`
+`AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/dm1”)`
 
 Rydberg atom devices Aquila (AHS device from QuEra):
 
-`“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”`
+`AwsDevice(“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”)`
 
 Rigetti Aspen M3 device:	
-`"arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"`
+
+`AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3")`
 
 IQM Garnet device (20 qubits, superconducting QPU):
 
-`"arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"`
+`AwsDevice("arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet")`
 
 **Device Properties**
 
