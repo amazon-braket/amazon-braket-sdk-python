@@ -3611,6 +3611,7 @@ def test_circuit_with_global_phase():
         ]
     )
 
+
 def test_from_ir_round_trip_transformation_with_targeted_measurements():
     circuit = (
         Circuit()
