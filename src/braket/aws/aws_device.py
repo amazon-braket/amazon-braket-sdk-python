@@ -27,6 +27,14 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
+from braket.aws.aws_emulator_helpers import (
+    create_connectivity_criterion,
+    create_gate_connectivity_criterion,
+    create_gate_criterion,
+    create_lexi_mapping_routing_pass,
+    create_qubit_count_criterion,
+)
+from braket.aws.aws_noise_models import create_device_noise_model
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
@@ -39,8 +47,9 @@ from braket.device_schema.dwave import DwaveProviderProperties
 
 # TODO: Remove device_action module once this is added to init in the schemas repo
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
-from braket.devices.device import Device
 from braket.devices import Devices
+from braket.devices.device import Device
+from braket.emulators import Emulator
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
@@ -48,18 +57,8 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
-
-
-from braket.emulators import Emulator
-from braket.aws.aws_emulator_helpers import (
-    create_qubit_count_criterion, 
-    create_gate_criterion, 
-    create_connectivity_criterion, 
-    create_gate_connectivity_criterion, 
-    create_lexi_mapping_routing_pass
-)
 from braket.tasks import QuantumTask
-from braket.aws.aws_noise_models import create_device_noise_model
+
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -871,64 +870,73 @@ class AwsDevice(Device):
     @property
     def emulator(self) -> Emulator:
         if self._arn in Devices.Amazon:
-            raise ValueError("Creating an emulator from a Braket managed simulator is not supported.")
+            raise ValueError(
+                "Creating an emulator from a Braket managed simulator is not supported."
+            )
         if not hasattr(self, "_emulator"):
             self._emulator = self._setup_emulator()
         return self._emulator
-    
-    
-    def _setup_emulator(self, emulator_noise_model: NoiseModel = None) -> Emulator: 
-        """ 
-        Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a 
-        real QPU (not simulated). 
+
+    def _setup_emulator(self, emulator_noise_model: NoiseModel = None) -> Emulator:
+        """
+        Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a
+        real QPU (not simulated).
         """
         if not emulator_noise_model:
             emulator_noise_model = create_device_noise_model(self.properties, self._arn)
         self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm")
-        
+
         self._emulator.add_pass(create_qubit_count_criterion(self.properties))
         self._emulator.add_pass(create_gate_criterion(self.properties))
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
-        self._emulator.add_pass(create_gate_connectivity_criterion(self.properties, self.topology_graph))
-        self._emulator.add_pass(create_lexi_mapping_routing_pass(self.properties, self.topology_graph))
+        self._emulator.add_pass(
+            create_gate_connectivity_criterion(self.properties, self.topology_graph)
+        )
+        self._emulator.add_pass(
+            create_lexi_mapping_routing_pass(self.properties, self.topology_graph)
+        )
         return self._emulator
-    
-    
-    def validate(self, task_specification: Union[
+
+    def validate(
+        self,
+        task_specification: Union[
             Circuit,
             Problem,
             OpenQasmProgram,
             BlackbirdProgram,
             PulseSequence,
             AnalogHamiltonianSimulation,
-        ]): 
+        ],
+    ):
         """
-        Runs all non-modifying emulator passes on the input program and raises an 
-        error if any device-specific criterion are not met by the program. If the 
-        program meets all criterion, returns the input program without modification. 
+        Runs all non-modifying emulator passes on the input program and raises an
+        error if any device-specific criterion are not met by the program. If the
+        program meets all criterion, returns the input program without modification.
         """
         self.emulator.run_validation_passes(task_specification)
         return task_specification
-    
-    
-    def run_emulator_passes(self, task_specification: Union[
+
+    def run_emulator_passes(
+        self,
+        task_specification: Union[
             Circuit,
             Problem,
             OpenQasmProgram,
             BlackbirdProgram,
             PulseSequence,
             AnalogHamiltonianSimulation,
-        ], apply_noise_model=True):
+        ],
+        apply_noise_model=True,
+    ):
         """
         Runs all emulator passes and returns the modified program, which should be the same
         type as the input program.
         """
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
-            
+
         return self.emulator.run_program_passes(task_specification, apply_noise_model)
-    
-    
+
     def emulate(
         self,
         task_specification: Union[
@@ -943,11 +951,8 @@ class AwsDevice(Device):
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
     ) -> QuantumTask:
-        
+
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
-        
-        return self.emulator.run(
-            task_specification, shots=shots, inputs=inputs
-        )
-            
+
+        return self.emulator.run(task_specification, shots=shots, inputs=inputs)

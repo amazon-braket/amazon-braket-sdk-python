@@ -1,11 +1,9 @@
-from abc import ABC, abstractmethod
 import io
-from braket.emulators.pytket_translator.qasm3_gen.qasm_context import (
-    QasmContext, 
-    Gate, 
-    Measurement
-)
-from braket.emulators.pytket_translator.translations import MEASUREMENT_REGISTER_NAME 
+from abc import ABC, abstractmethod
+
+from braket.emulators.pytket_translator.qasm3_gen.qasm_context import Gate, QasmContext
+from braket.emulators.pytket_translator.translations import MEASUREMENT_REGISTER_NAME
+
 
 class QasmWriter(ABC):
     """Abstract class for OpenQASM program writing. It handles basic program writing flow,
@@ -13,21 +11,25 @@ class QasmWriter(ABC):
     """
 
     def __init__(self, context: QasmContext):
-        """Initialize a new QasmWriter from a context containing program information.
-
+        """
+        Initialize a new QasmWriter from a context containing program information.
         The writer does not modify the context.
         """
         self.context = context
 
     def get_program(self) -> str:
-        """Return the OpenQASM3 program program string from the constructor argument
+        """
+        Return the OpenQASM 3.0 program program string from the constructor argument
         ProgramContext.
+
+        Returns:
+            str: A complete OpenQASM 3.0 program string.
         """
         stream = io.StringIO()
         stream.write(self.get_program_header())
         stream.write(self.get_input_declarations())
         stream.write(self.get_classical_bit_declarations())
-        # stream.write(self.get_verbatim_pragma()) 
+        # stream.write(self.get_verbatim_pragma())
         # stream.write(self.get_boxed_program_body())
         stream.write(self.get_body())
         stream.write(self.get_measurements())
@@ -50,15 +52,21 @@ class QasmWriter(ABC):
             if self.context.num_bits
             else ""
         )
-        
-    
+
     def get_verbatim_pragma(self) -> str:
-        return f"#pragma braket verbatim\n"
+        return "#pragma braket verbatim\n"
 
     def get_boxed_program_body(self) -> str:
         return f"box {{\n{self.get_body()}}}\n"
 
     def get_body(self) -> str:
+        """
+        Creates an OpenQASM 3.0 program body from the program operations and
+        returns a string containing the program body.
+
+        Returns:
+            str: the OpenQASM 3.0 program body.
+        """
         stream = io.StringIO()
         for gate in self.context.gates:
             stream.write(self.get_gate(gate))
@@ -86,8 +94,8 @@ class QasmWriter(ABC):
 
     def format_qubit(self, qubit: int) -> str:
         return f"${qubit}"
-    
-    
+
+
 class BasicQasmWriter(QasmWriter):
     """This writer returns human-readable, basic OpenQASM.
 
@@ -105,6 +113,13 @@ class BasicQasmWriter(QasmWriter):
     """
 
     def get_input_declarations(self) -> str:
+        """
+        Creates parameter declarations for program inputs (e.g. theta, phi).
+        Parameters are assumed to all be of type float.
+
+        Returns:
+            str: OpenQASM 3.0 lines with paramater variable declarations.
+        """
         stream = io.StringIO()
         for param_name, param_type in self.context.input_parameters.items():
             stream.write(f"input {param_type} {param_name};\n")

@@ -1,5 +1,6 @@
+from pytket.circuit import OpType
+
 from braket.emulators.pytket_translator.composed_gates import ComposedGates
-from pytket.circuit import OpType 
 
 """The measurement register identifier."""
 MEASUREMENT_REGISTER_NAME = "c"
@@ -39,19 +40,19 @@ QASM_TO_PYTKET = {
     "ccnot": OpType.CCX,
     "cswap": OpType.CSWAP,
     "unitary": OpType.U3,
-    "gpi": OpType.GPI, 
-    "gpi2": OpType.GPI2, 
-    "ms": OpType.AAMS, 
+    "gpi": OpType.GPI,
+    "gpi2": OpType.GPI2,
+    "ms": OpType.AAMS,
     "cphaseshift": OpType.CU1,
-    "prx": OpType.PhasedX
+    "prx": OpType.PhasedX,
 }
 
 
 COMPOSED_GATES = {
-        "cphaseshift00": ComposedGates.add_cphaseshift00,
-        "cphaseshift01": ComposedGates.add_cphaseshift01,
-        "cphaseshift10": ComposedGates.add_cphaseshift10,
-        "pswap": ComposedGates.add_pswap
+    "cphaseshift00": ComposedGates.add_cphaseshift00,
+    "cphaseshift01": ComposedGates.add_cphaseshift01,
+    "cphaseshift10": ComposedGates.add_cphaseshift10,
+    "pswap": ComposedGates.add_pswap,
 }
 
 """

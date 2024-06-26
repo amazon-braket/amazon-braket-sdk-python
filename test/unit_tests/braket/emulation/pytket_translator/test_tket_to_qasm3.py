@@ -1,9 +1,11 @@
-import pytest
-from pytket.circuit import Circuit, Bit, OpType
-import pytket.circuit
-from braket.emulators.pytket_translator import tket_to_qasm3
-from sympy import Symbol
 import re
+
+import pytest
+from pytket.circuit import Bit, Circuit, OpType
+from sympy import Symbol
+
+from braket.emulators.pytket_translator import tket_to_qasm3
+
 
 @pytest.fixture
 def simple_bell_circuit():
@@ -19,6 +21,7 @@ def simple_bell_circuit():
     circ.Measure(2, 2)
     return circ
 
+
 @pytest.fixture
 def simple_parametric_circuit():
     circ = Circuit(1)
@@ -26,6 +29,7 @@ def simple_parametric_circuit():
     circ.Rx(Symbol("theta"), 0)
     circ.Measure(0, 0)
     return circ
+
 
 def test_simple_bell(simple_bell_circuit):
     expected = """
@@ -41,7 +45,7 @@ c[1] = measure $1;
 """.strip()
     qasm_result = tket_to_qasm3(simple_bell_circuit).strip()
     assert qasm_result == expected
-    
+
 
 def test_parametric_circuit(simple_parametric_circuit):
     expected = """
@@ -53,14 +57,16 @@ c[0] = measure $0;
 """.strip()
     qasm_result = tket_to_qasm3(simple_parametric_circuit).strip()
     assert expected == qasm_result
-    
+
+
 def test_empty_circuit():
     circ = Circuit(0)
     expected = """OPENQASM 3.0;
 """
     qasm_result = tket_to_qasm3(circ)
     assert expected == qasm_result
-    
+
+
 def test_multiple_parameter_circuits():
     theta = Symbol("theta")
     phi = Symbol("phi")
@@ -68,7 +74,7 @@ def test_multiple_parameter_circuits():
     circ.add_bit(Bit("c", 0))
     circ.Rx(theta, 0)
     circ.Rx(theta + phi, 0)
-    expected="""
+    expected = """
 OPENQASM 3.0;
 input float theta;
 input float phi;
@@ -85,16 +91,17 @@ def test_invalid_operation_on_measured_targets():
     circ.add_bit(Bit("c", 0))
     circ.Measure(0, 0)
     circ.X(0)
-    
-    error_message = re.escape("Circuit QASM cannot be generated as circuit contains midcircuit measurements on qubit: q[0]")
+
+    error_message = re.escape(
+        "Circuit QASM cannot be generated as circuit contains midcircuit\
+            measurements on qubit: q[0]"
+    )
     with pytest.raises(ValueError, match=error_message):
         tket_to_qasm3(circ)
-        
+
+
 def test_translation_with_gate_overrides(simple_bell_circuit):
-    gate_override = {
-        OpType.CX: "CNOT", 
-        OpType.H: "HADAMARD"
-    }
+    gate_override = {OpType.CX: "CNOT", OpType.H: "HADAMARD"}
     expected = """
 OPENQASM 3.0;
 bit[3] c;
