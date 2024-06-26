@@ -62,7 +62,7 @@ class AwsDevice(Device):
     device.
     """
 
-    REGIONS = ("us-east-1", "us-west-1", "us-west-2", "eu-west-2")
+    REGIONS = ("us-east-1", "us-west-1", "us-west-2", "eu-west-2", "eu-north-1")
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
