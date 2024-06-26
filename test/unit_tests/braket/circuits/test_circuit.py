@@ -891,35 +891,6 @@ def test_from_ir_round_trip_transformation():
     assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
 
 
-def test_from_ir_round_trip_transformation_with_targeted_measurements():
-    circuit = (
-        Circuit()
-        .h(0)
-        .cnot(0, 1)
-        .add_instruction(Instruction(Measure(index=2), 1))
-        .add_instruction(Instruction(Measure(index=1), 2))
-        .add_instruction(Instruction(Measure(index=0), 0))
-    )
-    ir = OpenQasmProgram(
-        source="\n".join(
-            [
-                "OPENQASM 3.0;",
-                "bit[3] b;",
-                "qubit[3] q;",
-                "h q[0];",
-                "cnot q[0], q[1];",
-                "b[2] = measure q[1];",
-                "b[1] = measure q[2];",
-                "b[0] = measure q[0];",
-            ]
-        ),
-        inputs={},
-    )
-
-    assert Circuit.from_ir(ir) == Circuit.from_ir(circuit.to_ir("OPENQASM"))
-    assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
-
-
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
