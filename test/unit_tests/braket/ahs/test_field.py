@@ -98,3 +98,23 @@ def test_uniform_field(
     ) or expected.pattern.series == actual.pattern.series
     assert expected.time_series.times() == actual.time_series.times()
     assert expected.time_series.values() == actual.time_series.values()
+
+
+def test_from_lists():
+    times = [0, 0.1, 0.2, 0.3]
+    values = [0.5, 0.8, 0.9, 1.0]
+    pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    sh_field = Field.from_lists(times, values, pattern)
+    assert sh_field.time_series.times() == times
+    assert sh_field.time_series.values() == values
+    assert sh_field.pattern.series == pattern
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_from_lists_not_eq_length():
+    times = [0, 0.1, 0.2]
+    values = [0.5, 0.8, 0.9, 1.0]
+    pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    Field.from_lists(times, values, pattern)

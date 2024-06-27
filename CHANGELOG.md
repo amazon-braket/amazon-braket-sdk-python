@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.82.0 (2024-06-27)
+
+### Features
+
+ * Track classical target indices for measurements
+
+### Bug Fixes and Other Changes
+
+ * Add test to check classical indices used in measurement are preserved between Circuit and OpenQASM Translations.
+
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
+## v1.80.1 (2024-06-10)
+
+### Bug Fixes and Other Changes
+
+ * docs: add stack exchange badge to the readme
+ * Implement `braket.ahs.AnalogHamiltonianSimulation.from_ir()`
+
 ## v1.80.0 (2024-05-22)
 
 ### Features

@@ -483,10 +483,10 @@ def test_parameter_binding(parameterized_noise, params, expected_noise):
 
 
 def test_parameterized_noise():
-    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("b"))
+    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("d"))
     assert noise.probX == FreeParameter("a")
     assert noise.probY == 0.2
-    assert noise.probZ == FreeParameter("b")
+    assert noise.probZ == FreeParameter("d")
 
 
 # Additional Unitary noise tests
