@@ -1,5 +1,6 @@
+from dataclasses import dataclass, field
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Dict
 
 import numpy as np
 from pytket.circuit import Circuit, OpType, Unitary1qBox, Unitary2qBox, Unitary3qBox
@@ -9,6 +10,11 @@ from sympy import Expr, Symbol, pi
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.emulators.pytket_translator.translations import COMPOSED_GATES, QASM_TO_PYTKET
 
+@dataclass
+class PytketProgramTranslation:
+    circuit: Circuit = field(default_factory=Circuit)
+    is_verbatim: bool = field(default=False)
+    measurements: Dict[Union[int, Qubit], Union[int, Bit]] = field(default_factory=dict)
 
 class PytketProgramContext(AbstractProgramContext):
     def __init__(self, circuit: Optional[Circuit] = None):
@@ -19,13 +25,18 @@ class PytketProgramContext(AbstractProgramContext):
                 context. Default: None.
         """
         super().__init__()
-        self._circuit = circuit or Circuit()
+        self._program_translation = PytketProgramTranslation()
         self._qubits_set = set()
 
     @property
-    def circuit(self) -> Circuit:
-        """Returns the Pytket circuit being built in this context."""
-        return self._circuit
+    def _circuit(self) -> Circuit: 
+        """Returns the Pytket Circuit being built in this context."""
+        return self._program_translation.circuit
+
+    @property
+    def circuit(self) -> PytketProgramTranslation:
+        """Returns the PytketProgramTranslation being built in this context."""
+        return self._program_translation
 
     def is_builtin_gate(self, name: str) -> bool:
         user_defined_gate = self.is_user_defined_gate(name)
@@ -70,8 +81,8 @@ class PytketProgramContext(AbstractProgramContext):
         self._check_and_update_qubits(target)
         for index, qubit in enumerate(target):
             target_bit = classical_targets[index] if classical_targets is not None else qubit
-            self._circuit.add_bit(Bit(target_bit))
-            self._circuit.Measure(qubit, target_bit)
+            pytket_bit = Bit(target_bit)
+            self._program_translation.measurements[qubit] = pytket_bit
 
     def add_custom_unitary(
         self,

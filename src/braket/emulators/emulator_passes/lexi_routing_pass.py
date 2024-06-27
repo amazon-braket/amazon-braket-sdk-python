@@ -11,8 +11,9 @@ from braket.circuits import Circuit
 from braket.circuits.serialization import IRType
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.emulators.emulator_passes import EmulatorPass
-from braket.emulators.pytket_translator import PytketProgramContext, tket_to_qasm3
+from braket.emulators.pytket_translator import PytketProgramContext, PytketProgramTranslation, tket_to_qasm3
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.circuits.compiler_directives import StartVerbatimBox
 
 
 class LexiRoutingPass(EmulatorPass):
@@ -38,22 +39,33 @@ class LexiRoutingPass(EmulatorPass):
 
     @run.register
     def _(self, task_specification: Circuit) -> Circuit:
+        has_verbatim = any([isinstance(instruction.operator, StartVerbatimBox) \
+                        for instruction in task_specification.instructions])
+        
+        #If the circuit has a verbatim box, don't perform circuit mapping. 
+        if has_verbatim:
+            return task_specification
+        
         open_qasm_program = task_specification.to_ir(ir_type=IRType.OPENQASM)
         mapped_open_qasm_program = self.run(open_qasm_program)
         resulting_circuit = Circuit.from_ir(mapped_open_qasm_program)
         return resulting_circuit
 
     @run.register
-    def _(self, task_specification: OpenQasmProgram) -> OpenQasmProgram:
-        pytket_circuit = Interpreter(PytketProgramContext()).build_circuit(
+    def _(self, task_specification: OpenQasmProgram, is_verbatim=False) -> OpenQasmProgram:
+        pytket_translation: PytketProgramTranslation = Interpreter(PytketProgramContext()).build_circuit(
             task_specification.source
         )
+        if pytket_translation.is_verbatim:
+            return task_specification
+        
+        pytket_circuit = pytket_translation.circuit
         pytket_circuit = self.run(pytket_circuit)
         open_qasm_program_string = tket_to_qasm3(pytket_circuit)
         return OpenQasmProgram(source=open_qasm_program_string)
 
     @run.register
-    def _(self, task_specification: PytketCircuit) -> PytketCircuit:
+    def _(self, task_specification: PytketCircuit, is_verbatim=False) -> PytketCircuit:
         self._mapping_manager.route_circuit(
             task_specification, [self._lexi_label, self._lexi_route]
         )
