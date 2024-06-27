@@ -156,7 +156,7 @@ class LocalSimulator(Device):
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
             max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel. Default
-                is the number of CPU.
+                is the number of logical CPUs.
             inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated with
                 this value. Default: {}.
