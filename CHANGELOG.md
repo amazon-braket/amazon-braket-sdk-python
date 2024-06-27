@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.82.0 (2024-06-27)
+
+### Features
+
+ * Track classical target indices for measurements
+
+### Bug Fixes and Other Changes
+
+ * Add test to check classical indices used in measurement are preserved between Circuit and OpenQASM Translations.
+
 ## v1.81.1 (2024-06-17)
 
 ### Bug Fixes and Other Changes
