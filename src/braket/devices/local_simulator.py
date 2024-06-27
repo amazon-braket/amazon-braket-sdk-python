@@ -123,7 +123,7 @@ class LocalSimulator(Device):
         if self._noise_model:
             task_specification = self._apply_noise_model_to_circuit(task_specification)
         payload = self._construct_payload(task_specification, inputs, shots)
-        result = self._delegate.run(*payload, shots=shots, *args, **kwargs)
+        result = self._delegate.run(payload, *args, shots=shots, **kwargs)
         return LocalQuantumTask(self._to_result_object(result))
 
     def run_batch(  # noqa: C901
@@ -201,10 +201,6 @@ class LocalSimulator(Device):
             tasks_and_inputs = list(tasks_and_inputs)
 
         payloads = []
-        payload_args = []
-        kwargs_with_shots = dict(**kwargs)
-        kwargs_with_shots["shots"] = shots
-        payload_kwargs = [kwargs_with_shots] * len(tasks_and_inputs)
         for task_specification, input_map in tasks_and_inputs:
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
@@ -213,11 +209,11 @@ class LocalSimulator(Device):
                         f"Cannot execute circuit with unbound parameters: "
                         f"{unbounded_parameters}"
                     )
-            payload = self._construct_payload(task_specification, input_map, shots)
-            payloads.append(payload[0])
-            payload_args.append(payload[1:] + args)
+            payloads.append(self._construct_payload(task_specification, input_map, shots))
 
-        results = self._delegate.run_multiple(payloads, payload_args, payload_kwargs, max_parallel)
+        results = self._delegate.run_multiple(
+            payloads, *args, shots=shots, max_parallel=max_parallel, **kwargs
+        )
         return LocalQuantumTaskBatch([self._to_result_object(result) for result in results])
 
     @property
@@ -263,7 +259,7 @@ class LocalSimulator(Device):
         task_specification: Any,
         inputs: Optional[dict[str, float]],
         shots: Optional[int],
-    ) -> tuple:
+    ) -> Any:
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
@@ -273,10 +269,10 @@ class LocalSimulator(Device):
             validate_circuit_and_shots(circuit, shots)
             program = circuit.to_ir(ir_type=IRType.OPENQASM)
             program.inputs.update(inputs or {})
-            return (program,)
+            return program
         elif DeviceActionType.JAQCD in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
-            return circuit.to_ir(ir_type=IRType.JAQCD), circuit.qubit_count
+            return circuit.to_ir(ir_type=IRType.JAQCD)
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register
@@ -291,11 +287,11 @@ class LocalSimulator(Device):
                 source=program.source,
                 inputs=inputs_copy,
             )
-        return (program,)
+        return program
 
     @_construct_payload.register
     def _(self, program: SerializableProgram, _inputs, _shots):
-        return (OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM)),)
+        return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM))
 
     @_construct_payload.register
     def _(self, program: AnalogHamiltonianSimulation, _inputs, _shots):
@@ -304,7 +300,7 @@ class LocalSimulator(Device):
             raise NotImplementedError(
                 f"{type(simulator)} does not support analog Hamiltonian simulation programs"
             )
-        return (program.to_ir(),)
+        return program.to_ir()
 
     @_construct_payload.register
     def _(self, program: AHSProgram, _inputs, _shots):
@@ -313,20 +309,16 @@ class LocalSimulator(Device):
             raise NotImplementedError(
                 f"{type(simulator)} does not support analog Hamiltonian simulation programs"
             )
-        return (program,)
+        return program
 
     @_construct_payload.register
-    def _(self, problem: Problem, _inputs, _shots) -> Union[
-        GateModelQuantumTaskResult,
-        AnalogHamiltonianSimulationQuantumTaskResult,
-        AnnealingQuantumTaskResult,
-    ]:
+    def _(self, problem: Problem, _inputs, _shots):
         simulator = self._delegate
         if DeviceActionType.ANNEALING not in simulator.properties.action:
             raise NotImplementedError(
                 f"{type(simulator)} does not support quantum annealing problems"
             )
-        return (problem.to_ir(),)
+        return problem.to_ir()
 
     @singledispatchmethod
     def _to_result_object(self, result: Any) -> Any:

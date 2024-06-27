@@ -156,7 +156,12 @@ class DummyCircuitSimulator(BraketSimulator):
 
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+        self,
+        program: ir.jaqcd.Program,
+        qubits: Optional[int] = None,
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
     ) -> dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
@@ -552,7 +557,7 @@ def test_run_jaqcd_only():
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
-    dummy.assert_qubits(2)
+    dummy.assert_qubits(None)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
