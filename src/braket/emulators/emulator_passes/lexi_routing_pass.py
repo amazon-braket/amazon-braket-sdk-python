@@ -6,6 +6,7 @@ from networkx import DiGraph
 from pytket import Circuit as PytketCircuit
 from pytket.architecture import Architecture
 from pytket.mapping import LexiLabellingMethod, LexiRouteRoutingMethod, MappingManager
+from pytket.transform import Transform
 
 from braket.circuits import Circuit
 from braket.circuits.serialization import IRType
@@ -69,4 +70,5 @@ class LexiRoutingPass(EmulatorPass):
         self._mapping_manager.route_circuit(
             task_specification, [self._lexi_label, self._lexi_route]
         )
+        Transform.DecomposeBRIDGE().apply(task_specification)
         return task_specification
