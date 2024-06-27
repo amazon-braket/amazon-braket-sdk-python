@@ -884,7 +884,7 @@ class AwsDevice(Device):
         """
         if not emulator_noise_model:
             emulator_noise_model = create_device_noise_model(self.properties, self._arn)
-        self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm")
+        self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm", name=self._name)
 
         self._emulator.add_pass(create_qubit_count_criterion(self.properties))
         self._emulator.add_pass(create_gate_criterion(self.properties))

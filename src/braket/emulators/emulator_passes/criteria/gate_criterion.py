@@ -39,7 +39,7 @@ class GateCriterion(EmulatorCriterion):
                         gate = instruction.operator
                         if not type(gate) in self._native_gates:
                             raise ValueError(
-                                f"Gate {gate.name} is not a native gate supported by this emulator."
+                                f"Gate {gate.name} is not a native gate supported by this device."
                             )
                     idx += 1
                 if not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
@@ -47,7 +47,7 @@ class GateCriterion(EmulatorCriterion):
             elif isinstance(instruction.operator, Gate):
                 gate = instruction.operator
                 if not type(gate) in self._supported_gates:
-                    raise ValueError(f"Gate {gate.name} is not supported by this emulator.")
+                    raise ValueError(f"Gate {gate.name} is not supported by this device.")
             idx += 1
 
     def __eq__(self, other: EmulatorCriterion) -> bool:

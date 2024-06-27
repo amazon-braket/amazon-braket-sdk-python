@@ -27,7 +27,11 @@ class Emulator(Device, EmulatorInterface):
         emulator_passes: Iterable[EmulatorPass] = None,
         **kwargs,
     ):
-
+        Device.__init__(
+            self,
+            name=kwargs.get("name", "DeviceEmulator"), 
+            status="AVAILABLE"
+        )
         EmulatorInterface.__init__(self, emulator_passes)
         self._noise_model = noise_model
         if noise_model and backend == "default":
@@ -56,7 +60,8 @@ class Emulator(Device, EmulatorInterface):
         """
         task_specification = self.run_program_passes(
             task_specification, apply_noise_model=False
-        )  # Don't apply noise model as the local simulator will automatically apply it.
+        )  
+        # Don't apply noise model as the local simulator will automatically apply it.
         return self._backend.run(task_specification, shots, inputs, *args, **kwargs)
 
     def run_batch(  # noqa: C901
@@ -90,7 +95,19 @@ class Emulator(Device, EmulatorInterface):
     def run_program_passes(
         self, task_specification: ProgramType, apply_noise_model=True
     ) -> ProgramType:
-        program = super().run_program_passes(task_specification)
-        if apply_noise_model:
-            return self._noise_model.apply(program)
-        return program
+        try:
+            program = super().run_program_passes(task_specification)
+            if apply_noise_model:
+                return self._noise_model.apply(program)
+            return program
+        except Exception as e:
+            self._raise_exception(e)
+            
+    def run_validation_passes(self, task_specification: ProgramType) -> None:
+        try:
+            super().run_validation_passes(task_specification)
+        except Exception as e:
+            self._raise_exception(e)
+        
+    def _raise_exception(self, exception: Exception):
+        raise type(exception)(str(exception) + f" ({self._name})")
