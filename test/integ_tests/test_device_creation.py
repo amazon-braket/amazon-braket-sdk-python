@@ -19,11 +19,12 @@ from braket.devices import Devices
 
 RIGETTI_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
-@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (SIMULATOR_ARN), (PULSE_ARN)])
+@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN), (PULSE_ARN)])
 def test_device_creation(arn, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.arn == arn
@@ -45,9 +46,10 @@ def test_device_across_regions(aws_session, created_braket_devices):
     # assert QPUs across different regions can be created using the same aws_session
     created_braket_devices[RIGETTI_ARN]
     created_braket_devices[IONQ_ARN]
+    created_braket_devices[IQM_ARN]
 
 
-@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (SIMULATOR_ARN)])
+@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN)])
 def test_get_devices_arn(arn):
     results = AwsDevice.get_devices(arns=[arn])
     assert results[0].arn == arn
@@ -73,7 +75,7 @@ def test_get_devices_others():
 
 def test_get_devices_all(braket_devices):
     result_arns = [result.arn for result in braket_devices]
-    for arn in [RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN]:
+    for arn in [RIGETTI_ARN, IONQ_ARN, IQM_ARN, SIMULATOR_ARN]:
         assert arn in result_arns
 
 
