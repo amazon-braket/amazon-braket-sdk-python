@@ -242,14 +242,14 @@ def _setup_basic_noise_model_strategy(
         noise_model.add_noise(PhaseDamping(dephasing_prob), GateCriteria(qubits=qubit))
 
         # 1 Qubit RB Depolarizing Noise
-        if "SIMULTANEOUS_RANDOMIZED_BENCHMARKING" in data:
+        if data.get("SIMULTANEOUS_RANDOMIZED_BENCHMARKING"):
             benchmark_fidelity = data["SIMULTANEOUS_RANDOMIZED_BENCHMARKING"]
         else:
-            benchmark_fidelity = data.get(["RANDOMIZED_BENCHMARKING"])
+            benchmark_fidelity = data.get("RANDOMIZED_BENCHMARKING")
         if benchmark_fidelity:
             depolarizing_rate = 1 - benchmark_fidelity
             noise_model.add_noise(Depolarizing(depolarizing_rate), GateCriteria(qubits=qubit))
-
+        
         # 1 Qubit Readout Error
         readout_error_rate = 1 - data["READOUT"]
         noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))
