@@ -25,7 +25,7 @@ SHOTS = 8000
 
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
-OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
+IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 
 
 @pytest.mark.parametrize("arn", [(IONQ_ARN), (SIMULATOR_ARN)])
@@ -53,7 +53,7 @@ def test_measure_on_local_sim(sim):
     assert result.measured_qubits == [0, 1]
 
 
-@pytest.mark.parametrize("arn", [(OQC_ARN)])
+@pytest.mark.parametrize("arn", [(IQM_ARN)])
 def test_measure_on_supported_devices(arn):
     device = AwsDevice(arn)
     if not device.is_available:
