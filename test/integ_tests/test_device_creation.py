@@ -24,7 +24,9 @@ SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
-@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN), (PULSE_ARN)])
+@pytest.mark.parametrize(
+    "arn", [(RIGETTI_ARN), (IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
+)
 def test_device_creation(arn, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.arn == arn
