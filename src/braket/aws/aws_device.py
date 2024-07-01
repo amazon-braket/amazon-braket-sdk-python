@@ -911,11 +911,12 @@ class AwsDevice(Device):
         """
         Runs all non-modifying emulator passes on the input program and raises an
         error if any device-specific criterion are not met by the program. If the
-        program meets all criterion, returns the input program without modification.
+        program meets all criterion, returns.
         """
         self.emulator.run_validation_passes(task_specification)
-        return task_specification
-
+        return
+    
+    
     def run_emulator_passes(
         self,
         task_specification: Union[
