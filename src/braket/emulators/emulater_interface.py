@@ -34,7 +34,7 @@ class EmulatorInterface(ABC):
                 emulator_pass(task_specification)
 
     def add_pass(self, emulator_pass: Union[Iterable[EmulatorPass], EmulatorPass]) -> None:
-        if isinstance(emulator_pass, Iterator):
+        if isinstance(emulator_pass, Iterable):
             self._emulator_passes.extend(emulator_pass)
         elif isinstance(emulator_pass, EmulatorPass):
             self._emulator_passes.append(emulator_pass)
