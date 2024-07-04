@@ -8,7 +8,7 @@ from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
-from braket.emulators.emulater_interface import EmulatorInterface
+from braket.emulators.emulator_interface import EmulatorInterface
 from braket.emulators.emulator_passes import EmulatorPass, ProgramType
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.simulator import BraketSimulator
