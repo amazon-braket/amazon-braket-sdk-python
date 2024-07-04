@@ -17,7 +17,6 @@ from braket.emulators.emulator_passes import (
     ConnectivityCriterion,
     GateConnectivityCriterion,
     GateCriterion,
-    LexiRoutingPass,
     QubitCountCriterion,
 )
 
@@ -183,32 +182,3 @@ def _(properties: RigettiDeviceCapabilities, gate_name: str) -> str:
 def _(properties: IonqDeviceCapabilities, gate_name: str) -> str:
     translations = {"GPI": "GPi", "GPI2": "GPi2"}
     return translations.get(gate_name, gate_name)
-
-
-@singledispatch
-def create_lexi_mapping_routing_pass(
-    properties: DeviceCapabilities, connectivity_graph: DiGraph
-) -> LexiRoutingPass:
-    raise NotImplementedError
-
-
-@create_lexi_mapping_routing_pass.register(RigettiDeviceCapabilities)
-@create_lexi_mapping_routing_pass.register(IonqDeviceCapabilities)
-def _(
-    properties: Union[RigettiDeviceCapabilities, IonqDeviceCapabilities],
-    connectivity_graph: DiGraph,
-) -> LexiRoutingPass:
-    return LexiRoutingPass(connectivity_graph)
-
-
-@create_lexi_mapping_routing_pass.register(IqmDeviceCapabilities)
-def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> LexiRoutingPass:
-    """
-    IQM provides only forward edges for their *undirected* gate connectivity graph, so back-edges must
-    be introduced when creating the GateConnectivityCriterion object for an IQM QPU.
-    """
-
-    connectivity_graph = connectivity_graph.copy()
-    for edge in connectivity_graph.edges:
-        connectivity_graph.add_edge(edge[1], edge[0])
-    return LexiRoutingPass(connectivity_graph)

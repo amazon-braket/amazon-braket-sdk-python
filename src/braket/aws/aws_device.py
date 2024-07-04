@@ -31,7 +31,6 @@ from braket.aws.aws_emulator_helpers import (
     create_connectivity_criterion,
     create_gate_connectivity_criterion,
     create_gate_criterion,
-    create_lexi_mapping_routing_pass,
     create_qubit_count_criterion,
 )
 from braket.aws.aws_noise_models import create_device_noise_model
@@ -891,9 +890,6 @@ class AwsDevice(Device):
         self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
         self._emulator.add_pass(
             create_gate_connectivity_criterion(self.properties, self.topology_graph)
-        )
-        self._emulator.add_pass(
-            create_lexi_mapping_routing_pass(self.properties, self.topology_graph)
         )
         return self._emulator
 
