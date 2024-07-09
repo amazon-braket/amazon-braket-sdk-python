@@ -35,7 +35,7 @@ class ConnectivityCriterion(EmulatorCriterion):
         fully_connected=False,
         num_qubits: int = None,
         qubit_labels: Union[Iterable[int], QubitSet] = None,
-        directed: bool = False,
+        directed: bool = True,
     ):
         if not (connectivity_graph or fully_connected):
             raise ValueError(
@@ -43,9 +43,10 @@ class ConnectivityCriterion(EmulatorCriterion):
             )
 
         if fully_connected:
-            if not (num_qubits or qubit_labels) or (num_qubits and qubit_labels):
+            if not((num_qubits is None) ^ (qubit_labels is None)):
                 raise ValueError(
-                    "Either num_qubits or qubit_labels (NOT both) must be provided if fully_connected is True."
+                    "Either num_qubits or qubit_labels (NOT both) must be \
+                        provided if fully_connected is True."
                 )
             self._connectivity_graph = complete_graph(
                 num_qubits if num_qubits else qubit_labels, create_using=DiGraph()
@@ -57,7 +58,8 @@ class ConnectivityCriterion(EmulatorCriterion):
                 )
             except Exception as e:
                 raise ValueError(
-                    f"connectivity_graph must be a valid DiGraph or a dictionary mapping integers (nodes) to a list of integers (adjancency lists): {e}"
+                    f"connectivity_graph must be a valid DiGraph or a dictionary\
+                        mapping integers (nodes) to a list of integers (adjancency lists): {e}"
                 )
         else:
             self._connectivity_graph = connectivity_graph
@@ -65,13 +67,21 @@ class ConnectivityCriterion(EmulatorCriterion):
         if not directed:
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
+        else:
+            print("here")
 
     def validate(self, circuit: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
-        device connectivity definied by this criteria.
+        device connectivity definied by this criterion. If any sub-circuit of the
+        input circuit is verbatim, we validate the connectivity of all gate operations
+        in the circuit.
+
+        Args:
+            circuit (Circuit): The Braket circuit whose gate operations to
+                validate.
         """
-        # If any of the instructions are in verbatim mode, all qubit references 
+        # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
         if not any(
             [
@@ -90,18 +100,31 @@ class ConnectivityCriterion(EmulatorCriterion):
                 else:
                     # just check that the target qubit exists in the connectivity graph
                     target_qubit = instruction.target[0]
-                    if not target_qubit in self._connectivity_graph:
+                    if target_qubit not in self._connectivity_graph:
                         raise ValueError(
                             f"Qubit {target_qubit} does not exist in the device topology."
                         )
 
-    def validate_instruction_connectivity(self, control_qubits: QubitSet, target_qubits: QubitSet):
+    def validate_instruction_connectivity(
+        self, control_qubits: QubitSet, target_qubits: QubitSet
+    ) -> None:
+        """
+        Checks if a two-qubit instruction is valid based on this criterion's connectivity
+        graph.
+
+        Args:
+            control_qubits (QubitSet): The control qubits used in this multi-qubit
+                operation.
+            target_qubits (QubitSet): The target qubits of this operation. For many gates,
+                both the control and target are stored in "target_qubits", so we may
+                see target_qubits have length 2.
+        """
         # Create edges between each of the target qubits
         gate_connectivity_graph = DiGraph()
         # Create an edge from each control bit to each target qubit
         if len(control_qubits) == 1 and len(target_qubits) == 1:
             gate_connectivity_graph.add_edge(control_qubits[0], target_qubits[0])
-        elif len(target_qubits) == 2:
+        elif len(control_qubits) == 0 and len(target_qubits) == 2:
             gate_connectivity_graph.add_edges_from(
                 [(target_qubits[0], target_qubits[1]), (target_qubits[1], target_qubits[0])]
             )

@@ -21,7 +21,7 @@ def test_valid_circuits(qubit_count, circuit):
     """
     QubitCountCriterion should not raise any errors when validating these circuits.
     """
-    QubitCountCriterion(qubit_count=qubit_count).validate(circuit)
+    QubitCountCriterion(qubit_count=qubit_count).__call__(circuit)
 
 
 @pytest.mark.parametrize("qubit_count", [0, -1])
@@ -42,6 +42,15 @@ def test_invalid_circuits(qubit_count, circuit):
     with pytest.raises(
         ValueError,
         match=f"Circuit must use at most {qubit_count} qubits, \
-            but uses {circuit.qubit_count} qubits.",
+but uses {circuit.qubit_count} qubits.",
     ):
         QubitCountCriterion(qubit_count).validate(circuit)
+
+
+def test_equality():
+    qcc_1 = QubitCountCriterion(1)
+    qcc_2 = QubitCountCriterion(2)
+    
+    
+    assert qcc_1 != qcc_2
+    assert qcc_1 == QubitCountCriterion(1)

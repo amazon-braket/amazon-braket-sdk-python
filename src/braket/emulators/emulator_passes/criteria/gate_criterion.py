@@ -26,6 +26,14 @@ class GateCriterion(EmulatorCriterion):
             raise ValueError(f"Input {str(e)} is not a valid Braket gate name.")
 
     def validate(self, circuit: Circuit) -> None:
+        """
+        Checks that all non-verbatim gates used in the circuit are in this criterion's
+        supported gate set and that all verbatim gates used in the circuit are in this
+        criterion's native gate set.
+
+        Args:
+            circuit (Circuit): The Braket circuit whose gates to validate.
+        """
         idx = 0
         while idx < len(circuit.instructions):
             instruction = circuit.instructions[idx]
@@ -42,7 +50,8 @@ class GateCriterion(EmulatorCriterion):
                                 f"Gate {gate.name} is not a native gate supported by this device."
                             )
                     idx += 1
-                if not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
+                if idx == len(circuit.instructions) or \
+                    not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
             elif isinstance(instruction.operator, Gate):
                 gate = instruction.operator

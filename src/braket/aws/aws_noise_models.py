@@ -15,16 +15,11 @@ from braket.circuits.noises import (
     PhaseDamping,
     TwoQubitDepolarizing,
 )
-from braket.device_schema import (
-    DeviceActionType,
-    DeviceCapabilities,
-    StandardizedGateModelQpuDeviceProperties,
-)
+from braket.device_schema import DeviceCapabilities
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
-    Fidelity1Q,
     GateFidelity2Q,
     OneQubitProperties,
     StandardizedGateModelQpuDeviceProperties,
@@ -32,8 +27,8 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 from braket.devices import Devices
 
 """
- The following gate duration values are not available through Braket device calibration data and must
- be hardcoded. 
+ The following gate duration values are not available through Braket device
+ calibration data and must be hardcoded.
 """
 QPU_GATE_DURATIONS = {
     Devices.Rigetti.AspenM3: {
@@ -58,12 +53,20 @@ class GateDeviceCalibrationData:
     single_qubit_specs: Dict[int, Dict[str, float]]
     two_qubit_edge_specs: Dict[Tuple[int, int], List[GateFidelity]]
 
-    def _validate_single_qubit_specs(self):
+    def _validate_single_qubit_specs(self) -> None:
+        """
+        Checks single qubit specs and the input qubit labels are compatible with
+        one another.
+        """
         for qubit in self.single_qubit_specs.keys():
             if qubit not in self.qubit_labels:
                 raise ValueError(f"Invalid qubit label {qubit}")
 
-    def _validate_two_qubit_specs(self):
+    def _validate_two_qubit_specs(self) -> None:
+        """
+        Checks that the qubit edge specs and the input qubit labels are compatible
+        with one another.
+        """
         for edge in self.two_qubit_edge_specs.keys():
             if edge[0] not in self.qubit_labels or edge[1] not in self.qubit_labels:
                 raise ValueError(f"Invalid qubit pair {edge}")
@@ -74,20 +77,34 @@ class GateDeviceCalibrationData:
 
 
 def create_device_noise_model(properties: DeviceCapabilities, arn: str) -> NoiseModel:
+    """
+    Create a device-specific noise model using the calibration data provided
+    in the device properties object for a QPU.
+
+    Args:
+        properties (DeviceCapabilities): Data structure containing
+            device properties and calibration data to be used when creating the
+            device noise model for an emulator.
+
+        arn (str): Amazon Braket ARN for the QPU.
+
+    Returns:
+        NoiseModel: Returns a NoiseModel object created using the device's
+        calibration data created from the device properties.
+    """
     device_calibration_data = _setup_calibration_specs(properties, arn)
     noise_model = _setup_basic_noise_model_strategy(device_calibration_data)
     return noise_model
 
 
 @singledispatch
-def _setup_calibration_specs(properties, arn: str) -> NoiseModel:
+def _setup_calibration_specs(properties: DeviceCapabilities, arn: str) -> NoiseModel:
     raise NotImplementedError(
         f"A noise model cannot be created from device capabilities with \
                               type {type(properties)}."
     )
 
 
-# Rigetti and IonQ provide calibration data in a standardized data structure that can be parsed generally.
 @_setup_calibration_specs.register(RigettiDeviceCapabilities)
 @_setup_calibration_specs.register(IqmDeviceCapabilities)
 def _(properties: Union[RigettiDeviceCapabilities, IqmDeviceCapabilities], arn: str) -> NoiseModel:
@@ -97,7 +114,7 @@ def _(properties: Union[RigettiDeviceCapabilities, IqmDeviceCapabilities], arn: 
     single_qubit_gate_duration = gate_durations["single_qubit_gate_duration"]
     two_qubit_gate_duration = gate_durations["two_qubit_gate_duration"]
 
-    standardized_properties = properties.standardized
+    standardized_properties: StandardizedGateModelQpuDeviceProperties = properties.standardized
     one_qubit_properties = standardized_properties.oneQubitProperties
     qubit_labels = set(int(qubit) for qubit in one_qubit_properties.keys())
     single_qubit_specs = {
@@ -153,9 +170,10 @@ def _(properties: IonqDeviceCapabilities, arn: str) -> NoiseModel:
             gate = getattr(Gate, gate_name)
             if gate.fixed_qubit_count() != 2:
                 """
-                The noise model applies depolarizing noise associated with the individual qubits themselves (RB/sRB fidelities).
-                This is a choice of this particular model to generalize the implementation as not all QHPs provide
-                single-qubit gate fidelities.
+                The noise model applies depolarizing noise associated with the
+                individual qubits themselves (RB/sRB fidelities). This is a choice
+                of this particular model to generalize the implementation as not
+                all QHPs provide single-qubit gate fidelities.
                 """
                 continue
             native_gate_fidelities.append(GateFidelity(gate, two_qubit_rb_fidelity))
@@ -229,7 +247,6 @@ def _setup_basic_noise_model_strategy(
     """
     noise_model = NoiseModel()
     gate_duration_1Q = gate_calibration_data.single_qubit_gate_duration
-    gate_duration_2Q = gate_calibration_data.two_qubit_gate_duration
     for qubit, data in gate_calibration_data.single_qubit_specs.items():
         # T1 dampening
         T1 = data["T1"]
@@ -249,7 +266,7 @@ def _setup_basic_noise_model_strategy(
         if benchmark_fidelity:
             depolarizing_rate = 1 - benchmark_fidelity
             noise_model.add_noise(Depolarizing(depolarizing_rate), GateCriteria(qubits=qubit))
-        
+
         # 1 Qubit Readout Error
         readout_error_rate = 1 - data["READOUT"]
         noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))

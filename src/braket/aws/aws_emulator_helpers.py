@@ -4,15 +4,10 @@ from typing import Union
 
 from networkx import DiGraph
 
-from braket.device_schema import (
-    DeviceActionType,
-    DeviceCapabilities,
-    StandardizedGateModelQpuDeviceProperties,
-)
+from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
-from braket.emulators import Emulator
 from braket.emulators.emulator_passes import (
     ConnectivityCriterion,
     GateConnectivityCriterion,
@@ -22,14 +17,36 @@ from braket.emulators.emulator_passes import (
 
 
 def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
+    """
+    Create a QubitCountCriterion pass which checks that the number of qubits used in a program does
+    not exceed the number of qubits allowed by a QPU, as defined in the device properties.
+
+    Args:
+        properties (DeviceCapabilities): QPU Device Capabilities object with a
+            QHP-specific schema.
+
+    Returns:
+        QubitCountCriterion: An eulator pass that checks that the number of qubits used in a program
+        does not exceed that of the max qubit count on the device.
+    """
     qubit_count = properties.paradigm.qubitCount
     return QubitCountCriterion(qubit_count)
 
 
 def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
     supported_gates = properties.action[DeviceActionType.OPENQASM].supportedOperations
-    """TODO: Issue in IQM Garnet Supported Operations: Includes "startVerbatimBox" and "endVerbatimBox" instructions in supported operations, 
-    which are braket specific pragmas. Filter out explicitly until they are removed from device properties."""
+    """
+    Create a GateCriterion pass which defines what supported and native gates are allowed in a
+    program based on the provided device properties.
+
+    Args:
+        properties (DeviceCapabilities): QPU Device Capabilities object with a
+            QHP-specific schema.
+
+    Returns:
+        GateCriterion: An emulator pass that checks that a circuit only uses supported gates and
+        verbatim circuits only use native gates.
+    """
 
     if isinstance(properties, IqmDeviceCapabilities):
         try:
@@ -47,6 +64,20 @@ def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
 def create_connectivity_criterion(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
 ) -> ConnectivityCriterion:
+    """
+    Creates a ConnectivityCriterion pass which validates that multi-qubit gates are applied to
+    connected qubits based on this device's connectivity graph.
+
+    Args:
+        properties (DeviceCapabilities): QPU Device Capabilities object with a
+            QHP-specific schema.
+
+        connectivity_graph (DiGraph): Connectivity graph for this device.
+
+    Returns:
+        ConnectivityCriterion: An emulator pass that checks that a circuit only applies two-qubit
+        gates to connected qubits on the device.
+    """
     connectivity_criterion = ConnectivityCriterion(connectivity_graph)
     return connectivity_criterion
 
@@ -66,7 +97,7 @@ def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> Connect
 
 @singledispatch
 def create_gate_connectivity_criterion(
-    properties, connectivity_graph: DiGraph
+    properties: DeviceCapabilities, connectivity_graph: DiGraph
 ) -> GateConnectivityCriterion:
     raise NotImplementedError
 
@@ -79,7 +110,7 @@ def _(
     Rigetti provides device capabilities using a standardized properties schema for gate devices.
 
     Rigetti provides both forwards and backwards edges for their undirected gate
-    connectivity graph, so no new needs to be introduced when creating a 
+    connectivity graph, so no new needs to be introduced when creating a
     GateConnectivityCriterion object for a Rigetti QPU.
     """
     gate_connectivity_graph = connectivity_graph.copy()
@@ -102,8 +133,9 @@ def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> GateCon
     """
     IQM provides device capabilities using a standardized properties schema for gate devices.
 
-    IQM provides only forward edges for their *undirected* gate connectivity graph, so back-edges must
-    be introduced when creating the GateConnectivityCriterion object for an IQM QPU.
+    IQM provides only forward edges for their *undirected* gate
+    connectivity graph, so back-edges must be introduced when creating the
+    GateConnectivityCriterion object for an IQM QPU.
     """
     gate_connectivity_graph = connectivity_graph.copy()
     for edge in gate_connectivity_graph.edges:
@@ -125,9 +157,10 @@ def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> GateCon
 @create_gate_connectivity_criterion.register(IonqDeviceCapabilities)
 def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion:
     """
-    Qubits in IonQ's trapped ion devices are all fully connected with identical gate-pair capabilities.
-    Thus, IonQ does not expliclty provide a set of edges for gate connectivity between qubit pairs in
-    their trapped ion QPUs. We extrapolate gate connectivity across all possible qubit edge pairs.
+    Qubits in IonQ's trapped ion devices are all fully connected with identical
+    gate-pair capabilities. IonQ does not expliclty provide a set of edges for
+    gate connectivity between qubit pairs in their trapped ion QPUs.
+    We extrapolate gate connectivity across all possible qubit edge pairs.
     """
     gate_connectivity_graph = connectivity_graph.copy()
     native_gates = get_qpu_gate_translation(properties, properties.paradigm.nativeGateSet)
@@ -140,10 +173,12 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
 def get_qpu_gate_translation(
     properties: DeviceCapabilities, gate_name: Union[str, Iterable[str]]
 ) -> Union[str, list[str]]:
-    """Returns the translated gate name(s) for a given QPU ARN and gate name(s).
+    """Returns the translated gate name(s) for a given QPU device capabilities schema type
+        and gate name(s).
 
     Args:
-        arn (str): The ARN of the QPU
+        properties (DeviceCapabilities): Device capabilities object based on a
+            device-specific schema.
         gate_name (Union[str, Iterable[str]]): The name(s) of the gate(s)
 
     Returns:
@@ -156,11 +191,12 @@ def get_qpu_gate_translation(
 
 
 @singledispatch
-def _get_qpu_gate_translation(properties, gate_name: str) -> str:
+def _get_qpu_gate_translation(properties: DeviceCapabilities, gate_name: str) -> str:
     """Returns the translated gate name for a given QPU ARN and gate name.
 
     Args:
-        properties (str): QHP device properties type
+        properties (DeviceCapabilities): QPU Device Capabilities object with a
+            QHP-specific schema.
         gate_name (str): The name of the gate
 
     Returns:

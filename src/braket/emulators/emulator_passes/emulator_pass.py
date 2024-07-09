@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar
+from typing import TypeVar
 
 ProgramType = TypeVar("ProgramType")
 
 
 class EmulatorPass(ABC):
     @abstractmethod
-    def run[ProgramType](self, program: ProgramType) -> ProgramType:
+    def run(self, program: ProgramType) -> ProgramType:
         """Runs the emulator pass on the provided program.
         Args:
             program (ProgramType): The program to run the emulator pass on.
@@ -15,5 +15,5 @@ class EmulatorPass(ABC):
         """
         raise NotImplementedError
 
-    def __call__[ProgramType](self, program: ProgramType) -> ProgramType:
+    def __call__(self, program: ProgramType) -> ProgramType:
         return self.run(program)

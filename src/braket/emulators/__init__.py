@@ -1,1 +1,1 @@
-from braket.emulators.emulator import Emulator
+from braket.emulators.emulator import Emulator  # noqa: F40

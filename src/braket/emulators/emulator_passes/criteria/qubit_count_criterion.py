@@ -13,10 +13,19 @@ class QubitCountCriterion(EmulatorCriterion):
             raise ValueError(f"qubit_count ({qubit_count}) must be a positive integer.")
         self._qubit_count = qubit_count
 
-    def validate(self, circuit: Circuit) -> Circuit:
+    def validate(self, circuit: Circuit) -> None:
+        """
+        Checks that the number of qubits used in this circuit does not exceed this
+        criterion's qubit_count max.
+
+        Args:
+            circuit (Circuit): The Braket circuit whose qubit count to validate.
+
+        """
         if circuit.qubit_count > self._qubit_count:
             raise ValueError(
-                f"Circuit must use at most {self._qubit_count} qubits, but uses {circuit.qubit_count} qubits."
+                f"Circuit must use at most {self._qubit_count} qubits, \
+but uses {circuit.qubit_count} qubits."
             )
 
     def __eq__(self, other: EmulatorCriterion) -> bool:

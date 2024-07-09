@@ -868,6 +868,22 @@ class AwsDevice(Device):
 
     @property
     def emulator(self) -> Emulator:
+        """
+        A device emulator mimics the restrictions and noise of an AWS QPU by validating and
+        compiling programs before running them on a simulated backend. An emulator can be used
+        as a soft check that a program can run on an AwsDevice.
+
+        Examples:
+            >>> device = AwsDevice(Devices.IQM.Garnet)
+            >>> circuit = Circuit().cnot(0, 1).h(2).cz(2, 3)
+            >>> device.validate(circuit)
+            >>> # validates, compiles and runs on the local simulator.
+            >>> result = device.emulator(circuit, shots=100)
+            >>> print(result.result().measurement_counts)
+
+        Returns:
+            Emulator: An emulator for this device, if this is not a simulator device.
+        """
         if self._arn in Devices.Amazon:
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."
@@ -876,14 +892,24 @@ class AwsDevice(Device):
             self._emulator = self._setup_emulator()
         return self._emulator
 
-    def _setup_emulator(self, emulator_noise_model: NoiseModel = None) -> Emulator:
+    def _setup_emulator(self, emulator_noise_model: NoiseModel | None = None) -> Emulator:
         """
         Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a
         real QPU (not simulated).
+
+        Args:
+            emulator_noise_model (NoiseModel | None): Use the provided noise model in the emulator
+                instead of creating one.
+
+        Returns:
+            Emulator: An emulator with a noise model, compilation passes, and validation passes
+            based on this device's properites.
         """
         if not emulator_noise_model:
             emulator_noise_model = create_device_noise_model(self.properties, self._arn)
-        self._emulator = Emulator(noise_model=emulator_noise_model, backend="braket_dm", name=self._name)
+        self._emulator = Emulator(
+            noise_model=emulator_noise_model, backend="braket_dm", name=self._name
+        )
 
         self._emulator.add_pass(create_qubit_count_criterion(self.properties))
         self._emulator.add_pass(create_gate_criterion(self.properties))
@@ -903,31 +929,39 @@ class AwsDevice(Device):
             PulseSequence,
             AnalogHamiltonianSimulation,
         ],
-    ):
+    ) -> None:
         """
         Runs all non-modifying emulator passes on the input program and raises an
         error if any device-specific criterion are not met by the program. If the
         program meets all criterion, returns.
+
+        Args:
+
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                PulseSequence, AnalogHamiltonianSimulation]): The quantum program to emulate against
+                this AwsDevice device properties.
+
         """
         self.emulator.run_validation_passes(task_specification)
         return
-    
-    
-    def run_emulator_passes(
-        self,
-        task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            PulseSequence,
-            AnalogHamiltonianSimulation,
-        ],
-        apply_noise_model=True,
-    ):
+
+    def run_emulator_passes[
+        ProgramType
+    ](self, task_specification: ProgramType, apply_noise_model: bool = True) -> ProgramType:
         """
         Runs all emulator passes and returns the modified program, which should be the same
         type as the input program.
+
+        Args:
+            task_specification (ProgramType): The quantum program to emulate against
+                this AwsDevice device properties.
+
+            apply_noise_model (bool): If true, apply a device specific noise model to the program
+                before returning.
+
+        Returns:
+            ProgramType: A validated and compiled program that may be augmented with noise
+            operations to mimic noise on this device.
         """
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
@@ -946,9 +980,26 @@ class AwsDevice(Device):
         ],
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
     ) -> QuantumTask:
+        """Emulate a quantum task specification on this quantum device emulator.
+        A quantum task can be a circuit or an annealing problem. Emulation
+        involves running all emulator passes on the input program before running
+        the program on the emulator's backend.
 
+        Args:
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                PulseSequence, AnalogHamiltonianSimulation]): Specification of a quantum task
+                to run on device.
+
+            shots (Optional[int]): The number of times to run the quantum task on the device.
+                Default is `None`.
+
+            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+                IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
+                Not all devices and IR formats support inputs. Default: {}.
+        Returns:
+            QuantumTask: The QuantumTask tracking task execution on this device emulator.
+        """
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
 

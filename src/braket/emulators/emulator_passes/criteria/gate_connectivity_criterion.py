@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Set, Tuple, Union
+from typing import Any, Dict, Iterable, Tuple, Union
 
 from networkx import DiGraph
+from networkx.utils import graphs_equal
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
@@ -44,14 +44,19 @@ class GateConnectivityCriterion(EmulatorCriterion):
                         )
         else:
             raise TypeError(
-                "gate_connectivity_graph must either be a dictionary of edges mapped to supported gates lists, or a DiGraph with supported \
-                            gates provided as edge attributs. "
+                "Gate_connectivity_graph must either be a dictionary of edges mapped to \
+supported gates lists, or a DiGraph with supported gates \
+provided as edge attributes."
             )
 
     def validate(self, circuit: Circuit) -> None:
         """
-        Verifies that any multiqubit gates used within a verbatim box are supported by the devices gate
-        connectivity defined by this criteria.
+        Verifies that any multiqubit gates used within a verbatim box are supported
+        by the devices gate connectivity defined by this criteria.
+
+        Args:
+            circuit (Circuit): The circuit whose gate instructions need to be validated
+                against this criterion's gate connectivity graph.
         """
         for idx in range(len(circuit.instructions)):
             instruction = circuit.instructions[idx]
@@ -71,23 +76,33 @@ class GateConnectivityCriterion(EmulatorCriterion):
                         else:
                             # just check that the target qubit exists in the connectivity graph
                             target_qubit = instruction.target[0]
-                            if not target_qubit in self._gate_connectivity_graph:
+                            if target_qubit not in self._gate_connectivity_graph:
                                 raise ValueError(
                                     f"Qubit {target_qubit} does not exist in the device topology."
                                 )
                     idx += 1
 
-                if not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
+                if idx == len(circuit.instructions) or \
+                    not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
                 idx += 1
 
     def validate_instruction_connectivity(
         self, gate_name: str, control_qubits: QubitSet, target_qubits: QubitSet
-    ):
+    ) -> None:
+        """
+        Checks if a specific is able to be applied to the control and target qubits based
+        on this criterion's gate connectivity graph.
+
+        Args:
+            gate_name (str): The name of the gate being applied.
+            control_qubits (QubitSet): The set of control qubits used by this gate operation.
+            target_qubits (QubitSet): The set of target qubits used by this gate operation.
+        """
         # Create edges between each of the target qubits
         if len(control_qubits) == 1 and len(target_qubits) == 1:
             e = (control_qubits[0], target_qubits[0])
-        elif len(target_qubits) == 2:
+        elif len(control_qubits) == 0 and len(target_qubits) == 2:
             e = (target_qubits[0], target_qubits[1])
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
@@ -104,11 +119,5 @@ class GateConnectivityCriterion(EmulatorCriterion):
     def __eq__(self, other: EmulatorCriterion) -> bool:
         return (
             isinstance(other, GateConnectivityCriterion)
-            and all(
-                [
-                    self._gate_connectivity_graph[edge] == other._gate_connectivity_graph.get(edge)
-                    for edge in self._gate_connectivity_graph.keys()
-                ]
-            )
-            and len(self._gate_connectivity_graph) == len(other._gate_connectivity_graph)
+            and graphs_equal(self._gate_connectivity_graph, other._gate_connectivity_graph)
         )
