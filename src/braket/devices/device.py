@@ -131,7 +131,7 @@ class Device(ABC):
 
     def _apply_noise_model_to_circuit(
         self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
-    ) -> None:
+    ) -> Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]:
         if isinstance(task_specification, Circuit):
             for instruction in task_specification.instructions:
                 if isinstance(instruction.operator, Noise):
