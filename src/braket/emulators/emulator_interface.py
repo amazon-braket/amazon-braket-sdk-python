@@ -40,7 +40,9 @@ class EmulatorInterface(ABC):
             if isinstance(emulator_pass, EmulatorCriterion):
                 emulator_pass(task_specification)
 
-    def add_pass(self, emulator_pass: Union[Iterable[EmulatorPass], EmulatorPass]) -> EmulatorInterface:
+    def add_pass(
+        self, emulator_pass: Union[Iterable[EmulatorPass], EmulatorPass]
+    ) -> EmulatorInterface:
         """
         Append a new EmulatorPass or a list of EmulatorPass objects.
 
@@ -49,10 +51,10 @@ class EmulatorInterface(ABC):
                 single EmulatorPass object or a list of EmulatorPass objects that
                 will be used in validation and program compilation passes by this
                 emulator.
-            
-        Returns: 
-            EmulatorInterface: Returns an updated self. 
-            
+
+        Returns:
+            EmulatorInterface: Returns an updated self.
+
         """
         if isinstance(emulator_pass, Iterable):
             self._emulator_passes.extend(emulator_pass)

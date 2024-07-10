@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit, Gate, Instruction
-from braket.emulators.emulator_passes.criteria import GateCriterion
-from braket.circuits.noises import BitFlip
 from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.noises import BitFlip
+from braket.emulators.emulator_passes.criteria import GateCriterion
 
 
 @pytest.fixture
@@ -64,9 +64,11 @@ def mock_qpu_gates():
         .add_verbatim_box(Circuit().cz(0, 2).prx(0, 0.5, 0.5))
         .add_verbatim_box(Circuit().cz(0, 4).cz(3, 6)),
         Circuit().h(0).add_verbatim_box(Circuit()),
-        Circuit().add_verbatim_box(
-            Circuit().prx(0, np.pi/4, np.pi/4).apply_gate_noise(BitFlip(0.1), Gate.PRx)
-        ).v(1)
+        Circuit()
+        .add_verbatim_box(
+            Circuit().prx(0, np.pi / 4, np.pi / 4).apply_gate_noise(BitFlip(0.1), Gate.PRx)
+        )
+        .v(1),
     ],
 )
 def test_valid_circuits(mock_qpu_gates, circuit):
@@ -110,13 +112,7 @@ def test_non_verbatim_circuit_only_native_gates():
         criterion.validate(circuit)
 
 
-@pytest.mark.parametrize(
-    "supported_gates,native_gates",
-    [
-        ([],[]),
-        (["CX"], [])
-    ]
-)
+@pytest.mark.parametrize("supported_gates,native_gates", [([], []), (["CX"], [])])
 def test_invalid_instantiation(supported_gates, native_gates):
     with pytest.raises(ValueError):
         GateCriterion(supported_gates, native_gates)
@@ -133,7 +129,7 @@ def test_invalid_instantiation(supported_gates, native_gates):
         .h(0)
         .add_verbatim_box(Circuit().cz(1, 2).prx(range(5), np.pi / 4, np.pi / 2).cz(2, 6))
         .prx(range(4), np.pi / 4, np.pi / 6),
-        Circuit().add_instruction(Instruction(StartVerbatimBox()))
+        Circuit().add_instruction(Instruction(StartVerbatimBox())),
     ],
 )
 def test_invalid_circuits(basic_gate_set, circuit):
@@ -149,7 +145,7 @@ def test_invalid_circuits(basic_gate_set, circuit):
     [
         (["h"], ["h"]),
         (["cnot", "h"], ["h", "cnot"]),
-        (["phaseshift", "cnot", "rx", "ry"], ["ry", "rx", "cnot", "phaseshift"])
+        (["phaseshift", "cnot", "rx", "ry"], ["ry", "rx", "cnot", "phaseshift"]),
     ],
 )
 def test_equality(gate_set_1, gate_set_2):
@@ -162,7 +158,7 @@ def test_equality(gate_set_1, gate_set_2):
         (["h"], ["x"]),
         (["cnot"], ["h", "cnot"]),
         (["cnot", "h"], ["h"]),
-        (["phaseshift", "cnot", "ms", "ry"], ["ry", "rx", "cnot", "ms"])
+        (["phaseshift", "cnot", "ms", "ry"], ["ry", "rx", "cnot", "ms"]),
     ],
 )
 def test_inequality(gate_set_1, gate_set_2):

@@ -50,7 +50,6 @@ but uses {circuit.qubit_count} qubits.",
 def test_equality():
     qcc_1 = QubitCountCriterion(1)
     qcc_2 = QubitCountCriterion(2)
-    
-    
+
     assert qcc_1 != qcc_2
     assert qcc_1 == QubitCountCriterion(1)

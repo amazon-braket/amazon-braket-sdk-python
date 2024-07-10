@@ -147,16 +147,20 @@ def test_equality_graph_created_with_dict(six_node_digraph):
 @pytest.mark.parametrize(
     "connectivity_graph, fully_connected, num_qubits, qubit_labels, directed",
     [
-        (None, True, None, None, False), 
+        (None, True, None, None, False),
         (nx.DiGraph(), True, None, None, False),
         (None, True, 5, [0, 1], False),
-        (None, False, None, None, False), 
-        (nx.from_edgelist([(0, 1)], create_using=nx.Graph()), False, None, None, False)
+        (None, False, None, None, False),
+        (nx.from_edgelist([(0, 1)], create_using=nx.Graph()), False, None, None, False),
     ],
 )
-def test_invalid_constructors(connectivity_graph, fully_connected, num_qubits, qubit_labels, directed):
+def test_invalid_constructors(
+    connectivity_graph, fully_connected, num_qubits, qubit_labels, directed
+):
     with pytest.raises(ValueError):
-        ConnectivityCriterion(connectivity_graph, fully_connected, num_qubits, qubit_labels, directed)
+        ConnectivityCriterion(
+            connectivity_graph, fully_connected, num_qubits, qubit_labels, directed
+        )
 
 
 @pytest.mark.parametrize(
@@ -186,11 +190,7 @@ def test_undirected_graph_construction(representation):
     )
     cc = ConnectivityCriterion(representation, directed=False)
     assert graphs_equal(cc._connectivity_graph, expected_digraph)
-    
-    
-    
-    
-    
+
 
 # @pytest.fixture
 # def six_node_digraph():
@@ -201,12 +201,12 @@ def test_undirected_graph_construction(representation):
 @pytest.mark.parametrize(
     "controls,targets,is_valid",
     [
-        ([0], [1], True), 
+        ([0], [1], True),
         ([], [0, 1], True),
         ([3], [0], True),
         ([0, 2], [], False),
         ([0], [1, 2], False),
-    ]
+    ],
 )
 def test_validate_instruction_method(controls, targets, is_valid, six_node_digraph):
     gcc = ConnectivityCriterion(six_node_digraph, directed=False)

@@ -15,12 +15,13 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
 class Emulator(Device, EmulatorInterface):
-    
+
     DEFAULT_SIMULATOR_BACKEND = "default"
     DEFAULT_NOISY_BACKEND = "braket_dm"
 
     """An emulator is a simulation device that more closely resembles
     the capabilities and constraints of a real device or of a specific device model."""
+
     def __init__(
         self,
         backend: str = "default",
@@ -31,19 +32,34 @@ class Emulator(Device, EmulatorInterface):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
         EmulatorInterface.__init__(self, emulator_passes)
         self._noise_model = noise_model
-        
+
         backend_name = self._get_local_simulator_backend(backend, noise_model)
         self._backend = LocalSimulator(backend=backend_name, noise_model=noise_model)
 
-    def _get_local_simulator_backend(self, backend: str, noise_model: Optional[NoiseModel] = None):
-        if noise_model and backend == "default":
-            logging.info(
-                "Setting LocalSimulator backend to use 'braket_dm' \
-                    because a NoiseModel was provided."
-            )
+    def _get_local_simulator_backend(
+        self, backend: str, noise_model: Optional[NoiseModel] = None
+    ) -> str:
+        """
+        Returns the name of the backend to use with the local simulator.
+
+        Args:
+            backend (str): The name of the backend requested by the customer, or default if none
+                were provided.
+            noise_model (Optional[NoiseModel]): A noise model to use with the emulator, if at all.
+                If a noise model is provided, the density matrix simulator is used.
+
+        Returns:
+            str: The name of the backend to pass into the LocalSimulator constructor.
+        """
+        if noise_model:
+            if backend == "default":
+                logging.info(
+                    "Setting LocalSimulator backend to use 'braket_dm' \
+                        because a NoiseModel was provided."
+                )
             return Emulator.DEFAULT_NOISY_BACKEND
         return Emulator.DEFAULT_SIMULATOR_BACKEND
-    
+
     def run(
         self,
         task_specification: Union[

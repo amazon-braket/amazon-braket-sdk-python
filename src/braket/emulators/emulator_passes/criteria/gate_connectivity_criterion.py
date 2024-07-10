@@ -82,8 +82,9 @@ provided as edge attributes."
                                 )
                     idx += 1
 
-                if idx == len(circuit.instructions) or \
-                    not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
+                if idx == len(circuit.instructions) or not isinstance(
+                    circuit.instructions[idx].operator, EndVerbatimBox
+                ):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
                 idx += 1
 
@@ -117,7 +118,6 @@ provided as edge attributes."
             )
 
     def __eq__(self, other: EmulatorCriterion) -> bool:
-        return (
-            isinstance(other, GateConnectivityCriterion)
-            and graphs_equal(self._gate_connectivity_graph, other._gate_connectivity_graph)
+        return isinstance(other, GateConnectivityCriterion) and graphs_equal(
+            self._gate_connectivity_graph, other._gate_connectivity_graph
         )

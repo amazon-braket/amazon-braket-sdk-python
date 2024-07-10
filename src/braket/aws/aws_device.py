@@ -936,7 +936,6 @@ class AwsDevice(Device):
         program meets all criterion, returns.
 
         Args:
-
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
                 PulseSequence, AnalogHamiltonianSimulation]): The quantum program to emulate against
                 this AwsDevice device properties.
@@ -1003,4 +1002,4 @@ class AwsDevice(Device):
         if isinstance(task_specification, Circuit):
             task_specification = task_specification.copy()
 
-        return self.emulator.run(task_specification, shots=shots, inputs=inputs)
+        return self.emulator.run(task_specification, shots, inputs)

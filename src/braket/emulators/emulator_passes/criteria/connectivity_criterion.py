@@ -43,7 +43,7 @@ class ConnectivityCriterion(EmulatorCriterion):
             )
 
         if fully_connected:
-            if not((num_qubits is None) ^ (qubit_labels is None)):
+            if not ((num_qubits is None) ^ (qubit_labels is None)):
                 raise ValueError(
                     "Either num_qubits or qubit_labels (NOT both) must be \
                         provided if fully_connected is True."
@@ -67,8 +67,6 @@ class ConnectivityCriterion(EmulatorCriterion):
         if not directed:
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
-        else:
-            print("here")
 
     def validate(self, circuit: Circuit) -> None:
         """

@@ -50,8 +50,9 @@ class GateCriterion(EmulatorCriterion):
                                 f"Gate {gate.name} is not a native gate supported by this device."
                             )
                     idx += 1
-                if idx == len(circuit.instructions) or \
-                    not isinstance(circuit.instructions[idx].operator, EndVerbatimBox):
+                if idx == len(circuit.instructions) or not isinstance(
+                    circuit.instructions[idx].operator, EndVerbatimBox
+                ):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
             elif isinstance(instruction.operator, Gate):
                 gate = instruction.operator

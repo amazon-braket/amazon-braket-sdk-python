@@ -228,9 +228,6 @@ def _create_edge_specs(
         if hasattr(Gate, gate_name):
             gate = getattr(Gate, gate_name)
             edge_specs.append(GateFidelity(gate, edge_property.fidelity))
-        else:
-            continue
-            # logging.warning(f"Unsupported gate {gate_name}")
     return edge_specs
 
 
