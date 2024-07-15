@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from functools import singledispatch
 from typing import Dict, List, Set, Tuple, Union
@@ -177,10 +176,6 @@ def _(properties: IonqDeviceCapabilities, arn: str) -> NoiseModel:
                 """
                 continue
             native_gate_fidelities.append(GateFidelity(gate, two_qubit_rb_fidelity))
-        else:
-            continue
-            logging.warning(f"Unsupported gate {native_gate}")
-
     single_qubit_specs = {}
     two_qubit_edge_specs = {}
     for ii in range(qubit_count):

@@ -178,7 +178,7 @@ MOCK_STANDARDIZED_CALIBRATION_JSON = {
 }
 
 MOCK_STANDARDIZED_CALIBRATION_JSON_2 = MOCK_STANDARDIZED_CALIBRATION_JSON.copy()
-MOCK_STANDARDIZED_CALIBRATION_JSON["twoQubitProperties"]["0-1"]["twoQubitGateFidelity"][2][
+MOCK_STANDARDIZED_CALIBRATION_JSON_2["twoQubitProperties"]["0-1"]["twoQubitGateFidelity"][2][
     "gateName"
 ] = "CPhaseShift"
 
@@ -212,7 +212,7 @@ MOCK_RIGETTI_QPU_CAPABILITIES_1 = {
             "connectivityGraph": {"0": ["1", "2"], "1": ["0"], "2": ["0"]},
         },
     },
-    "standardized": MOCK_STANDARDIZED_CALIBRATION_JSON,
+    "standardized": MOCK_STANDARDIZED_CALIBRATION_JSON_2,
     "deviceParameters": {},
 }
 
@@ -443,6 +443,8 @@ def test_missing_gate_durations(rigetti_device_capabilities):
 
 
 def test_ionq_noise_model(ionq_device_capabilities, ionq_target_noise_model):
+    # modify capabilities to include gate not supported by braket but included in IonQ capabilities.
+    ionq_device_capabilities.paradigm.nativeGateSet.append("Two_Qubit_Clifford")
     noise_model = create_device_noise_model(ionq_device_capabilities, Devices.IonQ.Aria1)
     assert noise_model.instructions == ionq_target_noise_model.instructions
 

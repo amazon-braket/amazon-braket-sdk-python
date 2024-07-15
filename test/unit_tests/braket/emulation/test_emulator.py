@@ -31,16 +31,6 @@ local_simulator._simulator_devices.update(
     {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
 )
 
-# @pytest.fixture(autouse=True)
-# def _setup_simulator_devices():
-#     mock_circuit_entry = Mock()
-#     mock_circuit_dm_entry = Mock()
-#     mock_circuit_entry.load.return_value = StateVectorSimulator
-#     mock_circuit_dm_entry.load.return_value = DensityMatrixSimulator
-#     local_simulator._simulator_devices.update(
-#         {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
-#     )
-
 
 @pytest.fixture
 def basic_emulator():
