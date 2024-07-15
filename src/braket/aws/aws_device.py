@@ -916,14 +916,7 @@ class AwsDevice(Device):
 
     def validate(
         self,
-        task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            PulseSequence,
-            AnalogHamiltonianSimulation,
-        ],
+        task_specification: Circuit,
     ) -> None:
         """
         Runs all non-modifying emulator passes on the input program and raises an
@@ -931,8 +924,7 @@ class AwsDevice(Device):
         program meets all criterion, returns.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation]): The quantum program to emulate against
+            task_specification (Circuit): The quantum program to emulate against
                 this AwsDevice device properties.
 
         """
