@@ -49,6 +49,7 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDe
 from braket.devices import Devices
 from braket.devices.device import Device
 from braket.emulators import Emulator
+from braket.emulators.emulator_passes import ProgramType
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
@@ -931,9 +932,9 @@ class AwsDevice(Device):
         self.emulator.run_validation_passes(task_specification)
         return
 
-    def run_emulator_passes[
-        ProgramType
-    ](self, task_specification: ProgramType, apply_noise_model: bool = True) -> ProgramType:
+    def run_emulator_passes(
+        self, task_specification: ProgramType, apply_noise_model: bool = True
+    ) -> ProgramType:
         """
         Runs all emulator passes and returns the modified program, which should be the same
         type as the input program.

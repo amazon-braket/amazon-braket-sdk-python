@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import Iterable, Union
 
-from braket.emulators.emulator_passes import EmulatorPass
+from braket.emulators.emulator_passes import EmulatorPass, ProgramType
 from braket.emulators.emulator_passes.criteria import EmulatorCriterion
 
 
@@ -11,7 +11,7 @@ class EmulatorInterface(ABC):
     def __init__(self, emulator_passes: Iterable[EmulatorPass] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
-    def run_program_passes[ProgramType](self, task_specification: ProgramType) -> ProgramType:
+    def run_program_passes(self, task_specification: ProgramType) -> ProgramType:
         """
         This method passes the input program through the EmulatorPasses contained
         within this emulator. An emulator pass may simply validate a program or may
@@ -27,7 +27,7 @@ class EmulatorInterface(ABC):
             task_specification = emulator_pass(task_specification)
         return task_specification
 
-    def run_validation_passes[ProgramType](self, task_specification: ProgramType) -> None:
+    def run_validation_passes(self, task_specification: ProgramType) -> None:
         """
         This method passes the input program through EmulatorPasses that perform
         only validation, without modifying the input program.
