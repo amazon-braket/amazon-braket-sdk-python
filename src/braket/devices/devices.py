@@ -37,7 +37,7 @@ class Devices:
         Forte1 = "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1"
 
     class _OQC(str, Enum):
-        Lucy = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
+        _Lucy = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 
     class _QuEra(str, Enum):
         Aquila = "arn:aws:braket:us-east-1::device/qpu/quera/Aquila"
@@ -58,7 +58,7 @@ class Devices:
     # DWave = _DWave
     IonQ = _IonQ
     IQM = _IQM
-    OQC = _OQC
+    # OQC = _OQC
     QuEra = _QuEra
     Rigetti = _Rigetti
     # Xanadu = _Xanadu

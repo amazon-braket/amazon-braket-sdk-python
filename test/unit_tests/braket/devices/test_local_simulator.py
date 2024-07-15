@@ -157,7 +157,12 @@ class DummyCircuitSimulator(BraketSimulator):
 
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+        self,
+        program: ir.jaqcd.Program,
+        qubits: Optional[int] = None,
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
     ) -> dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
@@ -526,7 +531,7 @@ def test_run_gate_model_inputs():
             ),
             inputs={"theta": 2},
         ),
-        10,
+        shots=10,
     )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
@@ -549,7 +554,7 @@ def test_run_program_model_inputs():
     task = sim.run(program, inputs=update_inputs, shots=10)
     assert program.inputs == inputs
     program.inputs.update(update_inputs)
-    dummy.run.assert_called_with(program, 10)
+    dummy.run.assert_called_with(program, shots=10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
@@ -558,7 +563,7 @@ def test_run_jaqcd_only():
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
-    dummy.assert_qubits(2)
+    dummy.assert_qubits(None)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
@@ -719,7 +724,7 @@ def test_run_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs={}),
-        4,
+        shots=4,
     )
 
 
@@ -759,7 +764,7 @@ def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs={}),
-        4,
+        shots=4,
     )
     assert w[-1].message.__str__() == expected_warning
 
@@ -787,6 +792,6 @@ def test_run_openqasm_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs=None),
-        4,
+        shots=4,
     )
     assert w[-1].message.__str__() == expected_warning
