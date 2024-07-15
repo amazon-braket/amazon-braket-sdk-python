@@ -885,7 +885,7 @@ class AwsDevice(Device):
         Returns:
             Emulator: An emulator for this device, if this is not a simulator device.
         """
-        if self._arn in Devices.Amazon:
+        if self._arn in [simulator_enum.value for simulator_enum in Devices.Amazon]:
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."
             )
