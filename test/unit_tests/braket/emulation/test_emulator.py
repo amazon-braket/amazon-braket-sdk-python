@@ -31,6 +31,16 @@ local_simulator._simulator_devices.update(
     {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
 )
 
+# @pytest.fixture(autouse=True)
+# def _setup_simulator_devices():
+#     mock_circuit_entry = Mock()
+#     mock_circuit_dm_entry = Mock()
+#     mock_circuit_entry.load.return_value = StateVectorSimulator
+#     mock_circuit_dm_entry.load.return_value = DensityMatrixSimulator
+#     local_simulator._simulator_devices.update(
+#         {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
+#     )
+
 
 @pytest.fixture
 def basic_emulator():
@@ -163,7 +173,9 @@ def test_noisy_run():
     qubit_count_criterion = QubitCountCriterion(4)
     gate_criterion = GateCriterion(supported_gates=["H"])
     emulator = Emulator(
-        emulator_passes=[qubit_count_criterion, gate_criterion], noise_model=noise_model
+        backend="braket_dm",
+        emulator_passes=[qubit_count_criterion, gate_criterion],
+        noise_model=noise_model,
     )
 
     circuit = Circuit().h(0)

@@ -892,21 +892,16 @@ class AwsDevice(Device):
             self._emulator = self._setup_emulator()
         return self._emulator
 
-    def _setup_emulator(self, emulator_noise_model: NoiseModel | None = None) -> Emulator:
+    def _setup_emulator(self) -> Emulator:
         """
         Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a
         real QPU (not simulated).
-
-        Args:
-            emulator_noise_model (NoiseModel | None): Use the provided noise model in the emulator
-                instead of creating one.
 
         Returns:
             Emulator: An emulator with a noise model, compilation passes, and validation passes
             based on this device's properites.
         """
-        if not emulator_noise_model:
-            emulator_noise_model = create_device_noise_model(self.properties, self._arn)
+        emulator_noise_model = create_device_noise_model(self.properties, self._arn)
         self._emulator = Emulator(
             noise_model=emulator_noise_model, backend="braket_dm", name=self._name
         )
@@ -962,21 +957,12 @@ class AwsDevice(Device):
             ProgramType: A validated and compiled program that may be augmented with noise
             operations to mimic noise on this device.
         """
-        if isinstance(task_specification, Circuit):
-            task_specification = task_specification.copy()
-
+        task_specification = task_specification.copy()
         return self.emulator.run_program_passes(task_specification, apply_noise_model)
 
     def emulate(
         self,
-        task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            PulseSequence,
-            AnalogHamiltonianSimulation,
-        ],
+        task_specification: Circuit,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
     ) -> QuantumTask:
@@ -986,8 +972,7 @@ class AwsDevice(Device):
         the program on the emulator's backend.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation]): Specification of a quantum task
+            task_specification (Circuit): Specification of a quantum task
                 to run on device.
 
             shots (Optional[int]): The number of times to run the quantum task on the device.
@@ -999,7 +984,5 @@ class AwsDevice(Device):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
-        if isinstance(task_specification, Circuit):
-            task_specification = task_specification.copy()
-
+        task_specification = task_specification.copy()
         return self.emulator.run(task_specification, shots, inputs)

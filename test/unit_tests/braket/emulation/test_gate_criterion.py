@@ -68,7 +68,8 @@ def mock_qpu_gates():
         .add_verbatim_box(
             Circuit().prx(0, np.pi / 4, np.pi / 4).apply_gate_noise(BitFlip(0.1), Gate.PRx)
         )
-        .v(1),
+        .v(1)
+        .apply_gate_noise(BitFlip(0.1), Gate.V),
     ],
 )
 def test_valid_circuits(mock_qpu_gates, circuit):

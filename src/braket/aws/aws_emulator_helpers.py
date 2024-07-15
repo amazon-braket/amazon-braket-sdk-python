@@ -102,54 +102,37 @@ def create_gate_connectivity_criterion(
     raise NotImplementedError
 
 
+@create_gate_connectivity_criterion.register(IqmDeviceCapabilities)
 @create_gate_connectivity_criterion.register(RigettiDeviceCapabilities)
 def _(
     properties: RigettiDeviceCapabilities, connectivity_graph: DiGraph
 ) -> GateConnectivityCriterion:
     """
-    Rigetti provides device capabilities using a standardized properties schema for gate devices.
-
-    Rigetti provides both forwards and backwards edges for their undirected gate
-    connectivity graph, so no new needs to be introduced when creating a
-    GateConnectivityCriterion object for a Rigetti QPU.
+    Both IQM and Rigetti have undirected connectivity graphs; Rigetti device capabilities
+    provide back edges, but the calibration data only provides edges in one direction.
+    Additionally, IQM does not provide back edges in its connectivity_graph (nor is this
+    resolved manually by AwsDevice at the moment).
     """
     gate_connectivity_graph = connectivity_graph.copy()
     edge_properties = properties.standardized.twoQubitProperties
-    for edge in gate_connectivity_graph.edges:
-        edge_key = "-".join([str(qubit) for qubit in edge])
-        edge_property = edge_properties.get(edge_key, list())
+    for u, v in gate_connectivity_graph.edges:
+        edge_key = "-".join([str(qubit) for qubit in (u, v)])
+        edge_property = edge_properties.get(edge_key)
         if not edge_property:
+            gate_connectivity_graph[u][v]["supported_gates"] = set()
             continue
         edge_supported_gates = get_qpu_gate_translation(
             properties, [property.gateName for property in edge_property.twoQubitGateFidelity]
         )
-        gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = edge_supported_gates
+        gate_connectivity_graph[u][v]["supported_gates"] = set(edge_supported_gates)
 
-    return GateConnectivityCriterion(gate_connectivity_graph)
-
-
-@create_gate_connectivity_criterion.register(IqmDeviceCapabilities)
-def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion:
-    """
-    IQM provides device capabilities using a standardized properties schema for gate devices.
-
-    IQM provides only forward edges for their *undirected* gate
-    connectivity graph, so back-edges must be introduced when creating the
-    GateConnectivityCriterion object for an IQM QPU.
-    """
-    gate_connectivity_graph = connectivity_graph.copy()
-    for edge in gate_connectivity_graph.edges:
-        gate_connectivity_graph.add_edge(edge[1], edge[0])
-
-    edge_properties = properties.standardized.twoQubitProperties
-    for edge_property in edge_properties.keys():
-        edge = [int(qubit) for qubit in edge_property.split("-")]
-        edge_supported_gates = get_qpu_gate_translation(
-            properties,
-            [property.gateName for property in edge_properties[edge_property].twoQubitGateFidelity],
-        )
-        gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = edge_supported_gates
-        gate_connectivity_graph[edge[1]][edge[0]]["supported_gates"] = edge_supported_gates
+    for u, v in gate_connectivity_graph.edges:
+        if (v, u) not in gate_connectivity_graph.edges or gate_connectivity_graph[v][u].get(
+            "supported_gates"
+        ) in [None, set()]:
+            gate_connectivity_graph.add_edge(
+                v, u, supported_gates=set(gate_connectivity_graph[u][v]["supported_gates"])
+            )
 
     return GateConnectivityCriterion(gate_connectivity_graph)
 
@@ -164,8 +147,9 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
     """
     gate_connectivity_graph = connectivity_graph.copy()
     native_gates = get_qpu_gate_translation(properties, properties.paradigm.nativeGateSet)
+
     for edge in gate_connectivity_graph.edges:
-        gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = native_gates
+        gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = set(native_gates)
 
     return GateConnectivityCriterion(gate_connectivity_graph)
 
@@ -203,9 +187,6 @@ def _get_qpu_gate_translation(properties: DeviceCapabilities, gate_name: str) ->
         str: The translated gate name
     """
     return gate_name
-
-
-# TODO: put translations in global dict with explicit QHP names as keys?
 
 
 @_get_qpu_gate_translation.register(RigettiDeviceCapabilities)

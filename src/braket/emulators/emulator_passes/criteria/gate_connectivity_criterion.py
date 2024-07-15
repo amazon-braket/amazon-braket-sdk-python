@@ -20,12 +20,10 @@ class GateConnectivityCriterion(EmulatorCriterion):
         if isinstance(gate_connectivity_graph, DiGraph):
             self._gate_connectivity_graph = gate_connectivity_graph
             if not directed:
-                for edge in self._gate_connectivity_graph.edges:
-                    back_edge = (edge[1], edge[0])
+                for u, v in self._gate_connectivity_graph.edges:
+                    back_edge = (v, u)
                     if back_edge not in self._gate_connectivity_graph.edges:
-                        supported_gates = self._gate_connectivity_graph[edge[0]][edge[1]][
-                            "supported_gates"
-                        ]
+                        supported_gates = self._gate_connectivity_graph[u][v]["supported_gates"]
                         self._gate_connectivity_graph.add_edge(
                             *back_edge, supported_gates=supported_gates
                         )

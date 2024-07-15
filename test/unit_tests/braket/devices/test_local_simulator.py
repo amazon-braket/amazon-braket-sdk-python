@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import sys
 import textwrap
 import warnings
 from typing import Any, Optional
@@ -386,20 +387,25 @@ class DummyRydbergSimulator(BraketSimulator):
         return RydbergSimulatorDeviceCapabilities.parse_obj(properties)
 
 
-mock_circuit_entry = Mock()
-mock_program_entry = Mock()
-mock_jaqcd_entry = Mock()
-mock_circuit_dm_entry = Mock()
-mock_circuit_entry.load.return_value = DummyCircuitSimulator
-mock_program_entry.load.return_value = DummyProgramSimulator
-mock_jaqcd_entry.load.return_value = DummyJaqcdSimulator
-mock_circuit_dm_entry.load.return_value = DummyProgramDensityMatrixSimulator
-local_simulator._simulator_devices = {
-    "dummy": mock_circuit_entry,
-    "dummy_oq3": mock_program_entry,
-    "dummy_jaqcd": mock_jaqcd_entry,
-    "dummy_oq3_dm": mock_circuit_dm_entry,
-}
+@pytest.fixture(autouse=True)
+def _simulator_devices(request):
+    if request.module == sys.modules[__name__]:
+        mock_circuit_entry = Mock()
+        mock_program_entry = Mock()
+        mock_jaqcd_entry = Mock()
+        mock_circuit_dm_entry = Mock()
+        mock_circuit_entry.load.return_value = DummyCircuitSimulator
+        mock_program_entry.load.return_value = DummyProgramSimulator
+        mock_jaqcd_entry.load.return_value = DummyJaqcdSimulator
+        mock_circuit_dm_entry.load.return_value = DummyProgramDensityMatrixSimulator
+        local_simulator._simulator_devices = {
+            "dummy": mock_circuit_entry,
+            "dummy_oq3": mock_program_entry,
+            "dummy_jaqcd": mock_jaqcd_entry,
+            "dummy_oq3_dm": mock_circuit_dm_entry,
+        }
+    return local_simulator._simulator_devices
+
 
 mock_ahs_program = AnalogHamiltonianSimulation(
     register=AtomArrangement(), hamiltonian=Hamiltonian()
