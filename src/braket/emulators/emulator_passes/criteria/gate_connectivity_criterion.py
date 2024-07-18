@@ -17,46 +17,42 @@ class GateConnectivityCriterion(EmulatorCriterion):
         directed=True,
     ):
         super().__init__()
-        if isinstance(gate_connectivity_graph, DiGraph):
-            self._gate_connectivity_graph = gate_connectivity_graph
-            if not directed:
-                for u, v in self._gate_connectivity_graph.edges:
-                    back_edge = (v, u)
-                    if back_edge not in self._gate_connectivity_graph.edges:
-                        supported_gates = self._gate_connectivity_graph[u][v]["supported_gates"]
-                        self._gate_connectivity_graph.add_edge(
-                            *back_edge, supported_gates=supported_gates
-                        )
-                    else:
-                        # check that the supported gate sets are identical
-                        if (
-                            self._gate_connectivity_graph[u][v]["supported_gates"]
-                            != self._gate_connectivity_graph[v][u]["supported_gates"]
-                        ):
-                            raise ValueError(
-                                f"Connectivity Graph marked as undirected\
-                                    but edges ({u}, {v}) and ({v}, {u}) have different supported\
-                                    gate sets."
-                            )
-
-        elif isinstance(gate_connectivity_graph, dict):
+        if isinstance(gate_connectivity_graph, dict):
             self._gate_connectivity_graph = DiGraph()
-            for edge, supported_gates in gate_connectivity_graph.items():
-                self._gate_connectivity_graph.add_edge(
-                    edge[0], edge[1], supported_gates=supported_gates
-                )
-                if not directed:
-                    back_edge = (edge[1], edge[0])
-                    if back_edge not in gate_connectivity_graph:
-                        self._gate_connectivity_graph.add_edge(
-                            edge[1], edge[0], supported_gates=supported_gates
-                        )
+            for (u, v), supported_gates in gate_connectivity_graph.items():
+                self._gate_connectivity_graph.add_edge(u, v, supported_gates=supported_gates)
+        elif isinstance(gate_connectivity_graph, DiGraph):
+            self._gate_connectivity_graph = gate_connectivity_graph
         else:
             raise TypeError(
                 "Gate_connectivity_graph must either be a dictionary of edges mapped to \
 supported gates lists, or a DiGraph with supported gates \
 provided as edge attributes."
             )
+
+        if not directed:
+            """
+            Add reverse edges and check that any supplied reverse edges have
+            identical supported gate sets to their corresponding forwards edge.
+            """
+            for u, v in self._gate_connectivity_graph.edges:
+                back_edge = (v, u)
+                if back_edge not in self._gate_connectivity_graph.edges:
+                    supported_gates = self._gate_connectivity_graph[u][v]["supported_gates"]
+                    self._gate_connectivity_graph.add_edge(
+                        *back_edge, supported_gates=supported_gates
+                    )
+                else:
+                    # check that the supported gate sets are identical
+                    if (
+                        self._gate_connectivity_graph[u][v]["supported_gates"]
+                        != self._gate_connectivity_graph[v][u]["supported_gates"]
+                    ):
+                        raise ValueError(
+                            f"Connectivity Graph marked as undirected\
+                                but edges ({u}, {v}) and ({v}, {u}) have different supported\
+                                gate sets."
+                        )
 
     def validate(self, circuit: Circuit) -> None:
         """

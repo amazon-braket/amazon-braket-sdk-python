@@ -155,7 +155,7 @@ def test_undirected_graph_construction_from_dict():
     """
     dict_representation = {
         (0, 1): ["CNot", "CZ"],
-        (1, 0): ["CZ", "XX"],
+        (1, 0): ["CNot", "CZ"],
         (1, 2): ["Swap", "CNot", "YY"],
         (0, 2): ["XX", "XY", "CNot", "CZ"],
         (2, 5): ["XX", "XY", "CNot", "CZ"],
@@ -167,7 +167,7 @@ def test_undirected_graph_construction_from_dict():
             (1, 2, {"supported_gates": ["Swap", "CNot", "YY"]}),
             (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
             (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-            (1, 0, {"supported_gates": ["CZ", "XX"]}),
+            (1, 0, {"supported_gates": ["CNot", "CZ"]}),
             (2, 1, {"supported_gates": ["Swap", "CNot", "YY"]}),
             (2, 0, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
             (5, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
@@ -289,3 +289,24 @@ def test_validate_instruction_method(gate_name, controls, targets, is_valid, bas
     else:
         with pytest.raises(ValueError):
             gcc.validate_instruction_connectivity(gate_name, controls, targets)
+
+
+@pytest.mark.parametrize(
+    "graph",
+    [
+        (
+            nx.from_dict_of_dicts(
+                {
+                    0: {1: {"supported_gates": ["cnot", "cz"]}},
+                    1: {0: {"supported_gates": ["cz", "cnot", "xx"]}},
+                },
+                create_using=nx.DiGraph(),
+            )
+        ),
+        ({(0, 1): ["cnot", "cz"], (1, 0): ["cz", "cnot", "xx"]}),
+        ({(0, 1): ["xx", "yy"], (1, 0): ["yy", "xx"]}),
+    ],
+)
+def test_invalid_undirected_graph(graph):
+    with pytest.raises(ValueError):
+        GateConnectivityCriterion(graph, directed=False)
