@@ -12,23 +12,6 @@ from braket.registers.qubit_set import QubitSet
 
 
 class ConnectivityCriterion(EmulatorCriterion):
-    """
-    args:
-        connectivity_graph (Union[Dict[int, List[int]], DiGraph]): Either a sparse matrix or DiGraph
-        representation of the device connectivity. Can be None if fully_connected is true.
-
-        fully_connected (bool): If true, the all qubits in the device are connected.
-
-        num_qubits (int): The number of qubits in the device; if fully_connected is True,
-        this is used to create a complete graph with num_qubits nodes; ignored if
-        connectivity_graph is provided and fully_connected if False.
-
-        qubit_labels (Iterable[int]): A set of qubit labels; if fully_connected is True,
-        the qubits_labels are used as nodes of a fully connected topology; ignored if
-        connectivity_graph is provided and fully_connected if False.
-
-    """
-
     def __init__(
         self,
         connectivity_graph: Union[Dict[int, Iterable[int]], DiGraph] = None,
@@ -37,6 +20,27 @@ class ConnectivityCriterion(EmulatorCriterion):
         qubit_labels: Union[Iterable[int], QubitSet] = None,
         directed: bool = True,
     ):
+        """
+        args:
+            connectivity_graph (Union[Dict[int, List[int]], DiGraph]): Either a sparse matrix or
+            DiGraph representation of the device connectivity. Can be None if fully_connected is
+            true.
+
+            fully_connected (bool): If true, the all qubits in the device are connected.
+
+            num_qubits (int): The number of qubits in the device; if fully_connected is True,
+            this is used to create a complete graph with num_qubits nodes; ignored if
+            connectivity_graph is provided and fully_connected if False.
+
+            qubit_labels (Iterable[int]): A set of qubit labels; if fully_connected is True,
+            the qubits_labels are used as nodes of a fully connected topology; ignored if
+            connectivity_graph is provided and fully_connected if False.
+
+            directed (bool): Denotes if the connectivity graph is directed or undirected. If
+                the connectivity graph is undirected, this constructor attempts to fill in any
+                missing back edges.
+        """
+
         if not (connectivity_graph or fully_connected):
             raise ValueError(
                 "Either the connectivity_graph must be provided or fully_connected must be True."

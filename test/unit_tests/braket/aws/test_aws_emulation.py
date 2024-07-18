@@ -235,7 +235,7 @@ MOCK_IQM_QPU_CAPABILITIES_1 = {
         "braket.ir.openqasm.program": {
             "actionType": "braket.ir.openqasm.program",
             "version": ["1"],
-            "supportedOperations": ["H", "CNot", "Ry", "XX", "YY", "start_verbatim_box"],
+            "supportedOperations": ["H", "CNot", "Ry", "XX", "YY"],
         }
     },
     "paradigm": {

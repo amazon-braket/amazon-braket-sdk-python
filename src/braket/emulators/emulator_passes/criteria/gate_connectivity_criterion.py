@@ -27,6 +27,17 @@ class GateConnectivityCriterion(EmulatorCriterion):
                         self._gate_connectivity_graph.add_edge(
                             *back_edge, supported_gates=supported_gates
                         )
+                    else:
+                        # check that the supported gate sets are identical
+                        if (
+                            self._gate_connectivity_graph[u][v]["supported_gates"]
+                            != self._gate_connectivity_graph[v][u]["supported_gates"]
+                        ):
+                            raise ValueError(
+                                f"Connectivity Graph marked as undirected\
+                                    but edges ({u}, {v}) and ({v}, {u}) have different supported\
+                                    gate sets."
+                            )
 
         elif isinstance(gate_connectivity_graph, dict):
             self._gate_connectivity_graph = DiGraph()
@@ -79,11 +90,6 @@ provided as edge attributes."
                                     f"Qubit {target_qubit} does not exist in the device topology."
                                 )
                     idx += 1
-
-                if idx == len(circuit.instructions) or not isinstance(
-                    circuit.instructions[idx].operator, EndVerbatimBox
-                ):
-                    raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
                 idx += 1
 
     def validate_instruction_connectivity(

@@ -870,9 +870,9 @@ class AwsDevice(Device):
     @property
     def emulator(self) -> Emulator:
         """
-        A device emulator mimics the restrictions and noise of an AWS QPU by validating and
+        A device emulator mimics the restrictions and noise of the AWS QPU by validating and
         compiling programs before running them on a simulated backend. An emulator can be used
-        as a soft check that a program can run on an AwsDevice.
+        as a soft check that a program can run the target AwsDevice.
 
         Examples:
             >>> device = AwsDevice(Devices.IQM.Garnet)
@@ -883,7 +883,8 @@ class AwsDevice(Device):
             >>> print(result.result().measurement_counts)
 
         Returns:
-            Emulator: An emulator for this device, if this is not a simulator device.
+            Emulator: An emulator for this device, if this is not a simulator device. Raises an
+            exception if an emulator is requested for al simulator device.
         """
         if self._arn in [simulator_enum.value for simulator_enum in Devices.Amazon]:
             raise ValueError(
@@ -896,7 +897,7 @@ class AwsDevice(Device):
     def _setup_emulator(self) -> Emulator:
         """
         Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a
-        real QPU (not simulated).
+        real QPU (not a simulator).
 
         Returns:
             Emulator: An emulator with a noise model, compilation passes, and validation passes
@@ -921,8 +922,8 @@ class AwsDevice(Device):
     ) -> None:
         """
         Runs all non-modifying emulator passes on the input program and raises an
-        error if any device-specific criterion are not met by the program. If the
-        program meets all criterion, returns.
+        error if any device-specific criteria are not met by the program. If the
+        program meets all criteria, returns.
 
         Args:
             task_specification (Circuit): The quantum program to emulate against
@@ -960,7 +961,7 @@ class AwsDevice(Device):
         inputs: Optional[dict[str, float]] = None,
     ) -> QuantumTask:
         """Emulate a quantum task specification on this quantum device emulator.
-        A quantum task can be a circuit or an annealing problem. Emulation
+        A quantum task can be a circuit. Emulation
         involves running all emulator passes on the input program before running
         the program on the emulator's backend.
 

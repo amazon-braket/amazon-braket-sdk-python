@@ -26,15 +26,14 @@ def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCr
             QHP-specific schema.
 
     Returns:
-        QubitCountCriterion: An eulator pass that checks that the number of qubits used in a program
-        does not exceed that of the max qubit count on the device.
+        QubitCountCriterion: An emulator pass that checks that the number of qubits used in a
+        program does not exceed that of the max qubit count on the device.
     """
     qubit_count = properties.paradigm.qubitCount
     return QubitCountCriterion(qubit_count)
 
 
 def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
-    supported_gates = properties.action[DeviceActionType.OPENQASM].supportedOperations
     """
     Create a GateCriterion pass which defines what supported and native gates are allowed in a
     program based on the provided device properties.
@@ -48,13 +47,7 @@ def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
         verbatim circuits only use native gates.
     """
 
-    if isinstance(properties, IqmDeviceCapabilities):
-        try:
-            supported_gates.remove("start_verbatim_box")
-            supported_gates.remove("end_verbatim_box")
-        except ValueError:
-            pass
-
+    supported_gates = properties.action[DeviceActionType.OPENQASM].supportedOperations
     native_gates = properties.paradigm.nativeGateSet
 
     return GateCriterion(supported_gates=supported_gates, native_gates=native_gates)
@@ -65,7 +58,7 @@ def create_connectivity_criterion(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
 ) -> ConnectivityCriterion:
     """
-    Creates a ConnectivityCriterion pass which validates that multi-qubit gates are applied to
+    Creates a ConnectivityCriterion pass which validates that two-qubit gates are applied to
     connected qubits based on this device's connectivity graph.
 
     Args:
@@ -118,6 +111,8 @@ def _(
     for u, v in gate_connectivity_graph.edges:
         edge_key = "-".join([str(qubit) for qubit in (u, v)])
         edge_property = edge_properties.get(edge_key)
+
+        # Check that the QHP provided calibration data for this edge.
         if not edge_property:
             gate_connectivity_graph[u][v]["supported_gates"] = set()
             continue
@@ -126,6 +121,8 @@ def _(
         )
         gate_connectivity_graph[u][v]["supported_gates"] = set(edge_supported_gates)
 
+    # Add the reversed edge to ensure gates can be applied
+    # in both directions for a given qubit pair.
     for u, v in gate_connectivity_graph.edges:
         if (v, u) not in gate_connectivity_graph.edges or gate_connectivity_graph[v][u].get(
             "supported_gates"
@@ -163,7 +160,9 @@ def get_qpu_gate_translation(
     Args:
         properties (DeviceCapabilities): Device capabilities object based on a
             device-specific schema.
-        gate_name (Union[str, Iterable[str]]): The name(s) of the gate(s)
+        gate_name (Union[str, Iterable[str]]): The name(s) of the gate(s). If gate_name is a list
+            of string gate names, this function attempts to retrieve translations of all the gate
+            names.
 
     Returns:
         Union[str, list[str]]: The translated gate name(s)

@@ -113,9 +113,21 @@ def test_non_verbatim_circuit_only_native_gates():
         criterion.validate(circuit)
 
 
-@pytest.mark.parametrize("supported_gates,native_gates", [([], []), (["CX"], [])])
-def test_invalid_instantiation(supported_gates, native_gates):
-    with pytest.raises(ValueError):
+@pytest.mark.parametrize(
+    "supported_gates,native_gates,error_message",
+    [
+        ([], [], "Supported gate set or native gate set must be provided."),
+        (["CX"], [], "Input 'cx' in supported_gates is not a valid Braket gate name."),
+        ([], ["CX"], "Input 'cx' in native_gates is not a valid Braket gate name."),
+        (
+            ["Toffoli"],
+            ["CX"],
+            "Input 'toffoli' in supported_gates is not a valid Braket gate name.",
+        ),
+    ],
+)
+def test_invalid_instantiation(supported_gates, native_gates, error_message):
+    with pytest.raises(ValueError, match=error_message):
         GateCriterion(supported_gates, native_gates)
 
 

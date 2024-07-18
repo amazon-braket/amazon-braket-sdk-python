@@ -144,7 +144,7 @@ class Emulator(Device, EmulatorInterface):
         """
         Passes the input program through all EmulatorPass objects contained in this
         emulator and applies the emulator's noise model, if it exists, before
-        retruning the compiled program.
+        returning the compiled program.
 
         Args:
             task_specification (ProgramType): The input program to validate and

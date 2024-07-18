@@ -11,19 +11,23 @@ class GateCriterion(EmulatorCriterion):
     def __init__(self, supported_gates: Iterator[str] = [], native_gates: Iterator[str] = []):
         """
         args:
-            native_gates (Iterator[str]): A list of gates supported inside of verbatim mode by
-            the emulator.
             supported_gates (Iterator[str]): A list of gates supported outside of verbatim mode
-            by the emulator. A gate is a Braket gate name.
+                by the emulator. A gate is a Braket gate name.
+            native_gates (Iterator[str]): A list of gates supported inside of verbatim mode by
+                the emulator.
         """
         if len(supported_gates) == 0 and len(native_gates) == 0:
             raise ValueError("Supported gate set or native gate set must be provided.")
 
         try:
             self._supported_gates = set(BRAKET_GATES[gate.lower()] for gate in supported_gates)
+        except KeyError as e:
+            raise ValueError(f"Input {str(e)} in supported_gates is not a valid Braket gate name.")
+
+        try:
             self._native_gates = set(BRAKET_GATES[gate.lower()] for gate in native_gates)
         except KeyError as e:
-            raise ValueError(f"Input {str(e)} is not a valid Braket gate name.")
+            raise ValueError(f"Input {str(e)} in native_gates is not a valid Braket gate name.")
 
     def validate(self, circuit: Circuit) -> None:
         """
