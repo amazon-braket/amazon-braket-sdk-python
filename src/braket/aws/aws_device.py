@@ -28,12 +28,12 @@ from networkx import DiGraph, complete_graph, from_edgelist
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_emulator_helpers import (
-    create_connectivity_criterion,
-    create_gate_connectivity_criterion,
-    create_gate_criterion,
-    create_qubit_count_criterion,
+    connectivity_criterion,
+    gate_connectivity_criterion,
+    gate_criterion,
+    qubit_count_criterion,
 )
-from braket.aws.aws_noise_models import create_device_noise_model
+from braket.aws.aws_noise_models import device_noise_model
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
@@ -903,17 +903,15 @@ class AwsDevice(Device):
             Emulator: An emulator with a noise model, compilation passes, and validation passes
             based on this device's properites.
         """
-        emulator_noise_model = create_device_noise_model(self.properties, self._arn)
+        emulator_noise_model = device_noise_model(self.properties, self._arn)
         self._emulator = Emulator(
             noise_model=emulator_noise_model, backend="braket_dm", name=self._name
         )
 
-        self._emulator.add_pass(create_qubit_count_criterion(self.properties))
-        self._emulator.add_pass(create_gate_criterion(self.properties))
-        self._emulator.add_pass(create_connectivity_criterion(self.properties, self.topology_graph))
-        self._emulator.add_pass(
-            create_gate_connectivity_criterion(self.properties, self.topology_graph)
-        )
+        self._emulator.add_pass(qubit_count_criterion(self.properties))
+        self._emulator.add_pass(gate_criterion(self.properties))
+        self._emulator.add_pass(connectivity_criterion(self.properties, self.topology_graph))
+        self._emulator.add_pass(gate_connectivity_criterion(self.properties, self.topology_graph))
         return self._emulator
 
     def validate(
@@ -930,7 +928,7 @@ class AwsDevice(Device):
                 this AwsDevice device properties.
 
         """
-        self.emulator.run_validation_passes(task_specification)
+        self.emulator.validate(task_specification)
         return
 
     def run_emulator_passes(
@@ -952,7 +950,7 @@ class AwsDevice(Device):
             operations to mimic noise on this device.
         """
         task_specification = task_specification.copy()
-        return self.emulator.run_program_passes(task_specification, apply_noise_model)
+        return self.emulator.run_passes(task_specification, apply_noise_model)
 
     def emulate(
         self,

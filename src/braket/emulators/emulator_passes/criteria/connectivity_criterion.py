@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from networkx import DiGraph, complete_graph, from_dict_of_lists
 from networkx.utils import graphs_equal
@@ -14,31 +14,40 @@ from braket.registers.qubit_set import QubitSet
 class ConnectivityCriterion(EmulatorCriterion):
     def __init__(
         self,
-        connectivity_graph: Union[Dict[int, Iterable[int]], DiGraph] = None,
+        connectivity_graph: Optional[Union[Dict[int, Iterable[int]], DiGraph]] = None,
         fully_connected=False,
-        num_qubits: int = None,
-        qubit_labels: Union[Iterable[int], QubitSet] = None,
+        num_qubits: Optional[int] = None,
+        qubit_labels: Optional[Union[Iterable[int], QubitSet]] = None,
         directed: bool = True,
     ):
         """
-        args:
-            connectivity_graph (Union[Dict[int, List[int]], DiGraph]): Either a sparse matrix or
-            DiGraph representation of the device connectivity. Can be None if fully_connected is
-            true.
+        A ConnectivityCriterion instance takes in a qubit connectivity graph and validates that
+        a circuit that uses verbatim circuits makes valid hardware qubit references in single
+        and two-qubit gate operations.
+
+        Args:
+            connectivity_graph (Optional[Union[Dict[int, Iterable[int]], DiGraph]]):
+                Either a sparse matrix or DiGraph representation of the device connectivity.
+                Can be None if fully_connected is true.
 
             fully_connected (bool): If true, the all qubits in the device are connected.
 
-            num_qubits (int): The number of qubits in the device; if fully_connected is True,
-            this is used to create a complete graph with num_qubits nodes; ignored if
-            connectivity_graph is provided and fully_connected if False.
+            num_qubits (Optional[int]): The number of qubits in the device; if fully_connected is
+                True, create a complete graph with num_qubits nodes; ignored if
+                connectivity_graph is provided and fully_connected if False.
 
-            qubit_labels (Iterable[int]): A set of qubit labels; if fully_connected is True,
-            the qubits_labels are used as nodes of a fully connected topology; ignored if
-            connectivity_graph is provided and fully_connected if False.
+            qubit_labels (Optional[Union[Iterable[int], QubitSet]]): A set of qubit labels; if
+                fully_connected is True, the qubits_labels are used as nodes of a fully connected
+                topology; ignored if connectivity_graph is provided and fully_connected if False.
 
             directed (bool): Denotes if the connectivity graph is directed or undirected. If
                 the connectivity graph is undirected, this constructor attempts to fill in any
                 missing back edges.
+
+        Raises:
+            ValueError: If the inputs do not correctly yield a connectivity graph; i.e.
+            fully_connected is true but neither/both num qubits and qubit labels are defined
+            or a valid DiGraph or dict representation of a connectivity graph is not provided.
         """
 
         if not (connectivity_graph or fully_connected):
@@ -82,6 +91,9 @@ class ConnectivityCriterion(EmulatorCriterion):
         Args:
             circuit (Circuit): The Braket circuit whose gate operations to
                 validate.
+
+        Raises:
+            ValueError: If a hardware qubit reference does not exist in the connectivity graph.
         """
         # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
@@ -120,6 +132,10 @@ class ConnectivityCriterion(EmulatorCriterion):
             target_qubits (QubitSet): The target qubits of this operation. For many gates,
                 both the control and target are stored in "target_qubits", so we may
                 see target_qubits have length 2.
+
+        Raises:
+            ValueError: If any two-qubit gate operation uses a qubit edge that does not exist
+            in the qubit connectivity graph.
         """
         # Create edges between each of the target qubits
         gate_connectivity_graph = DiGraph()

@@ -62,6 +62,10 @@ provided as edge attributes."
         Args:
             circuit (Circuit): The circuit whose gate instructions need to be validated
                 against this criterion's gate connectivity graph.
+
+        Raises:
+            ValueError if any of the gate operations use qubits or qubit edges that don't exist
+            in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
         for idx in range(len(circuit.instructions)):
             instruction = circuit.instructions[idx]
@@ -99,6 +103,9 @@ provided as edge attributes."
             gate_name (str): The name of the gate being applied.
             control_qubits (QubitSet): The set of control qubits used by this gate operation.
             target_qubits (QubitSet): The set of target qubits used by this gate operation.
+
+        Raises:
+            ValueError if the gate operation is not possible on the qubit connectivity graph.
         """
         # Create edges between each of the target qubits
         if len(control_qubits) == 1 and len(target_qubits) == 1:

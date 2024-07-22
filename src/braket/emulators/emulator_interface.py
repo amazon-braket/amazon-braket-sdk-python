@@ -11,11 +11,12 @@ class EmulatorInterface(ABC):
     def __init__(self, emulator_passes: Iterable[EmulatorPass] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
-    def run_program_passes(self, task_specification: ProgramType) -> ProgramType:
+    def run_passes(self, task_specification: ProgramType) -> ProgramType:
         """
         This method passes the input program through the EmulatorPasses contained
         within this emulator. An emulator pass may simply validate a program or may
         modify or entirely transform the program (to an equivalent quantum program).
+
         Args:
             task_specification (ProgramType): The program to run the emulator passes on.
 
@@ -27,7 +28,7 @@ class EmulatorInterface(ABC):
             task_specification = emulator_pass(task_specification)
         return task_specification
 
-    def run_validation_passes(self, task_specification: ProgramType) -> None:
+    def validate(self, task_specification: ProgramType) -> None:
         """
         This method passes the input program through EmulatorPasses that perform
         only validation, without modifying the input program.
@@ -54,6 +55,9 @@ class EmulatorInterface(ABC):
 
         Returns:
             EmulatorInterface: Returns an updated self.
+
+        Raises:
+            TypeError: If the input is not an iterable or an EmulatorPass.
 
         """
         if isinstance(emulator_pass, Iterable):

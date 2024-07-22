@@ -21,6 +21,9 @@ class QubitCountCriterion(EmulatorCriterion):
         Args:
             circuit (Circuit): The Braket circuit whose qubit count to validate.
 
+        Raises:
+            ValueError: If the number of qubits used in the circuit exceeds the qubit_count.
+
         """
         if circuit.qubit_count > self._qubit_count:
             raise ValueError(

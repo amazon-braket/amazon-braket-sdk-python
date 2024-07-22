@@ -90,7 +90,7 @@ class Emulator(Device, EmulatorInterface):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
-        task_specification = self.run_program_passes(task_specification, apply_noise_model=False)
+        task_specification = self.run_passes(task_specification, apply_noise_model=False)
         # Don't apply noise model as the local simulator will automatically apply it.
         return self._backend.run(task_specification, shots, inputs, *args, **kwargs)
 
@@ -138,7 +138,7 @@ class Emulator(Device, EmulatorInterface):
         self._noise_model = noise_model
         self._backend = LocalSimulator(backend="braket_dm", noise_model=noise_model)
 
-    def run_program_passes(
+    def run_passes(
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """
@@ -157,14 +157,14 @@ class Emulator(Device, EmulatorInterface):
             exists for this emulator and apply_noise_model is true.
         """
         try:
-            program = super().run_program_passes(task_specification)
+            program = super().run_passes(task_specification)
             if apply_noise_model and self.noise_model:
                 return self._noise_model.apply(program)
             return program
         except Exception as e:
             self._raise_exception(e)
 
-    def run_validation_passes(self, task_specification: ProgramType) -> None:
+    def validate(self, task_specification: ProgramType) -> None:
         """
         Runs only EmulatorPasses that are EmulatorCriterion, i.e. all non-modifying
         validation passes on the input program.
@@ -173,7 +173,7 @@ class Emulator(Device, EmulatorInterface):
             task_specification (ProgramType): The input program to validate.
         """
         try:
-            super().run_validation_passes(task_specification)
+            super().validate(task_specification)
         except Exception as e:
             self._raise_exception(e)
 

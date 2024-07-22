@@ -16,7 +16,7 @@ from braket.emulators.emulator_passes import (
 )
 
 
-def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
+def qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
     """
     Create a QubitCountCriterion pass which checks that the number of qubits used in a program does
     not exceed the number of qubits allowed by a QPU, as defined in the device properties.
@@ -33,7 +33,7 @@ def create_qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCr
     return QubitCountCriterion(qubit_count)
 
 
-def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
+def gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
     """
     Create a GateCriterion pass which defines what supported and native gates are allowed in a
     program based on the provided device properties.
@@ -53,8 +53,7 @@ def create_gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
     return GateCriterion(supported_gates=supported_gates, native_gates=native_gates)
 
 
-@singledispatch
-def create_connectivity_criterion(
+def connectivity_criterion(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
 ) -> ConnectivityCriterion:
     """
@@ -71,11 +70,20 @@ def create_connectivity_criterion(
         ConnectivityCriterion: An emulator pass that checks that a circuit only applies two-qubit
         gates to connected qubits on the device.
     """
+
+    return _connectivity_criterion(properties, connectivity_graph)
+
+
+@singledispatch
+def _connectivity_criterion(
+    properties: DeviceCapabilities, connectivity_graph: DiGraph
+) -> ConnectivityCriterion:
+
     connectivity_criterion = ConnectivityCriterion(connectivity_graph)
     return connectivity_criterion
 
 
-@create_connectivity_criterion.register(IqmDeviceCapabilities)
+@_connectivity_criterion.register(IqmDeviceCapabilities)
 def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> ConnectivityCriterion:
     """
     IQM qubit connectivity is undirected but the directed graph that represents qubit connectivity
@@ -88,15 +96,21 @@ def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> Connect
     return ConnectivityCriterion(connectivity_graph)
 
 
+def gate_connectivity_criterion(
+    properties: DeviceCapabilities, connectivity_graph: DiGraph
+) -> GateConnectivityCriterion:
+    return _gate_connectivity_criterion(properties, connectivity_graph)
+
+
 @singledispatch
-def create_gate_connectivity_criterion(
+def _gate_connectivity_criterion(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
 ) -> GateConnectivityCriterion:
     raise NotImplementedError
 
 
-@create_gate_connectivity_criterion.register(IqmDeviceCapabilities)
-@create_gate_connectivity_criterion.register(RigettiDeviceCapabilities)
+@_gate_connectivity_criterion.register(IqmDeviceCapabilities)
+@_gate_connectivity_criterion.register(RigettiDeviceCapabilities)
 def _(
     properties: RigettiDeviceCapabilities, connectivity_graph: DiGraph
 ) -> GateConnectivityCriterion:
@@ -116,7 +130,7 @@ def _(
         if not edge_property:
             gate_connectivity_graph[u][v]["supported_gates"] = set()
             continue
-        edge_supported_gates = get_qpu_gate_translation(
+        edge_supported_gates = _get_qpu_gate_translations(
             properties, [property.gateName for property in edge_property.twoQubitGateFidelity]
         )
         gate_connectivity_graph[u][v]["supported_gates"] = set(edge_supported_gates)
@@ -134,7 +148,7 @@ def _(
     return GateConnectivityCriterion(gate_connectivity_graph)
 
 
-@create_gate_connectivity_criterion.register(IonqDeviceCapabilities)
+@_gate_connectivity_criterion.register(IonqDeviceCapabilities)
 def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion:
     """
     Qubits in IonQ's trapped ion devices are all fully connected with identical
@@ -143,7 +157,7 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
     We extrapolate gate connectivity across all possible qubit edge pairs.
     """
     gate_connectivity_graph = connectivity_graph.copy()
-    native_gates = get_qpu_gate_translation(properties, properties.paradigm.nativeGateSet)
+    native_gates = _get_qpu_gate_translations(properties, properties.paradigm.nativeGateSet)
 
     for edge in gate_connectivity_graph.edges:
         gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = set(native_gates)
@@ -151,7 +165,7 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
     return GateConnectivityCriterion(gate_connectivity_graph)
 
 
-def get_qpu_gate_translation(
+def _get_qpu_gate_translations(
     properties: DeviceCapabilities, gate_name: Union[str, Iterable[str]]
 ) -> Union[str, list[str]]:
     """Returns the translated gate name(s) for a given QPU device capabilities schema type

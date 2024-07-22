@@ -4,7 +4,7 @@ from typing import Dict, List, Set, Tuple, Union
 
 import numpy as np
 
-from braket.aws.aws_emulator_helpers import get_qpu_gate_translation
+from braket.aws.aws_emulator_helpers import _get_qpu_gate_translations
 from braket.circuits import Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -29,7 +29,7 @@ from braket.devices import Devices
  The following gate duration values are not available through Braket device
  calibration data and must be hardcoded.
 """
-QPU_GATE_DURATIONS = {
+_QPU_GATE_DURATIONS = {
     Devices.Rigetti.AspenM3: {
         "single_qubit_gate_duration": 40e-9,
         "two_qubit_gate_duration": 240e-9,
@@ -56,6 +56,10 @@ class GateDeviceCalibrationData:
         """
         Checks single qubit specs and the input qubit labels are compatible with
         one another.
+
+        Raises:
+            ValueError: If a qubit in the single-qubit calibration data is not mentioned in the
+            provided qubit labels.
         """
         for qubit in self.single_qubit_specs.keys():
             if qubit not in self.qubit_labels:
@@ -65,6 +69,10 @@ class GateDeviceCalibrationData:
         """
         Checks that the qubit edge specs and the input qubit labels are compatible
         with one another.
+
+        Raises:
+            ValueError: If a qubit in the two-qubit calibration data is not mentioned in the
+            provided qubit labels.
         """
         for edge in self.two_qubit_edge_specs.keys():
             if edge[0] not in self.qubit_labels or edge[1] not in self.qubit_labels:
@@ -75,7 +83,7 @@ class GateDeviceCalibrationData:
         self._validate_two_qubit_specs()
 
 
-def create_device_noise_model(properties: DeviceCapabilities, arn: str) -> NoiseModel:
+def device_noise_model(properties: DeviceCapabilities, arn: str) -> NoiseModel:
     """
     Create a device-specific noise model using the calibration data provided
     in the device properties object for a QPU.
@@ -107,7 +115,7 @@ def _setup_calibration_specs(properties: DeviceCapabilities, arn: str) -> NoiseM
 @_setup_calibration_specs.register(RigettiDeviceCapabilities)
 @_setup_calibration_specs.register(IqmDeviceCapabilities)
 def _(properties: Union[RigettiDeviceCapabilities, IqmDeviceCapabilities], arn: str) -> NoiseModel:
-    gate_durations = QPU_GATE_DURATIONS.get(arn, None)
+    gate_durations = _QPU_GATE_DURATIONS.get(arn, None)
     if not gate_durations:
         raise ValueError(f"Gate durations are not available for device {arn}")
     single_qubit_gate_duration = gate_durations["single_qubit_gate_duration"]
@@ -151,7 +159,7 @@ def _(properties: IonqDeviceCapabilities, arn: str) -> NoiseModel:
     fidelity_data = calibration_data.fidelity
     timing_data = calibration_data.timing
     qubit_count = properties.paradigm.qubitCount
-    native_gates = get_qpu_gate_translation(properties, properties.paradigm.nativeGateSet)
+    native_gates = _get_qpu_gate_translations(properties, properties.paradigm.nativeGateSet)
 
     single_qubit_gate_duration = timing_data["1Q"]
     two_qubit_gate_duration = timing_data["2Q"]
@@ -219,7 +227,7 @@ def _create_edge_specs(
 ) -> List[GateFidelity]:
     edge_specs = []
     for edge_property in edge_properties:
-        gate_name = get_qpu_gate_translation(properties, edge_property.gateName)
+        gate_name = _get_qpu_gate_translations(properties, edge_property.gateName)
         if hasattr(Gate, gate_name):
             gate = getattr(Gate, gate_name)
             edge_specs.append(GateFidelity(gate, edge_property.fidelity))

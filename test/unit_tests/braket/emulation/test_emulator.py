@@ -47,7 +47,7 @@ def basic_emulator(empty_emulator):
 def test_empty_emulator_validation(empty_emulator):
     emulator = empty_emulator
     circuit = Circuit().h(0).cnot(0, 1)
-    emulator.run_validation_passes(circuit)
+    emulator.validate(circuit)
 
 
 def test_basic_emulator(basic_emulator):
@@ -55,7 +55,7 @@ def test_basic_emulator(basic_emulator):
     Should not error out when passed a valid circuit.
     """
     circuit = Circuit().cnot(0, 1)
-    circuit = basic_emulator.run_program_passes(circuit)
+    circuit = basic_emulator.run_passes(circuit)
     assert circuit == circuit
 
 
@@ -69,7 +69,7 @@ def test_basic_invalidate(basic_emulator):
 but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
     )
     with pytest.raises(ValueError, match=match_string):
-        basic_emulator.run_program_passes(circuit)
+        basic_emulator.run_passes(circuit)
 
 
 def test_add_pass_single(empty_emulator):
@@ -129,7 +129,7 @@ def test_validation_only_pass(setup_local_simulator_devices):
 but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
     )
     with pytest.raises(ValueError, match=match_string):
-        emulator.run_validation_passes(circuit)
+        emulator.validate(circuit)
 
 
 def test_apply_noise_model(setup_local_simulator_devices):
@@ -138,13 +138,13 @@ def test_apply_noise_model(setup_local_simulator_devices):
     emulator = Emulator(noise_model=noise_model)
 
     circuit = Circuit().h(0)
-    circuit = emulator.run_program_passes(circuit)
+    circuit = emulator.run_passes(circuit)
 
     noisy_circuit = Circuit().h(0).apply_gate_noise(BitFlip(0.1), Gate.H)
     assert circuit == noisy_circuit
 
     circuit = Circuit().h(0)
-    circuit = emulator.run_program_passes(circuit, apply_noise_model=False)
+    circuit = emulator.run_passes(circuit, apply_noise_model=False)
 
     target_circ = Circuit().h(0)
     assert circuit == target_circ

@@ -10,13 +10,17 @@ from braket.emulators.emulator_passes.criteria.emulator_criterion import Emulato
 class GateCriterion(EmulatorCriterion):
     def __init__(self, supported_gates: Iterator[str] = [], native_gates: Iterator[str] = []):
         """
-        args:
+        Args:
             supported_gates (Iterator[str]): A list of gates supported outside of verbatim mode
                 by the emulator. A gate is a Braket gate name.
             native_gates (Iterator[str]): A list of gates supported inside of verbatim mode by
                 the emulator.
+
+        Raises:
+            ValueError: If supported_gates and and native_gates are empty or any of the provided
+            gate are not supported by the Braket BDK.
         """
-        if len(supported_gates) == 0 and len(native_gates) == 0:
+        if not len(supported_gates) and not len(native_gates):
             raise ValueError("Supported gate set or native gate set must be provided.")
 
         try:
@@ -37,6 +41,10 @@ class GateCriterion(EmulatorCriterion):
 
         Args:
             circuit (Circuit): The Braket circuit whose gates to validate.
+
+        Raises:
+            ValueError: If a gate operation or verbatim gate operation is not in this criterion's
+            supported or native gate set, respectively.
         """
         idx = 0
         while idx < len(circuit.instructions):

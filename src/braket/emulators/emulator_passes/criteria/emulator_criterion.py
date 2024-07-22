@@ -33,4 +33,16 @@ class EmulatorCriterion(EmulatorPass):
 
     @abstractmethod
     def __eq__(self, other: EmulatorCriterion) -> bool:
+        """
+        Checks whether or not two EmulatorCriterion are equivalent, i.e. they sets of programs
+        they validate and invalidate are identical.
+
+        Args:
+            other (EmulatorCriterion): The other criterion instance to compare with this instance.
+
+
+        Raises:
+            NotImplementedError: Method not implemented.
+        """
+
         raise NotImplementedError
