@@ -16,13 +16,14 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable, Iterable
 from numbers import Number
-from typing import Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
 from sympy import Expr
 
 from braket.circuits import compiler_directives
+from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -64,6 +65,9 @@ from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
+
+if TYPE_CHECKING:  # pragma: no cover
+    from braket.aws import AwsDevice
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1213,6 +1217,26 @@ class Circuit:
             str: An ASCII string circuit diagram.
         """
         return circuit_diagram_class.build_diagram(self)
+
+    def pulse_sequence(
+        self,
+        device: AwsDevice,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        pulse_sequence_builder_class: type = CircuitPulseSequenceBuilder,
+    ) -> PulseSequence:
+        """Get the associated pulse sequence for the current circuit.
+
+        Args:
+            device (AwsDevice): an AWS device.
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): Additional
+                gate definitions.
+            pulse_sequence_builder_class (type): A `CircuitPulseSequenceBuilder` class that builds
+                the pulse sequence for this circuit. Default = `CircuitPulseSequenceBuilder`.
+
+        Returns:
+            PulseSequence: A PulseSequence corresponding to the full circuit.
+        """
+        return pulse_sequence_builder_class(device, gate_definitions).build_pulse_sequence(self)
 
     def to_ir(
         self,
