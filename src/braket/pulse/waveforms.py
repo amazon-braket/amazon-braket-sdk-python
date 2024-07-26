@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+import scipy as sp
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
 
@@ -501,6 +502,167 @@ class GaussianWaveform(Waveform, Parameterizable):
         return GaussianWaveform(**waveform_parameters)
 
 
+class ErfSquareWaveform(Waveform, Parameterizable):
+    """A square waveform with smoothed edges."""
+
+    def __init__(
+        self,
+        length: Union[float, FreeParameterExpression],
+        width: Union[float, FreeParameterExpression],
+        sigma: Union[float, FreeParameterExpression],
+        amplitude: Union[float, FreeParameterExpression] = 1,
+        zero_at_edges: bool = False,
+        id: Optional[str] = None,
+    ):
+        r"""Initializes a `ErfSquareWaveform`.
+
+        .. math:: (\text{step}((t-t_1)/sigma) + \text{step}(-(t-t_2)/sigma) - 1)
+
+        where :math:`\text{step}(t)` is the rounded step function defined as
+        :math:`(erf(t)+1)/2` and :math:`t_1` and :math:`t_2` are the timestamps at the half
+        height. The waveform is scaled such that its maximum is equal to `amplitude`.
+
+        Args:
+            length (Union[float, FreeParameterExpression]): Duration (in seconds) from the start
+                to the end of the waveform.
+            width (Union[float, FreeParameterExpression]): Duration (in seconds) between the
+                half height of the two edges.
+            sigma (Union[float, FreeParameterExpression]): A characteristic time of how quickly
+                the edges rise and fall.
+            amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
+                envelope. Defaults to 1.
+            zero_at_edges (bool): Whether the waveform is scaled such that it has zero value at the
+                edges. Defaults to False.
+            id (Optional[str]): The identifier used for declaring this waveform. A random string of
+                ascii characters is assigned by default.
+        """
+        self.length = length
+        self.width = width
+        self.sigma = sigma
+        self.amplitude = amplitude
+        self.zero_at_edges = zero_at_edges
+        self.id = id or _make_identifier_name()
+
+    def __repr__(self) -> str:
+        return (
+            f"ErfSquareWaveform('id': {self.id}, 'length': {self.length}, "
+            f"'width': {self.width}, 'sigma': {self.sigma}, 'amplitude': {self.amplitude}, "
+            f"'zero_at_edges': {self.zero_at_edges})"
+        )
+
+    @property
+    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
+        """
+        return [self.length, self.width, self.sigma, self.amplitude]
+
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ErfSquareWaveform:
+        """Takes in parameters and returns an object with specified parameters
+        replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+
+        Returns:
+            ErfSquareWaveform: A copy of this waveform with the requested parameters bound.
+        """
+        constructor_kwargs = {
+            "length": subs_if_free_parameter(self.length, **kwargs),
+            "width": subs_if_free_parameter(self.width, **kwargs),
+            "sigma": subs_if_free_parameter(self.sigma, **kwargs),
+            "amplitude": subs_if_free_parameter(self.amplitude, **kwargs),
+            "zero_at_edges": self.zero_at_edges,
+            "id": self.id,
+        }
+        return ErfSquareWaveform(**constructor_kwargs)
+
+    def __eq__(self, other: ErfSquareWaveform):
+        return isinstance(other, ErfSquareWaveform) and (
+            self.length,
+            self.width,
+            self.sigma,
+            self.amplitude,
+            self.zero_at_edges,
+            self.id,
+        ) == (
+            other.length,
+            other.width,
+            other.sigma,
+            other.amplitude,
+            other.zero_at_edges,
+            other.id,
+        )
+
+    def _to_oqpy_expression(self) -> OQPyExpression:
+        """Returns an OQPyExpression defining this waveform.
+
+        Returns:
+            OQPyExpression: The OQPyExpression.
+        """
+        erf_square_generator = declare_waveform_generator(
+            "erf_square",
+            [
+                ("length", duration),
+                ("width", duration),
+                ("sigma", duration),
+                ("amplitude", float64),
+                ("zero_at_edges", bool_),
+            ],
+        )
+        return WaveformVar(
+            init_expression=erf_square_generator(
+                self.length,
+                self.width,
+                self.sigma,
+                self.amplitude,
+                self.zero_at_edges,
+            ),
+            name=self.id,
+        )
+
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+
+        Args:
+            dt (float): The time resolution.
+
+        Returns:
+            np.ndarray: The sample amplitudes for this waveform.
+        """
+        sample_range = np.arange(0, self.length, dt)
+        t1 = (self.length - self.width) / 2
+        t2 = (self.length + self.width) / 2
+        samples = (
+            sp.special.erf((sample_range - t1) / self.sigma)
+            + sp.special.erf(-(sample_range - t2) / self.sigma)
+        ) / 2
+
+        mid_waveform_height = sp.special.erf((self.width / 2) / self.sigma)
+        waveform_bottom = (sp.special.erf(-t1 / self.sigma) + sp.special.erf(t2 / self.sigma)) / 2
+
+        if self.zero_at_edges:
+            return (
+                (samples - waveform_bottom)
+                / (mid_waveform_height - waveform_bottom)
+                * self.amplitude
+            )
+        else:
+            return samples * self.amplitude / mid_waveform_height
+
+    @staticmethod
+    def _from_calibration_schema(waveform_json: dict) -> ErfSquareWaveform:
+        waveform_parameters = {"id": waveform_json["waveformId"]}
+        for val in waveform_json["arguments"]:
+            waveform_parameters[val["name"]] = (
+                float(val["value"])
+                if val["type"] == "float"
+                else FreeParameterExpression(val["value"])
+            )
+        print(waveform_parameters)
+        return ErfSquareWaveform(**waveform_parameters)
+
+
 def _make_identifier_name() -> str:
     return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa S311
 
@@ -511,6 +673,7 @@ def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
         "drag_gaussian": DragGaussianWaveform._from_calibration_schema,
         "gaussian": GaussianWaveform._from_calibration_schema,
         "constant": ConstantWaveform._from_calibration_schema,
+        "erf_square": ErfSquareWaveform._from_calibration_schema,
     }
     if "amplitudes" in waveform:
         waveform["name"] = "arbitrary"
