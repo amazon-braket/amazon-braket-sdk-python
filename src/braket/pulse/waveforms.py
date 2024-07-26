@@ -659,7 +659,6 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 if val["type"] == "float"
                 else FreeParameterExpression(val["value"])
             )
-        print(waveform_parameters)
         return ErfSquareWaveform(**waveform_parameters)
 
 

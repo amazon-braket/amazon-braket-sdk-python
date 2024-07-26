@@ -158,8 +158,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        _validate_uniqueness(self._frames, frame_1)
-        _validate_uniqueness(self._frames, frame_2)
+        _validate_uniqueness(self._frames, [frame_1, frame_2])
         self._program.function_call("swap_phases", [frame_1, frame_2])
         self._frames[frame_1.id] = frame_1
         self._frames[frame_2.id] = frame_2
