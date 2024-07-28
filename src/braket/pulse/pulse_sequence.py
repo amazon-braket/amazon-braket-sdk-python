@@ -152,8 +152,8 @@ class PulseSequence:
         """Adds an instruction to swap the phases between two frames.
 
         Args:
-            frame_1 (Frame): First frame for which the phase to swap from.
-            frame_2 (Frame): Second frame for which the phase to swap from.
+            frame_1 (Frame): First frame for which to swap the phase.
+            frame_2 (Frame): Second frame for which to swap the phase.
 
         Returns:
             PulseSequence: self, with the instruction added.
