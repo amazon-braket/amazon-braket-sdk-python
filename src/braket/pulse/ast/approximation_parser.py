@@ -26,6 +26,7 @@ from braket.pulse.frame import Frame
 from braket.pulse.waveforms import (
     ConstantWaveform,
     DragGaussianWaveform,
+    ErfSquareWaveform,
     GaussianWaveform,
     Waveform,
 )
@@ -468,6 +469,20 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         value = self.visit(node.arguments[1], context)
         context.frame_data[frame].scale = value
 
+    def swap_phases(self, node: ast.FunctionCall, context: _ParseState) -> None:
+        """A 'swap_phases' Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+        """
+        frame1 = self.visit(node.arguments[0], context)
+        frame2 = self.visit(node.arguments[1], context)
+        phase1 = context.frame_data[frame1].phase
+        phase2 = context.frame_data[frame2].phase
+        context.frame_data[frame1].phase = phase2
+        context.frame_data[frame2].phase = phase1
+
     def capture_v0(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'capture_v0' Function call.
 
@@ -548,6 +563,19 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """
         args = [self.visit(arg, context) for arg in node.arguments]
         return DragGaussianWaveform(*args)
+
+    def erf_square(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
+        """A 'erf_square' Waveform Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+
+        Returns:
+            Waveform: The waveform object representing the function call.
+        """
+        args = [self.visit(arg, context) for arg in node.arguments]
+        return ErfSquareWaveform(*args)
 
 
 def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:

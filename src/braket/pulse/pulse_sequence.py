@@ -144,6 +144,26 @@ class PulseSequence:
         self._frames[frame.id] = frame
         return self
 
+    def swap_phases(
+        self,
+        frame_1: Frame,
+        frame_2: Frame,
+    ) -> PulseSequence:
+        """Adds an instruction to swap the phases between two frames.
+
+        Args:
+            frame_1 (Frame): First frame for which to swap the phase.
+            frame_2 (Frame): Second frame for which to swap the phase.
+
+        Returns:
+            PulseSequence: self, with the instruction added.
+        """
+        _validate_uniqueness(self._frames, [frame_1, frame_2])
+        self._program.function_call("swap_phases", [frame_1, frame_2])
+        self._frames[frame_1.id] = frame_1
+        self._frames[frame_2.id] = frame_2
+        return self
+
     def set_scale(
         self, frame: Frame, scale: Union[float, FreeParameterExpression]
     ) -> PulseSequence:

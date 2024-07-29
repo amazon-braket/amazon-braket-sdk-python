@@ -18,5 +18,6 @@ from braket.pulse.waveforms import (  # noqa: F401
     ArbitraryWaveform,
     ConstantWaveform,
     DragGaussianWaveform,
+    ErfSquareWaveform,
     GaussianWaveform,
 )
