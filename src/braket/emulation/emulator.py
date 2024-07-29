@@ -7,17 +7,17 @@ from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
-from braket.emulators.emulator_interface import EmulatorInterface
-from braket.emulators.emulator_passes import EmulatorPass, ProgramType
+from braket.emulation.base_emulator import BaseEmulator
+from braket.emulation.emulator_passes import EmulationPass, ProgramType
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class Emulator(Device, EmulatorInterface):
+class Emulator(Device, BaseEmulator):
 
-    DEFAULT_SIMULATOR_BACKEND = "default"
-    DEFAULT_NOISY_BACKEND = "braket_dm"
+    _DEFAULT_SIMULATOR_BACKEND = "default"
+    _DEFAULT_NOISY_BACKEND = "braket_dm"
 
     """An emulator is a simulation device that more closely resembles
     the capabilities and constraints of a real device or of a specific device model."""
@@ -26,11 +26,11 @@ class Emulator(Device, EmulatorInterface):
         self,
         backend: str = "default",
         noise_model: Optional[NoiseModel] = None,
-        emulator_passes: Iterable[EmulatorPass] = None,
+        emulator_passes: Iterable[EmulationPass] = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
-        EmulatorInterface.__init__(self, emulator_passes)
+        BaseEmulator.__init__(self, emulator_passes)
         self._noise_model = noise_model
 
         backend_name = self._get_local_simulator_backend(backend, noise_model)
@@ -57,8 +57,8 @@ class Emulator(Device, EmulatorInterface):
                     "Setting LocalSimulator backend to use 'braket_dm' \
                         because a NoiseModel was provided."
                 )
-            return Emulator.DEFAULT_NOISY_BACKEND
-        return Emulator.DEFAULT_SIMULATOR_BACKEND
+            return Emulator._DEFAULT_NOISY_BACKEND
+        return Emulator._DEFAULT_SIMULATOR_BACKEND
 
     def run(
         self,
@@ -142,13 +142,13 @@ class Emulator(Device, EmulatorInterface):
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """
-        Passes the input program through all EmulatorPass objects contained in this
+        Passes the input program through all EmulationPass objects contained in this
         emulator and applies the emulator's noise model, if it exists, before
         returning the compiled program.
 
         Args:
             task_specification (ProgramType): The input program to validate and
-                compile based on this emulator's EmulatorPasses
+                compile based on this emulator's EmulationPasses
             apply_noise_model (bool): If true, apply this emulator's noise model
                 to the compiled program before returning the final program.
 
@@ -166,7 +166,7 @@ class Emulator(Device, EmulatorInterface):
 
     def validate(self, task_specification: ProgramType) -> None:
         """
-        Runs only EmulatorPasses that are EmulatorCriterion, i.e. all non-modifying
+        Runs only EmulationPasses that are ValidationPass, i.e. all non-modifying
         validation passes on the input program.
 
         Args:

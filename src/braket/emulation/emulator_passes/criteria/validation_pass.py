@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from braket.emulators.emulator_passes.emulator_pass import EmulatorPass, ProgramType
+from braket.emulation.emulator_passes.emulator_pass import EmulationPass, ProgramType
 
 
-class EmulatorCriterion(EmulatorPass):
+class ValidationPass(EmulationPass[ProgramType]):
     @abstractmethod
     def validate(self, program: ProgramType) -> None:
         """
-        An emulator criterion is used to perform some non-modifying validation
+        An emulator validator is used to perform some non-modifying validation
         pass on an input program. Implementations of validate should return
         nothing if the input program passes validation and raise an error otherwise.
 
@@ -30,19 +30,3 @@ class EmulatorCriterion(EmulatorPass):
         """
         self.validate(program)
         return program
-
-    @abstractmethod
-    def __eq__(self, other: EmulatorCriterion) -> bool:
-        """
-        Checks whether or not two EmulatorCriterion are equivalent, i.e. they sets of programs
-        they validate and invalidate are identical.
-
-        Args:
-            other (EmulatorCriterion): The other criterion instance to compare with this instance.
-
-
-        Raises:
-            NotImplementedError: Method not implemented.
-        """
-
-        raise NotImplementedError

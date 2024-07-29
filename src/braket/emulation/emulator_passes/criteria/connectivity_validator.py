@@ -7,21 +7,21 @@ from networkx.utils import graphs_equal
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.emulators.emulator_passes.criteria.emulator_criterion import EmulatorCriterion
+from braket.emulation.emulator_passes.criteria.validation_pass import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 
-class ConnectivityCriterion(EmulatorCriterion):
+class ConnectivityValidator(ValidationPass[Circuit]):
     def __init__(
         self,
         connectivity_graph: Optional[Union[Dict[int, Iterable[int]], DiGraph]] = None,
-        fully_connected=False,
+        fully_connected: bool = False,
         num_qubits: Optional[int] = None,
         qubit_labels: Optional[Union[Iterable[int], QubitSet]] = None,
         directed: bool = True,
     ):
         """
-        A ConnectivityCriterion instance takes in a qubit connectivity graph and validates that
+        A ConnectivityValidator instance takes in a qubit connectivity graph and validates that
         a circuit that uses verbatim circuits makes valid hardware qubit references in single
         and two-qubit gate operations.
 
@@ -50,9 +50,10 @@ class ConnectivityCriterion(EmulatorCriterion):
             or a valid DiGraph or dict representation of a connectivity graph is not provided.
         """
 
-        if not (connectivity_graph or fully_connected):
+        if not ((connectivity_graph is not None) ^ fully_connected):
             raise ValueError(
-                "Either the connectivity_graph must be provided or fully_connected must be True."
+                "Either the connectivity_graph must be provided OR fully_connected must be True\
+                    (not both)."
             )
 
         if fully_connected:
@@ -81,15 +82,15 @@ class ConnectivityCriterion(EmulatorCriterion):
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, program: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
-        device connectivity definied by this criterion. If any sub-circuit of the
+        device connectivity definied by this validator. If any sub-circuit of the
         input circuit is verbatim, we validate the connectivity of all gate operations
         in the circuit.
 
         Args:
-            circuit (Circuit): The Braket circuit whose gate operations to
+            program (Circuit): The Braket circuit whose gate operations to
                 validate.
 
         Raises:
@@ -100,17 +101,17 @@ class ConnectivityCriterion(EmulatorCriterion):
         if not any(
             [
                 isinstance(instruction.operator, StartVerbatimBox)
-                for instruction in circuit.instructions
+                for instruction in program.instructions
             ]
         ):
             return
-        for idx in range(len(circuit.instructions)):
-            instruction = circuit.instructions[idx]
+        for idx in range(len(program.instructions)):
+            instruction = program.instructions[idx]
             if isinstance(instruction.operator, Gate):
                 if (
                     instruction.operator.qubit_count == 2
                 ):  # Assuming only maximum 2-qubit native gates are supported
-                    self.validate_instruction_connectivity(instruction.control, instruction.target)
+                    self._validate_instruction_connectivity(instruction.control, instruction.target)
                 else:
                     # just check that the target qubit exists in the connectivity graph
                     target_qubit = instruction.target[0]
@@ -119,11 +120,11 @@ class ConnectivityCriterion(EmulatorCriterion):
                             f"Qubit {target_qubit} does not exist in the device topology."
                         )
 
-    def validate_instruction_connectivity(
+    def _validate_instruction_connectivity(
         self, control_qubits: QubitSet, target_qubits: QubitSet
     ) -> None:
         """
-        Checks if a two-qubit instruction is valid based on this criterion's connectivity
+        Checks if a two-qubit instruction is valid based on this validator's connectivity
         graph.
 
         Args:
@@ -148,12 +149,12 @@ class ConnectivityCriterion(EmulatorCriterion):
             )
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
-        # Check that each edge exists in this criterion's connectivity graph
+        # Check that each edge exists in this validator's connectivity graph
         for e in gate_connectivity_graph.edges:
             if not self._connectivity_graph.has_edge(*e):
                 raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
 
-    def __eq__(self, other: EmulatorCriterion) -> bool:
-        return isinstance(other, ConnectivityCriterion) and graphs_equal(
+    def __eq__(self, other: ValidationPass) -> bool:
+        return isinstance(other, ConnectivityValidator) and graphs_equal(
             self._connectivity_graph, other._connectivity_graph
         )

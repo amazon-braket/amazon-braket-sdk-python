@@ -28,10 +28,10 @@ from networkx import DiGraph, complete_graph, from_edgelist
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_emulator_helpers import (
-    connectivity_criterion,
-    gate_connectivity_criterion,
-    gate_criterion,
-    qubit_count_criterion,
+    connectivity_validator,
+    gate_connectivity_validator,
+    gate_validator,
+    qubit_count_validator,
 )
 from braket.aws.aws_noise_models import device_noise_model
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -48,8 +48,8 @@ from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.devices import Devices
 from braket.devices.device import Device
-from braket.emulators import Emulator
-from braket.emulators.emulator_passes import ProgramType
+from braket.emulation import Emulator
+from braket.emulation.emulator_passes import ProgramType
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
@@ -908,15 +908,15 @@ class AwsDevice(Device):
             noise_model=emulator_noise_model, backend="braket_dm", name=self._name
         )
 
-        self._emulator.add_pass(qubit_count_criterion(self.properties))
-        self._emulator.add_pass(gate_criterion(self.properties))
-        self._emulator.add_pass(connectivity_criterion(self.properties, self.topology_graph))
-        self._emulator.add_pass(gate_connectivity_criterion(self.properties, self.topology_graph))
+        self._emulator.add_pass(qubit_count_validator(self.properties))
+        self._emulator.add_pass(gate_validator(self.properties))
+        self._emulator.add_pass(connectivity_validator(self.properties, self.topology_graph))
+        self._emulator.add_pass(gate_connectivity_validator(self.properties, self.topology_graph))
         return self._emulator
 
     def validate(
         self,
-        task_specification: Circuit,
+        task_specification: ProgramType,
     ) -> None:
         """
         Runs all non-modifying emulator passes on the input program and raises an
@@ -924,14 +924,14 @@ class AwsDevice(Device):
         program meets all criteria, returns.
 
         Args:
-            task_specification (Circuit): The quantum program to emulate against
+            task_specification (ProgramType): The quantum program to emulate against
                 this AwsDevice device properties.
 
         """
         self.emulator.validate(task_specification)
         return
 
-    def run_emulator_passes(
+    def run_passes(
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """
@@ -954,7 +954,7 @@ class AwsDevice(Device):
 
     def emulate(
         self,
-        task_specification: Circuit,
+        task_specification: ProgramType,
         shots: Optional[int] = None,
         inputs: Optional[dict[str, float]] = None,
     ) -> QuantumTask:
@@ -964,7 +964,7 @@ class AwsDevice(Device):
         the program on the emulator's backend.
 
         Args:
-            task_specification (Circuit): Specification of a quantum task
+            task_specification (ProgramType): Specification of a quantum task
                 to run on device.
 
             shots (Optional[int]): The number of times to run the quantum task on the device.

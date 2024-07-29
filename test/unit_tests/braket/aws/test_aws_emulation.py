@@ -30,12 +30,12 @@ from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.devices import Devices
 from braket.devices.local_simulator import LocalSimulator
-from braket.emulators import Emulator
-from braket.emulators.emulator_passes import (
-    ConnectivityCriterion,
-    GateConnectivityCriterion,
-    GateCriterion,
-    QubitCountCriterion,
+from braket.emulation import Emulator
+from braket.emulation.emulator_passes import (
+    ConnectivityValidator,
+    GateConnectivityValidator,
+    GateValidator,
+    QubitCountValidator,
 )
 
 REGION = "us-west-1"
@@ -566,13 +566,13 @@ def rigetti_device(aws_session, mock_rigetti_qpu_device):
 def test_ionq_emulator(ionq_device):
     emulator = ionq_device.emulator
     target_emulator_passes = [
-        QubitCountCriterion(ionq_device.properties.paradigm.qubitCount),
-        GateCriterion(
+        QubitCountValidator(ionq_device.properties.paradigm.qubitCount),
+        GateValidator(
             supported_gates=["x", "Y"],
             native_gates=["cz", "gpi", "cphaseshift"],
         ),
-        ConnectivityCriterion(nx.from_edgelist([(0, 1), (1, 0)], create_using=nx.DiGraph())),
-        GateConnectivityCriterion(
+        ConnectivityValidator(nx.from_edgelist([(0, 1), (1, 0)], create_using=nx.DiGraph())),
+        GateConnectivityValidator(
             nx.from_dict_of_dicts(
                 {
                     0: {1: {"supported_gates": set(["CZ", "CPhaseShift", "GPi"])}},
@@ -598,15 +598,15 @@ def test_rigetti_emulator(rigetti_device, rigetti_target_noise_model):
     )
 
     target_emulator_passes = [
-        QubitCountCriterion(rigetti_device.properties.paradigm.qubitCount),
-        GateCriterion(
+        QubitCountValidator(rigetti_device.properties.paradigm.qubitCount),
+        GateValidator(
             supported_gates=["H", "X", "CNot", "CZ", "Rx", "Ry", "YY"],
             native_gates=["cz", "prx", "cphaseshift"],
         ),
-        ConnectivityCriterion(
+        ConnectivityValidator(
             nx.from_edgelist([(0, 1), (0, 2), (1, 0), (2, 0)], create_using=nx.DiGraph())
         ),
-        GateConnectivityCriterion(
+        GateConnectivityValidator(
             nx.from_dict_of_dicts(
                 {
                     0: {
@@ -630,17 +630,17 @@ def test_iqm_emulator(iqm_device, iqm_target_noise_model):
     assert len(emulator.noise_model.instructions) == len(iqm_target_noise_model.instructions)
     assert emulator.noise_model.instructions == iqm_target_noise_model.instructions
     target_emulator_passes = [
-        QubitCountCriterion(iqm_device.properties.paradigm.qubitCount),
-        GateCriterion(
+        QubitCountValidator(iqm_device.properties.paradigm.qubitCount),
+        GateValidator(
             supported_gates=["H", "CNot", "Ry", "XX", "YY"],
             native_gates=["cz", "prx", "cphaseshift"],
         ),
-        ConnectivityCriterion(
+        ConnectivityValidator(
             nx.from_edgelist(
                 [(0, 1), (0, 2), (1, 0), (2, 0), (2, 3), (3, 2)], create_using=nx.DiGraph()
             )
         ),
-        GateConnectivityCriterion(
+        GateConnectivityValidator(
             nx.from_dict_of_dicts(
                 {
                     0: {
@@ -691,7 +691,7 @@ def test_get_gate_translations(device_capabilities, gate_name, expected_result, 
 def test_emulator_passes(circuit, is_valid, rigetti_device):
     if is_valid:
         rigetti_device.validate(circuit)
-        assert rigetti_device.run_emulator_passes(circuit, apply_noise_model=False) == circuit
+        assert rigetti_device.run_passes(circuit, apply_noise_model=False) == circuit
     else:
         with pytest.raises(ValueError):
             rigetti_device.validate(circuit)

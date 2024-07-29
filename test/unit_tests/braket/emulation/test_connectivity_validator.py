@@ -4,7 +4,7 @@ import pytest
 from networkx.utils import graphs_equal
 
 from braket.circuits import Circuit
-from braket.emulators.emulator_passes.criteria import ConnectivityCriterion
+from braket.emulation.emulator_passes.criteria import ConnectivityValidator
 
 
 @pytest.fixture
@@ -39,9 +39,9 @@ def six_node_digraph():
 )
 def test_basic_contiguous_circuits(basic_2_node_complete_graph, circuit):
     """
-    ConnectivityGateCriterion should not raise any errors when validating these circuits.
+    ConnectivityValidator should not raise any errors when validating these circuits.
     """
-    ConnectivityCriterion(basic_2_node_complete_graph).validate(circuit)
+    ConnectivityValidator(basic_2_node_complete_graph).validate(circuit)
 
 
 @pytest.mark.parametrize(
@@ -58,18 +58,18 @@ def test_basic_contiguous_circuits(basic_2_node_complete_graph, circuit):
 )
 def test_valid_discontiguous_circuits(basic_noncontig_qubits_2_node_complete_graph, circuit):
     """
-    ConnectivityGateCriterion should not raise any errors when validating these circuits.
+    ConnectivityValidator should not raise any errors when validating these circuits.
     """
-    ConnectivityCriterion(basic_noncontig_qubits_2_node_complete_graph).validate(circuit)
+    ConnectivityValidator(basic_noncontig_qubits_2_node_complete_graph).validate(circuit)
 
 
 def test_complete_graph_instantation_with_num_qubits():
     """
     Tests that, if fully_connected is True and num_qubits are passed into the
-    ConnectivityCriterion constructor, a fully connected graph is created.
+    ConnectivityValidator constructor, a fully connected graph is created.
     """
     num_qubits = 5
-    criterion = ConnectivityCriterion(num_qubits=num_qubits, fully_connected=True)
+    validator = ConnectivityValidator(num_qubits=num_qubits, fully_connected=True)
     vb = Circuit()
     for i in range(num_qubits):
         for j in range(num_qubits):
@@ -78,19 +78,19 @@ def test_complete_graph_instantation_with_num_qubits():
             else:
                 vb.i(i)
     circuit = Circuit().add_verbatim_box(vb)
-    criterion.validate(circuit)
+    validator.validate(circuit)
     assert nx.utils.graphs_equal(
-        criterion._connectivity_graph, nx.complete_graph(num_qubits, create_using=nx.DiGraph())
+        validator._connectivity_graph, nx.complete_graph(num_qubits, create_using=nx.DiGraph())
     )
 
 
 def test_complete_graph_instantation_with_qubit_labels():
     """
     Tests that, if fully_connected is True and num_qubits are passed into the
-    ConnectivityCriterion constructor, a fully connected graph is created.
+    ConnectivityValidator constructor, a fully connected graph is created.
     """
     qubit_labels = [0, 1, 10, 11, 110, 111, 112, 113]
-    criterion = ConnectivityCriterion(qubit_labels=qubit_labels, fully_connected=True)
+    validator = ConnectivityValidator(qubit_labels=qubit_labels, fully_connected=True)
     vb = Circuit()
     for i in qubit_labels:
         for j in qubit_labels:
@@ -99,9 +99,9 @@ def test_complete_graph_instantation_with_qubit_labels():
             else:
                 vb.i(i)
     circuit = Circuit().add_verbatim_box(vb)
-    criterion.validate(circuit)
+    validator.validate(circuit)
     assert nx.utils.graphs_equal(
-        criterion._connectivity_graph, nx.complete_graph(qubit_labels, create_using=nx.DiGraph())
+        validator._connectivity_graph, nx.complete_graph(qubit_labels, create_using=nx.DiGraph())
     )
 
 
@@ -118,7 +118,7 @@ def test_complete_graph_instantation_with_qubit_labels():
 )
 def test_invalid_2_qubit_gates(six_node_digraph, circuit):
     with pytest.raises(ValueError):
-        ConnectivityCriterion(six_node_digraph).validate(circuit)
+        ConnectivityValidator(six_node_digraph).validate(circuit)
 
 
 @pytest.mark.parametrize(
@@ -134,13 +134,13 @@ def test_invalid_2_qubit_gates(six_node_digraph, circuit):
 )
 def test_invalid_1_qubit_gates(six_node_digraph, circuit):
     with pytest.raises(ValueError):
-        ConnectivityCriterion(six_node_digraph).validate(circuit)
+        ConnectivityValidator(six_node_digraph).validate(circuit)
 
 
 def test_equality_graph_created_with_dict(six_node_digraph):
     graph = {0: [1, 3], 1: [0, 2, 10], 2: [1, 3, 11], 10: [1, 11], 11: [2, 10]}
-    criteria_from_digraph = ConnectivityCriterion(six_node_digraph)
-    criteria_from_dict = ConnectivityCriterion(graph)
+    criteria_from_digraph = ConnectivityValidator(six_node_digraph)
+    criteria_from_dict = ConnectivityValidator(graph)
     assert criteria_from_dict == criteria_from_digraph
 
 
@@ -158,7 +158,7 @@ def test_invalid_constructors(
     connectivity_graph, fully_connected, num_qubits, qubit_labels, directed
 ):
     with pytest.raises(ValueError):
-        ConnectivityCriterion(
+        ConnectivityValidator(
             connectivity_graph, fully_connected, num_qubits, qubit_labels, directed
         )
 
@@ -188,7 +188,7 @@ def test_undirected_graph_construction(representation):
         ],
         create_using=nx.DiGraph,
     )
-    cc = ConnectivityCriterion(representation, directed=False)
+    cc = ConnectivityValidator(representation, directed=False)
     assert graphs_equal(cc._connectivity_graph, expected_digraph)
 
 
@@ -209,9 +209,9 @@ def test_undirected_graph_construction(representation):
     ],
 )
 def test_validate_instruction_method(controls, targets, is_valid, six_node_digraph):
-    gcc = ConnectivityCriterion(six_node_digraph, directed=False)
+    gcc = ConnectivityValidator(six_node_digraph, directed=False)
     if is_valid:
-        gcc.validate_instruction_connectivity(controls, targets)
+        gcc._validate_instruction_connectivity(controls, targets)
     else:
         with pytest.raises(ValueError):
-            gcc.validate_instruction_connectivity(controls, targets)
+            gcc._validate_instruction_connectivity(controls, targets)

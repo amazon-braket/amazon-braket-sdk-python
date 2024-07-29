@@ -6,11 +6,11 @@ from networkx.utils import graphs_equal
 from braket.circuits.circuit import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.emulators.emulator_passes.criteria.emulator_criterion import EmulatorCriterion
+from braket.emulation.emulator_passes.criteria.validation_pass import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 
-class GateConnectivityCriterion(EmulatorCriterion):
+class GateConnectivityValidator(ValidationPass[Circuit]):
     def __init__(
         self,
         gate_connectivity_graph: Union[Dict[Tuple[Any, Any], Iterable[str]], DiGraph],
@@ -54,32 +54,32 @@ provided as edge attributes."
                                 gate sets."
                         )
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, program: Circuit) -> None:
         """
         Verifies that any multiqubit gates used within a verbatim box are supported
         by the devices gate connectivity defined by this criteria.
 
         Args:
-            circuit (Circuit): The circuit whose gate instructions need to be validated
-                against this criterion's gate connectivity graph.
+            program (Circuit): The circuit whose gate instructions need to be validated
+                against this validator's gate connectivity graph.
 
         Raises:
             ValueError if any of the gate operations use qubits or qubit edges that don't exist
             in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
-        for idx in range(len(circuit.instructions)):
-            instruction = circuit.instructions[idx]
+        for idx in range(len(program.instructions)):
+            instruction = program.instructions[idx]
             if isinstance(instruction.operator, StartVerbatimBox):
                 idx += 1
-                while idx < len(circuit.instructions) and not isinstance(
-                    circuit.instructions[idx].operator, EndVerbatimBox
+                while idx < len(program.instructions) and not isinstance(
+                    program.instructions[idx].operator, EndVerbatimBox
                 ):
-                    instruction = circuit.instructions[idx]
+                    instruction = program.instructions[idx]
                     if isinstance(instruction.operator, Gate):
                         if (
                             instruction.operator.qubit_count == 2
                         ):  # Assuming only maximum 2-qubit native gates are supported
-                            self.validate_instruction_connectivity(
+                            self._validate_instruction_connectivity(
                                 instruction.operator.name, instruction.control, instruction.target
                             )
                         else:
@@ -92,12 +92,12 @@ provided as edge attributes."
                     idx += 1
                 idx += 1
 
-    def validate_instruction_connectivity(
+    def _validate_instruction_connectivity(
         self, gate_name: str, control_qubits: QubitSet, target_qubits: QubitSet
     ) -> None:
         """
         Checks if a specific is able to be applied to the control and target qubits based
-        on this criterion's gate connectivity graph.
+        on this validator's gate connectivity graph.
 
         Args:
             gate_name (str): The name of the gate being applied.
@@ -115,7 +115,7 @@ provided as edge attributes."
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
 
-        # Check that each edge exists in this criterion's connectivity graph
+        # Check that each edge exists in this validator's connectivity graph
         if not self._gate_connectivity_graph.has_edge(*e):
             raise ValueError(f"{e[0]} is not connected to {e[1]} on this device.")
         supported_gates = self._gate_connectivity_graph[e[0]][e[1]]["supported_gates"]
@@ -124,7 +124,7 @@ provided as edge attributes."
                 f"Qubit pair ({e[0]}, {e[1]}) does not support gate {gate_name} on this device."
             )
 
-    def __eq__(self, other: EmulatorCriterion) -> bool:
-        return isinstance(other, GateConnectivityCriterion) and graphs_equal(
+    def __eq__(self, other: ValidationPass) -> bool:
+        return isinstance(other, GateConnectivityValidator) and graphs_equal(
             self._gate_connectivity_graph, other._gate_connectivity_graph
         )

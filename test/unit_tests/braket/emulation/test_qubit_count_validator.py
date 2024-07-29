@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit
-from braket.emulators.emulator_passes import QubitCountCriterion
+from braket.emulation.emulator_passes import QubitCountValidator
 
 
 @pytest.mark.parametrize(
@@ -19,15 +19,15 @@ from braket.emulators.emulator_passes import QubitCountCriterion
 )
 def test_valid_circuits(qubit_count, circuit):
     """
-    QubitCountCriterion should not raise any errors when validating these circuits.
+    QubitCountValidator should not raise any errors when validating these circuits.
     """
-    QubitCountCriterion(qubit_count=qubit_count).__call__(circuit)
+    QubitCountValidator(qubit_count=qubit_count).__call__(circuit)
 
 
 @pytest.mark.parametrize("qubit_count", [0, -1])
 def test_invalid_instantiation(qubit_count):
     with pytest.raises(ValueError):
-        QubitCountCriterion(qubit_count)
+        QubitCountValidator(qubit_count)
 
 
 @pytest.mark.parametrize(
@@ -44,12 +44,12 @@ def test_invalid_circuits(qubit_count, circuit):
         match=f"Circuit must use at most {qubit_count} qubits, \
 but uses {circuit.qubit_count} qubits.",
     ):
-        QubitCountCriterion(qubit_count).validate(circuit)
+        QubitCountValidator(qubit_count).validate(circuit)
 
 
 def test_equality():
-    qcc_1 = QubitCountCriterion(1)
-    qcc_2 = QubitCountCriterion(2)
+    qcc_1 = QubitCountValidator(1)
+    qcc_2 = QubitCountValidator(2)
 
     assert qcc_1 != qcc_2
-    assert qcc_1 == QubitCountCriterion(1)
+    assert qcc_1 == QubitCountValidator(1)

@@ -5,7 +5,7 @@ from networkx.utils import graphs_equal
 
 from braket.circuits import Circuit, Gate
 from braket.circuits.noises import BitFlip
-from braket.emulators.emulator_passes.criteria import GateConnectivityCriterion
+from braket.emulation.emulator_passes.criteria import GateConnectivityValidator
 
 
 @pytest.fixture
@@ -66,10 +66,10 @@ def basic_4_node_graph_as_dict():
 )
 def test_valid_basic_contiguous_circuits(basic_4_node_graph, circuit):
     """
-    ConnectivityGateCriterion should not raise any errors when validating these circuits.
+    GateConnectivityValidator should not raise any errors when validating these circuits.
     """
-    gate_connectivity_criterion = GateConnectivityCriterion(basic_4_node_graph)
-    gate_connectivity_criterion.validate(circuit)
+    gate_connectivity_validator = GateConnectivityValidator(basic_4_node_graph)
+    gate_connectivity_validator.validate(circuit)
 
 
 @pytest.mark.parametrize(
@@ -92,15 +92,15 @@ def test_valid_basic_contiguous_circuits(basic_4_node_graph, circuit):
 )
 def test_valid_basic_discontiguous_circuits(basic_discontiguous_4_node_graph, circuit):
     """
-    ConnectivityGateCriterion should not raise any errors when validating these circuits.
+    GateConnectivityValidator should not raise any errors when validating these circuits.
     """
-    gate_connectivity_criterion = GateConnectivityCriterion(basic_discontiguous_4_node_graph)
-    gate_connectivity_criterion.validate(circuit)
+    gate_connectivity_validator = GateConnectivityValidator(basic_discontiguous_4_node_graph)
+    gate_connectivity_validator.validate(circuit)
 
 
 def test_directed_graph_construction_from_dict():
     """
-    ConnectivityGateCriterion should correctly construct a graph from a dictionary
+    GateConnectivityValidator should correctly construct a graph from a dictionary
     representation of the connectivity.
     """
     dict_representation = {
@@ -118,7 +118,7 @@ def test_directed_graph_construction_from_dict():
             (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
         ]
     )
-    gcc = GateConnectivityCriterion(dict_representation)
+    gcc = GateConnectivityValidator(dict_representation)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
 
 
@@ -140,17 +140,17 @@ def test_directed_graph_construction_from_dict():
 )
 def test_undirected_criteria_from_dict_with_valid_circuits(basic_4_node_graph_as_dict, circuit):
     """
-    ConnectivityGateCriterion should not raise any errors when validating these circuits.
+    GateConnectivityValidator should not raise any errors when validating these circuits.
     """
-    gate_connectivity_criterion = GateConnectivityCriterion(
+    gate_connectivity_validator = GateConnectivityValidator(
         basic_4_node_graph_as_dict, directed=False
     )
-    gate_connectivity_criterion.validate(circuit)
+    gate_connectivity_validator.validate(circuit)
 
 
 def test_undirected_graph_construction_from_dict():
     """
-    ConnectivityGateCriterion should correctly construct an undirected graph from a dictionary
+    GateConnectivityValidator should correctly construct an undirected graph from a dictionary
     representation of the connectivity.
     """
     dict_representation = {
@@ -173,7 +173,7 @@ def test_undirected_graph_construction_from_dict():
             (5, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
         ]
     )
-    gcc = GateConnectivityCriterion(dict_representation, directed=False)
+    gcc = GateConnectivityValidator(dict_representation, directed=False)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
 
 
@@ -199,7 +199,7 @@ def test_undirected_graph_construction_from_dict():
 def test_undirected_graph_from_digraph(edges):
     """
     Check that undirected topologies created from a digraph correctly add all possible
-    back edges to the criterion's connectivity graph.
+    back edges to the validator's connectivity graph.
     """
     directed_graph = nx.DiGraph()
     directed_graph.add_edges_from(edges)
@@ -209,10 +209,10 @@ def test_undirected_graph_from_digraph(edges):
         if (edge[1], edge[0]) not in undirected_graph.edges:
             undirected_graph.add_edges_from([(edge[1], edge[0], edge[2])])
 
-    gcc = GateConnectivityCriterion(directed_graph, directed=False)
+    gcc = GateConnectivityValidator(directed_graph, directed=False)
     assert graphs_equal(gcc._gate_connectivity_graph, undirected_graph)
 
-    gcc_other = GateConnectivityCriterion(undirected_graph)
+    gcc_other = GateConnectivityValidator(undirected_graph)
     assert gcc_other == gcc
 
 
@@ -236,7 +236,7 @@ def create_undirected_graph_with_exisiting_back_edges(representation):
     is created properly.
     """
 
-    gcc = GateConnectivityCriterion(representation, directed=False)
+    gcc = GateConnectivityValidator(representation, directed=False)
     expected_digraph_representation = nx.DiGraph()
     expected_digraph_representation.add_edges_from(
         [
@@ -261,14 +261,14 @@ def create_undirected_graph_with_exisiting_back_edges(representation):
 )
 def test_invalid_circuits(basic_4_node_graph, circuit):
     with pytest.raises(ValueError):
-        gate_connectivity_criterion = GateConnectivityCriterion(basic_4_node_graph)
-        gate_connectivity_criterion.validate(circuit)
+        gate_connectivity_validator = GateConnectivityValidator(basic_4_node_graph)
+        gate_connectivity_validator.validate(circuit)
 
 
 def test_invalid_connectivity_graph():
     bad_graph = nx.complete_graph(5, create_using=nx.Graph())
     with pytest.raises(TypeError):
-        GateConnectivityCriterion(bad_graph)
+        GateConnectivityValidator(bad_graph)
 
 
 @pytest.mark.parametrize(
@@ -283,12 +283,12 @@ def test_invalid_connectivity_graph():
     ],
 )
 def test_validate_instruction_method(gate_name, controls, targets, is_valid, basic_4_node_graph):
-    gcc = GateConnectivityCriterion(basic_4_node_graph, directed=False)
+    gcc = GateConnectivityValidator(basic_4_node_graph, directed=False)
     if is_valid:
-        gcc.validate_instruction_connectivity(gate_name, controls, targets)
+        gcc._validate_instruction_connectivity(gate_name, controls, targets)
     else:
         with pytest.raises(ValueError):
-            gcc.validate_instruction_connectivity(gate_name, controls, targets)
+            gcc._validate_instruction_connectivity(gate_name, controls, targets)
 
 
 @pytest.mark.parametrize(
@@ -309,4 +309,4 @@ def test_validate_instruction_method(gate_name, controls, targets, is_valid, bas
 )
 def test_invalid_undirected_graph(graph):
     with pytest.raises(ValueError):
-        GateConnectivityCriterion(graph, directed=False)
+        GateConnectivityValidator(graph, directed=False)

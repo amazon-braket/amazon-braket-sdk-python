@@ -8,17 +8,17 @@ from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
-from braket.emulators.emulator_passes import (
-    ConnectivityCriterion,
-    GateConnectivityCriterion,
-    GateCriterion,
-    QubitCountCriterion,
+from braket.emulation.emulator_passes import (
+    ConnectivityValidator,
+    GateConnectivityValidator,
+    GateValidator,
+    QubitCountValidator,
 )
 
 
-def qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion:
+def qubit_count_validator(properties: DeviceCapabilities) -> QubitCountValidator:
     """
-    Create a QubitCountCriterion pass which checks that the number of qubits used in a program does
+    Create a QubitCountValidator pass which checks that the number of qubits used in a program does
     not exceed the number of qubits allowed by a QPU, as defined in the device properties.
 
     Args:
@@ -26,16 +26,16 @@ def qubit_count_criterion(properties: DeviceCapabilities) -> QubitCountCriterion
             QHP-specific schema.
 
     Returns:
-        QubitCountCriterion: An emulator pass that checks that the number of qubits used in a
+        QubitCountValidator: An emulator pass that checks that the number of qubits used in a
         program does not exceed that of the max qubit count on the device.
     """
     qubit_count = properties.paradigm.qubitCount
-    return QubitCountCriterion(qubit_count)
+    return QubitCountValidator(qubit_count)
 
 
-def gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
+def gate_validator(properties: DeviceCapabilities) -> GateValidator:
     """
-    Create a GateCriterion pass which defines what supported and native gates are allowed in a
+    Create a GateValidator pass which defines what supported and native gates are allowed in a
     program based on the provided device properties.
 
     Args:
@@ -43,21 +43,21 @@ def gate_criterion(properties: DeviceCapabilities) -> GateCriterion:
             QHP-specific schema.
 
     Returns:
-        GateCriterion: An emulator pass that checks that a circuit only uses supported gates and
+        GateValidator: An emulator pass that checks that a circuit only uses supported gates and
         verbatim circuits only use native gates.
     """
 
     supported_gates = properties.action[DeviceActionType.OPENQASM].supportedOperations
     native_gates = properties.paradigm.nativeGateSet
 
-    return GateCriterion(supported_gates=supported_gates, native_gates=native_gates)
+    return GateValidator(supported_gates=supported_gates, native_gates=native_gates)
 
 
-def connectivity_criterion(
+def connectivity_validator(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
-) -> ConnectivityCriterion:
+) -> ConnectivityValidator:
     """
-    Creates a ConnectivityCriterion pass which validates that two-qubit gates are applied to
+    Creates a ConnectivityValidator pass which validates that two-qubit gates are applied to
     connected qubits based on this device's connectivity graph.
 
     Args:
@@ -67,53 +67,53 @@ def connectivity_criterion(
         connectivity_graph (DiGraph): Connectivity graph for this device.
 
     Returns:
-        ConnectivityCriterion: An emulator pass that checks that a circuit only applies two-qubit
+        ConnectivityValidator: An emulator pass that checks that a circuit only applies two-qubit
         gates to connected qubits on the device.
     """
 
-    return _connectivity_criterion(properties, connectivity_graph)
+    return _connectivity_validator(properties, connectivity_graph)
 
 
 @singledispatch
-def _connectivity_criterion(
+def _connectivity_validator(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
-) -> ConnectivityCriterion:
+) -> ConnectivityValidator:
 
-    connectivity_criterion = ConnectivityCriterion(connectivity_graph)
-    return connectivity_criterion
+    connectivity_validator = ConnectivityValidator(connectivity_graph)
+    return connectivity_validator
 
 
-@_connectivity_criterion.register(IqmDeviceCapabilities)
-def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> ConnectivityCriterion:
+@_connectivity_validator.register(IqmDeviceCapabilities)
+def _(properties: IqmDeviceCapabilities, connectivity_graph: DiGraph) -> ConnectivityValidator:
     """
     IQM qubit connectivity is undirected but the directed graph that represents qubit connectivity
     does not include back-edges. Thus, we must explicitly introduce back edges before creating
-    the ConnectivityCriterion for an IQM device.
+    the ConnectivityValidator for an IQM device.
     """
     connectivity_graph = connectivity_graph.copy()
     for edge in connectivity_graph.edges:
         connectivity_graph.add_edge(edge[1], edge[0])
-    return ConnectivityCriterion(connectivity_graph)
+    return ConnectivityValidator(connectivity_graph)
 
 
-def gate_connectivity_criterion(
+def gate_connectivity_validator(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
-) -> GateConnectivityCriterion:
-    return _gate_connectivity_criterion(properties, connectivity_graph)
+) -> GateConnectivityValidator:
+    return _gate_connectivity_validator(properties, connectivity_graph)
 
 
 @singledispatch
-def _gate_connectivity_criterion(
+def _gate_connectivity_validator(
     properties: DeviceCapabilities, connectivity_graph: DiGraph
-) -> GateConnectivityCriterion:
+) -> GateConnectivityValidator:
     raise NotImplementedError
 
 
-@_gate_connectivity_criterion.register(IqmDeviceCapabilities)
-@_gate_connectivity_criterion.register(RigettiDeviceCapabilities)
+@_gate_connectivity_validator.register(IqmDeviceCapabilities)
+@_gate_connectivity_validator.register(RigettiDeviceCapabilities)
 def _(
     properties: RigettiDeviceCapabilities, connectivity_graph: DiGraph
-) -> GateConnectivityCriterion:
+) -> GateConnectivityValidator:
     """
     Both IQM and Rigetti have undirected connectivity graphs; Rigetti device capabilities
     provide back edges, but the calibration data only provides edges in one direction.
@@ -145,11 +145,11 @@ def _(
                 v, u, supported_gates=set(gate_connectivity_graph[u][v]["supported_gates"])
             )
 
-    return GateConnectivityCriterion(gate_connectivity_graph)
+    return GateConnectivityValidator(gate_connectivity_graph)
 
 
-@_gate_connectivity_criterion.register(IonqDeviceCapabilities)
-def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityCriterion:
+@_gate_connectivity_validator.register(IonqDeviceCapabilities)
+def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateConnectivityValidator:
     """
     Qubits in IonQ's trapped ion devices are all fully connected with identical
     gate-pair capabilities. IonQ does not expliclty provide a set of edges for
@@ -162,7 +162,7 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
     for edge in gate_connectivity_graph.edges:
         gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = set(native_gates)
 
-    return GateConnectivityCriterion(gate_connectivity_graph)
+    return GateConnectivityValidator(gate_connectivity_graph)
 
 
 def _get_qpu_gate_translations(

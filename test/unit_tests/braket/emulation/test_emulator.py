@@ -9,16 +9,16 @@ from braket.circuits.noise_model import GateCriteria, NoiseModel
 from braket.circuits.noises import BitFlip
 from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulator
 from braket.devices import local_simulator
-from braket.emulators import Emulator
-from braket.emulators.emulator_passes import (
-    EmulatorPass,
-    GateCriterion,
+from braket.emulation import Emulator
+from braket.emulation.emulator_passes import (
+    EmulationPass,
+    GateValidator,
     ProgramType,
-    QubitCountCriterion,
+    QubitCountValidator,
 )
 
 
-class AlwaysFailPass(EmulatorPass):
+class AlwaysFailPass(EmulationPass):
     def run(self, program: ProgramType):
         raise ValueError("This pass always raises an error.")
 
@@ -40,8 +40,8 @@ def empty_emulator(setup_local_simulator_devices):
 
 @pytest.fixture
 def basic_emulator(empty_emulator):
-    qubit_count_criterion = QubitCountCriterion(4)
-    return empty_emulator.add_pass(emulator_pass=[qubit_count_criterion])
+    qubit_count_validator = QubitCountValidator(4)
+    return empty_emulator.add_pass(emulator_pass=[qubit_count_validator])
 
 
 def test_empty_emulator_validation(empty_emulator):
@@ -61,7 +61,7 @@ def test_basic_emulator(basic_emulator):
 
 def test_basic_invalidate(basic_emulator):
     """
-    Emulator should raise an error thrown by the QubitCountCriterion.
+    Emulator should raise an error thrown by the QubitCountValidator.
     """
     circuit = Circuit().x(range(6))
     match_string = re.escape(
@@ -74,10 +74,10 @@ but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
 
 def test_add_pass_single(empty_emulator):
     emulator = empty_emulator
-    qubit_count_criterion = QubitCountCriterion(4)
-    emulator.add_pass(qubit_count_criterion)
+    qubit_count_validator = QubitCountValidator(4)
+    emulator.add_pass(qubit_count_validator)
 
-    assert emulator._emulator_passes == [qubit_count_criterion]
+    assert emulator._emulator_passes == [qubit_count_validator]
 
 
 def test_bad_add_pass(empty_emulator):
@@ -87,16 +87,16 @@ def test_bad_add_pass(empty_emulator):
 
 
 def test_add_pass_multiple(setup_local_simulator_devices):
-    native_gate_criterion = GateCriterion(native_gates=["CZ", "PRx"])
-    emulator = Emulator(emulator_passes=[native_gate_criterion])
-    qubit_count_criterion = QubitCountCriterion(4)
-    gate_criterion = GateCriterion(supported_gates=["H", "CNot"])
+    native_gate_validator = GateValidator(native_gates=["CZ", "PRx"])
+    emulator = Emulator(emulator_passes=[native_gate_validator])
+    qubit_count_validator = QubitCountValidator(4)
+    gate_validator = GateValidator(supported_gates=["H", "CNot"])
 
-    emulator.add_pass([qubit_count_criterion, gate_criterion])
+    emulator.add_pass([qubit_count_validator, gate_validator])
     assert emulator._emulator_passes == [
-        native_gate_criterion,
-        qubit_count_criterion,
-        gate_criterion,
+        native_gate_validator,
+        qubit_count_validator,
+        gate_validator,
     ]
 
 
@@ -119,9 +119,9 @@ def test_update_noise_model(empty_emulator):
 
 
 def test_validation_only_pass(setup_local_simulator_devices):
-    qubit_count_criterion = QubitCountCriterion(4)
+    qubit_count_validator = QubitCountValidator(4)
     bad_pass = AlwaysFailPass()
-    emulator = Emulator(emulator_passes=[bad_pass, qubit_count_criterion])
+    emulator = Emulator(emulator_passes=[bad_pass, qubit_count_validator])
 
     circuit = Circuit().h(range(5))
     match_string = re.escape(
@@ -151,9 +151,9 @@ def test_apply_noise_model(setup_local_simulator_devices):
 
 
 def test_noiseless_run(setup_local_simulator_devices):
-    qubit_count_criterion = QubitCountCriterion(4)
-    gate_criterion = GateCriterion(supported_gates=["H"])
-    emulator = Emulator(emulator_passes=[qubit_count_criterion, gate_criterion])
+    qubit_count_validator = QubitCountValidator(4)
+    gate_validator = GateValidator(supported_gates=["H"])
+    emulator = Emulator(emulator_passes=[qubit_count_validator, gate_validator])
     circuit = Circuit().h(0).state_vector()
 
     result = emulator.run(circuit).result()
@@ -166,11 +166,11 @@ def test_noisy_run(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
 
-    qubit_count_criterion = QubitCountCriterion(4)
-    gate_criterion = GateCriterion(supported_gates=["H"])
+    qubit_count_validator = QubitCountValidator(4)
+    gate_validator = GateValidator(supported_gates=["H"])
     emulator = Emulator(
         backend="braket_dm",
-        emulator_passes=[qubit_count_criterion, gate_criterion],
+        emulator_passes=[qubit_count_validator, gate_validator],
         noise_model=noise_model,
     )
 

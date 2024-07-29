@@ -4,7 +4,7 @@ import pytest
 from braket.circuits import Circuit, Gate, Instruction
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.noises import BitFlip
-from braket.emulators.emulator_passes.criteria import GateCriterion
+from braket.emulation.emulator_passes.criteria import GateValidator
 
 
 @pytest.fixture
@@ -74,43 +74,43 @@ def mock_qpu_gates():
 )
 def test_valid_circuits(mock_qpu_gates, circuit):
     """
-    GateCriterion should not raise any errors when validating these circuits.
+    GateValidator should not raise any errors when validating these circuits.
     """
-    GateCriterion(mock_qpu_gates[0], mock_qpu_gates[1]).validate(circuit)
+    GateValidator(mock_qpu_gates[0], mock_qpu_gates[1]).validate(circuit)
 
 
 def test_only_supported_gates():
     supported_gates = ["h", "cnot", "rx", "xx", "y"]
-    criterion = GateCriterion(supported_gates=supported_gates)
+    validator = GateValidator(supported_gates=supported_gates)
     circuit = Circuit().h(0).cnot(0, 1).rx(4, np.pi / 4).xx(2, 3, np.pi / 4).y(7)
-    criterion.validate(circuit)
+    validator.validate(circuit)
 
 
 def test_verbatim_circuit_only_supported_gates():
     supported_gates = ["h", "cnot", "rx", "xx", "y"]
-    criterion = GateCriterion(supported_gates=supported_gates)
+    validator = GateValidator(supported_gates=supported_gates)
     circuit = Circuit().add_verbatim_box(Circuit().h(0))
 
     with pytest.raises(ValueError):
-        criterion.validate(circuit)
+        validator.validate(circuit)
 
 
 def test_only_native_gates():
     native_gates = ["h", "cnot", "rx", "xx", "y"]
-    criterion = GateCriterion(native_gates=native_gates)
+    validator = GateValidator(native_gates=native_gates)
     vb = Circuit().h(0).cnot(0, 1).rx(4, np.pi / 4).xx(2, 3, np.pi / 4).y(7)
     circuit = Circuit().add_verbatim_box(vb)
-    criterion.validate(circuit)
+    validator.validate(circuit)
 
 
 def test_non_verbatim_circuit_only_native_gates():
     native_gates = ["h", "cnot", "rx", "xx", "y"]
-    criterion = GateCriterion(native_gates=native_gates)
+    validator = GateValidator(native_gates=native_gates)
     vb = Circuit().h(0).cnot(0, 1).rx(4, np.pi / 4).xx(2, 3, np.pi / 4).y(7)
     circuit = Circuit().add_verbatim_box(vb)
     circuit.i(0)
     with pytest.raises(ValueError):
-        criterion.validate(circuit)
+        validator.validate(circuit)
 
 
 @pytest.mark.parametrize(
@@ -128,7 +128,7 @@ def test_non_verbatim_circuit_only_native_gates():
 )
 def test_invalid_instantiation(supported_gates, native_gates, error_message):
     with pytest.raises(ValueError, match=error_message):
-        GateCriterion(supported_gates, native_gates)
+        GateValidator(supported_gates, native_gates)
 
 
 @pytest.mark.parametrize(
@@ -147,10 +147,10 @@ def test_invalid_instantiation(supported_gates, native_gates, error_message):
 )
 def test_invalid_circuits(basic_gate_set, circuit):
     """
-    GateCriterion should raise errors when validating these circuits.
+    GateValidator should raise errors when validating these circuits.
     """
     with pytest.raises(ValueError):
-        GateCriterion(basic_gate_set[0], basic_gate_set[1]).validate(circuit)
+        GateValidator(basic_gate_set[0], basic_gate_set[1]).validate(circuit)
 
 
 @pytest.mark.parametrize(
@@ -162,7 +162,7 @@ def test_invalid_circuits(basic_gate_set, circuit):
     ],
 )
 def test_equality(gate_set_1, gate_set_2):
-    assert GateCriterion(gate_set_1) == GateCriterion(gate_set_2)
+    assert GateValidator(gate_set_1) == GateValidator(gate_set_2)
 
 
 @pytest.mark.parametrize(
@@ -175,4 +175,4 @@ def test_equality(gate_set_1, gate_set_2):
     ],
 )
 def test_inequality(gate_set_1, gate_set_2):
-    assert GateCriterion(gate_set_1) != GateCriterion(gate_set_2)
+    assert GateValidator(gate_set_1) != GateValidator(gate_set_2)

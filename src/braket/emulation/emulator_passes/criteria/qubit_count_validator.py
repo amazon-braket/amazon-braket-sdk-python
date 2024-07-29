@@ -1,11 +1,11 @@
 from braket.circuits import Circuit
-from braket.emulators.emulator_passes.criteria.emulator_criterion import EmulatorCriterion
+from braket.emulation.emulator_passes.criteria.validation_pass import ValidationPass
 
 
-class QubitCountCriterion(EmulatorCriterion):
+class QubitCountValidator(ValidationPass[Circuit]):
     """
-    A simple criterion class that checks that an input program does not use more qubits
-    than available on a device, as set during this criterion's instantiation.
+    A simple validator class that checks that an input program does not use more qubits
+    than available on a device, as set during this validator's instantiation.
     """
 
     def __init__(self, qubit_count: int):
@@ -16,7 +16,7 @@ class QubitCountCriterion(EmulatorCriterion):
     def validate(self, circuit: Circuit) -> None:
         """
         Checks that the number of qubits used in this circuit does not exceed this
-        criterion's qubit_count max.
+        validator's qubit_count max.
 
         Args:
             circuit (Circuit): The Braket circuit whose qubit count to validate.
@@ -31,5 +31,5 @@ class QubitCountCriterion(EmulatorCriterion):
 but uses {circuit.qubit_count} qubits."
             )
 
-    def __eq__(self, other: EmulatorCriterion) -> bool:
-        return isinstance(other, QubitCountCriterion) and self._qubit_count == other._qubit_count
+    def __eq__(self, other: ValidationPass) -> bool:
+        return isinstance(other, QubitCountValidator) and self._qubit_count == other._qubit_count
