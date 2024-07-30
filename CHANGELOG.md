@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.84.0 (2024-07-30)
+
+### Features
+
+ * support erf_square and swap_phases
+
 ## v1.83.0 (2024-06-28)
 
 ### Deprecations and Removals
