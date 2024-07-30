@@ -51,14 +51,15 @@ class Emulator(Device, BaseEmulator):
         Returns:
             str: The name of the backend to pass into the LocalSimulator constructor.
         """
-        if noise_model:
-            if backend == "default":
+        if backend == "default":
+            if noise_model:
                 logging.info(
                     "Setting LocalSimulator backend to use 'braket_dm' \
                         because a NoiseModel was provided."
                 )
-            return Emulator._DEFAULT_NOISY_BACKEND
-        return Emulator._DEFAULT_SIMULATOR_BACKEND
+                return Emulator._DEFAULT_NOISY_BACKEND
+            return Emulator._DEFAULT_SIMULATOR_BACKEND
+        return backend
 
     def run(
         self,

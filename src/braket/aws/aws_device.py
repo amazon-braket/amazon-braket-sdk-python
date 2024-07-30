@@ -18,6 +18,7 @@ import json
 import os
 import urllib.request
 import warnings
+from copy import deepcopy
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Optional, Union
@@ -949,7 +950,7 @@ class AwsDevice(Device):
             ProgramType: A validated and compiled program that may be augmented with noise
             operations to mimic noise on this device.
         """
-        task_specification = task_specification.copy()
+        task_specification = deepcopy(task_specification)
         return self.emulator.run_passes(task_specification, apply_noise_model)
 
     def emulate(
@@ -976,5 +977,5 @@ class AwsDevice(Device):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
-        task_specification = task_specification.copy()
+        task_specification = deepcopy(task_specification)
         return self.emulator.run(task_specification, shots, inputs)
