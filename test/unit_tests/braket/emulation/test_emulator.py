@@ -10,15 +10,11 @@ from braket.circuits.noises import BitFlip
 from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulator
 from braket.devices import local_simulator
 from braket.emulation import Emulator
-from braket.emulation.emulator_passes import (
-    EmulationPass,
-    GateValidator,
-    ProgramType,
-    QubitCountValidator,
-)
+from braket.emulation.emulator_passes import EmulationPass, ProgramType
+from braket.emulation.emulator_passes.gate_device_passes import GateValidator, QubitCountValidator
 
 
-class AlwaysFailPass(EmulationPass):
+class AlwaysFailPass(EmulationPass[ProgramType]):
     def run(self, program: ProgramType):
         raise ValueError("This pass always raises an error.")
 

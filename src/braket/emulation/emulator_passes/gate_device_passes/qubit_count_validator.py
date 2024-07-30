@@ -1,5 +1,5 @@
 from braket.circuits import Circuit
-from braket.emulation.emulator_passes.validation_pass import ValidationPass
+from braket.emulation.emulator_passes import ValidationPass
 
 
 class QubitCountValidator(ValidationPass[Circuit]):

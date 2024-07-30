@@ -7,7 +7,7 @@ from networkx.utils import graphs_equal
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.emulation.emulator_passes.validation_pass import ValidationPass
+from braket.emulation.emulator_passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 
