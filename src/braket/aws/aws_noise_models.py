@@ -4,7 +4,7 @@ from typing import Dict, List, Set, Tuple, Union
 
 import numpy as np
 
-from braket.aws.aws_emulator_helpers import _get_qpu_gate_translations
+from braket.aws.aws_emulation import _get_qpu_gate_translations
 from braket.circuits import Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (

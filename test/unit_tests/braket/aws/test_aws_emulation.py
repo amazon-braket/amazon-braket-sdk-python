@@ -7,7 +7,7 @@ import pytest
 from common_test_utils import RIGETTI_ARN, RIGETTI_REGION
 
 from braket.aws import AwsDevice
-from braket.aws.aws_emulator_helpers import _get_qpu_gate_translations
+from braket.aws.aws_emulation import _get_qpu_gate_translations
 from braket.aws.aws_noise_models import (
     GateDeviceCalibrationData,
     GateFidelity,

@@ -5,7 +5,7 @@ from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.circuits.translations import BRAKET_GATES
-from braket.emulation.emulator_passes.criteria.validation_pass import ValidationPass
+from braket.emulation.emulator_passes.validation_pass import ValidationPass
 
 
 class GateValidator(ValidationPass[Circuit]):

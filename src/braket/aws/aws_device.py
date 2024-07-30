@@ -27,7 +27,7 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.aws.aws_emulator_helpers import (
+from braket.aws.aws_emulation import (
     connectivity_validator,
     gate_connectivity_validator,
     gate_validator,

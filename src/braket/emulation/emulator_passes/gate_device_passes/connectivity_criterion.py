@@ -7,11 +7,11 @@ from networkx.utils import graphs_equal
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.emulation.emulator_passes.criteria.validation_pass import ValidationPass
+from braket.emulation.emulator_passes.validation_pass import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 
-class ConnectivityValidator(ValidationPass[Circuit]):
+class ConnectivityValidator(ValidationPass):
     def __init__(
         self,
         connectivity_graph: Optional[Union[Dict[int, Iterable[int]], DiGraph]] = None,
@@ -82,15 +82,15 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
-    def validate(self, program: Circuit) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
-        device connectivity definied by this validator. If any sub-circuit of the
+        device connectivity definied by this criterion. If any sub-circuit of the
         input circuit is verbatim, we validate the connectivity of all gate operations
         in the circuit.
 
         Args:
-            program (Circuit): The Braket circuit whose gate operations to
+            circuit (Circuit): The Braket circuit whose gate operations to
                 validate.
 
         Raises:
@@ -101,12 +101,12 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         if not any(
             [
                 isinstance(instruction.operator, StartVerbatimBox)
-                for instruction in program.instructions
+                for instruction in circuit.instructions
             ]
         ):
             return
-        for idx in range(len(program.instructions)):
-            instruction = program.instructions[idx]
+        for idx in range(len(circuit.instructions)):
+            instruction = circuit.instructions[idx]
             if isinstance(instruction.operator, Gate):
                 if (
                     instruction.operator.qubit_count == 2
@@ -124,7 +124,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         self, control_qubits: QubitSet, target_qubits: QubitSet
     ) -> None:
         """
-        Checks if a two-qubit instruction is valid based on this validator's connectivity
+        Checks if a two-qubit instruction is valid based on this criterion's connectivity
         graph.
 
         Args:
@@ -149,7 +149,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             )
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
-        # Check that each edge exists in this validator's connectivity graph
+        # Check that each edge exists in this criterion's connectivity graph
         for e in gate_connectivity_graph.edges:
             if not self._connectivity_graph.has_edge(*e):
                 raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
