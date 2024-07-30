@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit
-from braket.emulation.emulator_passes.gate_device_passes import QubitCountValidator
+from braket.emulation.emulation_passes.gate_device_passes import QubitCountValidator
 
 
 @pytest.mark.parametrize(

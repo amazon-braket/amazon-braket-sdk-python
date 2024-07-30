@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from braket.emulation.emulator_passes.emulator_pass import EmulationPass, ProgramType
+from braket.emulation.emulation_passes.emulation_pass import EmulationPass, ProgramType
 
 
 class ValidationPass(EmulationPass[ProgramType]):

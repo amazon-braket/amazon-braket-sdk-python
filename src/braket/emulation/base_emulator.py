@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Union
 
-from braket.emulation.emulator_passes import EmulationPass, ProgramType, ValidationPass
+from braket.emulation.emulation_passes import EmulationPass, ProgramType, ValidationPass
 
 
 class BaseEmulator:

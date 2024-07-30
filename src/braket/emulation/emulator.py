@@ -8,7 +8,7 @@ from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.base_emulator import BaseEmulator
-from braket.emulation.emulator_passes import EmulationPass, ProgramType
+from braket.emulation.emulation_passes import EmulationPass, ProgramType
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch

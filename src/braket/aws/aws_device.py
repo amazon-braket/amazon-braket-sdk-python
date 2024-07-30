@@ -49,7 +49,7 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDe
 from braket.devices import Devices
 from braket.devices.device import Device
 from braket.emulation import Emulator
-from braket.emulation.emulator_passes import ProgramType
+from braket.emulation.emulation_passes import ProgramType
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
