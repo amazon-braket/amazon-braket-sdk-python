@@ -693,7 +693,7 @@ def test_emulator_passes(circuit, is_valid, rigetti_device):
         rigetti_device.validate(circuit)
         assert rigetti_device.run_passes(circuit, apply_noise_model=False) == circuit
     else:
-        with pytest.raises(ValueError):
+        with pytest.raises(Exception):
             rigetti_device.validate(circuit)
 
 

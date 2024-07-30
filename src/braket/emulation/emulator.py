@@ -186,4 +186,4 @@ class Emulator(Device, BaseEmulator):
         Args:
             exception (Exception): The exception to modify and raise.
         """
-        raise type(exception)(str(exception) + f" ({self._name})")
+        raise Exception(str(exception) + f" ({self._name})") from exception

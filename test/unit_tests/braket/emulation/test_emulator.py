@@ -64,7 +64,7 @@ def test_basic_invalidate(basic_emulator):
         f"Circuit must use at most 4 qubits, \
 but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
     )
-    with pytest.raises(ValueError, match=match_string):
+    with pytest.raises(Exception, match=match_string):
         basic_emulator.run_passes(circuit)
 
 
@@ -124,7 +124,7 @@ def test_validation_only_pass(setup_local_simulator_devices):
         f"Circuit must use at most 4 qubits, \
 but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
     )
-    with pytest.raises(ValueError, match=match_string):
+    with pytest.raises(Exception, match=match_string):
         emulator.validate(circuit)
 
 
