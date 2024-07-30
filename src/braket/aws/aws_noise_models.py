@@ -107,8 +107,7 @@ def device_noise_model(properties: DeviceCapabilities, arn: str) -> NoiseModel:
 @singledispatch
 def _setup_calibration_specs(properties: DeviceCapabilities, arn: str) -> NoiseModel:
     raise NotImplementedError(
-        f"A noise model cannot be created from device capabilities with \
-                              type {type(properties)}."
+        f"A noise model cannot be created from device capabilities with type {type(properties)}."
     )
 
 
