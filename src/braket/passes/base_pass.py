@@ -8,13 +8,14 @@ class BasePass(ABC, Generic[ProgramType]):
     @abstractmethod
     def run(self, program: ProgramType) -> ProgramType:
         """
-        Runs the emulator pass on the provided program.
+        Runs a pass on the provided program.
 
         Args:
-            program (ProgramType): The program to run the emulator pass on.
+            program (ProgramType): The program to run the pass on.
 
         Returns:
-            ProgramType: The program after the emulator pass has been applied.
+            ProgramType: The program after the pass has been applied. Same type as the input 
+            program.
 
         Raises:
             NotImplementedError: Method not implemented.
