@@ -14,7 +14,7 @@ class BasePass(ABC, Generic[ProgramType]):
             program (ProgramType): The program to run the pass on.
 
         Returns:
-            ProgramType: The program after the pass has been applied. Same type as the input 
+            ProgramType: The program after the pass has been applied. Same type as the input
             program.
 
         Raises:
