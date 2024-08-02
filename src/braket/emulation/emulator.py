@@ -8,8 +8,8 @@ from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.base_emulator import BaseEmulator
-from braket.emulation.emulation_passes import EmulationPass, ProgramType
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.passes import BasePass, ProgramType
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -26,7 +26,7 @@ class Emulator(Device, BaseEmulator):
         self,
         backend: str = "default",
         noise_model: Optional[NoiseModel] = None,
-        emulator_passes: Iterable[EmulationPass] = None,
+        emulator_passes: Iterable[BasePass] = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
@@ -143,13 +143,13 @@ class Emulator(Device, BaseEmulator):
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """
-        Passes the input program through all EmulationPass objects contained in this
+        Passes the input program through all Pass objects contained in this
         emulator and applies the emulator's noise model, if it exists, before
         returning the compiled program.
 
         Args:
             task_specification (ProgramType): The input program to validate and
-                compile based on this emulator's EmulationPasses
+                compile based on this emulator's Passes
             apply_noise_model (bool): If true, apply this emulator's noise model
                 to the compiled program before returning the final program.
 
@@ -167,7 +167,7 @@ class Emulator(Device, BaseEmulator):
 
     def validate(self, task_specification: ProgramType) -> None:
         """
-        Runs only EmulationPasses that are ValidationPass, i.e. all non-modifying
+        Runs only Passes that are ValidationPass, i.e. all non-modifying
         validation passes on the input program.
 
         Args:

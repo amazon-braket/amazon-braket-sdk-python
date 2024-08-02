@@ -50,11 +50,11 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDe
 from braket.devices import Devices
 from braket.devices.device import Device
 from braket.emulation import Emulator
-from braket.emulation.emulation_passes import ProgramType
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
+from braket.passes import ProgramType
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
@@ -930,7 +930,6 @@ class AwsDevice(Device):
 
         """
         self.emulator.validate(task_specification)
-        return
 
     def run_passes(
         self, task_specification: ProgramType, apply_noise_model: bool = True

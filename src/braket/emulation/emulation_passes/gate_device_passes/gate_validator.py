@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Iterable
 from typing import Optional
 
 from braket.circuits import Circuit
@@ -11,14 +11,14 @@ from braket.emulation.emulation_passes import ValidationPass
 class GateValidator(ValidationPass[Circuit]):
     def __init__(
         self,
-        supported_gates: Optional[Iterator[str]] = None,
-        native_gates: Optional[Iterator[str]] = None,
+        supported_gates: Optional[Iterable[str]] = None,
+        native_gates: Optional[Iterable[str]] = None,
     ):
         """
         Args:
-            supported_gates (Optional[Iterator[str]]): A list of gates supported outside of
+            supported_gates (Optional[Iterable[str]]): A list of gates supported outside of
                 verbatim modeby the emulator. A gate is a Braket gate name.
-            native_gates (Optional[Iterator[str]]): A list of gates supported inside of
+            native_gates (Optional[Iterable[str]]): A list of gates supported inside of
                 verbatim mode by the emulator.
 
         Raises:
@@ -30,12 +30,14 @@ class GateValidator(ValidationPass[Circuit]):
             raise ValueError("Supported gate set or native gate set must be provided.")
 
         try:
-            self._supported_gates = set(BRAKET_GATES[gate.lower()] for gate in supported_gates)
+            self._supported_gates = frozenset(
+                BRAKET_GATES[gate.lower()] for gate in supported_gates
+            )
         except KeyError as e:
             raise ValueError(f"Input {str(e)} in supported_gates is not a valid Braket gate name.")
 
         try:
-            self._native_gates = set(BRAKET_GATES[gate.lower()] for gate in native_gates)
+            self._native_gates = frozenset(BRAKET_GATES[gate.lower()] for gate in native_gates)
         except KeyError as e:
             raise ValueError(f"Input {str(e)} in native_gates is not a valid Braket gate name.")
 

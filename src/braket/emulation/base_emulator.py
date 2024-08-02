@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import Iterable, Union
 
-from braket.emulation.emulation_passes import EmulationPass, ProgramType, ValidationPass
+from braket.emulation.emulation_passes import ValidationPass
+from braket.passes import BasePass, ProgramType
 
 
 class BaseEmulator:
-    def __init__(self, emulator_passes: Iterable[EmulationPass] = None):
+    def __init__(self, emulator_passes: Iterable[BasePass] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
     def run_passes(self, task_specification: ProgramType) -> ProgramType:
         """
-        This method passes the input program through the EmulationPasses contained
+        This method passes the input program through the Passes contained
         within this emulator. An emulator pass may simply validate a program or may
         modify or entirely transform the program (to an equivalent quantum program).
 
@@ -28,7 +29,7 @@ class BaseEmulator:
 
     def validate(self, task_specification: ProgramType) -> None:
         """
-        This method passes the input program through EmulationPasses that perform
+        This method passes the input program through Passes that perform
         only validation, without modifying the input program.
 
         Args:
@@ -39,15 +40,13 @@ class BaseEmulator:
             if isinstance(emulator_pass, ValidationPass):
                 emulator_pass(task_specification)
 
-    def add_pass(
-        self, emulator_pass: Union[Iterable[EmulationPass], EmulationPass]
-    ) -> BaseEmulator:
+    def add_pass(self, emulator_pass: Union[Iterable[BasePass], BasePass]) -> BaseEmulator:
         """
-        Append a new EmulationPass or a list of EmulationPass objects.
+        Append a new BasePass or a list of BasePass objects.
 
         Args:
-            emulator_pass (Union[Iterable[EmulationPass], EmulationPass]): Either a
-                single EmulationPass object or a list of EmulationPass objects that
+            emulator_pass (Union[Iterable[BasePass], BasePass]): Either a
+                single Pass object or a list of Pass objects that
                 will be used in validation and program compilation passes by this
                 emulator.
 
@@ -55,15 +54,13 @@ class BaseEmulator:
             BaseEmulator: Returns an updated self.
 
         Raises:
-            TypeError: If the input is not an iterable or an EmulationPass.
+            TypeError: If the input is not an iterable or an Pass.
 
         """
         if isinstance(emulator_pass, Iterable):
             self._emulator_passes.extend(emulator_pass)
-        elif isinstance(emulator_pass, EmulationPass):
+        elif isinstance(emulator_pass, BasePass):
             self._emulator_passes.append(emulator_pass)
         else:
-            raise TypeError(
-                "emulator_pass must be an EmulationPass or an iterable of EmulationPass"
-            )
+            raise TypeError("emulator_pass must be an Pass or an iterable of Pass")
         return self

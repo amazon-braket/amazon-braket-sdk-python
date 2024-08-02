@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
-from braket.emulation.emulation_passes.emulation_pass import EmulationPass, ProgramType
+from braket.passes.base_pass import BasePass, ProgramType
 
 
-class ValidationPass(EmulationPass[ProgramType]):
+class ValidationPass(BasePass[ProgramType]):
     @abstractmethod
     def validate(self, program: ProgramType) -> None:
         """

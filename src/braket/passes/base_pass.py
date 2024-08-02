@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 ProgramType = TypeVar("ProgramType")
 
 
-class EmulationPass(ABC, Generic[ProgramType]):
+class BasePass(ABC, Generic[ProgramType]):
     @abstractmethod
     def run(self, program: ProgramType) -> ProgramType:
         """
