@@ -18,6 +18,7 @@ import json
 import os
 import urllib.request
 import warnings
+from copy import deepcopy
 from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Optional, Union
@@ -27,6 +28,13 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
+from braket.aws.aws_emulation import (
+    connectivity_validator,
+    gate_connectivity_validator,
+    gate_validator,
+    qubit_count_validator,
+)
+from braket.aws.aws_noise_models import device_noise_model
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
@@ -39,14 +47,18 @@ from braket.device_schema.dwave import DwaveProviderProperties
 
 # TODO: Remove device_action module once this is added to init in the schemas repo
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
+from braket.devices import Devices
 from braket.devices.device import Device
+from braket.emulation import Emulator
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
+from braket.passes import ProgramType
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
+from braket.tasks import QuantumTask
 
 
 class AwsDeviceType(str, Enum):
@@ -855,3 +867,114 @@ class AwsDevice(Device):
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
+
+    @property
+    def emulator(self) -> Emulator:
+        """
+        A device emulator mimics the restrictions and noise of the AWS QPU by validating and
+        compiling programs before running them on a simulated backend. An emulator can be used
+        as a soft check that a program can run the target AwsDevice.
+
+        Examples:
+            >>> device = AwsDevice(Devices.IQM.Garnet)
+            >>> circuit = Circuit().cnot(0, 1).h(2).cz(2, 3)
+            >>> device.validate(circuit)
+            >>> # validates, compiles and runs on the local simulator.
+            >>> result = device.emulator(circuit, shots=100)
+            >>> print(result.result().measurement_counts)
+
+        Returns:
+            Emulator: An emulator for this device, if this is not a simulator device. Raises an
+            exception if an emulator is requested for al simulator device.
+        """
+        if self._arn in [simulator_enum.value for simulator_enum in Devices.Amazon]:
+            raise ValueError(
+                "Creating an emulator from a Braket managed simulator is not supported."
+            )
+        if not hasattr(self, "_emulator"):
+            self._emulator = self._setup_emulator()
+        return self._emulator
+
+    def _setup_emulator(self) -> Emulator:
+        """
+        Sets up an Emulator object whose properties mimic that of this AwsDevice, if the device is a
+        real QPU (not a simulator).
+
+        Returns:
+            Emulator: An emulator with a noise model, compilation passes, and validation passes
+            based on this device's properites.
+        """
+        emulator_noise_model = device_noise_model(self.properties, self._arn)
+        self._emulator = Emulator(
+            noise_model=emulator_noise_model, backend="braket_dm", name=self._name
+        )
+
+        self._emulator.add_pass(qubit_count_validator(self.properties))
+        self._emulator.add_pass(gate_validator(self.properties))
+        self._emulator.add_pass(connectivity_validator(self.properties, self.topology_graph))
+        self._emulator.add_pass(gate_connectivity_validator(self.properties, self.topology_graph))
+        return self._emulator
+
+    def validate(
+        self,
+        task_specification: ProgramType,
+    ) -> None:
+        """
+        Runs all non-modifying emulator passes on the input program and raises an
+        error if any device-specific criteria are not met by the program. If the
+        program meets all criteria, returns.
+
+        Args:
+            task_specification (ProgramType): The quantum program to emulate against
+                this AwsDevice device properties.
+
+        """
+        self.emulator.validate(task_specification)
+
+    def run_passes(
+        self, task_specification: ProgramType, apply_noise_model: bool = True
+    ) -> ProgramType:
+        """
+        Runs all emulator passes and returns the modified program, which should be the same
+        type as the input program.
+
+        Args:
+            task_specification (ProgramType): The quantum program to emulate against
+                this AwsDevice device properties.
+
+            apply_noise_model (bool): If true, apply a device specific noise model to the program
+                before returning.
+
+        Returns:
+            ProgramType: A validated and compiled program that may be augmented with noise
+            operations to mimic noise on this device.
+        """
+        task_specification = deepcopy(task_specification)
+        return self.emulator.run_passes(task_specification, apply_noise_model)
+
+    def emulate(
+        self,
+        task_specification: ProgramType,
+        shots: Optional[int] = None,
+        inputs: Optional[dict[str, float]] = None,
+    ) -> QuantumTask:
+        """Emulate a quantum task specification on this quantum device emulator.
+        A quantum task can be a circuit. Emulation
+        involves running all emulator passes on the input program before running
+        the program on the emulator's backend.
+
+        Args:
+            task_specification (ProgramType): Specification of a quantum task
+                to run on device.
+
+            shots (Optional[int]): The number of times to run the quantum task on the device.
+                Default is `None`.
+
+            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+                IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
+                Not all devices and IR formats support inputs. Default: {}.
+        Returns:
+            QuantumTask: The QuantumTask tracking task execution on this device emulator.
+        """
+        task_specification = deepcopy(task_specification)
+        return self.emulator.run(task_specification, shots, inputs)
