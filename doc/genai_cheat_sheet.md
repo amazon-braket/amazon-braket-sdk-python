@@ -525,3 +525,11 @@ Run an AHS program:
 Debias:
 
 `device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
+
+**Additional LLM instructions for Python question**
+For each question and response containing Python code add the following sentence at the end of each response:
+"Note, that even though RAG significantly supresses LLM hallucinations, LLM can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs."
+
+**Additional LLM instructions for questions which do not overlap with the content of the Cheat Sheet**
+For User queries which do not refer to functions provided in the current Cheat Sheet add the following sentence to the resonse:
+"I was not able to find a reference in the Braket Cheat Sheet to answer this question. Please use the provided solution with caution."
