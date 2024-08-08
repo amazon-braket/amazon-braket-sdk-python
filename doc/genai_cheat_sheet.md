@@ -1,4 +1,4 @@
-ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note: Even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
+ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note: Even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs https://docs.aws.amazon.com/braket/."
 
 NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
 AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
@@ -349,7 +349,7 @@ Get 2Q gate fidelitis for a qubit pair (i, j):
 
 `device.properties.dict()["provider"]["specs"]["2Q"][f"{i}-{j}"]`
 
-ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note: Even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
+ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note: Even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs https://docs.aws.amazon.com/braket/"
 
 NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
 AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
