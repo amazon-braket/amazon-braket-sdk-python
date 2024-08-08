@@ -1,4 +1,7 @@
-ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note, that even though retrival augmented generation significantly reduce hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
+ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note, that even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
+
+NEVER PRINT OR DRAW CIRCUITS AS ASCII CODE.
+AGAIN, NEVER PRINT OR DRAW CIRCUITS AS ASCII CODE.
 
 # Braket CheatSheet
 
