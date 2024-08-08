@@ -1,7 +1,7 @@
 ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note, that even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
 
-NEVER PRINT OR DRAW CIRCUITS AS ASCII CODE.
-AGAIN, NEVER PRINT OR DRAW CIRCUITS AS ASCII CODE.
+NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
+AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
 
 # Braket CheatSheet
 
@@ -344,6 +344,10 @@ Get 2Q gate fidelitis for a qubit pair (i, j):
 
 `device.properties.dict()["provider"]["specs"]["2Q"][f"{i}-{j}"]`
 
+ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note, that even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs [https://docs.aws.amazon.com/braket/]."
+
+NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
+AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
 
 **Pricing**
 
@@ -530,3 +534,4 @@ Run an AHS program:
 Debias:
 
 `device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
+
