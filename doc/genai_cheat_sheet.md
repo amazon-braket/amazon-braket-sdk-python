@@ -479,3 +479,17 @@ Debias:
 * Tensor-network based simulator of Rydberg atom-based AHS programs -  BraketAHS.jl: https://github.com/amazon-braket/BraketAHS.jl. Allows to simulate AHS programs with hundreds of atoms using TEBD time evolution algorithm.
 
 * Amazon Braket pricing information: https://aws.amazon.com/braket/pricing/. Amazon Braket provides on-demand and dedicated access to quantum computers, quantum circuit simulators, fully managed execution of hybrid quantum-classical algorithms, and Jupyter notebook development environments. You will be billed separately for use of these capabilities, as well as other AWS services that you use with Amazon Braket such as Amazon Simple Storage Service (S3) for storing the results of quantum computations. Pricing calculator: https://calculator.aws/#/addService.
+
+There are two pricing components for on-demand use of a quantum computer, or quantum processing unit (QPU), on Amazon Braket: a per-shot fee and a per-task fee.
+
+A shot is a single execution of a quantum algorithm on a QPU. For example, a shot is a single pass through each stage of a complete quantum circuit on a gate-based QPU from IonQ, IQM, or Rigetti, or the time evolution of a Hamiltonian on a QPU from QuEra. A task is a sequence of repeated shots based on the same circuit design or Hamiltonian. You define how many shots you want included in a task when you submit the task to Amazon Braket.
+
+Per-task pricing is the same across all QPUs. The per-shot pricing depends on the type of QPU used. For gate-based QPUs, the per-shot price is not affected by the number or type of gates used in a quantum circuit.
+
+QPU per task price: $0.30000
+
+* Braket Direct: Braket Direct is an Amazon Braket program: Skip the wait and directly leverage dedicated device access using reservations, expert advice, and experimental capabilities – all in one place. The cost of dedicated device access is based on the duration of your reservation, regardless of how many quantum tasks and hybrid jobs you execute on the QPU. You can make reservations in 1-hour increments. Reservations can be canceled up to 48 hours in advance, at no charge.
+
+Expert advice offerings are billed separately from Braket – please review each offering’s pricing information by navigating to Braket Direct in the AWS Management Console.
+
+Experimental capabilities are currently available on a per-request basis – contact us by navigating to Braket Direct in the AWS Management Console to learn more. For more information see https://docs.aws.amazon.com/braket/latest/developerguide/braket-direct.html
