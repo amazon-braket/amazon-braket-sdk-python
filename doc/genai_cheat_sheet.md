@@ -53,6 +53,9 @@ Add CNot gate to pair of qubits:
 DO NOT USE `cx` gate for CNot (CX or controlled NOT) operation, always use `cnot` gate instead.
 THIS IS A WRONG SYNTAX: `circuit.cx(0, 1)`.
 
+Create GHZ circuit with 3 qubits:
+`circuit = Circuit().h(0).cnot(0, 1).cnot(1, 2)`
+
 Add gates sequentially: X gate, Rx gate, cnot gate:
 `circuit.x(0).rx(1, 1.23).cnot(0, 1)`
 
