@@ -3,8 +3,6 @@ ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION 
 NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
 AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
 
-DO NOT HALLUCINATE.
-
 # Glossary
 * QPU - Quantum Processing Unit
 * Analog Hamiltonian Simulation (AHS) - paradigm of quantum computation, when the computation corresponds to an evolution of a quantum system under a time-dependent Hamiltonian. Rydberg atom device `Aquila` from QuEra is an example of an AHS device.
@@ -22,6 +20,7 @@ To import modules from Braket:
 **Circuits**
 
 Import Braket modules:
+
 ```
 from braket.circuits import Circuit, Gate, Instruction
 from braket.circuits.observables import X, Y, Z
@@ -50,14 +49,13 @@ Add Rx gate to qubit 1 with a float angle, `angle = 1.234`:
 Add CNot gate to pair of qubits:
 `circuit.cnot(0, 1)`.
 
-DO NOT USE `cx` gate for CNot (CX or controlled NOT) operation, always use `cnot` gate instead.
-THIS IS A WRONG SYNTAX: `circuit.cx(0, 1)`.
+DO NOT USE `cx` GATE. ALWAYS USE `cnot` GATE.
 
 Create GHZ circuit with 3 qubits:
 `circuit = Circuit().h(0).cnot(0, 1).cnot(1, 2)`
 
-Add gates sequentially: X gate, Rx gate, cnot gate:
-`circuit.x(0).rx(1, 1.23).cnot(0, 1)`
+Add gates sequentially: `X` gate, `rx` gate, and two `cnot` gates:
+`circuit.x(0).rx(1, 1.23).cnot(0, 1).cnot(1, 2)`
 
 Get the list of available gates:
 `[attr for attr in dir(Gate) if attr[0].isupper()]`
@@ -239,7 +237,7 @@ Get compiled circuit:
 
 **Device**
 
-Imports	
+Imports:
 
 ```
 from braket.devices import LocalSimulator
@@ -464,3 +462,18 @@ Run an AHS program on AHS device:
 Debias:
 `device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
 
+**Additional resources**
+
+* Amazon Braket Examples Github repository: https://github.com/amazon-braket/amazon-braket-examples
+
+* Amazon Braket SDK repository: https://github.com/amazon-braket/amazon-braket-sdk-python
+
+* Amazon Braket Qiskit plugin: https://github.com/qiskit-community/qiskit-braket-provider. Allows to run Qiskit circuits on Braket devices.
+
+* Amazon Braket Pennylane plugin: https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python. Allows to run Pennylane quantum circuits and algorithms on Braket devices.
+
+* Amazon Braket Quantum Algorithm library: https://github.com/amazon-braket/amazon-braket-algorithm-library. Contains examples of textbook algorithms, e.g. Shor's algorithm, Grover's, Simons algorithm, Bernstein-Vazirani algorithm, Quantum Walk, QAOA, VQE, and shows how to run these algorithms on Amazon Braket. Also contains examples advanced algorithms, such as Quantum Monte Carlo and Quantum PCA.
+
+* Julia-based implementation of Amazon Braket SDK: https://github.com/amazon-braket/Braket.jl
+
+* Tensor-network based simulator of Rydberg atom-based AHS programs -  BraketAHS.jl: https://github.com/amazon-braket/BraketAHS.jl. Allows to simulate AHS programs with hundreds of atoms using TEBD time evolution algorithm.
