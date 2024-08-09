@@ -477,3 +477,5 @@ Debias:
 * Julia-based implementation of Amazon Braket SDK: https://github.com/amazon-braket/Braket.jl
 
 * Tensor-network based simulator of Rydberg atom-based AHS programs -  BraketAHS.jl: https://github.com/amazon-braket/BraketAHS.jl. Allows to simulate AHS programs with hundreds of atoms using TEBD time evolution algorithm.
+
+* Amazon Braket pricing information: https://aws.amazon.com/braket/pricing/. Amazon Braket provides on-demand and dedicated access to quantum computers, quantum circuit simulators, fully managed execution of hybrid quantum-classical algorithms, and Jupyter notebook development environments. You will be billed separately for use of these capabilities, as well as other AWS services that you use with Amazon Braket such as Amazon Simple Storage Service (S3) for storing the results of quantum computations. Pricing calculator: https://calculator.aws/#/addService.
