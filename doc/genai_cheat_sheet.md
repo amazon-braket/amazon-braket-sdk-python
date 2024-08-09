@@ -3,7 +3,13 @@ ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION 
 NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
 AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
 
-ADDITIONAL INSTRUCTIONS FOR QUESTIONS 
+DO NOT HALLUCINATE.
+
+# Glossary
+* QPU - Quantum Processing Unit
+* Analog Hamiltonian Simulation (AHS) - paradigm of quantum computation, when the computation corresponds to an evolution of a quantum system under a time-dependent Hamiltonian. Rydberg atom device `Aquila` from QuEra is an example of an AHS device.
+* IonQ devices: IonQ Harmony (11 qubits), IonQ Aria-1 and IonQ Aria-2 (25 qubits), IonQ Forte 1 (36 qubits, Braket direct reservation only). Gate-based devices from IonQ are based on ion-trap technology.
+* IQM devices: IQM Garnet (20 qubits) from Finish company IQM. This is a superconducting quantum processing unit based on transmon technology.
 
 # Braket CheatSheet
 
@@ -24,77 +30,65 @@ from braket.circuits.instruction import Instruction
 ```
 
 Create an empty circuit (default constructor):
-
 `circuit = Circuit()`
 
-Create an circuit with arbitrary number of qubits. Note that number of qubits is not passed as an argument to the circuit constructor:
-
+Create an circuit with arbitrary number of qubits:
 `circuit = Circuit()`
 
-Please DO NOT pass number of qubits to the `Circuit()` constructor.
+DO NOT PASS NUMBER OF QUBITS TO CIRCUIT CONSTRUCTOR AS AN ARGUMENT `Circuit()`. AGAIN, NEVER PASS NUMBER OF QUBITS TO CIRCUIT CONSTRUCTOR AS AN ARGUMENT.
 
 
 Add X gate to circuit at qubit 0:
-
 `circuit.x(0)`
 
 Add H (Hadamard) gate to circuit at qubit 0:
-
 `circuit.h(0)`
 
-Add Rx gate to qubit 1 with a float angle 1.234	angle = 1.234:
-
+Add Rx gate to qubit 1 with a float angle, `angle = 1.234`:
 `circuit.rx(1, angle)`
 
-Add cnot gate to pair of qubits:
-
+Add CNot gate to pair of qubits:
 `circuit.cnot(0, 1)`.
-DO NOT use `cx` gate for CNot operation, always use `cnot` gate instead.
+
+DO NOT USE `cx` gate for CNot (CX or controlled NOT) operation, always use `cnot` gate instead.
+THIS IS A WRONG SYNTAX: `circuit.cx(0, 1)`.
 
 Add gates sequentially: X gate, Rx gate, cnot gate:
-
 `circuit.x(0).rx(1, 1.23).cnot(0, 1)`
 
 Get the list of available gates:
-
 `[attr for attr in dir(Gate) if attr[0].isupper()]`
 
 Get the inverse (adjoint) of the quantum circuit:
 `inverse_circuit = circuit.adjoint()`
 
 Create a single qubit gate from unitary matrix:
-
 ```
+from braket.circuits.gates import Unitary
 matrix = np.eye(2)
 G = Unitary(matrix)
 ```
 
-Get the circuit unitary:
-
+Compute circuit unitary:
 `circuit.to_unitary()`
 
 Add a probability result type to qubit 0 (will return exact probabilities, corresponds to shots=0 case when running on a simulator):
-
 `circuit.probability(0)`
 
 Add probability result type to all qubits. Add probability result type only when measuring exact probabilities:
-
 ```	
 for i in range(len(circuit.qubits)):
     circuit.probability(i)
 ```
 
 Show all result types attached to the circuit:
-
 `print(circuit._result_types)`
 
 Get circuit depth:
-
 `circuit.depth`
 
 Attach Expectation result type to measure both qubits [0, 1] in X basis. 
 The expectation method allows to pass an arbitrary tensor product of Pauli operators applied to each qubit, e.g. X() @ Y() @ Z():
-
 ```
 circuit.expectation(X() @ X(), target=[0, 1]);
 circuit.expectation(X() @ Y() @ Z(), target=[0, 1, 2]);
@@ -102,48 +96,40 @@ circuit.expectation(X() @ Y() @ Z(), target=[0, 1, 2]);
 
 List of the available result types	
 adjoint_gradient, amplitude, density_matrix, expectation, probability, sample, state_vector, variance:
-
 `print(circuit._result_types)`
 
-Append a circuit (new_circuit) to a given circuit:
-
+Append a circuit `new_circuit` to a given circuit `circuit`:
 `circuit.add_circuit(new_circuit)`
 
 Wrap a new_circuit to a verbatim box and append it to a circuit:
-
 `circuit.add_verbatim_box(new_circuit)`
 
-Wrap a circuit to a verbatim box (will be executed without as is without modifications):
-
+Wrap a circuit to a verbatim box (will be executed without as is on the QPU):
 `Circuit().add_verbatim_box(circuit)`
 
 Gate modifiers (conditional gates with control and target qubits).
 Gate modifiers allow to specify a fractional power applied to a gate:
+`circuit.x(0, control=[1, 2], control_state=[0, 1], power=-0.5)`.
 
-`circuit.x(0, control=[1, 2], control_state=[0, 1], power=-0.5)`
+Double control NOT gate (CCNot or Toffoli gate):
+`circuit.x(0, control=[1, 2], control_state=[0, 1], power=1)`
 
-Print a circuit:
-	
+Print (visualize) a Braket circuit:
 `print(circuit)`
 
 Create circuit from OpenQASM3 string:
-
 `Circuit.from_ir(source=qasm_str)`
 
-Export to OpenQASM3:
-
+Export to OpenQASM3 string:
 `Circuit.to_ir("OPENQASM")`
 
 Create an instruction from a gate:
-
 `inst = Instruction(Gate.CPhaseShift(1.23), target=[0, 1])`
 
 Add an instruction to the circuit:
-
 `circuit.add(inst)`
 
 Create a random circuit:
-
 ```
 from braket.experimental.auxiliary_functions import random_circuit
 from braket.circuits.gates import CNot, Rx, Rz, CPhaseShift, XY
@@ -160,41 +146,33 @@ circuit = random_circuit(num_qubits=5,
 **FreeParameters (parametric gates)**
 
 Imports	
-
 `from braket.circuits import FreeParameter`
 
 Create a FreeParameter (symbolic parameter):
-
 `alpha = FreeParameter(“alpha”)`
 
 Use FreeParameters:
-
 `circuit.rx(0, alpha+1)`
 
 Bind a FreeParameter to a specific value:
-
 `circuit.make_bound_circuit({“alpha”: 0.1})`
 
-Get the list of unbound FreeParameters:
-
+Get the list of unbound FreeParameters for the `circuit`:
 `circuit.parameters`
 
 Run circuit on a device with parametric compilation enabled.	
-
 `device.run(circuit, inputs={“alpha”: 0.1})`
+In case of repetitive execution of the same circuit via device.run (but with different values of bound parameters), the circuit will be compiled only once for this device if parametric compilation is enabled.
 
 **Tasks**
 
 Imports:
-
 `from braket.aws import AwsSession, AwsQuantumTask`
 
 Create a quantum task by executing a circuit on a device:
-
 `task = device.run(circuit)`
 
 Disable qubit rewiring (forces trivial mapping between logical and physical qubits on QPU):
-
 `device.run(circuit, disable_qubit_rewiring=True)`
 
 Instantiate an AwsSession:	
@@ -207,7 +185,6 @@ Task Queue position:
 `task.queue_position()`
 
 Quantum Task batching:
-
 ```
 n_batch = 5  # define circuit batch size
 circuits = [circuit for _ in range(n_batch)]  # Create a list of circuits in the batch
@@ -216,7 +193,6 @@ print(batch.results()[0].measurement_counts)  # The result of the first quantum 
 ```
 
 Attach tag to a Quantum Task:
-
 ```
 task = device.run(
     circuit,
@@ -244,23 +220,18 @@ The initial layer should rotate qubits to |+> state by applying H (Hadamard) gat
 **Results**
 
 Retrieve task results:
-
 `result = task.result()`
 
 Get measurement counts:
-
 `result.measurement_counts`
 
 Get measurement probabilities (for Probability Result Type):
-
 `result.measurement_probabilities`
 
 Get measured qubits:
-
 `result.measured_qubits`
 
 Get compiled circuit:
-
 `result.get_compiled_circuit()`
 
 **Device**
@@ -274,16 +245,13 @@ from braket.devices import Devices
 ```
 
 Instantiate Local simulator:
-
 `local_sim = LocalSimulator()`.
 Local simulator does not have ARN.
 
 Instantiate a device from ARN:
-
 `AwsDevice("<deviceARN>")`
 
 Device alias (use in place of string ARN):
-
 `Devices.Rigetti.AspenM3`
 
 QuantumTask Queue depth:
@@ -310,29 +278,21 @@ Rydberg atom devices Aquila (AHS device from QuEra):
 
 `AwsDevice(“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”)`
 
-Rigetti Aspen M3 device:	
-
-`AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3")`
-
-IQM Garnet device (20 qubits, superconducting QPU):
-
+IQM Garnet device:
 `AwsDevice("arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet")`
 
 **Device Properties**
 
-Connectivity graph:
-
+Connectivity graph of a QPU:
 `device.properties.paradigm.connectivity`
 
-Fidelities dictionary:
+Fidelities dictionary as measured by the QPU vendor:
 `device.properties.provider.specs`
 
-Native gate set:
-
+Native gate set of a device:
 `device.properties.paradigm.nativeGateSet`
 
-Cost and availability:
-
+Get device pricing info (device pricing per task) and availability:
 `device.properties.service`
 
 Pulse properties:
@@ -341,25 +301,18 @@ Pulse properties:
 Actions properties:
 `action_properties = device.properties.action['braket.ir.openqasm.program']`
 
-Supported gates:
-
+Supported gates on the device:
 `action_properties.supportedOperations`
 
-Get 2Q gate fidelitis for a qubit pair (i, j):
-
+Get 2Q gate fidelities for a qubit pair (i, j):
 `device.properties.dict()["provider"]["specs"]["2Q"][f"{i}-{j}"]`
 
-ADDITIONAL INSTRUCTIONS FOR QUESTIONS CONTAINING PYTHON CODE. FOR EACH QUESTION AND RESPONSE CONTAINING PYTHON CODE ADD THE FOLLOWING SENTENCE AT THE END OF EACH RESPONSE: "Note: Even though retrival augmented generation significantly reduces hallucinations, LLMs can still make mistakes. Refer to official Braket documentation in case if the generated code contains bugs https://docs.aws.amazon.com/braket/"
-
-NEVER PRINT OR VISUALIZE CIRCUITS AS ASCII CODE.
-AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
-
-**Pricing**
+**Task Pricing**
 
 Imports:
 `from braket.tracking import Tracker`
 
-Start the cost tracker:
+Start the cost tracker (tracks monetary costs spent on Braket in the current session):
 `tracker=Tracker().start()`
 
 Print costs:
@@ -368,10 +321,7 @@ tracker.qpu_tasks_cost()
 tracker.simulator_tasks_cost()
 ```
 
-Cost summary:
-
-`tracker.quantum_tasks_statistics()`
-
+Cost summary (detailed information about costs spent on Braket): `tracker.quantum_tasks_statistics()`
 
 
 **Hybrid Jobs**
@@ -385,48 +335,38 @@ job = AwsQuantumJob.create(arn, source_module="algorithm_script.py", entry_point
 ```
 
 AwsQuantumJob Queue position:
-
 `job.queue_position()`
 
-Job decorator (local mode):
-
+Hybrid Job decorator (local mode):
 `@hybrid_job(device=None, local=True)`
 
 Records Braket Hybrid Job metrics (will be displayed on Hybrid Jobbs concole metrics log):
-
 `log_metric(metric_name=metric_name, value=value, iteration_number=iteration_number)`
 
 
 **Simulator**
 
 Imports:
-
 `from braket.devices import LocalSimulator`
 
 Instantiate the local simulator:
-
 `local_sim = LocalSimulator()`
 
 **Noise Simulation**
 
 Imports:
-
 `from braket.circuits import Noise`
 
 Apply Depolarizing noise:
-
 `circuit.depolarizing(0, 0.1)`
 
 Apply a Kraus operator:
-
 `circuit.kraus([0,2], [E0, E1])`
 
 Phase dampling channel:
-
 `noise = Noise.PhaseDamping(0.1)`
 
-Apply a noise channel to an individual X gate	
-
+Apply a noise channel to an individual X gate in a circuit:
 `circuit.apply_gate_noise(noise, Gate.X)`
 
 
@@ -441,23 +381,18 @@ from braket.pulse.waveforms import *
 ```
 
 Create a new pulse sequence:
-
 `pulse_sequence = PulseSequence()`
 
 Predefined ports:
-
 `device.ports`
 
-Predefined frames:
-
+Predefined time frames:
 `device.frames`
 
 Create a frame:
-
 `Frame(port, frequency[, phase])`
 
 Predefined waveforms:
-
 ```
 ConstantWaveform(length, iq)
 GaussianWaveform(length, width, amplitude, zero_at_edges)
@@ -465,44 +400,36 @@ DragGaussianWaveform(length, width, amplitude, beta, zero_at_edges)
 ```
 
 Play a waveform:
-
 `pulse_sequence.play(frame, waveform)`
 
-Add a delay:
-
+Add a time delay to the pulse sequence:
 `pulse_sequence.delay(frame, delay)`
 
 Set frequency:
-
 `pulse_sequence.set_frequency(frame, frequency)`
 
 Shift frequency:
-
 `pulse_sequence.shift_frequency(frame, detuning)`
 
 `Set phase:`
 pulse_sequence.set_phase(frame, phase)
 
 `Shift phase:`
-
 pulse_sequence.shift_phase(frame, phi)
 
 Get the time series:
-
 `pulse_sequence.to_time_traces()`
 
 
-**Analog Hamiltonian Simulation**
+**Analog Hamiltonian Simulation (AHS)**
 
 Imports:
 `from braket.ahs import AtomArrangement, DrivingField, AnalogHamiltonianSimulation`
 
 Atom arrangement:
-
 `register = AtomArrangement()`
 
 Add an atom with (x, y) coordinates (in meters):
-
 `register.add((5.7e-6, 5.7e-6))`
 
 Add atoms in square lattice with lattice spacing a
@@ -515,28 +442,22 @@ for i in range(nx):
 ```
 
 Get atom coordinates along x-axis:
-
 `register.coordinate_list(0)`
 
 Get atom coordinates along y-axis:
-
 `register.coordinate_list(1)`
 
 Create a driving field:
-
 `DrivingField(amplitude, phase, detuning)`
 
 Create an AHS program:
-
 `ahs_program = AnalogHamiltonianSimulation(register, drive)`
 
-Run an AHS program:
-
+Run an AHS program on AHS device:
 `device.run(ahs_program)`
 
 **Error Mitigation**
 
 Debias:
-
 `device.run(circuit, shots=1000, device_parameters={"errorMitigation": Debias()})`
 
