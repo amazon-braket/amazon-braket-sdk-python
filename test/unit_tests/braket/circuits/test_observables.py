@@ -304,6 +304,13 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             [[0], [1, 2]],
             "8 * z($0) + 48 * x($1) @ y($2)",
         ),
+        (
+            4 * (2 * Observable.Z(0) + 2 * (3 * Observable.X(1) @ (2 * Observable.Y(2)))),
+            None,
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[5], [4, 3]],
+            "8 * z($5) + 48 * x($4) @ y($3)",
+        ),
     ],
 )
 def test_observables_to_ir_openqasm(
