@@ -769,4 +769,4 @@ def test_unscaled_tensor_product():
 
 def test_sum_with_and_without_targets():
     with pytest.raises(ValueError):
-        3 * ((2 * Observable.X()) @ (5 * Observable.Y(4)))
+        Observable.X() + 3 * Observable.Y(4)
