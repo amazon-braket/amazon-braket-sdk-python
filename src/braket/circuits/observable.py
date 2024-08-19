@@ -52,7 +52,9 @@ class Observable(QuantumOperator):
         self._coef = 1
 
     def _unscaled(self) -> Observable:
-        return Observable(qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols)
+        return Observable(
+            qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols, targets=self.targets
+        )
 
     def to_ir(
         self,

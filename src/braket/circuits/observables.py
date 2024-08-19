@@ -48,7 +48,7 @@ class H(StandardObservable):
         super().__init__(ascii_symbols=["H"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return H()
+        return H(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -93,7 +93,7 @@ class I(Observable):  # noqa: E742
         super().__init__(qubit_count=1, ascii_symbols=["I"], targets=target)
 
     def _unscaled(self) -> Observable:
-        return I()
+        return I(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -148,7 +148,7 @@ class X(StandardObservable):
         super().__init__(ascii_symbols=["X"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return X()
+        return X(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -191,7 +191,7 @@ class Y(StandardObservable):
         super().__init__(ascii_symbols=["Y"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return Y()
+        return Y(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -234,7 +234,7 @@ class Z(StandardObservable):
         super().__init__(ascii_symbols=["Z"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return Z()
+        return Z(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -315,7 +315,7 @@ class TensorProduct(Observable):
             if len(merged_targets) != len(flat_targets):
                 raise ValueError("Cannot have repeated target qubits")
         else:
-            raise ValueError("Cannot mix observables with and without targets")
+            raise ValueError("Cannot mix factors with and without targets")
 
         super().__init__(
             qubit_count=qubit_count,
@@ -492,13 +492,13 @@ class Sum(Observable):
 
         self._summands = tuple(flattened_observables)
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
-        all_targets = [observable for observable in flattened_observables]
+        all_targets = [observable.targets for observable in flattened_observables]
         if all(targets is None for targets in all_targets):
             targets = None
         elif all(targets is not None for targets in all_targets):
             targets = all_targets
         else:
-            raise ValueError("Cannot mix observables with and without targets")
+            raise ValueError("Cannot mix terms with and without targets")
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
         self._targets = targets
 
@@ -519,6 +519,7 @@ class Sum(Observable):
         serialization_properties: OpenQASMSerializationProperties,
         target: list[QubitSetInput] = None,
     ) -> str:
+        target = target or self._targets
         if len(self.summands) != len(target):
             raise ValueError(
                 f"Invalid target of length {len(target)} for Sum with {len(self.summands)} terms"
@@ -613,10 +614,14 @@ class Hermitian(Observable):
             Gate.Unitary(matrix=eigendecomposition["eigenvectors"].conj().T),
         )
 
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        super().__init__(
+            qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count, targets=targets
+        )
 
     def _unscaled(self) -> Observable:
-        return Hermitian(matrix=self._matrix, display_name=self.ascii_symbols[0])
+        return Hermitian(
+            matrix=self._matrix, display_name=self.ascii_symbols[0], targets=self._targets
+        )
 
     def _to_jaqcd(self) -> list[list[list[list[float]]]]:
         if self.coefficient != 1:
@@ -629,6 +634,7 @@ class Hermitian(Observable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
+        target = target or self._targets
         if target:
             qubit_target = ", ".join(
                 [serialization_properties.format_target(int(t)) for t in target]
