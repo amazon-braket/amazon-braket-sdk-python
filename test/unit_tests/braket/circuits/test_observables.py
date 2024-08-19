@@ -237,20 +237,6 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
             "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $0, $1",
         ),
-        # (
-        #     (2 * Observable.Z()) @ (3 * Observable.H()),
-        #     (2 * Observable.Z(3)) @ (3 * Observable.H(3)),
-        #     OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-        #     [3, 3],
-        #     "6 * z($3) @ h($3)",
-        # ),
-        # (
-        #     (2 * Observable.Z()) @ (3 * Observable.H()) @ (2 * Observable.Y()),
-        #     (2 * Observable.Z(3)) @ (3 * Observable.H(3)) @ (2 * Observable.Y(1)),
-        #     OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-        #     [3, 3, 1],
-        #     "12 * z($3) @ h($3) @ y($1)",
-        # ),
         (
             3 * (2 * Observable.Z()),
             3 * (2 * Observable.Z(3)),
@@ -508,6 +494,11 @@ def test_hermitian_eigenvalues(matrix, eigenvalues):
     compare_eigenvalues(Observable.Hermitian(matrix=matrix), eigenvalues)
 
 
+def test_hermitian_matrix_target_mismatch():
+    with pytest.raises(ValueError):
+        Observable.Hermitian(np.eye(4), targets=[0, 1, 2])
+
+
 def test_flattened_tensor_product():
     observable_one = Observable.Z() @ Observable.Y()
     observable_two = Observable.X() @ Observable.H()
@@ -662,6 +653,16 @@ def test_tensor_product_basis_rotation_gates(observable, basis_rotation_gates):
     assert observable.basis_rotation_gates == basis_rotation_gates
 
 
+def test_tensor_product_repeated_qubits():
+    with pytest.raises(ValueError):
+        (2 * Observable.Z(3)) @ (3 * Observable.H(3))
+
+
+def test_tensor_product_with_and_without_targets():
+    with pytest.raises(ValueError):
+        (2 * Observable.Z(3)) @ (3 * Observable.H())
+
+
 def test_observable_from_ir_tensor_product():
     expected_observable = Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
     actual_observable = observable_from_ir(["z", "i", "x"])
@@ -764,3 +765,8 @@ def test_unscaled_tensor_product():
     observable = 3 * ((2 * Observable.X()) @ (5 * Observable.Y()))
     assert observable == 30 * (Observable.X() @ Observable.Y())
     assert observable._unscaled() == Observable.X() @ Observable.Y()
+
+
+def test_sum_with_and_without_targets():
+    with pytest.raises(ValueError):
+        3 * ((2 * Observable.X()) @ (5 * Observable.Y(4)))

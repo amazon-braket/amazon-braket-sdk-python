@@ -606,8 +606,6 @@ class Hermitian(Observable):
             raise ValueError(f"{self._matrix} is not hermitian")
 
         qubit_count = int(np.log2(self._matrix.shape[0]))
-        if targets and len(targets) != qubit_count:
-            raise ValueError(f"Target size {len(targets)} does not match qubit count {qubit_count}")
         eigendecomposition = Hermitian._get_eigendecomposition(self._matrix)
         self._eigenvalues = eigendecomposition["eigenvalues"]
         self._diagonalizing_gates = (
