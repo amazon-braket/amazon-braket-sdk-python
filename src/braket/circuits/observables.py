@@ -30,17 +30,22 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-from braket.registers.qubit_set import QubitSet
+from braket.registers import QubitInput, QubitSet, QubitSetInput
 
 
 class H(StandardObservable):
     """Hadamard operation as an observable."""
 
-    def __init__(self):
-        """Examples:
-        >>> Observable.H()
+    def __init__(self, target: QubitInput | None = None):
+        """ Initializes Hadamard observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on
+
+        Examples:
+            >>> Observable.H()
         """
-        super().__init__(ascii_symbols=["H"])
+        super().__init__(ascii_symbols=["H"], target=target)
 
     def _unscaled(self) -> StandardObservable:
         return H()
@@ -54,11 +59,11 @@ class H(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}h({qubit_target})"
-        else:
-            return f"{coef_prefix}h all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}h({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}h all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * (
@@ -76,11 +81,16 @@ Observable.register_observable(H)
 class I(Observable):  # noqa: E742
     """Identity operation as an observable."""
 
-    def __init__(self):
-        """Examples:
-        >>> Observable.I()
+    def __init__(self, target: QubitInput | None = None):
+        """ Initializes Identity observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on
+
+        Examples:
+            >>> Observable.I()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["I"])
+        super().__init__(qubit_count=1, ascii_symbols=["I"], target=target)
 
     def _unscaled(self) -> Observable:
         return I()
@@ -94,11 +104,11 @@ class I(Observable):  # noqa: E742
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}i({qubit_target})"
-        else:
-            return f"{coef_prefix}i all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}i({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}i all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.eye(2, dtype=complex)
@@ -126,11 +136,16 @@ Observable.register_observable(I)
 class X(StandardObservable):
     """Pauli-X operation as an observable."""
 
-    def __init__(self):
-        """Examples:
-        >>> Observable.X()
+    def __init__(self, target: QubitInput | None = None):
+        """ Initializes Pauli-X observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on
+
+        Examples:
+            >>> Observable.X()
         """
-        super().__init__(ascii_symbols=["X"])
+        super().__init__(ascii_symbols=["X"], target=target)
 
     def _unscaled(self) -> StandardObservable:
         return X()
@@ -144,11 +159,11 @@ class X(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}x({qubit_target})"
-        else:
-            return f"{coef_prefix}x all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}x({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}x all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -164,11 +179,16 @@ Observable.register_observable(X)
 class Y(StandardObservable):
     """Pauli-Y operation as an observable."""
 
-    def __init__(self):
-        """Examples:
-        >>> Observable.Y()
+    def __init__(self, target: QubitInput | None = None):
+        """ Initializes Pauli-Y observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on
+
+        Examples:
+            >>> Observable.Y()
         """
-        super().__init__(ascii_symbols=["Y"])
+        super().__init__(ascii_symbols=["Y"], target=target)
 
     def _unscaled(self) -> StandardObservable:
         return Y()
@@ -182,11 +202,11 @@ class Y(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}y({qubit_target})"
-        else:
-            return f"{coef_prefix}y all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}y({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}y all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -202,11 +222,16 @@ Observable.register_observable(Y)
 class Z(StandardObservable):
     """Pauli-Z operation as an observable."""
 
-    def __init__(self):
-        """Examples:
-        >>> Observable.Z()
+    def __init__(self, target: QubitInput | None = None):
+        """ Initializes Pauli-Z observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on
+
+        Examples:
+            >>> Observable.Z()
         """
-        super().__init__(ascii_symbols=["Z"])
+        super().__init__(ascii_symbols=["Z"], target=target)
 
     def _unscaled(self) -> StandardObservable:
         return Z()
@@ -220,11 +245,11 @@ class Z(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}z({qubit_target})"
-        else:
-            return f"{coef_prefix}z all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}z({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}z all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -281,7 +306,22 @@ class TensorProduct(Observable):
             f"{coefficient if coefficient != 1 else ''}"
             f"{'@'.join([obs.ascii_symbols[0] for obs in unscaled_factors])}"
         )
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        all_targets = [factor.targets for factor in unscaled_factors]
+        if all(targets is None for targets in all_targets):
+            merged_targets = None
+        elif all(isinstance(targets, QubitSet) for targets in all_targets):
+            flat_targets = [qubit for target in all_targets for qubit in target]
+            merged_targets = QubitSet(flat_targets)
+            if len(merged_targets) != len(flat_targets):
+                raise ValueError("Cannot have repeated target qubits")
+        else:
+            raise ValueError("Cannot mix observables with and without targets")
+
+        super().__init__(
+            qubit_count=qubit_count,
+            ascii_symbols=[display_name] * qubit_count,
+            targets=merged_targets
+        )
         self._coef = coefficient
         self._factors = unscaled_factors
         self._factor_dimensions = tuple(
@@ -316,7 +356,7 @@ class TensorProduct(Observable):
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
         factors = []
-        use_qubits = iter(target)
+        use_qubits = iter(target or self._targets)
         for obs in self._factors:
             obs_target = QubitSet()
             num_qubits = int(np.log2(obs.to_matrix().shape[0]))
@@ -452,7 +492,15 @@ class Sum(Observable):
 
         self._summands = tuple(flattened_observables)
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
+        all_targets = [observable for observable in flattened_observables]
+        if all(targets is None for targets in all_targets):
+            targets = None
+        elif all(isinstance(targets, QubitSet) for targets in all_targets):
+            targets = all_targets
+        else:
+            raise ValueError("Cannot mix observables with and without targets")
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        self._targets = targets
 
     def __mul__(self, other: numbers.Number) -> Observable:
         """Scalar multiplication"""
@@ -469,7 +517,7 @@ class Sum(Observable):
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        target: list[QubitSet] = None,
+        target: list[QubitSetInput] = None,
     ) -> str:
         if len(self.summands) != len(target):
             raise ValueError(
@@ -529,18 +577,24 @@ class Hermitian(Observable):
     # Cache of eigenpairs
     _eigenpairs: ClassVar = {}
 
-    def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
+    def __init__(
+        self,
+        matrix: np.ndarray,
+        display_name: str = "Hermitian",
+        targets: QubitSetInput | None = None
+    ):
         """Inits a `Hermitian`.
 
         Args:
             matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
+            targets (QubitSetInput | None): The target qubits to measure the observable on
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length that is not a positive power of 2,
-                or is not Hermitian.
+                is not Hermitian, or has a dimension length that is either not a positive power of 2
+                or, if targets is supplied, doesn't match the size of targets.
 
         Examples:
             >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
@@ -551,6 +605,8 @@ class Hermitian(Observable):
             raise ValueError(f"{self._matrix} is not hermitian")
 
         qubit_count = int(np.log2(self._matrix.shape[0]))
+        if targets and len(targets) != qubit_count:
+            raise ValueError(f"Target size {len(targets)} does not match qubit count {qubit_count}")
         eigendecomposition = Hermitian._get_eigendecomposition(self._matrix)
         self._eigenvalues = eigendecomposition["eigenvalues"]
         self._diagonalizing_gates = (
