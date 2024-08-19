@@ -224,7 +224,7 @@ class StandardObservable(Observable):
         super().__init__(
             qubit_count=1,
             ascii_symbols=ascii_symbols,
-            targets=[target] if target is not None else None
+            targets=[target] if target is not None else None,
         )
         self._eigenvalues = (1.0, -1.0)  # immutable
 

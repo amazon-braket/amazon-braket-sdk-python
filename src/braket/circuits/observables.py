@@ -37,7 +37,7 @@ class H(StandardObservable):
     """Hadamard operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):
-        """ Initializes Hadamard observable.
+        """Initializes Hadamard observable.
 
         Args:
             target (QubitInput | None): The target qubit to measure the observable on
@@ -82,7 +82,7 @@ class I(Observable):  # noqa: E742
     """Identity operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):
-        """ Initializes Identity observable.
+        """Initializes Identity observable.
 
         Args:
             target (QubitInput | None): The target qubit to measure the observable on
@@ -90,7 +90,7 @@ class I(Observable):  # noqa: E742
         Examples:
             >>> Observable.I()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["I"], target=target)
+        super().__init__(qubit_count=1, ascii_symbols=["I"], targets=target)
 
     def _unscaled(self) -> Observable:
         return I()
@@ -137,7 +137,7 @@ class X(StandardObservable):
     """Pauli-X operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):
-        """ Initializes Pauli-X observable.
+        """Initializes Pauli-X observable.
 
         Args:
             target (QubitInput | None): The target qubit to measure the observable on
@@ -180,7 +180,7 @@ class Y(StandardObservable):
     """Pauli-Y operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):
-        """ Initializes Pauli-Y observable.
+        """Initializes Pauli-Y observable.
 
         Args:
             target (QubitInput | None): The target qubit to measure the observable on
@@ -223,7 +223,7 @@ class Z(StandardObservable):
     """Pauli-Z operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):
-        """ Initializes Pauli-Z observable.
+        """Initializes Pauli-Z observable.
 
         Args:
             target (QubitInput | None): The target qubit to measure the observable on
@@ -309,7 +309,7 @@ class TensorProduct(Observable):
         all_targets = [factor.targets for factor in unscaled_factors]
         if all(targets is None for targets in all_targets):
             merged_targets = None
-        elif all(isinstance(targets, QubitSet) for targets in all_targets):
+        elif all(targets is not None for targets in all_targets):
             flat_targets = [qubit for target in all_targets for qubit in target]
             merged_targets = QubitSet(flat_targets)
             if len(merged_targets) != len(flat_targets):
@@ -320,7 +320,7 @@ class TensorProduct(Observable):
         super().__init__(
             qubit_count=qubit_count,
             ascii_symbols=[display_name] * qubit_count,
-            targets=merged_targets
+            targets=merged_targets,
         )
         self._coef = coefficient
         self._factors = unscaled_factors
@@ -495,7 +495,7 @@ class Sum(Observable):
         all_targets = [observable for observable in flattened_observables]
         if all(targets is None for targets in all_targets):
             targets = None
-        elif all(isinstance(targets, QubitSet) for targets in all_targets):
+        elif all(targets is not None for targets in all_targets):
             targets = all_targets
         else:
             raise ValueError("Cannot mix observables with and without targets")
@@ -581,7 +581,7 @@ class Hermitian(Observable):
         self,
         matrix: np.ndarray,
         display_name: str = "Hermitian",
-        targets: QubitSetInput | None = None
+        targets: QubitSetInput | None = None,
     ):
         """Inits a `Hermitian`.
 
