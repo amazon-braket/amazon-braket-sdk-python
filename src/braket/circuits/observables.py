@@ -40,10 +40,13 @@ class H(StandardObservable):
         """Initializes Hadamard observable.
 
         Args:
-            target (QubitInput | None): The target qubit to measure the observable on
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Examples:
-            >>> Observable.H()
+            >>> observables.H(0)
+            >>> observables.H()
         """
         super().__init__(ascii_symbols=["H"], target=target)
 
@@ -85,10 +88,13 @@ class I(Observable):  # noqa: E742
         """Initializes Identity observable.
 
         Args:
-            target (QubitInput | None): The target qubit to measure the observable on
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Examples:
-            >>> Observable.I()
+            >>> observables.I(0)
+            >>> observables.I()
         """
         super().__init__(qubit_count=1, ascii_symbols=["I"], targets=target)
 
@@ -140,10 +146,13 @@ class X(StandardObservable):
         """Initializes Pauli-X observable.
 
         Args:
-            target (QubitInput | None): The target qubit to measure the observable on
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Examples:
-            >>> Observable.X()
+            >>> observables.X(0)
+            >>> observables.X()
         """
         super().__init__(ascii_symbols=["X"], target=target)
 
@@ -183,10 +192,13 @@ class Y(StandardObservable):
         """Initializes Pauli-Y observable.
 
         Args:
-            target (QubitInput | None): The target qubit to measure the observable on
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Examples:
-            >>> Observable.Y()
+            >>> observables.Y(0)
+            >>> observables.Y()
         """
         super().__init__(ascii_symbols=["Y"], target=target)
 
@@ -226,10 +238,13 @@ class Z(StandardObservable):
         """Initializes Pauli-Z observable.
 
         Args:
-            target (QubitInput | None): The target qubit to measure the observable on
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Examples:
-            >>> Observable.Z()
+            >>> observables.Z(0)
+            >>> observables.Z()
         """
         super().__init__(ascii_symbols=["Z"], target=target)
 
@@ -272,13 +287,13 @@ class TensorProduct(Observable):
             observables (list[Observable]): List of observables for tensor product
 
         Examples:
-            >>> t1 = Observable.Y() @ Observable.X()
+            >>> t1 = Observable.Y(0) @ Observable.X(1)
             >>> t1.to_matrix()
             array([[0.+0.j, 0.+0.j, 0.-0.j, 0.-1.j],
             [0.+0.j, 0.+0.j, 0.-1.j, 0.-0.j],
             [0.+0.j, 0.+1.j, 0.+0.j, 0.+0.j],
             [0.+1.j, 0.+0.j, 0.+0.j, 0.+0.j]])
-            >>> t2 = Observable.Z() @ t1
+            >>> t2 = Observable.Z(3) @ t1
             >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
@@ -478,7 +493,7 @@ class Sum(Observable):
                 observable for circuit diagrams. Defaults to `Hamiltonian`.
 
         Examples:
-            >>> t1 = -3 * Observable.Y() + 2 * Observable.X()
+            >>> t1 = -3 * Observable.Y(0) + 2 * Observable.X(0)
             Sum(X('qubit_count': 1), Y('qubit_count': 1))
             >>> t1.summands
             (X('qubit_count': 1), Y('qubit_count': 1))
@@ -590,7 +605,9 @@ class Hermitian(Observable):
             matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
-            targets (QubitSetInput | None): The target qubits to measure the observable on
+            targets (QubitSetInput | None): The target qubits to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
@@ -598,7 +615,8 @@ class Hermitian(Observable):
                 or, if targets is supplied, doesn't match the size of targets.
 
         Examples:
-            >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
+            >>> observables.Hermitian(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
+            >>> observables.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
         """
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
