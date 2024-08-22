@@ -510,6 +510,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
         length: Union[float, FreeParameterExpression],
         width: Union[float, FreeParameterExpression],
         sigma: Union[float, FreeParameterExpression],
+        off_center: Union[float, FreeParameterExpression],
         amplitude: Union[float, FreeParameterExpression] = 1,
         zero_at_edges: bool = False,
         id: Optional[str] = None,
@@ -529,6 +530,9 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 half height of the two edges.
             sigma (Union[float, FreeParameterExpression]): A characteristic time of how quickly
                 the edges rise and fall.
+            off_center (Union[float, FreeParameterExpression]): Shift the smoothed square waveform
+                earlier or later in time. When positive, the smoothed square is shifted later
+                (to the right), otherwise earlier (to the left).
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
                 envelope. Defaults to 1.
             zero_at_edges (bool): Whether the waveform is scaled such that it has zero value at the
@@ -539,6 +543,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
         self.length = length
         self.width = width
         self.sigma = sigma
+        self.off_center = off_center
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
@@ -546,8 +551,8 @@ class ErfSquareWaveform(Waveform, Parameterizable):
     def __repr__(self) -> str:
         return (
             f"ErfSquareWaveform('id': {self.id}, 'length': {self.length}, "
-            f"'width': {self.width}, 'sigma': {self.sigma}, 'amplitude': {self.amplitude}, "
-            f"'zero_at_edges': {self.zero_at_edges})"
+            f"'width': {self.width}, 'sigma': {self.sigma}, 'off_center': {self.off_center}, "
+            f"'amplitude': {self.amplitude}, 'zero_at_edges': {self.zero_at_edges})"
         )
 
     @property
@@ -555,7 +560,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
         """
-        return [self.length, self.width, self.sigma, self.amplitude]
+        return [self.length, self.width, self.sigma, self.off_center, self.amplitude]
 
     def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ErfSquareWaveform:
         """Takes in parameters and returns an object with specified parameters
@@ -571,6 +576,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
             "length": subs_if_free_parameter(self.length, **kwargs),
             "width": subs_if_free_parameter(self.width, **kwargs),
             "sigma": subs_if_free_parameter(self.sigma, **kwargs),
+            "off_center": subs_if_free_parameter(self.off_center, **kwargs),
             "amplitude": subs_if_free_parameter(self.amplitude, **kwargs),
             "zero_at_edges": self.zero_at_edges,
             "id": self.id,
@@ -582,6 +588,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
             self.length,
             self.width,
             self.sigma,
+            self.off_center,
             self.amplitude,
             self.zero_at_edges,
             self.id,
@@ -589,6 +596,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
             other.length,
             other.width,
             other.sigma,
+            other.off_center,
             other.amplitude,
             other.zero_at_edges,
             other.id,
@@ -606,6 +614,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 ("length", duration),
                 ("width", duration),
                 ("sigma", duration),
+                ("off_center", duration),
                 ("amplitude", float64),
                 ("zero_at_edges", bool_),
             ],
@@ -615,6 +624,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 self.length,
                 self.width,
                 self.sigma,
+                self.off_center,
                 self.amplitude,
                 self.zero_at_edges,
             ),
@@ -631,8 +641,8 @@ class ErfSquareWaveform(Waveform, Parameterizable):
             np.ndarray: The sample amplitudes for this waveform.
         """
         sample_range = np.arange(0, self.length, dt)
-        t1 = (self.length - self.width) / 2
-        t2 = (self.length + self.width) / 2
+        t1 = (self.length - self.width) / 2 + self.off_center
+        t2 = (self.length + self.width) / 2 + self.off_center
         samples = (
             sp.special.erf((sample_range - t1) / self.sigma)
             + sp.special.erf(-(sample_range - t2) / self.sigma)

@@ -696,7 +696,7 @@ def test_play_drag_gaussian_waveforms(port):
 def test_play_erf_square_waveforms(port):
     frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     erf_square_wf_ZaE_False = ErfSquareWaveform(
-        length=1e-8, width=8e-9, sigma=1e-9, amplitude=0.8, zero_at_edges=False
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=0.0, amplitude=0.8, zero_at_edges=False
     )
     pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_False)
 
@@ -733,7 +733,7 @@ def test_play_erf_square_waveforms(port):
 def test_play_erf_square_waveforms_zero_at_edges(port):
     frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     erf_square_wf_ZaE_True = ErfSquareWaveform(
-        length=1e-8, width=8e-9, sigma=1e-9, amplitude=0.8, zero_at_edges=True
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=0.0, amplitude=0.8, zero_at_edges=True
     )
     pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_True)
 
@@ -750,6 +750,43 @@ def test_play_erf_square_waveforms_zero_at_edges(port):
             complex(0.7979691964131336),
             complex(0.731709291296886),
             complex(0.36585464564844294),
+        ],
+        dtype=np.complex128,
+    )
+
+    expected_amplitudes = {"frame1": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries()}
+
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(t, v)
+        expected_frequencies["frame1"].put(t, 1e8)
+        expected_phases["frame1"].put(t, 0)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
+def test_play_erf_square_waveforms_off_center(port):
+    frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    erf_square_wf_ZaE_False = ErfSquareWaveform(
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=-2e-9, amplitude=0.8, zero_at_edges=False
+    )
+    pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_False)
+
+    times = np.arange(0, 1e-8, port.dt)
+    values = np.array(
+        [
+            complex(0.7370803285436436),
+            complex(0.7981289183125405),
+            complex(0.7999911761342559),
+            complex(0.8),
+            complex(0.7999911761342559),
+            complex(0.7981289183125405),
+            complex(0.7370803285436436),
+            complex(0.4000000061669036),
+            complex(0.0629196837901632),
+            complex(0.0018710940212660543),
         ],
         dtype=np.complex128,
     )
