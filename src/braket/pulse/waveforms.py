@@ -510,7 +510,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
         length: Union[float, FreeParameterExpression],
         width: Union[float, FreeParameterExpression],
         sigma: Union[float, FreeParameterExpression],
-        off_center: Union[float, FreeParameterExpression],
+        off_center: Union[float, FreeParameterExpression] = 0,
         amplitude: Union[float, FreeParameterExpression] = 1,
         zero_at_edges: bool = False,
         id: Optional[str] = None,
@@ -532,7 +532,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 the edges rise and fall.
             off_center (Union[float, FreeParameterExpression]): Shift the smoothed square waveform
                 earlier or later in time. When positive, the smoothed square is shifted later
-                (to the right), otherwise earlier (to the left).
+                (to the right), otherwise earlier (to the left). Defaults to 0.
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
                 envelope. Defaults to 1.
             zero_at_edges (bool): Whether the waveform is scaled such that it has zero value at the
