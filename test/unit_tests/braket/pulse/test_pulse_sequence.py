@@ -18,6 +18,7 @@ from braket.pulse import (
     ArbitraryWaveform,
     ConstantWaveform,
     DragGaussianWaveform,
+    ErfSquareWaveform,
     Frame,
     GaussianWaveform,
     Port,
@@ -119,6 +120,16 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             predefined_frame_2,
             ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="arb_wf"),
         )
+        .play(
+            predefined_frame_1,
+            ErfSquareWaveform(
+                length=FreeParameter("length_es"),
+                width=FreeParameter("width_es"),
+                sigma=2e-9,
+                off_center=8e-9,
+                id="erf_square_wf",
+            ),
+        )
         .capture_v0(predefined_frame_2)
     )
     expected_str_unbound = "\n".join(
@@ -135,6 +146,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             " sigma_dg * 1s, 0.2, 1, false);",
             "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(length_es * 1s, width_es * 1s, 2.0ns,"
+            " 8.0ns, 1, false);",
             "    set_frequency(predefined_frame_1, a + 2.0 * c);",
             "    shift_frequency(predefined_frame_1, a + 2.0 * c);",
             "    set_phase(predefined_frame_1, a + 2.0 * c);",
@@ -149,6 +162,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    play(predefined_frame_2, drag_gauss_wf);",
             "    play(predefined_frame_1, constant_wf);",
             "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
             "    psb[1] = capture_v0(predefined_frame_2);",
             "}",
         ]
@@ -162,11 +176,29 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         FreeParameter("sigma_g"),
         FreeParameter("sigma_dg"),
         FreeParameter("length_c"),
+        FreeParameter("width_es"),
+        FreeParameter("length_es"),
     }
     b_bound = pulse_sequence.make_bound_pulse_sequence(
-        {"c": 2, "length_g": 1e-3, "length_dg": 3e-3, "sigma_dg": 0.4, "length_c": 4e-3}
+        {
+            "c": 2,
+            "length_g": 1e-3,
+            "length_dg": 3e-3,
+            "sigma_dg": 0.4,
+            "length_c": 4e-3,
+            "length_es": 20e-9,
+            "width_es": 12e-9,
+        }
     )
-    b_bound_call = pulse_sequence(c=2, length_g=1e-3, length_dg=3e-3, sigma_dg=0.4, length_c=4e-3)
+    b_bound_call = pulse_sequence(
+        c=2,
+        length_g=1e-3,
+        length_dg=3e-3,
+        sigma_dg=0.4,
+        length_c=4e-3,
+        length_es=20e-9,
+        width_es=12e-9,
+    )
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
@@ -177,6 +209,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
             "    set_frequency(predefined_frame_1, a + 4.0);",
             "    shift_frequency(predefined_frame_1, a + 4.0);",
             "    set_phase(predefined_frame_1, a + 4.0);",
@@ -191,6 +224,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    play(predefined_frame_2, drag_gauss_wf);",
             "    play(predefined_frame_1, constant_wf);",
             "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
             "    psb[1] = capture_v0(predefined_frame_2);",
             "}",
         ]
@@ -209,6 +243,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
             "    set_frequency(predefined_frame_1, 5.0);",
             "    shift_frequency(predefined_frame_1, 5.0);",
             "    set_phase(predefined_frame_1, 5.0);",
@@ -223,6 +258,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    play(predefined_frame_2, drag_gauss_wf);",
             "    play(predefined_frame_1, constant_wf);",
             "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
             "    psb[1] = capture_v0(predefined_frame_2);",
             "}",
         ]
@@ -302,6 +338,16 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             predefined_frame_2,
             ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="arb_wf"),
         )
+        .play(
+            predefined_frame_1,
+            ErfSquareWaveform(
+                length=32e-9,
+                width=20e-9,
+                sigma=2e-9,
+                off_center=8e-9,
+                id="erf_square_wf",
+            ),
+        )
         .capture_v0(predefined_frame_2)
     )
     expected_str = "\n".join(
@@ -313,6 +359,7 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(32.0ns, 20.0ns, 2.0ns, 8.0ns, 1, false);",
             "    set_frequency(predefined_frame_1, 3000000000.0);",
             "    shift_frequency(predefined_frame_1, 1000000000.0);",
             "    set_phase(predefined_frame_1, -0.5);",
@@ -328,6 +375,7 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "    play(predefined_frame_2, drag_gauss_wf);",
             "    play(predefined_frame_1, constant_wf);",
             "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
             "    psb[1] = capture_v0(predefined_frame_2);",
             "}",
         ]

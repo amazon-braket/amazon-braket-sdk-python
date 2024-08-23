@@ -304,26 +304,29 @@ def test_erf_square_waveform():
     length = 4e-9
     width = 0.3
     sigma = 0.2
+    off_center = 1e-9
     amplitude = 0.4
     zero_at_edges = False
     id = "erf_square_wf"
-    wf = ErfSquareWaveform(length, width, sigma, amplitude, zero_at_edges, id)
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
     assert wf.id == id
     assert wf.zero_at_edges == zero_at_edges
     assert wf.amplitude == amplitude
     assert wf.width == width
     assert wf.sigma == sigma
     assert wf.length == length
+    assert wf.off_center == off_center
 
 
 def test_erf_square_waveform_repr():
     length = 4e-9
     width = 0.3
     sigma = 0.2
+    off_center = 1e-9
     amplitude = 0.4
     zero_at_edges = False
     id = "erf_square_wf"
-    wf = ErfSquareWaveform(length, width, sigma, amplitude, zero_at_edges, id)
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
     repr(wf)
 
 
@@ -331,20 +334,24 @@ def test_erf_square_waveform_default_params():
     length = 4e-9
     width = 0.3
     sigma = 0.2
-    wf = ErfSquareWaveform(length, width, sigma)
+    off_center = 1e-9
+    wf = ErfSquareWaveform(length, width, sigma, off_center)
     assert re.match(r"[A-Za-z]{10}", wf.id)
     assert wf.zero_at_edges is False
     assert wf.amplitude == 1
     assert wf.width == width
     assert wf.sigma == sigma
     assert wf.length == length
+    assert wf.off_center == off_center
 
 
 def test_erf_square_wf_eq():
-    wf = ErfSquareWaveform(4e-9, 0.3, 0.2, 0.7, True, "wf_es")
-    wf_2 = ErfSquareWaveform(wf.length, wf.width, wf.sigma, wf.amplitude, wf.zero_at_edges, wf.id)
+    wf = ErfSquareWaveform(4e-9, 0.3, 0.2, 1e-9, 0.7, True, "wf_es")
+    wf_2 = ErfSquareWaveform(
+        wf.length, wf.width, wf.sigma, wf.off_center, wf.amplitude, wf.zero_at_edges, wf.id
+    )
     assert wf_2 == wf
-    for att in ["length", "width", "sigma", "amplitude", "zero_at_edges", "id"]:
+    for att in ["length", "width", "sigma", "off_center", "amplitude", "zero_at_edges", "id"]:
         wfc = deepcopy(wf_2)
         setattr(wfc, att, "wrong_value")
         assert wf != wfc
@@ -355,6 +362,7 @@ def test_erf_square_wf_free_params():
         FreeParameter("length_v"),
         FreeParameter("width_x"),
         FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
         FreeParameter("amp_z"),
         id="erf_square_wf",
     )
@@ -362,20 +370,29 @@ def test_erf_square_wf_free_params():
         FreeParameter("length_v"),
         FreeParameter("width_x"),
         FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
         FreeParameter("amp_z"),
     ]
 
     wf_2 = wf.bind_values(length_v=0.6, width_x=0.4)
-    assert wf_2.parameters == [0.6, 0.4, FreeParameter("sigma_y"), FreeParameter("amp_z")]
+    assert wf_2.parameters == [
+        0.6,
+        0.4,
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+    ]
     _assert_wf_qasm(
         wf_2,
-        "waveform erf_square_wf = erf_square(600.0ms, 400.0ms, sigma_y * 1s, amp_z, false);",
+        "waveform erf_square_wf = erf_square(600.0ms, 400.0ms, sigma_y * 1s, off_center_x * 1s,"
+        " amp_z, false);",
     )
 
-    wf_3 = wf.bind_values(length_v=0.6, width_x=0.3, sigma_y=0.1)
-    assert wf_3.parameters == [0.6, 0.3, 0.1, FreeParameter("amp_z")]
+    wf_3 = wf.bind_values(length_v=0.6, width_x=0.3, sigma_y=0.1, off_center_x=0.05)
+    assert wf_3.parameters == [0.6, 0.3, 0.1, 0.05, FreeParameter("amp_z")]
     _assert_wf_qasm(
-        wf_3, "waveform erf_square_wf = erf_square(600.0ms, 300.0ms, 100.0ms, amp_z, false);"
+        wf_3,
+        "waveform erf_square_wf = erf_square(600.0ms, 300.0ms, 100.0ms, 50.0ms, amp_z, false);",
     )
 
 
@@ -450,6 +467,7 @@ def _assert_wf_qasm(waveform, expected_qasm):
                     {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
                     {"name": "width", "value": 3.000000000000000e-8, "type": "float"},
                     {"name": "sigma", "value": 5.000000000060144e-9, "type": "float"},
+                    {"name": "off_center", "value": 4.000000000000000e-9, "type": "float"},
                     {"name": "amplitude", "value": 0.4549282253548838, "type": "float"},
                 ],
             },
@@ -458,6 +476,7 @@ def _assert_wf_qasm(waveform, expected_qasm):
                 length=6.000000000000001e-8,
                 width=3.000000000000000e-8,
                 sigma=5.000000000060144e-9,
+                off_center=4.000000000000000e-9,
                 amplitude=0.4549282253548838,
             ),
         ),

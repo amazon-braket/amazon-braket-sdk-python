@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.85.0 (2024-08-20)
+
+### Features
+
+ * Allow early qubit binding of observables
+
 ## v1.84.0 (2024-07-30)
 
 ### Features
