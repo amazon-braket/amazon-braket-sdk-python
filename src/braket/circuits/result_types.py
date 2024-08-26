@@ -14,14 +14,12 @@
 from __future__ import annotations
 
 import re
-from functools import reduce
 from typing import Union
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
-from braket.circuits.observables import Sum
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
@@ -210,11 +208,7 @@ class AdjointGradient(ObservableParameterResultType):
             >>>     parameters=["alpha", "beta"],
             >>> )
         """
-        if isinstance(observable, Sum):
-            target_qubits = reduce(QubitSet.union, map(QubitSet, target), QubitSet())
-        else:
-            target_qubits = QubitSet(target)
-
+        target_qubits = QubitSet(target if target is not None else observable.targets)
         super().__init__(
             ascii_symbols=[f"AdjointGradient({observable.ascii_symbols[0]})"] * len(target_qubits),
             observable=observable,
