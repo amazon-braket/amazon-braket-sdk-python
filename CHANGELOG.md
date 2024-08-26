@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.86.0 (2024-08-26)
+
+### Features
+
+ * Rigetti Ankaa
+ * add off_center to erf_square
+
 ## v1.85.0 (2024-08-20)
 
 ### Features
