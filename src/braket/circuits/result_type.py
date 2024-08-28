@@ -209,7 +209,7 @@ class ObservableResultType(ResultType):
         super().__init__(ascii_symbols)
         self._observable = observable
         self._target = QubitSet(target)
-        if self._target:
+        if target is not None:
             if isinstance(observable, Sum):  # nested target
                 if len(target) != len(observable.summands):
                     raise ValueError(
