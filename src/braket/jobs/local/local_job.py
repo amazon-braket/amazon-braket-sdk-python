@@ -158,7 +158,7 @@ class LocalQuantumJob(QuantumJob):
             env_variables = setup_container(container, session, **create_job_kwargs)
             container.run_local_job(env_variables)
             container.copy_from("/opt/ml/model", job_name)
-            with open(os.path.join(job_name, "log.txt"), "w") as log_file:
+            with open(os.path.join(job_name, "log.txt"), "w", encoding="utf-8") as log_file:
                 log_file.write(container.run_log)
             if "checkpointConfig" in create_job_kwargs:
                 checkpoint_config = create_job_kwargs["checkpointConfig"]
@@ -209,7 +209,7 @@ class LocalQuantumJob(QuantumJob):
         """
         if not self._run_log:
             try:
-                with open(os.path.join(self.name, "log.txt")) as log_file:
+                with open(os.path.join(self.name, "log.txt"), encoding="utf-8") as log_file:
                     self._run_log = log_file.read()
             except FileNotFoundError as e:
                 raise ValueError(
@@ -289,12 +289,9 @@ class LocalQuantumJob(QuantumJob):
             dict[str, Any]: Dict specifying the hybrid job results.
         """
         try:
-            with open(os.path.join(self.name, "results.json")) as f:
+            with open(os.path.join(self.name, "results.json"), encoding="utf-8") as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
-                deserialized_data = deserialize_values(
-                    persisted_data.dataDictionary, persisted_data.dataFormat
-                )
-                return deserialized_data
+                return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
         except FileNotFoundError as e:
             raise ValueError(
                 f"Unable to find results in the local job directory {self.name}."

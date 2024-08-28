@@ -178,18 +178,19 @@ def hybrid_job(
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """
-            with _IncludeModules(include_modules), tempfile.TemporaryDirectory(
-                dir="", prefix="decorator_job_"
-            ) as temp_dir:
+            with (
+                _IncludeModules(include_modules),
+                tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
+            ):
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
-                with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
-                    template = "\n".join(
-                        [
-                            _process_input_data(input_data),
-                            _serialize_entry_point(entry_point, args, kwargs),
-                        ]
-                    )
+                with open(
+                    temp_dir_path / entry_point_file_path, "w", encoding="utf-8"
+                ) as entry_point_file:
+                    template = "\n".join([
+                        _process_input_data(input_data),
+                        _serialize_entry_point(entry_point, args, kwargs),
+                    ])
                     entry_point_file.write(template)
 
                 if dependencies:
@@ -221,12 +222,8 @@ def hybrid_job(
                     "quiet": quiet,
                     "reservation_arn": reservation_arn,
                 }
-                for key, value in optional_args.items():
-                    if value is not None:
-                        job_args[key] = value
-
-                job = _create_job(job_args, local)
-            return job
+                job_args.update({key: val for key, val in optional_args.items() if val is not None})
+                return _create_job(job_args, local)
 
         return job_wrapper
 
@@ -264,12 +261,12 @@ def _process_dependencies(dependencies: str | Path | list[str], temp_dir: Path) 
         shutil.copy(Path(dependencies).resolve(), temp_dir / "requirements.txt")
     else:
         # list of packages
-        with open(temp_dir / "requirements.txt", "w") as f:
+        with open(temp_dir / "requirements.txt", "w", encoding="utf-8") as f:
             f.write("\n".join(dependencies))
 
 
 class _IncludeModules:
-    def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] = None):
+    def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] | None = None):
         modules = modules or []
         if isinstance(modules, (str, ModuleType)):
             modules = [modules]
@@ -283,7 +280,7 @@ class _IncludeModules:
         for module in self._modules:
             cloudpickle.register_pickle_by_value(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         """Unregister included modules with cloudpickle to be pickled by value"""
         for module in self._modules:
             cloudpickle.unregister_pickle_by_value(module)
@@ -317,10 +314,10 @@ def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict) -> di
     hyperparameters = {}
     for param, value in bound_args.arguments.items():
         param_kind = signature.parameters[param].kind
-        if param_kind in [
+        if param_kind in {
             inspect.Parameter.POSITIONAL_OR_KEYWORD,
             inspect.Parameter.KEYWORD_ONLY,
-        ]:
+        }:
             hyperparameters[param] = value
         elif param_kind == inspect.Parameter.VAR_KEYWORD:
             hyperparameters.update(**value)
@@ -351,7 +348,7 @@ def _sanitize(hyperparameter: Any) -> str:
     # max allowed length for a hyperparameter is 2500
     if len(sanitized) > 2500:
         # show as much as possible, including the final 20 characters
-        return f"{sanitized[:2500 - 23]}...{sanitized[-20:]}"
+        return f"{sanitized[: 2500 - 23]}...{sanitized[-20:]}"
     return sanitized
 
 
@@ -408,7 +405,7 @@ def _process_input_data(input_data: dict) -> list[str]:
 def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
     """Create an AWS or Local hybrid job"""
     if local:
-        from braket.jobs.local import LocalQuantumJob
+        from braket.jobs.local import LocalQuantumJob  # noqa: PLC0415
 
         for aws_only_arg in [
             "wait_until_complete",
@@ -422,7 +419,6 @@ def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
             if aws_only_arg in job_args:
                 del job_args[aws_only_arg]
         return LocalQuantumJob.create(**job_args)
-    else:
-        from braket.aws import AwsQuantumJob
+    from braket.aws import AwsQuantumJob  # noqa: PLC0415
 
-        return AwsQuantumJob.create(**job_args)
+    return AwsQuantumJob.create(**job_args)

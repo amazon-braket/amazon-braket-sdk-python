@@ -16,7 +16,6 @@ from __future__ import annotations
 import random
 import string
 from abc import ABC, abstractmethod
-from typing import Optional, Union
 
 import numpy as np
 import scipy as sp
@@ -58,7 +57,7 @@ class Waveform(ABC):
     @staticmethod
     @abstractmethod
     def _from_calibration_schema(waveform_json: dict) -> Waveform:
-        """Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104 # noqa: E501
+        """Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
 
         Args:
             waveform_json (dict): A JSON object with the needed parameters for making the Waveform.
@@ -73,7 +72,7 @@ class ArbitraryWaveform(Waveform):
     an array.
     """
 
-    def __init__(self, amplitudes: list[complex], id: Optional[str] = None):
+    def __init__(self, amplitudes: list[complex], id: str | None = None):
         """Initializes an `ArbitraryWaveform`.
 
         Args:
@@ -129,9 +128,7 @@ class ConstantWaveform(Waveform, Parameterizable):
     specified length.
     """
 
-    def __init__(
-        self, length: Union[float, FreeParameterExpression], iq: complex, id: Optional[str] = None
-    ):
+    def __init__(self, length: float | FreeParameterExpression, iq: complex, id: str | None = None):
         """Initializes a `ConstantWaveform`.
 
         Args:
@@ -149,7 +146,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -158,7 +155,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         """
         return [self.length]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ConstantWaveform:
+    def bind_values(self, **kwargs: FreeParameter | str) -> ConstantWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
@@ -207,8 +204,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         """
         # Amplitudes should be gated by [0:self.length]
         sample_range = np.arange(0, self.length, dt)
-        samples = self.iq * np.ones_like(sample_range)
-        return samples
+        return self.iq * np.ones_like(sample_range)
 
     @staticmethod
     def _from_calibration_schema(waveform_json: dict) -> ConstantWaveform:
@@ -235,12 +231,12 @@ class DragGaussianWaveform(Waveform, Parameterizable):
 
     def __init__(
         self,
-        length: Union[float, FreeParameterExpression],
-        sigma: Union[float, FreeParameterExpression],
-        beta: Union[float, FreeParameterExpression],
-        amplitude: Union[float, FreeParameterExpression] = 1,
+        length: float | FreeParameterExpression,
+        sigma: float | FreeParameterExpression,
+        beta: float | FreeParameterExpression,
+        amplitude: float | FreeParameterExpression = 1,
         zero_at_edges: bool = False,
-        id: Optional[str] = None,
+        id: str | None = None,
     ):
         """Initializes a `DragGaussianWaveform`.
 
@@ -272,13 +268,13 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
         """
         return [self.length, self.sigma, self.beta, self.amplitude]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> DragGaussianWaveform:
+    def bind_values(self, **kwargs: FreeParameter | str) -> DragGaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
@@ -347,7 +343,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2
         zero_at_edges_int = int(self.zero_at_edges)
-        samples = (
+        return (
             (1 - (1.0j * self.beta * ((sample_range - t0) / self.sigma**2)))
             * (
                 self.amplitude
@@ -358,7 +354,6 @@ class DragGaussianWaveform(Waveform, Parameterizable):
                 - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2))
             )
         )
-        return samples
 
     @staticmethod
     def _from_calibration_schema(waveform_json: dict) -> DragGaussianWaveform:
@@ -377,11 +372,11 @@ class GaussianWaveform(Waveform, Parameterizable):
 
     def __init__(
         self,
-        length: Union[float, FreeParameterExpression],
-        sigma: Union[float, FreeParameterExpression],
-        amplitude: Union[float, FreeParameterExpression] = 1,
+        length: float | FreeParameterExpression,
+        sigma: float | FreeParameterExpression,
+        amplitude: float | FreeParameterExpression = 1,
         zero_at_edges: bool = False,
-        id: Optional[str] = None,
+        id: str | None = None,
     ):
         """Initializes a `GaussianWaveform`.
 
@@ -410,13 +405,13 @@ class GaussianWaveform(Waveform, Parameterizable):
         )
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
         """
         return [self.length, self.sigma, self.amplitude]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> GaussianWaveform:
+    def bind_values(self, **kwargs: FreeParameter | str) -> GaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
@@ -481,14 +476,13 @@ class GaussianWaveform(Waveform, Parameterizable):
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2
         zero_at_edges_int = int(self.zero_at_edges)
-        samples = (
+        return (
             self.amplitude
             / (1 - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2)))
         ) * (
             np.exp(-0.5 * (((sample_range - t0) / self.sigma) ** 2))
             - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2))
         )
-        return samples
 
     @staticmethod
     def _from_calibration_schema(waveform_json: dict) -> GaussianWaveform:
@@ -507,12 +501,12 @@ class ErfSquareWaveform(Waveform, Parameterizable):
 
     def __init__(
         self,
-        length: Union[float, FreeParameterExpression],
-        width: Union[float, FreeParameterExpression],
-        sigma: Union[float, FreeParameterExpression],
-        amplitude: Union[float, FreeParameterExpression] = 1,
+        length: float | FreeParameterExpression,
+        width: float | FreeParameterExpression,
+        sigma: float | FreeParameterExpression,
+        amplitude: float | FreeParameterExpression = 1,
         zero_at_edges: bool = False,
-        id: Optional[str] = None,
+        id: str | None = None,
     ):
         r"""Initializes a `ErfSquareWaveform`.
 
@@ -551,13 +545,13 @@ class ErfSquareWaveform(Waveform, Parameterizable):
         )
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
         """
         return [self.length, self.width, self.sigma, self.amplitude]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ErfSquareWaveform:
+    def bind_values(self, **kwargs: FreeParameter | str) -> ErfSquareWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
@@ -647,8 +641,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
                 / (mid_waveform_height - waveform_bottom)
                 * self.amplitude
             )
-        else:
-            return samples * self.amplitude / mid_waveform_height
+        return samples * self.amplitude / mid_waveform_height
 
     @staticmethod
     def _from_calibration_schema(waveform_json: dict) -> ErfSquareWaveform:
@@ -663,7 +656,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
 
 
 def _make_identifier_name() -> str:
-    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa S311
+    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa: S311
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:

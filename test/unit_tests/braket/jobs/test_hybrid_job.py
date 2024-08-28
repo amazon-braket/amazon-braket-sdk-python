@@ -281,7 +281,9 @@ def test_decorator_list_dependencies(
         aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
-    _mock_open.assert_called_with(Path(mock_tempdir_name) / "requirements.txt", "w")
+    _mock_open.assert_called_with(
+        Path(mock_tempdir_name) / "requirements.txt", "w", encoding="utf-8"
+    )
     _mock_open.return_value.__enter__.return_value.write.assert_called_with(
         "\n".join(dependency_list)
     )

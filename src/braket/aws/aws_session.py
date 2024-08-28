@@ -20,7 +20,7 @@ import re
 import warnings
 from functools import cache
 from pathlib import Path
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 import backoff
 import boto3
@@ -34,7 +34,7 @@ from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
-class AwsSession:
+class AwsSession:  # noqa: PLR0904
     """Manage interactions with AWS services."""
 
     class S3DestinationFolder(NamedTuple):
@@ -211,7 +211,7 @@ class AwsSession:
             request.headers.add_header("User-Agent", self._braket_user_agents)
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -250,7 +250,8 @@ class AwsSession:
             warnings.warn(
                 "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
                 "by a 'DirectReservation' context. If this was not intended, please review your "
-                "reservation ARN settings or the context in which 'CreateQuantumTask' is called."
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called.",
+                stacklevel=2,
             )
 
         # Ensure reservation only applies to specific device
@@ -294,10 +295,10 @@ class AwsSession:
         return not (
             isinstance(err, ClientError)
             and err.response["Error"]["Code"]
-            in [
+            in {
                 "ResourceNotFoundException",
                 "ThrottlingException",
-            ]
+            }
         )
 
     @backoff.on_exception(
@@ -606,9 +607,8 @@ class AwsSession:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
 
-            if (
-                error_code == "BucketAlreadyOwnedByYou"
-                or error_code != "BucketAlreadyExists"
+            if error_code == "BucketAlreadyOwnedByYou" or (
+                error_code != "BucketAlreadyExists"
                 and error_code == "OperationAborted"
                 and "conflicting conditional operation" in message
             ):
@@ -635,11 +635,11 @@ class AwsSession:
 
     def search_devices(
         self,
-        arns: Optional[list[str]] = None,
-        names: Optional[list[str]] = None,
-        types: Optional[list[str]] = None,
-        statuses: Optional[list[str]] = None,
-        provider_names: Optional[list[str]] = None,
+        arns: list[str] | None = None,
+        names: list[str] | None = None,
+        types: list[str] | None = None,
+        statuses: list[str] | None = None,
+        provider_names: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
@@ -714,11 +714,12 @@ class AwsSession:
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
-                raise AssertionError
+                raise AssertionError  # noqa: TRY301
             bucket, key = s3_uri_match.groups()
-            return bucket, key
         except (AssertionError, ValueError) as e:
             raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
+        else:
+            return bucket, key
 
     @staticmethod
     def construct_s3_uri(bucket: str, *dirs: str) -> str:
@@ -743,8 +744,8 @@ class AwsSession:
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: Optional[int] = None,
-        next_token: Optional[str] = None,
+        limit: int | None = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Describes CloudWatch log streams in a log group with a given prefix.
 
@@ -779,7 +780,7 @@ class AwsSession:
         log_stream: str,
         start_time: int,
         start_from_head: bool = True,
-        next_token: Optional[str] = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Gets CloudWatch log events from a given log stream.
 
@@ -809,8 +810,8 @@ class AwsSession:
 
     def copy_session(
         self,
-        region: Optional[str] = None,
-        max_connections: Optional[int] = None,
+        region: str | None = None,
+        max_connections: int | None = None,
     ) -> AwsSession:
         """Creates a new AwsSession based on the region.
 
@@ -856,7 +857,7 @@ class AwsSession:
         copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
 
-    @cache
+    @cache  # noqa: B019
     def get_full_image_tag(self, image_uri: str) -> str:
         """Get verbose image tag from image uri.
 

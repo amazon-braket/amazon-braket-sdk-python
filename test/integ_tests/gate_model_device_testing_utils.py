@@ -335,14 +335,12 @@ def result_types_tensor_hermitian_hermitian_testing(device: Device, run_kwargs: 
     phi = 0.123
     varphi = -0.543
     matrix1 = np.array([[1, 2], [2, 4]])
-    matrix2 = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    matrix2 = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Hermitian(matrix1) @ Observable.Hermitian(matrix2)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
@@ -391,14 +389,12 @@ def result_types_tensor_z_hermitian_testing(device: Device, run_kwargs: dict[str
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Z() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
@@ -455,14 +451,12 @@ def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: dict[str
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Y() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
@@ -484,14 +478,12 @@ def result_types_noncommuting_testing(device: Device, run_kwargs: dict[str, Any]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs1 = Observable.X() @ Observable.Y()
     obs1_targets = [0, 2]
     obs2 = Observable.Z() @ Observable.Z()

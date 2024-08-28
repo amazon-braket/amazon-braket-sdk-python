@@ -10,9 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import asyncio
-from typing import Union
 
 from braket.tasks import (
     AnnealingQuantumTaskResult,
@@ -30,9 +30,9 @@ class LocalQuantumTask(QuantumTask):
 
     def __init__(
         self,
-        result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ],
+        result: GateModelQuantumTaskResult
+        | AnnealingQuantumTaskResult
+        | PhotonicModelQuantumTaskResult,
     ):
         self._id = result.task_metadata.id
         self._result = result
@@ -60,9 +60,7 @@ class LocalQuantumTask(QuantumTask):
 
     def result(
         self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    ) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
         return self._result
 
     def async_result(self) -> asyncio.Task:

@@ -361,7 +361,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
         importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
         if module is None:
-            raise AssertionError
+            raise AssertionError  # noqa: TRY301
     except (ModuleNotFoundError, AssertionError) as e:
         raise ValueError(f"Entry point module was not found: {importable}") from e
     finally:

@@ -18,7 +18,7 @@ import itertools
 import math
 import numbers
 from copy import deepcopy
-from typing import ClassVar, Union
+from typing import ClassVar
 
 import numpy as np
 
@@ -57,8 +57,7 @@ class H(StandardObservable):
         if target:
             qubit_target = serialization_properties.format_target(int(target[0]))
             return f"{coef_prefix}h({qubit_target})"
-        else:
-            return f"{coef_prefix}h all"
+        return f"{coef_prefix}h all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * (
@@ -97,8 +96,7 @@ class I(Observable):  # noqa: E742
         if target:
             qubit_target = serialization_properties.format_target(int(target[0]))
             return f"{coef_prefix}i({qubit_target})"
-        else:
-            return f"{coef_prefix}i all"
+        return f"{coef_prefix}i all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.eye(2, dtype=complex)
@@ -147,8 +145,7 @@ class X(StandardObservable):
         if target:
             qubit_target = serialization_properties.format_target(int(target[0]))
             return f"{coef_prefix}x({qubit_target})"
-        else:
-            return f"{coef_prefix}x all"
+        return f"{coef_prefix}x all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -185,8 +182,7 @@ class Y(StandardObservable):
         if target:
             qubit_target = serialization_properties.format_target(int(target[0]))
             return f"{coef_prefix}y({qubit_target})"
-        else:
-            return f"{coef_prefix}y all"
+        return f"{coef_prefix}y all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -223,8 +219,7 @@ class Z(StandardObservable):
         if target:
             qubit_target = serialization_properties.format_target(int(target[0]))
             return f"{coef_prefix}z({qubit_target})"
-        else:
-            return f"{coef_prefix}z all"
+        return f"{coef_prefix}z all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -469,7 +464,7 @@ class Sum(Observable):
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        target: list[QubitSet] = None,
+        target: list[QubitSet] | None = None,
     ) -> str:
         if len(self.summands) != len(target):
             raise ValueError(
@@ -543,7 +538,7 @@ class Hermitian(Observable):
                 or is not Hermitian.
 
         Examples:
-            >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
+            >>> Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]]))
         """
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
@@ -574,15 +569,14 @@ class Hermitian(Observable):
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
         if target:
-            qubit_target = ", ".join(
-                [serialization_properties.format_target(int(t)) for t in target]
-            )
+            qubit_target = ", ".join([
+                serialization_properties.format_target(int(t)) for t in target
+            ])
             return (
                 f"{coef_prefix}"
                 f"hermitian({self._serialized_matrix_openqasm_matrix()}) {qubit_target}"
             )
-        else:
-            return f"{coef_prefix}hermitian({self._serialized_matrix_openqasm_matrix()}) all"
+        return f"{coef_prefix}hermitian({self._serialized_matrix_openqasm_matrix()}) all"
 
     def _serialized_matrix_openqasm_matrix(self) -> str:
         serialized = str([[f"{complex(elem)}" for elem in row] for row in self._matrix.tolist()])
@@ -647,7 +641,7 @@ class Hermitian(Observable):
 Observable.register_observable(Hermitian)
 
 
-def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]]) -> Observable:
+def observable_from_ir(ir_observable: list[str | list[list[list[float]]]]) -> Observable:
     """Create an observable from the IR observable list. This can be a tensor product of
     observables or a single observable.
 
@@ -659,26 +653,24 @@ def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]])
     """
     if len(ir_observable) == 1:
         return _observable_from_ir_list_item(ir_observable[0])
-    observable = TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
-    return observable
+    return TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
 
 
-def _observable_from_ir_list_item(observable: Union[str, list[list[list[float]]]]) -> Observable:
+def _observable_from_ir_list_item(observable: str | list[list[list[float]]]) -> Observable:
     if observable == "i":
         return I()
-    elif observable == "h":
+    if observable == "h":
         return H()
-    elif observable == "x":
+    if observable == "x":
         return X()
-    elif observable == "y":
+    if observable == "y":
         return Y()
-    elif observable == "z":
+    if observable == "z":
         return Z()
-    else:
-        try:
-            matrix = np.array(
-                [[complex(element[0], element[1]) for element in row] for row in observable]
-            )
-            return Hermitian(matrix)
-        except Exception as e:
-            raise ValueError(f"Invalid observable specified: {observable} error: {e}") from e
+    try:
+        matrix = np.array([
+            [complex(element[0], element[1]) for element in row] for row in observable
+        ])
+        return Hermitian(matrix)
+    except Exception as e:
+        raise ValueError(f"Invalid observable specified: {observable} error: {e}") from e

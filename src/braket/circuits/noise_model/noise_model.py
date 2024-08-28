@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.gate import Gate
@@ -38,9 +37,9 @@ class NoiseModelInstruction:
 
     def __init__(self, noise: Noise, criteria: Criteria):
         if not isinstance(noise, Noise):
-            raise ValueError(f"{noise} must be a Noise type.")
+            raise TypeError(f"{noise} must be a Noise type.")
         if not isinstance(criteria, Criteria):
-            raise ValueError(f"{criteria} must be a Criteria type.")
+            raise TypeError(f"{criteria} must be a Criteria type.")
         self.noise = noise
         self.criteria = criteria
 
@@ -89,7 +88,7 @@ class NoiseModel:
     a phase flip.
     """
 
-    def __init__(self, instructions: list[NoiseModelInstruction] = None):
+    def __init__(self, instructions: list[NoiseModelInstruction] | None = None):
         self._instructions = instructions or []
 
     def __repr__(self):
@@ -194,9 +193,9 @@ class NoiseModel:
 
     def from_filter(
         self,
-        qubit: Optional[QubitSetInput] = None,
-        gate: Optional[Gate] = None,
-        noise: Optional[type[Noise]] = None,
+        qubit: QubitSetInput | None = None,
+        gate: Gate | None = None,
+        noise: type[Noise] | None = None,
     ) -> NoiseModel:
         """Returns a new NoiseModel from this NoiseModel using a given filter. If no filters are
         specified, the returned NoiseModel will be the same as this one.

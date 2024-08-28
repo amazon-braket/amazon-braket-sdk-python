@@ -126,7 +126,7 @@ class Device(ABC):
         if not noise_operators <= supported_noises:
             raise ValueError(
                 f"{self.name} does not support noise simulation or the noise model includes noise "
-                + f"that is not supported by {self.name}."
+                f"that is not supported by {self.name}."
             )
 
     def _apply_noise_model_to_circuit(
@@ -137,7 +137,8 @@ class Device(ABC):
                 if isinstance(instruction.operator, Noise):
                     warnings.warn(
                         "The noise model of the device is applied to a circuit that already has"
-                        " noise instructions."
+                        " noise instructions.",
+                        stacklevel=2,
                     )
                     break
             task_specification = self._noise_model.apply(task_specification)
@@ -145,6 +146,7 @@ class Device(ABC):
             warnings.warn(
                 "Noise model is only applicable to circuits. The type of the task specification is"
                 f" {task_specification.__class__.__name__}. The noise model of the device does not"
-                " apply."
+                " apply.",
+                stacklevel=2,
             )
         return task_specification

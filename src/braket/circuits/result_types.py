@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import re
 from functools import reduce
-from typing import Union
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
@@ -119,8 +118,7 @@ class DensityMatrix(ResultType):
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
-        else:
-            return ir.DensityMatrix.construct()
+        return ir.DensityMatrix.construct()
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
@@ -177,7 +175,7 @@ class AdjointGradient(ObservableParameterResultType):
         self,
         observable: Observable,
         target: list[QubitSetInput] | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ):
         """Inits an `AdjointGradient`.
 
@@ -240,7 +238,7 @@ class AdjointGradient(ObservableParameterResultType):
     def adjoint_gradient(
         observable: Observable,
         target: list[QubitSetInput] | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ) -> ResultType:
         """Registers this function into the circuit class.
 
@@ -259,7 +257,7 @@ class AdjointGradient(ObservableParameterResultType):
             ResultType: gradient computed via adjoint differentiation as a requested result type
 
         Examples:
-            >>> alpha, beta = FreeParameter('alpha'), FreeParameter('beta')
+            >>> alpha, beta = FreeParameter("alpha"), FreeParameter("beta")
             >>> circ = Circuit().h(0).h(1).rx(0, alpha).yy(0, 1, beta).adjoint_gradient(
             >>>     observable=Observable.Z(), target=[0], parameters=[alpha, beta]
             >>> )
@@ -288,7 +286,7 @@ class Amplitude(ResultType):
                 state is not a list of strings of '0' and '1'
 
         Examples:
-            >>> ResultType.Amplitude(state=['01', '10'])
+            >>> ResultType.Amplitude(state=["01", "10"])
         """
         if (
             not state
@@ -390,8 +388,7 @@ class Probability(ResultType):
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
-        else:
-            return ir.Probability.construct()
+        return ir.Probability.construct()
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
@@ -475,8 +472,7 @@ class Expectation(ObservableResultType):
             return ir.Expectation.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Expectation.construct(observable=self.observable.to_ir())
+        return ir.Expectation.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
@@ -547,8 +543,7 @@ class Sample(ObservableResultType):
             return ir.Sample.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Sample.construct(observable=self.observable.to_ir())
+        return ir.Sample.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
@@ -624,8 +619,7 @@ class Variance(ObservableResultType):
             return ir.Variance.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Variance.construct(observable=self.observable.to_ir())
+        return ir.Variance.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(

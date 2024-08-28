@@ -331,9 +331,10 @@ def test_invalid_scalar_multiplication(expression, observable):
     [
         (
             (-3 * Observable.H()).to_matrix(),
-            np.array(
-                [[-2.12132034 + 0.0j, -2.12132034 + 0.0j], [-2.12132034 + 0.0j, 2.12132034 - 0.0j]]
-            ),
+            np.array([
+                [-2.12132034 + 0.0j, -2.12132034 + 0.0j],
+                [-2.12132034 + 0.0j, 2.12132034 - 0.0j],
+            ]),
         ),
         (
             (3 * Observable.Z()).to_matrix(),
@@ -462,9 +463,12 @@ def test_flattened_tensor_product():
     observable_one = Observable.Z() @ Observable.Y()
     observable_two = Observable.X() @ Observable.H()
     actual = Observable.TensorProduct([observable_one, observable_two])
-    expected = Observable.TensorProduct(
-        [Observable.Z(), Observable.Y(), Observable.X(), Observable.H()]
-    )
+    expected = Observable.TensorProduct([
+        Observable.Z(),
+        Observable.Y(),
+        Observable.X(),
+        Observable.H(),
+    ])
     assert expected == actual
 
 
@@ -477,20 +481,19 @@ def test_flattened_tensor_product():
         ),
         (
             np.array([[0, -1j], [1j, 0]]),
-            np.array(
-                [[-0.70710678 + 0.0j, -0.70710678 + 0.0j], [0.0 + 0.70710678j, 0.0 - 0.70710678j]]
-            )
+            np.array([
+                [-0.70710678 + 0.0j, -0.70710678 + 0.0j],
+                [0.0 + 0.70710678j, 0.0 - 0.70710678j],
+            ])
             .conj()
             .T,
         ),
         (
             np.array([[1, 1 - 1j], [1 + 1j, -1]]),
-            np.array(
-                [
-                    [-0.45970084 - 0.0j, 0.62796303 - 0.62796303j],
-                    [-0.88807383 - 0.0j, -0.32505758 + 0.32505758j],
-                ]
-            ),
+            np.array([
+                [-0.45970084 - 0.0j, 0.62796303 - 0.62796303j],
+                [-0.88807383 - 0.0j, -0.32505758 + 0.32505758j],
+            ]),
         ),
     ],
 )
@@ -532,9 +535,10 @@ def test_tensor_product_to_ir():
 
 def test_tensor_product_matmul_tensor():
     t1 = Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
-    t2 = Observable.TensorProduct(
-        [Observable.Hermitian(matrix=Observable.I().to_matrix()), Observable.Y()]
-    )
+    t2 = Observable.TensorProduct([
+        Observable.Hermitian(matrix=Observable.I().to_matrix()),
+        Observable.Y(),
+    ])
     t3 = t1 @ t2
     assert t3.to_ir() == ["z", "i", "x", [[[1.0, 0], [0, 0]], [[0, 0], [1.0, 0]]], "y"]
     assert t3.qubit_count == 5
@@ -557,7 +561,7 @@ def test_tensor_product_eigenvalue_index_out_of_bounds():
 
 
 def test_tensor_product_value_error():
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()]) @ "a"
 
 
