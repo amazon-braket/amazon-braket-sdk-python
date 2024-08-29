@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.86.1 (2024-08-29)
+
+### Bug Fixes and Other Changes
+
+ * Use observable targets for targetless results
+
 ## v1.86.0 (2024-08-26)
 
 ### Features
