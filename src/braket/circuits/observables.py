@@ -508,9 +508,9 @@ class Sum(Observable):
         self._summands = tuple(flattened_observables)
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         all_targets = [observable.targets for observable in flattened_observables]
-        if all(targets is None for targets in all_targets):
-            targets = None
-        elif all(targets is not None for targets in all_targets):
+        if not any(all_targets):
+            targets = QubitSet()
+        elif all(all_targets):
             targets = all_targets
         else:
             raise ValueError("Cannot mix terms with and without targets")
