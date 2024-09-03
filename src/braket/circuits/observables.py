@@ -617,8 +617,8 @@ class Hermitian(Observable):
                 or, if targets is supplied, doesn't match the size of targets.
 
         Examples:
-            >>> observables.Hermitian(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
-            >>> observables.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
+            >>> observables.Hermitian(matrix=np.array([[0, 1], [1, 0]]), targets=[0])
+            >>> observables.Hermitian(matrix=np.array([[0, 1], [1, 0]]))
         """
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)

@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import re
-from functools import reduce
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
@@ -282,7 +281,7 @@ class Amplitude(ResultType):
                 state is not a list of strings of '0' and '1'
 
         Examples:
-            >>> result_types.Amplitude(state=['01', '10'])
+            >>> result_types.Amplitude(state=["01", "10"])
         """
         if (
             not state
