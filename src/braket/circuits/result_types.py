@@ -218,7 +218,7 @@ class AdjointGradient(ObservableParameterResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -477,7 +477,7 @@ class Expectation(ObservableResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -552,7 +552,7 @@ class Sample(ObservableResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -632,7 +632,7 @@ class Variance(ObservableResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
