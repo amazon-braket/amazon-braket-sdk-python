@@ -208,32 +208,32 @@ class ObservableResultType(ResultType):
         super().__init__(ascii_symbols)
         self._observable = observable
         self._target = QubitSet(target)
-        if not self._target:
-            if self._observable.qubit_count != 1:
-                raise ValueError(
-                    f"Observable {self._observable} must only operate on 1 qubit for target=None"
-                )
-        elif isinstance(observable, Sum):  # nested target
-            if len(target) != len(observable.summands):
-                raise ValueError(
-                    "Sum observable's target shape must be a nested list where each term's "
-                    "target length is equal to the observable term's qubits count."
-                )
-            self._target = [QubitSet(term_target) for term_target in target]
-            for term_target, obs in zip(self._target, observable.summands):
-                if obs.qubit_count != len(term_target):
+        if self._target:
+            if isinstance(observable, Sum):  # nested target
+                if len(target) != len(observable.summands):
                     raise ValueError(
                         "Sum observable's target shape must be a nested list where each term's "
                         "target length is equal to the observable term's qubits count."
                     )
-        elif self._observable.qubit_count != len(self._target):
+                self._target = [QubitSet(term_target) for term_target in target]
+                for term_target, obs in zip(self._target, observable.summands):
+                    if obs.qubit_count != len(term_target):
+                        raise ValueError(
+                            "Sum observable's target shape must be a nested list where each term's "
+                            "target length is equal to the observable term's qubits count."
+                        )
+            elif self._observable.qubit_count != len(self._target):
+                raise ValueError(
+                    f"Observable's qubit count {self._observable.qubit_count} and "
+                    f"the size of the target qubit set {self._target} must be equal"
+                )
+            elif self._observable.qubit_count != len(self.ascii_symbols):
+                raise ValueError(
+                    "Observable's qubit count and the number of ASCII symbols must be equal"
+                )
+        elif (not self._observable.targets) and self._observable.qubit_count != 1:
             raise ValueError(
-                f"Observable's qubit count {self._observable.qubit_count} and "
-                f"the size of the target qubit set {self._target} must be equal"
-            )
-        elif self._observable.qubit_count != len(self.ascii_symbols):
-            raise ValueError(
-                "Observable's qubit count and the number of ASCII symbols must be equal"
+                f"Observable {self._observable} must only operate on 1 qubit for target=None"
             )
 
     @property
