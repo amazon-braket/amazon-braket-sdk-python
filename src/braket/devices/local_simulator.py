@@ -17,7 +17,7 @@ import sys
 from functools import singledispatchmethod
 from itertools import repeat
 from os import cpu_count
-from typing import Any
+from typing import Any, Optional
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -60,7 +60,7 @@ class LocalSimulator(Device):
     def __init__(
         self,
         backend: str | BraketSimulator = "default",
-        noise_model: NoiseModel | None = None,
+        noise_model: Optional[NoiseModel] = None,  # noqa: UP007
     ):
         """Initializes a `LocalSimulator`.
 
