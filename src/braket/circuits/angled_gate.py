@@ -17,6 +17,7 @@ import copy
 import math
 from collections.abc import Sequence
 from functools import singledispatch
+from typing import Optional
 
 from sympy import Float
 
@@ -31,7 +32,7 @@ class AngledGate(Gate, Parameterizable):
     def __init__(
         self,
         angle: FreeParameterExpression | float,
-        qubit_count: int | None,
+        qubit_count: Optional[int],  # noqa: UP007
         ascii_symbols: Sequence[str],
     ):
         """Initializes an `AngledGate`.
@@ -129,7 +130,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         self,
         angle_1: FreeParameterExpression | float,
         angle_2: FreeParameterExpression | float,
-        qubit_count: int | None,
+        qubit_count: Optional[int],  # noqa: UP007
         ascii_symbols: Sequence[str],
     ):
         """Inits a `DoubleAngledGate`.
@@ -242,7 +243,7 @@ class TripleAngledGate(Gate, Parameterizable):
         angle_1: FreeParameterExpression | float,
         angle_2: FreeParameterExpression | float,
         angle_3: FreeParameterExpression | float,
-        qubit_count: int | None,
+        qubit_count: Optional[int],  # noqa: UP007
         ascii_symbols: Sequence[str],
     ):
         """Inits a `TripleAngledGate`.

@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Any
+from typing import Any, Optional
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -63,13 +63,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            dict[tuple[Gate, QubitSet], PulseSequence]
-            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-            | None
+            Optional[
+                dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+                | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+            ]
         ) = None,
-        reservation_arn: str | None = None,
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ):
@@ -155,10 +156,11 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         | list[
             Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         ],
-        inputs: dict[str, float] | list[dict[str, float]] | None = None,
-        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence]
-        | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-        | None = None,
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
+        gate_definitions: Optional[
+            dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+        ] = None,
     ) -> list[
         tuple[
             Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation,
@@ -231,13 +233,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            dict[tuple[Gate, QubitSet], PulseSequence]
-            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-            | None
+            Optional[
+                dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+                | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+            ]
         ) = None,
-        reservation_arn: str | None = None,
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -293,9 +296,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: dict[str, float] | None = None,
-        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
-        reservation_arn: str | None = None,
+        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,  # noqa: UP007
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *args,
         **kwargs,
     ) -> AwsQuantumTask:

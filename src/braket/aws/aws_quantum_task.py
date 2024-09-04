@@ -18,7 +18,7 @@ import contextlib
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Optional
 
 import boto3
 
@@ -101,13 +101,13 @@ class AwsQuantumTask(QuantumTask):
         | AnalogHamiltonianSimulation,
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        device_parameters: dict[str, Any] | None = None,
+        device_parameters: Optional[dict[str, Any]] = None,  # noqa: UP007
         disable_qubit_rewiring: bool = False,
-        tags: dict[str, str] | None = None,
-        inputs: dict[str, float] | None = None,
-        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        tags: Optional[dict[str, str]] = None,  # noqa: UP007
+        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,  # noqa: UP007
         quiet: bool = False,
-        reservation_arn: str | None = None,
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -225,7 +225,7 @@ class AwsQuantumTask(QuantumTask):
     def __init__(
         self,
         arn: str,
-        aws_session: AwsSession | None = None,
+        aws_session: Optional[AwsSession] = None,  # noqa: UP007
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
@@ -621,7 +621,7 @@ def _(
     device_parameters: dict | BraketSchemaBase,
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
-    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None,
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],  # noqa: UP007
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -731,7 +731,7 @@ def _(
     | Dwave2000QDeviceParameters,
     _: bool,
     inputs: dict[str, float],
-    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None,
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],  # noqa: UP007
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -754,7 +754,7 @@ def _(
     device_parameters: dict,
     _: AnalogHamiltonianSimulationTaskResult,
     inputs: dict[str, float],
-    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None,
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],  # noqa: UP007
     *args,
     **kwargs,
 ) -> AwsQuantumTask:

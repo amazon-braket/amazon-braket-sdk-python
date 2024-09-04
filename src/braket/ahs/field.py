@@ -14,13 +14,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Optional
 
 from braket.ahs.pattern import Pattern
 from braket.timings.time_series import TimeSeries
 
 
 class Field:
-    def __init__(self, time_series: TimeSeries, pattern: Pattern | None = None) -> None:
+    def __init__(self, time_series: TimeSeries, pattern: Optional[Pattern] = None) -> None:  # noqa: UP007
         """A space and time dependent parameter of a program.
 
         Args:
@@ -36,15 +37,15 @@ class Field:
         return self._time_series
 
     @property
-    def pattern(self) -> Pattern | None:
+    def pattern(self) -> Optional[Pattern]:  # noqa: UP007
         """Optional[Pattern]: The local pattern of real numbers."""
         return self._pattern
 
     def discretize(
         self,
-        time_resolution: Decimal | None = None,
-        value_resolution: Decimal | None = None,
-        pattern_resolution: Decimal | None = None,
+        time_resolution: Optional[Decimal] = None,  # noqa: UP007
+        value_resolution: Optional[Decimal] = None,  # noqa: UP007
+        pattern_resolution: Optional[Decimal] = None,  # noqa: UP007
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
