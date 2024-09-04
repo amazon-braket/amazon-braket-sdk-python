@@ -23,7 +23,7 @@ from braket.devices import LocalSimulator
 DEVICE = LocalSimulator()
 SHOTS = 8000
 
-IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 
