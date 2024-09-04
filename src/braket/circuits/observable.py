@@ -40,20 +40,18 @@ class Observable(QuantumOperator):
         self, qubit_count: int, ascii_symbols: Sequence[str], targets: QubitSetInput | None = None
     ):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
-        if targets is not None:
-            targets = QubitSet(targets)
+        targets = QubitSet(targets)
+        if targets:
             if (num_targets := len(targets)) != qubit_count:
                 raise ValueError(
                     f"Length of target {num_targets} does not match qubit count {qubit_count}"
                 )
-            self._targets = targets
-        else:
-            self._targets = None
+        self._targets = targets
         self._coef = 1
 
     def _unscaled(self) -> Observable:
         return Observable(
-            qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols, targets=self.targets
+            qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols, targets=self._targets
         )
 
     def to_ir(
@@ -206,7 +204,7 @@ class Observable(QuantumOperator):
     def __repr__(self) -> str:
         return (
             f"{self.name}('qubit_count': {self._qubit_count})"
-            if self._targets is None
+            if not self._targets
             else f"{self.name}('qubit_count': {self._qubit_count}, 'target': {self._targets})"
         )
 
