@@ -259,7 +259,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: Optional[dict[str, float], None], shots: Optional[int]):  # noqa: UP007
+    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: Optional[int]):  # noqa: UP007
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
