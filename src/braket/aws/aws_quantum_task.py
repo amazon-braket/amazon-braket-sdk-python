@@ -726,10 +726,9 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     device_arn: str,
-    device_parameters: dict
-    | DwaveDeviceParameters
-    | DwaveAdvantageDeviceParameters
-    | Dwave2000QDeviceParameters,
+    device_parameters: Union[  # noqa: UP007
+        dict, DwaveDeviceParameters, DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters
+    ],
     _: bool,
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],  # noqa: UP007
