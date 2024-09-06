@@ -665,7 +665,7 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     device_arn: str,
-    device_parameters: dict | BraketSchemaBase,
+    device_parameters: Union[dict, BraketSchemaBase],  # noqa: UP007
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
     gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
