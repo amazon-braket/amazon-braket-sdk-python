@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.87.0 (2024-09-05)
+
+### Deprecations and Removals
+
+ * Retire IonQ Harmony
+
+### Bug Fixes and Other Changes
+
+ * Return observable target if absent for RT
+
 ## v1.86.1 (2024-08-29)
 
 ### Bug Fixes and Other Changes
