@@ -90,7 +90,7 @@ class LocalSimulator(Device):
         | AnalogHamiltonianSimulation
         | SerializableProgram,
         shots: int = 0,
-        inputs: dict[str, float] | None = None,
+        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
         *args: Any,
         **kwargs: Any,
     ) -> LocalQuantumTask:
@@ -259,7 +259,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: dict[str, float] | None, shots: int | None):
+    def _(self, circuit: Circuit, inputs: Optional[dict[str, float], None], shots: Optional[int]):  # noqa: UP007
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
@@ -272,7 +272,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register
-    def _(self, program: OpenQASMProgram, inputs: dict[str, float] | None, _shots: int):
+    def _(self, program: OpenQASMProgram, inputs: Optional[dict[str, float]], _shots: int):  # noqa: UP007
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
