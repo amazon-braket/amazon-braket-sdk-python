@@ -59,7 +59,7 @@ class FreeParameterExpression:
         }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-        elif isinstance(expression, (Number, sympy.Expr)):
+        elif isinstance(expression, (Number | sympy.Expr)):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression

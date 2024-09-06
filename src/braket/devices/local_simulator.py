@@ -176,7 +176,7 @@ class LocalSimulator(Device):
 
         single_task = isinstance(
             task_specifications,
-            (Circuit, OpenQASMProgram, Problem, AnalogHamiltonianSimulation),
+            (Circuit | OpenQASMProgram | Problem | AnalogHamiltonianSimulation),
         )
 
         single_input = isinstance(inputs, dict)
@@ -189,7 +189,7 @@ class LocalSimulator(Device):
         if single_input:
             inputs = repeat(inputs)
 
-        tasks_and_inputs = zip(task_specifications, inputs)
+        tasks_and_inputs = zip(task_specifications, inputs, strict=False)
 
         if single_task and single_input:
             tasks_and_inputs = [next(tasks_and_inputs)]

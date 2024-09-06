@@ -382,7 +382,7 @@ def angled_ascii_characters(gate: str, angle: FreeParameterExpression | float) -
         str: Returns the ascii representation for an angled gate.
 
     """
-    return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
+    return f'{gate}({angle:{".2f" if isinstance(angle, (float | Float)) else ""}})'
 
 
 def _multi_angled_ascii_characters(
@@ -409,7 +409,7 @@ def _multi_angled_ascii_characters(
         Returns:
             str: The ASCII representation of the angle.
         """
-        return ".2f" if isinstance(angle, (float, Float)) else ""
+        return ".2f" if isinstance(angle, (float | Float)) else ""
 
     return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
 

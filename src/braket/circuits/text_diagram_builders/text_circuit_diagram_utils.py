@@ -132,7 +132,7 @@ def _group_items(
     for item in items:
         # Can only print Gate, Noise and Measure operators for instructions at the moment
         if isinstance(item, Instruction) and not isinstance(
-            item.operator, (Gate, Noise, CompilerDirective, Measure)
+            item.operator, (Gate | Noise | CompilerDirective | Measure)
         ):
             continue
 

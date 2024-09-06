@@ -13,7 +13,7 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, ClassVar, Union
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -78,7 +78,7 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -128,7 +128,7 @@ class BitFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
@@ -183,7 +183,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -233,7 +233,7 @@ class PhaseFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
@@ -306,9 +306,9 @@ class PauliChannel(PauliNoise):
 
     def __init__(
         self,
-        probX: Union[FreeParameterExpression, float],
-        probY: Union[FreeParameterExpression, float],
-        probZ: Union[FreeParameterExpression, float],
+        probX: FreeParameterExpression | float,
+        probY: FreeParameterExpression | float,
+        probZ: FreeParameterExpression | float,
     ):
         """Creates PauliChannel noise.
 
@@ -459,7 +459,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -584,7 +584,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -709,7 +709,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -988,7 +988,7 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1104,8 +1104,8 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def __init__(
         self,
-        gamma: Union[FreeParameterExpression, float],
-        probability: Union[FreeParameterExpression, float],
+        gamma: FreeParameterExpression | float,
+        probability: FreeParameterExpression | float,
     ):
         super().__init__(
             gamma=gamma,
@@ -1231,7 +1231,7 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1438,9 +1438,7 @@ class Kraus(Noise):
 Noise.register_noise(Kraus)
 
 
-def _ascii_representation(
-    noise: str, parameters: list[Union[FreeParameterExpression, float]]
-) -> str:
+def _ascii_representation(noise: str, parameters: list[FreeParameterExpression | float]) -> str:
     """Generates a formatted ascii representation of a noise.
 
     Args:
@@ -1458,11 +1456,11 @@ def _ascii_representation(
     return f"{noise}({param_str})"
 
 
-def _substitute_value(expr: float, **kwargs) -> Union[FreeParameterExpression, float]:
+def _substitute_value(expr: float, **kwargs) -> FreeParameterExpression | float:
     return expr.subs(kwargs) if isinstance(expr, FreeParameterExpression) else expr
 
 
-def _parameter_from_dict(parameter: Union[dict, float]) -> Union[FreeParameter, float]:
+def _parameter_from_dict(parameter: dict | float) -> FreeParameter | float:
     """Converts a parameter from a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:
