@@ -41,11 +41,10 @@ class Observable(QuantumOperator):
     ):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         targets = QubitSet(targets)
-        if targets:
-            if (num_targets := len(targets)) != qubit_count:
-                raise ValueError(
-                    f"Length of target {num_targets} does not match qubit count {qubit_count}"
-                )
+        if targets and (num_targets := len(targets)) != qubit_count:
+            raise ValueError(
+                f"Length of target {num_targets} does not match qubit count {qubit_count}"
+            )
         self._targets = targets
         self._coef = 1
 

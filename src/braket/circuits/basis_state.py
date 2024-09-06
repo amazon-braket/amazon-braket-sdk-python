@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import singledispatch
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -48,7 +48,7 @@ class BasisState:
         return BasisState(self.state[item])
 
 
-BasisStateInput = int | list[int] | str | BasisState
+BasisStateInput = Union[int, list[int], str, BasisState]
 
 
 @singledispatch

@@ -65,8 +65,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            Optional[
-                dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+            Optional[  # noqa: UP007
+                dict[tuple[Gate, QubitSet], PulseSequence]
                 | list[dict[tuple[Gate, QubitSet], PulseSequence]]
             ]
         ) = None,
@@ -157,8 +157,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         ],
         inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
-        gate_definitions: Optional[
-            dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+        gate_definitions: Optional[  # noqa: UP007
+            dict[tuple[Gate, QubitSet], PulseSequence]
             | list[dict[tuple[Gate, QubitSet], PulseSequence]]
         ] = None,
     ) -> list[
@@ -235,8 +235,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            Optional[
-                dict[tuple[Gate, QubitSet], PulseSequence]  # noqa: UP007
+            Optional[  # noqa: UP007
+                dict[tuple[Gate, QubitSet], PulseSequence]
                 | list[dict[tuple[Gate, QubitSet], PulseSequence]]
             ]
         ) = None,
