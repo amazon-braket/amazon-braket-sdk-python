@@ -135,9 +135,9 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 # Determine if the qubit is part of the item or in the middle of a
                 # multi qubit item.
                 if qubit in target_qubits:
-                    item_qubit_index = next(
+                    item_qubit_index = [  # noqa: RUF015
                         index for index, q in enumerate(target_qubits) if q == qubit
-                    )
+                    ][0]
                     power_string = (
                         f"^{power}"
                         if (
