@@ -268,9 +268,9 @@ class AwsQuantumTask(QuantumTask):
         self._quiet = quiet
 
         self._metadata: dict[str, Any] = {}
-        self._result: (
+        self._result: Optional[  # noqa: UP007
             GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult
-        ) = None
+        ] = None
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
