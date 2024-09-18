@@ -322,9 +322,9 @@ class TensorProduct(Observable):
             f"{'@'.join([obs.ascii_symbols[0] for obs in unscaled_factors])}"
         )
         all_targets = [factor.targets for factor in unscaled_factors]
-        if all(targets is None for targets in all_targets):
-            merged_targets = None
-        elif all(targets is not None for targets in all_targets):
+        if not any(all_targets):
+            merged_targets = QubitSet()
+        elif all(all_targets):
             flat_targets = [qubit for target in all_targets for qubit in target]
             merged_targets = QubitSet(flat_targets)
             if len(merged_targets) != len(flat_targets):
@@ -508,9 +508,9 @@ class Sum(Observable):
         self._summands = tuple(flattened_observables)
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         all_targets = [observable.targets for observable in flattened_observables]
-        if all(targets is None for targets in all_targets):
-            targets = None
-        elif all(targets is not None for targets in all_targets):
+        if not any(all_targets):
+            targets = QubitSet()
+        elif all(all_targets):
             targets = all_targets
         else:
             raise ValueError("Cannot mix terms with and without targets")
