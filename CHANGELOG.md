@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
 ## v1.87.0 (2024-09-05)
 
 ### Deprecations and Removals
