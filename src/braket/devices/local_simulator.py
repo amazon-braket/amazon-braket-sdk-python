@@ -290,8 +290,9 @@ class LocalSimulator(Device):
         return program
 
     @_construct_payload.register
-    def _(self, program: SerializableProgram, _inputs, _shots):
-        return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM))
+    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots):
+        inputs_copy = inputs.copy() if inputs is not None else {}
+        return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM), inputs=inputs_copy)
 
     @_construct_payload.register
     def _(self, program: AnalogHamiltonianSimulation, _inputs, _shots):
