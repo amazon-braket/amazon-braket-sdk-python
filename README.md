@@ -138,7 +138,7 @@ import boto3
 from braket.circuits import Circuit
 from braket.aws import AwsDevice
 
-device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
+device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Ankaa-2")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)

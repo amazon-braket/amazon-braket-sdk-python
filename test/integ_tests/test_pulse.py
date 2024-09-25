@@ -11,7 +11,7 @@ from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 @pytest.fixture
 def device():
-    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3")
+    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2")
 
 
 @pytest.fixture
