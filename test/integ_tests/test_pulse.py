@@ -305,6 +305,7 @@ def test_pulse_sequence(arbitrary_waveform, device):
     assert chi_squared < 10  # adjust this threshold if test is flaky
 
 
+@pytest.mark.skip(reason="needs to be updated to work correctly on Ankaa-2")
 def test_gate_calibration_run(device, pulse_sequence):
     if device.status == "OFFLINE":
         pytest.skip("Device offline")
