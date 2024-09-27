@@ -174,7 +174,7 @@ def h_gate(q0):
     return Circuit().rz(q0, np.pi).rx(q0, np.pi / 2).rz(q0, np.pi / 2).rx(q0, -np.pi / 2)
 
 
-def cz_pulse(
+def make_pulse(
     q0: str,
     q1: str,
     shift_phases_q0: float,
@@ -208,17 +208,17 @@ def test_pulse_bell(arbitrary_waveform, device):
         a,
         b,
     ) = (
-        10,
-        113,
+        26,
+        33,
     )  # qubits used
     p0, p1 = 1.1733407221086924, 6.269846678712192
     theta_0, theta_1 = FreeParameter("theta_0"), FreeParameter("theta_1")
-    a_b_cz_waveform = arbitrary_waveform
-    cz = cz_pulse(a, b, theta_0, theta_1, a_b_cz_waveform, device)
+    a_b_waveform = arbitrary_waveform
+    pulse = make_pulse(a, b, theta_0, theta_1, a_b_waveform, device)
 
-    bell_pair_with_gates = Circuit().h(a).h(b).cz(a, b).h(b)
+    bell_pair_with_gates = Circuit().h(a).h(b).iswap(a, b).h(b)
     bell_pair_with_pulses_unbound = (
-        h_gate(a) + h_gate(b) + Circuit().pulse_gate([a, b], cz) + h_gate(b)
+        h_gate(a) + h_gate(b) + Circuit().pulse_gate([a, b], pulse) + h_gate(b)
     )
     bell_pair_with_pulses = bell_pair_with_pulses_unbound(theta_0=p0, theta_1=p1)
 
@@ -258,27 +258,27 @@ def test_pulse_sequence(arbitrary_waveform, device):
         a,
         b,
     ) = (
-        10,
-        113,
+        26,
+        33,
     )  # qubits used
     p0, p1 = 1.1733407221086924, 6.269846678712192
     theta_0, theta_1 = FreeParameter("theta_0"), FreeParameter("theta_1")
-    a_b_cz_waveform = arbitrary_waveform
+    a_b_waveform = arbitrary_waveform
 
-    cz_with_pulses_unbound = cz_pulse(a, b, theta_0, theta_1, a_b_cz_waveform, device)
+    pulse_unbound = make_pulse(a, b, theta_0, theta_1, a_b_waveform, device)
 
     q0_readout_frame = device.frames[f"Transmon_{a}_readout_rx"]
     q1_readout_frame = device.frames[f"Transmon_{b}_readout_rx"]
-    cz_with_pulses = (
-        cz_with_pulses_unbound(theta_0=p0, theta_1=p1)
+    pulses = (
+        pulse_unbound(theta_0=p0, theta_1=p1)
         .capture_v0(q0_readout_frame)
         .capture_v0(q1_readout_frame)
     )
-    cz_with_gates = Circuit().cz(a, b)
+    circuit_with_gates = Circuit().iswap(a, b)
 
     num_shots = 1000
-    gate_task = device.run(cz_with_gates, shots=num_shots, disable_qubit_rewiring=True)
-    pulse_task = device.run(cz_with_pulses, shots=num_shots)
+    gate_task = device.run(circuit_with_gates, shots=num_shots, disable_qubit_rewiring=True)
+    pulse_task = device.run(pulses, shots=num_shots)
 
     if not device.is_available:
         try:
@@ -310,7 +310,7 @@ def test_gate_calibration_run(device, pulse_sequence):
         pytest.skip("Device offline")
     user_gate_calibrations = GateCalibrations({(Gate.Rx(math.pi / 2), QubitSet(0)): pulse_sequence})
     num_shots = 50
-    bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).cz(0, 1).rx(1, -math.pi / 2)
+    bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).iswap(0, 1).rx(1, -math.pi / 2)
     user_calibration_task = device.run(
         bell_circuit,
         gate_definitions=user_gate_calibrations.pulse_sequences,
