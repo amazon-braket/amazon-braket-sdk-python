@@ -182,30 +182,22 @@ def cz_pulse(
     waveform: ArbitraryWaveform,
     device: AwsDevice,
 ):
-    q0_rf_frame = device.frames[f"q{q0}_rf_frame"]
-    q1_rf_frame = device.frames[f"q{q1}_rf_frame"]
-    q0_q1_cz_frame = device.frames[f"q{q0}_q{q1}_cz_frame"]
-    frames = [q0_rf_frame, q1_rf_frame, q0_q1_cz_frame]
+    q0_drive_frame = device.frames[f"Transmon_{q0}_charge_tx"]
+    q1_drive_frame = device.frames[f"Transmon_{q1}_charge_tx"]
+    frames = [q0_drive_frame, q1_drive_frame]
 
-    dt = device.properties.pulse.ports[q0_q1_cz_frame.port.id].dt
+    dt = device.properties.pulse.ports[q0_drive_frame.port.id].dt
     wfm_duration = len(waveform.amplitudes) * dt
 
     pulse_sequence = (
         PulseSequence()
         .barrier(frames)
-        .play(q0_q1_cz_frame, waveform)
-        .delay(q0_rf_frame, wfm_duration)
-        .shift_phase(q0_rf_frame, shift_phases_q0)
-        .delay(q1_rf_frame, wfm_duration)
-        .shift_phase(q1_rf_frame, shift_phases_q1)
+        .delay(q0_drive_frame, wfm_duration)
+        .shift_phase(q0_drive_frame, shift_phases_q0)
+        .delay(q1_drive_frame, wfm_duration)
+        .shift_phase(q1_drive_frame, shift_phases_q1)
         .barrier(frames)
     )
-    for phase, q in [(shift_phases_q0 * 0.5, q0), (-shift_phases_q1 * 0.5, q1)]:
-        for neighbor in device.properties.paradigm.connectivity.connectivityGraph[str(q)]:
-            xy_frame_name = f"q{min(q, int(neighbor))}_q{max(q, int(neighbor))}_xy_frame"
-            if xy_frame_name in device.frames:
-                xy_frame = device.frames[xy_frame_name]
-                pulse_sequence.shift_phase(xy_frame, phase)
     return pulse_sequence
 
 
@@ -275,8 +267,8 @@ def test_pulse_sequence(arbitrary_waveform, device):
 
     cz_with_pulses_unbound = cz_pulse(a, b, theta_0, theta_1, a_b_cz_waveform, device)
 
-    q0_readout_frame = device.frames[f"q{a}_ro_rx_frame"]
-    q1_readout_frame = device.frames[f"q{b}_ro_rx_frame"]
+    q0_readout_frame = device.frames[f"Transmon_{a}_readout_rx"]
+    q1_readout_frame = device.frames[f"Transmon_{b}_readout_rx"]
     cz_with_pulses = (
         cz_with_pulses_unbound(theta_0=p0, theta_1=p1)
         .capture_v0(q0_readout_frame)
