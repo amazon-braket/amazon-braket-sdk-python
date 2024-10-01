@@ -1,0 +1,41 @@
+- file: What-is.md
+  title: What is…?
+  fr: De quoi s'agit-il ?
+- file: Circuits.md
+  title: Circuits
+  fr: Circuits
+- file: FreeParameters.md
+  title: FreeParameters
+  fr: Paramètres libres
+- file: Tasks.md
+  title: Tasks
+  fr: Tâches
+- file: Results.md
+  title: Results
+- file: Device.md
+  title: Device
+- file: DeviceProperties.md
+  title: Device Properties
+- file: Pricing.md
+  title: Pricing
+- file: HybridJobs.md
+  title: Hybrid Jobs
+  fr: Tâches
+- file: Simulators.md
+  title: Simulators
+- file: NoiseSimulation.md
+  title: Noise Simulation
+- file: LLDC.md
+  title: Low-Level Device Control
+- file: AHS.md
+  title: Analog Hamiltonian Simulation
+- file: ErrorMitigation.md
+  title: Error Mitigation
+- file: Console.md
+  title: Console
+- file: APICalls.md
+  title: API Calls
+- file: QiskitProvider.md
+  title: Qiskit Provider
+- file: Resources.md
+  title: Resources
