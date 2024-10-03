@@ -243,7 +243,7 @@ class ObservableResultType(ResultType):
 
     @property
     def target(self) -> QubitSet:
-        return self._target
+        return self._target or self._observable.targets
 
     @target.setter
     def target(self, target: QubitSetInput) -> None:
