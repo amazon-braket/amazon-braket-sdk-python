@@ -55,10 +55,12 @@ setup(
             "pytest-cov",
             "pytest-rerunfailures",
             "pytest-xdist[psutil]",
+            "tox",
+        ],
+        "docs": [
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
-            "tox",
         ]
     },
     include_package_data=True,
