@@ -61,7 +61,7 @@ setup(
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",
