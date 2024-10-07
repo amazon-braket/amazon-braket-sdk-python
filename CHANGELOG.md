@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.88.0 (2024-09-27)
+
+### Deprecations and Removals
+
+ * Mark Aspen-M-3 as deprecated, replace with Ankaa-2 in tests
+
+### Bug Fixes and Other Changes
+
+ * Update pulse integration tests for Ankaa-2 device
+
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
 ## v1.87.0 (2024-09-05)
 
 ### Deprecations and Removals

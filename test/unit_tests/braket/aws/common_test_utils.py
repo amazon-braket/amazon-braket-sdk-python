@@ -17,7 +17,7 @@ from unittest.mock import Mock
 from braket.aws import AwsQuantumTaskBatch
 
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
-RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Ankaa-2"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
