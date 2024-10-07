@@ -172,11 +172,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         gate_definitions = gate_definitions or {}
 
         single_task_type = (
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            AnalogHamiltonianSimulation,
+            Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         )
         single_input_type = dict
         single_gate_definitions_type = dict
@@ -186,7 +182,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         batch_length = 1
         arg_lengths = []
-        for arg, single_arg_type in zip(args, single_arg_types):
+        for arg, single_arg_type in zip(args, single_arg_types, strict=False):
             arg_length = 1 if isinstance(arg, single_arg_type) else len(arg)
             arg_lengths.append(arg_length)
 
@@ -199,10 +195,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 batch_length = arg_length
 
         for i in range(len(arg_lengths)):
-            if isinstance(args[i], (dict, single_task_type)):
+            if isinstance(args[i], (dict | single_task_type)):
                 args[i] = repeat(args[i], batch_length)
 
-        tasks_inputs_definitions = list(zip(*args))
+        tasks_inputs_definitions = list(zip(*args, strict=False))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
@@ -352,7 +348,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
             self._unsuccessful = {
-                task.id for task, result in zip(self._tasks, self._results) if not result
+                task.id
+                for task, result in zip(self._tasks, self._results, strict=False)
+                if not result
             }
 
         retries = 0
@@ -402,14 +400,16 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             *self._aws_quantum_task_args,
             **self._aws_quantum_task_kwargs,
         )
-        for index, task in zip(unsuccessful_indices, retried_tasks):
+        for index, task in zip(unsuccessful_indices, retried_tasks, strict=False):
             self._tasks[index] = task
 
         retried_results = AwsQuantumTaskBatch._retrieve_results(retried_tasks, self._max_workers)
-        for index, result in zip(unsuccessful_indices, retried_results):
+        for index, result in zip(unsuccessful_indices, retried_results, strict=False):
             self._results[index] = result
         self._unsuccessful = {
-            task.id for task, result in zip(retried_tasks, retried_results) if not result
+            task.id
+            for task, result in zip(retried_tasks, retried_results, strict=False)
+            if not result
         }
         return not self._unsuccessful
 
