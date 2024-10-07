@@ -55,11 +55,13 @@ setup(
             "pytest-cov",
             "pytest-rerunfailures",
             "pytest-xdist[psutil]",
+            "tox",
+        ],
+        "docs": [
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
-            "tox",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",
