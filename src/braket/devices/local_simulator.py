@@ -286,7 +286,7 @@ class LocalSimulator(Device):
         return program
 
     @_construct_payload.register
-    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots):
+    def _(self, program: SerializableProgram, inputs: dict[str, float] | None, _shots: int):
         inputs_copy = inputs.copy() if inputs is not None else {}
         return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM), inputs=inputs_copy)
 
