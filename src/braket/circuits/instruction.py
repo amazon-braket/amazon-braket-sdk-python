@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.compiler_directive import CompilerDirective
@@ -36,10 +36,10 @@ class Instruction:
     def __init__(
         self,
         operator: InstructionOperator,
-        target: Optional[QubitSetInput] = None,
+        target: QubitSetInput | None = None,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         """InstructionOperator includes objects of type `Gate` and `Noise` only.
@@ -149,7 +149,7 @@ class Instruction:
                 )
                 for gate in operator.adjoint()
             ]
-        elif isinstance(operator, CompilerDirective):
+        if isinstance(operator, CompilerDirective):
             return [Instruction(operator.counterpart(), self._target)]
         raise NotImplementedError(f"Adjoint not supported for {operator}")
 
@@ -191,11 +191,11 @@ class Instruction:
 
     def copy(
         self,
-        target_mapping: Optional[dict[QubitInput, QubitInput]] = None,
-        target: Optional[QubitSetInput] = None,
-        control_mapping: Optional[dict[QubitInput, QubitInput]] = None,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+        target: QubitSetInput | None = None,
+        control_mapping: dict[QubitInput, QubitInput] | None = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         """Return a shallow copy of the instruction.
@@ -287,7 +287,7 @@ class Instruction:
             )
         return NotImplemented
 
-    def __pow__(self, power: float, modulo: float = None):
+    def __pow__(self, power: float, modulo: float | None = None):
         new_power = self.power * power
         if modulo is not None:
             new_power %= modulo

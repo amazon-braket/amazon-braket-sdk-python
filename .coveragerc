@@ -32,6 +32,9 @@ exclude_lines =
     # Avoid situation where system version causes coverage issues
     if sys.version_info.minor == 9:
 
+    # Avoid type checking import conditionals
+    if TYPE_CHECKING:
+
 [html]
 directory = build/coverage
 

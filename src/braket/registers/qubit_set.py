@@ -50,14 +50,12 @@ class QubitSet(IndexedSet):
             >>> qubits = QubitSet([0, 1])
             >>> for qubit in qubits:
             ...     print(qubit)
-            ...
             Qubit(0)
             Qubit(1)
 
             >>> qubits = QubitSet([0, 1, [2, 3]])
             >>> for qubit in qubits:
             ...     print(qubit)
-            ...
             Qubit(0)
             Qubit(1)
             Qubit(2)
@@ -83,7 +81,7 @@ class QubitSet(IndexedSet):
             >>> mapping = {0: 10, Qubit(1): Qubit(11)}
             >>> qubits.map(mapping)
             QubitSet([Qubit(10), Qubit(11)])
-        """  # noqa E501
+        """  # noqa: E501
         new_qubits = [mapping.get(qubit, qubit) for qubit in self]
 
         return QubitSet(new_qubits)
