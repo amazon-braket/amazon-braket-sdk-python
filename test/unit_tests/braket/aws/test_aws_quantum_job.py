@@ -70,7 +70,7 @@ def generate_get_job_response():
             },
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 51),
             "deviceConfig": {
-                "device": "arn:aws:braket:::device/qpu/rigetti/Aspen-10",
+                "device": "arn:aws:braket:::device/qpu/rigetti/Ankaa-2",
             },
             "hyperParameters": {
                 "foo": "bar",

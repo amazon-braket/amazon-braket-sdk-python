@@ -216,7 +216,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Aspen-10",
+    "deviceName": "Ankaa-2",
     "deviceType": "QPU",
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
@@ -1451,7 +1451,7 @@ def test_run_device_poll_interval_kwargs(
     capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
     capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
     properties = {
-        "deviceName": "Aspen-10",
+        "deviceName": "Ankaa-2",
         "deviceType": "QPU",
         "providerName": "provider1",
         "deviceStatus": "OFFLINE",

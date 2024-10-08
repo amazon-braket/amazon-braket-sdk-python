@@ -49,7 +49,7 @@ class Devices:
         _Aspen11 = "arn:aws:braket:::device/qpu/rigetti/Aspen-11"
         _AspenM1 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1"
         _AspenM2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2"
-        AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+        _AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
         Ankaa2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
 
     class _Xanadu(str, Enum):
