@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -117,7 +116,7 @@ def _compute_moment_global_phase(
 
 def _group_items(
     circuit_qubits: QubitSet,
-    items: list[Union[Instruction, ResultType]],
+    items: list[Instruction | ResultType],
 ) -> list[tuple[QubitSet, list[Instruction]]]:
     """
     Group instructions in a moment

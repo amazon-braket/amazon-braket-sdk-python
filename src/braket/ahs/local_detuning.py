@@ -81,9 +81,7 @@ class LocalDetuning(Hamiltonian):
         magnitude = TimeSeries()
         for t, v in zip(times, values):
             magnitude.put(t, v)
-        shift = LocalDetuning(Field(magnitude, Pattern(pattern)))
-
-        return shift
+        return LocalDetuning(Field(magnitude, Pattern(pattern)))
 
     def stitch(
         self, other: LocalDetuning, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN

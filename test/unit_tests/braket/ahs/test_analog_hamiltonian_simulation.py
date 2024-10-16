@@ -354,13 +354,11 @@ def test_discretize(register, driving_field, local_detuning):
 def test_converting_numpy_array_sites_to_ir(driving_field):
     hamiltonian = driving_field
 
-    sites = np.array(
-        [
-            [0.0, 0.0],
-            [0.0, 1.0e-6],
-            [1e-6, 2.0e-6],
-        ]
-    )
+    sites = np.array([
+        [0.0, 0.0],
+        [0.0, 1.0e-6],
+        [1e-6, 2.0e-6],
+    ])
     register = AtomArrangement()
     for site in sites:
         register.add(site)
@@ -385,14 +383,12 @@ def test_site_validation_wrong_length():
 @pytest.mark.xfail(raises=TypeError)
 def test_site_validation_non_number():
     register = AtomArrangement()
-    register.add(
+    register.add([
+        "not-a-number",
         [
-            "not-a-number",
-            [
-                "also-not-a-number",
-            ],
-        ]
-    )
+            "also-not-a-number",
+        ],
+    ])
 
 
 @pytest.mark.xfail(raises=TypeError)
