@@ -337,7 +337,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_retries: int = MAX_RETRIES,
         use_cached_value: bool = True,
     ) -> list[
-        GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult
+        GateModelQuantumTaskResult
+        | AnnealingQuantumTaskResult
+        | PhotonicModelQuantumTaskResult
+        | AnalogHamiltonianSimulationQuantumTaskResult
     ]:
         """Retrieves the result of every quantum task in the batch.
 
@@ -355,7 +358,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 even when results have already been cached. Default: `True`.
 
         Returns:
-            list[GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult]: The  # noqa: E501
+            list[GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult | AnalogHamiltonianSimulationQuantumTaskResult]: The  # noqa: E501
             results of all of the quantum tasks in the batch.
             `FAILED`, `CANCELLED`, or timed out quantum tasks will have a result of None
         """
@@ -380,7 +383,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     def _retrieve_results(
         tasks: list[AwsQuantumTask], max_workers: int
     ) -> list[
-        GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult
+        GateModelQuantumTaskResult
+        | AnnealingQuantumTaskResult
+        | PhotonicModelQuantumTaskResult
+        | AnalogHamiltonianSimulationQuantumTaskResult
     ]:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             result_futures = [executor.submit(task.result) for task in tasks]
