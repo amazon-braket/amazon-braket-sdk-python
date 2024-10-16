@@ -31,6 +31,9 @@ from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 if TYPE_CHECKING:
+    from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
+        AnalogHamiltonianSimulationQuantumTaskResult,
+    )
     from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
     from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
     from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
