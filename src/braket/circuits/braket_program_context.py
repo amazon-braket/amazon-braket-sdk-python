@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional, Union
 
 import numpy as np
 from sympy import Expr, Number
@@ -32,7 +31,7 @@ from braket.parametric import FreeParameterExpression
 
 
 class BraketProgramContext(AbstractProgramContext):
-    def __init__(self, circuit: Optional[Circuit] = None):
+    def __init__(self, circuit: Circuit | None = None):
         """Inits a `BraketProgramContext`.
 
         Args:
@@ -143,9 +142,7 @@ class BraketProgramContext(AbstractProgramContext):
         """
         self._circuit.add_result_type(braket_result_to_result_type(result))
 
-    def handle_parameter_value(
-        self, value: Union[float, Expr]
-    ) -> Union[float, FreeParameterExpression]:
+    def handle_parameter_value(self, value: float | Expr) -> float | FreeParameterExpression:
         """Convert parameter value to required format.
 
         Args:
@@ -163,7 +160,7 @@ class BraketProgramContext(AbstractProgramContext):
         return value
 
     def add_measure(
-        self, target: tuple[int], classical_targets: Optional[Iterable[int]] = None
+        self, target: tuple[int], classical_targets: Iterable[int] | None = None
     ) -> None:
         """Add a measure instruction to the circuit
 
