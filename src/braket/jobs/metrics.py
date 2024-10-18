@@ -10,28 +10,28 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
 
 import time
-from typing import Optional, Union
 
 
 def log_metric(
     metric_name: str,
-    value: Union[float, int],
-    timestamp: Optional[float] = None,
-    iteration_number: Optional[int] = None,
+    value: float,
+    timestamp: float | None = None,
+    iteration_number: int | None = None,
 ) -> None:
     """Records Braket Hybrid Job metrics.
 
     Args:
         metric_name (str): The name of the metric.
 
-        value (Union[float, int]): The value of the metric.
+        value (float): The value of the metric.
 
-        timestamp (Optional[float]): The time the metric data was received, expressed
+        timestamp (float | None): The time the metric data was received, expressed
             as the number of seconds since the epoch. Default: Current system time.
 
-        iteration_number (Optional[int]): The iteration number of the metric.
+        iteration_number (int | None): The iteration number of the metric.
     """
     logged_timestamp = timestamp or time.time()
     metric_list = [f"Metrics - timestamp={logged_timestamp}; {metric_name}={value};"]

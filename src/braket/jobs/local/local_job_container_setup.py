@@ -181,7 +181,7 @@ def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs: str)
     hyperparameters = creation_kwargs["hyperParameters"]
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = Path(temp_dir, "hyperparameters.json")
-        with open(file_path, "w") as write_file:
+        with open(file_path, "w", encoding="utf-8") as write_file:
             json.dump(hyperparameters, write_file)
         container.copy_to(str(file_path), "/opt/ml/input/config/hyperparameters.json")
     return True
