@@ -216,7 +216,7 @@ class ObservableResultType(ResultType):
                         "target length is equal to the observable term's qubits count."
                     )
                 self._target = [QubitSet(term_target) for term_target in target]
-                for term_target, obs in zip(self._target, observable.summands):
+                for term_target, obs in zip(self._target, observable.summands, strict=False):
                     if obs.qubit_count != len(term_target):
                         raise ValueError(
                             "Sum observable's target shape must be a nested list where each term's "
