@@ -515,8 +515,7 @@ class AwsQuantumJob(QuantumJob):
             except ClientError as e:
                 if e.response["Error"]["Code"] == "404":
                     return {}
-                else:
-                    raise e
+                raise
             return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
 
     @staticmethod
@@ -561,8 +560,7 @@ class AwsQuantumJob(QuantumJob):
                 AwsQuantumJob._attempt_results_download(self, output_s3_uri, output_s3_path)
                 AwsQuantumJob._extract_tar_file(f"{extract_to}/{self.name}")
                 return
-            else:
-                time.sleep(poll_interval_seconds)
+            time.sleep(poll_interval_seconds)
 
         raise TimeoutError(
             f"{job_response['jobName']}: Polling for job completion "
@@ -576,7 +574,7 @@ class AwsQuantumJob(QuantumJob):
             )
         except ClientError as e:
             if e.response["Error"]["Code"] != "404":
-                raise e
+                raise
             exception_response = {
                 "Error": {
                     "Code": "404",
@@ -589,7 +587,7 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
         with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
-            tar.extractall(extract_path)
+            tar.extractall(extract_path)  # noqa: S202
 
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"
@@ -623,13 +621,14 @@ class AwsQuantumJob(QuantumJob):
             logger.info(f"Changed session region from '{current_region}' to '{device_region}'")
         try:
             aws_session.get_device(device)
-            return aws_session
         except ClientError as e:
             raise (
                 ValueError(f"'{device}' not found.")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
             ) from e
+        else:
+            return aws_session
 
     @staticmethod
     def _initialize_non_regional_device_session(
@@ -638,13 +637,14 @@ class AwsQuantumJob(QuantumJob):
         original_region = aws_session.region
         try:
             aws_session.get_device(device)
-            return aws_session
         except ClientError as e:
             if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                raise e
+                raise
 
             if "qpu" not in device:
                 raise ValueError(f"Simulator '{device}' not found in '{original_region}'") from e
+        else:
+            return aws_session
         for region in frozenset(AwsDevice.REGIONS) - {original_region}:
             device_session = aws_session.copy_session(region=region)
             try:
@@ -652,8 +652,9 @@ class AwsQuantumJob(QuantumJob):
                 logger.info(
                     f"Changed session region from '{original_region}' to '{device_session.region}'"
                 )
-                return device_session
             except ClientError as e:
                 if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                    raise e
+                    raise
+            else:
+                return device_session
         raise ValueError(f"QPU '{device}' not found.")

@@ -21,7 +21,7 @@ from braket.timings.time_series import TimeSeries
 
 
 class Field:
-    def __init__(self, time_series: TimeSeries, pattern: Optional[Pattern] = None) -> None:
+    def __init__(self, time_series: TimeSeries, pattern: Optional[Pattern] = None) -> None:  # noqa: UP007
         """A space and time dependent parameter of a program.
 
         Args:
@@ -37,15 +37,15 @@ class Field:
         return self._time_series
 
     @property
-    def pattern(self) -> Optional[Pattern]:
+    def pattern(self) -> Optional[Pattern]:  # noqa: UP007
         """Optional[Pattern]: The local pattern of real numbers."""
         return self._pattern
 
     def discretize(
         self,
-        time_resolution: Optional[Decimal] = None,
-        value_resolution: Optional[Decimal] = None,
-        pattern_resolution: Optional[Decimal] = None,
+        time_resolution: Optional[Decimal] = None,  # noqa: UP007
+        value_resolution: Optional[Decimal] = None,  # noqa: UP007
+        pattern_resolution: Optional[Decimal] = None,  # noqa: UP007
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
@@ -64,8 +64,7 @@ class Field:
             discretized_pattern = None
         else:
             discretized_pattern = self.pattern.discretize(pattern_resolution)
-        discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
-        return discretized_field
+        return Field(time_series=discretized_time_series, pattern=discretized_pattern)
 
     @staticmethod
     def from_lists(times: list[Decimal], values: list[Decimal], pattern: list[Decimal]) -> Field:
@@ -90,6 +89,4 @@ class Field:
 
         time_series = TimeSeries.from_lists(times=times, values=values)
 
-        field = Field(time_series=time_series, pattern=Pattern(pattern))
-
-        return field
+        return Field(time_series=time_series, pattern=Pattern(pattern))
