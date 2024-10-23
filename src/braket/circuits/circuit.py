@@ -613,7 +613,7 @@ class Circuit:
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
         elif target is not None:
-            keys = sorted(circuit.qubits)
+            keys = circuit.qubits
             values = target
             target_mapping = dict(zip(keys, values))
 
