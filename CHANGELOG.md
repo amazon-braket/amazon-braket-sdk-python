@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
 ## v1.88.0 (2024-09-27)
 
 ### Deprecations and Removals
