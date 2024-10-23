@@ -18,7 +18,7 @@ import json
 import os
 import urllib.request
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional
 
@@ -434,7 +434,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.now(tz=datetime.timezone.utc)
+        current_datetime_utc = datetime.now(tz=timezone.utc)
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
