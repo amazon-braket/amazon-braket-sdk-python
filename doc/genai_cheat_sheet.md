@@ -231,7 +231,6 @@ task = device.run(
 )
 ```
 
-
 Cancel task: `task.cancel()`
 Task metadata: `task.metadata()`
 Task state (CREATED, COMPLETED, CANCELED, FAILED): `task.state()`
@@ -336,6 +335,15 @@ IonQ Forte device (Braket Direct reservation only, 36 qubits):
 </device_arn>
 
 IonQ devices ONLY: Aria-1, Aria-2, Forte-1.
+
+**Native gates**
+<native_gates>
+`Devices.Rigetti.Ankaa2`: Gate.Rx, Gate.Rz, Gate.ISwap
+`Devices.IonQ.Aria1`: Gate.GPi, Gate.GPi2, Gate.MS
+`Devices.IonQ.Aria2`: Gate.GPi, Gate.GPi2, Gate.MS
+`Devices.IonQ.Forte1`: Gate.GPi, Gate.GPi2, Gate.ZZ
+`Devices.IQM.Garnet`: Gate.CZ, Gate.PRx
+</native_gates>
 
 **Device Properties**
 
