@@ -271,43 +271,39 @@ Device alias (use in place of string ARN):
 `Devices.IonQ.Forte1`,
 
 QuantumTask Queue depth:
-
 `device.queue_depth()`
 
 Gate pulse implementation:
-
 `device.gate_calibrations`
 
-SV1 Simulator:
-
+SV1 Simulator (up to 34 qubits):
 `AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/sv1”)`
 
-TN1 Simulator (Tensor Network simulator):
-
+TN1 Simulator (Tensor Network simulator, 50 qubits):
 `AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/tn1”)`
 
-DM1 Simulator (density matrix simulator):
-
+DM1 Simulator (density matrix simulator, 17 qubits):
 `AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/dm1”)`
 
-Rydberg atom devices Aquila (AHS device from QuEra):
-
+Rydberg atom devices Aquila (AHS device from QuEra, 256 atoms):
 `AwsDevice(“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”)`
 
-IQM Garnet device:
+IQM Garnet device (superconducting, 20 qubits):
 `AwsDevice("arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet")`
 
-Rigetti Ankaa-2 device:
+Rigetti Ankaa-2 device (superconducting, 84 qubits):
 `arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2`
 
-IonQ Aria-1 device (ion trap device):
+IonQ Aria-1 device (ion trap device, 25 qubits):
 `arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1`
 
-IonQ Aria-2 device (ion trap device):
+IonQ Aria-2 device (ion trap device, 25 qubits):
 `arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2`
 
-IonQ Forte device (Braket Direct reservation only):
+IonQ Forte device (Braket Direct reservation only, 36 qubits):
 `arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1`
+
+IonQ devices ONLY: Aria-1, Aria-2, Forte-1.
 
 **Device Properties**
 
