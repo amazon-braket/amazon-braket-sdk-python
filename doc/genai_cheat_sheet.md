@@ -270,6 +270,9 @@ Device alias (use in place of string ARN):
 `Devices.IonQ.Aria1`,
 `Devices.IonQ.Aria2`,
 `Devices.IonQ.Forte1`,
+`Devices.Amazon.SV1`,
+`Devices.Amazon.TN1`,
+`Devices.Amazon.DM1`
 
 QuantumTask Queue depth:
 `device.queue_depth()`
