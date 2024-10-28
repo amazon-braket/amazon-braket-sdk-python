@@ -267,6 +267,9 @@ Get measured qubits:
 Get compiled circuit:
 `result.get_compiled_circuit()`
 
+Print measurement results:
+`print(task.result().measurement_counts)`
+
 **Devices**
 
 Imports:
