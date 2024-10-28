@@ -51,8 +51,19 @@ Add CNot gate to pair of qubits:
 
 DO NOT USE `cx` GATE. ALWAYS USE `cnot` GATE.
 
+Create GHZ circuit with 2 qubits (Bell circuit):
+`circuit = Circuit().h(0).cnot(0, 1)`
+
 Create GHZ circuit with 3 qubits:
 `circuit = Circuit().h(0).cnot(0, 1).cnot(1, 2)`
+
+Create GHZ circuit with `n_qubits` qubits:
+```
+circuit = Circuit()
+circuit.h(0)  # Add Hadamard gate to create a |+> state
+for i in range(1, n_qubits):
+    circuit.cnot(i-1, i)  # Ladder-like GHZ state
+```
 
 Add gates sequentially: `X` gate, `rx` gate, and two `cnot` gates:
 `circuit.x(0).rx(1, 1.23).cnot(0, 1).cnot(1, 2)`
