@@ -373,7 +373,16 @@ Native gate set of a device:
 `device.properties.paradigm.nativeGateSet`
 
 Get device pricing info (device pricing per task) and availability:
-`device.properties.service`
+`device.status`.
+Device is ONLINE: 
+```
+device.status == 'ONLINE'
+```
+Device is OFFLINE: 
+```
+device.status == 'OFFLINE'
+```
+
 
 Pulse properties:
 `device.properties.pulse`
