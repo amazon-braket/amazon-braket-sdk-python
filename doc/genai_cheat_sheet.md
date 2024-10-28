@@ -14,13 +14,9 @@ AGAIN, NEVER PRINT OR VISUALIZE CIRCUITS.
 Installing Amazon Braket SDK:
 `pip install amazon-braket-sdk`
 
-To import modules from Braket:
-`from braket import ...`
-
 **Circuits**
 
 Import Braket modules:
-
 <imports>
 ```
 from braket.circuits import Circuit
@@ -177,8 +173,14 @@ circuit = random_circuit(num_qubits=5,
 **FreeParameters (parametric gates)**
 
 <parametric_circuit>
-Imports	
-`from braket.circuits import FreeParameter`
+Imports
+
+<imports>
+```
+from braket.circuits import FreeParameter
+from braket.circuits import Circuit
+```
+</imports>
 
 Create a FreeParameter (symbolic parameter):
 `alpha = FreeParameter(“alpha”)`
@@ -200,8 +202,11 @@ In case of repetitive execution of the same circuit via device.run (but with dif
 **Tasks**
 
 <tasks>
+
 Imports:
+<imports>
 `from braket.aws import AwsSession, AwsQuantumTask`
+</imports>
 
 Create a quantum task by executing a circuit on a device:
 `task = device.run(circuit, shots=1000)`
@@ -276,13 +281,13 @@ Print measurement results:
 **Devices**
 
 Imports:
-
+<imports>
 ```
 from braket.devices import LocalSimulator
 from braket.aws import AwsDevice
 from braket.devices import Devices
 ```
-
+</imports>
 
 Instantiate a device from ARN:
 `AwsDevice("<deviceARN>")`
@@ -418,8 +423,10 @@ Always use `tracker.quantum_tasks_statistics()` for more accurate estimation of 
 
 **Hybrid Jobs**
 <hybrid_job>
-Imports	
+Imports:
+<imports>	
 `from braket.aws import AwsQuantumJob`
+</imports>
 
 Create a job	
 ```
@@ -469,11 +476,13 @@ Apply a noise channel to an individual X gate in a circuit:
 
 <pulse_control>
 Imports:
-
+<imports>
 ```
+from braket.circuits import Circuit
 from braket.pulse import PulseSequence, Frame
 from braket.pulse.waveforms import *
 ```
+</imports>
 
 Create a new pulse sequence:
 `pulse_sequence = PulseSequence()`
