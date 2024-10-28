@@ -28,6 +28,7 @@ from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot
 from braket.circuits.instruction import Instruction
 ```
 
+<create_circuit>
 Create an empty circuit (default constructor):
 `circuit = Circuit()`
 
@@ -74,6 +75,9 @@ Get the list of available gates:
 Get the inverse (adjoint) of the quantum circuit:
 `inverse_circuit = circuit.adjoint()`
 
+</create_circuit>
+
+<circuit_unitary>
 Create a single qubit gate from unitary matrix:
 ```
 from braket.circuits.gates import Unitary
@@ -83,7 +87,9 @@ G = Unitary(matrix)
 
 Compute circuit unitary:
 `circuit.to_unitary()`
+</circuit_unitary>
 
+<probability_result>
 Add a probability result type to qubit 0 (will return exact probabilities, corresponds to `shots=0` case when running on a simulator):
 `circuit.probability(0)`
 
@@ -94,18 +100,19 @@ for i in range(len(circuit.qubits)):
 ```
 ONLY use `ciruit.probability` when running on device with zero shots `device.run(circuit, shots=0)`!
 
+</probability_result>
+
 Show all result types attached to the circuit:
 `print(circuit._result_types)`
 
-Get circuit depth:
-`circuit.depth`
-
+<expectation_types>
 Attach Expectation result type to measure both qubits [0, 1] in X basis. 
 The expectation method allows to pass an arbitrary tensor product of Pauli operators applied to each qubit, e.g. X() @ Y() @ Z():
 ```
 circuit.expectation(X() @ X(), target=[0, 1]);
 circuit.expectation(X() @ Y() @ Z(), target=[0, 1, 2]);
 ```
+</expectation_types>
 
 List of the available result types	
 adjoint_gradient, amplitude, density_matrix, expectation, probability, sample, state_vector, variance:
@@ -120,21 +127,28 @@ Wrap a new_circuit to a verbatim box and append it to a circuit:
 Wrap a circuit to a verbatim box (will be executed without as is on the QPU):
 `Circuit().add_verbatim_box(circuit)`
 
+<conditional_gates>
 Gate modifiers (conditional gates with control and target qubits).
 Gate modifiers allow to specify a fractional power applied to a gate:
 `circuit.x(0, control=[1, 2], control_state=[0, 1], power=-0.5)`.
 
 Double control NOT gate (CCNot or Toffoli gate):
 `circuit.x(0, control=[1, 2], control_state=[0, 1], power=1)`
+</conditional_gates>
 
+<circuit_properties>
 Print (visualize) a Braket circuit:
 `print(circuit)`
+
+Get circuit depth:
+`circuit.depth`
 
 Create circuit from OpenQASM3 string:
 `Circuit.from_ir(source=qasm_str)`
 
 Export to OpenQASM3 string:
 `Circuit.to_ir("OPENQASM")`
+</circuit_properties>
 
 Create an instruction from a gate:
 `inst = Instruction(Gate.CPhaseShift(1.23), target=[0, 1])`
@@ -158,6 +172,7 @@ circuit = random_circuit(num_qubits=5,
 
 **FreeParameters (parametric gates)**
 
+<parametric_circuit>
 Imports	
 `from braket.circuits import FreeParameter`
 
@@ -176,9 +191,11 @@ Get the list of unbound FreeParameters for the `circuit`:
 Run circuit on a device with parametric compilation enabled.	
 `device.run(circuit, inputs={“alpha”: 0.1})`
 In case of repetitive execution of the same circuit via device.run (but with different values of bound parameters), the circuit will be compiled only once for this device if parametric compilation is enabled.
+</parametric_circuit>
 
 **Tasks**
 
+<tasks>
 Imports:
 `from braket.aws import AwsSession, AwsQuantumTask`
 
@@ -214,7 +231,6 @@ task = device.run(
 )
 ```
 
-**Quantum Task attributes:**
 
 Cancel task: `task.cancel()`
 Task metadata: `task.metadata()`
@@ -222,16 +238,19 @@ Task state (CREATED, COMPLETED, CANCELED, FAILED): `task.state()`
 Task position in the queue: `task.queue_position()`
 Get Task result dicitonary: `task.result()`
 
-**QAOA circuits**
+</tasks>
 
+**QAOA circuits**
+<qaoa>
 Decomposition of the ZZ gate (cost Hamiltonian) to Cnot:
 `ZZ(alpha, [i, j]) -> Cnot(i, j) Rz(alpha) Cnot(i, j)`
 
 The QAOA circuit consits of alternating layers of single qubit RX rotations (mixer term) and two-qubit ZZ gates (cost term).
 The initial layer should rotate qubits to |+> state by applying H (Hadamard) gate to all qubits. 
+</qaoa>
 
 **Results**
-
+<results>
 Retrieve task results:
 `result = task.result()`
 
@@ -240,6 +259,7 @@ Get measurement counts:
 
 Get measurement probabilities (for Probability Result Type):
 `result.measurement_probabilities`
+Use `result.measurement_probabilities` only in combination with circuit.probability()
 
 Get measured qubits:
 `result.measured_qubits`
@@ -247,7 +267,7 @@ Get measured qubits:
 Get compiled circuit:
 `result.get_compiled_circuit()`
 
-**Device**
+**Devices**
 
 Imports:
 
@@ -257,23 +277,23 @@ from braket.aws import AwsDevice
 from braket.devices import Devices
 ```
 
-Instantiate Local simulator:
-`local_sim = LocalSimulator()`.
-Local simulator does not have ARN.
 
 Instantiate a device from ARN:
 `AwsDevice("<deviceARN>")`
 
+<device_alias>
 Device alias (use in place of string ARN):
-`Devices.Rigetti.Ankaa2`,
-`Devices.IQM.Garnet`,
-`Devices.IonQ.Aria1`,
-`Devices.IonQ.Aria2`,
-`Devices.IonQ.Forte1`,
-`Devices.Amazon.SV1`,
-`Devices.Amazon.TN1`,
-`Devices.Amazon.DM1`,
-`Devices.QuEra.Aquila`
+
+Rigetti Ankaa-2: `Devices.Rigetti.Ankaa2`
+IQM Garnet: `Devices.IQM.Garnet`,
+IonQ Aria-1: `Devices.IonQ.Aria1`,
+Ionq Aria-2: `Devices.IonQ.Aria2`,
+IonQ Forte-1: `Devices.IonQ.Forte1`,
+Amazon SV1: `Devices.Amazon.SV1`,
+Amazon TN1: `Devices.Amazon.TN1`,
+Amazon DM1: `Devices.Amazon.DM1`,
+QuEra Aquila: `Devices.QuEra.Aquila`
+</device_alias>
 
 QuantumTask Queue depth:
 `device.queue_depth()`
@@ -281,8 +301,11 @@ QuantumTask Queue depth:
 Gate pulse implementation:
 `device.gate_calibrations`
 
+<device_arn>
+List of device ARN (unique device IDs) is presented below.
+
 SV1 Simulator (up to 34 qubits):
-`AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/sv1”)`
+`AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")`
 
 TN1 Simulator (Tensor Network simulator, 50 qubits):
 `AwsDevice(“arn:aws:braket:::device/quantum-simulator/amazon/tn1”)`
@@ -297,21 +320,23 @@ IQM Garnet device (superconducting, 20 qubits):
 `AwsDevice("arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet")`
 
 Rigetti Ankaa-2 device (superconducting, 84 qubits):
-`arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2`
+`AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2")`
 
 IonQ Aria-1 device (ion trap device, 25 qubits):
-`arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1`
+`AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1")`
 
 IonQ Aria-2 device (ion trap device, 25 qubits):
-`arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2`
+`AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2")`
 
 IonQ Forte device (Braket Direct reservation only, 36 qubits):
-`arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1`
+`AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1")`
+</device_arn>
 
 IonQ devices ONLY: Aria-1, Aria-2, Forte-1.
 
 **Device Properties**
 
+<device_properties>
 Connectivity graph of a QPU:
 `device.properties.paradigm.connectivity`
 
@@ -335,9 +360,11 @@ Supported gates on the device:
 
 Get 2Q gate fidelities for a qubit pair (i, j):
 `device.properties.dict()["provider"]["specs"]["2Q"][f"{i}-{j}"]`
+</device_properties>
 
 **Task Pricing**
 
+<pricing>
 Imports:
 `from braket.tracking import Tracker`
 
@@ -360,7 +387,7 @@ tracker.simulator_tasks_cost()
 
 Cost summary (detailed information about costs spent on Braket): `tracker.quantum_tasks_statistics()`
 
-**Information about pricing for each device**
+Information about pricing for each device:
 Devices.Amazon.SV1: $0.075 / minute
 Devices.Amazon.TN1: $0.275 / minute
 Devices.Amazon.DM1: $0.075 / minute
@@ -370,8 +397,12 @@ Devices.Amazon.Garnet: $0.30 / task + $0.00145 / shot (on-demand)
 Devices.Amazon.Ankaa2: $0.30 / task + $0.0009 / shot (on-demand)
 Devices.QuEra.Aquila: $0.30 / task + $0.01 / shot (on-demand)
 
-**Hybrid Jobs**
+Always use `tracker.quantum_tasks_statistics()` for more accurate estimation of the pricing.
+</pricing>
 
+
+**Hybrid Jobs**
+<hybrid_job>
 Imports	
 `from braket.aws import AwsQuantumJob`
 
@@ -388,9 +419,9 @@ Hybrid Job decorator (local mode):
 
 Records Braket Hybrid Job metrics (will be displayed on Hybrid Jobbs concole metrics log):
 `log_metric(metric_name=metric_name, value=value, iteration_number=iteration_number)`
+</hybrid_job>
 
-
-**Simulator**
+**Local Simulator**
 
 Imports:
 `from braket.devices import LocalSimulator`
@@ -398,8 +429,11 @@ Imports:
 Instantiate the local simulator:
 `local_sim = LocalSimulator()`
 
+Local simulator does not have ARN.
+
 **Noise Simulation**
 
+<noise_simulation>
 Imports:
 `from braket.circuits import Noise`
 
@@ -414,11 +448,11 @@ Phase dampling channel:
 
 Apply a noise channel to an individual X gate in a circuit:
 `circuit.apply_gate_noise(noise, Gate.X)`
-
-
+</noise_simulation>
 
 **Low-Level Device Control**
 
+<pulse_control>
 Imports:
 
 ```
@@ -465,10 +499,10 @@ pulse_sequence.shift_phase(frame, phi)
 
 Get the time series:
 `pulse_sequence.to_time_traces()`
-
+</pulse_control>
 
 **Analog Hamiltonian Simulation (AHS)**
-
+<ahs>
 Imports:
 `from braket.ahs import AtomArrangement, DrivingField, AnalogHamiltonianSimulation`
 
@@ -501,6 +535,7 @@ Create an AHS program:
 
 Run an AHS program on AHS device:
 `device.run(ahs_program, shots=1000)`
+</ahs>
 
 **Error Mitigation**
 
