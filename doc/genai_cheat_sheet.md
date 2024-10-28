@@ -23,7 +23,8 @@ from braket.circuits import Circuit
 from braket.circuits import Gate
 from braket.circuits import Instruction
 from braket.circuits.observables import X, Y, Z
-from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot
+
+from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot # Import gates. Import is not required if using circuit.rx(...) or circuit.cnot(...) syntaxis.
 from braket.circuits.instruction import Instruction
 ```
 </imports>
