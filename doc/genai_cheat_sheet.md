@@ -21,12 +21,16 @@ To import modules from Braket:
 
 Import Braket modules:
 
+<imports>
 ```
-from braket.circuits import Circuit, Gate, Instruction
+from braket.circuits import Circuit
+from braket.circuits import Gate
+from braket.circuits import Instruction
 from braket.circuits.observables import X, Y, Z
 from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot
 from braket.circuits.instruction import Instruction
 ```
+</imports>
 
 <create_circuit>
 Create an empty circuit (default constructor):
