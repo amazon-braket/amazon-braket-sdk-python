@@ -182,10 +182,10 @@ Imports:
 `from braket.aws import AwsSession, AwsQuantumTask`
 
 Create a quantum task by executing a circuit on a device:
-`task = device.run(circuit)`
+`task = device.run(circuit, shots=1000)`
 
 Disable qubit rewiring (forces trivial mapping between logical and physical qubits on QPU):
-`device.run(circuit, disable_qubit_rewiring=True)`
+`device.run(circuit, disable_qubit_rewiring=True, shots=n_shots)`
 
 Instantiate an AwsSession:	
 `session = AwsSession(...)`
@@ -478,7 +478,7 @@ Create an AHS program:
 `ahs_program = AnalogHamiltonianSimulation(register, drive)`
 
 Run an AHS program on AHS device:
-`device.run(ahs_program)`
+`device.run(ahs_program, shots=1000)`
 
 **Error Mitigation**
 
