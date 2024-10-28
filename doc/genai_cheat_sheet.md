@@ -253,7 +253,11 @@ Instantiate a device from ARN:
 `AwsDevice("<deviceARN>")`
 
 Device alias (use in place of string ARN):
-`Devices.Rigetti.AspenM3`
+`Devices.Rigetti.Ankaa2`,
+`Devices.IQM.Garnet`,
+`Devices.IonQ.Aria1`,
+`Devices.IonQ.Aria2`,
+`Devices.IonQ.Forte1`,
 
 QuantumTask Queue depth:
 
@@ -281,6 +285,18 @@ Rydberg atom devices Aquila (AHS device from QuEra):
 
 IQM Garnet device:
 `AwsDevice("arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet")`
+
+Rigetti Ankaa-2 device:
+`arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2`
+
+IonQ Aria-1 device (ion trap device):
+`arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1`
+
+IonQ Aria-2 device (ion trap device):
+`arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2`
+
+IonQ Forte device (Braket Direct reservation only):
+`arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1`
 
 **Device Properties**
 
