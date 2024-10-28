@@ -341,6 +341,12 @@ IonQ Aria-2 device (ion trap device, 25 qubits):
 
 IonQ Forte device (Braket Direct reservation only, 36 qubits):
 `AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1")`
+
+Create Device:
+`sv1 = Devices.Amazon.SV1`
+`garnet = Devices.IQM.Garnet`
+`ankaa_2 = Devices.Rigetti.Ankaa2`
+
 </device_arn>
 
 IonQ devices ONLY: Aria-1, Aria-2, Forte-1.
