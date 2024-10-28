@@ -338,7 +338,15 @@ Imports:
 `from braket.tracking import Tracker`
 
 Start the cost tracker (tracks monetary costs spent on Braket in the current session):
-`tracker=Tracker().start()`
+```
+tracker=Tracker().start()
+# Code block for running quantum tasks is here 
+...
+
+cost_summary = tracker.quantum_tasks_statistics()
+```
+To initiate cost tracking add `tracker=Tracker().start()` in the beggining of the code.
+Print cost summary with `tracker.quantum_tasks_statistics()`.
 
 Print costs:
 ```
