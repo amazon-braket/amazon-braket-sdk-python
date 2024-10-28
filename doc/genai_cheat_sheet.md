@@ -272,7 +272,8 @@ Device alias (use in place of string ARN):
 `Devices.IonQ.Forte1`,
 `Devices.Amazon.SV1`,
 `Devices.Amazon.TN1`,
-`Devices.Amazon.DM1`
+`Devices.Amazon.DM1`,
+`Devices.QuEra.Aquila`
 
 QuantumTask Queue depth:
 `device.queue_depth()`
@@ -359,6 +360,15 @@ tracker.simulator_tasks_cost()
 
 Cost summary (detailed information about costs spent on Braket): `tracker.quantum_tasks_statistics()`
 
+**Information about pricing for each device**
+Devices.Amazon.SV1: $0.075 / minute
+Devices.Amazon.TN1: $0.275 / minute
+Devices.Amazon.DM1: $0.075 / minute
+Devices.Amazon.Aria1: $0.30 / task + $0.03 / shot (on-demand)
+Devices.Amazon.Aria2: $0.30 / task + $0.03 / shot (on-demand)
+Devices.Amazon.Garnet: $0.30 / task + $0.00145 / shot (on-demand)
+Devices.Amazon.Ankaa2: $0.30 / task + $0.0009 / shot (on-demand)
+Devices.QuEra.Aquila: $0.30 / task + $0.01 / shot (on-demand)
 
 **Hybrid Jobs**
 
