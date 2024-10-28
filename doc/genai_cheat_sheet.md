@@ -84,7 +84,7 @@ G = Unitary(matrix)
 Compute circuit unitary:
 `circuit.to_unitary()`
 
-Add a probability result type to qubit 0 (will return exact probabilities, corresponds to shots=0 case when running on a simulator):
+Add a probability result type to qubit 0 (will return exact probabilities, corresponds to `shots=0` case when running on a simulator):
 `circuit.probability(0)`
 
 Add probability result type to all qubits. Add probability result type only when measuring exact probabilities:
@@ -92,6 +92,7 @@ Add probability result type to all qubits. Add probability result type only when
 for i in range(len(circuit.qubits)):
     circuit.probability(i)
 ```
+ONLY use `ciruit.probability` when running on device with zero shots `device.run(circuit, shots=0)`!
 
 Show all result types attached to the circuit:
 `print(circuit._result_types)`
