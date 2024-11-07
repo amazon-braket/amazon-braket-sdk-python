@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
@@ -23,7 +23,7 @@ from braket.registers.qubit_set import QubitSet, QubitSetInput
 class QubitInitializationCriteria(InitializationCriteria):
     """This class models initialization noise Criteria based on qubits."""
 
-    def __init__(self, qubits: Optional[QubitSetInput] = None):
+    def __init__(self, qubits: QubitSetInput | None = None):
         """Creates initialization noise Qubit-based Criteria.
 
         Args:
@@ -46,7 +46,7 @@ class QubitInitializationCriteria(InitializationCriteria):
         """
         return [CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
