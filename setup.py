@@ -33,7 +33,8 @@ setup(
         "backoff",
         "boltons",
         "boto3>=1.28.53",
-        # SageMaker is pinned to 2.2.1; update once https://github.com/aws/sagemaker-python-sdk/issues/4871 is resolved
+        # SageMaker pinned cloudpickle==2.2.1
+        # see https://github.com/aws/sagemaker-python-sdk/issues/4871
         "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
