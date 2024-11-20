@@ -1,5 +1,111 @@
 # Changelog
 
+## v1.88.2 (2024-11-18)
+
+### Bug Fixes and Other Changes
+
+ * Pin cloudpickle==2.2.1
+
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
+## v1.88.0 (2024-09-27)
+
+### Deprecations and Removals
+
+ * Mark Aspen-M-3 as deprecated, replace with Ankaa-2 in tests
+
+### Bug Fixes and Other Changes
+
+ * Update pulse integration tests for Ankaa-2 device
+
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
+## v1.87.0 (2024-09-05)
+
+### Deprecations and Removals
+
+ * Retire IonQ Harmony
+
+### Bug Fixes and Other Changes
+
+ * Return observable target if absent for RT
+
+## v1.86.1 (2024-08-29)
+
+### Bug Fixes and Other Changes
+
+ * Use observable targets for targetless results
+
+## v1.86.0 (2024-08-26)
+
+### Features
+
+ * Rigetti Ankaa
+ * add off_center to erf_square
+
+## v1.85.0 (2024-08-20)
+
+### Features
+
+ * Allow early qubit binding of observables
+
+## v1.84.0 (2024-07-30)
+
+### Features
+
+ * support erf_square and swap_phases
+
+## v1.83.0 (2024-06-28)
+
+### Deprecations and Removals
+
+ * Remove OQC
+
+### Features
+
+ * Use `run_multiple` for local batches
+
+### Documentation Changes
+
+ * update PR title instructions
+
+## v1.82.0 (2024-06-27)
+
+### Features
+
+ * Track classical target indices for measurements
+
+### Bug Fixes and Other Changes
+
+ * Add test to check classical indices used in measurement are preserved between Circuit and OpenQASM Translations.
+
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
+## v1.80.1 (2024-06-10)
+
+### Bug Fixes and Other Changes
+
+ * docs: add stack exchange badge to the readme
+ * Implement `braket.ahs.AnalogHamiltonianSimulation.from_ir()`
+
 ## v1.80.0 (2024-05-22)
 
 ### Features

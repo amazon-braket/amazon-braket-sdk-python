@@ -31,13 +31,13 @@ class Devices:
         Garnet = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 
     class _IonQ(str, Enum):
-        Harmony = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+        _Harmony = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
         Aria1 = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
         Aria2 = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2"
         Forte1 = "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1"
 
     class _OQC(str, Enum):
-        Lucy = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
+        _Lucy = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 
     class _QuEra(str, Enum):
         Aquila = "arn:aws:braket:us-east-1::device/qpu/quera/Aquila"
@@ -49,7 +49,8 @@ class Devices:
         _Aspen11 = "arn:aws:braket:::device/qpu/rigetti/Aspen-11"
         _AspenM1 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1"
         _AspenM2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2"
-        AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+        _AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+        Ankaa2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
 
     class _Xanadu(str, Enum):
         _Borealis = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
@@ -58,7 +59,7 @@ class Devices:
     # DWave = _DWave
     IonQ = _IonQ
     IQM = _IQM
-    OQC = _OQC
+    # OQC = _OQC
     QuEra = _QuEra
     Rigetti = _Rigetti
     # Xanadu = _Xanadu

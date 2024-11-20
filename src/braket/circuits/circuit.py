@@ -319,8 +319,8 @@ class Circuit:
             observable = Circuit._extract_observable(result_type_to_add)
             # We can skip this for now for AdjointGradient (the only subtype of this
             # type) because AdjointGradient can only be used when `shots=0`, and the
-            # qubit_observable_mapping is used to generate basis rotation instrunctions
-            # and make sure the observables are simultaneously commuting for `shots>0` mode.
+            # qubit_observable_mapping is used to generate basis rotation instructions
+            # and make sure the observables mutually commute for `shots>0` mode.
             supports_basis_rotation_instructions = not isinstance(
                 result_type_to_add, ObservableParameterResultType
             )
@@ -503,6 +503,11 @@ class Circuit:
 
         # Check if there is a measure instruction on the circuit
         self._check_if_qubit_measured(instruction, target, target_mapping)
+
+        # Update measure targets if instruction is a measurement
+        if isinstance(instruction.operator, Measure):
+            measure_target = target or instruction.target[0]
+            self._measure_targets = (self._measure_targets or []) + [measure_target]
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -710,10 +715,6 @@ class Circuit:
                     target=target,
                 )
             )
-            if self._measure_targets:
-                self._measure_targets.append(target)
-            else:
-                self._measure_targets = [target]
 
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
         """
