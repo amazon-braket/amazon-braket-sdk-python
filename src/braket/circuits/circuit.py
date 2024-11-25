@@ -1596,9 +1596,7 @@ class Circuit:  # noqa: PLR0904
     def __repr__(self) -> str:
         if not self.result_types:
             return f"Circuit('instructions': {self.instructions})"
-        return (
-            f"Circuit('instructions': {self.instructions}" f", 'result_types': {self.result_types})"
-        )
+        return f"Circuit('instructions': {self.instructions}, 'result_types': {self.result_types})"
 
     def __str__(self):
         return self.diagram()

@@ -42,8 +42,7 @@ def _add_footers(
     # A list of parameters in the circuit to the currently assigned values.
     if circuit.parameters:
         lines.append(
-            "\nUnassigned parameters: "
-            f"{sorted(circuit.parameters, key=lambda param: param.name)}."
+            f"\nUnassigned parameters: {sorted(circuit.parameters, key=lambda param: param.name)}."
         )
 
     return "\n".join(lines)

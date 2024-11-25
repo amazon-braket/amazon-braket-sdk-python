@@ -736,8 +736,7 @@ def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
         _ = device.run(circuit, shots=4)
 
     expected_warning = (
-        "The noise model of the device is applied to a circuit that already has noise "
-        "instructions."
+        "The noise model of the device is applied to a circuit that already has noise instructions."
     )
     expected_circuit = textwrap.dedent(
         """

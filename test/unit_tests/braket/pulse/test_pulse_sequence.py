@@ -139,8 +139,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             for parameter in reversed(list(pulse_sequence.parameters))
         ],
         "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
-        "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s,"
-        " sigma_dg * 1s, 0.2, 1, false);",
+        "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s, sigma_dg * 1s, 0.2, 1, false);",
         "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
         "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
         "    waveform erf_square_wf = erf_square(length_es * 1s, width_es * 1s, 2.0ns,"

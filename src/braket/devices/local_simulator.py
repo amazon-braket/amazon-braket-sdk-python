@@ -202,8 +202,7 @@ class LocalSimulator(Device):
                 param_names = {param.name for param in task_specification.parameters}
                 if unbounded_parameters := param_names - set(input_map.keys()):
                     raise ValueError(
-                        f"Cannot execute circuit with unbound parameters: "
-                        f"{unbounded_parameters}"
+                        f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                     )
             payloads.append(self._construct_payload(task_specification, input_map, shots))
 

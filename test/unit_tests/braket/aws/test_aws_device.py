@@ -2031,9 +2031,9 @@ def test_get_device_availability(mock_utc_now):
                 )
                 expected = bool(test_item[1][i])
                 actual = device.is_available
-                assert (
-                    expected == actual
-                ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                assert expected == actual, (
+                    f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                )
 
 
 @pytest.mark.parametrize(

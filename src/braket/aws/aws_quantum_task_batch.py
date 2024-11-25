@@ -71,14 +71,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,   # noqa: UP007
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            Optional[   # noqa: UP007
+            Optional[  # noqa: UP007
                 dict[tuple[Gate, QubitSet], PulseSequence]
                 | list[dict[tuple[Gate, QubitSet], PulseSequence]]
             ]
         ) = None,
-        reservation_arn: Optional[str] = None,   # noqa: UP007
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ):
@@ -164,8 +164,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         | list[
             Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         ],
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,   # noqa: UP007
-        gate_definitions: Optional[   # noqa: UP007
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
+        gate_definitions: Optional[  # noqa: UP007
             dict[tuple[Gate, QubitSet], PulseSequence]
             | list[dict[tuple[Gate, QubitSet], PulseSequence]]
         ] = None,
@@ -217,8 +217,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 param_names = {param.name for param in task_specification.parameters}
                 if unbounded_parameters := param_names - set(input_map.keys()):
                     raise ValueError(
-                        f"Cannot execute circuit with unbound parameters: "
-                        f"{unbounded_parameters}"
+                        f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                     )
 
         return tasks_inputs_definitions
@@ -243,12 +242,12 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
         gate_definitions: (
-            Optional[   # noqa: UP007
+            Optional[  # noqa: UP007
                 dict[tuple[Gate, QubitSet], PulseSequence]
                 | list[dict[tuple[Gate, QubitSet], PulseSequence]]
             ]
         ) = None,
-        reservation_arn: Optional[str] = None,   # noqa: UP007
+        reservation_arn: Optional[str] = None,  # noqa: UP007
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -304,8 +303,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float]] = None,   # noqa: UP007
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,   # noqa: UP007
+        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,  # noqa: UP007
         reservation_arn: str | None = None,
         *args,
         **kwargs,
