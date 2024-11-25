@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.88.2.post0 (2024-11-25)
+
+### Documentation Changes
+
+ * add dual navigation buttons and cleanup some docstrings
+
 ## v1.88.2 (2024-11-18)
 
 ### Bug Fixes and Other Changes
