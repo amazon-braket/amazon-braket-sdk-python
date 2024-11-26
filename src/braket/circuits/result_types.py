@@ -287,7 +287,7 @@ class Amplitude(ResultType):
             not state
             or not isinstance(state, list)
             or not all(
-                isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude)
+                isinstance(amplitude, str) and re.fullmatch(r"^[01]+$", amplitude)
                 for amplitude in state
             )
         ):

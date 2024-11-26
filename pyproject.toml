@@ -12,8 +12,6 @@ lint.ignore = [
   "ANN202", "ARG001", "ARG002",  # TODO after onboarding
   "ANN002",  # Missing tpye annotation for `*args` in method
   "ANN003",  # Missing tpye annotation for `**kwargs` in method
-  "ANN101",  # Missing type annotation for `self` in method
-  "ANN102",  # Missing type annotation for `cls` in classmethod"
   "ANN204",  # Special functions don't need return types
   "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `arg`"
   "B008",    # Logger deinition rework
