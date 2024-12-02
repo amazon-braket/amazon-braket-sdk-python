@@ -33,7 +33,9 @@ setup(
         "backoff",
         "boltons",
         "boto3>=1.28.53",
-        "cloudpickle>=3",
+        # SageMaker pinned cloudpickle==2.2.1
+        # see https://github.com/aws/sagemaker-python-sdk/issues/4871
+        "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
         "numpy",

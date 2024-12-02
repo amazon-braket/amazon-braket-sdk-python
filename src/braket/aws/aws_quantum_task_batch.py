@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -29,6 +29,14 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
+
+if TYPE_CHECKING:
+    from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
+        AnalogHamiltonianSimulationQuantumTaskResult,
+    )
+    from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
+    from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
+    from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
 
 
 class AwsQuantumTaskBatch(QuantumTaskBatch):
@@ -331,7 +339,12 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         fail_unsuccessful: bool = False,
         max_retries: int = MAX_RETRIES,
         use_cached_value: bool = True,
-    ) -> list[AwsQuantumTask]:
+    ) -> list[
+        GateModelQuantumTaskResult
+        | AnnealingQuantumTaskResult
+        | PhotonicModelQuantumTaskResult
+        | AnalogHamiltonianSimulationQuantumTaskResult
+    ]:
         """Retrieves the result of every quantum task in the batch.
 
         Polling for results happens in parallel; this method returns when all quantum tasks
@@ -348,7 +361,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 even when results have already been cached. Default: `True`.
 
         Returns:
-            list[AwsQuantumTask]: The results of all of the quantum tasks in the batch.
+            list[GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult | AnalogHamiltonianSimulationQuantumTaskResult]: The  # noqa: E501
+            results of all of the quantum tasks in the batch.
             `FAILED`, `CANCELLED`, or timed out quantum tasks will have a result of None
         """
         if not self._results or not use_cached_value:
@@ -369,7 +383,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return self._results
 
     @staticmethod
-    def _retrieve_results(tasks: list[AwsQuantumTask], max_workers: int) -> list[AwsQuantumTask]:
+    def _retrieve_results(
+        tasks: list[AwsQuantumTask], max_workers: int
+    ) -> list[
+        GateModelQuantumTaskResult
+        | AnnealingQuantumTaskResult
+        | PhotonicModelQuantumTaskResult
+        | AnalogHamiltonianSimulationQuantumTaskResult
+    ]:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             result_futures = [executor.submit(task.result) for task in tasks]
         return [future.result() for future in result_futures]

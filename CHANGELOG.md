@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.88.2.post0 (2024-11-25)
+
+### Documentation Changes
+
+ * add dual navigation buttons and cleanup some docstrings
+
+## v1.88.2 (2024-11-18)
+
+### Bug Fixes and Other Changes
+
+ * Pin cloudpickle==2.2.1
+
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
 ## v1.88.0 (2024-09-27)
 
 ### Deprecations and Removals
