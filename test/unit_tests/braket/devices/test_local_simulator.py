@@ -594,13 +594,30 @@ def test_run_serializable_program_model():
             source="""
 qubit[2] q;
 bit[2] c;
-
 h q[0];
 cnot q[0], q[1];
-
 c = measure q;
 """
         )
+    )
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_serializable_program_model_with_inputs():
+    dummy = DummySerializableProgramSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(
+        DummySerializableProgram(
+            source="""
+input float a;
+qubit[2] q;
+bit[2] c;
+h q[0];
+cnot q[0], q[1];
+c = measure q;
+"""
+        ),
+        inputs={"a": 0.1},
     )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 

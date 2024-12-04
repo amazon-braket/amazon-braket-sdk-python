@@ -319,8 +319,8 @@ class Circuit:
             observable = Circuit._extract_observable(result_type_to_add)
             # We can skip this for now for AdjointGradient (the only subtype of this
             # type) because AdjointGradient can only be used when `shots=0`, and the
-            # qubit_observable_mapping is used to generate basis rotation instrunctions
-            # and make sure the observables are simultaneously commuting for `shots>0` mode.
+            # qubit_observable_mapping is used to generate basis rotation instructions
+            # and make sure the observables mutually commute for `shots>0` mode.
             supports_basis_rotation_instructions = not isinstance(
                 result_type_to_add, ObservableParameterResultType
             )
@@ -1537,9 +1537,9 @@ class Circuit:
             `qubit count` > 10.
 
         Returns:
-            np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            circuit as a unitary. For an empty circuit, an empty numpy array is returned
-            (`array([], dtype=complex)`)
+            np.ndarray: A numpy array with shape (2 :sup:`qubit_count`, 2 :sup:`qubit_count`)
+            representing the circuit as a unitary. For an empty circuit, an empty numpy array
+            is returned (`array([], dtype=complex)`)
 
         Raises:
             TypeError: If circuit is not composed only of `Gate` instances,

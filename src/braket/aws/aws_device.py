@@ -88,6 +88,7 @@ class AwsDevice(Device):
         "Cz": "CZ",
         "Cphaseshift": "CPhaseShift",
         "Xy": "XY",
+        "Iswap": "ISwap",
     }
 
     def __init__(

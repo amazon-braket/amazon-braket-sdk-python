@@ -1,5 +1,68 @@
 # Changelog
 
+## v1.88.2.post0 (2024-11-25)
+
+### Documentation Changes
+
+ * add dual navigation buttons and cleanup some docstrings
+
+## v1.88.2 (2024-11-18)
+
+### Bug Fixes and Other Changes
+
+ * Pin cloudpickle==2.2.1
+
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
+## v1.88.0 (2024-09-27)
+
+### Deprecations and Removals
+
+ * Mark Aspen-M-3 as deprecated, replace with Ankaa-2 in tests
+
+### Bug Fixes and Other Changes
+
+ * Update pulse integration tests for Ankaa-2 device
+
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
+## v1.87.0 (2024-09-05)
+
+### Deprecations and Removals
+
+ * Retire IonQ Harmony
+
+### Bug Fixes and Other Changes
+
+ * Return observable target if absent for RT
+
+## v1.86.1 (2024-08-29)
+
+### Bug Fixes and Other Changes
+
+ * Use observable targets for targetless results
+
+## v1.86.0 (2024-08-26)
+
+### Features
+
+ * Rigetti Ankaa
+ * add off_center to erf_square
+
+## v1.85.0 (2024-08-20)
+
+### Features
+
+ * Allow early qubit binding of observables
+
 ## v1.84.0 (2024-07-30)
 
 ### Features
