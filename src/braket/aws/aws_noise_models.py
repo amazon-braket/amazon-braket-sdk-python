@@ -30,7 +30,7 @@ from braket.devices import Devices
  calibration data and must be hardcoded.
 """
 _QPU_GATE_DURATIONS = {
-    Devices.Rigetti.AspenM3: {
+    Devices.Rigetti.Ankaa2: {
         "single_qubit_gate_duration": 40e-9,
         "two_qubit_gate_duration": 240e-9,
     },
