@@ -58,7 +58,7 @@ def save_job_checkpoint(
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
-    with open(checkpoint_file_path, "w") as f:
+    with open(checkpoint_file_path, "w", encoding="utf-8") as f:
         serialized_data = serialize_values(checkpoint_data or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())
@@ -102,18 +102,15 @@ def load_job_checkpoint(
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
-    with open(checkpoint_file_path) as f:
+    with open(checkpoint_file_path, encoding="utf-8") as f:
         persisted_data = PersistedJobData.parse_raw(f.read())
-        deserialized_data = deserialize_values(
-            persisted_data.dataDictionary, persisted_data.dataFormat
-        )
-        return deserialized_data
+        return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
 
 
 def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData:
     filename = filename or Path(get_results_dir()) / "results.json"
     try:
-        with open(filename) as f:
+        with open(filename, encoding="utf-8") as f:
             return PersistedJobData.parse_raw(f.read())
     except FileNotFoundError:
         return PersistedJobData(
@@ -134,8 +131,7 @@ def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
         dict[str, Any]: Job result data of current job
     """
     persisted_data = _load_persisted_data(filename)
-    deserialized_data = deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
-    return deserialized_data
+    return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
 
 
 def save_job_result(
@@ -186,7 +182,7 @@ def save_job_result(
     )
     updated_results = current_results | result_data
 
-    with open(Path(get_results_dir()) / "results.json", "w") as f:
+    with open(Path(get_results_dir()) / "results.json", "w", encoding="utf-8") as f:
         serialized_data = serialize_values(updated_results or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())

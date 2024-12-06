@@ -471,20 +471,20 @@ def test_remove_noise_at_invalid_index():
     assert not "should not get here"
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_invalid_noise():
     noise_model = NoiseModel()
-    noise_model.add_noise(Mock(), Mock(spec=Criteria))
+    with pytest.raises(TypeError):
+        noise_model.add_noise(Mock(), Mock(spec=Criteria))
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_invalid_criteria():
     noise_model = NoiseModel()
-    noise_model.add_noise(Mock(spec=Noise), Mock())
+    with pytest.raises(TypeError):
+        noise_model.add_noise(Mock(spec=Noise), Mock())
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_apply_to_circuit_list():
     noise_model = NoiseModel()
-    noise_model.add_noise(Mock(), Mock(spec=Criteria))
-    noise_model.apply([])
+    with pytest.raises(TypeError):
+        noise_model.add_noise(Mock(), Mock(spec=Criteria))
+        noise_model.apply([])

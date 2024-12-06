@@ -60,17 +60,16 @@ def test_filter(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0]))
     calibration_key_2 = (Gate.H(), QubitSet([1]))
     calibration_key_3 = (Gate.CZ(), QubitSet([0, 1]))
-    calibration = GateCalibrations(
-        {
-            calibration_key: pulse_sequence,
-            calibration_key_2: pulse_sequence,
-            calibration_key_3: pulse_sequence,
-        }
-    )
+    calibration = GateCalibrations({
+        calibration_key: pulse_sequence,
+        calibration_key_2: pulse_sequence,
+        calibration_key_3: pulse_sequence,
+    })
     expected_calibration_1 = GateCalibrations({calibration_key: pulse_sequence})
-    expected_calibration_2 = GateCalibrations(
-        {calibration_key: pulse_sequence, calibration_key_3: pulse_sequence}
-    )
+    expected_calibration_2 = GateCalibrations({
+        calibration_key: pulse_sequence,
+        calibration_key_3: pulse_sequence,
+    })
     expected_calibration_3 = GateCalibrations({calibration_key_2: pulse_sequence})
     expected_calibration_4 = GateCalibrations({})
     expected_calibration_5 = calibration
@@ -86,15 +85,13 @@ def test_filter(pulse_sequence):
 def test_to_ir(pulse_sequence):
     calibration_key = (Gate.Rx(angle=1), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
-    expected_ir = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "defcal rx(1.0) $0, $1 {",
-            "    barrier test_frame_rf;",
-            "    delay[1000s] test_frame_rf;",
-            "}",
-        ]
-    )
+    expected_ir = "\n".join([
+        "OPENQASM 3.0;",
+        "defcal rx(1.0) $0, $1 {",
+        "    barrier test_frame_rf;",
+        "    delay[1000s] test_frame_rf;",
+        "}",
+    ])
 
     assert calibration.to_ir() == expected_ir
 
@@ -103,45 +100,44 @@ def test_to_ir(pulse_sequence):
 def test_to_ir_with_bad_key(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations(
-        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
-    )
-    expected_ir = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "defcal z $0, $1 {",
-            "    barrier test_frame_rf;",
-            "    delay[1000s] test_frame_rf;",
-            "}",
-        ]
-    )
+    calibration = GateCalibrations({
+        calibration_key: pulse_sequence,
+        calibration_key_2: pulse_sequence,
+    })
+    expected_ir = "\n".join([
+        "OPENQASM 3.0;",
+        "defcal z $0, $1 {",
+        "    barrier test_frame_rf;",
+        "    delay[1000s] test_frame_rf;",
+        "}",
+    ])
     assert expected_ir == calibration.to_ir((Gate.Z(), QubitSet([1, 2])))
 
 
 def test_to_ir_with_key(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations(
-        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
-    )
-    expected_ir = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "defcal z $0, $1 {",
-            "    barrier test_frame_rf;",
-            "    delay[1000s] test_frame_rf;",
-            "}",
-        ]
-    )
+    calibration = GateCalibrations({
+        calibration_key: pulse_sequence,
+        calibration_key_2: pulse_sequence,
+    })
+    expected_ir = "\n".join([
+        "OPENQASM 3.0;",
+        "defcal z $0, $1 {",
+        "    barrier test_frame_rf;",
+        "    delay[1000s] test_frame_rf;",
+        "}",
+    ])
     assert expected_ir == calibration.to_ir(calibration_key)
 
 
 def test_gate_calibrations_length(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations(
-        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
-    )
+    calibration = GateCalibrations({
+        calibration_key: pulse_sequence,
+        calibration_key_2: pulse_sequence,
+    })
 
     assert len(calibration) == 2
 
