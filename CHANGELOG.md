@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.88.3 (2024-12-06)
+
+### Bug Fixes and Other Changes
+
+ * increase timeout for tasks to avoid async polling timeout during…
+
 ## v1.88.2.post0 (2024-11-25)
 
 ### Documentation Changes

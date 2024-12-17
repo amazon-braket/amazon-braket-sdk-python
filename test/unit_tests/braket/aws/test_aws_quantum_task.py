@@ -91,7 +91,7 @@ def quantum_task_quiet(aws_session):
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=4)
 
 
 @pytest.fixture
