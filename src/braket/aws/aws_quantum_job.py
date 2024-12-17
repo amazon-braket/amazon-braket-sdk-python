@@ -470,7 +470,7 @@ class AwsQuantumJob(QuantumJob):
         if "startedAt" in metadata:
             job_start = int(metadata["startedAt"].timestamp())
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
-            job_end = int(math.ceil(metadata["endedAt"].timestamp()))
+            job_end = math.ceil(metadata["endedAt"].timestamp())
         return fetcher.get_metrics_for_job(
             self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
         )

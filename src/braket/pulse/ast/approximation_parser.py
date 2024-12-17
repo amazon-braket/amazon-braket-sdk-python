@@ -331,7 +331,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
         Returns:
             list[Any]: The parsed ArrayLiteral.
         """
-        return [self.visit(e, context) for e in node.values]  # noqa: PD011
+        return [self.visit(e, context) for e in node.values]
 
     def visit_IntegerLiteral(self, node: ast.IntegerLiteral, context: _ParseState) -> int:
         """Visit Integer Literal.

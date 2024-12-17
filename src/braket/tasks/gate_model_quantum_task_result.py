@@ -206,7 +206,7 @@ class GateModelQuantumTaskResult:
         measurements_list = []
         for bitstring, prob in measurement_probabilities.items():
             measurement = list(bitstring)
-            individual_measurement_list = [measurement] * int(round(prob * shots))
+            individual_measurement_list = [measurement] * round(prob * shots)
             measurements_list.extend(individual_measurement_list)
         return np.asarray(measurements_list, dtype=int)
 

@@ -416,8 +416,7 @@ def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
             "tags",
             "logger",
         ]:
-            if aws_only_arg in job_args:
-                del job_args[aws_only_arg]
+            job_args.pop(aws_only_arg, None)
         return LocalQuantumJob.create(**job_args)
     from braket.aws import AwsQuantumJob  # noqa: PLC0415
 
