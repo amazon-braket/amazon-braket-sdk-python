@@ -35,8 +35,6 @@ exclude_lines =
     # Avoid type checking import conditionals
     if TYPE_CHECKING:
 
-
-
 [html]
 directory = build/coverage
 
