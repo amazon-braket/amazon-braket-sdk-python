@@ -29,7 +29,7 @@ class InstanceConfig:
     """Configuration of the instance(s) used to run the hybrid job."""
 
     instanceType: str = "ml.m5.large"
-    volumeSizeInGb: int = 30
+    volumeSizeInGB: int = 30
     instanceCount: int = 1
 
 
