@@ -88,7 +88,7 @@ def generate_get_job_response():
             "instanceConfig": {
                 "instanceCount": 1,
                 "instanceType": "ml.m5.large",
-                "volumeSizeInGb": 1,
+                "volumeSizeInGB": 1,
             },
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
