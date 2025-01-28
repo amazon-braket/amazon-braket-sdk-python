@@ -41,7 +41,7 @@ setup(
         "numpy",
         "openpulse",
         "openqasm3",
-        "sympy==1.13.3",
+        "sympy",
         "backports.entry-points-selectable",
     ],
     extras_require={
