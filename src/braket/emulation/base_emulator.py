@@ -1,16 +1,28 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from typing import Iterable, Union
 
-from braket.emulation.emulation_passes import ValidationPass
-from braket.passes import BasePass, ProgramType
+from braket.passes import BasePass, ProgramType, ValidationPass
 
 
 class BaseEmulator:
     def __init__(self, emulator_passes: Iterable[BasePass] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
-    def run_passes(self, task_specification: ProgramType) -> ProgramType:
+    def transform(self, task_specification: ProgramType) -> ProgramType:
         """
         This method passes the input program through the Passes contained
         within this emulator. An emulator pass may simply validate a program or may

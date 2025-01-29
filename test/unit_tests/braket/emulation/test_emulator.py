@@ -10,8 +10,8 @@ from braket.circuits.noises import BitFlip
 from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulator
 from braket.devices import local_simulator
 from braket.emulation import Emulator
-from braket.emulation.emulation_passes.gate_device_passes import GateValidator, QubitCountValidator
 from braket.passes import BasePass, ProgramType
+from braket.passes.circuit_passes import GateValidator, QubitCountValidator
 
 
 class AlwaysFailPass(BasePass[ProgramType]):
@@ -51,7 +51,7 @@ def test_basic_emulator(basic_emulator):
     Should not error out when passed a valid circuit.
     """
     circuit = Circuit().cnot(0, 1)
-    circuit = basic_emulator.run_passes(circuit)
+    circuit = basic_emulator.transform(circuit)
     assert circuit == circuit
 
 
@@ -65,7 +65,7 @@ def test_basic_invalidate(basic_emulator):
 but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
     )
     with pytest.raises(Exception, match=match_string):
-        basic_emulator.run_passes(circuit)
+        basic_emulator.transform(circuit)
 
 
 def test_add_pass_single(empty_emulator):
@@ -134,13 +134,13 @@ def test_apply_noise_model(setup_local_simulator_devices):
     emulator = Emulator(noise_model=noise_model)
 
     circuit = Circuit().h(0)
-    circuit = emulator.run_passes(circuit)
+    circuit = emulator.transform(circuit)
 
     noisy_circuit = Circuit().h(0).apply_gate_noise(BitFlip(0.1), Gate.H)
     assert circuit == noisy_circuit
 
     circuit = Circuit().h(0)
-    circuit = emulator.run_passes(circuit, apply_noise_model=False)
+    circuit = emulator.transform(circuit, apply_noise_model=False)
 
     target_circ = Circuit().h(0)
     assert circuit == target_circ

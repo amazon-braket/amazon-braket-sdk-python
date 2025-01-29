@@ -1,3 +1,16 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 import logging
@@ -91,7 +104,7 @@ class Emulator(Device, BaseEmulator):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
-        task_specification = self.run_passes(task_specification, apply_noise_model=False)
+        task_specification = self.transform(task_specification, apply_noise_model=False)
         # Don't apply noise model as the local simulator will automatically apply it.
         return self._backend.run(task_specification, shots, inputs, *args, **kwargs)
 
@@ -139,7 +152,7 @@ class Emulator(Device, BaseEmulator):
         self._noise_model = noise_model
         self._backend = LocalSimulator(backend="braket_dm", noise_model=noise_model)
 
-    def run_passes(
+    def transform(
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """
@@ -158,7 +171,7 @@ class Emulator(Device, BaseEmulator):
             exists for this emulator and apply_noise_model is true.
         """
         try:
-            program = super().run_passes(task_specification)
+            program = super().transform(task_specification)
             if apply_noise_model and self.noise_model:
                 return self._noise_model.apply(program)
             return program

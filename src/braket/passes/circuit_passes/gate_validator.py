@@ -1,3 +1,16 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from collections.abc import Iterable
 from typing import Optional
 
@@ -5,7 +18,7 @@ from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.circuits.translations import BRAKET_GATES
-from braket.emulation.emulation_passes import ValidationPass
+from braket.passes import ValidationPass
 
 
 class GateValidator(ValidationPass[Circuit]):

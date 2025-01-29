@@ -951,7 +951,7 @@ class AwsDevice(Device):
             operations to mimic noise on this device.
         """
         task_specification = deepcopy(task_specification)
-        return self.emulator.run_passes(task_specification, apply_noise_model)
+        return self.emulator.transform(task_specification, apply_noise_model)
 
     def emulate(
         self,
