@@ -53,7 +53,7 @@ def test_measure_on_local_sim(sim):
     assert result.measured_qubits == [0, 1]
 
 
-@pytest.mark.parametrize("arn", [(IQM_ARN)])
+@pytest.mark.parametrize("arn", [IQM_ARN])
 def test_measure_on_supported_devices(arn):
     device = AwsDevice(arn)
     if not device.is_available:
