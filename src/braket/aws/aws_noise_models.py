@@ -1,10 +1,23 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from dataclasses import dataclass
 from functools import singledispatch
 from typing import Dict, List, Set, Tuple, Union
 
 import numpy as np
 
-from braket.aws.aws_emulation import _get_qpu_gate_translations
+from braket.aws._aws_device_constants import _QPU_GATE_DURATIONS, _get_qpu_gate_translations
 from braket.circuits import Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -23,19 +36,6 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     StandardizedGateModelQpuDeviceProperties,
 )
-from braket.devices import Devices
-
-"""
- The following gate duration values are not available through Braket device
- calibration data and must be hardcoded.
-"""
-_QPU_GATE_DURATIONS = {
-    Devices.Rigetti.Ankaa2: {
-        "single_qubit_gate_duration": 40e-9,
-        "two_qubit_gate_duration": 240e-9,
-    },
-    Devices.IQM.Garnet: {"single_qubit_gate_duration": 32e-9, "two_qubit_gate_duration": 60e-9},
-}
 
 
 @dataclass

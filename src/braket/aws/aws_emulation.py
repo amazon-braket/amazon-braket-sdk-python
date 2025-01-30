@@ -11,12 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from collections.abc import Iterable
 from functools import singledispatch
-from typing import Union
 
 from networkx import DiGraph
 
+from braket.aws._aws_device_constants import _get_qpu_gate_translations
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.iqm import IqmDeviceCapabilities
@@ -176,52 +175,3 @@ def _(properties: IonqDeviceCapabilities, connectivity_graph: DiGraph) -> GateCo
         gate_connectivity_graph[edge[0]][edge[1]]["supported_gates"] = set(native_gates)
 
     return GateConnectivityValidator(gate_connectivity_graph)
-
-
-def _get_qpu_gate_translations(
-    properties: DeviceCapabilities, gate_name: Union[str, Iterable[str]]
-) -> Union[str, list[str]]:
-    """Returns the translated gate name(s) for a given QPU device capabilities schema type
-        and gate name(s).
-
-    Args:
-        properties (DeviceCapabilities): Device capabilities object based on a
-            device-specific schema.
-        gate_name (Union[str, Iterable[str]]): The name(s) of the gate(s). If gate_name is a list
-            of string gate names, this function attempts to retrieve translations of all the gate
-            names.
-
-    Returns:
-        Union[str, list[str]]: The translated gate name(s)
-    """
-    if isinstance(gate_name, str):
-        return _get_qpu_gate_translation(properties, gate_name)
-    else:
-        return [_get_qpu_gate_translation(properties, name) for name in gate_name]
-
-
-@singledispatch
-def _get_qpu_gate_translation(properties: DeviceCapabilities, gate_name: str) -> str:
-    """Returns the translated gate name for a given QPU ARN and gate name.
-
-    Args:
-        properties (DeviceCapabilities): QPU Device Capabilities object with a
-            QHP-specific schema.
-        gate_name (str): The name of the gate
-
-    Returns:
-        str: The translated gate name
-    """
-    return gate_name
-
-
-@_get_qpu_gate_translation.register(RigettiDeviceCapabilities)
-def _(properties: RigettiDeviceCapabilities, gate_name: str) -> str:
-    translations = {"CPHASE": "CPhaseShift"}
-    return translations.get(gate_name, gate_name)
-
-
-@_get_qpu_gate_translation.register(IonqDeviceCapabilities)
-def _(properties: IonqDeviceCapabilities, gate_name: str) -> str:
-    translations = {"GPI": "GPi", "GPI2": "GPi2"}
-    return translations.get(gate_name, gate_name)
