@@ -7,13 +7,6 @@ import pytest
 from common_test_utils import RIGETTI_ARN, RIGETTI_REGION
 
 from braket.aws import AwsDevice
-from braket.aws._aws_device_constants import _get_qpu_gate_translations
-from braket.aws.aws_noise_models import (
-    GateDeviceCalibrationData,
-    GateFidelity,
-    _setup_calibration_specs,
-    device_noise_model,
-)
 from braket.circuits import Circuit, Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -29,6 +22,13 @@ from braket.device_schema.ionq import IonqDeviceCapabilities, IonqDeviceParamete
 from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.devices import Devices
+from braket.devices._aws_device_constants import _get_qpu_gate_translations
+from braket.devices.device_noise_models import (
+    GateDeviceCalibrationData,
+    GateFidelity,
+    _setup_calibration_specs,
+    device_noise_model,
+)
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation import Emulator
 from braket.passes.circuit_passes import (
@@ -41,7 +41,7 @@ from braket.passes.circuit_passes import (
 REGION = "us-west-1"
 
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/Forte1"
-IQM_ARN = "arn:aws:braket:::device/qpu/iqm/Garent"
+IQM_ARN = "arn:aws:braket:::device/qpu/iqm/Garnet"
 
 
 MOCK_QPU_GATE_DURATIONS = {
@@ -405,7 +405,7 @@ def ionq_target_noise_model(ionq_device_capabilities):
     return target_noise_model
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 def test_standardized_noise_model(rigetti_device_capabilities, rigetti_target_noise_model):
     noise_model = device_noise_model(rigetti_device_capabilities, RIGETTI_ARN)
 
@@ -458,7 +458,7 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 @pytest.fixture
 def mock_rigetti_qpu_device(rigetti_device_capabilities):
     return {
-        "deviceName": "Aspen-M3",
+        "deviceName": "Ankaa-2",
         "deviceType": "QPU",
         "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",
@@ -585,7 +585,7 @@ def test_ionq_emulator(ionq_device):
     emulator._emulator_passes == target_emulator_passes
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 def test_rigetti_emulator(rigetti_device, rigetti_target_noise_model):
     emulator = rigetti_device.emulator
     assert emulator.noise_model
@@ -623,7 +623,7 @@ def test_rigetti_emulator(rigetti_device, rigetti_target_noise_model):
     assert emulator._emulator_passes == target_emulator_passes
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 def test_iqm_emulator(iqm_device, iqm_target_noise_model):
     emulator = iqm_device.emulator
     assert emulator.noise_model
@@ -674,7 +674,7 @@ def test_get_gate_translations(device_capabilities, gate_name, expected_result, 
     assert _get_qpu_gate_translations(device_capabilities_obj, gate_name) == expected_result
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 @pytest.mark.parametrize(
     "circuit,is_valid",
     [
@@ -691,13 +691,13 @@ def test_get_gate_translations(device_capabilities, gate_name, expected_result, 
 def test_emulator_passes(circuit, is_valid, rigetti_device):
     if is_valid:
         rigetti_device.validate(circuit)
-        assert rigetti_device.run_passes(circuit, apply_noise_model=False) == circuit
+        assert rigetti_device.transform(circuit, apply_noise_model=False) == circuit
     else:
         with pytest.raises(Exception):
             rigetti_device.validate(circuit)
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 @patch.object(LocalSimulator, "run")
 def test_device_emulate(mock_run, rigetti_device):
     circuit = Circuit().h(0).cnot(0, 1)
@@ -705,7 +705,7 @@ def test_device_emulate(mock_run, rigetti_device):
     mock_run.assert_called_once()
 
 
-@patch.dict("braket.aws.aws_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
+@patch.dict("braket.devices.device_noise_models._QPU_GATE_DURATIONS", MOCK_QPU_GATE_DURATIONS)
 @patch.object(AwsDevice, "_setup_emulator", return_value=Emulator())
 def test_get_emulator_multiple(mock_setup, rigetti_device):
     emulator = rigetti_device.emulator

@@ -28,13 +28,6 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.aws.aws_emulation import (
-    connectivity_validator,
-    gate_connectivity_validator,
-    gate_validator,
-    qubit_count_validator,
-)
-from braket.aws.aws_noise_models import device_noise_model
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
@@ -49,6 +42,13 @@ from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.devices import Devices
 from braket.devices.device import Device
+from braket.devices.device_noise_models import device_noise_model
+from braket.devices.device_validators import (
+    connectivity_validator,
+    gate_connectivity_validator,
+    gate_validator,
+    qubit_count_validator,
+)
 from braket.emulation import Emulator
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -932,7 +932,7 @@ class AwsDevice(Device):
         """
         self.emulator.validate(task_specification)
 
-    def run_passes(
+    def transform(
         self, task_specification: ProgramType, apply_noise_model: bool = True
     ) -> ProgramType:
         """

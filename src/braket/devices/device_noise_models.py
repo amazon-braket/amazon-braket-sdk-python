@@ -17,7 +17,6 @@ from typing import Dict, List, Set, Tuple, Union
 
 import numpy as np
 
-from braket.aws._aws_device_constants import _QPU_GATE_DURATIONS, _get_qpu_gate_translations
 from braket.circuits import Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -36,6 +35,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     StandardizedGateModelQpuDeviceProperties,
 )
+from braket.devices._aws_device_constants import _QPU_GATE_DURATIONS, _get_qpu_gate_translations
 
 
 @dataclass
@@ -113,7 +113,9 @@ def _setup_calibration_specs(properties: DeviceCapabilities, arn: str) -> NoiseM
 
 @_setup_calibration_specs.register(RigettiDeviceCapabilities)
 @_setup_calibration_specs.register(IqmDeviceCapabilities)
-def _(properties: Union[RigettiDeviceCapabilities, IqmDeviceCapabilities], arn: str) -> NoiseModel:
+def _(
+    properties: Union[RigettiDeviceCapabilities, IqmDeviceCapabilities], arn: str
+) -> GateDeviceCalibrationData:
     gate_durations = _QPU_GATE_DURATIONS.get(arn, None)
     if not gate_durations:
         raise ValueError(f"Gate durations are not available for device {arn}")

@@ -15,11 +15,11 @@ from functools import singledispatch
 
 from networkx import DiGraph
 
-from braket.aws._aws_device_constants import _get_qpu_gate_translations
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.ionq import IonqDeviceCapabilities
 from braket.device_schema.iqm import IqmDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
+from braket.devices._aws_device_constants import _get_qpu_gate_translations
 from braket.passes.circuit_passes import (
     ConnectivityValidator,
     GateConnectivityValidator,

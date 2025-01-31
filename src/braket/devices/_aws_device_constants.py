@@ -11,6 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+# This file contains hardcoded values for Amazon Braket devices;
+# remove when these values are available in device capabilities
+
 from collections.abc import Iterable
 from functools import singledispatch
 
