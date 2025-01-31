@@ -37,7 +37,7 @@ def test_device_creation(arn, created_braket_devices):
     assert device.properties
 
 
-@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+@pytest.mark.parametrize("arn", [PULSE_ARN])
 def test_device_pulse_properties(arn, aws_session, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.ports
@@ -57,7 +57,7 @@ def test_get_devices_arn(arn):
     assert results[0].arn == arn
 
 
-@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+@pytest.mark.parametrize("arn", [PULSE_ARN])
 def test_device_gate_calibrations(arn, aws_session, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.gate_calibrations

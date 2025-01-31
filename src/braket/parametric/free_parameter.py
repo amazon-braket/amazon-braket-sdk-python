@@ -108,7 +108,7 @@ class FreeParameter(FreeParameterExpression):
 
         Examples:
             >>> param1 = FreeParameter("theta")
-            >>> param1 = FreeParameter("\u03B8")
+            >>> param1 = FreeParameter("\u03b8")
         """
         self._set_name(name)
         super().__init__(expression=self._name)
