@@ -110,7 +110,7 @@ def test_one_gate_with_zero_global_phase():
 
 
 def test_one_gate_one_qubit_rotation_with_unicode():
-    theta = FreeParameter("\u03B8")
+    theta = FreeParameter("\u03b8")
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
@@ -126,7 +126,7 @@ def test_one_gate_one_qubit_rotation_with_unicode():
 
 
 def test_one_gate_with_parametric_expression_global_phase_():
-    theta = FreeParameter("\u03B8")
+    theta = FreeParameter("\u03b8")
     circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
     expected = (
         "T  : │  0  │  1  │    2    │",
