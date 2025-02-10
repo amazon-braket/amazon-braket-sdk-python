@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.89.1 (2025-02-10)
+
+### Bug Fixes and Other Changes
+
+ * decorator job with no inner function
+
 ## v1.89.0 (2025-02-10)
 
 ### Deprecations and Removals
