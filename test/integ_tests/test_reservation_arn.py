@@ -64,7 +64,7 @@ def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
 
         @hybrid_job(
-            device=Devices.IonQ.Aria1,
+            device=Devices.IQM.Garnet,
             reservation_arn=reservation_arn,
         )
         def hello_job():
