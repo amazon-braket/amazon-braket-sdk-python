@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.89.0 (2025-02-10)
+
+### Deprecations and Removals
+
+ * Ankaa-2
+
+### Features
+
+ * support CUDA-Q decorator kernel with hybrid job decorator
+
 ## v1.88.3 (2024-12-06)
 
 ### Bug Fixes and Other Changes
