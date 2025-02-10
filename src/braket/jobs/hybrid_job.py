@@ -262,14 +262,17 @@ def persist_inner_function_source(entry_point: callable) -> None:
     """
     inner_source_mapping = _get_inner_function_source(entry_point.__code__)
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        copy_dir = f"{temp_dir}/{INNER_FUNCTION_SOURCE_INPUT_FOLDER}"
-        os.mkdir(copy_dir)
-        path_mapping = _save_inner_source_to_file(inner_source_mapping, copy_dir)
-        entry_point.__code__ = _replace_inner_function_source_path(
-            entry_point.__code__, path_mapping
-        )
-        yield {INNER_FUNCTION_SOURCE_INPUT_CHANNEL: copy_dir}
+    if len(inner_source_mapping)==0:
+        yield {}
+    else:
+        with tempfile.TemporaryDirectory(dir="", prefix="decorator_job_inner_source_") as temp_dir:
+            copy_dir = f"{temp_dir}/{INNER_FUNCTION_SOURCE_INPUT_FOLDER}"
+            os.mkdir(copy_dir)
+            path_mapping = _save_inner_source_to_file(inner_source_mapping, copy_dir)
+            entry_point.__code__ = _replace_inner_function_source_path(
+                entry_point.__code__, path_mapping
+            )
+            yield {INNER_FUNCTION_SOURCE_INPUT_CHANNEL: copy_dir}
 
 
 def _replace_inner_function_source_path(
