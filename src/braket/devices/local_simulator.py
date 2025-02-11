@@ -60,7 +60,7 @@ class LocalSimulator(Device):
     def __init__(
         self,
         backend: str | BraketSimulator = "default",
-        noise_model: Optional[NoiseModel] = None,  # noqa: UP007
+        noise_model: Optional[NoiseModel] = None,
     ):
         """Initializes a `LocalSimulator`.
 
@@ -90,7 +90,7 @@ class LocalSimulator(Device):
         | AnalogHamiltonianSimulation
         | SerializableProgram,
         shots: int = 0,
-        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
+        inputs: Optional[dict[str, float]] = None,
         *args: Any,
         **kwargs: Any,
     ) -> LocalQuantumTask:
@@ -258,7 +258,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: Optional[int]):  # noqa: UP007
+    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: Optional[int]):
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
@@ -271,7 +271,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register
-    def _(self, program: OpenQASMProgram, inputs: Optional[dict[str, float]], _shots: int):  # noqa: UP007
+    def _(self, program: OpenQASMProgram, inputs: Optional[dict[str, float]], _shots: int):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
@@ -285,7 +285,7 @@ class LocalSimulator(Device):
         return program
 
     @_construct_payload.register
-    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots: int):  # noqa: UP007
+    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots: int):
         inputs_copy = inputs.copy() if inputs is not None else {}
         return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM), inputs=inputs_copy)
 

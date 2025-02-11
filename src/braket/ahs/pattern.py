@@ -35,7 +35,7 @@ class Pattern:
         """
         return self._series
 
-    def discretize(self, resolution: Optional[Decimal]) -> Pattern:  # noqa: UP007
+    def discretize(self, resolution: Optional[Decimal]) -> Pattern:
         """Creates a discretized version of the pattern,
         where each value is rounded to the closest multiple
         of the resolution.

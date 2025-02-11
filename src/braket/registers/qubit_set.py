@@ -61,7 +61,7 @@ class QubitSet(IndexedSet):
             Qubit(2)
             Qubit(3)
         """
-        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None  # noqa: RUF052
+        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None
         super().__init__(_qubits)
 
     def map(self, mapping: dict[QubitInput, QubitInput]) -> QubitSet:

@@ -70,7 +70,7 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET: ClassVar[Optional[dict[str, str]]] = {  # noqa: UP007
+    _RIGETTI_GATES_TO_BRAKET: ClassVar[Optional[dict[str, str]]] = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -82,8 +82,8 @@ class AwsDevice(Device):
     def __init__(
         self,
         arn: str,
-        aws_session: Optional[AwsSession] = None,  # noqa: UP007
-        noise_model: Optional[NoiseModel] = None,  # noqa: UP007
+        aws_session: Optional[AwsSession] = None,
+        noise_model: Optional[NoiseModel] = None,
     ):
         """Initializes an `AwsDevice`.
 
@@ -126,13 +126,13 @@ class AwsDevice(Device):
         | BlackbirdProgram
         | PulseSequence
         | AnalogHamiltonianSimulation,
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,  # noqa: UP007
-        shots: Optional[int] = None,  # noqa: UP007
+        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
+        shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[float] = None,  # noqa: UP007
-        inputs: Optional[dict[str, float]] = None,  # noqa: UP007
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,  # noqa: UP007
-        reservation_arn: Optional[str] = None,  # noqa: UP007
+        poll_interval_seconds: Optional[float] = None,
+        inputs: Optional[dict[str, float]] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
@@ -240,15 +240,15 @@ class AwsDevice(Device):
             | PulseSequence
             | AnalogHamiltonianSimulation
         ],
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,  # noqa: UP007
-        shots: Optional[int] = None,  # noqa: UP007
-        max_parallel: Optional[int] = None,  # noqa: UP007
+        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
+        shots: Optional[int] = None,
+        max_parallel: Optional[int] = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,  # noqa: UP007
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,  # noqa: UP007
-        reservation_arn: Optional[str] = None,  # noqa: UP007
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -410,7 +410,7 @@ class AwsDevice(Device):
         return self._arn
 
     @property
-    def gate_calibrations(self) -> Optional[GateCalibrations]:  # noqa: UP007
+    def gate_calibrations(self) -> Optional[GateCalibrations]:
         """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
         If a QPU does not expose these calibrations, None is returned.
 
@@ -575,13 +575,13 @@ class AwsDevice(Device):
 
     @staticmethod
     def get_devices(
-        arns: Optional[list[str]] = None,  # noqa: UP007
-        names: Optional[list[str]] = None,  # noqa: UP007
-        types: Optional[list[AwsDeviceType]] = None,  # noqa: UP007
-        statuses: Optional[list[str]] = None,  # noqa: UP007
-        provider_names: Optional[list[str]] = None,  # noqa: UP007
+        arns: Optional[list[str]] = None,
+        names: Optional[list[str]] = None,
+        types: Optional[list[AwsDeviceType]] = None,
+        statuses: Optional[list[str]] = None,
+        provider_names: Optional[list[str]] = None,
         order_by: str = "name",
-        aws_session: Optional[AwsSession] = None,  # noqa: UP007
+        aws_session: Optional[AwsSession] = None,
     ) -> list[AwsDevice]:
         """Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
@@ -755,7 +755,7 @@ class AwsDevice(Device):
 
         return QueueDepthInfo(**queue_info)
 
-    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:  # noqa: UP007
+    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
         """Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.

@@ -74,6 +74,7 @@ lint.isort = { known-first-party = [
   "tests",
 ] }
 lint.preview = true
+lint.pyupgrade.keep-runtime-typing = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
