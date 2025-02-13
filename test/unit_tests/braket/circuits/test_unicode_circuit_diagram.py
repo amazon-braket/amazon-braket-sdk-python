@@ -51,6 +51,21 @@ def test_one_gate_one_qubit():
     _assert_correct_diagram(circ, expected)
 
 
+def test_barrier_circuit_visualization():
+    circ = Circuit().barrier(target=[0, 100])
+    expected = (
+        "T    : │  0   │",
+        "               ",
+        "q0   : ───▒────",
+        "          │    ",
+        "          │    ",
+        "q100 : ───▒────",
+        "               ",
+        "T    : │  0   │",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_one_gate_one_qubit_rotation():
     circ = Circuit().rx(angle=3.14, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
