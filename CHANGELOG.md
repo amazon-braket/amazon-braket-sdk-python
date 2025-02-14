@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.90.0 (2025-02-14)
+
+### Features
+
+ * added ankaa-3 to enum
+
 ## v1.89.1 (2025-02-10)
 
 ### Bug Fixes and Other Changes
