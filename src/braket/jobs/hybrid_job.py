@@ -196,7 +196,6 @@ def hybrid_job(
                 tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
                 persist_inner_function_source(entry_point) as inner_source_input,
             ):
-
                 job_input_data = _add_inner_function_source_to_input_data(
                     input_data, inner_source_input
                 )
@@ -255,6 +254,10 @@ def persist_inner_function_source(entry_point: callable) -> None:
     and replace the source file path with the saved one.
     Args:
         entry_point (callable): The job decorated function.
+
+    Yields:
+        dict: if the inner function exists, a mapping of the input channel to the copy directory.
+            Otherwise an empty dict
     """
     inner_source_mapping = _get_inner_function_source(entry_point.__code__)
 
@@ -287,12 +290,11 @@ def _replace_inner_function_source_path(
     for const in code_object.co_consts:
         if inspect.iscode(const):
             new_path = path_mapping[const.co_filename]
-            const = const.replace(co_filename=new_path)
-            const = _replace_inner_function_source_path(const, path_mapping)
-        new_co_consts.append(const)
+            new_const = const.replace(co_filename=new_path)
+            new_const = _replace_inner_function_source_path(new_const, path_mapping)
+        new_co_consts.append(new_const)
 
-    code_object = code_object.replace(co_consts=tuple(new_co_consts))
-    return code_object
+    return code_object.replace(co_consts=tuple(new_co_consts))
 
 
 def _save_inner_source_to_file(inner_source: dict[str, str], input_data_dir: str) -> dict[str, str]:
@@ -307,7 +309,7 @@ def _save_inner_source_to_file(inner_source: dict[str, str], input_data_dir: str
     path_mapping = {}
     for i, (local_path, source_code) in enumerate(inner_source.items()):
         copy_file_name = f"source_{i}.py"
-        with open(f"{input_data_dir}/{copy_file_name}", "w") as f:
+        with open(f"{input_data_dir}/{copy_file_name}", "w", encoding="utf-8") as f:
             f.write(source_code)
 
         path_mapping[local_path] = os.path.join(

@@ -1447,17 +1447,17 @@ class U(TripleAngledGate):
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
-        _theta = self.angle_1
-        _phi = self.angle_2
-        _lambda = self.angle_3
+        theta_ = self.angle_1
+        phi_ = self.angle_2
+        lambda_ = self.angle_3
         return np.array([
             [
-                np.cos(_theta / 2),
-                -np.exp(1j * _lambda) * np.sin(_theta / 2),
+                np.cos(theta_ / 2),
+                -np.exp(1j * lambda_) * np.sin(theta_ / 2),
             ],
             [
-                np.exp(1j * _phi) * np.sin(_theta / 2),
-                np.exp(1j * (_phi + _lambda)) * np.cos(_theta / 2),
+                np.exp(1j * phi_) * np.sin(theta_ / 2),
+                np.exp(1j * (phi_ + lambda_)) * np.cos(theta_ / 2),
             ],
         ])
 
