@@ -288,6 +288,7 @@ def _replace_inner_function_source_path(
     """
     new_co_consts = []
     for const in code_object.co_consts:
+        new_const = const
         if inspect.iscode(const):
             new_path = path_mapping[const.co_filename]
             new_const = const.replace(co_filename=new_path)
