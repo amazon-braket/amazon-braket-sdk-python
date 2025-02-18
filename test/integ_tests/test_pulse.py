@@ -200,8 +200,8 @@ def make_pulse(
 
 
 def test_pulse_bell(arbitrary_waveform, device):
-    if device.status == "OFFLINE":
-        pytest.skip("Device offline")
+    if device.status != "ONLINE":
+        pytest.skip("Device not online")
     (
         a,
         b,
@@ -250,8 +250,8 @@ def test_pulse_bell(arbitrary_waveform, device):
 
 
 def test_pulse_sequence(arbitrary_waveform, device):
-    if device.status == "OFFLINE":
-        pytest.skip("Device offline")
+    if device.status != "ONLINE":
+        pytest.skip("Device not online")
     (
         a,
         b,
@@ -305,8 +305,8 @@ def test_pulse_sequence(arbitrary_waveform, device):
 
 @pytest.mark.skip(reason="needs to be updated to work correctly on Ankaa-2")
 def test_gate_calibration_run(device, pulse_sequence):
-    if device.status == "OFFLINE":
-        pytest.skip("Device offline")
+    if device.status != "ONLINE":
+        pytest.skip("Device not online")
     user_gate_calibrations = GateCalibrations({(Gate.Rx(math.pi / 2), QubitSet(0)): pulse_sequence})
     num_shots = 50
     bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).iswap(0, 1).rx(1, -math.pi / 2)
