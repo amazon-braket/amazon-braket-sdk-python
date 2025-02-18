@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Union
 
 from sympy import Symbol
 
@@ -118,7 +117,7 @@ class FreeParameter(FreeParameterExpression):
         """str: Name of this parameter."""
         return self._name.name
 
-    def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:
+    def subs(self, parameter_values: dict[str, Number]) -> FreeParameter | Number:
         """Substitutes a value in if the parameter exists within the mapping.
 
         Args:

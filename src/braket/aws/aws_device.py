@@ -18,9 +18,9 @@ import json
 import os
 import urllib.request
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar, Optional
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -70,7 +70,7 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET: ClassVar[dict[str, str | None]] = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar[Optional[dict[str, str]]] = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -120,21 +120,19 @@ class AwsDevice(Device):
 
     def run(
         self,
-        task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            PulseSequence,
-            AnalogHamiltonianSimulation,
-        ],
+        task_specification: Circuit
+        | Problem
+        | OpenQasmProgram
+        | BlackbirdProgram
+        | PulseSequence
+        | AnalogHamiltonianSimulation,
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        reservation_arn: str | None = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
@@ -202,7 +200,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
-        """  # noqa E501
+        """  # noqa: E501
         if self._noise_model:
             task_specification = self._apply_noise_model_to_circuit(task_specification)
         return AwsQuantumTask.create(
@@ -228,25 +226,19 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: Union[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                PulseSequence,
-                AnalogHamiltonianSimulation,
-            ],
-            list[
-                Union[
-                    Circuit,
-                    Problem,
-                    OpenQasmProgram,
-                    BlackbirdProgram,
-                    PulseSequence,
-                    AnalogHamiltonianSimulation,
-                ]
-            ],
+        task_specifications: Circuit
+        | Problem
+        | OpenQasmProgram
+        | BlackbirdProgram
+        | PulseSequence
+        | AnalogHamiltonianSimulation
+        | list[
+            Circuit
+            | Problem
+            | OpenQasmProgram
+            | BlackbirdProgram
+            | PulseSequence
+            | AnalogHamiltonianSimulation
         ],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
@@ -254,7 +246,7 @@ class AwsDevice(Device):
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
         reservation_arn: Optional[str] = None,
         *aws_quantum_task_args,
@@ -299,7 +291,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
-        """  # noqa E501
+        """  # noqa: E501
         if self._noise_model:
             task_specifications = [
                 self._apply_noise_model_to_circuit(task_specification)
@@ -349,33 +341,36 @@ class AwsDevice(Device):
         )
         try:
             self._populate_properties(region_session)
-            return region_session
         except ClientError as e:
             raise (
                 ValueError(f"'{self._arn}' not found")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
             ) from e
+        else:
+            return region_session
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
         try:
             self._populate_properties(session)
-            return session
         except ClientError as e:
             if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                raise e
+                raise
             if "qpu" not in self._arn:
                 raise ValueError(f"Simulator '{self._arn}' not found in '{current_region}'") from e
+        else:
+            return session
         # Search remaining regions for QPU
         for region in frozenset(AwsDevice.REGIONS) - {current_region}:
             region_session = AwsSession.copy_session(session, region)
             try:
                 self._populate_properties(region_session)
-                return region_session
             except ClientError as e:
                 if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                    raise e
+                    raise
+            else:
+                return region_session
         raise ValueError(f"QPU '{self._arn}' not found")
 
     def _populate_properties(self, session: AwsSession) -> None:
@@ -439,7 +434,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.utcnow()
+        current_datetime_utc = datetime.now(tz=timezone.utc)
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
@@ -537,13 +532,12 @@ class AwsDevice(Device):
                 i = item[0]
                 edges.extend([(int(i), int(j)) for j in item[1]])
             return from_edgelist(edges, create_using=DiGraph())
-        elif hasattr(self.properties, "provider") and isinstance(
+        if hasattr(self.properties, "provider") and isinstance(
             self.properties.provider, DwaveProviderProperties
         ):
             edges = self.properties.provider.couplers
             return from_edgelist(edges, create_using=DiGraph())
-        else:
-            return None
+        return None
 
     @property
     def _default_shots(self) -> int:
@@ -593,9 +587,9 @@ class AwsDevice(Device):
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Examples:
-            >>> AwsDevice.get_devices(provider_names=['Rigetti'], statuses=['ONLINE'])
-            >>> AwsDevice.get_devices(order_by='provider_name')
-            >>> AwsDevice.get_devices(types=['SIMULATOR'])
+            >>> AwsDevice.get_devices(provider_names=["Rigetti"], statuses=["ONLINE"])
+            >>> AwsDevice.get_devices(order_by="provider_name")
+            >>> AwsDevice.get_devices(types=["SIMULATOR"])
 
         Args:
             arns (Optional[list[str]]): device ARN filter, default is `None`
@@ -779,7 +773,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(
+                with urllib.request.urlopen(  # noqa: S310
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(
@@ -795,8 +789,8 @@ class AwsDevice(Device):
 
     def _parse_waveforms(self, waveforms_json: dict) -> dict:
         waveforms = {}
-        for waveform in waveforms_json:
-            parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
+        for waveform in waveforms_json.values():
+            parsed_waveform = _parse_waveform_from_calibration_schema(waveform)
             waveforms[parsed_waveform.id] = parsed_waveform
         return waveforms
 

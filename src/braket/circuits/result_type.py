@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
@@ -86,7 +86,7 @@ class ResultType:
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -95,8 +95,7 @@ class ResultType:
                     "for IRType.OPENQASM."
                 )
             return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the result type."""
@@ -152,10 +151,10 @@ class ResultType:
             >>> new_result_type.target
             QubitSet(Qubit(5))
         """
-        copy = self.__copy__()
+        copy = self.__copy__()  # noqa: PLC2801
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
-        elif target is not None:
+        if target is not None:
             if hasattr(copy, "target"):
                 copy.target = target
         elif hasattr(copy, "target"):
@@ -288,7 +287,7 @@ class ObservableParameterResultType(ObservableResultType):
         ascii_symbols: list[str],
         observable: Observable,
         target: QubitSetInput | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ):
         super().__init__(ascii_symbols, observable, target)
 
