@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.90.0 (2025-02-14)
+
+### Features
+
+ * added ankaa-3 to enum
+
+## v1.89.1 (2025-02-10)
+
+### Bug Fixes and Other Changes
+
+ * decorator job with no inner function
+
+## v1.89.0 (2025-02-10)
+
+### Deprecations and Removals
+
+ * Ankaa-2
+
+### Features
+
+ * support CUDA-Q decorator kernel with hybrid job decorator
+
+## v1.88.3 (2024-12-06)
+
+### Bug Fixes and Other Changes
+
+ * increase timeout for tasks to avoid async polling timeout during…
+
 ## v1.88.2.post0 (2024-11-25)
 
 ### Documentation Changes

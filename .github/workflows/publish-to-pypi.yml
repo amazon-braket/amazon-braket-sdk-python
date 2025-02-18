@@ -12,9 +12,9 @@ jobs:
     name: Build and publish distribution to PyPi
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: '3.x'
       - name: Install wheel
@@ -26,6 +26,6 @@ jobs:
       - name: Build a binary wheel and a source tarball
         run: python setup.py sdist bdist_wheel
       - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@fb13cb306901256ace3dab689990e13a5550ffaa # release/v1
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # release/v1
         with:
           password: ${{ secrets.pypi_token }}
