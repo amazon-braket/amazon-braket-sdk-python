@@ -233,6 +233,8 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
+        *args,
+        **kwargs,
     ):
         """Initializes an `AwsQuantumTask`.
 
