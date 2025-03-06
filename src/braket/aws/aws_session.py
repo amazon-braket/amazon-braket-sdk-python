@@ -78,13 +78,16 @@ class AwsSession:
             self._config = self._config.merge(config)
 
         if braket_client:
-            if braket_client._client_config:
-                self._config = self._config.merge(braket_client._client_config)
-            braket_client._client_config = self._config
+            braket_client._client_config = (
+                self._config.merge(braket_client._client_config)
+                if braket_client._client_config
+                else self._config
+            )
             self.boto_session = boto_session or boto3.Session(
                 region_name=braket_client.meta.region_name
             )
             self.braket_client = braket_client
+            self._config = braket_client._client_config
         else:
             self.boto_session = boto_session or boto3.Session(
                 region_name=os.environ.get("AWS_REGION")
