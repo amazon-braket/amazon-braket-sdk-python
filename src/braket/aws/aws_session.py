@@ -72,13 +72,22 @@ class AwsSession:
                 f"Braket Client region is '{braket_client.meta.region_name}'."
             )
 
-        self._config = config
+        self._update_user_agent()
+        self._config = Config(user_agent_extra=self._braket_user_agents)
+        if config:
+            self._config = self._config.merge(config)
 
         if braket_client:
+            braket_client._client_config = (
+                self._config.merge(braket_client._client_config)
+                if braket_client._client_config
+                else self._config
+            )
             self.boto_session = boto_session or boto3.Session(
                 region_name=braket_client.meta.region_name
             )
             self.braket_client = braket_client
+            self._config = braket_client._client_config
         else:
             self.boto_session = boto_session or boto3.Session(
                 region_name=os.environ.get("AWS_REGION")
@@ -86,14 +95,11 @@ class AwsSession:
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
-        self._update_user_agent()
+        self._braket_user_agents = self._config._user_provided_options["user_agent_extra"]
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
         self.braket_client.meta.events.register(
             "before-sign.braket.CreateQuantumTask", self._add_cost_tracker_count_handler
-        )
-        self.braket_client.meta.events.register(
-            "before-sign.braket", self._add_braket_user_agents_handler
         )
 
         self._iam = None
@@ -201,14 +207,11 @@ class AwsSession:
         if user_agent not in self._braket_user_agents:
             self._braket_user_agents = f"{self._braket_user_agents} {user_agent}"
 
-    def _add_braket_user_agents_handler(self, request: awsrequest.AWSRequest, **kwargs) -> None:
-        try:
-            initial_user_agent = request.headers["User-Agent"]
-            request.headers.replace_header(
-                "User-Agent", f"{initial_user_agent} {self._braket_user_agents}"
-            )
-        except KeyError:
-            request.headers.add_header("User-Agent", self._braket_user_agents)
+        new_user_agent_config = Config(user_agent_extra=self._braket_user_agents)
+        updated_config = self.braket_client._client_config.merge(new_user_agent_config)
+        self.braket_client = self.boto_session.client(
+            "braket", config=updated_config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
+        )
 
     @staticmethod
     def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
@@ -822,7 +825,10 @@ class AwsSession:
         Returns:
             AwsSession: based on the region and boto config parameters.
         """
-        config = Config(max_pool_connections=max_connections) if max_connections else None
+        config = Config(user_agent_extra=self._braket_user_agents)
+        if max_connections:
+            config = config.merge(Config(max_pool_connections=max_connections))
+
         session_region = self.boto_session.region_name
         new_region = region or session_region
 
@@ -852,8 +858,6 @@ class AwsSession:
         copied_session = AwsSession(
             boto_session=boto_session, config=config, default_bucket=default_bucket
         )
-        # Preserve user_agent information
-        copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
 
     @cache
