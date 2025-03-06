@@ -76,8 +76,14 @@ class AwsSession:
         self._config = Config(user_agent_extra=self._braket_user_agents)
         if config:
             self._config = self._config.merge(config)
+        if braket_client and braket_client._client_config:
+            self._config = self._config.merge(braket_client._client_config)
+
+        if self._config._user_provided_options["user_agent_extra"]:
+            self._braket_user_agents = self._config._user_provided_options["user_agent_extra"]
 
         if braket_client:
+            braket_client._client_config = self._config
             self.boto_session = boto_session or boto3.Session(
                 region_name=braket_client.meta.region_name
             )
@@ -818,7 +824,10 @@ class AwsSession:
         Returns:
             AwsSession: based on the region and boto config parameters.
         """
-        config = Config(max_pool_connections=max_connections) if max_connections else None
+        config = Config(user_agent_extra=self._braket_user_agents)
+        if max_connections:
+            config = config.merge(Config(max_pool_connections=max_connections))
+
         session_region = self.boto_session.region_name
         new_region = region or session_region
 
@@ -848,8 +857,6 @@ class AwsSession:
         copied_session = AwsSession(
             boto_session=boto_session, config=config, default_bucket=default_bucket
         )
-        # Preserve user_agent information
-        copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
 
     @cache
