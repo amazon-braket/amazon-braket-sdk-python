@@ -76,13 +76,10 @@ class AwsSession:
         self._config = Config(user_agent_extra=self._braket_user_agents)
         if config:
             self._config = self._config.merge(config)
-        if braket_client and braket_client._client_config:
-            self._config = self._config.merge(braket_client._client_config)
-
-        if self._config._user_provided_options["user_agent_extra"]:
-            self._braket_user_agents = self._config._user_provided_options["user_agent_extra"]
 
         if braket_client:
+            if braket_client._client_config:
+                self._config = self._config.merge(braket_client._client_config)
             braket_client._client_config = self._config
             self.boto_session = boto_session or boto3.Session(
                 region_name=braket_client.meta.region_name
@@ -95,6 +92,7 @@ class AwsSession:
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
+        self._braket_user_agents = self._config._user_provided_options["user_agent_extra"]
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
         self.braket_client.meta.events.register(
