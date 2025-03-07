@@ -261,7 +261,8 @@ class AwsQuantumTask(QuantumTask):
         """
         if kwargs:
             warnings.warn(
-                f"AwsQuantumTask.__init__ received unknown keyword args: {list(kwargs.keys())}"
+                f"AwsQuantumTask.__init__ received unknown keyword args: {list(kwargs.keys())}",
+                stacklevel=2,
             )
 
         self._arn: str = arn

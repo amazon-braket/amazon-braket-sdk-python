@@ -856,10 +856,7 @@ class AwsSession:  # noqa: PLR0904
                 region_name=new_region,
                 profile_name=profile_name,
             )
-        copied_session = AwsSession(
-            boto_session=boto_session, config=config, default_bucket=default_bucket
-        )
-        return copied_session
+        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
 
     @cache  # noqa: B019
     def get_full_image_tag(self, image_uri: str) -> str:
