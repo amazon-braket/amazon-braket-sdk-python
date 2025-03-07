@@ -34,7 +34,7 @@ from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
-class AwsSession:
+class AwsSession:  # noqa: PLR0904
     """Manage interactions with AWS services."""
 
     class S3DestinationFolder(NamedTuple):
@@ -45,10 +45,10 @@ class AwsSession:
 
     def __init__(
         self,
-        boto_session: boto3.Session | None = None,
-        braket_client: client | None = None,
-        config: Config | None = None,
-        default_bucket: str | None = None,
+        boto_session: Optional[boto3.Session] = None,
+        braket_client: Optional[client] = None,
+        config: Optional[Config] = None,
+        default_bucket: Optional[str] = None,
     ):
         """Initializes an `AwsSession`.
 
@@ -214,7 +214,7 @@ class AwsSession:
         )
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -253,7 +253,8 @@ class AwsSession:
             warnings.warn(
                 "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
                 "by a 'DirectReservation' context. If this was not intended, please review your "
-                "reservation ARN settings or the context in which 'CreateQuantumTask' is called."
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called.",
+                stacklevel=2,
             )
 
         # Ensure reservation only applies to specific device
@@ -297,10 +298,10 @@ class AwsSession:
         return not (
             isinstance(err, ClientError)
             and err.response["Error"]["Code"]
-            in [
+            in {
                 "ResourceNotFoundException",
                 "ThrottlingException",
-            ]
+            }
         )
 
     @backoff.on_exception(
@@ -609,9 +610,8 @@ class AwsSession:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
 
-            if (
-                error_code == "BucketAlreadyOwnedByYou"
-                or error_code != "BucketAlreadyExists"
+            if error_code == "BucketAlreadyOwnedByYou" or (
+                error_code != "BucketAlreadyExists"
                 and error_code == "OperationAborted"
                 and "conflicting conditional operation" in message
             ):
@@ -717,11 +717,12 @@ class AwsSession:
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
-                raise AssertionError
+                raise AssertionError  # noqa: TRY301
             bucket, key = s3_uri_match.groups()
-            return bucket, key
         except (AssertionError, ValueError) as e:
             raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
+        else:
+            return bucket, key
 
     @staticmethod
     def construct_s3_uri(bucket: str, *dirs: str) -> str:
@@ -855,12 +856,9 @@ class AwsSession:
                 region_name=new_region,
                 profile_name=profile_name,
             )
-        copied_session = AwsSession(
-            boto_session=boto_session, config=config, default_bucket=default_bucket
-        )
-        return copied_session
+        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
 
-    @cache
+    @cache  # noqa: B019
     def get_full_image_tag(self, image_uri: str) -> str:
         """Get verbose image tag from image uri.
 

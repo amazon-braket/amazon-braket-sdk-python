@@ -58,8 +58,9 @@ def test_hyperparameters():
         "a": "a_val",
         "b": 2,
     }
-    with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
-        os.environ, {"AMZN_BRAKET_HP_FILE": str(Path(temp_dir) / hp_file)}
+    with (
+        tempfile.TemporaryDirectory() as temp_dir,
+        patch.dict(os.environ, {"AMZN_BRAKET_HP_FILE": str(Path(temp_dir) / hp_file)}),
     ):
         with open(str(Path(temp_dir) / hp_file), "w") as f:
             json.dump(hyperparameters, f)
