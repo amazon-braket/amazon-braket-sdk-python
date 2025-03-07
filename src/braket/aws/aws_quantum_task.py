@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
+import warnings
 from functools import singledispatch
 from logging import Logger, getLogger
 from typing import Any, ClassVar, Optional, Union
@@ -230,6 +231,7 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
+        **kwargs,
     ):
         """Initializes an `AwsQuantumTask`.
 
@@ -257,6 +259,11 @@ class AwsQuantumTask(QuantumTask):
             >>> result = task.result()
             GateModelQuantumTaskResult(...)
         """
+        if kwargs:
+            warnings.warn(
+                f"AwsQuantumTask.__init__ received unknown keyword args: {list(kwargs.keys())}"
+            )
+
         self._arn: str = arn
         self._aws_session: AwsSession = aws_session or AwsQuantumTask._aws_session_for_task_arn(
             task_arn=arn

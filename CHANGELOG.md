@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.90.1 (2025-03-06)
+
+### Bug Fixes and Other Changes
+
+ * Set user agent in Boto3 config object
+ * Update AwsQuantumTask.__init__ signature
+
 ## v1.90.0 (2025-02-14)
 
 ### Features

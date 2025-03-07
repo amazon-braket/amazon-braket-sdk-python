@@ -15,6 +15,7 @@ import asyncio
 import json
 import threading
 import time
+import warnings
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -202,6 +203,17 @@ def test_id_getter(arn, aws_session):
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_id_setter(quantum_task):
     quantum_task.id = 123
+
+
+def test_no_unknown_kwargs_no_warnings(arn, aws_session):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        AwsQuantumTask(arn, aws_session)
+
+
+def test_unknown_kwarg_warning(arn, aws_session):
+    with pytest.warns(UserWarning):
+        AwsQuantumTask(arn, aws_session, unknown_kwarg=123)
 
 
 def test_metadata(quantum_task):
