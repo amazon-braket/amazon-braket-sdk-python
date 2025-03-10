@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.90.2 (2025-03-10)
+
+### Bug Fixes and Other Changes
+
+ * onboard to use ruff
+
 ## v1.90.1 (2025-03-06)
 
 ### Bug Fixes and Other Changes
