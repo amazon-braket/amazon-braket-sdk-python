@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.91.0 (2025-03-18)
+
+### Features
+
+ * Add Forte Enterprise 1
+
 ## v1.90.2 (2025-03-10)
 
 ### Bug Fixes and Other Changes
