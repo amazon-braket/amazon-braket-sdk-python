@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable, Iterable
+from functools import cache
 from numbers import Number
 from typing import Any, TypeVar
 
@@ -1125,7 +1126,7 @@ class Circuit:  # noqa: PLR0904
 
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
 
-    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
+    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:  # noqa: C901
         """Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
         supports are supported by this method. If adding a
@@ -1160,20 +1161,28 @@ class Circuit:  # noqa: PLR0904
             >>> circ = Circuit().add(bell_pair, [4, 5])
         """
 
-        def _flatten(addable: Iterable | AddableTypes) -> AddableTypes:
-            if isinstance(addable, Iterable):
-                for item in addable:
-                    yield from _flatten(item)
-            else:
-                yield addable
+        @cache
+        def _get_handler(item_type: type):
+            """Cache handler lookup for frequently used types."""
+            if issubclass(item_type, Instruction):
+                return self.add_instruction
+            if issubclass(item_type, ResultType):
+                return self.add_result_type
+            if issubclass(item_type, Circuit):
+                return self.add_circuit
+            return None
+
+        def _flatten(item: Iterable | AddableTypes) -> AddableTypes:
+            if isinstance(item, (str, bytes)) or not isinstance(item, Iterable):
+                yield item
+                return
+            for subitem in item:
+                yield from _flatten(subitem)
 
         for item in _flatten(addable):
-            if isinstance(item, Instruction):
-                self.add_instruction(item, *args, **kwargs)
-            elif isinstance(item, ResultType):
-                self.add_result_type(item, *args, **kwargs)
-            elif isinstance(item, Circuit):
-                self.add_circuit(item, *args, **kwargs)
+            handler = _get_handler(type(item))
+            if handler:
+                handler(item, *args, **kwargs)
             elif callable(item):
                 self.add(item(*args, **kwargs))
             else:
