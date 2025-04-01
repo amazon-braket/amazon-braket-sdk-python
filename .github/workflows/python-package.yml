@@ -27,7 +27,7 @@ jobs:
     - name: Set Python tool cache for Windows
       if: runner.os == 'Windows'
       run: |
-        echo "RUNNER_TOOL_CACHE=D:/hostedtoolcache/windows" >> $GITHUB_ENV
+        echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache\windows" >> $GITHUB_ENV
       shell: bash
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
