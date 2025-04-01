@@ -3,6 +3,10 @@
 
 name: Python package
 
+env:
+  RUNNER_TOOL_CACHE: D:\hostedtoolcache
+  RUNNER_TEMP: D:\Temp
+
 on:
   push:
     branches:
@@ -30,13 +34,16 @@ jobs:
       run: |
         echo "SystemDrive=D:" >> $env:GITHUB_ENV
         echo "HOMEDRIVE=D:" >> $env:GITHUB_ENV
-        echo "RUNNER_TEMP=D:\Temp" >> $env:GITHUB_ENV
-        echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" >> $env:GITHUB_ENV
         
-        # Create necessary directories
-        New-Item -Path "D:\Temp" -ItemType Directory -Force
-        New-Item -Path "D:\hostedtoolcache" -ItemType Directory -Force
-        New-Item -Path "D:\actions" -ItemType Directory -Force
+        Remove-Item -Path "C:\hostedtoolcache" -Recurse -Force -ErrorAction SilentlyContinue
+        
+        echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "RUNNER_TEMP=D:\Temp" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+        echo "pythonLocation=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "PKG_CONFIG_PATH=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "Python_ROOT_DIR=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "Python3_ROOT_DIR=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
