@@ -37,12 +37,15 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      working-directory: ${{ runner.os == 'Windows' && env.WORKSPACE_DIR || github.workspace }}
       run: |
         pip install tox
     - name: Run unit tests
+      working-directory: ${{ runner.os == 'Windows' && env.WORKSPACE_DIR || github.workspace }}
       run: |
         tox -e unit-tests
     - name: Upload coverage report to Codecov
+      working-directory: ${{ runner.os == 'Windows' && env.WORKSPACE_DIR || github.workspace }}
       uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
