@@ -6,6 +6,7 @@ name: Python package
 env:
   RUNNER_TOOL_CACHE: D:\hostedtoolcache
   RUNNER_TEMP: D:\Temp
+  GITHUB_WORKSPACE: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}
 
 on:
   push:
@@ -32,11 +33,15 @@ jobs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        echo "SystemDrive=D:" >> $env:GITHUB_ENV
-        echo "HOMEDRIVE=D:" >> $env:GITHUB_ENV
-        
+        New-Item -Path "D:\hostedtoolcache" -ItemType Directory -Force
+        New-Item -Path "D:\Temp" -ItemType Directory -Force
+        New-Item -Path "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" -ItemType Directory -Force
+
+        echo "GITHUB_WORKSPACE=D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TEMP=D:\Temp" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "SystemDrive=D:" >> $env:GITHUB_ENV
+        echo "HOMEDRIVE=D:" >> $env:GITHUB_ENV
         
         echo "pythonLocation=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "PKG_CONFIG_PATH=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Append
