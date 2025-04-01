@@ -35,8 +35,6 @@ jobs:
         echo "SystemDrive=D:" >> $env:GITHUB_ENV
         echo "HOMEDRIVE=D:" >> $env:GITHUB_ENV
         
-        Remove-Item -Path "C:\hostedtoolcache" -Recurse -Force -ErrorAction SilentlyContinue
-        
         echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TEMP=D:\Temp" | Out-File -FilePath $env:GITHUB_ENV -Append
         
