@@ -24,7 +24,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11"]
     defaults:
       run:
-        working-directory: ${{ runner.os == 'Windows' && 'D:/a/runner' || '.' }}
+        working-directory: ${{ matrix.os == 'windows-latest' && 'D:/a/runner' || '.' }}
 
     steps:
     - name: Set Python tool cache for Windows
