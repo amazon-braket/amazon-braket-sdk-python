@@ -9,6 +9,8 @@ env:
   GITHUB_WORKSPACE: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}
   SystemDrive: 'D:'
   HOMEDRIVE: 'D:'
+  ProgramFiles: 'D:\Program Files'
+  POWERSHELL_DISTRIBUTION_CHANNEL: 'D:\Program Files\PowerShell\7'
 
 on:
   push:
@@ -37,7 +39,13 @@ jobs:
       run: |
         New-Item -Path "D:\hostedtoolcache" -ItemType Directory -Force
         New-Item -Path "D:\Temp" -ItemType Directory -Force
+        New-Item -Path "D:\Program Files" -ItemType Directory -Force
+        New-Item -Path "D:\Program Files\PowerShell\7" -ItemType Directory -Force
         New-Item -Path "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" -ItemType Directory -Force
+        
+        if (Test-Path "C:\Program Files\PowerShell") {
+          Copy-Item -Path "C:\Program Files\PowerShell\*" -Destination "D:\Program Files\PowerShell" -Recurse -Force
+        }
 
         echo "GITHUB_WORKSPACE=D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
