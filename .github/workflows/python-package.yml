@@ -44,6 +44,7 @@ jobs:
         echo "RUNNER_TEMP=D:\Temp" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "SystemDrive=D:" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "HOMEDRIVE=D:" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "AGENT_TOOLSDIRECTORY=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
         
         echo "pythonLocation=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "PKG_CONFIG_PATH=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -57,6 +58,8 @@ jobs:
       uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
       with:
         python-version: ${{ matrix.python-version }}
+        AGENT_TOOLSDIRECTORY: D:\hostedtoolcache
+        RUNNER_TOOL_CACHE: D:\hostedtoolcache
         cache-dependency-path: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}/requirements.txt', github.event.repository.name) || './requirements.txt' }}
     - name: Install dependencies
       working-directory: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}', github.event.repository.name) || '.' }}
