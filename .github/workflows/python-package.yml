@@ -3,13 +3,6 @@
 
 name: Python package
 
-env:
-  RUNNER_TOOL_CACHE: ${{ matrix.os == 'Windows' && 'D:\hostedtoolcache' || '' }}
-  RUNNER_TEMP: ${{ matrix.os == 'Windows' && 'D:\Temp' || '' }}
-  GITHUB_WORKSPACE: ${{ matrix.os == 'Windows' && format('D:\a\{0}\{0}', github.event.repository.name) || '' }}
-  SystemDrive: ${{ matrix.os == 'Windows' && 'D' || '' }}
-  HOMEDRIVE: ${{ matrix.os == 'Windows' && 'D' || '' }}
-
 on:
   push:
     branches:
