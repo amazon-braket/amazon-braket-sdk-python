@@ -63,7 +63,8 @@ class DirectReservation(AbstractContextManager):
         elif isinstance(device, Device) or device is None:  # LocalSimulator
             warnings.warn(
                 "Using a local simulator with the reservation. For a reservation on a QPU, please "
-                "ensure the device matches the reserved Braket device."
+                "ensure the device matches the reserved Braket device.",
+                stacklevel=2,
             )
             self.device_arn = ""  # instead of None, use empty string
         else:
@@ -75,7 +76,7 @@ class DirectReservation(AbstractContextManager):
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
         self.stop()
 
     def start(self) -> None:
@@ -91,7 +92,7 @@ class DirectReservation(AbstractContextManager):
     def stop(self) -> None:
         """Stop the reservation context."""
         if not DirectReservation._is_active:
-            warnings.warn("Reservation context is not active.")
+            warnings.warn("Reservation context is not active.", stacklevel=2)
             return
         os.environ.pop("AMZN_BRAKET_RESERVATION_DEVICE_ARN", None)
         os.environ.pop("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN", None)

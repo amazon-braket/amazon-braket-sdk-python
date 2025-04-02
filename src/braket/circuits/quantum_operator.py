@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -24,7 +24,7 @@ from braket.circuits.operator import Operator
 class QuantumOperator(Operator):
     """A quantum operator is the definition of a quantum operation for a quantum device."""
 
-    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(self, qubit_count: int | None, ascii_symbols: Sequence[str]):
         """Initializes a `QuantumOperator`.
 
         Args:
@@ -55,7 +55,7 @@ class QuantumOperator(Operator):
         elif qubit_count and qubit_count != fixed_qubit_count:
             raise ValueError(
                 f"Provided qubit count {qubit_count}"
-                "does not equal fixed qubit count {fixed_qubit_count}"
+                f"does not equal fixed qubit count {fixed_qubit_count}"
             )
         else:
             self._qubit_count = fixed_qubit_count

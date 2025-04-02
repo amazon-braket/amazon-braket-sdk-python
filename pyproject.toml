@@ -1,3 +1,4 @@
+
 [tool.pytest.ini_options]
 xfail_strict = true
 # https://pytest-xdist.readthedocs.io/en/latest/known-limitations.html
@@ -19,5 +20,89 @@ norecursedirs = [
   "*/{{cookiecutter.project_slug}}/*",
 ]
 
-[tool.black]
+[tool.ruff]
+target-version = "py39"
 line-length = 100
+format.preview = true
+format.docstring-code-line-length = 100
+format.docstring-code-format = true
+lint.select = [
+  "ALL",
+]
+lint.ignore = [
+  "A001", "A002", # This will be refactored out later 
+  "ANN202", "ARG001", "ARG002",  # TODO after onboarding
+  "ANN002",  # Missing tpye annotation for `*args` in method
+  "ANN003",  # Missing tpye annotation for `**kwargs` in method
+  "ANN204",  # Special functions don't need return types
+  "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `arg`"
+  "B008",    # Logger deinition rework
+  "B026",    # Accepted pattern to unpack after keyword args
+  "BLE001",  # This needs to be cleaned up later.
+  "COM812",  # conflicts with formatter
+  "CPY",     # No copyright header
+  "D",       # ignore documentation for now
+  "D203",    # `one-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible
+  "D212",    # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible
+  "DOC201",  # no restructuredtext support yet
+  "DOC502",  # Exceptions are documented in top level functions and no in the private methods
+  "DOC501",  # broken with sphinx docs
+  "EM",      # error string messages are fine
+  "ERA001",  # This is used to capture math
+  "FA100",   # Ignore until Python 3.10 is used
+  "FBT",     # Booleans in methods are fine
+  "FIX",     # Allow TODO statements for now.
+  "FURB101", # Same as PTH
+  "FURB103", # Same as PTH
+  "G004",    # Let f strings in logger
+  "INP001",  # no implicit namespaces here
+  "ISC001",  # conflicts with formatter
+  "N802",    # Function names are set now
+  "N803",    # Allow uppercase
+  "N806",    # Vars will break this rule based on technical names.
+  "N815",    # Allowing reviwers to do a per case basis
+  "PLC2701", # Allow private function access in code
+  "PLR0913", # Too many variables in function
+  "PLR0914", # Too many local variables
+  "PLR0917", # Too many positional arguments
+  "PLR6301", # Ignore for dispath functions
+  "PLR2004", # Allow magic values
+  "PLW1510", # Subprocess implicitly uses this
+  "PLW0603", # Allow usage of global vars
+  "PLW1641", # Object with equal and not __hash__
+  "PTH",     # Prefer builtin path
+  "PYI034",  # Return class type hint here instead of self
+  "S104",    # Possible binding to all interfaces
+  "S403",    # Pickle is used
+  "S404",    # Using subprocess is alright.
+  "S603",    # Using subprocess is alright.
+  "S607",    # Partial path
+  "SLF",     # Private methods are allowed for access
+  "T201",    # Print statements are used in some places. Later this should be moved inline.
+  "TCH",     # This is good to look into later on. TODO
+  "TD",      # Allow TODO Statements
+  "TRY003",  # Longer messages are fine.
+]
+lint.per-file-ignores."tests/**/*.py" = [
+  "D",       # don't care about documentation in tests
+  "FBT",     # don"t care about booleans as positional arguments in tests
+  "INP001",  # no implicit namespace
+  "PLR2004", # Magic value used in comparison, consider replacing with a constant variable
+  "S101",    # asserts allowed in tests...
+  "S603",    # `subprocess` call: check for execution of untrusted input
+]
+lint.isort = { known-first-party = [
+  "amazon-braket-sdk",
+  "tests",
+] }
+lint.preview = true
+lint.pyupgrade.keep-runtime-typing = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = false
+
+[tool.ruff.lint.flake8-builtins]
+builtins-allowed-modules = ["operator"]

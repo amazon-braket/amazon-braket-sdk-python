@@ -18,8 +18,8 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # 
 )
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult  # noqa: F401
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult  # noqa: F401
-from braket.tasks.photonic_model_quantum_task_result import (  # noqa: F401
-    PhotonicModelQuantumTaskResult,
+from braket.tasks.photonic_model_quantum_task_result import (
+    PhotonicModelQuantumTaskResult,  # noqa: F401
 )
 from braket.tasks.quantum_task import QuantumTask  # noqa: F401
 from braket.tasks.quantum_task_batch import QuantumTaskBatch  # noqa: F401

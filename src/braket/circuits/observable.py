@@ -41,11 +41,10 @@ class Observable(QuantumOperator):
     ):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         targets = QubitSet(targets)
-        if targets:
-            if (num_targets := len(targets)) != qubit_count:
-                raise ValueError(
-                    f"Length of target {num_targets} does not match qubit count {qubit_count}"
-                )
+        if targets and (num_targets := len(targets)) != qubit_count:
+            raise ValueError(
+                f"Length of target {num_targets} does not match qubit count {qubit_count}"
+            )
         self._targets = targets
         self._coef = 1
 
@@ -80,7 +79,7 @@ class Observable(QuantumOperator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -91,8 +90,7 @@ class Observable(QuantumOperator):
             return self._to_openqasm(
                 serialization_properties or OpenQASMSerializationProperties(), target
             )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> list[str | list[list[list[float]]]]:
         """Returns the JAQCD representation of the observable."""
@@ -177,7 +175,7 @@ class Observable(QuantumOperator):
         if isinstance(other, Observable):
             return Observable.TensorProduct([self, other])
 
-        raise ValueError("Can only perform tensor products between observables.")
+        raise TypeError("Can only perform tensor products between observables.")
 
     def __mul__(self, other: Observable) -> Observable:
         """Scalar multiplication"""
@@ -192,13 +190,13 @@ class Observable(QuantumOperator):
 
     def __add__(self, other: Observable):
         if not isinstance(other, Observable):
-            raise ValueError("Can only perform addition between observables.")
+            raise TypeError("Can only perform addition between observables.")
 
         return Observable.Sum([self, other])
 
     def __sub__(self, other: Observable):
         if not isinstance(other, Observable):
-            raise ValueError("Can only perform subtraction between observables.")
+            raise TypeError("Can only perform subtraction between observables.")
 
         return self + (-1 * other)
 

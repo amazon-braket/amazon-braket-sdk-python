@@ -109,9 +109,7 @@ class CwlMetricsFetcher:
         while time.time() < timeout_time:
             response = self._logs_client.describe_log_streams(**kwargs)
             if streams := response.get("logStreams"):
-                for stream in streams:
-                    if name := stream.get("logStreamName"):
-                        log_streams.append(name)
+                log_streams = [name for stream in streams if (name := stream.get("logStreamName"))]
             if next_token := response.get("nextToken"):
                 kwargs["nextToken"] = next_token
             else:
