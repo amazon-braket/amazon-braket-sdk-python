@@ -64,10 +64,14 @@ jobs:
         path: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}', github.event.repository.name) || '.'}}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
-      with:
-        python-version: ${{ matrix.python-version }}
+      env:
         AGENT_TOOLSDIRECTORY: D:\hostedtoolcache
         RUNNER_TOOL_CACHE: D:\hostedtoolcache
+        pythonLocation: D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64
+        ProgramFiles: D:\Program Files
+        POWERSHELL_DISTRIBUTION_CHANNEL: D:\Program Files\PowerShell\7
+      with:
+        python-version: ${{ matrix.python-version }}
         cache-dependency-path: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}/requirements.txt', github.event.repository.name) || './requirements.txt' }}
     - name: Install dependencies
       working-directory: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}', github.event.repository.name) || '.' }}
