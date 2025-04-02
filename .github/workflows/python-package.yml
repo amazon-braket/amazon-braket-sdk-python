@@ -32,23 +32,32 @@ jobs:
         New-Item -Path "D:\Temp" -ItemType Directory -Force
         New-Item -Path "D:\Program Files" -ItemType Directory -Force
         New-Item -Path "D:\Program Files\PowerShell\7" -ItemType Directory -Force
-        New-Item -Path "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" -ItemType Directory -Force
         
-        if (Test-Path "C:\Program Files\PowerShell") {
-          Copy-Item -Path "C:\Program Files\PowerShell\*" -Destination "D:\Program Files\PowerShell" -Recurse -Force
-        }
+        New-Item -Path "D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" -ItemType Directory -Force
+      
 
         echo "GITHUB_WORKSPACE=D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TOOL_CACHE=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "RUNNER_TEMP=D:\Temp" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "SystemDrive=D:" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "HOMEDRIVE=D:" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
         echo "AGENT_TOOLSDIRECTORY=D:\hostedtoolcache" | Out-File -FilePath $env:GITHUB_ENV -Append
         
         echo "pythonLocation=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "PKG_CONFIG_PATH=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64\lib\pkgconfig" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "Python_ROOT_DIR=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "Python3_ROOT_DIR=D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+        "ProgramFiles=D:\Program Files" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "ProgramFiles(x86)=D:\Program Files (x86)" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "CommonProgramFiles=D:\Program Files\Common Files" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "CommonProgramFiles(x86)=D:\Program Files (x86)\Common Files" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "CommonProgramW6432=D:\Program Files\Common Files" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "ProgramW6432=D:\Program Files" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+        $newPath = $env:PATH -replace 'C:\\Program Files', 'D:\Program Files'
+        "PATH=$newPath" | Out-File -FilePath $env:GITHUB_ENV -Append
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
