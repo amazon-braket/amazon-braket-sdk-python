@@ -4,13 +4,11 @@
 name: Python package
 
 env:
-  RUNNER_TOOL_CACHE: D:\hostedtoolcache
-  RUNNER_TEMP: D:\Temp
-  GITHUB_WORKSPACE: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}
-  SystemDrive: 'D:'
-  HOMEDRIVE: 'D:'
-  ProgramFiles: 'D:\Program Files'
-  POWERSHELL_DISTRIBUTION_CHANNEL: 'D:\Program Files\PowerShell\7'
+  RUNNER_TOOL_CACHE: ${{ runner.os == 'Windows' && 'D:\hostedtoolcache' || '' }}
+  RUNNER_TEMP: ${{ runner.os == 'Windows' && 'D:\Temp' || '' }}
+  GITHUB_WORKSPACE: ${{ runner.os == 'Windows' && format('D:\a\{0}\{0}', github.event.repository.name) || '' }}
+  SystemDrive: ${{ runner.os == 'Windows' && 'D' || '' }}
+  HOMEDRIVE: ${{ runner.os == 'Windows' && 'D' || '' }}
 
 on:
   push:
@@ -64,12 +62,6 @@ jobs:
         path: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}', github.event.repository.name) || '.'}}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
-      env:
-        AGENT_TOOLSDIRECTORY: D:\hostedtoolcache
-        RUNNER_TOOL_CACHE: D:\hostedtoolcache
-        pythonLocation: D:\hostedtoolcache\Python\${{ matrix.python-version }}\x64
-        ProgramFiles: D:\Program Files
-        POWERSHELL_DISTRIBUTION_CHANNEL: D:\Program Files\PowerShell\7
       with:
         python-version: ${{ matrix.python-version }}
         cache-dependency-path: ${{ matrix.os == 'windows-latest' && format('D:\a\{0}\{0}/requirements.txt', github.event.repository.name) || './requirements.txt' }}
