@@ -17,7 +17,7 @@ from unittest.mock import Mock
 from braket.aws import AwsQuantumTaskBatch
 
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
-RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Ankaa-2"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
@@ -36,156 +36,146 @@ class MockS3:
         "deviceId": "default",
     }
 
-    MOCK_S3_RESULT_GATE_MODEL = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.gate_model_task_result",
-                "version": "1",
+    MOCK_S3_RESULT_GATE_MODEL = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.gate_model_task_result",
+            "version": "1",
+        },
+        "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+        "measuredQubits": [0, 1],
+        "taskMetadata": MOCK_TASK_METADATA,
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
             },
-            "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-            "measuredQubits": [0, 1],
-            "taskMetadata": MOCK_TASK_METADATA,
-            "additionalMetadata": {
-                "action": {
-                    "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
-                    "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
-                },
-            },
-        }
-    )
+        },
+    })
 
-    MOCK_S3_RESULT_GATE_MODEL_WITH_RESULT_TYPES = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.gate_model_task_result",
-                "version": "1",
+    MOCK_S3_RESULT_GATE_MODEL_WITH_RESULT_TYPES = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.gate_model_task_result",
+            "version": "1",
+        },
+        "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+        "measuredQubits": [0, 1],
+        "resultTypes": [
+            {
+                "type": {"observable": ["h", "x"], "targets": [0, 1], "type": "expectation"},
+                "value": 0.7071067811865474,
             },
-            "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-            "measuredQubits": [0, 1],
-            "resultTypes": [
-                {
-                    "type": {"observable": ["h", "x"], "targets": [0, 1], "type": "expectation"},
-                    "value": 0.7071067811865474,
-                },
-                {
-                    "type": {"states": ["01", "10", "00", "11"], "type": "amplitude"},
-                    "value": {
-                        "01": [0.0, 0.0],
-                        "10": [0.0, 0.0],
-                        "00": [0.7071067811865475, 0.0],
-                        "11": [0.7071067811865475, 0.0],
-                    },
-                },
-            ],
-            "taskMetadata": MOCK_TASK_METADATA,
-            "additionalMetadata": {
-                "action": {
-                    "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
-                    "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+            {
+                "type": {"states": ["01", "10", "00", "11"], "type": "amplitude"},
+                "value": {
+                    "01": [0.0, 0.0],
+                    "10": [0.0, 0.0],
+                    "00": [0.7071067811865475, 0.0],
+                    "11": [0.7071067811865475, 0.0],
                 },
             },
-        }
-    )
+        ],
+        "taskMetadata": MOCK_TASK_METADATA,
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+            },
+        },
+    })
 
-    MOCK_S3_RESULT_ANNEALING = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.annealing_task_result",
-                "version": "1",
+    MOCK_S3_RESULT_ANNEALING = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.annealing_task_result",
+            "version": "1",
+        },
+        "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+        "solutionCounts": [3, 2, 4],
+        "values": [0.0, 1.0, 2.0],
+        "variableCount": 4,
+        "taskMetadata": {
+            "id": "task_arn",
+            "shots": 100,
+            "deviceId": DWAVE_ARN,
+        },
+        "additionalMetadata": {
+            "action": {
+                "type": "ISING",
+                "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
+                "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
             },
-            "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-            "solutionCounts": [3, 2, 4],
-            "values": [0.0, 1.0, 2.0],
-            "variableCount": 4,
-            "taskMetadata": {
-                "id": "task_arn",
-                "shots": 100,
-                "deviceId": DWAVE_ARN,
-            },
-            "additionalMetadata": {
-                "action": {
-                    "type": "ISING",
-                    "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
-                    "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
-                },
-                "dwaveMetadata": {
-                    "activeVariables": [0],
-                    "timing": {
-                        "qpuSamplingTime": 100,
-                        "qpuAnnealTimePerSample": 20,
-                        "qpuAccessTime": 10917,
-                        "qpuAccessOverheadTime": 3382,
-                        "qpuReadoutTimePerSample": 274,
-                        "qpuProgrammingTime": 9342,
-                        "qpuDelayTimePerSample": 21,
-                        "postProcessingOverheadTime": 117,
-                        "totalPostProcessingTime": 117,
-                        "totalRealTime": 10917,
-                        "runTimeChip": 1575,
-                        "annealTimePerRun": 20,
-                        "readoutTimePerRun": 274,
-                    },
+            "dwaveMetadata": {
+                "activeVariables": [0],
+                "timing": {
+                    "qpuSamplingTime": 100,
+                    "qpuAnnealTimePerSample": 20,
+                    "qpuAccessTime": 10917,
+                    "qpuAccessOverheadTime": 3382,
+                    "qpuReadoutTimePerSample": 274,
+                    "qpuProgrammingTime": 9342,
+                    "qpuDelayTimePerSample": 21,
+                    "postProcessingOverheadTime": 117,
+                    "totalPostProcessingTime": 117,
+                    "totalRealTime": 10917,
+                    "runTimeChip": 1575,
+                    "annealTimePerRun": 20,
+                    "readoutTimePerRun": 274,
                 },
             },
-        }
-    )
+        },
+    })
 
-    MOCK_S3_RESULT_PHOTONIC_MODEL = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.photonic_model_task_result",
-                "version": "1",
+    MOCK_S3_RESULT_PHOTONIC_MODEL = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.photonic_model_task_result",
+            "version": "1",
+        },
+        "measurements": [[[1, 2, 3, 4]], [[4, 3, 2, 1]], [[0, 0, 0, 0]]],
+        "taskMetadata": {
+            "id": "task_arn",
+            "shots": 3,
+            "deviceId": XANADU_ARN,
+        },
+        "additionalMetadata": {
+            "action": {
+                "source": "Vac | q[0]",
             },
-            "measurements": [[[1, 2, 3, 4]], [[4, 3, 2, 1]], [[0, 0, 0, 0]]],
-            "taskMetadata": {
-                "id": "task_arn",
-                "shots": 3,
-                "deviceId": XANADU_ARN,
+            "xanaduMetadata": {
+                "compiledProgram": "DECLARE ro BIT[2];",
             },
-            "additionalMetadata": {
-                "action": {
-                    "source": "Vac | q[0]",
-                },
-                "xanaduMetadata": {
-                    "compiledProgram": "DECLARE ro BIT[2];",
-                },
-            },
-        }
-    )
+        },
+    })
 
-    MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.analog_hamiltonian_simulation_task_result",
-                "version": "1",
+    MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.analog_hamiltonian_simulation_task_result",
+            "version": "1",
+        },
+        "taskMetadata": {
+            "id": "task_arn",
+            "shots": 3,
+            "deviceId": "mock_arn",
+        },
+        "measurements": [
+            {
+                "shotMetadata": {"shotStatus": "Success"},
+                "shotResult": {
+                    "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                    "postSequence": [0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0],
+                },
             },
-            "taskMetadata": {
-                "id": "task_arn",
-                "shots": 3,
-                "deviceId": "mock_arn",
+            {
+                "shotMetadata": {"shotStatus": "Partial Success"},
+                "shotResult": {
+                    "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                    "postSequence": None,
+                },
             },
-            "measurements": [
-                {
-                    "shotMetadata": {"shotStatus": "Success"},
-                    "shotResult": {
-                        "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-                        "postSequence": [0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0],
-                    },
-                },
-                {
-                    "shotMetadata": {"shotStatus": "Partial Success"},
-                    "shotResult": {
-                        "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
-                        "postSequence": None,
-                    },
-                },
-                {
-                    "shotMetadata": {"shotStatus": "Failure"},
-                    "shotResult": {"preSequence": None, "postSequence": None},
-                },
-            ],
-        }
-    )
+            {
+                "shotMetadata": {"shotStatus": "Failure"},
+                "shotResult": {"preSequence": None, "postSequence": None},
+            },
+        ],
+    })
 
 
 def run_and_assert(
@@ -352,19 +342,15 @@ def _create_task_args_and_kwargs(
     ]
     create_args += extra_args or []
     create_kwargs = extra_kwargs or {}
-    create_kwargs.update(
-        {
-            "poll_timeout_seconds": (
-                poll_timeout_seconds if poll_timeout_seconds is not None else default_poll_timeout
-            ),
-            "poll_interval_seconds": (
-                poll_interval_seconds
-                if poll_interval_seconds is not None
-                else default_poll_interval
-            ),
-            "inputs": inputs,
-            "gate_definitions": gate_definitions,
-            "reservation_arn": reservation_arn,
-        }
-    )
+    create_kwargs.update({
+        "poll_timeout_seconds": (
+            poll_timeout_seconds if poll_timeout_seconds is not None else default_poll_timeout
+        ),
+        "poll_interval_seconds": (
+            poll_interval_seconds if poll_interval_seconds is not None else default_poll_interval
+        ),
+        "inputs": inputs,
+        "gate_definitions": gate_definitions,
+        "reservation_arn": reservation_arn,
+    })
     return create_args, create_kwargs

@@ -1,5 +1,121 @@
 # Changelog
 
+## v1.91.0 (2025-03-18)
+
+### Features
+
+ * Add Forte Enterprise 1
+
+## v1.90.2 (2025-03-10)
+
+### Bug Fixes and Other Changes
+
+ * onboard to use ruff
+
+## v1.90.1 (2025-03-06)
+
+### Bug Fixes and Other Changes
+
+ * Set user agent in Boto3 config object
+ * Update AwsQuantumTask.__init__ signature
+
+## v1.90.0 (2025-02-14)
+
+### Features
+
+ * added ankaa-3 to enum
+
+## v1.89.1 (2025-02-10)
+
+### Bug Fixes and Other Changes
+
+ * decorator job with no inner function
+
+## v1.89.0 (2025-02-10)
+
+### Deprecations and Removals
+
+ * Ankaa-2
+
+### Features
+
+ * support CUDA-Q decorator kernel with hybrid job decorator
+
+## v1.88.3 (2024-12-06)
+
+### Bug Fixes and Other Changes
+
+ * increase timeout for tasks to avoid async polling timeout during…
+
+## v1.88.2.post0 (2024-11-25)
+
+### Documentation Changes
+
+ * add dual navigation buttons and cleanup some docstrings
+
+## v1.88.2 (2024-11-18)
+
+### Bug Fixes and Other Changes
+
+ * Pin cloudpickle==2.2.1
+
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
+## v1.88.0 (2024-09-27)
+
+### Deprecations and Removals
+
+ * Mark Aspen-M-3 as deprecated, replace with Ankaa-2 in tests
+
+### Bug Fixes and Other Changes
+
+ * Update pulse integration tests for Ankaa-2 device
+
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
+## v1.87.0 (2024-09-05)
+
+### Deprecations and Removals
+
+ * Retire IonQ Harmony
+
+### Bug Fixes and Other Changes
+
+ * Return observable target if absent for RT
+
+## v1.86.1 (2024-08-29)
+
+### Bug Fixes and Other Changes
+
+ * Use observable targets for targetless results
+
+## v1.86.0 (2024-08-26)
+
+### Features
+
+ * Rigetti Ankaa
+ * add off_center to erf_square
+
+## v1.85.0 (2024-08-20)
+
+### Features
+
+ * Allow early qubit binding of observables
+
+## v1.84.0 (2024-07-30)
+
+### Features
+
+ * support erf_square and swap_phases
+
 ## v1.83.0 (2024-06-28)
 
 ### Deprecations and Removals

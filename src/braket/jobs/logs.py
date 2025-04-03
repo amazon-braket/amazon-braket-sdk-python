@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import collections
 import os
 import sys
 from collections.abc import Generator
@@ -21,11 +20,18 @@ from collections.abc import Generator
 # Support for reading logs
 #
 ##############################################################################
-from typing import ClassVar, Optional
+from typing import ClassVar, NamedTuple, Optional
 
 from botocore.exceptions import ClientError
 
 from braket.aws.aws_session import AwsSession
+
+
+# Position is a tuple that includes the last read timestamp and the number of items that were read
+# at that time. This is used to figure out which event to start with on the next read.
+class Position(NamedTuple):
+    timestamp: str
+    skip: bool
 
 
 class ColorWrap:
@@ -68,11 +74,6 @@ class ColorWrap:
         print(f"\x1b[{self._stream_colors[index % len(self._stream_colors)]}m{s}\x1b[0m")
 
 
-# Position is a tuple that includes the last read timestamp and the number of items that were read
-# at that time. This is used to figure out which event to start with on the next read.
-Position = collections.namedtuple("Position", ["timestamp", "skip"])
-
-
 def multi_stream_iter(
     aws_session: AwsSession, log_group: str, streams: list[str], positions: dict[str, Position]
 ) -> Generator[tuple[int, dict]]:
@@ -99,7 +100,7 @@ def multi_stream_iter(
     for s in event_iters:
         try:
             events.append(next(s))
-        except StopIteration:
+        except StopIteration:  # noqa: PERF203
             events.append(None)
 
     while any(events):
@@ -149,12 +150,12 @@ def log_stream(
             events = events[skip:]
             skip = 0
         else:
-            skip = skip - event_count
+            skip -= event_count
             events = []
         yield from events
 
 
-def flush_log_streams(  # noqa C901
+def flush_log_streams(
     aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,

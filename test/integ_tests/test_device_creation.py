@@ -17,11 +17,11 @@ import pytest
 from braket.aws import AwsDevice
 from braket.devices import Devices
 
-RIGETTI_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
-IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+RIGETTI_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
+IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
 IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
-PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
 
 
 @pytest.mark.parametrize(
@@ -37,7 +37,7 @@ def test_device_creation(arn, created_braket_devices):
     assert device.properties
 
 
-@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+@pytest.mark.parametrize("arn", [PULSE_ARN])
 def test_device_pulse_properties(arn, aws_session, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.ports
@@ -51,13 +51,13 @@ def test_device_across_regions(aws_session, created_braket_devices):
     created_braket_devices[IQM_ARN]
 
 
-@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN)])
+@pytest.mark.parametrize("arn", [(IONQ_ARN), (IQM_ARN), (SIMULATOR_ARN)])
 def test_get_devices_arn(arn):
     results = AwsDevice.get_devices(arns=[arn])
     assert results[0].arn == arn
 
 
-@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+@pytest.mark.parametrize("arn", [PULSE_ARN])
 def test_device_gate_calibrations(arn, aws_session, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.gate_calibrations

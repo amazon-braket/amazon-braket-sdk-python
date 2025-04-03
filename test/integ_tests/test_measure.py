@@ -23,7 +23,7 @@ from braket.devices import LocalSimulator
 DEVICE = LocalSimulator()
 SHOTS = 8000
 
-IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 
@@ -31,8 +31,8 @@ IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 @pytest.mark.parametrize("arn", [(IONQ_ARN), (SIMULATOR_ARN)])
 def test_unsupported_devices(arn):
     device = AwsDevice(arn)
-    if device.status == "OFFLINE":
-        pytest.skip("Device offline")
+    if device.status != "ONLINE":
+        pytest.skip("Device not online")
 
     circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1])
     error_string = re.escape(
@@ -53,7 +53,7 @@ def test_measure_on_local_sim(sim):
     assert result.measured_qubits == [0, 1]
 
 
-@pytest.mark.parametrize("arn", [(IQM_ARN)])
+@pytest.mark.parametrize("arn", [IQM_ARN])
 def test_measure_on_supported_devices(arn):
     device = AwsDevice(arn)
     if not device.is_available:

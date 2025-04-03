@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Union
 
 import numpy as np
 
@@ -63,7 +62,7 @@ class AtomArrangement:
 
     def add(
         self,
-        coordinate: Union[tuple[Number, Number], np.ndarray],
+        coordinate: tuple[Number, Number] | np.ndarray,
         site_type: SiteType = SiteType.FILLED,
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
@@ -124,6 +123,7 @@ class AtomArrangement:
                     round(Decimal(c) / position_res) * position_res for c in site.coordinate
                 )
                 discretized_arrangement.add(new_coordinates, site.site_type)
-            return discretized_arrangement
         except Exception as e:
             raise DiscretizationError(f"Failed to discretize register {e}") from e
+        else:
+            return discretized_arrangement

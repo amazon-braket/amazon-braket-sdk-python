@@ -27,12 +27,14 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.21.3",
+        "amazon-braket-schemas>=1.23.0",
         "amazon-braket-default-simulator>=1.26.0",
         "oqpy~=0.3.5",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
+        # SageMaker pinned cloudpickle==2.2.1
+        # see https://github.com/aws/sagemaker-python-sdk/issues/4871
         "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
@@ -55,11 +57,13 @@ setup(
             "pytest-cov",
             "pytest-rerunfailures",
             "pytest-xdist[psutil]",
+            "tox",
+        ],
+        "docs": [
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
-            "tox",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",

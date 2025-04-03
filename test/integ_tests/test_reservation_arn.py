@@ -33,7 +33,7 @@ def reservation_arn(aws_session):
 
 def test_create_task_via_invalid_reservation_arn_on_qpu(reservation_arn):
     circuit = Circuit().h(0)
-    device = AwsDevice(Devices.IonQ.Harmony)
+    device = AwsDevice(Devices.IonQ.Aria1)
 
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
         device.run(circuit, shots=10, reservation_arn=reservation_arn)
@@ -64,7 +64,7 @@ def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
 
         @hybrid_job(
-            device=Devices.IonQ.Aria1,
+            device=Devices.IQM.Garnet,
             reservation_arn=reservation_arn,
         )
         def hello_job():
