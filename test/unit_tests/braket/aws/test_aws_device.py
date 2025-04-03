@@ -474,6 +474,7 @@ MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
     "deviceCapabilities": {},
 }
 
+
 @pytest.fixture(
     params=[
         "arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim",
