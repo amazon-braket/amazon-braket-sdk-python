@@ -466,6 +466,14 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "tasks",
 )
 
+MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
+    "deviceName": "Aspen-10",
+    "deviceType": "QPU",
+    "providerName": "Rigetti",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": {},
+}
+
 
 @pytest.fixture(
     params=[
@@ -675,6 +683,15 @@ def test_device_refresh_metadata(arn):
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_2
     device.refresh_metadata()
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_2, MOCK_GATE_MODEL_QPU_2)
+
+
+def test_get_device_invalid_capabilities(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert device is not None
+    assert device.properties is None
 
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
