@@ -24,6 +24,7 @@ from typing import Any, ClassVar, Optional, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
+from pydantic.v1 import ValidationError
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -383,13 +384,21 @@ class AwsDevice(Device):
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
-        device_poll_interval = self._properties.service.getTaskPollIntervalMillis
-        self._poll_interval_seconds = (
-            device_poll_interval / 1000.0
-            if device_poll_interval
-            else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
-        )
+        try:
+            self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
+            device_poll_interval = self._properties.service.getTaskPollIntervalMillis
+            self._poll_interval_seconds = (
+                device_poll_interval / 1000.0
+                if device_poll_interval
+                else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
+            )
+        except ValidationError:
+            warnings.warn(
+                f"Unable to determine device capabilities for '{self._arn}'."
+                " Please check make sure you are using the latest braket schema version.",
+                stacklevel=1,
+            )
+            self._poll_interval_seconds = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
         self._topology_graph = None
         self._frames = None
         self._ports = None
