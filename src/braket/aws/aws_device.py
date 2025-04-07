@@ -18,13 +18,14 @@ import json
 import os
 import urllib.request
 import warnings
+import pydantic
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
-from pydantic.v1 import ValidationError
+
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -388,7 +389,7 @@ class AwsDevice(Device):
                 if device_poll_interval
                 else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
             )
-        except ValidationError:
+        except (pydantic.v1.ValidationError, pydantic.ValidationError):
             warnings.warn(
                 f"Unable to determine device capabilities for '{self._arn}'."
                 " Please check make sure you are using the latest braket schema version.",
