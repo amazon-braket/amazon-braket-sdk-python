@@ -18,14 +18,13 @@ import json
 import os
 import urllib.request
 import warnings
-import pydantic
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional
 
+import pydantic
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
-
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
