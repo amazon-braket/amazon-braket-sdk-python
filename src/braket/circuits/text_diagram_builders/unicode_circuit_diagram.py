@@ -188,7 +188,6 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             connections[qubits[0]] = "below"
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     def _draw_symbol(
         cls,

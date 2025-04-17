@@ -259,8 +259,7 @@ class TimeSeries:
                 f"Boundary handler value {boundary} is not allowed. \
                 Possible options are: 'mean', 'left', 'right'."
             )
-
-        new_values = self.values()[:-1] + [bndry_val] + other.values()[1:]
+        new_values = [*self.values()[:-1], bndry_val, *other.values()[1:]]
 
         for t, v in zip(new_times, new_values):
             new_time_series.put(t, v)
