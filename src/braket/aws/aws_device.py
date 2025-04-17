@@ -391,7 +391,7 @@ class AwsDevice(Device):
         except (pydantic.v1.ValidationError, pydantic.ValidationError):
             warnings.warn(
                 f"Unable to determine device capabilities for '{self._arn}'."
-                " Please check make sure you are using the latest braket schema version.",
+                " Please make sure you are using the latest version of amazon-braket-schemas.",
                 stacklevel=1,
             )
             self._poll_interval_seconds = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
