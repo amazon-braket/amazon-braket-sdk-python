@@ -68,7 +68,6 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         """
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     @abstractmethod
     def _draw_symbol(
