@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.91.2 (2025-04-22)
+
+### Bug Fixes and Other Changes
+
+ * handling capability upgrade issues
+
 ## v1.91.1 (2025-04-21)
 
 ### Bug Fixes and Other Changes
