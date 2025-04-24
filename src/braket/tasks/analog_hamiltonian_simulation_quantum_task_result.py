@@ -126,7 +126,8 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 post = shot.post_sequence
                 # converting presequence and postsequence measurements to state_idx
                 state_idx = [
-                    0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
+                    0 if pre_i == 0 else 1 if post_i == 0 else 2
+                    for pre_i, post_i in zip(pre, post, strict=False)
                 ]
                 state = "".join(states[s_idx] for s_idx in state_idx)
                 state_counts.update([state])

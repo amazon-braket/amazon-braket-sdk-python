@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 from collections.abc import KeysView
 from dataclasses import dataclass
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
 import numpy as np
 from openpulse import ast
@@ -64,9 +64,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
         self._qubit_frames_mapping: dict[str, list[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
-    def visit(
-        self, node: Union[ast.QASMNode, ast.Expression], context: Optional[_ParseState] = None
-    ) -> Any:
+    def visit(self, node: ast.QASMNode | ast.Expression, context: _ParseState | None = None) -> Any:
         """Visit a node.
 
         Args:
@@ -80,7 +78,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
 
     def _get_frame_parameters(
         self, parameters: list[ast.Expression], context: _ParseState
-    ) -> Union[KeysView, list[str]]:
+    ) -> KeysView | list[str]:
         frame_ids = set()
         for expression in parameters:
             identifier_name = self.visit(expression, context)
@@ -129,7 +127,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
 
     def visit_ClassicalDeclaration(
         self, node: ast.ClassicalDeclaration, context: _ParseState
-    ) -> Union[dict, None]:
+    ) -> dict | None:
         """Visit a Classical Declaration.
             node.type, node.identifier, node.init_expression
             angle[20] a = 1+2;

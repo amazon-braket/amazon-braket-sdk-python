@@ -66,7 +66,9 @@ class AnalogHamiltonianSimulation:
             AnalogHamiltonianSimulation: The Analog Hamiltonian Simulation.
         """
         atom_arrangement = AtomArrangement()
-        for site, fill in zip(source.setup.ahs_register.sites, source.setup.ahs_register.filling):
+        for site, fill in zip(
+            source.setup.ahs_register.sites, source.setup.ahs_register.filling, strict=False
+        ):
             atom_arrangement.add(
                 coordinate=site, site_type=SiteType.FILLED if fill == 1 else SiteType.VACANT
             )

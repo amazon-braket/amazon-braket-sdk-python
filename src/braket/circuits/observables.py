@@ -541,7 +541,7 @@ class Sum(Observable):
             raise ValueError(
                 f"Invalid target of length {len(target)} for Sum with {len(self.summands)} terms"
             )
-        for i, (term, term_target) in enumerate(zip(self.summands, target)):
+        for i, (term, term_target) in enumerate(zip(self.summands, target, strict=False)):
             if term.qubit_count != len(term_target):
                 raise ValueError(
                     f"Invalid target for term {i} of Sum. "
@@ -553,7 +553,7 @@ class Sum(Observable):
                 ir_type=IRType.OPENQASM,
                 serialization_properties=serialization_properties,
             )
-            for obs, term_target in zip(self.summands, target)
+            for obs, term_target in zip(self.summands, target, strict=False)
         ).replace("+ -", "- ")
 
     @property
