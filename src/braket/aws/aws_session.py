@@ -24,11 +24,11 @@ from typing import Any, NamedTuple, Optional
 
 import backoff
 import boto3
+import braket._schemas as braket_schemas
 from botocore import awsrequest, client
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
 from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
