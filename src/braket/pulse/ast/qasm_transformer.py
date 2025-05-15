@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional
+from typing import Any
 
 from openpulse import ast
 from openqasm3.visitor import QASMTransformer
@@ -24,7 +24,7 @@ class _IRQASMTransformer(QASMTransformer):
         readout value to a bit register element.
     """
 
-    def __init__(self, register_identifier: Optional[str] = None):
+    def __init__(self, register_identifier: str | None = None):
         self._register_identifier = register_identifier
         self._capture_v0_count = 0
         super().__init__()
