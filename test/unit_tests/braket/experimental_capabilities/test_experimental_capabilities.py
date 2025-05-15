@@ -1,3 +1,16 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 from enum import Enum
 
@@ -13,12 +26,6 @@ from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
     ExperimentalCapabilityContextError,
 )
-
-
-def reset_capabilities_context():
-    """Reset the experimental capabilities context."""
-    for cap_name in GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.capabilities:
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[cap_name] = False
 
 
 @register_capabilities
@@ -54,8 +61,6 @@ def test_register_capabilities():
 
 
 def test_enable_experimental_capability_context():
-    reset_capabilities_context()
-
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(
         MockDeviceExperimentalCapabilities.feature1
     )
@@ -71,8 +76,6 @@ def test_enable_experimental_capability_context():
 
 
 def test_enable_multiple_capabilities():
-    reset_capabilities_context()
-
     # Check both capabilities are disabled
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(
         MockDeviceExperimentalCapabilities.feature1
@@ -103,8 +106,6 @@ def test_enable_multiple_capabilities():
 
 
 def test_nested_capability_contexts():
-    reset_capabilities_context()
-
     # Test that nested contexts work correctly
     with EnableExperimentalCapability(MockDeviceExperimentalCapabilities.feature1):
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(

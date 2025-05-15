@@ -1,3 +1,16 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 import math
 from unittest.mock import MagicMock, patch
@@ -18,21 +31,13 @@ from braket.experimental_capabilities.experimental_capability_context import (
 from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
 
-def reset_capabilities_context():
-    """Reset the experimental capabilities context."""
-    for cap_name in GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.capabilities:
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[cap_name] = False
-
-
 def test_ccprx_invalid_capability_context():
-    reset_capabilities_context()
     # Without enabling the capability, CCPRx should raise an error
     with pytest.raises(ExperimentalCapabilityContextError):
         CCPRx(0.1, 0.2, 0)
 
 
 def test_ccprx_with_capability():
-    reset_capabilities_context()
     # With capability enabled, CCPRx should work
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
@@ -46,7 +51,6 @@ def test_ccprx_with_capability():
 
 
 def test_ccprx_with_free_parameters():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         # Create CCPRx with FreeParameter
         theta = FreeParameter("theta")
@@ -62,14 +66,12 @@ def test_ccprx_with_free_parameters():
 
 # Tests for MeasureFF quantum operator
 def test_measure_ff_invalid_capability_context():
-    reset_capabilities_context()
     # Without enabling the capability, MeasureFF should raise an error
     with pytest.raises(ExperimentalCapabilityContextError):
         MeasureFF(0)
 
 
 def test_measure_ff_with_capability():
-    reset_capabilities_context()
     # With capability enabled, MeasureFF should work
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         measure_ff = MeasureFF(0)
@@ -83,13 +85,11 @@ def test_measure_ff_with_capability():
 
 
 def test_measure_ff_properties():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         measure_ff = MeasureFF(0)
 
 
 def test_ccprx_to_ir():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         target = [0]
@@ -103,7 +103,6 @@ def test_ccprx_to_ir():
 
 
 def test_measure_ff_to_ir():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         measure_ff = MeasureFF(0)
         target = [0]
@@ -117,7 +116,6 @@ def test_measure_ff_to_ir():
 
 
 def test_unsupported_ir_type():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         target = [0]
@@ -127,7 +125,6 @@ def test_unsupported_ir_type():
 
 
 def test_mixing_standard_and_experimental_operations():
-    reset_capabilities_context()
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         circuit = Circuit()
         circuit.h(0)
@@ -140,8 +137,6 @@ def test_mixing_standard_and_experimental_operations():
 
 @patch("braket.aws.AwsDevice")
 def test_circuit_with_classical_control_e2e(mock_aws_device_class):
-    reset_capabilities_context()
-
     expected_measurement_counts = {"0": 46, "1": 54}
 
     mock_device = MagicMock()
@@ -169,7 +164,6 @@ def test_circuit_with_classical_control_e2e(mock_aws_device_class):
 
 
 def test_example_expected_to_fail():
-    reset_capabilities_context()
     circuit = Circuit()
 
     with pytest.raises(Exception):
