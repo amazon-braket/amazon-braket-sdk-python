@@ -17,6 +17,8 @@ import os
 import time
 from typing import Any
 
+from braket.jobs_data import PersistedJobData
+
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import CheckpointConfig, OutputDataConfig, S3DataSourceConfig
 from braket.jobs.image_uris import Framework, retrieve_image
@@ -27,7 +29,6 @@ from braket.jobs.metrics_data.log_metrics_parser import LogMetricsParser
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import prepare_quantum_job
 from braket.jobs.serialization import deserialize_values
-from braket.jobs_data import PersistedJobData
 
 
 class LocalQuantumJob(QuantumJob):

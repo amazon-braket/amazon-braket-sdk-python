@@ -16,9 +16,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
+
 from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
-from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
 
 
 def save_job_checkpoint(
