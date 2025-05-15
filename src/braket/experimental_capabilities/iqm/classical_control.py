@@ -14,45 +14,16 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from copy import deepcopy
-from typing import Any
+from typing import Any, Optional
 
-import numpy as np
-from oqpy import Program
-
+from braket.circuits import circuit
+from braket.circuits.free_parameter_expression import FreeParameterExpression
+from braket.circuits.instruction import Instruction
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.serialization import (
     IRType,
-    OpenQASMSerializationProperties,
     SerializationProperties,
 )
-
-import braket.ir.jaqcd as ir
-from braket.circuits import circuit
-from braket.circuits.angled_gate import (
-    AngledGate,
-    DoubleAngledGate,
-    TripleAngledGate,
-    _get_angles,
-    _multi_angled_ascii_characters,
-    angled_ascii_characters,
-    get_angle,
-)
-from braket.circuits.basis_state import BasisState, BasisStateInput
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.free_parameter_expression import FreeParameterExpression
-from braket.circuits.gate import Gate
-from braket.circuits.instruction import Instruction
-from braket.circuits.parameterizable import Parameterizable
-from braket.circuits.quantum_operator_helpers import (
-    is_unitary,
-    verify_quantum_operator_matrix_dimensions,
-)
-from braket.circuits.serialization import OpenQASMSerializationProperties
-from braket.pulse.ast.qasm_parser import ast_to_qasm
-from braket.registers.qubit import QubitInput
-from braket.registers.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.quantum_operator import QuantumOperator
-
 from braket.experimental_capabilities.experimental_capability import ExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
@@ -61,30 +32,33 @@ from braket.experimental_capabilities.experimental_capability_context import (
 from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
     IqmExperimentalCapabilities,
 )
-
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 EXPCAP_FLAG = IqmExperimentalCapabilities.classical_control.value
 
 
 class ExperimentalQuantumOperator(QuantumOperator):
-    r"""Phase Rx gate.
-
-    Args:
-        angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
-            radians or expression representation.
-        angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
-            radians or expression representation.
-    """
-
     def __init__(
         self,
         expcap_flag: ExperimentalCapability,
         qubit_count: int,
         ascii_symbols: list[str],
-    ):
+    ) -> None:
+        """Base class for experimental quantum operators.
+
+        This class provides the foundation for quantum operators that are part of
+        experimental capabilities and ensures that they can only be instantiated
+        when the appropriate capability is enabled.
+
+        Args:
+            expcap_flag: The experimental capability flag that must be
+                enabled to use this operator.
+            qubit_count: The number of qubits this operator acts on.
+            ascii_symbols: ASCII string symbols for the operator.
+        """
         if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(expcap_flag):
             raise ExperimentalCapabilityContextError(
-                f"{self.name} can only be instantiated when {expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
+                f"{self.__class__.__name__} can only be instantiated when {expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
             )
 
         super().__init__(qubit_count=1, ascii_symbols=["C"])
@@ -92,46 +66,53 @@ class ExperimentalQuantumOperator(QuantumOperator):
 
     @property
     def _qasm_name(self) -> str:
+        """Get the OpenQASM name for this operator.
+
+        This property must be implemented by subclasses.
+
+        Returns:
+            str: The OpenQASM name for this operator.
+
+        Raises:
+            NotImplementedError: If the subclass does not implement this property.
+        """
         raise NotImplementedError
 
     @property
-    def ascii_symbols(self) -> tuple[str]:
-        """tuple[str]: Returns the ascii symbols for the measure."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """Get the ASCII symbols for this operator.
+
+        Returns:
+            tuple[str]: The ASCII symbols for this operator.
+        """
         return self._ascii_symbols
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
-        """Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+    def parameters(self) -> list[FreeParameterExpression | float | int]:
+        """Get the parameters associated with this operator.
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            list[FreeParameterExpression | float | int]: The free parameters or fixed values
+                associated with this operator.
         """
         return self._parameters
 
     def to_ir(
         self,
-        target: QubitSet | None = None,
+        target: Optional[QubitSet] = None,
         ir_type: IRType = IRType.OPENQASM,
-        serialization_properties: SerializationProperties | None = None,
-        **kwargs,
+        serialization_properties: Optional[SerializationProperties] = None,
+        **kwargs: Any,
     ) -> Any:
-        """Returns IR object of the measure operator.
+        """Convert this operator to its IR representation.
 
         Args:
-            target (QubitSet | None): target qubit(s). Defaults to None
-            ir_type(IRType) : The IRType to use for converting the measure object to its
-                IR representation. Defaults to IRType.OpenQASM.
-            serialization_properties (SerializationProperties | None): The serialization properties
-                to use while serializing the object to the IR representation. The serialization
-                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
+            target: Target qubit(s). Defaults to None.
+            ir_type: The IR type to use. Defaults to IRType.OPENQASM.
+            serialization_properties: Properties to use for serialization. Defaults to None.
 
         Returns:
-            Any: IR object of the measure operator.
-
-        Raises:
-            ValueError: If the supplied `ir_type` is not supported.
+            Any: The IR representation of this operator.
         """
         if ir_type != IRType.OPENQASM:
             raise ValueError(f"supplied ir_type {ir_type} is not supported for {self._qasm_name}.")
@@ -142,20 +123,17 @@ class ExperimentalQuantumOperator(QuantumOperator):
 
 
 class CCPRx(ExperimentalQuantumOperator):
-    r"""Phase Rx gate.
+    """Classically controlled Phased Rx gate.
 
-    Unitary matrix:
-
-        .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
-                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
-                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
-            \end{bmatrix}.
+    A rotation around the X-axis with a phase factor, where the rotation depends
+    on the value of a classical feedback.
 
     Args:
-        angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
-            radians or expression representation.
-        angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
-            radians or expression representation.
+        angle_1 (FreeParameterExpression | float): The first angle of the gate in radians or
+            expression representation.
+        angle_2 (FreeParameterExpression | float): The second angle of the gate in radians or
+            expression representation.
+        feedback_key (int): The integer feedback key that points to a measurement result.
     """
 
     def __init__(
@@ -166,17 +144,18 @@ class CCPRx(ExperimentalQuantumOperator):
     ):
         super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["C"])
         angles = [
-            (
-                angle
-                if isinstance(angle, FreeParameterExpression)
-                else float(angle)  # explicit casting in case angle is e.g. np.float32
-            )
+            (angle if isinstance(angle, FreeParameterExpression) else float(angle))
             for angle in (angle_1, angle_2)
         ]
         self._parameters = angles + [feedback_key]
 
     @property
     def _qasm_name(self) -> str:
+        """Get the OpenQASM name for this operator.
+
+        Returns:
+            str: The OpenQASM name "cc_prx".
+        """
         return "cc_prx"
 
     @staticmethod
@@ -187,20 +166,19 @@ class CCPRx(ExperimentalQuantumOperator):
         angle_2: FreeParameterExpression | float,
         feedback_key: int,
     ) -> Iterable[Instruction]:
-        r"""PhaseRx gate.
+        """Conditional PhaseRx gate.
 
-        .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
-                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
-                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
-            \end{bmatrix}.
+        Applies a rotation around the X-axis with a phase factor, conditioned on
+        the value in a classical feedback register.
 
         Args:
             target (QubitSetInput): Target qubit(s).
-            angle_1 (Union[FreeParameterExpression, float]): First angle in radians.
-            angle_2 (Union[FreeParameterExpression, float]): Second angle in radians.
+            angle_1 (FreeParameterExpression | float): First angle in radians.
+            angle_2 (FreeParameterExpression | float): Second angle in radians.
+            feedback_key (int): The integer feedback key that points to a measurement result.
 
         Returns:
-            Iterable[Instruction]: PhaseRx instruction.
+            Iterable[Instruction]: CCPRx instruction.
 
         Examples:
             >>> circ = Circuit().cc_prx(0, 0.15, 0.25, 0)
@@ -216,20 +194,27 @@ class CCPRx(ExperimentalQuantumOperator):
 
 class MeasureFF(ExperimentalQuantumOperator):
     r"""Measurement for Feed Forward control.
+    Performs a measurement and stores the result in a classical feedback register
+    for later use in conditional operations.
 
     Args:
-        feedback_key (int):
+        feedback_key (int): The integer feedback key that points to a measurement result.
     """
 
     def __init__(
         self,
         feedback_key: int,
-    ):
+    ) -> None:
         super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["MFF"])
         self._parameters = [feedback_key]
 
     @property
     def _qasm_name(self) -> str:
+        """Get the OpenQASM name for this operator.
+
+        Returns:
+            str: The OpenQASM name "measure_ff".
+        """
         return "measure_ff"
 
     @staticmethod
@@ -238,19 +223,17 @@ class MeasureFF(ExperimentalQuantumOperator):
         target: QubitSetInput,
         feedback_key: int,
     ) -> Iterable[Instruction]:
-        r"""PhaseRx gate.
+        r"""Measure and store result for feed-forward operations.
 
-        .. math:: \mathtt{PRx}(\theta,\phi) = \begin{bmatrix}
-                \cos{(\theta / 2)} & -i e^{-i \phi} \sin{(\theta / 2)} \\
-                -i e^{i \phi} \sin{(\theta / 2)} & \cos{(\theta / 2)}
-            \end{bmatrix}.
+        Performs a measurement on the target qubit and stores the result in a
+        classical feedback register for later use in conditional operations.
 
         Args:
             target (QubitSetInput): Target qubit(s).
-            feedback_key (int): 
+            feedback_key (int): The integer feedback key that points to a measurement result.
 
         Returns:
-            Iterable[Instruction]: PhaseRx instruction.
+            Iterable[Instruction]: MeasureFF instruction.
 
         Examples:
             >>> circ = Circuit().measure_ff(0, 0)

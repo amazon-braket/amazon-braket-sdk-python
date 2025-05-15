@@ -1,24 +1,17 @@
-import pytest
 from enum import Enum
-from unittest.mock import patch, MagicMock
+
+import pytest
 
 from braket.experimental_capabilities import (
-    ExperimentalCapability,
     EnableExperimentalCapability,
+    ExperimentalCapability,
     list_capabilities,
-    IqmExperimentalCapabilities,
 )
+from braket.experimental_capabilities.experimental_capability import register_capabilities
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
     ExperimentalCapabilityContextError,
 )
-from braket.experimental_capabilities.experimental_capability import register_capabilities
-from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
-from braket.circuits import Circuit
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-
-from braket.experimental_capabilities.experimental_capability_context import GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT
 
 
 def reset_capabilities_context():
@@ -29,17 +22,17 @@ def reset_capabilities_context():
 
 @register_capabilities
 class MockDeviceExperimentalCapabilities(Enum):
-    feature1 = ExperimentalCapability(
-        "feature1", description="Mock experimental capability 1"
-    )
-    feature2 = ExperimentalCapability(
-        "feature2", description="Mock experimental capability 2"
+    feature1 = ExperimentalCapability("feature1", description="Mock experimental capability 1")
+    feature2 = ExperimentalCapability("feature2", description="Mock experimental capability 2")
+
+GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.register_capability(
+    MockDeviceExperimentalCapabilities.feature1.value
 )
-GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.register_capability(MockDeviceExperimentalCapabilities.feature1.value)
-GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.register_capability(MockDeviceExperimentalCapabilities.feature2.value)
+GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.register_capability(
+    MockDeviceExperimentalCapabilities.feature2.value
+)
 
 
-# Tests for basic ExperimentalCapability functionality
 def test_experimental_capability_creation():
     cap = ExperimentalCapability("test_cap", "This is a test capability")
     assert cap.name == "test_cap"
@@ -47,7 +40,6 @@ def test_experimental_capability_creation():
     assert cap.__doc__ == "test_cap: This is a test capability"
 
 
-# Tests for capability registration
 def test_register_capabilities():
     class TestCapabilities(Enum):
         test_cap = ExperimentalCapability("test_cap", "Test capability")
@@ -59,7 +51,6 @@ def test_register_capabilities():
     assert "test_cap: Test capability" in capabilities_list
 
 
-# Tests for EnableExperimentalCapability context manager
 def test_enable_experimental_capability_context():
     reset_capabilities_context()
 

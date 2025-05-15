@@ -11,15 +11,26 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""IQM-specific experimental capabilities.
+
+This module defines experimental capabilities specific to IQM devices.
+"""
+
 import enum
+
 from braket.experimental_capabilities.experimental_capability import (
-    register_capabilities,
     ExperimentalCapability,
+    register_capabilities,
 )
 
 
 @register_capabilities
 class IqmExperimentalCapabilities(enum.Enum):
+    """Experimental capabilities available on IQM devices.
+    This enum contains all experimental capabilities that are specific to
+    IQM quantum processing units (QPUs).
+    """
+
     classical_control = ExperimentalCapability(
         "classical_control",
         description=(
