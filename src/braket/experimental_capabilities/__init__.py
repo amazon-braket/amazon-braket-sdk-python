@@ -18,7 +18,8 @@ from braket.experimental_capabilities.experimental_capability import (
 from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
     IqmExperimentalCapabilities,  # noqa: F401
 )
-from braket.experimental_capabilities.experimental_capability_context import (
-    EnableExperimentalCapability,  # isort: skip # noqa: F401
+
+from braket.experimental_capabilities.experimental_capability_context import (  # isort: skip
+    EnableExperimentalCapability,  # noqa: F401
 )
 from braket.experimental_capabilities.iqm import classical_control  # isort: skip # noqa: F401
