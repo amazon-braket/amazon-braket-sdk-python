@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.91.2 (2025-04-22)
+
+### Bug Fixes and Other Changes
+
+ * handling capability upgrade issues
+
+## v1.91.1 (2025-04-21)
+
+### Bug Fixes and Other Changes
+
+ * concatenate time series value with unpacking instead of +
+
 ## v1.91.0 (2025-03-18)
 
 ### Features

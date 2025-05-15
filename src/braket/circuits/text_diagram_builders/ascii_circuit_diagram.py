@@ -167,7 +167,6 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         return cls._create_output(symbols, connections, circuit_qubits, global_phase)
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     def _draw_symbol(
         cls, symbol: str, symbols_width: int, connection: Literal["above", "below", "both", "none"]

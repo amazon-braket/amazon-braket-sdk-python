@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional
 
+import pydantic
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
 
@@ -379,13 +380,21 @@ class AwsDevice(Device):
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
-        device_poll_interval = self._properties.service.getTaskPollIntervalMillis
-        self._poll_interval_seconds = (
-            device_poll_interval / 1000.0
-            if device_poll_interval
-            else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
-        )
+        try:
+            self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
+            device_poll_interval = self._properties.service.getTaskPollIntervalMillis
+            self._poll_interval_seconds = (
+                device_poll_interval / 1000.0
+                if device_poll_interval
+                else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
+            )
+        except (pydantic.v1.ValidationError, pydantic.ValidationError):
+            warnings.warn(
+                f"Unable to determine device capabilities for '{self._arn}'."
+                " Please make sure you are using the latest version of amazon-braket-schemas.",
+                stacklevel=1,
+            )
+            self._poll_interval_seconds = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
         self._topology_graph = None
         self._frames = None
         self._ports = None
