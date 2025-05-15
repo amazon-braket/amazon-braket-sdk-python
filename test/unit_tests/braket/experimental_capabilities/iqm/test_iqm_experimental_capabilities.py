@@ -24,7 +24,7 @@ def reset_capabilities_context():
         GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[cap_name] = False
 
 
-def test_ccprx_requires_capability():
+def test_ccprx_invalid_capability_context():
     reset_capabilities_context()
     # Without enabling the capability, CCPRx should raise an error
     with pytest.raises(ExperimentalCapabilityContextError):
@@ -37,6 +37,7 @@ def test_ccprx_with_capability():
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         assert cc_prx.parameters == [math.pi / 2, math.pi / 4, 0]
+        assert cc_prx.ascii_symbols == ("CCPRx",)
 
         circuit = Circuit()
         circuit.cc_prx(0, math.pi / 2, math.pi / 4, 0)
@@ -60,7 +61,7 @@ def test_ccprx_with_free_parameters():
 
 
 # Tests for MeasureFF quantum operator
-def test_measure_ff_requires_capability():
+def test_measure_ff_invalid_capability_context():
     reset_capabilities_context()
     # Without enabling the capability, MeasureFF should raise an error
     with pytest.raises(ExperimentalCapabilityContextError):
@@ -73,6 +74,7 @@ def test_measure_ff_with_capability():
     with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
         measure_ff = MeasureFF(0)
         assert measure_ff.parameters == [0]
+        assert measure_ff.ascii_symbols == ("MFF",)
 
         circuit = Circuit()
         circuit.measure_ff(0, 0)

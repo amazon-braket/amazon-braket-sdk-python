@@ -62,7 +62,7 @@ class ExperimentalQuantumOperator(QuantumOperator):
                 "{expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
             )
 
-        super().__init__(qubit_count=1, ascii_symbols=["C"])
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         self._parameters = None
 
     @property
@@ -143,7 +143,7 @@ class CCPRx(ExperimentalQuantumOperator):
         angle_2: FreeParameterExpression | float,
         feedback_key: int,
     ):
-        super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["C"])
+        super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["CCPRx"])
         angles = [
             (angle if isinstance(angle, FreeParameterExpression) else float(angle))
             for angle in (angle_1, angle_2)
