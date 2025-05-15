@@ -17,9 +17,9 @@ from collections.abc import Generator
 from dataclasses import dataclass
 
 import numpy as np
+from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
 from braket.annealing import ProblemType
-from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
 
 @dataclass

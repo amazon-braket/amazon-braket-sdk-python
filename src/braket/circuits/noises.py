@@ -15,9 +15,9 @@ import itertools
 from collections.abc import Iterable
 from typing import Any, ClassVar
 
+import braket.ir.jaqcd as ir
 import numpy as np
 
-import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
