@@ -11,8 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
+import types
 from enum import Enum
-from typing import Any, Optional
 
 from braket.experimental_capabilities.experimental_capability import (
     EXPERIMENTAL_CAPABILITIES,
@@ -61,7 +63,7 @@ class GlobalExperimentalCapabilityContext:
             raise ExperimentalCapabilityContextError(f"Unknown capability flag: {capability.name}")
         return self.capabilities[capability.extended_name]
 
-    def register_capability(self, cap: ExperimentalCapability):
+    def register_capability(self, cap: ExperimentalCapability) -> None:
         """Register a new experimental capability to the global capability context.
 
         Args:
@@ -90,9 +92,9 @@ class EnableExperimentalCapability:
             *capabilities: One or more capabilities to enable.
                 Can be ExperimentalCapability instances or Enum members containing them.
         """
-        self.capabilities: list[ExperimentalCapability] = list([
+        self.capabilities: list[ExperimentalCapability] = [
             cap.value if isinstance(cap, Enum) else cap for cap in capabilities
-        ])
+        ]
         self._previous_values: dict[str, bool] = {}
 
         for capability in self.capabilities:
@@ -112,7 +114,10 @@ class EnableExperimentalCapability:
             GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[capability.extended_name] = True
 
     def __exit__(
-        self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
     ) -> None:
         """Exit the context, restoring each capability to its previous state.
 

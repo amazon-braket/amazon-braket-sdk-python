@@ -11,8 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import enum
-from typing import Type
 
 
 class ExperimentalCapability:
@@ -64,7 +65,7 @@ class ExperimentalCapability:
 EXPERIMENTAL_CAPABILITIES: dict[str, ExperimentalCapability] = {}
 
 
-def register_capabilities(enum_cls: Type[enum.Enum]) -> Type[enum.Enum]:
+def register_capabilities(enum_cls: type[enum.Enum]) -> type[enum.Enum]:
     """Register all capabilities defined in an Enum class.
     This decorator function registers all ExperimentalCapability instances
     contained in Enum members into the global registry.
@@ -81,7 +82,7 @@ def register_capabilities(enum_cls: Type[enum.Enum]) -> Type[enum.Enum]:
         ...     my_cap = ExperimentalCapability("my_cap", "My experimental capability")
     """
     for member in enum_cls:
-        extended_name = member.__str__()
+        extended_name = str(member)
         member.value.set_extended_name(extended_name)
         EXPERIMENTAL_CAPABILITIES[extended_name] = member.value
     return enum_cls
@@ -95,6 +96,5 @@ def list_capabilities() -> str:
             with their names and descriptions.
     """
     lines = ["Available Experimental Capabilities:"]
-    for cap in EXPERIMENTAL_CAPABILITIES.values():
-        lines.append(f" - {cap.name}: {cap.description}")
+    lines.extend(f" - {cap.name}: {cap.description}" for cap in EXPERIMENTAL_CAPABILITIES.values())
     return "\n".join(lines)

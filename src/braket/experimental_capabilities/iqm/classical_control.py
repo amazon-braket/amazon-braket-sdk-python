@@ -58,7 +58,8 @@ class ExperimentalQuantumOperator(QuantumOperator):
         """
         if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(expcap_flag):
             raise ExperimentalCapabilityContextError(
-                f"{self.__class__.__name__} can only be instantiated when {expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
+                f"{self.__class__.__name__} can only be instantiated when "
+                "{expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
             )
 
         super().__init__(qubit_count=1, ascii_symbols=["C"])
@@ -147,7 +148,7 @@ class CCPRx(ExperimentalQuantumOperator):
             (angle if isinstance(angle, FreeParameterExpression) else float(angle))
             for angle in (angle_1, angle_2)
         ]
-        self._parameters = angles + [feedback_key]
+        self._parameters = [*angles, feedback_key]
 
     @property
     def _qasm_name(self) -> str:

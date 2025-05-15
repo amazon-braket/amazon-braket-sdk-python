@@ -16,6 +16,8 @@
 This module defines experimental capabilities specific to IQM devices.
 """
 
+from __future__ import annotations
+
 import enum
 
 from braket.experimental_capabilities.experimental_capability import (

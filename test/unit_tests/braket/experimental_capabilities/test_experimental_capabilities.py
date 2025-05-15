@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 
 import pytest
@@ -24,6 +25,7 @@ def reset_capabilities_context():
 class MockDeviceExperimentalCapabilities(Enum):
     feature1 = ExperimentalCapability("feature1", description="Mock experimental capability 1")
     feature2 = ExperimentalCapability("feature2", description="Mock experimental capability 2")
+
 
 GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.register_capability(
     MockDeviceExperimentalCapabilities.feature1.value
