@@ -11,15 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.experimental_capabilities.experimental_capability import (
-    ExperimentalCapability,  # noqa: F401
-    list_capabilities,  # noqa: F401
-)
-from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
-    IqmExperimentalCapabilities,  # noqa: F401
-)
+# from braket.experimental_capabilities.experimental_capability import (
+#     ExperimentalCapability,
+#     list_capabilities,
+# )
+# from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
+#     IqmExperimentalCapabilities,
+# )
 
-from braket.experimental_capabilities.experimental_capability_context import (  # isort: skip
+from braket.experimental_capabilities.experimental_capability_context import (
     EnableExperimentalCapability,  # noqa: F401
 )
-from braket.experimental_capabilities.iqm import classical_control  # isort: skip # noqa: F401
+from braket.experimental_capabilities.iqm import classical_control  # noqa: F401

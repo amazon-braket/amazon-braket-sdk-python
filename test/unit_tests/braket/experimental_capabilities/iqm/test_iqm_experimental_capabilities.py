@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
+
 import math
 from unittest.mock import MagicMock, patch
 
@@ -22,10 +23,8 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 from braket.experimental_capabilities import (
     EnableExperimentalCapability,
-    IqmExperimentalCapabilities,
 )
 from braket.experimental_capabilities.experimental_capability_context import (
-    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
     ExperimentalCapabilityContextError,
 )
 from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
@@ -39,7 +38,7 @@ def test_ccprx_invalid_capability_context():
 
 def test_ccprx_with_capability():
     # With capability enabled, CCPRx should work
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         assert cc_prx.parameters == [math.pi / 2, math.pi / 4, 0]
         assert cc_prx.ascii_symbols == ("CCPRx",)
@@ -51,7 +50,7 @@ def test_ccprx_with_capability():
 
 
 def test_ccprx_with_free_parameters():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         # Create CCPRx with FreeParameter
         theta = FreeParameter("theta")
         phi = FreeParameter("phi")
@@ -64,7 +63,6 @@ def test_ccprx_with_free_parameters():
         assert circuit.instructions[0].operator.parameters[1] == phi
 
 
-# Tests for MeasureFF quantum operator
 def test_measure_ff_invalid_capability_context():
     # Without enabling the capability, MeasureFF should raise an error
     with pytest.raises(ExperimentalCapabilityContextError):
@@ -73,7 +71,7 @@ def test_measure_ff_invalid_capability_context():
 
 def test_measure_ff_with_capability():
     # With capability enabled, MeasureFF should work
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         measure_ff = MeasureFF(0)
         assert measure_ff.parameters == [0]
         assert measure_ff.ascii_symbols == ("MFF",)
@@ -85,12 +83,12 @@ def test_measure_ff_with_capability():
 
 
 def test_measure_ff_properties():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         measure_ff = MeasureFF(0)
 
 
 def test_ccprx_to_ir():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         target = [0]
         serialization_props = OpenQASMSerializationProperties(qubit_reference_type="indexed")
@@ -103,7 +101,7 @@ def test_ccprx_to_ir():
 
 
 def test_measure_ff_to_ir():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         measure_ff = MeasureFF(0)
         target = [0]
         serialization_props = OpenQASMSerializationProperties(qubit_reference_type="indexed")
@@ -116,7 +114,7 @@ def test_measure_ff_to_ir():
 
 
 def test_unsupported_ir_type():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         cc_prx = CCPRx(math.pi / 2, math.pi / 4, 0)
         target = [0]
 
@@ -125,7 +123,7 @@ def test_unsupported_ir_type():
 
 
 def test_mixing_standard_and_experimental_operations():
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         circuit = Circuit()
         circuit.h(0)
         circuit.cc_prx(0, math.pi / 2, math.pi / 4, 0)
@@ -149,7 +147,7 @@ def test_circuit_with_classical_control_e2e(mock_aws_device_class):
 
     device = mock_aws_device_class("arn:aws:braket:us-west-2::device/qpu/iqm/Garnet")
 
-    with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+    with EnableExperimentalCapability():
         circuit = Circuit()
         circuit.cc_prx(1, math.pi / 2, math.pi / 2, 0)
         circuit.measure_ff(1, 0)

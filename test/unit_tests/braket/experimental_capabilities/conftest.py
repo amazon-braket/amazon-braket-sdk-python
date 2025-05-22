@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
+
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
 )
@@ -19,5 +20,4 @@ from braket.experimental_capabilities.experimental_capability_context import (
 
 @pytest.fixture(autouse=True)
 def reset_capabilities_context():
-    for cap_name in GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.capabilities:
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[cap_name] = False
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable()

@@ -24,23 +24,24 @@ from braket.circuits.serialization import (
     IRType,
     SerializationProperties,
 )
-from braket.experimental_capabilities.experimental_capability import ExperimentalCapability
+
+# from braket.experimental_capabilities.experimental_capability import ExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
     ExperimentalCapabilityContextError,
 )
-from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
-    IqmExperimentalCapabilities,
-)
+
+# from braket.experimental_capabilities.iqm.iqm_experimental_capabilities import (
+#     IqmExperimentalCapabilities,
+# )
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
-EXPCAP_FLAG = IqmExperimentalCapabilities.classical_control.value
+# EXPCAP_FLAG = IqmExperimentalCapabilities.classical_control.value
 
 
 class ExperimentalQuantumOperator(QuantumOperator):
     def __init__(
         self,
-        expcap_flag: ExperimentalCapability,
         qubit_count: int,
         ascii_symbols: list[str],
     ) -> None:
@@ -56,11 +57,7 @@ class ExperimentalQuantumOperator(QuantumOperator):
             qubit_count: The number of qubits this operator acts on.
             ascii_symbols: ASCII string symbols for the operator.
         """
-        if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(expcap_flag):
-            raise ExperimentalCapabilityContextError(
-                f"{self.__class__.__name__} can only be instantiated when "
-                f"{expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
-            )
+        self._validate_experimental_capabilities_enabled()
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         self._parameters = None
@@ -122,6 +119,15 @@ class ExperimentalQuantumOperator(QuantumOperator):
         parameters = f"({', '.join(map(str, self.parameters))})"
         return f"{self._qasm_name}{parameters} {target_qubits[0]};"
 
+    def _validate_experimental_capabilities_enabled(self) -> None:
+        """Check if the experimental capabilities are enabled."""
+        if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled:
+            raise ExperimentalCapabilityContextError(
+                f"{self.__class__.__name__} is an experimental capability. It can only be "
+                "instantiated under EnableExperimentalCapability. For more information about "
+                "experimental capabilities, view the Amazon Braket Developer Guide."
+            )
+
 
 class CCPRx(ExperimentalQuantumOperator):
     """Classically controlled Phased Rx gate.
@@ -143,7 +149,7 @@ class CCPRx(ExperimentalQuantumOperator):
         angle_2: FreeParameterExpression | float,
         feedback_key: int,
     ):
-        super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["CCPRx"])
+        super().__init__(qubit_count=1, ascii_symbols=["CCPRx"])
         angles = [
             (angle if isinstance(angle, FreeParameterExpression) else float(angle))
             for angle in (angle_1, angle_2)
@@ -206,7 +212,7 @@ class MeasureFF(ExperimentalQuantumOperator):
         self,
         feedback_key: int,
     ) -> None:
-        super().__init__(expcap_flag=EXPCAP_FLAG, qubit_count=1, ascii_symbols=["MFF"])
+        super().__init__(qubit_count=1, ascii_symbols=["MFF"])
         self._parameters = [feedback_key]
 
     @property

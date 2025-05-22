@@ -14,12 +14,6 @@
 from __future__ import annotations
 
 import types
-from enum import Enum
-
-from braket.experimental_capabilities.experimental_capability import (
-    EXPERIMENTAL_CAPABILITIES,
-    ExperimentalCapability,
-)
 
 
 class ExperimentalCapabilityContextError(Exception):
@@ -32,44 +26,32 @@ class GlobalExperimentalCapabilityContext:
         This class stores the state of all registered experimental capabilities
         and provides methods to check whether specific capabilities are enabled.
         """
-        self._capabilities = {
-            cap.extended_name: False for cap in EXPERIMENTAL_CAPABILITIES.values()
-        }
+        self._is_enabled = False
 
     @property
-    def capabilities(self) -> dict[str, bool]:
-        """Get a dictionary of all capabilities and their enabled status.
+    def is_enabled(self) -> bool:
+        """Check if experimental capabilities are enabled.
 
         Returns:
-            dict[str, bool]: Dictionary mapping capability extended names to boolean values
-                indicating whether the capability is enabled.
+            bool: True if experimental capabilities are enabled, False otherwise.
         """
-        return self._capabilities
+        return self._is_enabled
 
-    def check_enabled(self, capability: ExperimentalCapability | Enum) -> bool:
-        """Check if a specific capability is enabled.
+    def enable(self) -> None:
+        """Enable all experimental capabilities."""
+        self._is_enabled = True
+
+    def disable(self) -> None:
+        """Disable all experimental capabilities."""
+        self._is_enabled = False
+
+    def set_state(self, state: bool) -> None:
+        """Set the state of all experimental capabilities.
 
         Args:
-            capability: The capability to check. Can be an ExperimentalCapability
-                instance or an Enum member containing one.
-
-        Returns:
-            bool: True if the capability is enabled, False otherwise.
+            state: The state to set. True to enable all capabilities, False to disable all.
         """
-        if isinstance(capability, Enum):
-            capability = capability.value
-
-        if capability.extended_name not in self._capabilities:
-            raise ExperimentalCapabilityContextError(f"Unknown capability flag: {capability.name}")
-        return self.capabilities[capability.extended_name]
-
-    def register_capability(self, cap: ExperimentalCapability) -> None:
-        """Register a new experimental capability to the global capability context.
-
-        Args:
-            cap: The experimental capability to register.
-        """
-        self._capabilities[cap.extended_name] = False
+        self._is_enabled = bool(state)
 
 
 # Global singleton instance
@@ -77,7 +59,7 @@ GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT = GlobalExperimentalCapabilityContext()
 
 
 class EnableExperimentalCapability:
-    def __init__(self, *capabilities: ExperimentalCapability | Enum) -> None:
+    def __init__(self) -> None:
         """Context manager for temporarily enabling experimental capabilities.
         This context manager allows enabling one or more experimental capabilities
         for the duration of a code block, after which the capabilities are
@@ -92,26 +74,13 @@ class EnableExperimentalCapability:
             *capabilities: One or more capabilities to enable.
                 Can be ExperimentalCapability instances or Enum members containing them.
         """
-        self.capabilities: list[ExperimentalCapability] = [
-            cap.value if isinstance(cap, Enum) else cap for cap in capabilities
-        ]
-        self._previous_values: dict[str, bool] = {}
-
-        for capability in self.capabilities:
-            if capability.extended_name not in GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.capabilities:
-                raise ExperimentalCapabilityContextError(
-                    f"Unknown capability flag: {capability.extended_name}"
-                )
+        self._previous_state = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
 
     def __enter__(self) -> None:
         """Enter the context, enabling all specified capabilities.
         This method saves the current state of each capability and then enables them.
         """
-        for capability in self.capabilities:
-            self._previous_values[capability.extended_name] = (
-                GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.capabilities[capability.extended_name]
-            )
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[capability.extended_name] = True
+        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.enable()
 
     def __exit__(
         self,
@@ -126,5 +95,4 @@ class EnableExperimentalCapability:
             exc_val: The exception value if an exception was raised in the context, else None.
             exc_tb: The exception traceback if an exception was raised in the context, else None.
         """
-        for cap_extended_name, old_value in self._previous_values.items():
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT._capabilities[cap_extended_name] = old_value
+        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.set_state(self._previous_state)
