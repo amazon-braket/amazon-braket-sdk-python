@@ -59,7 +59,7 @@ class ExperimentalQuantumOperator(QuantumOperator):
         if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.check_enabled(expcap_flag):
             raise ExperimentalCapabilityContextError(
                 f"{self.__class__.__name__} can only be instantiated when "
-                "{expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
+                f"{expcap_flag.extended_name} is enabled in EnableExperimentalCapability."
             )
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
