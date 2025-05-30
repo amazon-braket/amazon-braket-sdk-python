@@ -879,6 +879,25 @@ def test_from_ir_round_trip_transformation():
     assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
 
 
+def test_from_ir_with_verbatim_box():
+    ir = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "#pragma braket verbatim",
+            "box {",
+            "  h $0;",
+            "  cnot $0, $1;",
+            "}",
+        ]),
+        inputs={},
+    )
+
+    verbatim_subcirc = Circuit().h(0).cnot(0, 1)
+    expected_circ = Circuit().add_verbatim_box(verbatim_subcirc)
+    actual_circ = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circ
+
+
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
