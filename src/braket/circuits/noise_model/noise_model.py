@@ -268,11 +268,33 @@ class NoiseModel:
             Circuit: A new circuit that's a `noisy` version of the passed in circuit. The targets
             set will be populated with the list of targets in the new circuit.
         """
+        from braket.circuits.measure import Measure
+        from braket.circuits.noise_model.measure_criteria import MeasureCriteria
         new_circuit = Circuit()
         for circuit_instruction in circuit.instructions:
+            # Check if this is a Measure instruction and if any MeasureCriteria matches
+            is_measure = isinstance(circuit_instruction.operator, Measure)
+            measure_criteria_matched = False
+            if is_measure:
+                for item in gate_noise_instructions:
+                    # Only apply noise before measure if the criteria is MeasureCriteria
+                    if isinstance(item.criteria, MeasureCriteria) and item.criteria.instruction_matches(circuit_instruction):
+                        measure_criteria_matched = True
+                        if item.noise.fixed_qubit_count() == 1:
+                            for qubit in circuit_instruction.target:
+                                new_circuit.add_instruction(Instruction(item.noise, qubit))
+                        else:
+                            new_circuit.add_instruction(Instruction(item.noise, list(circuit_instruction.target)))
+                new_circuit.add_instruction(circuit_instruction)
+                # For measure instructions, do not apply other gate noise after
+                continue
+            # For all other instructions, apply noise after as usual
             new_circuit.add_instruction(circuit_instruction)
             target_qubits = list(circuit_instruction.target)
             for item in gate_noise_instructions:
+                # Skip MeasureCriteria for non-measure instructions
+                if isinstance(item.criteria, MeasureCriteria):
+                    continue
                 if item.criteria.instruction_matches(circuit_instruction):
                     if item.noise.fixed_qubit_count() == len(target_qubits):
                         new_circuit.add_instruction(Instruction(item.noise, target_qubits))
