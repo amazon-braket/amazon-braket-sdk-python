@@ -68,7 +68,7 @@ class AwsDeviceType(str, Enum):
     QPU = "QPU"
 
 
-class AwsDevice(Device):
+class AwsDevice(Device): 
     """Amazon Braket implementation of a device.
     Use this class to retrieve the latest metadata about the device and to run a quantum task on the
     device.
