@@ -17,6 +17,7 @@ from collections.abc import Iterable
 from typing import Any, Optional
 
 from braket.circuits import circuit
+from braket.circuits.angled_gate import _multi_angled_ascii_characters
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.instruction import Instruction
 from braket.circuits.quantum_operator import QuantumOperator
@@ -149,7 +150,11 @@ class CCPRx(ExperimentalQuantumOperator):
         angle_2: FreeParameterExpression | float,
         feedback_key: int,
     ):
-        super().__init__(qubit_count=1, ascii_symbols=["CCPRx"])
+        ascii_symbols = f"{feedback_key}→" + _multi_angled_ascii_characters(
+            "CCPRx", angle_1, angle_2
+        )
+        super().__init__(qubit_count=1, ascii_symbols=[ascii_symbols])
+
         angles = [
             (angle if isinstance(angle, FreeParameterExpression) else float(angle))
             for angle in (angle_1, angle_2)
@@ -201,8 +206,9 @@ class CCPRx(ExperimentalQuantumOperator):
 
 class MeasureFF(ExperimentalQuantumOperator):
     r"""Measurement for Feed Forward control.
-    Performs a measurement and stores the result in a classical feedback register
-    for later use in conditional operations.
+
+    Performs a measurement. The result is associated with a feedback key that
+    can be used later in conditional operations.
 
     Args:
         feedback_key (int): The integer feedback key that points to a measurement result.
@@ -212,7 +218,8 @@ class MeasureFF(ExperimentalQuantumOperator):
         self,
         feedback_key: int,
     ) -> None:
-        super().__init__(qubit_count=1, ascii_symbols=["MFF"])
+        ascii_symbols = f"MFF→{feedback_key}"
+        super().__init__(qubit_count=1, ascii_symbols=[ascii_symbols])
         self._parameters = [feedback_key]
 
     @property

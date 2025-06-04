@@ -22,10 +22,7 @@ class ExperimentalCapabilityContextError(Exception):
 
 class GlobalExperimentalCapabilityContext:
     def __init__(self) -> None:
-        """A global singleton that tracks which experimental capabilities are enabled.
-        This class stores the state of all registered experimental capabilities
-        and provides methods to check whether specific capabilities are enabled.
-        """
+        """A global singleton that tracks whether experimental capabilities are enabled."""
         self._is_enabled = False
 
     @property
@@ -60,19 +57,23 @@ GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT = GlobalExperimentalCapabilityContext()
 
 class EnableExperimentalCapability:
     def __init__(self) -> None:
-        """Context manager for temporarily enabling experimental capabilities.
-        This context manager allows enabling one or more experimental capabilities
+        """This context manager temporarily enables experimental capabilities
         for the duration of a code block, after which the capabilities are
         returned to their previous states.
 
+        Experimental capabilities are those that hardware providers are rapidly
+        developing. As hardware improve and the support on the capabilities are expanded,
+        the behavior may change, including becoming less restrictive, more performant
+        and having higher quality. See the developer guide [1] to learn more about
+        experimental capabilities on Amazon Braket.
+        [1] https://docs.aws.amazon.com/braket/latest/developerguide/
+        braket-experimental-capabilities.html
+
         Examples:
-            >>> with EnableExperimentalCapability(IqmExperimentalCapabilities.classical_control):
+            >>> with EnableExperimentalCapability():
             ...     circuit = Circuit()
             ...     circuit.cc_prx(0, 0.1, 0.2, 0)
 
-        Args:
-            *capabilities: One or more capabilities to enable.
-                Can be ExperimentalCapability instances or Enum members containing them.
         """
         self._previous_state = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
 
