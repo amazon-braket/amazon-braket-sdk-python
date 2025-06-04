@@ -41,7 +41,7 @@ def test_ccprx_with_capability():
     with EnableExperimentalCapability():
         cc_prx = CCPRx(0.5, 0.8, 0)
         assert cc_prx.parameters == [0.5, 0.8, 0]
-        assert cc_prx.ascii_symbols == ("0->CCPRx(0.50, 0.80)",)
+        assert cc_prx.ascii_symbols == ("0→CCPRx(0.50, 0.80)",)
 
         circuit = Circuit()
         circuit.cc_prx(0, math.pi / 2, math.pi / 4, 0)
@@ -74,7 +74,7 @@ def test_measure_ff_with_capability():
     with EnableExperimentalCapability():
         measure_ff = MeasureFF(0)
         assert measure_ff.parameters == [0]
-        assert measure_ff.ascii_symbols == ("MFF->0",)
+        assert measure_ff.ascii_symbols == ("MFF→0",)
 
         circuit = Circuit()
         circuit.measure_ff(0, 0)

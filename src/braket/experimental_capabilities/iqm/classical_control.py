@@ -150,7 +150,7 @@ class CCPRx(ExperimentalQuantumOperator):
         angle_2: FreeParameterExpression | float,
         feedback_key: int,
     ):
-        ascii_symbols = f"{feedback_key}->" + _multi_angled_ascii_characters(
+        ascii_symbols = f"{feedback_key}→" + _multi_angled_ascii_characters(
             "CCPRx", angle_1, angle_2
         )
         super().__init__(qubit_count=1, ascii_symbols=[ascii_symbols])
@@ -218,7 +218,7 @@ class MeasureFF(ExperimentalQuantumOperator):
         self,
         feedback_key: int,
     ) -> None:
-        ascii_symbols = f"MFF->{feedback_key}"
+        ascii_symbols = f"MFF→{feedback_key}"
         super().__init__(qubit_count=1, ascii_symbols=[ascii_symbols])
         self._parameters = [feedback_key]
 
