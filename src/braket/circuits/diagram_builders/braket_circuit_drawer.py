@@ -1,46 +1,15 @@
-"""
-braket_circuit_drawer.py
+from typing import Any, Optional
 
-Provides functionality to visualize Braket `Circuit` objects using Matplotlib
-or to generate LaTeX (quantikz) code. Inspired by Qiskit's `circuit_drawer`.
-
-Main functions:
-- draw_circuit_matplotlib(circuit, figsize=(None, None), dx=1.5, dy=1.0):
-    Draws a Braket `Circuit` using Matplotlib, including parameterized gates and
-    multi-qubit measurements.
-
-- generate_circuit_latex(circuit, initial_states=None):
-    Generates a string of LaTeX code (quantikz) that represents the circuit.
-    Parameterized gates show their angles (rounded to 3 decimals). Multi-qubit
-    measurements put a `\\meter{}` on each measured qubit.
-
-- circuit_drawer(circuit, style='mpl', **kwargs):
-    High-level function to choose between 'mpl' (Matplotlib) or 'latex' output.
-
-Usage example:
-    from braket.circuits import Circuit
-    from braket.circuits.diagram_builders.braket_circuit_drawer import circuit_drawer
-    import matplotlib.pyplot as plt
-
-    circuit = Circuit().h(0).cnot(0, 1).rx(1, 3.14159).measure(0, 1)
-
-    # 1) Visualize with Matplotlib:
-    fig, ax = circuit_drawer(circuit, style='mpl', figsize=(6, 4))
-    plt.show()
-
-    # 2) Get LaTeX code (quantikz):
-    latex_code = circuit_drawer(circuit, style='latex', initial_states=['|0>', '|0>'])
-    print(latex_code)
-"""
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle, Circle
+from matplotlib.patches import Circle, Rectangle
+
 
 PARAMETERIZED_GATES = {"RX", "RY", "RZ", "PHASE", "U3"}
 CONTROL_GATES = {"CNOT", "CX"}
 TOFFOLI_GATES = {"TOFFOLI", "CCX", "CCNOT"}
 
 
-def parse_circuit(circuit):
+def parse_circuit(circuit: Any) -> tuple[list[dict[str, Any]], int]:
     instructions = []
     max_qubit_index = -1
 
@@ -60,7 +29,8 @@ def parse_circuit(circuit):
             qubits = list(instr.targets)
 
         if qubits:
-            max_qubit_index = max(max_qubit_index, max(qubits))
+            mq = max(qubits)
+            max_qubit_index = max(max_qubit_index, mq)
 
         instructions.append({
             "gate": gate_name,
@@ -73,7 +43,12 @@ def parse_circuit(circuit):
     return instructions, n_qubits
 
 
-def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
+def draw_circuit_matplotlib(
+    circuit: Any,
+    figsize: tuple[float, float] = (8, 6),
+    dx: float = 1.5,
+    dy: float = 1.0,
+) -> tuple[Any, Any]:
     instructions, n_qubits = parse_circuit(circuit)
     if n_qubits == 0:
         raise ValueError("The circuit contains no qubits to visualize.")
@@ -88,7 +63,7 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
     ax.set_aspect("equal")
     ax.axis("off")
 
-    def y_of(q):
+    def y_of(q: int) -> float:
         return -q * dy
 
     x_min = -dx
@@ -97,10 +72,12 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
         y = y_of(q)
         ax.hlines(y, x_min, x_max, color="black", linewidth=1.0)
 
-    def _draw_meter(x_ctr, yq, size=0.15 * dy):
+    def _draw_meter(x_ctr: float, yq: float, size: float = 0.15 * dy):
         circle = Circle((x_ctr, yq), size, fill=False, edgecolor="black", linewidth=1.0)
         ax.add_patch(circle)
-        ax.hlines(yq + size * 0.3, x_ctr - size * 0.5, x_ctr + size * 0.5, color="black", linewidth=1.0)
+        ax.hlines(
+            yq + size * 0.3, x_ctr - size * 0.5, x_ctr + size * 0.5, color="black", linewidth=1.0
+        )
         ax.vlines(x_ctr, yq - size * 0.3, yq + size * 0.3, color="black", linewidth=1.0)
 
     for instr_dict in instructions:
@@ -118,14 +95,26 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
             yq = y_of(q)
             angle = getattr(instr.operator, "angle", None)
             label = f"{gate}({angle:.3f})" if angle is not None else gate
-            rect = Rectangle((x_ctr - 0.4 * dx, yq - 0.3 * dy), 0.8 * dx, 0.6 * dy, facecolor="white", edgecolor="black")
+            rect = Rectangle(
+                (x_ctr - 0.4 * dx, yq - 0.3 * dy),
+                0.8 * dx,
+                0.6 * dy,
+                facecolor="white",
+                edgecolor="black",
+            )
             ax.add_patch(rect)
             ax.text(x_ctr, yq, label, ha="center", va="center", fontsize=8)
 
         elif len(qubits) == 1 and gate not in CONTROL_GATES.union(TOFFOLI_GATES).union({"MEASURE"}):
             q = qubits[0]
             yq = y_of(q)
-            rect = Rectangle((x_ctr - 0.4 * dx, yq - 0.3 * dy), 0.8 * dx, 0.6 * dy, facecolor="white", edgecolor="black")
+            rect = Rectangle(
+                (x_ctr - 0.4 * dx, yq - 0.3 * dy),
+                0.8 * dx,
+                0.6 * dy,
+                facecolor="white",
+                edgecolor="black",
+            )
             ax.add_patch(rect)
             ax.text(x_ctr, yq, gate, ha="center", va="center", fontsize=8)
 
@@ -136,7 +125,9 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
             ax.add_patch(Circle((x_ctr, y_ctrl), r, color="black"))
             ax.add_patch(Circle((x_ctr, y_tgt), r, fill=False, edgecolor="black"))
             ax.text(x_ctr, y_tgt, "+", ha="center", va="center", fontsize=8)
-            ax.vlines(x_ctr, min(y_ctrl, y_tgt) + r, max(y_ctrl, y_tgt) - r, color="black", linewidth=1.0)
+            ax.vlines(
+                x_ctr, min(y_ctrl, y_tgt) + r, max(y_ctrl, y_tgt) - r, color="black", linewidth=1.0
+            )
 
         elif gate in TOFFOLI_GATES and len(qubits) == 3:
             q1, q2, qt = qubits
@@ -155,7 +146,13 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
         else:
             y_vals = [y_of(q) for q in qubits]
             y_top, y_bot = max(y_vals) + 0.3 * dy, min(y_vals) - 0.3 * dy
-            rect = Rectangle((x_ctr - 0.4 * dx, y_bot), 0.8 * dx, y_top - y_bot, facecolor="white", edgecolor="black")
+            rect = Rectangle(
+                (x_ctr - 0.4 * dx, y_bot),
+                0.8 * dx,
+                y_top - y_bot,
+                facecolor="white",
+                edgecolor="black",
+            )
             ax.add_patch(rect)
             ax.text(x_ctr, (y_top + y_bot) / 2, gate, ha="center", va="center", fontsize=8)
 
@@ -165,7 +162,7 @@ def draw_circuit_matplotlib(circuit, figsize=(8, 6), dx=1.5, dy=1.0):
     return fig, ax
 
 
-def generate_circuit_latex(circuit, initial_states=None):
+def generate_circuit_latex(circuit: Any, initial_states: Optional[list[str]] = None) -> str:
     instructions, n_qubits = parse_circuit(circuit)
     if n_qubits == 0:
         raise ValueError("The circuit contains no qubits to generate LaTeX.")
@@ -217,17 +214,20 @@ def generate_circuit_latex(circuit, initial_states=None):
 
     lines = ["\\begin{quantikz}"]
     for q in range(n_qubits):
-        label = initial_states[q] if initial_states and q < len(initial_states) else "\\lstick{\\ket{0}}"
+        label = (
+            f"\\lstick{{{initial_states[q]}}}"
+            if initial_states and q < len(initial_states)
+            else "\\lstick{\\ket{0}}"
+        )
         row_tokens = [label] + matrix[q]
-        lines.append(" & ".join(row_tokens) + " \\")
+        lines.append(" & ".join(row_tokens) + " \\\\")
     lines.append("\\end{quantikz}")
     return "\n".join(lines)
 
 
-def circuit_drawer(circuit, style="mpl", **kwargs):
+def circuit_drawer(circuit: Any, style: str = "mpl", **kwargs) -> Any:
     if style == "mpl":
         return draw_circuit_matplotlib(circuit, **kwargs)
-    elif style == "latex":
+    if style == "latex":
         return generate_circuit_latex(circuit, **kwargs)
-    else:
-        raise ValueError("Unknown style: must be 'mpl' or 'latex'.")
+    raise ValueError("Unknown style: must be 'mpl' or 'latex'.")
