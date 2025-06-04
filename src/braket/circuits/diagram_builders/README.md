@@ -1,6 +1,6 @@
 # Braket Circuit Drawer
 
-A lightweight Python module to visualize AWS Braket `Circuit` objects using Matplotlib or to export them as LaTeX (quantikz) code.  
+A lightweight Python module to visualize Braket `Circuit` objects using Matplotlib or to export them as LaTeX (quantikz) code.  
 Inspired by Qiskit’s `circuit_drawer`, this package supports common single-qubit gates, parameterized rotations, controlled gates (CNOT, Toffoli), multi-qubit gates, and multi-qubit measurements.
 
 ---
@@ -33,3 +33,38 @@ Inspired by Qiskit’s `circuit_drawer`, this package supports common single-qub
    ```bash
    python3 -m venv venv
    source venv/bin/activate          # On Windows: venv\Scripts\activate
+   pip install -e .
+   ```
+
+---
+
+## Usage Example
+
+```python
+from braket.circuits import Circuit
+from braket.circuits.diagram_builders.braket_circuit_drawer import circuit_drawer
+import matplotlib.pyplot as plt
+
+circuit = Circuit().h(0).cnot(0, 1).rz(1, 0.5).measure(0, 1)
+
+# Draw with Matplotlib
+fig, ax = circuit_drawer(circuit, style='mpl', figsize=(6, 4))
+plt.show()
+
+# Generate LaTeX (quantikz)
+latex_code = circuit_drawer(circuit, style='latex', initial_states=['|0>', '|0>'])
+print(latex_code)
+```
+
+---
+
+## Testing
+
+To run unit tests and lint checks:
+
+```bash
+tox -e unit-tests
+ruff check src --fix
+```
+
+Ensure `expected_circuit.png` is present for image diff testing.

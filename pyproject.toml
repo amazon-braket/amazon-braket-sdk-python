@@ -2,7 +2,7 @@
 [tool.pytest.ini_options]
 xfail_strict = true
 # https://pytest-xdist.readthedocs.io/en/latest/known-limitations.html
-addopts = "--verbose -n logical --durations=0 --durations-min=1 --dist worksteal"
+addopts = "--verbose"
 testpaths = ["test/unit_tests",]
 # Issue #557 in `pytest-cov` (currently v4.x) has not moved for a while now,
 # but once a resolution has been adopted we can drop this "ignore".

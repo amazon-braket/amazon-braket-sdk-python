@@ -3,7 +3,6 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Rectangle
 
-
 PARAMETERIZED_GATES = {"RX", "RY", "RZ", "PHASE", "U3"}
 CONTROL_GATES = {"CNOT", "CX"}
 TOFFOLI_GATES = {"TOFFOLI", "CCX", "CCNOT"}
@@ -43,6 +42,113 @@ def parse_circuit(circuit: Any) -> tuple[list[dict[str, Any]], int]:
     return instructions, n_qubits
 
 
+def _draw_param_gate(
+    ax: plt.Axes,
+    x_ctr: float,
+    yq: float,
+    gate: str,
+    angle: Optional[float],
+    dx: float,
+    dy: float,
+) -> None:
+    label = f"{gate}({angle:.3f})" if angle is not None else gate
+    rect = Rectangle(
+        (x_ctr - 0.4 * dx, yq - 0.3 * dy),
+        0.8 * dx,
+        0.6 * dy,
+        facecolor="white",
+        edgecolor="black",
+    )
+    ax.add_patch(rect)
+    ax.text(x_ctr, yq, label, ha="center", va="center", fontsize=8)
+
+
+def _draw_single_gate(
+    ax: plt.Axes,
+    x_ctr: float,
+    yq: float,
+    gate: str,
+    dx: float,
+    dy: float,
+) -> None:
+    rect = Rectangle(
+        (x_ctr - 0.4 * dx, yq - 0.3 * dy),
+        0.8 * dx,
+        0.6 * dy,
+        facecolor="white",
+        edgecolor="black",
+    )
+    ax.add_patch(rect)
+    ax.text(x_ctr, yq, gate, ha="center", va="center", fontsize=8)
+
+
+def _draw_control_gate(
+    ax: plt.Axes,
+    x_ctr: float,
+    y_ctrl: float,
+    y_tgt: float,
+    dy: float,
+) -> None:
+    r = 0.1 * dy
+    ax.add_patch(Circle((x_ctr, y_ctrl), r, color="black"))
+    ax.add_patch(Circle((x_ctr, y_tgt), r, fill=False, edgecolor="black"))
+    ax.text(x_ctr, y_tgt, "+", ha="center", va="center", fontsize=8)
+    ax.vlines(x_ctr, min(y_ctrl, y_tgt) + r, max(y_ctrl, y_tgt) - r, color="black", linewidth=1.0)
+
+
+def _draw_toffoli_gate(
+    ax: plt.Axes,
+    x_ctr: float,
+    y1: float,
+    y2: float,
+    yt: float,
+    dy: float,
+) -> None:
+    r = 0.1 * dy
+    for y in [y1, y2]:
+        ax.add_patch(Circle((x_ctr, y), r, color="black"))
+    ax.add_patch(Circle((x_ctr, yt), r, fill=False, edgecolor="black"))
+    ax.text(x_ctr, yt, "+", ha="center", va="center", fontsize=8)
+    ax.vlines(x_ctr, min(y1, y2, yt) + r, max(y1, y2, yt) - r, color="black", linewidth=1.0)
+
+
+def _draw_meter(
+    ax: plt.Axes,
+    x_ctr: float,
+    yq: float,
+    dy: float,
+    size: Optional[float] = None,
+) -> None:
+    if size is None:
+        size = 0.15 * dy
+    circle = Circle((x_ctr, yq), size, fill=False, edgecolor="black", linewidth=1.0)
+    ax.add_patch(circle)
+    ax.hlines(yq + size * 0.3, x_ctr - size * 0.5, x_ctr + size * 0.5, color="black", linewidth=1.0)
+    ax.vlines(x_ctr, yq - size * 0.3, yq + size * 0.3, color="black", linewidth=1.0)
+
+
+def _draw_multi_gate(
+    ax: plt.Axes,
+    x_ctr: float,
+    qubits: list[int],
+    y_of: Any,
+    gate: str,
+    dx: float,
+    dy: float,
+) -> None:
+    y_vals = [y_of(q) for q in qubits]
+    y_top, y_bot = max(y_vals) + 0.3 * dy, min(y_vals) - 0.3 * dy
+    rect = Rectangle(
+        (x_ctr - 0.4 * dx, y_bot),
+        0.8 * dx,
+        y_top - y_bot,
+        facecolor="white",
+        edgecolor="black",
+    )
+    ax.add_patch(rect)
+    ax.text(x_ctr, (y_top + y_bot) / 2, gate, ha="center", va="center", fontsize=8)
+
+
 def draw_circuit_matplotlib(
     circuit: Any,
     figsize: tuple[float, float] = (8, 6),
@@ -72,14 +178,6 @@ def draw_circuit_matplotlib(
         y = y_of(q)
         ax.hlines(y, x_min, x_max, color="black", linewidth=1.0)
 
-    def _draw_meter(x_ctr: float, yq: float, size: float = 0.15 * dy):
-        circle = Circle((x_ctr, yq), size, fill=False, edgecolor="black", linewidth=1.0)
-        ax.add_patch(circle)
-        ax.hlines(
-            yq + size * 0.3, x_ctr - size * 0.5, x_ctr + size * 0.5, color="black", linewidth=1.0
-        )
-        ax.vlines(x_ctr, yq - size * 0.3, yq + size * 0.3, color="black", linewidth=1.0)
-
     for instr_dict in instructions:
         gate = instr_dict["gate"]
         qubits = instr_dict["qubits"]
@@ -94,67 +192,29 @@ def draw_circuit_matplotlib(
             q = qubits[0]
             yq = y_of(q)
             angle = getattr(instr.operator, "angle", None)
-            label = f"{gate}({angle:.3f})" if angle is not None else gate
-            rect = Rectangle(
-                (x_ctr - 0.4 * dx, yq - 0.3 * dy),
-                0.8 * dx,
-                0.6 * dy,
-                facecolor="white",
-                edgecolor="black",
-            )
-            ax.add_patch(rect)
-            ax.text(x_ctr, yq, label, ha="center", va="center", fontsize=8)
+            _draw_param_gate(ax, x_ctr, yq, gate, angle, dx, dy)
 
         elif len(qubits) == 1 and gate not in CONTROL_GATES.union(TOFFOLI_GATES).union({"MEASURE"}):
             q = qubits[0]
             yq = y_of(q)
-            rect = Rectangle(
-                (x_ctr - 0.4 * dx, yq - 0.3 * dy),
-                0.8 * dx,
-                0.6 * dy,
-                facecolor="white",
-                edgecolor="black",
-            )
-            ax.add_patch(rect)
-            ax.text(x_ctr, yq, gate, ha="center", va="center", fontsize=8)
+            _draw_single_gate(ax, x_ctr, yq, gate, dx, dy)
 
         elif gate in CONTROL_GATES and len(qubits) == 2:
             q_ctrl, q_tgt = qubits
             y_ctrl, y_tgt = y_of(q_ctrl), y_of(q_tgt)
-            r = 0.1 * dy
-            ax.add_patch(Circle((x_ctr, y_ctrl), r, color="black"))
-            ax.add_patch(Circle((x_ctr, y_tgt), r, fill=False, edgecolor="black"))
-            ax.text(x_ctr, y_tgt, "+", ha="center", va="center", fontsize=8)
-            ax.vlines(
-                x_ctr, min(y_ctrl, y_tgt) + r, max(y_ctrl, y_tgt) - r, color="black", linewidth=1.0
-            )
+            _draw_control_gate(ax, x_ctr, y_ctrl, y_tgt, dy)
 
         elif gate in TOFFOLI_GATES and len(qubits) == 3:
             q1, q2, qt = qubits
             y1, y2, yt = y_of(q1), y_of(q2), y_of(qt)
-            r = 0.1 * dy
-            for y in [y1, y2]:
-                ax.add_patch(Circle((x_ctr, y), r, color="black"))
-            ax.add_patch(Circle((x_ctr, yt), r, fill=False, edgecolor="black"))
-            ax.text(x_ctr, yt, "+", ha="center", va="center", fontsize=8)
-            ax.vlines(x_ctr, min(y1, y2, yt) + r, max(y1, y2, yt) - r, color="black", linewidth=1.0)
+            _draw_toffoli_gate(ax, x_ctr, y1, y2, yt, dy)
 
         elif gate == "MEASURE":
             for q in qubits:
-                _draw_meter(x_ctr, y_of(q))
+                _draw_meter(ax, x_ctr, y_of(q), dy)
 
         else:
-            y_vals = [y_of(q) for q in qubits]
-            y_top, y_bot = max(y_vals) + 0.3 * dy, min(y_vals) - 0.3 * dy
-            rect = Rectangle(
-                (x_ctr - 0.4 * dx, y_bot),
-                0.8 * dx,
-                y_top - y_bot,
-                facecolor="white",
-                edgecolor="black",
-            )
-            ax.add_patch(rect)
-            ax.text(x_ctr, (y_top + y_bot) / 2, gate, ha="center", va="center", fontsize=8)
+            _draw_multi_gate(ax, x_ctr, qubits, y_of, gate, dx, dy)
 
     ax.set_xlim(x_min, x_max + dx)
     ax.set_ylim(-n_qubits * dy - dy / 2, dy / 2)
