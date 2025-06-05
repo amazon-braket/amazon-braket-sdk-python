@@ -34,19 +34,41 @@ class MeasureCriteria(CircuitInstructionCriteria):
         """
         self._qubits = parse_qubit_input(qubits, 1)
 
-    def __str__(self):
-        return f"{self.__class__.__name__}({self._qubits})"
+    @property
+    def qubits(self):
+        """Returns the qubits associated with this criteria.
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}(qubits={self._qubits})"
+        Returns:
+            Optional[set[int]]: The qubits associated with this criteria, or None if all qubits are relevant.
+        """
+        return self._qubits
+
+    def qubit_intersection(self, qubits: QubitSetInput) -> set[int]:
+        """Returns the intersection of the criteria's qubits with the provided qubits.
+
+        Args:
+            qubits (QubitSetInput): The qubits to intersect with.
+
+        Returns:
+            set[int]: The intersection of the criteria's qubits with the provided qubits.
+        """
+        if self._qubits is None:
+            return set(qubits)
+        return set(self._qubits).intersection(set(qubits))
+
+    def __str__(self) -> str:
+        return f"MeasureCriteria(qubits={sorted(list(self._qubits))})"
+
+    def __repr__(self) -> str:
+        return f"MeasureCriteria(qubits={sorted(list(self._qubits))})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
         """Returns an Iterable of criteria keys.
 
         Returns:
-            Iterable[CriteriaKey]: This Criteria operates on Qubits.
+            Iterable[CriteriaKey]: This Criteria operates on Qubits and Gates.
         """
-        return [CriteriaKey.QUBIT]
+        return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
     def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Gets the keys for a given CriteriaKey.
@@ -58,10 +80,13 @@ class MeasureCriteria(CircuitInstructionCriteria):
             Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
+            GATE will return a set containing Measure().
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
             return CriteriaKeyResult.ALL if self._qubits is None else set(self._qubits)
+        if key_type == CriteriaKey.GATE:
+            return {Measure()}
         return set()
 
     def to_dict(self) -> dict:
@@ -109,4 +134,4 @@ class MeasureCriteria(CircuitInstructionCriteria):
         return MeasureCriteria(criteria["qubits"])
 
 
-Criteria.register_criteria(MeasureCriteria) 
+Criteria.register_criteria(MeasureCriteria)
