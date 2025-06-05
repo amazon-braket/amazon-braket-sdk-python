@@ -94,5 +94,8 @@ class Measure(QuantumOperator):
     def __eq__(self, other: Measure):
         return isinstance(other, Measure)
 
+    def __hash__(self):
+        return hash(self.__class__.__name__)
+
     def __repr__(self):
         return self.name
