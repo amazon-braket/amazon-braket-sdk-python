@@ -25,6 +25,7 @@ from braket.circuits.noise_model import (
     ObservableCriteria,
     QubitInitializationCriteria,
     UnitaryGateCriteria,
+    MeasureCriteria,
 )
 from braket.circuits.noises import BitFlip, Depolarizing, PauliChannel, TwoQubitDepolarizing
 
@@ -488,3 +489,77 @@ def test_apply_to_circuit_list():
     with pytest.raises(TypeError):
         noise_model.add_noise(Mock(), Mock(spec=Criteria))
         noise_model.apply([])
+
+
+@pytest.mark.parametrize(
+    "noise_model, input_circuit, expected_circuit",
+    [
+        (
+            # model with measure noise on qubit 0
+            NoiseModel().add_noise(BitFlip(0.01), MeasureCriteria([0])),
+            # input circuit with measure on qubit 0
+            Circuit().h(0).measure([0]),
+            # expected circuit has noise before measure
+            Circuit().h(0).bit_flip(0, 0.01).measure([0]),
+        ),
+        (
+            # model with measure noise on qubits 0 and 1
+            NoiseModel().add_noise(BitFlip(0.01), MeasureCriteria([0, 1])),
+            # input circuit with measure on qubits 0 and 1
+            Circuit().h(0).cnot(0, 1).measure([0, 1]),
+            # expected circuit has noise before measure
+            Circuit().h(0).cnot(0, 1).bit_flip(0, 0.01).bit_flip(1, 0.01).measure([0, 1]),
+        ),
+        (
+            # model with measure noise on qubit 1
+            NoiseModel().add_noise(BitFlip(0.01), MeasureCriteria([1])),
+            # input circuit with measure on qubit 0
+            Circuit().h(0).measure([0]),
+            # expected circuit has no noise (measure on wrong qubit)
+            Circuit().h(0).measure([0]),
+        ),
+        (
+            # model with measure noise and gate noise
+            NoiseModel()
+            .add_noise(BitFlip(0.01), MeasureCriteria([0]))
+            .add_noise(Depolarizing(0.02), GateCriteria(Gate.H, [0])),
+            # input circuit with H gate and measure
+            Circuit().h(0).measure([0]),
+            # expected circuit has both types of noise
+            Circuit().h(0).depolarizing(0, 0.02).bit_flip(0, 0.01).measure([0]),
+        ),
+        (
+            # model with measure noise and observable noise
+            NoiseModel()
+            .add_noise(BitFlip(0.01), MeasureCriteria([0]))
+            .add_noise(Depolarizing(0.02), ObservableCriteria(Observable.Z, [0])),
+            # input circuit with measure only
+            Circuit().h(0).measure([0]),
+            # expected circuit has measure noise only
+            Circuit().h(0).bit_flip(0, 0.01).measure([0]),
+        ),
+        (
+            # model with measure noise and observable noise
+            NoiseModel()
+            .add_noise(BitFlip(0.01), MeasureCriteria([0]))
+            .add_noise(Depolarizing(0.02), ObservableCriteria(Observable.Z, [0])),
+            # input circuit with observable only
+            Circuit().h(0).sample(Observable.Z(), 0),
+            # expected circuit has observable noise only
+            Circuit().h(0).depolarizing(0, 0.02).sample(Observable.Z(), 0),
+        ),
+    ],
+)
+def test_apply_measure_noise(noise_model, input_circuit, expected_circuit):
+    assert noise_model.apply(input_circuit) == expected_circuit
+
+
+@pytest.mark.parametrize(
+    "circuit, expected",
+    [
+        (Circuit().h(0).measure([0]), Circuit().h(0).measure([0])),
+        (Circuit().h(0).sample(Observable.Z(), 0), Circuit().h(0).sample(Observable.Z(), 0)),
+    ],
+)
+def test_circuit_with_measure_or_result_type_only(circuit, expected):
+    assert circuit == expected
