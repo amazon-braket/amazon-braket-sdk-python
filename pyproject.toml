@@ -61,6 +61,7 @@ lint.ignore = [
   "N803",    # Allow uppercase
   "N806",    # Vars will break this rule based on technical names.
   "N815",    # Allowing reviwers to do a per case basis
+  "PLC0207", # Accessing only the first or last element of `str.split()` without setting `maxsplit=1`
   "PLC2701", # Allow private function access in code
   "PLR0913", # Too many variables in function
   "PLR0914", # Too many local variables
