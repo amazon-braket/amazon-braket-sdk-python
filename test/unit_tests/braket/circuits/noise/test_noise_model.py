@@ -563,3 +563,88 @@ def test_apply_measure_noise(noise_model, input_circuit, expected_circuit):
 )
 def test_circuit_with_measure_or_result_type_only(circuit, expected):
     assert circuit == expected
+
+
+def test_add_noise_invalid_combinations():
+    noise_model = NoiseModel()
+    mock_noise = Mock(spec=Noise)
+
+    # Test invalid noise type
+    with pytest.raises(TypeError):
+        noise_model.add_noise("not a noise", GateCriteria(Gate.H))
+
+    # Test invalid criteria type
+    with pytest.raises(TypeError):
+        noise_model.add_noise(mock_noise, "not a criteria")
+
+    # Test None values
+    with pytest.raises(TypeError):
+        noise_model.add_noise(None, GateCriteria(Gate.H))
+    with pytest.raises(TypeError):
+        noise_model.add_noise(mock_noise, None)
+
+
+def test_serialization_edge_cases():
+    # Test empty noise model
+    empty_model = NoiseModel()
+    serialized = empty_model.to_dict()
+    deserialized = NoiseModel.from_dict(serialized)
+    assert len(deserialized.instructions) == 0
+
+    # Test invalid serialization data
+    with pytest.raises(KeyError):
+        NoiseModel.from_dict({})
+
+
+def test_filter_edge_cases():
+    noise_model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+        .add_noise(Depolarizing(0.02), GateCriteria(Gate.CNot))
+        .add_noise(Depolarizing(0.03), ObservableCriteria(Observable.Z))
+    )
+
+    # Test filtering with multiple criteria
+    filtered = noise_model.from_filter(gate=Gate.H, noise=Depolarizing)
+    assert len(filtered.instructions) == 1
+
+    # Test filtering with no matches
+    filtered = noise_model.from_filter(gate=Gate.X)
+    assert len(filtered.instructions) == 0
+
+    # Test filtering with invalid combinations
+    filtered = noise_model.from_filter(gate="invalid")
+    assert len(filtered.instructions) == 0
+
+
+def test_apply_overlapping_noise():
+    noise_model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+        .add_noise(Depolarizing(0.02), GateCriteria(None, 0))
+    )
+
+    circuit = Circuit().h(0)
+    noisy_circuit = noise_model.apply(circuit)
+    expected_circuit = Circuit().h(0).depolarizing(0, 0.01).depolarizing(0, 0.02)
+    assert noisy_circuit == expected_circuit
+
+
+def test_apply_multiple_result_types():
+    noise_model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.01), ObservableCriteria(Observable.Z, 0))
+        .add_noise(Depolarizing(0.02), ObservableCriteria(Observable.X, 0))
+    )
+
+    circuit = Circuit().h(0).sample(Observable.Z(), 0).sample(Observable.X(), 0)
+    noisy_circuit = noise_model.apply(circuit)
+    expected_circuit = (
+        Circuit()
+        .h(0)
+        .depolarizing(0, 0.01)
+        .sample(Observable.Z(), 0)
+        .depolarizing(0, 0.02)
+        .sample(Observable.X(), 0)
+    )
+    assert noisy_circuit == expected_circuit
