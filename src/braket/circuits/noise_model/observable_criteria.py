@@ -14,6 +14,7 @@
 from collections.abc import Iterable
 from typing import Any, Optional, Union
 
+from braket.circuits.instruction import Instruction
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import (
     parse_operator_input,
@@ -151,6 +152,21 @@ class ObservableCriteria(ResultTypeCriteria):
             else None
         )
         return ObservableCriteria(observables, criteria["qubits"])
+
+    def instruction_matches(
+        self, instruction_or_result_type: Union[ResultType, list[Instruction]]
+    ) -> bool:
+        """Check if the instruction or result type matches the criteria.
+
+        Args:
+            instruction_or_result_type: A result type or list of instructions to match.
+
+        Returns:
+            bool: True if the instruction or result type matches the criteria, False otherwise.
+        """
+        if isinstance(instruction_or_result_type, ResultType):
+            return self.result_type_matches(instruction_or_result_type)
+        return False
 
 
 Criteria.register_criteria(ObservableCriteria)
