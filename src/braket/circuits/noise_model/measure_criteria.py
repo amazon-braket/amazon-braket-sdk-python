@@ -35,11 +35,12 @@ class MeasureCriteria(CircuitInstructionCriteria):
         self._qubits = parse_qubit_input(qubits, 1)
 
     @property
-    def qubits(self):
+    def qubits(self) -> Optional[set[int]]:
         """Returns the qubits associated with this criteria.
 
         Returns:
-            Optional[set[int]]: The qubits associated with this criteria, or None if all qubits are relevant.
+            Optional[set[int]]: The qubits associated with this criteria, or None if all qubits
+            are relevant.
         """
         return self._qubits
 
@@ -57,10 +58,10 @@ class MeasureCriteria(CircuitInstructionCriteria):
         return set(self._qubits).intersection(set(qubits))
 
     def __str__(self) -> str:
-        return f"MeasureCriteria(qubits={sorted(list(self._qubits))})"
+        return f"MeasureCriteria(qubits={sorted(self._qubits)})"
 
     def __repr__(self) -> str:
-        return f"MeasureCriteria(qubits={sorted(list(self._qubits))})"
+        return f"MeasureCriteria(qubits={sorted(self._qubits)})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
         """Returns an Iterable of criteria keys.
