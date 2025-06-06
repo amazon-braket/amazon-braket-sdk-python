@@ -13,8 +13,8 @@
 
 import pytest
 
-from braket.circuits import Circuit, Gate, Instruction
-from braket.circuits.gates import H, X
+from braket.circuits.instruction import Instruction
+from braket.circuits.gates import X
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import MeasureCriteria
 
