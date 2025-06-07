@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass
 
 from braket.circuits.circuit import Circuit
@@ -25,9 +24,7 @@ from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInst
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.measure_criteria import MeasureCriteria
-from braket.circuits.noise_model.observable_criteria import ObservableCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
-from braket.circuits.result_types import ObservableResultType
 from braket.registers.qubit_set import QubitSetInput
 
 
@@ -184,6 +181,8 @@ class NoiseModel:
         for item in self._instructions:
             if isinstance(item.criteria, InitializationCriteria):
                 init_noise.append(item)
+            elif isinstance(item.criteria, MeasureCriteria):
+                readout_noise.append(item)
             elif isinstance(item.criteria, CircuitInstructionCriteria):
                 gate_noise.append(item)
             elif isinstance(item.criteria, ResultTypeCriteria):
@@ -247,7 +246,6 @@ class NoiseModel:
         instructions = self.get_instructions_by_type()
         new_circuit = NoiseModel._apply_gate_noise(circuit, instructions.gate_noise)
         new_circuit = NoiseModel._apply_init_noise(new_circuit, instructions.initialization_noise)
-        new_circuit = self._apply_measure_noise(new_circuit)
         return NoiseModel._apply_readout_noise(new_circuit, instructions.readout_noise)
 
     def to_dict(self) -> dict:
@@ -274,26 +272,45 @@ class NoiseModel:
         """
         new_circuit = Circuit()
         for circuit_instruction in circuit.instructions:
-            if isinstance(circuit_instruction.operator, Measure):
-                new_circuit.add_instruction(circuit_instruction)
-                continue
-
-            # For all other instructions, apply noise after as usual
+            # Add the instruction first
             new_circuit.add_instruction(circuit_instruction)
-            target_qubits = list(circuit_instruction.target)
-            for item in gate_noise_instructions:
-                # Skip MeasureCriteria for non-measure instructions
-                if isinstance(item.criteria, MeasureCriteria):
-                    continue
-                if item.criteria.instruction_matches(circuit_instruction):
-                    if item.noise.fixed_qubit_count() == len(target_qubits):
-                        new_circuit.add_instruction(Instruction(item.noise, target_qubits))
-                    else:
-                        for qubit in target_qubits:
-                            new_circuit.add_instruction(Instruction(item.noise, qubit))
+
+            # Apply noise after the instruction if it's not a measurement
+            if not isinstance(circuit_instruction.operator, Measure):
+                cls._apply_noise_to_instruction(
+                    new_circuit,
+                    circuit_instruction,
+                    gate_noise_instructions,
+                )
+
         for result_type in circuit.result_types:
             new_circuit.add_result_type(result_type)
         return new_circuit
+
+    @classmethod
+    def _apply_noise_to_instruction(
+        cls,
+        circuit: Circuit,
+        instruction: Instruction,
+        noise_instructions: list[NoiseModelInstruction],
+    ) -> None:
+        """Applies noise to a single instruction based on the noise instructions.
+
+        Args:
+            circuit (Circuit): The circuit to add noise instructions to
+            instruction (Instruction): The instruction to apply noise to
+            noise_instructions (list[NoiseModelInstruction]): List of noise instructions to apply
+        """
+        target_qubits = list(instruction.target)
+        for item in noise_instructions:
+            if not item.criteria.instruction_matches(instruction):
+                continue
+
+            if item.noise.fixed_qubit_count() == len(target_qubits):
+                circuit.add_instruction(Instruction(item.noise, target_qubits))
+            else:
+                for qubit in target_qubits:
+                    circuit.add_instruction(Instruction(item.noise, qubit))
 
     @classmethod
     def _apply_init_noise(
@@ -326,50 +343,70 @@ class NoiseModel:
         circuit: Circuit,
         readout_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
-        """Apply readout noise to the circuit.
+        """Applies the readout noise of this noise model to a circuit and returns the circuit.
+        This includes both observable result types and measurement instructions.
 
         Args:
-            circuit: The circuit to apply readout noise to.
-            readout_noise_instructions: The readout noise instructions.
+            circuit (Circuit): A circuit to apply `noise` to.
+            readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
+                to apply.
 
         Returns:
-            Circuit: The circuit with readout noise applied.
+            Circuit: The passed in circuit, with the readout noise applied.
         """
-        result = Circuit()
-        for instruction in circuit.instructions:
-            result.add_instruction(instruction)
+        if not readout_noise_instructions:
+            return circuit
 
-        def _should_apply_noise(
-            noise_instruction: NoiseModelInstruction,
-            result_type: ObservableResultType,
-            qubit: int,
-        ) -> bool:
-            """Check if noise should be applied to the given qubit."""
-            return (
-                isinstance(noise_instruction.criteria, ObservableCriteria)
-                and isinstance(result_type, ObservableResultType)
-                and noise_instruction.criteria.instruction_matches(result_type)
-                and (
-                    noise_instruction.criteria._qubits is None
-                    or qubit in noise_instruction.criteria._qubits
-                )
-            )
+        new_circuit = Circuit()
+        noise_qubit_applied = set()
 
-        # Track which (noise, qubit) pairs have already been applied
-        applied_noise_qubits = set()
-        for noise_instruction in readout_noise_instructions:
-            for result_type in circuit.result_types:
-                for q in result_type.target:
-                    if _should_apply_noise(noise_instruction, result_type, q):
-                        key = (id(noise_instruction.noise), q)
-                        if key not in applied_noise_qubits:
-                            result.add_instruction(Instruction(noise_instruction.noise, q))
-                            applied_noise_qubits.add(key)
+        cls._add_measurement_noise(new_circuit, circuit.instructions, readout_noise_instructions)
+        cls._add_result_type_noise(
+            new_circuit, circuit.result_types, readout_noise_instructions, noise_qubit_applied
+        )
+        return new_circuit
 
-        # Add all result types from the original circuit to the result circuit
-        for result_type in circuit.result_types:
-            result.add_result_type(result_type)
-        return result
+    @classmethod
+    def _add_measurement_noise(
+        cls,
+        new_circuit: Circuit,
+        instructions: list[Instruction],
+        readout_noise_instructions: list[NoiseModelInstruction],
+    ) -> None:
+        for instruction in instructions:
+            if not isinstance(instruction.operator, Measure):
+                new_circuit.add_instruction(instruction)
+                continue
+            for noise_instruction in readout_noise_instructions:
+                if hasattr(
+                    noise_instruction.criteria, "instruction_matches"
+                ) and noise_instruction.criteria.instruction_matches(instruction):
+                    new_circuit.add_instruction(
+                        Instruction(noise_instruction.noise, instruction.target)
+                    )
+            new_circuit.add_instruction(instruction)
+
+    @classmethod
+    def _add_result_type_noise(
+        cls,
+        new_circuit: Circuit,
+        result_types: list,
+        readout_noise_instructions: list[NoiseModelInstruction],
+        noise_qubit_applied: set,
+    ) -> None:
+        for result_type in result_types:
+            new_circuit.add_result_type(result_type)
+            for noise_instruction in readout_noise_instructions:
+                if hasattr(
+                    noise_instruction.criteria, "result_type_matches"
+                ) and noise_instruction.criteria.result_type_matches(result_type):
+                    for qubit in result_type.target:
+                        key = (id(noise_instruction.noise), qubit)
+                        if key not in noise_qubit_applied:
+                            new_circuit.add_instruction(
+                                Instruction(noise_instruction.noise, [qubit])
+                            )
+                            noise_qubit_applied.add(key)
 
     @classmethod
     def _items_to_string(
@@ -407,159 +444,3 @@ class NoiseModel:
             for item in noise_dict["instructions"]
         )
         return model
-
-    def _collect_measured_qubits(self, measure_block: list[Instruction]) -> set[int]:
-        measured_qubits = set()
-        for instruction in measure_block:
-            if isinstance(instruction, Measure):
-                measured_qubits.update(instruction.target)
-        return measured_qubits
-
-    def _add_noise_for_qubits(
-        self,
-        measure_noise_map: dict[int, list[NoiseModelInstruction]],
-        noise_instruction: NoiseModelInstruction,
-        qubits: list[int],
-    ) -> None:
-        for q in qubits:
-            measure_noise_map[q].append(noise_instruction)
-
-    def _process_measure_block(
-        self,
-        measure_block: list[Instruction],
-        measure_noise_map: dict[int, list[NoiseModelInstruction]],
-    ) -> None:
-        measured_qubits = self._collect_measured_qubits(measure_block)
-        for noise_instruction in self._instructions:
-            if not isinstance(noise_instruction.criteria, MeasureCriteria):
-                continue
-            if noise_instruction.criteria.instruction_matches(measure_block):
-                self._add_noise_for_qubits(
-                    measure_noise_map, noise_instruction, list(measured_qubits)
-                )
-
-    def _process_all_measure_blocks(
-        self,
-        circuit: Circuit,
-        measure_noise_map: dict[int, list[NoiseModelInstruction]],
-    ) -> None:
-        current_block = []
-        for instruction in circuit.instructions:
-            if isinstance(instruction, Measure):
-                current_block.append(instruction)
-            elif current_block:
-                self._process_measure_block(current_block, measure_noise_map)
-                current_block = []
-        if current_block:
-            self._process_measure_block(current_block, measure_noise_map)
-
-    def _apply_noise_to_qubits(
-        self,
-        result: Circuit,
-        noise_instruction: NoiseModelInstruction,
-        qubits_in_block: set[int],
-        qubits: object,
-    ) -> None:
-        """Apply noise to specified qubits in the block."""
-        if qubits == CriteriaKeyResult.ALL:
-            for q in qubits_in_block:
-                result.add_instruction(Instruction(noise_instruction.noise, [q]))
-        else:
-            for q in qubits_in_block:
-                if q in qubits:
-                    result.add_instruction(Instruction(noise_instruction.noise, [q]))
-
-    def _process_noise_instructions(
-        self,
-        result: Circuit,
-        measure_block: list[Instruction],
-        qubits_in_block: set[int],
-    ) -> None:
-        for noise_instruction in self._instructions:
-            if not isinstance(noise_instruction.criteria, MeasureCriteria):
-                continue
-            for instr in measure_block:
-                if noise_instruction.criteria.instruction_matches(instr):
-                    qubits = noise_instruction.criteria.get_keys(CriteriaKey.QUBIT)
-                    self._apply_noise_to_qubits(result, noise_instruction, qubits_in_block, qubits)
-                    break  # Only insert once per block
-
-    def _flush_measure_block(
-        self,
-        result: Circuit,
-        measure_block: list[Instruction],
-    ) -> None:
-        if not measure_block:
-            return
-        qubits_in_block = set()
-        for instr in measure_block:
-            qubits_in_block.update(instr.target)
-        self._process_noise_instructions(result, measure_block, qubits_in_block)
-        for instr in measure_block:
-            result.add_instruction(instr)
-        measure_block.clear()
-
-    def _apply_measure_noise(self, circuit: Circuit) -> Circuit:
-        """Apply measure noise to the circuit.
-
-        Args:
-            circuit: The circuit to apply measure noise to.
-
-        Returns:
-            Circuit: The circuit with measure noise applied.
-        """
-        result = Circuit()
-        measure_block: list[Instruction] = []
-        for instruction in circuit.instructions:
-            if isinstance(instruction.operator, Measure):
-                measure_block.append(instruction)
-            else:
-                self._flush_measure_block(result, measure_block)
-                result.add_instruction(instruction)
-        self._flush_measure_block(result, measure_block)
-        for result_type in circuit.result_types:
-            result.add_result_type(result_type)
-        return result
-
-    def _get_measure_noise_map(self) -> dict[int, list[NoiseModelInstruction]]:
-        """Returns a mapping from qubit index to a list of measure noise instructions
-        for that qubit."""
-        measure_noise_map = defaultdict(list)
-        for instruction in self._instructions:
-            if isinstance(instruction.criteria, MeasureCriteria):
-                qubits = instruction.criteria.get_keys(CriteriaKey.QUBIT)
-                if qubits == CriteriaKeyResult.ALL:
-                    continue  # If ALL, we will handle this in the application logic
-                for q in qubits:
-                    measure_noise_map[q].append(instruction)
-        return measure_noise_map
-
-
-def _apply_noise_on_observable_result_types(
-    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
-) -> Circuit:
-    """Applies readout noise based on the observable result types in the circuit. Each applicable
-    Noise will be applied only once to a target in the ObservableResultType.
-
-    Args:
-        circuit (Circuit): The circuit to apply the readout noise to.
-        readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
-            to apply.
-
-    Returns:
-        Circuit: The passed in circuit, with the readout noise applied.
-    """
-    result_types = circuit.result_types
-    noise_to_apply = defaultdict(set)
-    for result_type in result_types:
-        if isinstance(result_type, ObservableResultType):
-            target_qubits = list(result_type.target)
-            for item_index, item in enumerate(readout_noise_instructions):
-                if item.criteria.result_type_matches(result_type):
-                    for target_qubit in target_qubits:
-                        noise_to_apply[target_qubit].add(item_index)
-    for qubit in noise_to_apply:
-        for noise_item_index in noise_to_apply[qubit]:
-            item = readout_noise_instructions[noise_item_index]
-            circuit.apply_readout_noise(item.noise, qubit)
-    return circuit
