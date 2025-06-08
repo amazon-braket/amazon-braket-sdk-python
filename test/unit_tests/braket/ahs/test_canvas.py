@@ -48,14 +48,18 @@ class TestCanvas:
 
     def test_init_with_decimals(self):
         """Test Canvas initialization with Decimal coordinates."""
-        boundary_points = [(Decimal("0"), Decimal("0")), (Decimal("1"), Decimal("0")), (Decimal("0.5"), Decimal("1"))]
+        boundary_points = [
+            (Decimal("0"), Decimal("0")),
+            (Decimal("1"), Decimal("0")),
+            (Decimal("0.5"), Decimal("1")),
+        ]
         canvas = Canvas(boundary_points)
         assert canvas.boundary_points == boundary_points
 
     def test_contains_point_square_inside(self):
         """Test point containment for points inside a square."""
         canvas = Canvas([(0, 0), (2, 0), (2, 2), (0, 2)])
-        
+
         # Points clearly inside
         assert canvas.contains_point((1, 1))
         assert canvas.contains_point((0.5, 0.5))
@@ -64,7 +68,7 @@ class TestCanvas:
     def test_contains_point_square_outside(self):
         """Test point containment for points outside a square."""
         canvas = Canvas([(0, 0), (2, 0), (2, 2), (0, 2)])
-        
+
         # Points clearly outside
         assert not canvas.contains_point((-1, 1))
         assert not canvas.contains_point((3, 1))
@@ -74,7 +78,7 @@ class TestCanvas:
     def test_contains_point_square_on_boundary(self):
         """Test point containment for points on boundary of a square."""
         canvas = Canvas([(0, 0), (2, 0), (2, 2), (0, 2)])
-        
+
         # Points on boundary (ray casting may vary for boundary points)
         # The exact behavior on boundary is implementation-dependent
         # but should be consistent
@@ -84,10 +88,10 @@ class TestCanvas:
     def test_contains_point_triangle(self):
         """Test point containment for a triangle."""
         canvas = Canvas([(0, 0), (2, 0), (1, 2)])
-        
+
         # Point inside triangle
         assert canvas.contains_point((1, 0.5))
-        
+
         # Points outside triangle
         assert not canvas.contains_point((-1, 0))
         assert not canvas.contains_point((3, 0))
@@ -97,12 +101,12 @@ class TestCanvas:
         """Test point containment for a more complex polygon."""
         # L-shaped polygon
         canvas = Canvas([(0, 0), (2, 0), (2, 1), (1, 1), (1, 2), (0, 2)])
-        
+
         # Points inside L-shape
         assert canvas.contains_point((0.5, 0.5))
         assert canvas.contains_point((1.5, 0.5))
         assert canvas.contains_point((0.5, 1.5))
-        
+
         # Point in the "missing" part of the L
         assert not canvas.contains_point((1.5, 1.5))
 
@@ -110,7 +114,7 @@ class TestCanvas:
         """Test bounding box calculation for a square."""
         canvas = Canvas([(1, 1), (3, 1), (3, 3), (1, 3)])
         (min_x, min_y), (max_x, max_y) = canvas.get_bounding_box()
-        
+
         assert min_x == 1
         assert min_y == 1
         assert max_x == 3
@@ -120,7 +124,7 @@ class TestCanvas:
         """Test bounding box calculation for a triangle."""
         canvas = Canvas([(-1, 0), (2, 0), (0.5, 3)])
         (min_x, min_y), (max_x, max_y) = canvas.get_bounding_box()
-        
+
         assert min_x == -1
         assert min_y == 0
         assert max_x == 2
@@ -129,12 +133,12 @@ class TestCanvas:
     def test_get_bounding_box_with_decimals(self):
         """Test bounding box calculation with Decimal coordinates."""
         canvas = Canvas([
-            (Decimal("-1.5"), Decimal("0.5")), 
-            (Decimal("2.5"), Decimal("0.5")), 
-            (Decimal("0.5"), Decimal("3.5"))
+            (Decimal("-1.5"), Decimal("0.5")),
+            (Decimal("2.5"), Decimal("0.5")),
+            (Decimal("0.5"), Decimal("3.5")),
         ])
         (min_x, min_y), (max_x, max_y) = canvas.get_bounding_box()
-        
+
         assert min_x == Decimal("-1.5")
         assert min_y == Decimal("0.5")
         assert max_x == Decimal("2.5")
@@ -144,7 +148,7 @@ class TestCanvas:
         """Test edge case with degenerate triangle (collinear points)."""
         # Points are collinear (degenerate triangle)
         canvas = Canvas([(0, 0), (1, 0), (2, 0)])
-        
+
         # Point "inside" the degenerate triangle
         result = canvas.contains_point((1, 0))
         assert isinstance(result, bool)  # Should not crash
@@ -152,7 +156,7 @@ class TestCanvas:
     def test_edge_cases_duplicate_points(self):
         """Test edge case with duplicate boundary points."""
         canvas = Canvas([(0, 0), (1, 0), (1, 0), (0, 1)])
-        
+
         # Should not crash and should work reasonably
         result = canvas.contains_point((0.3, 0.3))
         assert isinstance(result, bool)

@@ -282,11 +282,11 @@ class AtomArrangement:
         # Honeycomb is triangular lattice with 2-atom basis
         # Lattice parameter is sqrt(3) times the nearest neighbor distance
         lattice_spacing = spacing * math.sqrt(3)
-        
+
         # Triangular lattice vectors
         a1 = (lattice_spacing, 0)
         a2 = (lattice_spacing / 2, lattice_spacing * math.sqrt(3) / 2)
-        
+
         # Two-atom basis
         basis = [(0, 0), (a1[0] / 3 + a2[0] / 3, a1[1] / 3 + a2[1] / 3)]
 
@@ -296,80 +296,85 @@ class AtomArrangement:
     def _calculate_lattice_bounds(
         cls,
         a1: tuple[Number, Number],
-        a2: tuple[Number, Number], 
+        a2: tuple[Number, Number],
         canvas_bounds: tuple[tuple[Number, Number], tuple[Number, Number]],
-        basis: list[tuple[Number, Number]] = None
+        basis: list[tuple[Number, Number]] | None = None,
     ) -> tuple[tuple[int, int], tuple[int, int]]:
         """Calculate the range of lattice indices needed to cover canvas bounds.
-        
+
         Uses linear algebra to find the minimal bounding box in lattice coordinates
         that covers the entire canvas bounding box, accounting for basis offsets.
-        
+
         Args:
             a1: First lattice vector (x, y)
-            a2: Second lattice vector (x, y)  
+            a2: Second lattice vector (x, y)
             canvas_bounds: ((min_x, min_y), (max_x, max_y))
             basis: List of basis vectors to account for in bounds calculation
-            
+
         Returns:
             ((n1_min, n1_max), (n2_min, n2_max)): Range of lattice indices
         """
         if basis is None:
             basis = [(0, 0)]
-            
+
         (min_x, min_y), (max_x, max_y) = canvas_bounds
-        
+
         # Cache float conversions for performance
         a1_x, a1_y = float(a1[0]), float(a1[1])
         a2_x, a2_y = float(a2[0]), float(a2[1])
-        
+
         # Calculate determinant with error checking
         det = a1_x * a2_y - a1_y * a2_x
         if abs(det) < 1e-12:
             raise ValueError(f"Lattice vectors are too close to parallel (det={det})")
-        
+
         # Inverse matrix: [[a2_y, -a2_x], [-a1_y, a1_x]] / det
         inv_00, inv_01 = a2_y / det, -a2_x / det
         inv_10, inv_11 = -a1_y / det, a1_x / det
-        
+
         # Canvas corners in real space, expanded with basis offsets
         base_corners = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_x, max_y)]
         corners = list(base_corners)  # Start with base corners
-        
+
         # Add corners shifted by each basis vector (both positive and negative)
         for basis_x, basis_y in basis:
             if basis_x != 0 or basis_y != 0:  # Skip origin basis
                 basis_x_f, basis_y_f = float(basis_x), float(basis_y)
-                for corner_x, corner_y in base_corners:
-                    corners.append((corner_x + basis_x_f, corner_y + basis_y_f))
-                    corners.append((corner_x - basis_x_f, corner_y - basis_y_f))
-        
+                corners.extend([
+                    (corner_x + basis_x_f, corner_y + basis_y_f)
+                    for corner_x, corner_y in base_corners
+                ])
+                corners.extend([
+                    (corner_x - basis_x_f, corner_y - basis_y_f)
+                    for corner_x, corner_y in base_corners
+                ])
+
         # Transform all points to lattice coordinates
         n1_values = []
         n2_values = []
-        
+
         for x, y in corners:
             n1 = inv_00 * x + inv_01 * y
             n2 = inv_10 * x + inv_11 * y
             n1_values.append(n1)
             n2_values.append(n2)
-        
+
         # margin calculation for lattice bounds
         lattice_magnitudes = [math.sqrt(a1_x**2 + a1_y**2), math.sqrt(a2_x**2 + a2_y**2)]
         min_lattice_mag = min(lattice_magnitudes)
-        
+
         if basis:
-            max_basis_mag = max(math.sqrt(float(bx)**2 + float(by)**2) for bx, by in basis)
+            max_basis_mag = max(math.sqrt(float(bx) ** 2 + float(by) ** 2) for bx, by in basis)
             margin = max(2, math.ceil(max_basis_mag / min_lattice_mag) + 1)
         else:
             margin = 2
-            
+
         # Convert to integer bounds
-        n1_min = int(math.floor(min(n1_values))) - margin
-        n1_max = int(math.ceil(max(n1_values))) + margin  
-        n2_min = int(math.floor(min(n2_values))) - margin
-        n2_max = int(math.ceil(max(n2_values))) + margin
-        
+        n1_min = math.floor(min(n1_values)) - margin
+        n1_max = math.ceil(max(n1_values)) + margin
+        n2_min = math.floor(min(n2_values)) - margin
+        n2_max = math.ceil(max(n2_values)) + margin
+
         return (n1_min, n1_max), (n2_min, n2_max)
 
     @classmethod
@@ -378,7 +383,7 @@ class AtomArrangement:
         a1: tuple[Number, Number],
         a2: tuple[Number, Number],
         canvas: Canvas,
-        basis: list[tuple[Number, Number]] = None,
+        basis: list[tuple[Number, Number]] | None = None,
         site_type: SiteType = SiteType.FILLED,
     ) -> AtomArrangement:
         """Create a general Bravais lattice arrangement within a canvas.
@@ -400,7 +405,7 @@ class AtomArrangement:
         # Validate lattice vectors
         if a1 == (0, 0) or a2 == (0, 0):
             raise ValueError("Lattice vectors cannot be zero")
-        
+
         # Check if vectors are parallel (cross product should be non-zero)
         cross_product = a1[0] * a2[1] - a1[1] * a2[0]
         if abs(cross_product) < 1e-12:
@@ -432,7 +437,7 @@ class AtomArrangement:
                 # Add all basis atoms at this lattice site
                 for basis_x, basis_y in basis_float:
                     point = (lattice_x + basis_x, lattice_y + basis_y)
-                    
+
                     # Check if point is within canvas
                     if canvas.contains_point(point):
                         arrangement.add(point, site_type)
