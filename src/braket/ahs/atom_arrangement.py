@@ -288,7 +288,7 @@ class AtomArrangement:
         a2 = (lattice_spacing / 2, lattice_spacing * math.sqrt(3) / 2)
         
         # Two-atom basis
-        basis = [(0, 0), (spacing, 0)]
+        basis = [(0, 0), (a1[0] / 3 + a2[0] / 3, a1[1] / 3 + a2[1] / 3)]
 
         return cls.from_bravais_lattice(a1, a2, canvas, basis=basis, site_type=site_type)
 
