@@ -13,6 +13,7 @@
 
 import math
 from decimal import Decimal
+import itertools
 
 import pytest
 
@@ -228,9 +229,50 @@ class TestAtomArrangementFactoryMethods:
         
         # Should have multiple atoms with honeycomb structure
         assert len(arrangement) >= 2
-        
-        # Honeycomb has two atoms per unit cell, so should have even number or close
-        # (allowing for boundary effects)
+
+    def test_honeycomb_lattice_contains_requested_spacing(self, square_canvas):
+        """At least one pair of atoms must be separated by exactly `spacing`
+        (the declared nearest-neighbour distance)."""
+        spacing = 2e-6
+        arr = AtomArrangement.from_honeycomb_lattice(spacing, square_canvas)
+        coords = [site.coordinate for site in arr]
+
+        # we need at least two atoms to measure a distance
+        assert len(coords) >= 2
+
+        # collect unique pairwise distances (rounded to tame fp noise)
+        distances = {
+            round(math.hypot(x1 - x2, y1 - y2), 12)
+            for (x1, y1), (x2, y2) in itertools.combinations(coords, 2)
+        }
+
+        # there should be at least one distance equal to `spacing`
+        assert any(
+            math.isclose(d, spacing, rel_tol=1e-7, abs_tol=1e-12)
+            for d in distances
+        ), "No pair found at the requested nearest-neighbour distance"
+
+    def test_honeycomb_lattice_min_distance_not_smaller_than_spacing(self, square_canvas):
+        """The shortest non-zero distance in the honeycomb lattice must be
+        at least the user-requested `spacing`.  A too-small value signals an
+        incorrect basis."""
+        spacing = 2e-6
+        arr = AtomArrangement.from_honeycomb_lattice(spacing, square_canvas)
+        coords = [site.coordinate for site in arr]
+
+        # at least one pair to measure
+        assert len(coords) >= 2
+
+        min_dist = min(
+            math.hypot(x1 - x2, y1 - y2)
+            for (x1, y1), (x2, y2) in itertools.combinations(coords, 2)
+            if (x1, y1) != (x2, y2)
+        )
+
+        # Allow tiny numerical wiggle room 
+        assert min_dist >= spacing * 0.999, (
+            f"Shortest distance {min_dist:e} is < requested spacing {spacing:e};"
+        )
 
     def test_factory_methods_empty_canvas(self):
         """Test factory methods with canvas that contains no lattice points."""
