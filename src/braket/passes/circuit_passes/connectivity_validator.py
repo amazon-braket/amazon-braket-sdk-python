@@ -111,12 +111,10 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         """
         # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
-        if not any(
-            [
-                isinstance(instruction.operator, StartVerbatimBox)
-                for instruction in program.instructions
-            ]
-        ):
+        if not any([
+            isinstance(instruction.operator, StartVerbatimBox)
+            for instruction in program.instructions
+        ]):
             return
         for idx in range(len(program.instructions)):
             instruction = program.instructions[idx]
@@ -157,9 +155,10 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         if len(control_qubits) == 1 and len(target_qubits) == 1:
             gate_connectivity_graph.add_edge(control_qubits[0], target_qubits[0])
         elif len(control_qubits) == 0 and len(target_qubits) == 2:
-            gate_connectivity_graph.add_edges_from(
-                [(target_qubits[0], target_qubits[1]), (target_qubits[1], target_qubits[0])]
-            )
+            gate_connectivity_graph.add_edges_from([
+                (target_qubits[0], target_qubits[1]),
+                (target_qubits[1], target_qubits[0]),
+            ])
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
