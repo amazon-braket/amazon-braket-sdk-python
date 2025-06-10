@@ -21,6 +21,7 @@ from braket.circuits.noise_model.criteria import (
 )
 from braket.circuits.noise_model.gate_criteria import GateCriteria  # noqa: F401
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria  # noqa: F401
+from braket.circuits.noise_model.measure_criteria import MeasureCriteria  # noqa: F401
 from braket.circuits.noise_model.noise_model import (
     NoiseModel,  # noqa: F401
     NoiseModelInstruction,  # noqa: F401
