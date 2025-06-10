@@ -35,7 +35,7 @@ class GateValidator(ValidationPass[Circuit]):
                 verbatim mode by the emulator.
 
         Raises:
-            ValueError: If supported_gates and and native_gates are empty or any of the provided
+            ValueError: If supported_gates and native_gates are empty or any of the provided
             gate are not supported by the Braket BDK.
         """
         supported_gates, native_gates = (supported_gates or []), (native_gates or [])
