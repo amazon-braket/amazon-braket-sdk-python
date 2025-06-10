@@ -68,9 +68,14 @@ class Canvas:
         p1x, p1y = self.boundary_points[0]
         for i in range(1, n + 1):
             p2x, p2y = self.boundary_points[i % n]
+
+            # Skip horizontal edges
+            if p1y == p2y:
+                p1x, p1y = p2x, p2y
+                continue
+
             if y > min(p1y, p2y) and y <= max(p1y, p2y) and x <= max(p1x, p2x):
-                if p1y != p2y:
-                    xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
                 if p1x == p2x or x <= xinters:
                     inside = not inside
             p1x, p1y = p2x, p2y

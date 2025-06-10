@@ -160,3 +160,13 @@ class TestCanvas:
         # Should not crash and should work reasonably
         result = canvas.contains_point((0.3, 0.3))
         assert isinstance(result, bool)
+
+    def test_vertical_edge_ray_casting(self):
+        """Test vertical edge case to ensure complete coverage."""
+        canvas = Canvas([(0, 0), (1, 0), (1, 1), (0, 1)])
+
+        # Test point that will cause ray casting to interact with vertical edge
+        assert canvas.contains_point((0.5, 0.5))
+
+        # Test point outside that interacts with vertical edge
+        assert not canvas.contains_point((-0.5, 0.5))
