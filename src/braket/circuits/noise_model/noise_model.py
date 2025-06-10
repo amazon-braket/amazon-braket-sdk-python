@@ -430,7 +430,7 @@ def _apply_noise_on_observable_result_types(
 def _apply_noise_on_measurements(
     circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
 ) -> Circuit:
-    """Applies readout noise to measurement instructions. Each applicable
+    """Applies readout noise to measurement instructions.
 
     Args:
         circuit (Circuit): The circuit to apply the readout noise to.
