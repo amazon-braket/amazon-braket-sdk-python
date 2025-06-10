@@ -43,8 +43,6 @@ class TestAtomArrangementFactoryMethods:
         arrangement = AtomArrangement.from_square_lattice(spacing, square_canvas)
 
         # Canvas is 1e-5 x 1e-5, with spacing 2e-6
-        # The exact boundary behavior may vary, but we should get a reasonable grid
-        assert len(arrangement) > 0  # At least some atoms should be created
         assert len(arrangement) == 25  # Expected 5x5 grid (excluding boundary points)
 
         # Check some specific positions that should definitely be present
@@ -85,26 +83,51 @@ class TestAtomArrangementFactoryMethods:
         with pytest.raises(ValueError, match="Spacings must be positive"):
             AtomArrangement.from_square_lattice(-1e-6, square_canvas)
 
-    def test_from_rectangular_lattice_basic(self, rectangular_canvas):
-        """Test basic rectangular lattice creation."""
-        spacing_x = 4e-6
-        spacing_y = 2e-6
+    @pytest.mark.parametrize("spacing_x,spacing_y,expected_count,test_coords", [
+        (
+            4e-6, 2e-6, 25,
+            [(4e-6, 2e-6), (8e-6, 4e-6), (1.2e-05, 6e-6), (1.6e-05, 8e-6)]
+        ),
+        (
+            5e-6, 5e-6, 8,
+            [(5e-6, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]
+        ),
+        (
+            10e-6, 5e-6, 4,
+            [(1e-05, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]
+        ),
+    ])
+    def test_from_rectangular_lattice_basic(self, rectangular_canvas, spacing_x, spacing_y, 
+                                          expected_count, test_coords):
+        """Test basic rectangular lattice creation with various spacings."""
         arrangement = AtomArrangement.from_rectangular_lattice(
             spacing_x, spacing_y, rectangular_canvas
         )
 
-        # Should have atoms in a rectangular grid
-        assert len(arrangement) > 0
-
-        # Check some specific positions (interior points)
+        assert len(arrangement) == expected_count
+        
         coordinates = [site.coordinate for site in arrangement]
-        assert (4e-6, 2e-6) in coordinates  # Interior point should be present
+        for coord in test_coords:
+            # Check if coordinate exists with floating point tolerance
+            found = any(
+                abs(actual[0] - coord[0]) < 1e-10 and abs(actual[1] - coord[1]) < 1e-10
+                for actual in coordinates
+            )
+            assert found, f"Expected coordinate {coord} not found in {coordinates}"
 
-        # Check grid structure
+        # Verify spacing pattern
         x_coords = sorted(set(coord[0] for coord in coordinates))
         y_coords = sorted(set(coord[1] for coord in coordinates))
-        assert len(x_coords) >= 2
-        assert len(y_coords) >= 2
+        
+        if len(x_coords) > 1:
+            for i in range(1, len(x_coords)):
+                spacing_diff = abs(x_coords[i] - x_coords[i-1] - spacing_x)
+                assert spacing_diff < 1e-10, f"X spacing mismatch: {spacing_diff}"
+        
+        if len(y_coords) > 1:
+            for i in range(1, len(y_coords)):
+                spacing_diff = abs(y_coords[i] - y_coords[i-1] - spacing_y)
+                assert spacing_diff < 1e-10, f"Y spacing mismatch: {spacing_diff}"
 
     def test_from_rectangular_lattice_invalid_spacing(self, rectangular_canvas):
         """Test rectangular lattice with invalid spacing."""
@@ -119,14 +142,8 @@ class TestAtomArrangementFactoryMethods:
         spacing = 3e-6
         arrangement = AtomArrangement.from_triangular_lattice(spacing, square_canvas)
 
-        assert len(arrangement) > 0
-
-        # Check that we have a reasonable number of atoms for triangular lattice
-        coordinates = [site.coordinate for site in arrangement]
-        assert len(coordinates) >= 3  # Should have multiple atoms
-
-        # In triangular lattice, check we have the expected structure
-        # At least verify we have atoms at reasonable positions
+        # Canvas is 1e-5 x 1e-5, with spacing 3e-6
+        assert len(arrangement) == 9
 
     def test_from_triangular_lattice_invalid_spacing(self, square_canvas):
         """Test triangular lattice with invalid spacing."""
@@ -138,12 +155,9 @@ class TestAtomArrangementFactoryMethods:
         spacing = 2e-6
         arrangement = AtomArrangement.from_honeycomb_lattice(spacing, square_canvas)
 
-        assert len(arrangement) > 0
-
-        # Honeycomb should have two atoms per unit cell
-        coordinates = [site.coordinate for site in arrangement]
-        # Check that we have multiple atoms forming honeycomb structure
-        assert len(coordinates) >= 2
+        # Canvas is 1e-5 x 1e-5, with spacing 2e-6 (nearest neighbor distance)
+        # Should produce exactly 18 atoms in honeycomb arrangement
+        assert len(arrangement) == 18
 
     def test_from_honeycomb_lattice_invalid_spacing(self, square_canvas):
         """Test honeycomb lattice with invalid spacing."""
@@ -156,29 +170,25 @@ class TestAtomArrangementFactoryMethods:
         a2 = (0, 3e-6)
         arrangement = AtomArrangement.from_bravais_lattice(a1, a2, square_canvas)
 
-        assert len(arrangement) > 0
+        # Canvas is 1e-5 x 1e-5, with lattice vectors (3e-6, 0) and (0, 3e-6)
+        # Should produce exactly 9 atoms in square lattice arrangement
+        assert len(arrangement) == 9
 
-        # Check some expected lattice positions (interior points)
+        # Check that expected lattice position exists
         coordinates = [site.coordinate for site in arrangement]
         assert (3e-6, 3e-6) in coordinates  # Interior point should be present
-
-        # Should have reasonable number of lattice points
-        assert len(coordinates) >= 4
 
     def test_from_bravais_lattice_with_basis(self, square_canvas):
         """Test Bravais lattice with custom basis."""
         a1 = (4e-6, 0)
         a2 = (0, 4e-6)
-        basis = [(1e-6, 1e-6), (2e-6, 2e-6)]  # Use interior points for basis
+        basis = [(1e-6, 1e-6), (2e-6, 2e-6)]  # Two-atom basis
 
         arrangement = AtomArrangement.from_bravais_lattice(a1, a2, square_canvas, basis=basis)
 
-        assert len(arrangement) > 0
-
-        # Check that basis atoms appear at reasonable positions
-        coordinates = [site.coordinate for site in arrangement]
-        # Look for atoms that are at basis offsets from lattice points
-        assert len(coordinates) >= 2  # Should have multiple atoms
+        # Canvas is 1e-5 x 1e-5, with lattice vectors (4e-6, 0) and (0, 4e-6)
+        # Two-atom basis should produce exactly 18 atoms (9 lattice sites × 2 basis atoms)
+        assert len(arrangement) == 18
 
     def test_from_bravais_lattice_invalid_vectors(self, square_canvas):
         """Test Bravais lattice with invalid lattice vectors."""
@@ -196,7 +206,9 @@ class TestAtomArrangementFactoryMethods:
         a2 = (Decimal("0"), Decimal("3e-6"))
 
         arrangement = AtomArrangement.from_bravais_lattice(a1, a2, square_canvas)
-        assert len(arrangement) > 0
+        
+        # Should produce same result as float version (9 atoms)
+        assert len(arrangement) == 9
 
     def test_triangular_lattice_spacing_geometry(self):
         """Test that triangular lattice has correct geometric properties."""
@@ -205,15 +217,9 @@ class TestAtomArrangementFactoryMethods:
         spacing = 1e-5
 
         arrangement = AtomArrangement.from_triangular_lattice(spacing, canvas)
-        coordinates = [site.coordinate for site in arrangement]
-
-        # Should have multiple atoms in triangular arrangement
-        assert len(coordinates) > 1
-
-        # Check that we have a reasonable number of atoms
-        # Just verify we get a reasonable count without being too precise
-        assert len(coordinates) > 10  # Should have a decent number of atoms
-        assert len(coordinates) < 200  # But not an unreasonable amount
+        
+        # Large canvas (99μm × 99μm) with spacing 10μm should produce exactly 108 atoms
+        assert len(arrangement) == 108
 
     def test_honeycomb_lattice_structure(self):
         """Test that honeycomb lattice has correct structure."""
@@ -222,10 +228,9 @@ class TestAtomArrangementFactoryMethods:
         spacing = 1e-5  # Nearest neighbor distance
 
         arrangement = AtomArrangement.from_honeycomb_lattice(spacing, canvas)
-        coordinates = [site.coordinate for site in arrangement]
-
-        # Should have multiple atoms with honeycomb structure
-        assert len(arrangement) >= 2
+        
+        # Large canvas (199μm × 199μm) with spacing 10μm should produce exactly 311 atoms
+        assert len(arrangement) == 311
 
     def test_honeycomb_lattice_contains_requested_spacing(self, square_canvas):
         """At least one pair of atoms must be separated by exactly `spacing`
