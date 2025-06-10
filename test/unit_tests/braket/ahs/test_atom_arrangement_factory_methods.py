@@ -79,10 +79,10 @@ class TestAtomArrangementFactoryMethods:
 
     def test_from_square_lattice_invalid_spacing(self, square_canvas):
         """Test square lattice with invalid spacing."""
-        with pytest.raises(ValueError, match="Spacing must be positive"):
+        with pytest.raises(ValueError, match="Spacings must be positive"):
             AtomArrangement.from_square_lattice(0, square_canvas)
 
-        with pytest.raises(ValueError, match="Spacing must be positive"):
+        with pytest.raises(ValueError, match="Spacings must be positive"):
             AtomArrangement.from_square_lattice(-1e-6, square_canvas)
 
     def test_from_rectangular_lattice_basic(self, rectangular_canvas):
