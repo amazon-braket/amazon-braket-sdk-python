@@ -274,10 +274,8 @@ class NoiseModel:
         """
         new_circuit = Circuit()
         for circuit_instruction in circuit.instructions:
-            # Add the instruction first
             new_circuit.add_instruction(circuit_instruction)
 
-            # Apply noise after the instruction if it's not a measurement
             if not isinstance(circuit_instruction.operator, Measure):
                 cls._apply_noise_to_instruction(
                     new_circuit,

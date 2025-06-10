@@ -511,14 +511,12 @@ def test_noise_model_from_dict():
     assert model.instructions[0].criteria.get_keys(CriteriaKey.QUBIT) == {0, 1}
 
 
-def test_apply_readout_noise_internal_helpers_measure():
-    # Create a circuit with measurement instructions only
+def test_apply_readout_noise_measure_only():
     circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
 
     noise = BitFlip(0.1)
     noise_model = NoiseModel().add_noise(noise, MeasureCriteria(qubits=[0]))
 
-    # Apply the noise model
     noisy_circuit = noise_model.apply(circuit)
 
     # Check that noise is applied after measure(0)
@@ -532,8 +530,7 @@ def test_apply_readout_noise_internal_helpers_measure():
         assert not (isinstance(instr.operator, BitFlip) and instr.target == [1])
 
 
-def test_apply_readout_noise_internal_helpers_measure_custom_criteria():
-    # Create a circuit with measurement instructions only
+def test_apply_readout_noise_measure_only_custom_criteria():
     circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
 
     class CustomMeasureCriteria(MeasureCriteria):
@@ -544,7 +541,6 @@ def test_apply_readout_noise_internal_helpers_measure_custom_criteria():
     noise = BitFlip(0.1)
     noise_model = NoiseModel().add_noise(noise, CustomMeasureCriteria(qubits=[0]))
 
-    # Apply the noise model
     noisy_circuit = noise_model.apply(circuit)
 
     # Check that noise is applied after measure(0)
@@ -558,8 +554,7 @@ def test_apply_readout_noise_internal_helpers_measure_custom_criteria():
         assert not (isinstance(instr.operator, BitFlip) and instr.target == [1])
 
 
-def test_apply_readout_noise_internal_helpers_result_type():
-    # Create a circuit with result types only
+def test_apply_readout_noise_result_type_only():
     circuit = Circuit().h(0).cnot(0, 1)
     circuit.add_result_type(Sample(Observable.Z(), 0))
     circuit.add_result_type(Expectation(Observable.Z(), 0))
