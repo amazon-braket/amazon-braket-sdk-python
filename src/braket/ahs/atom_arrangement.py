@@ -19,14 +19,11 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import TYPE_CHECKING
 
 import numpy as np
 
+from braket.ahs.canvas import Canvas
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
-
-if TYPE_CHECKING:
-    from braket.ahs.canvas import Canvas
 
 
 class SiteType(Enum):
