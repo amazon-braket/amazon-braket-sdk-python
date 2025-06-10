@@ -16,11 +16,13 @@ from typing import Dict, List
 from braket.circuits.translations import BRAKET_GATES
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.error_mitigation.error_mitigation_scheme import ErrorMitigationScheme
-from braket.device_schema.error_mitigation.error_mitigation_properties import ErrorMitigationProperties
+from braket.device_schema.error_mitigation.error_mitigation_properties import (
+    ErrorMitigationProperties,
+)
 from pydantic.v1 import BaseModel
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     OneQubitProperties,
-    TwoQubitProperties
+    TwoQubitProperties,
 )
 from braket.device_schema.device_capabilities import DeviceCapabilities
 
@@ -36,13 +38,13 @@ class DeviceEmulatorProperties(BaseModel):
             Valid gates include: gphase, i, h, x, y, z, cv, cnot, cy, cz, ecr, s, si, t, ti, v, vi,
             phaseshift, cphaseshift, cphaseshift00, cphaseshift01, cphaseshift10, rx, ry, rz, U,
             swap, iswap, pswap, xy, xx, yy, zz, ccnot, cswap, gpi, gpi2, prx, ms, unitary
-        connectivityGraph (Dict[str, List[str]]): Graph representing qubit connectivity. If it is an 
-            empty dictionary, the device is treated fully connected.
+        connectivityGraph (Dict[str, List[str]]): Graph representing qubit connectivity. If it is an
+            empty dictionary, the device is treated as fully connected.
         oneQubitProperties (Dict[str, OneQubitProperties]): Properties of one-qubit calibration details
         twoQubitProperties (Dict[str, TwoQubitProperties]): Properties of two-qubit calibration details
-        supportedResultTypes (List[ResultType]): List of supported result types. The valid result types 
+        supportedResultTypes (List[ResultType]): List of supported result types. The valid result types
             include those in the DEFAULT_SUPPORTED_RESULT_TYPES. Default is DEFAULT_SUPPORTED_RESULT_TYPES.
-        errorMitigation (Dict[ErrorMitigationScheme, ErrorMitigationProperties]): Error mitigation settings. 
+        errorMitigation (Dict[ErrorMitigationScheme, ErrorMitigationProperties]): Error mitigation settings.
             If it is an empty dictionary, then no error mitigation. Default is {}.
     """
 
@@ -64,7 +66,7 @@ class DeviceEmulatorProperties(BaseModel):
         # Validate the input nativeGateSet
         if not isinstance(self.nativeGateSet, list):
             raise ValueError("nativeGateSet must be a list of strings")
-        
+
         for gate in self.nativeGateSet:
             if gate.lower() not in BRAKET_GATES:
                 raise ValueError(
@@ -82,29 +84,31 @@ class DeviceEmulatorProperties(BaseModel):
             if not 0 <= node_int < self.qubitCount:
                 raise ValueError(
                     f"Node {node} in connectivityGraph must represent a valid qubit index "
-                    f"in range [0, {self.qubitCount-1}]"
+                    f"in range [0, {self.qubitCount - 1}]"
                 )
-            
+
             if not isinstance(neighbors, list):
                 raise ValueError(f"Neighbors for node {node} must be a list")
-            
+
             for neighbor in neighbors:
                 if (not isinstance(neighbor, str)) or (not neighbor.isdigit()):
-                    raise ValueError(f"Neighbor {neighbor} for node {node} must be a string of digits")
+                    raise ValueError(
+                        f"Neighbor {neighbor} for node {node} must be a string of digits"
+                    )
                 edge_int = int(neighbor)
                 if not 0 <= edge_int < self.qubitCount:
                     raise ValueError(
                         f"Neighbor {neighbor} for node {node} must represent a valid qubit index "
-                        f"in range [0, {self.qubitCount-1}]"
+                        f"in range [0, {self.qubitCount - 1}]"
                     )
 
         # Validate the input oneQubitProperties and twoQubitProperties
         if not isinstance(self.oneQubitProperties, dict):
             raise ValueError("oneQubitProperties must be a dictionary")
-        
+
         if not isinstance(self.twoQubitProperties, dict):
             raise ValueError("twoQubitProperties must be a dictionary")
-        
+
         for twoQubitProperty in self.twoQubitProperties:
             if not isinstance(twoQubitProperty, TwoQubitProperties):
                 raise ValueError("Each element in twoQubitProperties must be a TwoQubitProperties")
@@ -137,12 +141,18 @@ class DeviceEmulatorProperties(BaseModel):
         if self.errorMitigation:
             for scheme, properties in self.errorMitigation.items():
                 if not isinstance(scheme, ErrorMitigationScheme):
-                    raise ValueError(f"Error mitigation scheme must be of type ErrorMitigationScheme")
+                    raise ValueError(
+                        f"Error mitigation scheme must be of type ErrorMitigationScheme"
+                    )
                 if not isinstance(properties, ErrorMitigationProperties):
-                    raise ValueError(f"Error mitigation properties must be of type ErrorMitigationProperties")
+                    raise ValueError(
+                        f"Error mitigation properties must be of type ErrorMitigationProperties"
+                    )
 
 
-def distill_device_emulator_properties(device_properties: DeviceCapabilities) -> DeviceEmulatorProperties:
+def distill_device_emulator_properties(
+    device_properties: DeviceCapabilities,
+) -> DeviceEmulatorProperties:
     """Distill information from device properties for device emulation
 
     Args:
@@ -159,15 +169,17 @@ def distill_device_emulator_properties(device_properties: DeviceCapabilities) ->
             errorMitigation = {}
 
         device_emulator_properties = DeviceEmulatorProperties(
-            qubitCount = device_properties.paradigm.qubitCount,
-            nativeGateSet = device_properties.paradigm.nativeGateSet,
-            connectivityGraph = device_properties.paradigm.connectivity.connectivityGraph,
-            oneQubitProperties = device_properties.standardized.oneQubitProperties,
-            twoQubitProperties = device_properties.standardized.twoQubitProperties,
-            supportedResultTypes = device_properties.action['braket.ir.openqasm.program'].supportedResultTypes,
-            errorMitigation = errorMitigation
+            qubitCount=device_properties.paradigm.qubitCount,
+            nativeGateSet=device_properties.paradigm.nativeGateSet,
+            connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
+            oneQubitProperties=device_properties.standardized.oneQubitProperties,
+            twoQubitProperties=device_properties.standardized.twoQubitProperties,
+            supportedResultTypes=device_properties.action[
+                "braket.ir.openqasm.program"
+            ].supportedResultTypes,
+            errorMitigation=errorMitigation,
         )
     else:
         raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
-    
+
     return device_emulator_properties
