@@ -398,8 +398,7 @@ def _apply_noise_on_instruction(
 
 
 def _apply_noise_on_observable_result_types(
-    circuit: Circuit,
-    readout_noise_instructions: list[NoiseModelInstruction],
+    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
 ) -> Circuit:
     """Applies readout noise based on the observable result types in the circuit. Each applicable
     Noise will be applied only once to a target in the ObservableResultType.
@@ -429,8 +428,7 @@ def _apply_noise_on_observable_result_types(
 
 
 def _apply_noise_on_measurements(
-    circuit: Circuit,
-    readout_noise_instructions: list[NoiseModelInstruction],
+    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
 ) -> Circuit:
     """Applies readout noise to measurement instructions. Each applicable
 
