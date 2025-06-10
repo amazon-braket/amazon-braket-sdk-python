@@ -20,6 +20,7 @@ from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import GateModelQpuParadigmProperties
 from braket.emulation.emulator import Emulator
 from networkx import DiGraph, complete_graph, from_edgelist
+from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 
 class LocalEmulator(Emulator):
     """
@@ -29,7 +30,7 @@ class LocalEmulator(Emulator):
     @classmethod
     def from_device_properties(
         cls, 
-        device_properties: DeviceCapabilities, 
+        device_properties: Union[DeviceCapabilities, DeviceEmulatorProperties], 
         backend: str = "braket_dm", 
         **kwargs: Any,
     ) -> LocalEmulator:
@@ -37,7 +38,7 @@ class LocalEmulator(Emulator):
 
         Args:
             device_properties (DeviceCapabilities): The device properties to use for emulation.
-            backend (str): The backend to use for simulation. Defaults to "braket_dm".
+            backend (str): The backend to use for simulation. Default is "braket_dm".
             **kwargs (Any): Additional keyword arguments to pass to the LocalEmulator constructor.
 
         Returns:
@@ -52,14 +53,28 @@ class LocalEmulator(Emulator):
 
         # Initialize with device properties and specified backend
         emulator = cls(backend=backend, **kwargs)
+
+        # Instantiate an instance of DeviceEmulatorProperties
+        if isinstance(device_properties, DeviceCapabilities):
+            device_properties = DeviceEmulatorProperties(
+                qubitCount = device_properties.paradigm.qubitCount,
+                nativeGateSet = device_properties.paradigm.nativeGateSet,
+                connectivityGraph = device_properties.paradigm.connectivity.connectivityGraph,
+                oneQubitProperties = device_properties.standardized.oneQubitProperties,
+                twoQubitProperties = device_properties.standardized.twoQubitProperties,
+                supportedResultTypes = device_properties.action['braket.ir.openqasm.program'].supportedResultTypes,
+                errorMitigation = 
+            )
+        elif not isinstance(device_properties, DeviceEmulatorProperties):
+            raise ValueError(f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties.")
         
         # Create a noise model based on the provided device properties
 
         # Add the passes for validation
-        emulator.add_pass(qubit_count_validator(device_properties))
-        emulator.add_pass(gate_validator(device_properties))
-        emulator.add_pass(connectivity_validator(device_properties, self.topology_graph))
-        emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
+        # emulator.add_pass(qubit_count_validator(device_properties))
+        # emulator.add_pass(gate_validator(device_properties))
+        # emulator.add_pass(connectivity_validator(device_properties, self.topology_graph))
+        # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
         
         return emulator
 
@@ -120,4 +135,4 @@ class LocalEmulator(Emulator):
             return from_edgelist(edges, create_using=DiGraph())
         else:
             return None
-
+    
