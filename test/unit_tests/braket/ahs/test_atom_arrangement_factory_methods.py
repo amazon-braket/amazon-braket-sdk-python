@@ -83,29 +83,24 @@ class TestAtomArrangementFactoryMethods:
         with pytest.raises(ValueError, match="Spacings must be positive"):
             AtomArrangement.from_square_lattice(-1e-6, square_canvas)
 
-    @pytest.mark.parametrize("spacing_x,spacing_y,expected_count,test_coords", [
-        (
-            4e-6, 2e-6, 25,
-            [(4e-6, 2e-6), (8e-6, 4e-6), (1.2e-05, 6e-6), (1.6e-05, 8e-6)]
-        ),
-        (
-            5e-6, 5e-6, 8,
-            [(5e-6, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]
-        ),
-        (
-            10e-6, 5e-6, 4,
-            [(1e-05, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]
-        ),
-    ])
-    def test_from_rectangular_lattice_basic(self, rectangular_canvas, spacing_x, spacing_y, 
-                                          expected_count, test_coords):
+    @pytest.mark.parametrize(
+        "spacing_x,spacing_y,expected_count,test_coords",
+        [
+            (4e-6, 2e-6, 25, [(4e-6, 2e-6), (8e-6, 4e-6), (1.2e-05, 6e-6), (1.6e-05, 8e-6)]),
+            (5e-6, 5e-6, 8, [(5e-6, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]),
+            (10e-6, 5e-6, 4, [(1e-05, 5e-6), (1e-05, 1e-05), (2e-05, 5e-6), (2e-05, 1e-05)]),
+        ],
+    )
+    def test_from_rectangular_lattice_basic(
+        self, rectangular_canvas, spacing_x, spacing_y, expected_count, test_coords
+    ):
         """Test basic rectangular lattice creation with various spacings."""
         arrangement = AtomArrangement.from_rectangular_lattice(
             spacing_x, spacing_y, rectangular_canvas
         )
 
         assert len(arrangement) == expected_count
-        
+
         coordinates = [site.coordinate for site in arrangement]
         for coord in test_coords:
             # Check if coordinate exists with floating point tolerance
@@ -118,15 +113,15 @@ class TestAtomArrangementFactoryMethods:
         # Verify spacing pattern
         x_coords = sorted(set(coord[0] for coord in coordinates))
         y_coords = sorted(set(coord[1] for coord in coordinates))
-        
+
         if len(x_coords) > 1:
             for i in range(1, len(x_coords)):
-                spacing_diff = abs(x_coords[i] - x_coords[i-1] - spacing_x)
+                spacing_diff = abs(x_coords[i] - x_coords[i - 1] - spacing_x)
                 assert spacing_diff < 1e-10, f"X spacing mismatch: {spacing_diff}"
-        
+
         if len(y_coords) > 1:
             for i in range(1, len(y_coords)):
-                spacing_diff = abs(y_coords[i] - y_coords[i-1] - spacing_y)
+                spacing_diff = abs(y_coords[i] - y_coords[i - 1] - spacing_y)
                 assert spacing_diff < 1e-10, f"Y spacing mismatch: {spacing_diff}"
 
     def test_from_rectangular_lattice_invalid_spacing(self, rectangular_canvas):
@@ -206,7 +201,7 @@ class TestAtomArrangementFactoryMethods:
         a2 = (Decimal("0"), Decimal("3e-6"))
 
         arrangement = AtomArrangement.from_bravais_lattice(a1, a2, square_canvas)
-        
+
         # Should produce same result as float version (9 atoms)
         assert len(arrangement) == 9
 
@@ -217,7 +212,7 @@ class TestAtomArrangementFactoryMethods:
         spacing = 1e-5
 
         arrangement = AtomArrangement.from_triangular_lattice(spacing, canvas)
-        
+
         # Large canvas (99μm × 99μm) with spacing 10μm should produce exactly 108 atoms
         assert len(arrangement) == 108
 
@@ -228,7 +223,7 @@ class TestAtomArrangementFactoryMethods:
         spacing = 1e-5  # Nearest neighbor distance
 
         arrangement = AtomArrangement.from_honeycomb_lattice(spacing, canvas)
-        
+
         # Large canvas (199μm × 199μm) with spacing 10μm should produce exactly 311 atoms
         assert len(arrangement) == 311
 
@@ -327,3 +322,73 @@ class TestAtomArrangementFactoryMethods:
         # Verify all atoms are within the canvas
         for site in arrangement:
             assert l_canvas.contains_point(site.coordinate)
+
+    def test_from_bravais_lattice_default_basis(self, square_canvas):
+        """Test Bravais lattice with default basis (None), which should use [(0, 0)]."""
+        a1 = (3e-6, 0)
+        a2 = (0, 3e-6)
+
+        # Call with explicit basis=None to trigger the default basis path
+        arrangement = AtomArrangement.from_bravais_lattice(a1, a2, square_canvas, basis=None)
+
+        # Should produce same result as no basis specified (9 atoms)
+        assert len(arrangement) == 9
+
+    def test_calculate_lattice_bounds_direct_nearly_parallel(self):
+        """Test _calculate_lattice_bounds directly with nearly parallel vectors."""
+        # Test the _calculate_lattice_bounds method directly
+        a1 = (1e-6, 1e-20)  # Very small y component
+        a2 = (1e-6, 2e-20)  # Even smaller y component difference
+        canvas_bounds = ((0, 0), (1e-5, 1e-5))
+
+        # The determinant will be: 1e-6 * 2e-20 - 1e-20 * 1e-6 = 2e-26 - 1e-26 = 1e-26 < 1e-12
+        with pytest.raises(ValueError, match="Lattice vectors are too close to parallel"):
+            AtomArrangement._calculate_lattice_bounds(a1, a2, canvas_bounds)
+
+    def test_calculate_lattice_bounds_default_basis(self):
+        """Test _calculate_lattice_bounds with basis=None to trigger default basis path."""
+        # Test the _calculate_lattice_bounds method directly
+        a1 = (3e-6, 0)
+        a2 = (0, 3e-6)
+        canvas_bounds = ((0, 0), (1e-5, 1e-5))
+
+        # Call with basis=None to trigger the default basis = [(0, 0)]
+        bounds = AtomArrangement._calculate_lattice_bounds(a1, a2, canvas_bounds, basis=None)
+
+        assert isinstance(bounds, tuple)
+        assert len(bounds) == 2
+        (n1_min, n1_max), (n2_min, n2_max) = bounds
+        assert isinstance(n1_min, int) and isinstance(n1_max, int)
+        assert isinstance(n2_min, int) and isinstance(n2_max, int)
+
+    def test_calculate_lattice_bounds_empty_basis(self):
+        """Test _calculate_lattice_bounds with empty basis to trigger margin=2 path."""
+        # Test the _calculate_lattice_bounds method directly
+        a1 = (3e-6, 0)
+        a2 = (0, 3e-6)
+        canvas_bounds = ((0, 0), (1e-5, 1e-5))
+
+        # Call with empty basis to trigger the margin = 2
+        bounds = AtomArrangement._calculate_lattice_bounds(a1, a2, canvas_bounds, basis=[])
+
+        assert isinstance(bounds, tuple)
+        assert len(bounds) == 2
+        (n1_min, n1_max), (n2_min, n2_max) = bounds
+        assert isinstance(n1_min, int) and isinstance(n1_max, int)
+        assert isinstance(n2_min, int) and isinstance(n2_max, int)
+
+    def test_atom_arrangement_item_validation_errors(self):
+        """Test AtomArrangementItem validation error paths."""
+        from braket.ahs.atom_arrangement import AtomArrangementItem, SiteType
+
+        # Test invalid coordinate length
+        with pytest.raises(ValueError, match="must be of length 2"):
+            AtomArrangementItem((1, 2, 3), SiteType.FILLED)
+
+        # Test invalid coordinate type
+        with pytest.raises(TypeError, match="must be a number"):
+            AtomArrangementItem(("invalid", 2), SiteType.FILLED)
+
+        # Test invalid site type
+        with pytest.raises(ValueError, match="must be one of"):
+            AtomArrangementItem((1, 2), "invalid_site_type")
