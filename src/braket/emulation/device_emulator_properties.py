@@ -24,7 +24,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     TwoQubitProperties
 )
 
-from device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
+from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 
 class DeviceEmulatorProperties(BaseModel):
