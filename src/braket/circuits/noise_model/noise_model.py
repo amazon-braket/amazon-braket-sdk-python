@@ -277,7 +277,7 @@ class NoiseModel:
             new_circuit.add_instruction(circuit_instruction)
 
             if not isinstance(circuit_instruction.operator, Measure):
-                _apply_noise_on_instruction(
+                new_circuit = _apply_noise_on_instruction(
                     new_circuit,
                     circuit_instruction,
                     gate_noise_instructions,
@@ -377,13 +377,16 @@ def _apply_noise_on_instruction(
     circuit: Circuit,
     instruction: Instruction,
     noise_instructions: list[NoiseModelInstruction],
-) -> None:
+) -> Circuit:
     """Applies noise to a single instruction based on the noise instructions.
 
     Args:
         circuit (Circuit): The circuit to add noise instructions to.
         instruction (Instruction): The instruction to apply noise to.
         noise_instructions (list[NoiseModelInstruction]): List of noise instructions to apply.
+
+    Returns:
+        Circuit: The passed in circuit, with the instruction noise applied.
     """
     target_qubits = list(instruction.target)
     for item in noise_instructions:
@@ -395,6 +398,7 @@ def _apply_noise_on_instruction(
         else:
             for qubit in target_qubits:
                 circuit.add_instruction(Instruction(item.noise, qubit))
+    return circuit
 
 
 def _apply_noise_on_observable_result_types(
