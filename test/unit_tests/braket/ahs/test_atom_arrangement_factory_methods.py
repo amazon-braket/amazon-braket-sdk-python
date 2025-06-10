@@ -234,8 +234,8 @@ class TestAtomArrangementFactoryMethods:
         arr = AtomArrangement.from_honeycomb_lattice(spacing, square_canvas)
         coords = [site.coordinate for site in arr]
 
-        # we need at least two atoms to measure a distance
-        assert len(coords) >= 2
+        # Should have exactly 18 atoms for this canvas and spacing
+        assert len(coords) == 18
 
         # collect unique pairwise distances (rounded to tame fp noise)
         distances = {
@@ -256,8 +256,8 @@ class TestAtomArrangementFactoryMethods:
         arr = AtomArrangement.from_honeycomb_lattice(spacing, square_canvas)
         coords = [site.coordinate for site in arr]
 
-        # at least one pair to measure
-        assert len(coords) >= 2
+        # Should have exactly 18 atoms for this canvas and spacing
+        assert len(coords) == 18
 
         min_dist = min(
             math.hypot(x1 - x2, y1 - y2)
@@ -276,9 +276,9 @@ class TestAtomArrangementFactoryMethods:
         tiny_canvas = Canvas([(1e-7, 1e-7), (2e-7, 1e-7), (2e-7, 2e-7), (1e-7, 2e-7)])
         large_spacing = 1e-5
 
+        # Canvas is too small for the spacing, should produce no atoms
         arrangement = AtomArrangement.from_square_lattice(large_spacing, tiny_canvas)
-        # Should not crash, might be empty or have very few atoms
-        assert len(arrangement) >= 0
+        assert len(arrangement) == 0
 
     def test_mixed_site_types_with_factory_methods(self, square_canvas):
         """Test that factory methods respect site_type parameter."""
@@ -316,8 +316,8 @@ class TestAtomArrangementFactoryMethods:
         spacing = 2e-6
         arrangement = AtomArrangement.from_square_lattice(spacing, l_canvas)
 
-        # Should have atoms only in the L-shaped region
-        assert len(arrangement) > 0
+        # L-shaped canvas with spacing 2e-6 should produce exactly 16 atoms
+        assert len(arrangement) == 16
 
         # Verify all atoms are within the canvas
         for site in arrangement:
