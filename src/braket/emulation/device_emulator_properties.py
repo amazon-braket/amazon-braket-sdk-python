@@ -11,10 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from braket.circuits.translations import BRAKET_GATES
-from braket.circuits import result_types
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.error_mitigation.error_mitigation_scheme import ErrorMitigationScheme
 from braket.device_schema.error_mitigation.error_mitigation_properties import ErrorMitigationProperties
@@ -23,6 +22,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     TwoQubitProperties
 )
+from braket.device_schema.device_capabilities import DeviceCapabilities
 
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
@@ -140,3 +140,34 @@ class DeviceEmulatorProperties(BaseModel):
                     raise ValueError(f"Error mitigation scheme must be of type ErrorMitigationScheme")
                 if not isinstance(properties, ErrorMitigationProperties):
                     raise ValueError(f"Error mitigation properties must be of type ErrorMitigationProperties")
+
+
+def distill_device_emulator_properties(device_properties: DeviceCapabilities) -> DeviceEmulatorProperties:
+    """Distill information from device properties for device emulation
+
+    Args:
+        device_properties (DeviceCapabilities): The device properties to use for emulation.
+
+    Returns:
+        DeviceEmulatorProperties: An instance of DeviceEmulatorProperties for device emulation
+    """
+
+    if isinstance(device_properties, DeviceCapabilities):
+        if hasattr(device_properties.provider, "errorMitigation"):
+            errorMitigation = device_properties.provider.errorMitigation
+        else:
+            errorMitigation = {}
+
+        device_emulator_properties = DeviceEmulatorProperties(
+            qubitCount = device_properties.paradigm.qubitCount,
+            nativeGateSet = device_properties.paradigm.nativeGateSet,
+            connectivityGraph = device_properties.paradigm.connectivity.connectivityGraph,
+            oneQubitProperties = device_properties.standardized.oneQubitProperties,
+            twoQubitProperties = device_properties.standardized.twoQubitProperties,
+            supportedResultTypes = device_properties.action['braket.ir.openqasm.program'].supportedResultTypes,
+            errorMitigation = errorMitigation
+        )
+    else:
+        raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
+    
+    return device_emulator_properties
