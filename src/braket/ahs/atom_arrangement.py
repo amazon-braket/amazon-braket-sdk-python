@@ -153,28 +153,7 @@ class AtomArrangement:
         Raises:
             ValueError: If spacing is not positive.
         """
-        if spacing <= 0:
-            raise ValueError("Spacing must be positive")
-
-        arrangement = cls()
-        (min_x, min_y), (max_x, max_y) = canvas.get_bounding_box()
-
-        # Calculate starting points aligned to spacing grid from origin
-        start_x = math.floor(min_x / spacing) * spacing
-        start_y = math.floor(min_y / spacing) * spacing
-
-        # Generate lattice points
-        x = start_x
-        while x <= max_x + spacing / 2:  # Add small buffer to avoid floating point issues
-            y = start_y
-            while y <= max_y + spacing / 2:
-                point = (x, y)
-                if canvas.contains_point(point):
-                    arrangement.add(point, site_type)
-                y += spacing
-            x += spacing
-
-        return arrangement
+        return cls.from_rectangular_lattice(spacing, spacing, canvas, site_type)
 
     @classmethod
     def from_rectangular_lattice(
@@ -201,25 +180,11 @@ class AtomArrangement:
         if spacing_x <= 0 or spacing_y <= 0:
             raise ValueError("Spacings must be positive")
 
-        arrangement = cls()
-        (min_x, min_y), (max_x, max_y) = canvas.get_bounding_box()
+        # Rectangular lattice vectors
+        a1 = (spacing_x, 0)
+        a2 = (0, spacing_y)
 
-        # Calculate starting points aligned to spacing grid from origin
-        start_x = math.floor(min_x / spacing_x) * spacing_x
-        start_y = math.floor(min_y / spacing_y) * spacing_y
-
-        # Generate lattice points
-        x = start_x
-        while x <= max_x + spacing_x / 2:
-            y = start_y
-            while y <= max_y + spacing_y / 2:
-                point = (x, y)
-                if canvas.contains_point(point):
-                    arrangement.add(point, site_type)
-                y += spacing_y
-            x += spacing_x
-
-        return arrangement
+        return cls.from_bravais_lattice(a1, a2, canvas, site_type=site_type)
 
     @classmethod
     def from_triangular_lattice(
