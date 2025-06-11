@@ -943,6 +943,37 @@ def test_from_ir_with_verbatim_box():
     actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
     assert actual_circ == expected_circ
 
+def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
+    ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "qubit[2] q;",
+                "bit[2] c;",
+                # Non-verbatim instructions
+                "h q[0];",
+                "cnot q[0], q[1];",
+                # Verbatim block
+                "#pragma braket verbatim",
+                "box {",
+                "  h $0;",
+                "  cnot $0, $1;",
+                "}",
+                "c[0] = measure $0;",
+                "c[1] = measure $1;"
+            ]
+        ),
+        inputs={},
+    )
+
+    verbatim_subcirc = Circuit().h(0).cnot(0, 1)
+    expected_circ = Circuit().h(0).cnot(0, 1)
+    expected_circ.add_verbatim_box(verbatim_subcirc)
+    expected_circ.measure(0)
+    expected_circ.measure(1)
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circ
+
 
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
