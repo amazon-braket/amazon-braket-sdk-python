@@ -56,15 +56,7 @@ class LocalEmulator(Emulator):
 
         # Instantiate an instance of DeviceEmulatorProperties
         if isinstance(device_properties, DeviceCapabilities):
-            device_properties = DeviceEmulatorProperties(
-                qubitCount = device_properties.paradigm.qubitCount,
-                nativeGateSet = device_properties.paradigm.nativeGateSet,
-                connectivityGraph = device_properties.paradigm.connectivity.connectivityGraph,
-                oneQubitProperties = device_properties.standardized.oneQubitProperties,
-                twoQubitProperties = device_properties.standardized.twoQubitProperties,
-                supportedResultTypes = device_properties.action['braket.ir.openqasm.program'].supportedResultTypes,
-                errorMitigation = 
-            )
+            device_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
         elif not isinstance(device_properties, DeviceEmulatorProperties):
             raise ValueError(f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties.")
         
@@ -114,25 +106,25 @@ class LocalEmulator(Emulator):
         # Use from_device_properties to create the emulator
         return cls.from_device_properties(device_properties, backend=backend, **kwargs)
     
-    def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
-        """Construct topology graph. If no such metadata is available, return `None`.
+    # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
+    #     """Construct topology graph. If no such metadata is available, return `None`.
 
-        Returns:
-            DiGraph: topology of QPU as a networkx `DiGraph` object.
-        """
-        if hasattr(device_properties, "paradigm") and isinstance(
-            device_properties.paradigm, GateModelQpuParadigmProperties
-        ):
-            if device_properties.paradigm.connectivity.fullyConnected:
-                return complete_graph(
-                    int(self.properties.paradigm.qubitCount), create_using=DiGraph()
-                )
-            adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
-            edges = []
-            for item in adjacency_lists.items():
-                i = item[0]
-                edges.extend([(int(i), int(j)) for j in item[1]])
-            return from_edgelist(edges, create_using=DiGraph())
-        else:
-            return None
+    #     Returns:
+    #         DiGraph: topology of QPU as a networkx `DiGraph` object.
+    #     """
+    #     if hasattr(device_properties, "paradigm") and isinstance(
+    #         device_properties.paradigm, GateModelQpuParadigmProperties
+    #     ):
+    #         if device_properties.paradigm.connectivity.fullyConnected:
+    #             return complete_graph(
+    #                 int(self.properties.paradigm.qubitCount), create_using=DiGraph()
+    #             )
+    #         adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
+    #         edges = []
+    #         for item in adjacency_lists.items():
+    #             i = item[0]
+    #             edges.extend([(int(i), int(j)) for j in item[1]])
+    #         return from_edgelist(edges, create_using=DiGraph())
+    #     else:
+    #         return None
     
