@@ -15,8 +15,10 @@ from braket.device_schema.result_type import ResultType
 
 
 DEFAULT_SUPPORTED_RESULT_TYPES = [
-    ResultType(name='Sample', observables=['x', 'y', 'z', 'h', 'i'], minShots=1, maxShots=20000),
-    ResultType(name='Expectation', observables=['x', 'y', 'z', 'h', 'i'], minShots=1, maxShots=20000),
-    ResultType(name='Variance', observables=['x', 'y', 'z', 'h', 'i'], minShots=1, maxShots=20000),
-    ResultType(name='Probability', observables=None, minShots=1, maxShots=20000)
+    ResultType(name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
+    ResultType(
+        name="Expectation", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000
+    ),
+    ResultType(name="Variance", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
+    ResultType(name="Probability", observables=None, minShots=1, maxShots=20000),
 ]
