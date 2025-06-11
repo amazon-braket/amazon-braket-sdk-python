@@ -13,6 +13,5 @@
 
 from braket.emulation.device_emulator_properties import (
     DeviceEmulatorProperties,
-    distill_device_emulator_properties,
 )  # noqa: F401
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES  # noqa: F401

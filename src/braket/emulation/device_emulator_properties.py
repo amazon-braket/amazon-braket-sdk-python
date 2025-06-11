@@ -59,9 +59,7 @@ class DeviceEmulatorProperties(BaseModel):
     oneQubitProperties: Dict[NonNegativeIntStr, OneQubitProperties]
     twoQubitProperties: Dict[TwoNonNegativeIntsStr, TwoQubitProperties]
     supportedResultTypes: List[ResultType] = DEFAULT_SUPPORTED_RESULT_TYPES
-    errorMitigation: Dict[
-        str, ErrorMitigationProperties
-    ] = {}  # We will convert the key of the dict to ErrorMitigationScheme below
+    errorMitigation: Dict[type[ErrorMitigationScheme], ErrorMitigationProperties] = {}
 
     @root_validator
     def validate_nativeGateSet(cls, values):
@@ -74,62 +72,63 @@ class DeviceEmulatorProperties(BaseModel):
         return values
 
     @root_validator
-    def validate_connectivityGraph(cls, values):
-        connectivityGraph = values.get("connectivityGraph")
-        qubitCount = values.get("qubitCount")
-        for node, neighbors in connectivityGraph.items():
-            node_int = int(node)
-            if not 0 <= node_int < qubitCount:
-                raise ValueError(
-                    f"Node {node} in connectivityGraph must represent a valid qubit index "
-                    f"in range [0, {qubitCount - 1}]"
-                )
-            for neighbor in neighbors:
-                edge_int = int(neighbor)
-                if not 0 <= edge_int < qubitCount:
-                    raise ValueError(
-                        f"Neighbor {neighbor} for node {node} must represent a valid qubit index "
-                        f"in range [0, {qubitCount - 1}]"
-                    )
-        return values
-
-    @classmethod
-    def node_validator(cls, node, qubitCount):
-        if not 0 <= int(node) < qubitCount:
-            raise ValueError(
-                f"Node {node} in oneQubitProperties must represent a valid qubit index "
-                f"in range [0, {qubitCount - 1}]"
-            )
-
-    @root_validator
     def validate_oneQubitProperties(cls, values):
         oneQubitProperties = values["oneQubitProperties"]
         qubitCount = values.get("qubitCount")
-        for node, _ in oneQubitProperties.items():
-            cls.node_validator(node, qubitCount)
+        if len(oneQubitProperties) != qubitCount:
+            raise ValueError("The length of oneQubitProperties should be the same as qubitCount")
 
-        for node in range(qubitCount):
-            if str(node) not in oneQubitProperties.keys():
-                raise ValueError(f"The qubit property for node {node} is not provided.")
+        return values
+    
+    @property
+    def qubit_indices(self):
+        indices = list(self.oneQubitProperties.keys())
+        return sorted(int(x) for x in indices)
+    
+    @classmethod
+    def node_validator(cls, node, qubit_indices, field_name):
+        if int(node) not in qubit_indices:
+            raise ValueError(
+                f"Node {node} in {field_name} must represent a valid qubit index "
+                f"in {qubit_indices}."
+            )    
+    
+    @root_validator
+    def validate_connectivityGraph(cls, values):
+        connectivityGraph = values.get("connectivityGraph")
+        oneQubitProperties = values.get("oneQubitProperties")
+        indices = list(oneQubitProperties.keys())
+        qubit_indices = sorted(int(x) for x in indices)
+        
+        for node, neighbors in connectivityGraph.items():
+            cls.node_validator(node, qubit_indices, 'connectivityGraph')
+            
+            for neighbor in neighbors:
+                if int(neighbor) not in qubit_indices:
+                    raise ValueError(
+                        f"Neighbor {neighbor} for node {node} must represent a valid qubit index "
+                        f"in `qubit_indices`."
+                    )
 
         return values
 
     @root_validator
     def validate_twoQubitProperties(cls, values):
         twoQubitProperties = values["twoQubitProperties"]
-        qubitCount = values.get("qubitCount")
+        oneQubitProperties = values.get("oneQubitProperties")
+        indices = list(oneQubitProperties.keys())
+        qubit_indices = sorted(int(x) for x in indices)
 
         for edge, _ in twoQubitProperties.items():
             node_1, node_2 = edge.split("-")
-            cls.node_validator(node_1, qubitCount)
-            cls.node_validator(node_2, qubitCount)
+            cls.node_validator(node_1, qubit_indices, "twoQubitProperties")
+            cls.node_validator(node_2, qubit_indices, "twoQubitProperties")
 
         ## TODO: Add validation that all edges have calibration data
         return values
 
-    @root_validator
-    def validate_supportedResultTypes(cls, values):
-        supportedResultTypes = values["supportedResultTypes"]
+    @validator("supportedResultTypes", pre=False)
+    def validate_supportedResultTypes(cls, supportedResultTypes: List):
         valid_result_types = [rt.name for rt in DEFAULT_SUPPORTED_RESULT_TYPES]
 
         for result_type in supportedResultTypes:
@@ -137,79 +136,38 @@ class DeviceEmulatorProperties(BaseModel):
             if result_type.name not in valid_result_types:
                 raise ValueError(
                     f"Invalid result type. Must be one of: {', '.join(valid_result_types)}"
-                )
-        return values
+                )        
+        return supportedResultTypes
 
-    @validator("errorMitigation", pre=True)
-    def normalize_keys(cls, v: Any):
-        """
-        Pre-validator to convert class keys (e.g., Debias) to string keys ('Debias').
-
-        This allows using class objects in input even though Pydantic requires
-        string keys in JSON-compatible structures.
-        """
-
-        if not isinstance(v, dict):
-            raise TypeError("errorMitigation must be a dict")
-        return {(k.__name__ if isinstance(k, type) else str(k)): val for k, val in v.items()}
 
     @classmethod
-    def get_error_mitigation_class(cls, name: str) -> Type[ErrorMitigationScheme]:
-        """
-        Lookup method to resolve a class name string back to its class type.
+    def from_device_properties(cls, device_properties: DeviceCapabilities):
+        if isinstance(device_properties, DeviceCapabilities):
+            required_fields = ['paradigm', 'standardized']
+            for field in required_fields:
+                if (not hasattr(device_properties, field)) or (device_properties.dict()[field] is None):
+                    raise ValueError(f"The device property should have non-empty field {field}")
+            
+            if "braket.ir.openqasm.program" not in device_properties.action:
+                raise ValueError(f"The device_properties.action should have key `braket.ir.openqasm.program`.")
+                        
+            if hasattr(device_properties.provider, "errorMitigation"):
+                errorMitigation = device_properties.provider.errorMitigation
+            else:
+                errorMitigation = {}
 
-        Raises:
-            ValueError: if the name doesn't correspond to a known subclass.
-        """
-
-        subclasses = {sub.__name__: sub for sub in ErrorMitigationScheme.__subclasses__()}
-        if name not in subclasses:
-            raise ValueError(f"Unknown ErrorMitigationScheme subclass: {name}")
-        return subclasses[name]
-
-    def get_error_mitigation_resolved(
-        self,
-    ) -> Dict[Type[ErrorMitigationScheme], ErrorMitigationProperties]:
-        """
-        Converts the internal string-keyed errorMitigation map back to one keyed by class types.
-
-        Returns:
-            Dict[Type[ErrorMitigationScheme], ErrorMitigationProperties]
-        """
-
-        return {self.get_error_mitigation_class(k): v for k, v in self.errorMitigation.items()}
-
-
-def distill_device_emulator_properties(
-    device_properties: DeviceCapabilities,
-) -> DeviceEmulatorProperties:
-    """Distill information from device properties for device emulation
-
-    Args:
-        device_properties (DeviceCapabilities): The device properties to use for emulation.
-
-    Returns:
-        DeviceEmulatorProperties: An instance of DeviceEmulatorProperties for device emulation
-    """
-
-    if isinstance(device_properties, DeviceCapabilities):
-        if hasattr(device_properties.provider, "errorMitigation"):
-            errorMitigation = device_properties.provider.errorMitigation
+            device_emulator_properties = DeviceEmulatorProperties(
+                qubitCount=device_properties.paradigm.qubitCount,
+                nativeGateSet=device_properties.paradigm.nativeGateSet,
+                connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
+                oneQubitProperties=device_properties.standardized.oneQubitProperties,
+                twoQubitProperties=device_properties.standardized.twoQubitProperties,
+                supportedResultTypes=device_properties.action[
+                    "braket.ir.openqasm.program"
+                ].supportedResultTypes,
+                errorMitigation=errorMitigation,
+            )
         else:
-            errorMitigation = {}
+            raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
 
-        device_emulator_properties = DeviceEmulatorProperties(
-            qubitCount=device_properties.paradigm.qubitCount,
-            nativeGateSet=device_properties.paradigm.nativeGateSet,
-            connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
-            oneQubitProperties=device_properties.standardized.oneQubitProperties,
-            twoQubitProperties=device_properties.standardized.twoQubitProperties,
-            supportedResultTypes=device_properties.action[
-                "braket.ir.openqasm.program"
-            ].supportedResultTypes,
-            errorMitigation=errorMitigation,
-        )
-    else:
-        raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
-
-    return device_emulator_properties
+        return device_emulator_properties

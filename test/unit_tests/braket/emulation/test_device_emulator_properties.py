@@ -12,150 +12,155 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-
 import json
-
-import pytest
 from pydantic.v1 import ValidationError
 
-from braket.emulation.test_device_emulator_properties import DeviceEmulatorProperties
-
+from braket.emulation.device_emulator_properties import (
+    DeviceEmulatorProperties,
+    # distill_device_emulator_properties,
+)
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.error_mitigation.debias import Debias
 from braket.device_schema.error_mitigation.error_mitigation_properties import (
     ErrorMitigationProperties,
 )
+from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
+    CoherenceTime,
+    Fidelity1Q,
+    FidelityType,
+    OneQubitProperties,
+    TwoQubitProperties,
+    GateFidelity2Q
+)
+from braket.device_schema.device_capabilities import DeviceCapabilities
+from braket.device_schema.device_action_properties import DeviceActionType
+from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import GateModelQpuParadigmProperties
+from braket.device_schema.device_service_properties_v1 import DeviceServiceProperties
+from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
+from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
+from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
+
+valid_oneQubitProperties = OneQubitProperties(
+        T1=CoherenceTime(value=2e-5, standardError=1e-6, unit='S'), 
+        T2=CoherenceTime(value=8e-6, standardError=5e-7, unit='S'),
+        oneQubitFidelity=[
+            Fidelity1Q(fidelityType=FidelityType(name='RANDOMIZED_BENCHMARKING', description=None), fidelity=0.99, standardError=1e-5),
+            Fidelity1Q(fidelityType=FidelityType(name='READOUT', description=None), fidelity=0.9795, standardError=None)
+        ]
+    )
+
+valid_twoQubitProperties = TwoQubitProperties(
+    twoQubitGateFidelity=[
+        GateFidelity2Q(
+            direction=None, 
+            gateName='CZ', 
+            fidelity=0.99, 
+            standardError=0.0009,
+            fidelityType=FidelityType(name='RANDOMIZED_BENCHMARKING', description=None)
+        )
+    ]
+)
+
+valid_connectivityGraph = {"0": ["1"], "1": ["0"]}
 
 @pytest.fixture
-def mitigation_config() -> ErrorMitigationProperties:
-    return ErrorMitigationProperties(minimumShots=1234)
+def valid_input():
+    input = {
+        "qubitCount": 2,
+        "nativeGateSet": ["cz", "prx", "s"],
+        "connectivityGraph": valid_connectivityGraph,
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties.dict(),
+            "1": valid_oneQubitProperties.dict(),
+        },
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties.dict()
+        },
+        "supportedResultTypes": [
+            ResultType(
+                name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000
+            ),
+        ],
+        "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
+    }
+    return input
 
 
-@pytest.fixture
-def full_props(mitigation_config) -> DeviceEmulatorProperties:
-    return DeviceEmulatorProperties(errorMitigation={Debias: mitigation_config})
+def test_valid_device_emulator_properties(valid_input):
+    result = DeviceEmulatorProperties.parse_obj(valid_input)
+    assert result.qubitCount == 2
+    assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
+    assert result.qubit_indices == [0, 1]
 
-
-def test_valid_input_with_class_key(full_props, mitigation_config):
-    assert "Debias" in full_props.errorMitigation
-    assert full_props.errorMitigation["Debias"].minimumShots == mitigation_config.minimumShots
-
-    resolved = full_props.get_error_mitigation_resolved()
-    assert Debias in resolved
-    assert resolved[Debias].minimumShots == mitigation_config.minimumShots
-
-
-def test_valid_input_with_str_key(mitigation_config):
-    props = DeviceEmulatorProperties(errorMitigation={"Debias": mitigation_config})
-    resolved = props.get_error_mitigation_resolved()
-    assert Debias in resolved
-    assert resolved[Debias].minimumShots == mitigation_config.minimumShots
-
-
-def test_invalid_key_type():
-    with pytest.raises(TypeError, match="errorMitigation must be a dictionary"):
-        DeviceEmulatorProperties(errorMitigation=123)
-
-
-def test_invalid_value_type():
+@pytest.mark.parametrize("field, invalid_values", [
+    ("nativeGateSet", ["not_a_Braket_gate"]),
+    ("connectivityGraph", {2:[0]}),
+    ("connectivityGraph", {0:[2]}),
+    ("supportedResultTypes", ['not_a_ResultType']),
+    ("supportedResultTypes", [ResultType(name="not_a_valid_ResultType")]),
+    ("oneQubitProperties", {"2": valid_oneQubitProperties.dict()}),
+    ("oneQubitProperties", {"0": valid_oneQubitProperties.dict()}),
+    ("errorMitigation", {"not_a_ErrorMitigationScheme_subclass": ErrorMitigationProperties(minimumShots=2500)}),
+    ("errorMitigation", {Debias: "not_a_ErrorMitigationProperties"}),
+])
+def test_invalid_device_emulator_properties(valid_input, field, invalid_values):
     with pytest.raises(ValidationError):
-        DeviceEmulatorProperties(errorMitigation={Debias: {"minimumShots": "not-an-int"}})
+        valid_input[field] = invalid_values
+        DeviceEmulatorProperties.parse_obj(valid_input)
 
 
-def test_unknown_class_name_resolution():
-    with pytest.raises(ValueError, match="Unknown ErrorMitigationScheme subclass"):
-        DeviceEmulatorProperties.get_error_mitigation_class("DoesNotExist")
+@pytest.fixture
+def valid_input_2():
+    input = {
+            "service": {"executionWindows": [], "shotsRange": [1,2]},
+            "action": {
+                "braket.ir.openqasm.program": OpenQASMDeviceActionProperties(actionType = "braket.ir.openqasm.program", version=['1'], supportedOperations = ['x'], supportedResultTypes=DEFAULT_SUPPORTED_RESULT_TYPES)
+            },
+            "deviceParameters": {},
+            "paradigm": {'braketSchemaHeader': {'name': 'braket.device_schema.gate_model_qpu_paradigm_properties',
+                            'version': '1'},
+                    'connectivity': {'connectivityGraph': valid_connectivityGraph,
+                                    'fullyConnected': False},
+                    'nativeGateSet': ['cz', 'prx'],
+                    'qubitCount': 2},
+            "standardized": {
+                'braketSchemaHeader': {'name': 'braket.device_schema.standardized_gate_model_qpu_device_properties',
+                    'version': '1'},
+                "oneQubitProperties": {
+                    "0": valid_oneQubitProperties.dict(),
+                    "1": valid_oneQubitProperties.dict(),
+                },
+                "twoQubitProperties": {
+                "0-1": valid_twoQubitProperties.dict()
+            }
+            }
+        }
+    return input # IqmDeviceCapabilities.parse_obj(input)
 
+def test_instantiation_from_device_properties(valid_input_2):
+    result = DeviceEmulatorProperties.from_device_properties(IqmDeviceCapabilities.parse_obj(valid_input_2))
+    assert result.qubitCount == 2
+    assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
+    assert result.qubit_indices == [0, 1]
 
-# @pytest.fixture
-# def multi_config() -> DeviceEmulatorProperties:
-#     return DeviceEmulatorProperties(
-#         errorMitigation={
-#             Debias: ErrorMitigationProperties(minimumShots=2500),
-#             MockMitigation: ErrorMitigationProperties(minimumShots=1500)
-#         }
-#     )
+@pytest.mark.parametrize("missing_field", [
+    ("standardized"),
+    ("paradigm"),
+    ('braket.ir.openqasm.program'),
+])
+def test_invalid_instantiation_from_device_properties(valid_input_2, missing_field):
+    with pytest.raises(ValueError):
+        if missing_field == 'braket.ir.openqasm.program':
+            valid_input_2['action'].pop(missing_field)
+        else:
+            valid_input_2.pop(missing_field)
+        DeviceEmulatorProperties.from_device_properties(IqmDeviceCapabilities.parse_obj(valid_input_2))
 
-# def test_multiple_classes(multi_config):
-#     resolved = multi_config.get_error_mitigation_resolved()
-#     assert Debias in resolved
-#     assert MockMitigation in resolved
-#     assert resolved[Debias].minimumShots == 2500
-#     assert resolved[MockMitigation].minimumShots == 1500
-
-# @pytest.fixture(scope="module")
-# def valid_input():
-#     input = {
-#         "qubitCount": 2,
-#         "nativeGateSet": ["cz", "prx", "s"],
-#         "connectivityGraph": {"0": ["1"], "1": ["0"]},
-#         "oneQubitProperties": {
-#             "0": {
-#                 "T1": {"value": 28.9, "standardError": 0.01, "unit": "us"},
-#                 "T2": {"value": 44.5, "standardError": 0.02, "unit": "us"},
-#                 "oneQubitFidelity": [
-#                     {
-#                         "fidelityType": {
-#                             "name": "RANDOMIZED_BENCHMARKING",
-#                             "description": "uses a standard RB technique",
-#                         },
-#                         "fidelity": 0.9993,
-#                     },
-#                     {
-#                         "fidelityType": {"name": "READOUT"},
-#                         "fidelity": 0.903,
-#                         "standardError": None,
-#                     },
-#                 ],
-#             },
-#             "1": {
-#                 "T1": {"value": 28.9, "unit": "us"},
-#                 "T2": {"value": 44.5, "standardError": 0.02, "unit": "us"},
-#                 "oneQubitFidelity": [
-#                     {
-#                         "fidelityType": {"name": "RANDOMIZED_BENCHMARKING"},
-#                         "fidelity": 0.9986,
-#                         "standardError": None,
-#                     },
-#                     {
-#                         "fidelityType": {"name": "READOUT"},
-#                         "fidelity": 0.867,
-#                         "standardError": None,
-#                     },
-#                 ],
-#             },
-#         },
-#         "twoQubitProperties": {
-#             "0-1": {
-#                 "twoQubitGateFidelity": [
-#                     {
-#                         "direction": {"control": 0, "target": 1},
-#                         "gateName": "CNOT",
-#                         "fidelity": 0.877,
-#                         "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
-#                     }
-#                 ]
-#             }
-#         },
-#         "supportedResultTypes": [
-#             ResultType(
-#                 name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000
-#             ),
-#         ],
-#         "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
-#     }
-#     return input
-
-
-# def test_valid(valid_input):
-#     result = DeviceEmulatorProperties.parse_obj(valid_input)
-#     assert result.qubitCount == 2
-#     assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
-
-
-# @pytest.mark.parametrize("missing_field", ["connectivityGraph"])
-# def test_missing_field(valid_input, missing_field):
-#     with pytest.raises(ValidationError):
-#         valid_input.pop(missing_field)
-#         DeviceEmulatorProperties.parse_obj(valid_input)
+@pytest.mark.parametrize("invalid_device_properties", [
+    (1),
+    (valid_oneQubitProperties),
+])
+def test_invalid_instantiation_from_invalid_device_properties(invalid_device_properties):
+    with pytest.raises(ValueError):
+        DeviceEmulatorProperties.from_device_properties(invalid_device_properties)
