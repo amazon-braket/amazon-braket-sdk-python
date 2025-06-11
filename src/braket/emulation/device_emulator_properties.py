@@ -122,7 +122,7 @@ class DeviceEmulatorProperties(BaseModel):
         for edge, _ in twoQubitProperties.items():
             node_1, node_2 = edge.split("-")
             cls.node_validator(node_1, qubitCount)
-            cls.node_validator(node_1, qubitCount)
+            cls.node_validator(node_2, qubitCount)
 
         ## TODO: Add validation that all edges have calibration data
         return values
