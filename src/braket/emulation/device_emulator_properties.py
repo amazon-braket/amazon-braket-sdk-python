@@ -79,30 +79,30 @@ class DeviceEmulatorProperties(BaseModel):
             raise ValueError("The length of oneQubitProperties should be the same as qubitCount")
 
         return values
-    
+
     @property
     def qubit_indices(self):
         indices = list(self.oneQubitProperties.keys())
         return sorted(int(x) for x in indices)
-    
+
     @classmethod
     def node_validator(cls, node, qubit_indices, field_name):
         if int(node) not in qubit_indices:
             raise ValueError(
                 f"Node {node} in {field_name} must represent a valid qubit index "
                 f"in {qubit_indices}."
-            )    
-    
+            )
+
     @root_validator
     def validate_connectivityGraph(cls, values):
         connectivityGraph = values.get("connectivityGraph")
         oneQubitProperties = values.get("oneQubitProperties")
         indices = list(oneQubitProperties.keys())
         qubit_indices = sorted(int(x) for x in indices)
-        
+
         for node, neighbors in connectivityGraph.items():
-            cls.node_validator(node, qubit_indices, 'connectivityGraph')
-            
+            cls.node_validator(node, qubit_indices, "connectivityGraph")
+
             for neighbor in neighbors:
                 if int(neighbor) not in qubit_indices:
                     raise ValueError(
@@ -136,21 +136,24 @@ class DeviceEmulatorProperties(BaseModel):
             if result_type.name not in valid_result_types:
                 raise ValueError(
                     f"Invalid result type. Must be one of: {', '.join(valid_result_types)}"
-                )        
+                )
         return supportedResultTypes
-
 
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):
         if isinstance(device_properties, DeviceCapabilities):
-            required_fields = ['paradigm', 'standardized']
+            required_fields = ["paradigm", "standardized"]
             for field in required_fields:
-                if (not hasattr(device_properties, field)) or (device_properties.dict()[field] is None):
+                if (not hasattr(device_properties, field)) or (
+                    device_properties.dict()[field] is None
+                ):
                     raise ValueError(f"The device property should have non-empty field {field}")
-            
+
             if "braket.ir.openqasm.program" not in device_properties.action:
-                raise ValueError(f"The device_properties.action should have key `braket.ir.openqasm.program`.")
-                        
+                raise ValueError(
+                    f"The device_properties.action should have key `braket.ir.openqasm.program`."
+                )
+
             if hasattr(device_properties.provider, "errorMitigation"):
                 errorMitigation = device_properties.provider.errorMitigation
             else:
