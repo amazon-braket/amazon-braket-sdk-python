@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.93.0 (2025-06-11)
+
+### Features
+
+ * add factory methods for AHS AtomArrangements
+
 ## v1.92.0 (2025-06-10)
 
 ### Features
