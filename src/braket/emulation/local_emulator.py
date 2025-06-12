@@ -51,20 +51,23 @@ class LocalEmulator(Emulator):
             ValueError: If the backend is not the local density matrix simulator
         """
 
+        # Instantiate an instance of DeviceEmulatorProperties
+        if isinstance(device_properties, DeviceEmulatorProperties):
+            device_em_properties = device_properties
+        elif isinstance(device_properties, DeviceCapabilities):
+            device_em_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
+        else:
+            raise ValueError(
+                f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
+            )
+
+
         if backend != "braket_dm":
             raise ValueError(f"backend can only be `braket_dm`.")
 
         # Initialize with device properties and specified backend
         emulator = cls(backend=backend, **kwargs)
-
-        # Instantiate an instance of DeviceEmulatorProperties
-        if isinstance(device_properties, DeviceCapabilities):
-            device_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
-        elif not isinstance(device_properties, DeviceEmulatorProperties):
-            raise ValueError(
-                f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
-            )
-
+        
         # Create a noise model based on the provided device properties
 
         # Add the passes for validation
@@ -74,7 +77,7 @@ class LocalEmulator(Emulator):
         # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
 
         return emulator
-
+    
     @classmethod
     def from_json(
         cls,
@@ -95,20 +98,10 @@ class LocalEmulator(Emulator):
         Raises:
             ValueError: If the JSON string is invalid.
         """
-        # Convert JSON string to dictionary if needed
-        if isinstance(device_properties_json, str):
-            try:
-                properties_dict = json.loads(device_properties_json)
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON string: {str(e)}") from e
-        else:
-            properties_dict = device_properties_json
 
-        # Convert dictionary to DeviceCapabilities
-        device_properties = DeviceEmulatorProperties.from_json(properties_dict)
+        device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)
+        return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
 
-        # Use from_device_properties to create the emulator
-        return cls.from_device_properties(device_properties, backend=backend, **kwargs)
 
     # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
     #     """Construct topology graph. If no such metadata is available, return `None`.
