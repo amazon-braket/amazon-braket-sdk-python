@@ -139,8 +139,52 @@ class DeviceEmulatorProperties(BaseModel):
                 )
         return supportedResultTypes
 
+    # @classmethod
+    # def from_device_properties(cls, device_properties: DeviceCapabilities):
+    #     if isinstance(device_properties, DeviceCapabilities):
+    #         required_fields = ["paradigm", "standardized"]
+    #         for field in required_fields:
+    #             if (not hasattr(device_properties, field)) or (
+    #                 device_properties.dict()[field] is None
+    #             ):
+    #                 raise ValueError(f"The device property should have non-empty field {field}")
+
+    #         if "braket.ir.openqasm.program" not in device_properties.action:
+    #             raise ValueError(
+    #                 f"The device_properties.action should have key `braket.ir.openqasm.program`."
+    #             )
+
+    #         if hasattr(device_properties.provider, "errorMitigation"):
+    #             errorMitigation = device_properties.provider.errorMitigation
+    #         else:
+    #             errorMitigation = {}
+
+    #         device_emulator_properties = DeviceEmulatorProperties(
+    #             qubitCount=device_properties.paradigm.qubitCount,
+    #             nativeGateSet=device_properties.paradigm.nativeGateSet,
+    #             connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
+    #             oneQubitProperties=device_properties.standardized.oneQubitProperties,
+    #             twoQubitProperties=device_properties.standardized.twoQubitProperties,
+    #             supportedResultTypes=device_properties.action[
+    #                 "braket.ir.openqasm.program"
+    #             ].supportedResultTypes,
+    #             errorMitigation=errorMitigation,
+    #         )
+    #     else:
+    #         raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
+
+    #     return device_emulator_properties
+    
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):
+        if isinstance(device_properties, DeviceCapabilities):
+            return cls.from_device_properties_json(device_properties.json())
+        else:
+            raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
+
+    
+    @classmethod
+    def from_device_properties_json(cls, device_properties_json: str):
         if isinstance(device_properties, DeviceCapabilities):
             required_fields = ["paradigm", "standardized"]
             for field in required_fields:
@@ -174,3 +218,4 @@ class DeviceEmulatorProperties(BaseModel):
             raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
 
         return device_emulator_properties
+
