@@ -24,6 +24,11 @@ from braket.emulation.emulator import Emulator
 from networkx import DiGraph, complete_graph, from_edgelist
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 
+from braket.passes.circuit_passes import (
+    QubitCountValidator,
+    GateValidator,
+    ConnectivityValidator,
+)
 
 class LocalEmulator(Emulator):
     """
@@ -64,16 +69,22 @@ class LocalEmulator(Emulator):
 
         if backend != "braket_dm":
             raise ValueError(f"backend can only be `braket_dm`.")
-
-        # Initialize with device properties and specified backend
-        emulator = cls(backend=backend, **kwargs)
         
         # Create a noise model based on the provided device properties
+        noise_model = None
+
+        # Initialize with device properties and specified backend
+        emulator = cls(backend=backend, noise_model=noise_model, **kwargs)
 
         # Add the passes for validation
-        # emulator.add_pass(qubit_count_validator(device_properties))
-        # emulator.add_pass(gate_validator(device_properties))
-        # emulator.add_pass(connectivity_validator(device_properties, self.topology_graph))
+        emulator.add_pass(QubitCountValidator(device_em_properties.qubitCount))
+        emulator.add_pass(GateValidator(device_em_properties.nativeGateSet))
+        emulator.add_pass(
+            ConnectivityValidator(
+                connectivity_graph=device_em_properties.connectivityGraph,
+                directed = False
+                )
+            )
         # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
 
         return emulator
