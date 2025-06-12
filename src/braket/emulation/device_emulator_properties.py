@@ -80,11 +80,6 @@ class DeviceEmulatorProperties(BaseModel):
 
         return values
 
-    @property
-    def qubit_indices(self):
-        indices = list(self.oneQubitProperties.keys())
-        return sorted(int(x) for x in indices)
-
     @classmethod
     def node_validator(cls, node, qubit_indices, field_name):
         if int(node) not in qubit_indices:
@@ -139,41 +134,39 @@ class DeviceEmulatorProperties(BaseModel):
                 )
         return supportedResultTypes
 
-    # @classmethod
-    # def from_device_properties(cls, device_properties: DeviceCapabilities):
-    #     if isinstance(device_properties, DeviceCapabilities):
-    #         required_fields = ["paradigm", "standardized"]
-    #         for field in required_fields:
-    #             if (not hasattr(device_properties, field)) or (
-    #                 device_properties.dict()[field] is None
-    #             ):
-    #                 raise ValueError(f"The device property should have non-empty field {field}")
+    @property
+    def qubit_indices(self) -> list:
+        indices = list(self.oneQubitProperties.keys())
+        return sorted(int(x) for x in indices)
 
-    #         if "braket.ir.openqasm.program" not in device_properties.action:
-    #             raise ValueError(
-    #                 f"The device_properties.action should have key `braket.ir.openqasm.program`."
-    #             )
+    @property
+    def fully_connected(self) -> bool:
+        """Determine if the connectivity graph is fully connected.
+        
+        Note: We treat the graph as undirected, and determine if it is
+            a complete graph by counting the number of distinct edges
+        """
+        if not self.connectivityGraph:
+            return True
 
-    #         if hasattr(device_properties.provider, "errorMitigation"):
-    #             errorMitigation = device_properties.provider.errorMitigation
-    #         else:
-    #             errorMitigation = {}
+        edges = set()
+        for node, neighbors in self.connectivityGraph.items():
+            edges_node = [(int(node), int(neighbor)) for neighbor in neighbors]
+            edges_node = [(min(edge), max(edge)) for edge in edges_node]
+            edges.update(edges_node)
 
-    #         device_emulator_properties = DeviceEmulatorProperties(
-    #             qubitCount=device_properties.paradigm.qubitCount,
-    #             nativeGateSet=device_properties.paradigm.nativeGateSet,
-    #             connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
-    #             oneQubitProperties=device_properties.standardized.oneQubitProperties,
-    #             twoQubitProperties=device_properties.standardized.twoQubitProperties,
-    #             supportedResultTypes=device_properties.action[
-    #                 "braket.ir.openqasm.program"
-    #             ].supportedResultTypes,
-    #             errorMitigation=errorMitigation,
-    #         )
-    #     else:
-    #         raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
+        return len(edges) == self.qubitCount * (self.qubitCount-1)/2
 
-    #     return device_emulator_properties
+    @property
+    def directed(self) -> bool:
+        """Determine if the connectivity graph is a directed graph.
+        """
+        for node, neighbors in self.connectivityGraph.items():
+            for neighbor in neighbors:
+                # If neighbor doesn't link back to node, it's directed
+                if node not in self.connectivityGraph.get(neighbor, []):
+                    return True
+        return False
 
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):

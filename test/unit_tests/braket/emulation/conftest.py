@@ -84,7 +84,7 @@ minimal_valid_device_properties_dict = {
         }
     },
     "paradigm": {
-        "connectivity": {"connectivityGraph": valid_connectivityGraph, "fullyConnected": False},
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
         "nativeGateSet": valid_nativeGateSet,
         "qubitCount": 2,
     },
