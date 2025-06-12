@@ -141,6 +141,11 @@ class DeviceEmulatorProperties(BaseModel):
 
     @property
     def fully_connected(self) -> bool:
+        """Determine if the connectivity graph is fully connected.
+        
+        Note: We determine if a node shares an edge, regardless its direction,
+            with every other node in the graph.
+        """
         if not self.connectivityGraph:
             return True
 
@@ -158,6 +163,8 @@ class DeviceEmulatorProperties(BaseModel):
 
     @property
     def directed(self) -> bool:
+        """Determine if the connectivity graph is a directed graph.
+        """
         for node, neighbors in self.connectivityGraph.items():
             for neighbor in neighbors:
                 # If neighbor doesn't link back to node, it's directed
