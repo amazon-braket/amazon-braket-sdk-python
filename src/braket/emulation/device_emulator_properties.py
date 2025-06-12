@@ -81,11 +81,11 @@ class DeviceEmulatorProperties(BaseModel):
         return values
 
     @classmethod
-    def node_validator(cls, node, qubit_indices, field_name):
-        if int(node) not in qubit_indices:
+    def node_validator(cls, node, qubit_labels, field_name):
+        if int(node) not in qubit_labels:
             raise ValueError(
                 f"Node {node} in {field_name} must represent a valid qubit index "
-                f"in {qubit_indices}."
+                f"in {qubit_labels}."
             )
 
     @root_validator
@@ -93,16 +93,16 @@ class DeviceEmulatorProperties(BaseModel):
         connectivityGraph = values.get("connectivityGraph")
         oneQubitProperties = values.get("oneQubitProperties")
         indices = list(oneQubitProperties.keys())
-        qubit_indices = sorted(int(x) for x in indices)
+        qubit_labels = sorted(int(x) for x in indices)
 
         for node, neighbors in connectivityGraph.items():
-            cls.node_validator(node, qubit_indices, "connectivityGraph")
+            cls.node_validator(node, qubit_labels, "connectivityGraph")
 
             for neighbor in neighbors:
-                if int(neighbor) not in qubit_indices:
+                if int(neighbor) not in qubit_labels:
                     raise ValueError(
                         f"Neighbor {neighbor} for node {node} must represent a valid qubit index "
-                        f"in `qubit_indices`."
+                        f"in `qubit_labels`."
                     )
 
         return values
@@ -112,12 +112,12 @@ class DeviceEmulatorProperties(BaseModel):
         twoQubitProperties = values["twoQubitProperties"]
         oneQubitProperties = values.get("oneQubitProperties")
         indices = list(oneQubitProperties.keys())
-        qubit_indices = sorted(int(x) for x in indices)
+        qubit_labels = sorted(int(x) for x in indices)
 
         for edge, _ in twoQubitProperties.items():
             node_1, node_2 = edge.split("-")
-            cls.node_validator(node_1, qubit_indices, "twoQubitProperties")
-            cls.node_validator(node_2, qubit_indices, "twoQubitProperties")
+            cls.node_validator(node_1, qubit_labels, "twoQubitProperties")
+            cls.node_validator(node_2, qubit_labels, "twoQubitProperties")
 
         ## TODO: Add validation that all edges have calibration data
         return values
@@ -135,7 +135,7 @@ class DeviceEmulatorProperties(BaseModel):
         return supportedResultTypes
 
     @property
-    def qubit_indices(self) -> list:
+    def qubit_labels(self) -> list:
         indices = list(self.oneQubitProperties.keys())
         return sorted(int(x) for x in indices)
 

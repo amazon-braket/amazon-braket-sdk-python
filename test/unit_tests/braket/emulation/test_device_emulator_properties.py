@@ -55,7 +55,7 @@ def test_basic_instantiation():
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
 
@@ -78,7 +78,7 @@ def test_basic_instantiation_with_errorMitigation():
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
 
@@ -95,7 +95,7 @@ def test_from_json_1(minimal_valid_json):
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
 
@@ -111,7 +111,7 @@ def test_from_json_2(minimal_valid_json_with_errorMitigation):
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
 
@@ -127,7 +127,7 @@ def test_from_json_3(reduced_standardized_json):
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == True
 
@@ -144,7 +144,7 @@ def test_from_device_properties(reduced_standardized_json):
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
 
 
 
@@ -152,7 +152,7 @@ def test_yet_another_way_of_instantiation(valid_input):
     result = DeviceEmulatorProperties.parse_obj(valid_input)
     assert result.qubitCount == 2
     assert result.connectivityGraph == valid_connectivityGraph
-    assert result.qubit_indices == [0, 1]
+    assert result.qubit_labels == [0, 1]
 
 
 @pytest.mark.parametrize(
