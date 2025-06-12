@@ -81,8 +81,10 @@ class LocalEmulator(Emulator):
         emulator.add_pass(GateValidator(device_em_properties.nativeGateSet))
         emulator.add_pass(
             ConnectivityValidator(
-                connectivity_graph=device_em_properties.connectivityGraph,
-                directed = False
+                connectivity_graph = device_em_properties.connectivityGraph,
+                num_qubits = device_em_properties.qubitCount,
+                qubit_labels = device_em_properties.qubit_indices,
+                directed = device_em_properties.directed,
                 )
             )
         # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
