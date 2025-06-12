@@ -83,7 +83,7 @@ class LocalEmulator(Emulator):
             ConnectivityValidator(
                 connectivity_graph = device_em_properties.connectivityGraph,
                 num_qubits = device_em_properties.qubitCount,
-                qubit_labels = device_em_properties.qubit_indices,
+                qubit_labels = device_em_properties.qubit_labels,
                 directed = device_em_properties.directed,
                 )
             )
