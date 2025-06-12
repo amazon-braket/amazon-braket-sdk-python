@@ -49,6 +49,9 @@ from braket.circuits.result_type import (
 from braket.circuits.text_diagram_builders.ascii_circuit_diagram import (
     AsciiCircuitDiagram,  # noqa: F401
 )
+from braket.circuits.text_diagram_builders.matplotlib_circuit_diagram import (
+    MatplotlibCircuitDiagram,  # noqa: F401
+)
 from braket.circuits.text_diagram_builders.unicode_circuit_diagram import (
     UnicodeCircuitDiagram,  # noqa: F401
 )
