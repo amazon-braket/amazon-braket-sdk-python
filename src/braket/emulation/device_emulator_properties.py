@@ -178,48 +178,49 @@ class DeviceEmulatorProperties(BaseModel):
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):
         if isinstance(device_properties, DeviceCapabilities):
-            return cls.from_device_properties_json(device_properties.json())
+            return cls.from_json(device_properties.json())
         else:
             raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
 
     
     @classmethod
-    def from_device_properties_json(cls, device_properties_json: str):
-        try:
-            properties_dict = json.loads(device_properties_json)
-            required_keys = ["paradigm", "standardized"]
-            for key in required_keys:
-                if (key not in properties_dict) or (properties_dict[key] is None):
-                    raise ValueError(f"device_properties_json have non-empty value for key {key}")
+    def from_json(cls, device_properties_json: str):
+        properties_dict = json.loads(device_properties_json)
+        if not isinstance(properties_dict, dict):
+            raise ValueError(f"device_properties_json must be a json of a dictionary")
+        
+        required_keys = ["paradigm", "standardized"]
+        for key in required_keys:
+            if (key not in properties_dict) or (properties_dict[key] is None):
+                raise ValueError(f"device_properties_json have non-empty value for key {key}")
 
-            if "braket.ir.openqasm.program" not in properties_dict['action']:
-                raise ValueError(
-                    f"The action in device_properties_json must have key `braket.ir.openqasm.program`."
-                )
-
-            if "provider" in properties_dict:
-                # em = properties_dict['provider']['errorMitigation']
-                em = properties_dict['provider'].get("errorMitigation") or {}
-                errorMitigation = {}
-                for k, v in em.items():
-                    split = k.rsplit(".", 1)
-                    errorMitigation[getattr(import_module(split[0]), split[1])] = ErrorMitigationProperties(minimumShots=v['minimumShots'])
-            else:
-                errorMitigation = {}
-
-            device_emulator_properties = DeviceEmulatorProperties(
-                qubitCount=properties_dict['paradigm']['qubitCount'],
-                nativeGateSet=properties_dict['paradigm']['nativeGateSet'],
-                connectivityGraph=properties_dict['paradigm']['connectivity']['connectivityGraph'],
-                oneQubitProperties=properties_dict['standardized']['oneQubitProperties'],
-                twoQubitProperties=properties_dict['standardized']['twoQubitProperties'],
-                supportedResultTypes=properties_dict['action'][
-                    "braket.ir.openqasm.program"
-                ]['supportedResultTypes'],
-                errorMitigation=errorMitigation,
+        if "braket.ir.openqasm.program" not in properties_dict['action']:
+            raise ValueError(
+                f"The action in device_properties_json must have key `braket.ir.openqasm.program`."
             )
-            
-            return device_emulator_properties
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON string: {str(e)}") from e
 
+        if "provider" in properties_dict:
+            if properties_dict['provider']:
+                em = properties_dict['provider'].get("errorMitigation") or {}
+            else:
+                em = {}
+            errorMitigation = {}
+            for k, v in em.items():
+                split = k.rsplit(".", 1)
+                errorMitigation[getattr(import_module(split[0]), split[1])] = ErrorMitigationProperties(minimumShots=v['minimumShots'])
+        else:
+            errorMitigation = {}
+
+        device_emulator_properties = DeviceEmulatorProperties(
+            qubitCount=properties_dict['paradigm']['qubitCount'],
+            nativeGateSet=properties_dict['paradigm']['nativeGateSet'],
+            connectivityGraph=properties_dict['paradigm']['connectivity']['connectivityGraph'],
+            oneQubitProperties=properties_dict['standardized']['oneQubitProperties'],
+            twoQubitProperties=properties_dict['standardized']['twoQubitProperties'],
+            supportedResultTypes=properties_dict['action'][
+                "braket.ir.openqasm.program"
+            ]['supportedResultTypes'],
+            errorMitigation=errorMitigation,
+        )
+        
+        return device_emulator_properties
