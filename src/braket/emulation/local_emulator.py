@@ -17,10 +17,13 @@ import json
 from typing import Any, Dict, Optional, Union
 
 from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import GateModelQpuParadigmProperties
+from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
+    GateModelQpuParadigmProperties,
+)
 from braket.emulation.emulator import Emulator
 from networkx import DiGraph, complete_graph, from_edgelist
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
+
 
 class LocalEmulator(Emulator):
     """
@@ -29,21 +32,21 @@ class LocalEmulator(Emulator):
 
     @classmethod
     def from_device_properties(
-        cls, 
-        device_properties: Union[DeviceCapabilities, DeviceEmulatorProperties], 
-        backend: str = "braket_dm", 
+        cls,
+        device_properties: Union[DeviceCapabilities, DeviceEmulatorProperties],
+        backend: str = "braket_dm",
         **kwargs: Any,
     ) -> LocalEmulator:
         """Create a LocalEmulator instance from device properties.
 
         Args:
-            device_properties (DeviceCapabilities): The device properties to use for emulation.
+            device_properties (Union[DeviceCapabilities, DeviceEmulatorProperties]): The device properties to use for emulation.
             backend (str): The backend to use for simulation. Default is "braket_dm".
             **kwargs (Any): Additional keyword arguments to pass to the LocalEmulator constructor.
 
         Returns:
             LocalEmulator: A new LocalEmulator instance configured with the given properties.
-        
+
         Raises:
             ValueError: If the backend is not the local density matrix simulator
         """
@@ -58,8 +61,10 @@ class LocalEmulator(Emulator):
         if isinstance(device_properties, DeviceCapabilities):
             device_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
         elif not isinstance(device_properties, DeviceEmulatorProperties):
-            raise ValueError(f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties.")
-        
+            raise ValueError(
+                f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
+            )
+
         # Create a noise model based on the provided device properties
 
         # Add the passes for validation
@@ -67,21 +72,20 @@ class LocalEmulator(Emulator):
         # emulator.add_pass(gate_validator(device_properties))
         # emulator.add_pass(connectivity_validator(device_properties, self.topology_graph))
         # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
-        
+
         return emulator
 
     @classmethod
     def from_json(
-        cls, 
-        device_properties_json: Union[str, Dict[str, Any]], 
-        backend: str = "braket_dm", 
-        **kwargs: Any
+        cls,
+        device_properties_json: str,
+        backend: str = "braket_dm",
+        **kwargs: Any,
     ) -> LocalEmulator:
-        """Create a LocalEmulator instance from a JSON string or dictionary of device properties.
+        """Create a LocalEmulator instance from a device properties JSON string.
 
         Args:
-            device_properties_json (Union[str, Dict[str, Any]]): JSON string or dictionary containing
-                device properties.
+            device_properties_json (str): Device properties JSON string.
             backend (str): The backend to use for simulation. Defaults to "braket_dm".
             **kwargs (Any): Additional keyword arguments to pass to the Emulator constructor.
 
@@ -101,11 +105,11 @@ class LocalEmulator(Emulator):
             properties_dict = device_properties_json
 
         # Convert dictionary to DeviceCapabilities
-        device_properties = DeviceCapabilities.parse_obj(properties_dict)
-        
+        device_properties = DeviceEmulatorProperties.from_json(properties_dict)
+
         # Use from_device_properties to create the emulator
         return cls.from_device_properties(device_properties, backend=backend, **kwargs)
-    
+
     # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
     #     """Construct topology graph. If no such metadata is available, return `None`.
 
@@ -127,4 +131,3 @@ class LocalEmulator(Emulator):
     #         return from_edgelist(edges, create_using=DiGraph())
     #     else:
     #         return None
-    
