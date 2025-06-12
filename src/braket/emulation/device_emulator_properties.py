@@ -80,11 +80,6 @@ class DeviceEmulatorProperties(BaseModel):
 
         return values
 
-    @property
-    def qubit_indices(self):
-        indices = list(self.oneQubitProperties.keys())
-        return sorted(int(x) for x in indices)
-
     @classmethod
     def node_validator(cls, node, qubit_indices, field_name):
         if int(node) not in qubit_indices:
@@ -139,41 +134,36 @@ class DeviceEmulatorProperties(BaseModel):
                 )
         return supportedResultTypes
 
-    # @classmethod
-    # def from_device_properties(cls, device_properties: DeviceCapabilities):
-    #     if isinstance(device_properties, DeviceCapabilities):
-    #         required_fields = ["paradigm", "standardized"]
-    #         for field in required_fields:
-    #             if (not hasattr(device_properties, field)) or (
-    #                 device_properties.dict()[field] is None
-    #             ):
-    #                 raise ValueError(f"The device property should have non-empty field {field}")
+    @property
+    def qubit_indices(self) -> list:
+        indices = list(self.oneQubitProperties.keys())
+        return sorted(int(x) for x in indices)
 
-    #         if "braket.ir.openqasm.program" not in device_properties.action:
-    #             raise ValueError(
-    #                 f"The device_properties.action should have key `braket.ir.openqasm.program`."
-    #             )
+    @property
+    def fully_connected(self) -> bool:
+        if not self.connectivityGraph:
+            return True
 
-    #         if hasattr(device_properties.provider, "errorMitigation"):
-    #             errorMitigation = device_properties.provider.errorMitigation
-    #         else:
-    #             errorMitigation = {}
+        visited = set()
+        start_node = next(iter(self.connectivityGraph))  # pick any starting node
 
-    #         device_emulator_properties = DeviceEmulatorProperties(
-    #             qubitCount=device_properties.paradigm.qubitCount,
-    #             nativeGateSet=device_properties.paradigm.nativeGateSet,
-    #             connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
-    #             oneQubitProperties=device_properties.standardized.oneQubitProperties,
-    #             twoQubitProperties=device_properties.standardized.twoQubitProperties,
-    #             supportedResultTypes=device_properties.action[
-    #                 "braket.ir.openqasm.program"
-    #             ].supportedResultTypes,
-    #             errorMitigation=errorMitigation,
-    #         )
-    #     else:
-    #         raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
+        def dfs(node):
+            if node not in visited:
+                visited.add(node)
+                for neighbor in self.connectivityGraph.get(node, []):
+                    dfs(neighbor)
 
-    #     return device_emulator_properties
+        dfs(start_node)
+        return len(visited) == len(self.connectivityGraph)
+
+    @property
+    def directed(self) -> bool:
+        for node, neighbors in self.connectivityGraph.items():
+            for neighbor in neighbors:
+                # If neighbor doesn't link back to node, it's directed
+                if node not in self.connectivityGraph.get(neighbor, []):
+                    return True
+        return False
 
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):
