@@ -13,11 +13,7 @@
 
 import pytest
 import json
-from pydantic.v1 import ValidationError
 
-# from braket.emulation.device_emulator_properties import (
-#     DeviceEmulatorProperties,
-# )
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.error_mitigation.debias import Debias
 from braket.device_schema.error_mitigation.error_mitigation_properties import (
@@ -31,16 +27,6 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     TwoQubitProperties,
     GateFidelity2Q,
 )
-from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.device_schema.device_action_properties import DeviceActionType
-from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
-    GateModelQpuParadigmProperties,
-)
-from braket.device_schema.device_service_properties_v1 import DeviceServiceProperties
-from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
-from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
-
-# from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderProperties
 
@@ -74,7 +60,7 @@ valid_twoQubitProperties = TwoQubitProperties(
     ]
 ).dict()
 
-valid_connectivityGraph = {"1": ["2"], "2": ["1"]}
+valid_connectivityGraph = {"0": ["1"], "1": ["0"]}
 valid_nativeGateSet = ["cz", "prx"]
 valid_supportedResultTypes = [
     {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
@@ -104,11 +90,11 @@ minimal_valid_device_properties_dict = {
     },
     "standardized": {
         "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
             "1": valid_oneQubitProperties,
-            "2": valid_oneQubitProperties,
         },
         "twoQubitProperties": {
-            "1-2": valid_twoQubitProperties,
+            "0-1": valid_twoQubitProperties,
         },
     },
 }
@@ -137,7 +123,7 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
             "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
             "version": "1",
         },
-        "connectivity": {"connectivityGraph": {"1": ["2"]}, "fullyConnected": False},
+        "connectivity": {"connectivityGraph": {"0": ["1"]}, "fullyConnected": False},
         "nativeGateSet": ["cz", "prx"],
         "qubitCount": 2,
     },
@@ -156,9 +142,41 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
             "version": "1",
         },
         "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
             "1": valid_oneQubitProperties,
-            "2": valid_oneQubitProperties,
         },
-        "twoQubitProperties": {"1-2": valid_twoQubitProperties},
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties},
     },
 }
+
+
+@pytest.fixture
+def minimal_valid_json():
+    return json.dumps(minimal_valid_device_properties_dict)
+
+
+@pytest.fixture
+def minimal_valid_json_with_errorMitigation():
+    return json.dumps(minimal_valid_device_properties_dict_with_errorMitigation)
+
+
+@pytest.fixture
+def reduced_standardized_json():
+    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict)
+
+
+@pytest.fixture
+def valid_input():
+    input = {
+        "qubitCount": 2,
+        "nativeGateSet": ["cz", "prx", "s"],
+        "connectivityGraph": valid_connectivityGraph,
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties},
+        "supportedResultTypes": valid_supportedResultTypes,
+        "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
+    }
+    return input
