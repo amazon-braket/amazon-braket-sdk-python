@@ -23,35 +23,18 @@ from braket.device_schema.error_mitigation.debias import Debias
 from braket.device_schema.error_mitigation.error_mitigation_properties import (
     ErrorMitigationProperties,
 )
-from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
-    CoherenceTime,
-    Fidelity1Q,
-    FidelityType,
-    OneQubitProperties,
-    TwoQubitProperties,
-    GateFidelity2Q,
-)
-from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.device_schema.device_action_properties import DeviceActionType
-from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
-    GateModelQpuParadigmProperties,
-)
-from braket.device_schema.device_service_properties_v1 import DeviceServiceProperties
-from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderProperties
 
-from test_fixtures import (
-    valid_connectivityGraph,
+from conftest import (
     valid_oneQubitProperties,
     valid_twoQubitProperties,
-    minimal_valid_device_properties_dict,
-    minimal_valid_device_properties_dict_with_errorMitigation,
-    reduced_standardized_gate_model_qpu_device_properties_dict,
     valid_supportedResultTypes,
+    valid_connectivityGraph,
+    valid_nativeGateSet
 )
 
 
@@ -96,99 +79,69 @@ def test_basic_instantiation_with_errorMitigation():
     assert result.qubit_indices == [0, 1]
 
 
-@pytest.fixture
-def minimal_valid_json():
-    return json.dumps(minimal_valid_device_properties_dict)
-
-
-@pytest.fixture
-def minimal_valid_json_with_errorMitigation():
-    return json.dumps(minimal_valid_device_properties_dict_with_errorMitigation)
-
-
-@pytest.fixture
-def reduced_standardized_json():
-    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict)
-
 
 def test_from_json_1(minimal_valid_json):
     result = DeviceEmulatorProperties.from_json(minimal_valid_json)
     assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"1": ["2"], "2": ["1"]}
+    assert result.nativeGateSet == valid_nativeGateSet
+    assert result.connectivityGraph == valid_connectivityGraph
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["2"] == valid_oneQubitProperties
+        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["1-2"] == valid_twoQubitProperties
+    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [1, 2]
+    assert result.qubit_indices == [0, 1]
 
 
-def test_from_json_1(minimal_valid_json_with_errorMitigation):
+def test_from_json_2(minimal_valid_json_with_errorMitigation):
     result = DeviceEmulatorProperties.from_json(minimal_valid_json_with_errorMitigation)
     assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"1": ["2"], "2": ["1"]}
+    assert result.nativeGateSet == valid_nativeGateSet
+    assert result.connectivityGraph == valid_connectivityGraph
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["2"] == valid_oneQubitProperties
+        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["1-2"] == valid_twoQubitProperties
+    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
-    assert result.qubit_indices == [1, 2]
+    assert result.qubit_indices == [0, 1]
 
 
 def test_from_json_3(reduced_standardized_json):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json)
     assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"1": ["2"]}
+    assert result.nativeGateSet == valid_nativeGateSet
+    assert result.connectivityGraph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["2"] == valid_oneQubitProperties
+        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["1-2"] == valid_twoQubitProperties
+    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [1, 2]
+    assert result.qubit_indices == [0, 1]
 
 
 def test_from_device_properties(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
     result = DeviceEmulatorProperties.from_device_properties(device_properties)
     assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"1": ["2"]}
+    assert result.nativeGateSet == valid_nativeGateSet
+    assert result.connectivityGraph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["2"] == valid_oneQubitProperties
+        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["1-2"] == valid_twoQubitProperties
+    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
-    assert result.qubit_indices == [1, 2]
+    assert result.qubit_indices == [0, 1]
 
-
-@pytest.fixture
-def valid_input():
-    input = {
-        "qubitCount": 2,
-        "nativeGateSet": ["cz", "prx", "s"],
-        "connectivityGraph": {"0": ["1"], "1": ["0"]},
-        "oneQubitProperties": {
-            "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
-        },
-        "twoQubitProperties": {"0-1": valid_twoQubitProperties},
-        "supportedResultTypes": valid_supportedResultTypes,
-        "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
-    }
-    return input
 
 
 def test_yet_another_way_of_instantiation(valid_input):
     result = DeviceEmulatorProperties.parse_obj(valid_input)
     assert result.qubitCount == 2
-    assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
+    assert result.connectivityGraph == valid_connectivityGraph
     assert result.qubit_indices == [0, 1]
 
 
@@ -253,74 +206,3 @@ def test_invalid_json(invalid_json):
     with pytest.raises(ValueError):
         DeviceEmulatorProperties.from_json(invalid_json)
 
-
-# fakeproperties = IonqProviderProperties(
-#     braketSchemaHeader={
-#         "name": "braket.device_schema.ionq.ionq_provider_properties",
-#         "version": "1",
-#     },
-#     fidelity={"1Q": {"mean": 0.99}, "2Q": {"mean": 0.9}, "spam": {"mean": 0.9}},
-#     timing={
-#         "T1": 10000000000,
-#         "T2": 500000,
-#         "1Q": 1.1e-05,
-#         "2Q": 0.00021,
-#         "readout": 0.000175,
-#         "reset": 3.5e-05,
-#     },
-#     errorMitigation={Debias: {"minimumShots": 2500}},
-# )
-
-
-# @pytest.fixture
-# def valid_input_2():
-#     input = {
-#         "service": {"executionWindows": [], "shotsRange": [1, 2]},
-#         "action": {
-#             "braket.ir.openqasm.program": OpenQASMDeviceActionProperties(
-#                 actionType="braket.ir.openqasm.program",
-#                 version=["1"],
-#                 supportedOperations=["x"],
-#                 supportedResultTypes=DEFAULT_SUPPORTED_RESULT_TYPES,
-#             )
-#         },
-#         "deviceParameters": {},
-#         "paradigm": {
-#             "braketSchemaHeader": {
-#                 "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
-#                 "version": "1",
-#             },
-#             "connectivity": {"connectivityGraph": valid_connectivityGraph, "fullyConnected": False},
-#             "nativeGateSet": ["cz", "prx"],
-#             "qubitCount": 2,
-#         },
-#         "standardized": {
-#             "braketSchemaHeader": {
-#                 "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
-#                 "version": "1",
-#             },
-#             "oneQubitProperties": {
-#                 "0": valid_oneQubitProperties.dict(),
-#                 "1": valid_oneQubitProperties.dict(),
-#             },
-#             "twoQubitProperties": {"0-1": valid_twoQubitProperties.dict()},
-#         },
-#     }
-#     return input
-
-
-# # def test_instantiation_from_device_properties(valid_input_2):
-# #     device_properties = IqmDeviceCapabilities.parse_obj(valid_input_2)
-# #     result = DeviceEmulatorProperties.from_device_properties(device_properties)
-# #     assert result.qubitCount == 2
-# #     assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
-# #     assert result.qubit_indices == [0, 1]
-
-
-# # def test_instantiation_from_device_properties_with_errorMitigation(valid_input_2):
-# #     device_properties = IqmDeviceCapabilities.parse_obj(valid_input_2)
-# #     device_properties.provider = fakeproperties
-# #     result = DeviceEmulatorProperties.from_device_properties(device_properties)
-# #     assert result.qubitCount == 2
-# #     assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
-# #     assert result.qubit_indices == [0, 1]
