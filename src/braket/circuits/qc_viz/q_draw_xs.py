@@ -24,7 +24,9 @@ import os
 
 import sys
 
-font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'AVFontimerMedium.ttf')
+#Add Custom Font 
+#font_path = os.path.join(os.path.dirname(__file__), 'font_folder', 'font_file_name.ext')
+
 if os.path.exists(font_path):
     prop = fm.FontProperties(fname=font_path)
 else:
