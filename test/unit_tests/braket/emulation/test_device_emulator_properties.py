@@ -56,6 +56,8 @@ def test_basic_instantiation():
     assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
     assert result.errorMitigation == {}
     assert result.qubit_indices == [0, 1]
+    assert result.fully_connected == True
+    assert result.directed == False
 
 
 def test_basic_instantiation_with_errorMitigation():
@@ -77,6 +79,8 @@ def test_basic_instantiation_with_errorMitigation():
     assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
     assert result.qubit_indices == [0, 1]
+    assert result.fully_connected == True
+    assert result.directed == False
 
 
 
@@ -84,7 +88,7 @@ def test_from_json_1(minimal_valid_json):
     result = DeviceEmulatorProperties.from_json(minimal_valid_json)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == valid_connectivityGraph
+    assert result.connectivityGraph == {}
     assert (
         result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
@@ -92,13 +96,15 @@ def test_from_json_1(minimal_valid_json):
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
     assert result.qubit_indices == [0, 1]
+    assert result.fully_connected == True
+    assert result.directed == False
 
 
 def test_from_json_2(minimal_valid_json_with_errorMitigation):
     result = DeviceEmulatorProperties.from_json(minimal_valid_json_with_errorMitigation)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == valid_connectivityGraph
+    assert result.connectivityGraph == {}
     assert (
         result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
     )
@@ -106,6 +112,8 @@ def test_from_json_2(minimal_valid_json_with_errorMitigation):
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
     assert result.qubit_indices == [0, 1]
+    assert result.fully_connected == True
+    assert result.directed == False
 
 
 def test_from_json_3(reduced_standardized_json):
@@ -120,6 +128,8 @@ def test_from_json_3(reduced_standardized_json):
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
     assert result.qubit_indices == [0, 1]
+    assert result.fully_connected == True
+    assert result.directed == True
 
 
 def test_from_device_properties(reduced_standardized_json):

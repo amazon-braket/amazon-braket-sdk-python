@@ -143,23 +143,19 @@ class DeviceEmulatorProperties(BaseModel):
     def fully_connected(self) -> bool:
         """Determine if the connectivity graph is fully connected.
         
-        Note: We determine if a node shares an edge, regardless its direction,
-            with every other node in the graph.
+        Note: We treat the graph as undirected, and determine if it is
+            a complete graph by counting the number of distinct edges
         """
         if not self.connectivityGraph:
             return True
 
-        visited = set()
-        start_node = next(iter(self.connectivityGraph))  # pick any starting node
+        edges = set()
+        for node, neighbors in self.connectivityGraph.items():
+            edges_node = [(int(node), int(neighbor)) for neighbor in neighbors]
+            edges_node = [(min(edge), max(edge)) for edge in edges_node]
+            edges.update(edges_node)
 
-        def dfs(node):
-            if node not in visited:
-                visited.add(node)
-                for neighbor in self.connectivityGraph.get(node, []):
-                    dfs(neighbor)
-
-        dfs(start_node)
-        return len(visited) == len(self.connectivityGraph)
+        return len(edges) == self.qubitCount * (self.qubitCount-1)/2
 
     @property
     def directed(self) -> bool:
