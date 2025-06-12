@@ -34,7 +34,7 @@ from conftest import (
     valid_twoQubitProperties,
     valid_supportedResultTypes,
     valid_connectivityGraph,
-    valid_nativeGateSet
+    valid_nativeGateSet,
 )
 
 
@@ -81,7 +81,6 @@ def test_basic_instantiation_with_errorMitigation():
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
-
 
 
 def test_from_json_1(minimal_valid_json):
@@ -145,7 +144,6 @@ def test_from_device_properties(reduced_standardized_json):
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1]
-
 
 
 def test_yet_another_way_of_instantiation(valid_input):
@@ -215,4 +213,3 @@ def test_invalid_instantiation_due_to_missing_field(minimal_valid_json, missing_
 def test_invalid_json(invalid_json):
     with pytest.raises(ValueError):
         DeviceEmulatorProperties.from_json(invalid_json)
-

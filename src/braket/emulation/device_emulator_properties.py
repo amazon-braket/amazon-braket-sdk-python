@@ -84,8 +84,7 @@ class DeviceEmulatorProperties(BaseModel):
     def node_validator(cls, node, qubit_labels, field_name):
         if int(node) not in qubit_labels:
             raise ValueError(
-                f"Node {node} in {field_name} must represent a valid qubit index "
-                f"in {qubit_labels}."
+                f"Node {node} in {field_name} must represent a valid qubit index in {qubit_labels}."
             )
 
     @root_validator
@@ -142,7 +141,7 @@ class DeviceEmulatorProperties(BaseModel):
     @property
     def fully_connected(self) -> bool:
         """Determine if the connectivity graph is fully connected.
-        
+
         Note: We treat the graph as undirected, and determine if it is
             a complete graph by counting the number of distinct edges
         """
@@ -155,12 +154,11 @@ class DeviceEmulatorProperties(BaseModel):
             edges_node = [(min(edge), max(edge)) for edge in edges_node]
             edges.update(edges_node)
 
-        return len(edges) == self.qubitCount * (self.qubitCount-1)/2
+        return len(edges) == self.qubitCount * (self.qubitCount - 1) / 2
 
     @property
     def directed(self) -> bool:
-        """Determine if the connectivity graph is a directed graph.
-        """
+        """Determine if the connectivity graph is a directed graph."""
         for node, neighbors in self.connectivityGraph.items():
             for neighbor in neighbors:
                 # If neighbor doesn't link back to node, it's directed

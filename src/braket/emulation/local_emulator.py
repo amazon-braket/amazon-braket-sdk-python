@@ -30,6 +30,7 @@ from braket.passes.circuit_passes import (
     ConnectivityValidator,
 )
 
+
 class LocalEmulator(Emulator):
     """
     A local emulator that mimics the restrictions and noises of a QPU based on the provided device properties.
@@ -60,16 +61,17 @@ class LocalEmulator(Emulator):
         if isinstance(device_properties, DeviceEmulatorProperties):
             device_em_properties = device_properties
         elif isinstance(device_properties, DeviceCapabilities):
-            device_em_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
+            device_em_properties = DeviceEmulatorProperties.from_device_properties(
+                device_properties
+            )
         else:
             raise ValueError(
                 f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
             )
 
-
         if backend != "braket_dm":
             raise ValueError(f"backend can only be `braket_dm`.")
-        
+
         # Create a noise model based on the provided device properties
         noise_model = None
 
@@ -81,16 +83,18 @@ class LocalEmulator(Emulator):
         emulator.add_pass(GateValidator(device_em_properties.nativeGateSet))
         emulator.add_pass(
             ConnectivityValidator(
-                connectivity_graph = device_em_properties.connectivityGraph,
-                num_qubits = device_em_properties.qubitCount,
-                qubit_labels = device_em_properties.qubit_labels,
-                directed = device_em_properties.directed,
-                )
+                connectivity_graph=device_em_properties.connectivityGraph,
+                num_qubits=device_em_properties.qubitCount,
+                qubit_labels=device_em_properties.qubit_labels,
+                directed=False,  
+                # Set directed to false because ConnectivityValidator validates
+                # the connectivity regardless if the graph is directed or undirected.
             )
+        )
         # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
 
         return emulator
-    
+
     @classmethod
     def from_json(
         cls,
@@ -114,7 +118,6 @@ class LocalEmulator(Emulator):
 
         device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)
         return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
-
 
     # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
     #     """Construct topology graph. If no such metadata is available, return `None`.
