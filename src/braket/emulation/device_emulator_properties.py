@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from typing import Dict, List, Any, Type
-
+from importlib import import_module
 from braket.circuits.translations import BRAKET_GATES
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.error_mitigation.error_mitigation_scheme import ErrorMitigationScheme
@@ -25,7 +25,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     TwoQubitProperties,
 )
 from braket.device_schema.device_capabilities import DeviceCapabilities
-
+import json
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 
@@ -77,7 +77,7 @@ class DeviceEmulatorProperties(BaseModel):
         qubitCount = values.get("qubitCount")
         if len(oneQubitProperties) != qubitCount:
             raise ValueError("The length of oneQubitProperties should be the same as qubitCount")
-
+            
         return values
 
     @property
@@ -185,37 +185,41 @@ class DeviceEmulatorProperties(BaseModel):
     
     @classmethod
     def from_device_properties_json(cls, device_properties_json: str):
-        if isinstance(device_properties, DeviceCapabilities):
-            required_fields = ["paradigm", "standardized"]
-            for field in required_fields:
-                if (not hasattr(device_properties, field)) or (
-                    device_properties.dict()[field] is None
-                ):
-                    raise ValueError(f"The device property should have non-empty field {field}")
+        try:
+            properties_dict = json.loads(device_properties_json)
+            required_keys = ["paradigm", "standardized"]
+            for key in required_keys:
+                if (key not in properties_dict) or (properties_dict[key] is None):
+                    raise ValueError(f"device_properties_json have non-empty value for key {key}")
 
-            if "braket.ir.openqasm.program" not in device_properties.action:
+            if "braket.ir.openqasm.program" not in properties_dict['action']:
                 raise ValueError(
-                    f"The device_properties.action should have key `braket.ir.openqasm.program`."
+                    f"The action in device_properties_json must have key `braket.ir.openqasm.program`."
                 )
 
-            if hasattr(device_properties.provider, "errorMitigation"):
-                errorMitigation = device_properties.provider.errorMitigation
+            if "provider" in properties_dict:
+                # em = properties_dict['provider']['errorMitigation']
+                em = properties_dict['provider'].get("errorMitigation") or {}
+                errorMitigation = {}
+                for k, v in em.items():
+                    split = k.rsplit(".", 1)
+                    errorMitigation[getattr(import_module(split[0]), split[1])] = ErrorMitigationProperties(minimumShots=v['minimumShots'])
             else:
                 errorMitigation = {}
 
             device_emulator_properties = DeviceEmulatorProperties(
-                qubitCount=device_properties.paradigm.qubitCount,
-                nativeGateSet=device_properties.paradigm.nativeGateSet,
-                connectivityGraph=device_properties.paradigm.connectivity.connectivityGraph,
-                oneQubitProperties=device_properties.standardized.oneQubitProperties,
-                twoQubitProperties=device_properties.standardized.twoQubitProperties,
-                supportedResultTypes=device_properties.action[
+                qubitCount=properties_dict['paradigm']['qubitCount'],
+                nativeGateSet=properties_dict['paradigm']['nativeGateSet'],
+                connectivityGraph=properties_dict['paradigm']['connectivity']['connectivityGraph'],
+                oneQubitProperties=properties_dict['standardized']['oneQubitProperties'],
+                twoQubitProperties=properties_dict['standardized']['twoQubitProperties'],
+                supportedResultTypes=properties_dict['action'][
                     "braket.ir.openqasm.program"
-                ].supportedResultTypes,
+                ]['supportedResultTypes'],
                 errorMitigation=errorMitigation,
             )
-        else:
-            raise ValueError(f"device_properties has to be an instance of DeviceCapabilities.")
-
-        return device_emulator_properties
+            
+            return device_emulator_properties
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON string: {str(e)}") from e
 
