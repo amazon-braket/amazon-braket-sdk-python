@@ -82,7 +82,7 @@ class LocalEmulator(Emulator):
             raise ValueError(f"backend can only be `braket_dm`.")
         
         # Create a noise model based on the provided device properties
-        noise_model = None
+        noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 
         # Initialize with device properties and specified backend
         emulator = cls(backend=backend, noise_model=noise_model, **kwargs)
@@ -164,6 +164,7 @@ class LocalEmulator(Emulator):
             if len(valid_gate_names) == 0:
                 raise ValueError(f"No valid two-qubit RB data found for edge {edge} in twoQubitProperties.")
             
+            # Apply two qubit RB Depolarizing Noise
             for gate_name, gate_ind in valid_gate_names.items():
                 gate_fidelity = twoQubitGateFidelity[gate_ind]
                 two_qubit_depolarizing_rate = 1 - gate_fidelity.fidelity

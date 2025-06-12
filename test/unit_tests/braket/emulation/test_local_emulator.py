@@ -22,6 +22,8 @@ from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderPr
 
 from braket.emulation.local_emulator import LocalEmulator
 
+from conftest import (invalid_device_properties_dict_1, invalid_device_properties_dict_2)
+
 def test_from_json_1(minimal_valid_json):
     emulator = LocalEmulator.from_json(minimal_valid_json)
     assert isinstance(emulator, LocalEmulator)
@@ -52,3 +54,13 @@ def test_invalid_instantiation_2(reduced_standardized_json):
     with pytest.raises(ValueError):
         LocalEmulator.from_device_properties(reduced_standardized_json)
 
+@pytest.mark.parametrize(
+    "invalid_device_properties_dict",
+    [
+        (invalid_device_properties_dict_1),
+        (invalid_device_properties_dict_2),
+    ],
+)
+def test_noise_model_with_invalid_data(invalid_device_properties_dict):
+    with pytest.raises(ValueError):
+        LocalEmulator.from_json(json.dumps(invalid_device_properties_dict))

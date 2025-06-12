@@ -48,6 +48,23 @@ valid_oneQubitProperties = OneQubitProperties(
     ],
 ).dict()
 
+valid_oneQubitProperties_v2 = OneQubitProperties(
+    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
+    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
+    oneQubitFidelity=[
+        Fidelity1Q(
+            fidelityType=FidelityType(name="SIMULTANEOUS_RANDOMIZED_BENCHMARKING", description=None),
+            fidelity=0.99,
+            standardError=None,
+        ),
+        Fidelity1Q(
+            fidelityType=FidelityType(name="READOUT", description=None),
+            fidelity=0.9795,
+            standardError=None,
+        ),
+    ],
+).dict()
+
 valid_twoQubitProperties = TwoQubitProperties(
     twoQubitGateFidelity=[
         GateFidelity2Q(
@@ -91,7 +108,7 @@ minimal_valid_device_properties_dict = {
     "standardized": {
         "oneQubitProperties": {
             "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties_v2,
         },
         "twoQubitProperties": {
             "0-1": valid_twoQubitProperties,
@@ -180,3 +197,81 @@ def valid_input():
         "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
     }
     return input
+
+
+# invalid oneQubitProperties without 1q rb data
+invalid_oneQubitProperties = OneQubitProperties(
+    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
+    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
+    oneQubitFidelity=[
+        Fidelity1Q(
+            fidelityType=FidelityType(name="READOUT", description=None),
+            fidelity=0.9795,
+            standardError=None,
+        ),
+    ],
+).dict()
+
+# invalid twoQubitProperties without valid Braket gates
+invalid_twoQubitProperties = TwoQubitProperties(
+    twoQubitGateFidelity=[
+        GateFidelity2Q(
+            direction=None,
+            gateName="not_a_braket_gate",
+            fidelity=0.99,
+            standardError=0.0009,
+            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+        )
+    ]
+).dict()
+
+invalid_device_properties_dict_1 = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1.0"],
+        }
+    },
+    "paradigm": {
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
+        "nativeGateSet": valid_nativeGateSet,
+        "qubitCount": 2,
+    },
+    "standardized": {
+        "oneQubitProperties": {
+            "0": invalid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties,
+        },
+    },
+}
+
+
+invalid_device_properties_dict_2 = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1.0"],
+        }
+    },
+    "paradigm": {
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
+        "nativeGateSet": valid_nativeGateSet,
+        "qubitCount": 2,
+    },
+    "standardized": {
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {
+            "0-1": invalid_twoQubitProperties,
+        },
+    },
+}

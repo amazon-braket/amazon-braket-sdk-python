@@ -31,6 +31,7 @@ from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderPr
 
 from conftest import (
     valid_oneQubitProperties,
+    valid_oneQubitProperties_v2,
     valid_twoQubitProperties,
     valid_supportedResultTypes,
     valid_connectivityGraph,
@@ -89,9 +90,8 @@ def test_from_json_1(minimal_valid_json):
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {}
-    assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
-    )
+    assert result.oneQubitProperties["0"] == valid_oneQubitProperties
+    assert result.oneQubitProperties["1"] == valid_oneQubitProperties_v2
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
@@ -105,9 +105,8 @@ def test_from_json_2(minimal_valid_json_with_errorMitigation):
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {}
-    assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
-    )
+    assert result.oneQubitProperties["0"] == valid_oneQubitProperties
+    assert result.oneQubitProperties["1"] == valid_oneQubitProperties_v2
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
