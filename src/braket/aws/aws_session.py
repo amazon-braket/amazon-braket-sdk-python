@@ -20,7 +20,7 @@ import re
 import warnings
 from functools import cache
 from pathlib import Path
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 import backoff
 import boto3
@@ -45,10 +45,10 @@ class AwsSession:  # noqa: PLR0904
 
     def __init__(
         self,
-        boto_session: Optional[boto3.Session] = None,
-        braket_client: Optional[client] = None,
-        config: Optional[Config] = None,
-        default_bucket: Optional[str] = None,
+        boto_session: boto3.Session | None = None,
+        braket_client: client | None = None,
+        config: Config | None = None,
+        default_bucket: str | None = None,
     ):
         """Initializes an `AwsSession`.
 
@@ -638,11 +638,11 @@ class AwsSession:  # noqa: PLR0904
 
     def search_devices(
         self,
-        arns: Optional[list[str]] = None,
-        names: Optional[list[str]] = None,
-        types: Optional[list[str]] = None,
-        statuses: Optional[list[str]] = None,
-        provider_names: Optional[list[str]] = None,
+        arns: list[str] | None = None,
+        names: list[str] | None = None,
+        types: list[str] | None = None,
+        statuses: list[str] | None = None,
+        provider_names: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
@@ -747,8 +747,8 @@ class AwsSession:  # noqa: PLR0904
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: Optional[int] = None,
-        next_token: Optional[str] = None,
+        limit: int | None = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Describes CloudWatch log streams in a log group with a given prefix.
 
@@ -783,7 +783,7 @@ class AwsSession:  # noqa: PLR0904
         log_stream: str,
         start_time: int,
         start_from_head: bool = True,
-        next_token: Optional[str] = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Gets CloudWatch log events from a given log stream.
 
@@ -813,8 +813,8 @@ class AwsSession:  # noqa: PLR0904
 
     def copy_session(
         self,
-        region: Optional[str] = None,
-        max_connections: Optional[int] = None,
+        region: str | None = None,
+        max_connections: int | None = None,
     ) -> AwsSession:
         """Creates a new AwsSession based on the region.
 
