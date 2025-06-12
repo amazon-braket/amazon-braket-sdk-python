@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, Optional, Union
+from braket.circuits import Gate
 
 from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
@@ -29,6 +30,16 @@ from braket.passes.circuit_passes import (
     GateValidator,
     ConnectivityValidator,
 )
+
+from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
+from braket.circuits.noises import (
+    AmplitudeDamping,
+    BitFlip,
+    Depolarizing,
+    PhaseDamping,
+    TwoQubitDepolarizing,
+)
+from braket.circuits.translations import BRAKET_GATES
 
 class LocalEmulator(Emulator):
     """
@@ -114,6 +125,55 @@ class LocalEmulator(Emulator):
 
         device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)
         return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
+
+    @classmethod
+    def _setup_basic_noise_model_strategy(cls, device_em_properties: DeviceEmulatorProperties):
+        """
+        Apply a basic noise model strategy consisting of:
+            - 1 Qubit RB Depolarizing Noise
+            - 1 Qubit Readout Error
+            - 2 Qubit Gate Depolarizing Noise
+        """
+        noise_model = NoiseModel()
+        for qubit, data in device_em_properties.oneQubitProperties.items():
+            qubit=int(qubit)
+            oneQubitProperty = data.oneQubitFidelity
+            fidelity_names = {fidelity.fidelityType.name: ind for ind, fidelity in enumerate(oneQubitProperty)}
+            
+            # Apply one qubit RB Depolarizing Noise
+            if 'RANDOMIZED_BENCHMARKING' in fidelity_names:
+                one_qubit_fidelity = oneQubitProperty[fidelity_names['RANDOMIZED_BENCHMARKING']].fidelity
+            elif 'SIMULTANEOUS_RANDOMIZED_BENCHMARKING' in fidelity_names:
+                one_qubit_fidelity = oneQubitProperty[fidelity_names['SIMULTANEOUS_RANDOMIZED_BENCHMARKING']].fidelity
+            else:
+                raise ValueError(f"No valid one-qubit RB data found for qubit {qubit} in oneQubitProperties.")
+            
+            one_qubit_depolarizing_rate = 1 - one_qubit_fidelity
+            noise_model.add_noise(Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit))
+            
+            # Apply one qubit READOUT noise
+            readout_error_rate = 1 - oneQubitProperty[fidelity_names['READOUT']].fidelity
+            noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))
+            
+        for edge, data in device_em_properties.twoQubitProperties.items():
+            qubits = [int(qubit) for qubit in edge.split("-")]
+            twoQubitGateFidelity = data.twoQubitGateFidelity
+            
+            valid_gate_names = {gate_fidelity.gateName.lower(): ind for ind, gate_fidelity in enumerate(twoQubitGateFidelity) if gate_fidelity.gateName.lower() in BRAKET_GATES}
+            
+            if len(valid_gate_names) == 0:
+                raise ValueError(f"No valid two-qubit RB data found for edge {edge} in twoQubitProperties.")
+            
+            for gate_name, gate_ind in valid_gate_names.items():
+                gate_fidelity = twoQubitGateFidelity[gate_ind]
+                two_qubit_depolarizing_rate = 1 - gate_fidelity.fidelity
+                gate = BRAKET_GATES[gate_name]
+                noise_model.add_noise(
+                    TwoQubitDepolarizing(two_qubit_depolarizing_rate),
+                    GateCriteria(gate, [(qubits[0], qubits[1]), (qubits[1], qubits[0])]),
+                )
+
+        return noise_model
 
 
     # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
