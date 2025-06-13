@@ -275,3 +275,111 @@ invalid_device_properties_dict_2 = {
         },
     },
 }
+
+
+
+reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["0", "2"], "2": ["1"]},
+                         "fullyConnected": False
+        },
+        "nativeGateSet": ["cz", "prx", "cz"],
+        "qubitCount": 3,
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+    },
+    "standardized": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+            "version": "1",
+        },
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+            "2": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties,
+                               "1-2": valid_twoQubitProperties
+        },
+    },
+}
+
+@pytest.fixture
+def reduced_standardized_json_2():
+    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected)
+
+
+reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.iqm.iqm_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2"]},
+                         "fullyConnected": False
+        },
+        "nativeGateSet": ["cz", "prx", "cz"],
+        "qubitCount": 3,
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+    },
+    "standardized": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+            "version": "1",
+        },
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+            "2": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties,
+        },
+    },
+}
+
+@pytest.fixture
+def reduced_standardized_json_3():
+    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed)

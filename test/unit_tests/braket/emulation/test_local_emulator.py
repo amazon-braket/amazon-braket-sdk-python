@@ -18,7 +18,8 @@ from braket.emulation.device_emulator_properties import (
     DeviceEmulatorProperties,
 )
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
-from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderProperties
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiDeviceCapabilities
 
 from braket.emulation.local_emulator import LocalEmulator
 
@@ -27,7 +28,6 @@ from conftest import (invalid_device_properties_dict_1, invalid_device_propertie
 def test_from_json_1(minimal_valid_json):
     emulator = LocalEmulator.from_json(minimal_valid_json)
     assert isinstance(emulator, LocalEmulator)
-    
 
 
 def test_from_json_1(minimal_valid_json_with_errorMitigation):
@@ -39,8 +39,20 @@ def test_from_json_3(reduced_standardized_json):
     emulator = LocalEmulator.from_json(reduced_standardized_json)
     assert isinstance(emulator, LocalEmulator)
 
+
 def test_from_device_properties(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
+    emulator = LocalEmulator.from_device_properties(device_properties)
+    assert isinstance(emulator, LocalEmulator)
+
+
+def test_from_device_properties_non_fully_connected(reduced_standardized_json_2):
+    device_properties = RigettiDeviceCapabilities.parse_raw(reduced_standardized_json_2)
+    emulator = LocalEmulator.from_device_properties(device_properties)
+    assert isinstance(emulator, LocalEmulator)
+
+def test_from_device_properties_non_fully_connected_but_directed(reduced_standardized_json_3):
+    device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json_3)
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
 

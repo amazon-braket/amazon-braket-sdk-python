@@ -14,8 +14,12 @@
 from __future__ import annotations
 
 import json
+<<<<<<< HEAD
 from typing import Any, Dict, Optional, Union
 from braket.circuits import Gate
+=======
+from typing import Any, Dict, Union, Tuple, Iterable
+>>>>>>> local_emulator_emulation
 
 from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
@@ -29,7 +33,10 @@ from braket.passes.circuit_passes import (
     QubitCountValidator,
     GateValidator,
     ConnectivityValidator,
+    GateConnectivityValidator
 )
+from braket.circuits.translations import BRAKET_GATES
+
 
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -71,16 +78,17 @@ class LocalEmulator(Emulator):
         if isinstance(device_properties, DeviceEmulatorProperties):
             device_em_properties = device_properties
         elif isinstance(device_properties, DeviceCapabilities):
-            device_em_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
+            device_em_properties = DeviceEmulatorProperties.from_device_properties(
+                device_properties
+            )
         else:
             raise ValueError(
                 f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
             )
 
-
         if backend != "braket_dm":
             raise ValueError(f"backend can only be `braket_dm`.")
-        
+
         # Create a noise model based on the provided device properties
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 
@@ -92,16 +100,18 @@ class LocalEmulator(Emulator):
         emulator.add_pass(GateValidator(device_em_properties.nativeGateSet))
         emulator.add_pass(
             ConnectivityValidator(
-                connectivity_graph = device_em_properties.connectivityGraph,
-                num_qubits = device_em_properties.qubitCount,
-                qubit_labels = device_em_properties.qubit_labels,
-                directed = device_em_properties.directed,
-                )
+                connectivity_graph=device_em_properties.connectivityGraph,
+                num_qubits=device_em_properties.qubitCount,
+                qubit_labels=device_em_properties.qubit_labels,
+                directed=False,  
+                # Set directed to false because ConnectivityValidator validates
+                # the connectivity regardless if the graph is directed or undirected.
             )
-        # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
+        )
+        emulator.add_pass(cls._set_up_gate_connectivity_validator(device_em_properties))
 
         return emulator
-    
+
     @classmethod
     def from_json(
         cls,
@@ -176,3 +186,42 @@ class LocalEmulator(Emulator):
 
         return noise_model
     
+    @classmethod
+    def _set_up_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> Dict[Tuple[Any, Any], Iterable[str]]:
+        if device_emu_properties.fully_connected:
+            return cls._set_up_fully_connected_gate_connectivity_validator(device_emu_properties)
+        
+        twoQubitProperties = device_emu_properties.twoQubitProperties
+        # For non fully connected graph
+        gate_connectivity_graph = {}
+        for node, neighbors in device_emu_properties.connectivityGraph.items():
+            for neighbor in neighbors:
+                edge = (int(node), int(neighbor))
+                edge_key = "-".join([str(qubit) for qubit in edge])
+                edge_property = twoQubitProperties.get(edge_key)
+                if not edge_property:
+                    gate_connectivity_graph[edge] = {"supported_gates": set()}
+                    continue
+                
+                edge_supported_gates = [item.gateName.lower() for item in edge_property.twoQubitGateFidelity if item.gateName.lower() in BRAKET_GATES]
+                gate_connectivity_graph[edge] = {"supported_gates": set(edge_supported_gates)}
+
+        reversed_gate_connectivity_graph = {}
+        for edge, edge_property in gate_connectivity_graph.items():
+            reversed_edge = (edge[1], edge[0])
+            if reversed_edge not in gate_connectivity_graph:
+                reversed_gate_connectivity_graph[reversed_edge] = gate_connectivity_graph[edge]
+
+        gate_connectivity_graph.update(reversed_gate_connectivity_graph)
+        return GateConnectivityValidator(gate_connectivity_graph)
+
+    @classmethod
+    def _set_up_fully_connected_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> Dict[Tuple[Any, Any], Iterable[str]]:
+        gate_connectivity_graph = {}
+        for qubit_1 in device_emu_properties.qubit_labels:
+            for qubit_2 in device_emu_properties.qubit_labels:
+                gate_connectivity_graph[(qubit_1, qubit_2)] = {
+                    "supported_gates": set(device_emu_properties.nativeGateSet)
+                }
+
+        return GateConnectivityValidator(gate_connectivity_graph)
