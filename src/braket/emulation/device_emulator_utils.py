@@ -12,7 +12,21 @@
 # language governing permissions and limitations under the License.
 
 from braket.device_schema.result_type import ResultType
-
+from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
+    OneQubitProperties,
+    TwoQubitProperties,
+)
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+import json
+from braket.circuits.translations import BRAKET_GATES
+from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
+    CoherenceTime,
+    Fidelity1Q,
+    FidelityType,
+    OneQubitProperties,
+    TwoQubitProperties,
+    GateFidelity2Q,
+)
 
 DEFAULT_SUPPORTED_RESULT_TYPES = [
     ResultType(name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
@@ -22,3 +36,71 @@ DEFAULT_SUPPORTED_RESULT_TYPES = [
     ResultType(name="Variance", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
     ResultType(name="Probability", observables=None, minShots=1, maxShots=20000),
 ]
+
+def standardize_ionq_device_properties_json(device_properties_json:str) -> str:
+    device_properties_dict = json.loads(device_properties_json)
+    if device_properties_dict['braketSchemaHeader']['name'] != 'braket.device_schema.ionq.ionq_device_capabilities':
+        raise ValueError("The input json should be that for IonQ devices.")
+    
+    device_properties = IonqDeviceCapabilities.parse_raw(device_properties_json)
+    return standardize_ionq_device_properties(device_properties).json()
+    
+def standardize_ionq_device_properties(device_properties:IonqDeviceCapabilities) -> IonqDeviceCapabilities:
+    if device_properties.braketSchemaHeader.name != 'braket.device_schema.ionq.ionq_device_capabilities':
+        raise ValueError("The input must be of type IonqDeviceCapabilities.")
+    
+    device_properties_dict = device_properties.dict()
+    T1 = device_properties_dict['provider']['timing']['T1']
+    T2 = device_properties_dict['provider']['timing']['T2']
+    f1q = device_properties_dict['provider']['fidelity']['1Q']['mean']
+    f2q = device_properties_dict['provider']['fidelity']['2Q']['mean']
+    fspam = device_properties_dict['provider']['fidelity']['spam']['mean']
+
+    oneQubitProperties = OneQubitProperties(
+        T1=CoherenceTime(value=T1, standardError=None, unit="S"),
+        T2=CoherenceTime(value=T2, standardError=None, unit="S"),
+        oneQubitFidelity=[
+            Fidelity1Q(
+                fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+                fidelity=f1q,
+                standardError=None,
+            ),
+            Fidelity1Q(
+                fidelityType=FidelityType(name="READOUT", description=None),
+                fidelity=fspam,
+                standardError=None,
+            ),
+        ],
+    )
+
+    two_qubit_gate_names = [gate for gate in device_properties_dict['paradigm']['nativeGateSet'] if BRAKET_GATES[gate.lower()].fixed_qubit_count()==2]
+
+    # Assuming there is one and only one two-qubit native gate
+    two_qubit_gate_name = two_qubit_gate_names[0]
+
+    twoQubitProperties = TwoQubitProperties(
+        twoQubitGateFidelity=[
+            GateFidelity2Q(
+                direction=None,
+                gateName=two_qubit_gate_name,
+                fidelity=f2q,
+                standardError=None,
+                fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+            )
+        ]
+    )
+
+    num_qubits = device_properties_dict['paradigm']['qubitCount']
+
+    all_edges = [f"{i}-{j}" for i in range(num_qubits) for j in range(i+1, num_qubits)]
+    device_properties.__dict__['standardized'] = {
+            "braketSchemaHeader": {
+                "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+                "version": "1",
+            },
+            "oneQubitProperties": {i: oneQubitProperties for i in range(num_qubits)}, 
+            "twoQubitProperties": {edge: twoQubitProperties for edge in all_edges},
+        }
+
+    device_properties.paradigm.nativeGateSet = [gate.lower() for gate in device_properties.paradigm.nativeGateSet]
+    return device_properties

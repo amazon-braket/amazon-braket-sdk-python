@@ -27,8 +27,6 @@ from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabil
 
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
-from braket.device_schema.ionq.ionq_provider_properties_v1 import IonqProviderProperties
-
 from conftest import (
     valid_oneQubitProperties,
     valid_oneQubitProperties_v2,
