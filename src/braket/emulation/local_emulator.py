@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union, Tuple, Iterable
 
 from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
@@ -28,7 +28,9 @@ from braket.passes.circuit_passes import (
     QubitCountValidator,
     GateValidator,
     ConnectivityValidator,
+    GateConnectivityValidator
 )
+from braket.circuits.translations import BRAKET_GATES
 
 
 class LocalEmulator(Emulator):
@@ -91,7 +93,7 @@ class LocalEmulator(Emulator):
                 # the connectivity regardless if the graph is directed or undirected.
             )
         )
-        # emulator.add_pass(gate_connectivity_validator(device_properties, self.topology_graph))
+        emulator.add_pass(cls._set_up_gate_connectivity_validator(device_em_properties))
 
         return emulator
 
@@ -119,24 +121,42 @@ class LocalEmulator(Emulator):
         device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)
         return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
 
-    # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
-    #     """Construct topology graph. If no such metadata is available, return `None`.
+    @classmethod
+    def _set_up_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> Dict[Tuple[Any, Any], Iterable[str]]:
+        if device_emu_properties.fully_connected:
+            return cls._set_up_fully_connected_gate_connectivity_validator(device_emu_properties)
+        
+        twoQubitProperties = device_emu_properties.twoQubitProperties
+        # For non fully connected graph
+        gate_connectivity_graph = {}
+        for node, neighbors in device_emu_properties.connectivityGraph.items():
+            for neighbor in neighbors:
+                edge = (int(node), int(neighbor))
+                edge_key = "-".join([str(qubit) for qubit in edge])
+                edge_property = twoQubitProperties.get(edge_key)
+                if not edge_property:
+                    gate_connectivity_graph[edge] = {"supported_gates": set()}
+                    continue
+                
+                edge_supported_gates = [item.gateName.lower() for item in edge_property.twoQubitGateFidelity if item.gateName.lower() in BRAKET_GATES]
+                gate_connectivity_graph[edge] = {"supported_gates": set(edge_supported_gates)}
 
-    #     Returns:
-    #         DiGraph: topology of QPU as a networkx `DiGraph` object.
-    #     """
-    #     if hasattr(device_properties, "paradigm") and isinstance(
-    #         device_properties.paradigm, GateModelQpuParadigmProperties
-    #     ):
-    #         if device_properties.paradigm.connectivity.fullyConnected:
-    #             return complete_graph(
-    #                 int(self.properties.paradigm.qubitCount), create_using=DiGraph()
-    #             )
-    #         adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
-    #         edges = []
-    #         for item in adjacency_lists.items():
-    #             i = item[0]
-    #             edges.extend([(int(i), int(j)) for j in item[1]])
-    #         return from_edgelist(edges, create_using=DiGraph())
-    #     else:
-    #         return None
+        reversed_gate_connectivity_graph = {}
+        for edge, edge_property in gate_connectivity_graph.items():
+            reversed_edge = (edge[1], edge[0])
+            if reversed_edge not in gate_connectivity_graph:
+                reversed_gate_connectivity_graph[reversed_edge] = gate_connectivity_graph[edge]
+
+        gate_connectivity_graph.update(reversed_gate_connectivity_graph)
+        return GateConnectivityValidator(gate_connectivity_graph)
+
+    @classmethod
+    def _set_up_fully_connected_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> Dict[Tuple[Any, Any], Iterable[str]]:
+        gate_connectivity_graph = {}
+        for qubit_1 in device_emu_properties.qubit_labels:
+            for qubit_2 in device_emu_properties.qubit_labels:
+                gate_connectivity_graph[(qubit_1, qubit_2)] = {
+                    "supported_gates": set(device_emu_properties.nativeGateSet)
+                }
+
+        return GateConnectivityValidator(gate_connectivity_graph)
