@@ -12,21 +12,9 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
-
-import json
-<<<<<<< HEAD
-from typing import Any, Dict, Optional, Union
-from braket.circuits import Gate
-=======
 from typing import Any, Dict, Union, Tuple, Iterable
->>>>>>> local_emulator_emulation
-
 from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.device_schema.gate_model_qpu_paradigm_properties_v1 import (
-    GateModelQpuParadigmProperties,
-)
 from braket.emulation.emulator import Emulator
-from networkx import DiGraph, complete_graph, from_edgelist
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 
 from braket.passes.circuit_passes import (
@@ -40,10 +28,8 @@ from braket.circuits.translations import BRAKET_GATES
 
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
-    AmplitudeDamping,
     BitFlip,
     Depolarizing,
-    PhaseDamping,
     TwoQubitDepolarizing,
 )
 from braket.circuits.translations import BRAKET_GATES
