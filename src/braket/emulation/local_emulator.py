@@ -175,26 +175,4 @@ class LocalEmulator(Emulator):
                 )
 
         return noise_model
-
-
-    # def _construct_topology_graph(device_properties: DeviceCapabilities) -> DiGraph:
-    #     """Construct topology graph. If no such metadata is available, return `None`.
-
-    #     Returns:
-    #         DiGraph: topology of QPU as a networkx `DiGraph` object.
-    #     """
-    #     if hasattr(device_properties, "paradigm") and isinstance(
-    #         device_properties.paradigm, GateModelQpuParadigmProperties
-    #     ):
-    #         if device_properties.paradigm.connectivity.fullyConnected:
-    #             return complete_graph(
-    #                 int(self.properties.paradigm.qubitCount), create_using=DiGraph()
-    #             )
-    #         adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
-    #         edges = []
-    #         for item in adjacency_lists.items():
-    #             i = item[0]
-    #             edges.extend([(int(i), int(j)) for j in item[1]])
-    #         return from_edgelist(edges, create_using=DiGraph())
-    #     else:
-    #         return None
+    
