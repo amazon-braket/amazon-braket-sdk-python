@@ -128,8 +128,8 @@ provided as edge attributes."
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
 
-        e = (str(int(e[0])), str(int(e[1])))
-        
+        e = (int(e[0]), int(e[1]))
+
         # Check that each edge exists in this validator's connectivity graph
         if not self._gate_connectivity_graph.has_edge(*e):
             raise ValueError(f"{e[0]} is not connected to {e[1]} on this device.")
