@@ -186,11 +186,11 @@ class LocalEmulator(Emulator):
                 edge_key = "-".join([str(qubit) for qubit in edge])
                 edge_property = twoQubitProperties.get(edge_key)
                 if not edge_property:
-                    gate_connectivity_graph[edge] = {"supported_gates": set()}
+                    gate_connectivity_graph[edge] = set()
                     continue
                 
                 edge_supported_gates = [item.gateName.lower() for item in edge_property.twoQubitGateFidelity if item.gateName.lower() in BRAKET_GATES]
-                gate_connectivity_graph[edge] = {"supported_gates": set(edge_supported_gates)}
+                gate_connectivity_graph[edge] = set(edge_supported_gates)
 
         reversed_gate_connectivity_graph = {}
         for edge, edge_property in gate_connectivity_graph.items():
@@ -206,8 +206,6 @@ class LocalEmulator(Emulator):
         gate_connectivity_graph = {}
         for qubit_1 in device_emu_properties.qubit_labels:
             for qubit_2 in device_emu_properties.qubit_labels:
-                gate_connectivity_graph[(qubit_1, qubit_2)] = {
-                    "supported_gates": set(device_emu_properties.nativeGateSet)
-                }
+                gate_connectivity_graph[(qubit_1, qubit_2)] = set(device_emu_properties.nativeGateSet)
 
         return GateConnectivityValidator(gate_connectivity_graph)
