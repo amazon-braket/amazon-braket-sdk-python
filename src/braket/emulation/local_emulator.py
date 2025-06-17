@@ -83,7 +83,7 @@ class LocalEmulator(Emulator):
 
         # Add the passes for validation
         emulator.add_pass(QubitCountValidator(device_em_properties.qubitCount))
-        emulator.add_pass(GateValidator(device_em_properties.nativeGateSet))
+        emulator.add_pass(GateValidator(native_gates=device_em_properties.nativeGateSet))
         emulator.add_pass(
             ConnectivityValidator(
                 connectivity_graph=device_em_properties.connectivityGraph,
