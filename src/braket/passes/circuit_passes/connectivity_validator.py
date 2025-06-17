@@ -163,6 +163,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
         for e in gate_connectivity_graph.edges:
+            e = (str(int(e[0])), str(int(e[1])))
             if not self._connectivity_graph.has_edge(*e):
                 raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
 
