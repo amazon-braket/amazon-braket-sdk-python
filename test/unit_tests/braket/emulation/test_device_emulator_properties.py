@@ -214,7 +214,7 @@ def test_invalid_json(invalid_json):
 def test_from_json_non_fully_connected(reduced_standardized_json_2):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json_2)
     assert result.qubitCount == 3
-    assert result.nativeGateSet == ["cz", "prx", "cz"]
+    assert result.nativeGateSet == ["rx", "rz", "iswap"]
     assert result.connectivityGraph == {"0": ["1"], "1": ["0", "2"], "2": ["1"]}
     assert (
         result.oneQubitProperties["2"] == result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
@@ -229,7 +229,7 @@ def test_from_json_non_fully_connected(reduced_standardized_json_2):
 def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json_3)
     assert result.qubitCount == 3
-    assert result.nativeGateSet == ["cz", "prx", "cz"]
+    assert result.nativeGateSet == ['cz', 'prx']
     assert result.connectivityGraph == {"0": ["1"], "1": ["2"]}
     assert (
         result.oneQubitProperties["2"] == result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties

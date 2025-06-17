@@ -76,3 +76,11 @@ def test_invalid_instantiation_2(reduced_standardized_json):
 def test_noise_model_with_invalid_data(invalid_device_properties_dict):
     with pytest.raises(ValueError):
         LocalEmulator.from_json(json.dumps(invalid_device_properties_dict))
+
+def test_validate_valid_verbatim_circ_garnet(reduced_standardized_json_3, valid_verbatim_circ_garnet):
+    emulator = LocalEmulator.from_json(reduced_standardized_json_3)
+    emulator.validate(valid_verbatim_circ_garnet)
+
+def test_validate_valid_verbatim_circ_ankaa3(reduced_standardized_json_2, valid_verbatim_circ_ankaa3):
+    emulator = LocalEmulator.from_json(reduced_standardized_json_2)
+    emulator.validate(valid_verbatim_circ_ankaa3)
