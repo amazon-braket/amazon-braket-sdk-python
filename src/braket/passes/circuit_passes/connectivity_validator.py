@@ -126,7 +126,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                 else:
                     # just check that the target qubit exists in the connectivity graph
                     target_qubit = int(instruction.target[0])
-                    if target_qubit not in self._connectivity_graph:
+                    if str(target_qubit) not in self._connectivity_graph:
                         raise ValueError(
                             f"Qubit {target_qubit} does not exist in the device topology."
                         )
