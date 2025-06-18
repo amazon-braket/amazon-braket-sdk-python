@@ -67,6 +67,9 @@ provided as edge attributes."
                                 gate sets."
                         )
 
+    def _graph_node_type(self) -> type:
+        return type(list(self._gate_connectivity_graph.nodes)[0])
+
     def validate(self, program: Circuit) -> None:
         """
         Verifies that any multiqubit gates used within a verbatim box are supported
@@ -98,7 +101,7 @@ provided as edge attributes."
                         else:
                             # just check that the target qubit exists in the connectivity graph
                             target_qubit = instruction.target[0]
-                            if target_qubit not in self._gate_connectivity_graph:
+                            if self._graph_node_type()(int(target_qubit)) not in self._gate_connectivity_graph:
                                 raise ValueError(
                                     f"Qubit {target_qubit} does not exist in the device topology."
                                 )
@@ -128,12 +131,15 @@ provided as edge attributes."
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
 
-        e = (int(e[0]), int(e[1]))
+        e = (self._graph_node_type()(int(e[0])), self._graph_node_type()(int(e[1])))
 
         # Check that each edge exists in this validator's connectivity graph
-        if not self._gate_connectivity_graph.has_edge(*e):
+        if self._gate_connectivity_graph.has_edge(*e):
+            supported_gates = self._gate_connectivity_graph[e[0]][e[1]]["supported_gates"]
+        else:
             raise ValueError(f"{e[0]} is not connected to {e[1]} on this device.")
-        supported_gates = self._gate_connectivity_graph[e[0]][e[1]]["supported_gates"]
+        
+        supported_gates = [gate.lower() for gate in supported_gates]
         if gate_name.lower() not in supported_gates:
             raise ValueError(
                 f"Qubit pair ({e[0]}, {e[1]}) does not support gate {gate_name} on this device."
