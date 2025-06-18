@@ -22,7 +22,6 @@ from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
-from braket.registers.qubit import Qubit
 
 
 class ConnectivityValidator(ValidationPass[Circuit]):
