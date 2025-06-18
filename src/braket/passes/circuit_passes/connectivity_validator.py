@@ -22,6 +22,7 @@ from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
+from braket.registers.qubit import Qubit
 
 
 class ConnectivityValidator(ValidationPass[Circuit]):
@@ -95,6 +96,9 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
+    def _graph_node_type(self) -> type:
+        return type(list(self._connectivity_graph.nodes)[0])
+
     def validate(self, program: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
@@ -125,8 +129,8 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                     self._validate_instruction_connectivity(instruction.control, instruction.target)
                 else:
                     # just check that the target qubit exists in the connectivity graph
-                    target_qubit = int(instruction.target[0])
-                    if str(target_qubit) not in self._connectivity_graph:
+                    target_qubit = instruction.target[0]
+                    if self._graph_node_type()(int(target_qubit)) not in self._connectivity_graph:
                         raise ValueError(
                             f"Qubit {target_qubit} does not exist in the device topology."
                         )
@@ -163,7 +167,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
         for e in gate_connectivity_graph.edges:
-            e = (str(int(e[0])), str(int(e[1])))
+            e = (self._graph_node_type()(int(e[0])), self._graph_node_type()(int(e[1])))
             if not self._connectivity_graph.has_edge(*e):
                 raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
 
