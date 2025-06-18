@@ -80,7 +80,7 @@ class GateValidator(ValidationPass[Circuit]):
                         gate = instruction.operator
                         if not type(gate) in self._native_gates:
                             raise ValueError(
-                                f"Gate {gate.name} is not a native gate supported by this device."
+                                f"Gate {gate.name} is not a native gate for this device."
                             )
                     idx += 1
                 if idx == len(program.instructions) or not isinstance(
@@ -90,7 +90,7 @@ class GateValidator(ValidationPass[Circuit]):
             elif isinstance(instruction.operator, Gate):
                 gate = instruction.operator
                 if not type(gate) in self._supported_gates:
-                    raise ValueError(f"Gate {gate.name} is not supported by this device.")
+                    raise ValueError(f"Gate {gate.name} is not a supported gate for this device.")
             idx += 1
 
     def __eq__(self, other: ValidationPass) -> bool:
