@@ -22,6 +22,7 @@ from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapa
 from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiDeviceCapabilities
 
 from braket.emulation.local_emulator import LocalEmulator
+from braket.emulation.device_emulator_utils import standardize_ionq_device_properties_json
 
 from conftest import (invalid_device_properties_dict_1, invalid_device_properties_dict_2)
 
@@ -84,3 +85,7 @@ def test_validate_valid_verbatim_circ_garnet(reduced_standardized_json_3, valid_
 def test_validate_valid_verbatim_circ_ankaa3(reduced_standardized_json_2, valid_verbatim_circ_ankaa3):
     emulator = LocalEmulator.from_json(reduced_standardized_json_2)
     emulator.validate(valid_verbatim_circ_ankaa3)
+
+def test_validate_valid_verbatim_circ_aria_1(reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1):
+    emulator = LocalEmulator.from_json(standardize_ionq_device_properties_json(reduced_ionq_device_capabilities_json))
+    emulator.validate(valid_verbatim_circ_aria1)
