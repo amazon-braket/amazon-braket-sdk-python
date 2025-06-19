@@ -2403,3 +2403,78 @@ def test_local_emulator_not_local(aws_session_init, aws_session):
     error_message = "local can only be True"
     with pytest.raises(ValueError, match=error_message):
         emulator = device.emulator(local=False)
+
+# MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_4 = {
+#     "braketSchemaHeader": {
+#         "name": 'braket.device_schema.ionq.ionq_device_capabilities',
+#         "version": "1",
+#     },
+#     "service": {
+#         "executionWindows": [
+#             {
+#                 "executionDay": "Everyday",
+#                 "windowStartHour": "11:00",
+#                 "windowEndHour": "12:00",
+#             }
+#         ],
+#         "shotsRange": [1, 10],
+#     },
+#     "action": {
+#         "braket.ir.openqasm.program": {
+#             "actionType": "braket.ir.openqasm.program",
+#             "version": ["1"],
+#             "supportedOperations": ["H"],
+#             "supportedResultTypes": [
+#                 {
+#                     "maxShots": 20000,
+#                     "minShots": 1, "name":
+#                     "Probability",
+#                     "observables": None
+#                 }
+#             ]
+#         }
+#     },
+#     "paradigm": {
+#         "qubitCount": 4,
+#         'nativeGateSet': ['GPI', 'GPI2', 'MS'],
+#         "connectivity": {"fullyConnected": True, "connectivityGraph": {}},
+#     },
+#     "deviceParameters": {},
+#     'provider': {'braketSchemaHeader': {'name': 'braket.device_schema.ionq.ionq_provider_properties',
+#                                         'version': '1'},
+#                 'errorMitigation': {'braket.device_schema.error_mitigation.debias.Debias': {'minimumShots': 2500}},
+#                 'fidelity': {'1Q': {'mean': 0.9998},
+#                             '2Q': {'mean': 0.12345},
+#                             'spam': {'mean': 0.9937}},
+#                 'timing': {'1Q': 0.000135,
+#                             '2Q': 0.0006,
+#                             'T1': 123.45678,
+#                             'T2': 1.0,
+#                             'readout': 0.0003,
+#                             'reset': 2e-05}},
+# }
+
+# MOCK_GATE_MODEL_QPU_5 = {
+#     "deviceName": "Aria-1",
+#     "deviceType": "QPU",
+#     "providerName": "IonQ",
+#     "deviceStatus": "OFFLINE",
+#     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_4,
+#     "deviceQueueInfo": [
+#         {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+#         {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+#         {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+#     ],
+# }
+
+
+# @patch("braket.aws.aws_device.AwsSession")
+# def test_local_emulator(aws_session_init, aws_session):
+#     arn = RIGETTI_ARN
+#     aws_session_init.return_value = aws_session
+#     aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_5
+#     device = AwsDevice(arn)
+#     device._properties = IonqDeviceCapabilities.parse_raw(
+#         json.dumps(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_4)
+#     )
+#     emulator = device.emulator()

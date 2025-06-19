@@ -27,7 +27,8 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 from braket.device_schema.device_capabilities import DeviceCapabilities
 import json
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
-
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
 
 class DeviceEmulatorProperties(BaseModel):
     """Properties for device emulation.
@@ -168,6 +169,8 @@ class DeviceEmulatorProperties(BaseModel):
 
     @classmethod
     def from_device_properties(cls, device_properties: DeviceCapabilities):
+        if isinstance(device_properties, IonqDeviceCapabilities):
+            device_properties = standardize_ionq_device_properties(device_properties)
         if isinstance(device_properties, DeviceCapabilities):
             return cls.from_json(device_properties.json())
         else:
