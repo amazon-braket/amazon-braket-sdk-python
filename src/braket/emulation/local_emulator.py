@@ -69,7 +69,7 @@ class LocalEmulator(Emulator):
             )
         else:
             raise ValueError(
-                f"device_properties is an instance of either DeviceCapabilities or DeviceEmulatorProperties."
+                f"device_properties must be an instance of either DeviceCapabilities or DeviceEmulatorProperties, not {type(device_properties)}."
             )
 
         if backend != "braket_dm":
@@ -85,17 +85,6 @@ class LocalEmulator(Emulator):
         emulator.add_pass(QubitCountValidator(device_em_properties.qubitCount))
         emulator.add_pass(GateValidator(native_gates=device_em_properties.nativeGateSet))
         emulator.add_pass(cls._set_up_connectivity_validator(device_em_properties))
-
-        # emulator.add_pass(
-        #     ConnectivityValidator(
-        #         connectivity_graph=device_em_properties.connectivityGraph,
-        #         num_qubits=device_em_properties.qubitCount,
-        #         qubit_labels=device_em_properties.qubit_labels,
-        #         directed=False,  
-        #         # Set directed to false because ConnectivityValidator validates
-        #         # the connectivity regardless if the graph is directed or undirected.
-        #     )
-        # )
         emulator.add_pass(cls._set_up_gate_connectivity_validator(device_em_properties))
 
         return emulator

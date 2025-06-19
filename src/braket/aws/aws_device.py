@@ -587,7 +587,6 @@ class AwsDevice(Device):
         self._update_pulse_properties()
         return self._ports or {}
     
-    @property
     def emulator(self, local=True) -> Emulator:
         """
         A device emulator mimics the restrictions and noise of the AWS QPU by validating and
@@ -605,8 +604,7 @@ class AwsDevice(Device):
         if local != True:
             raise ValueError("local can only be True")
 
-        if not hasattr(self, "_emulator"):
-            self._emulator = self._setup_local_emulator()
+        self._emulator = self._setup_local_emulator()
         return self._emulator
 
     def _setup_local_emulator(self) -> LocalEmulator:
