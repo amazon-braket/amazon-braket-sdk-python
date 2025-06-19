@@ -56,6 +56,8 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     GateFidelity2Q,
 )
 
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
