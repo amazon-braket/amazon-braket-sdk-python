@@ -53,7 +53,7 @@ from braket.devices import Devices
 from braket.emulation.emulator import Emulator
 from braket.emulation.local_emulator import LocalEmulator
 from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
-from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -617,7 +617,7 @@ class AwsDevice(Device):
             based on this device's properites.
         """
         device_properties = self.properties
-        if isinstance(device_properties, IqmDeviceCapabilities):
+        if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = standardize_ionq_device_properties(device_properties)
 
         return LocalEmulator.from_device_properties(device_properties)
