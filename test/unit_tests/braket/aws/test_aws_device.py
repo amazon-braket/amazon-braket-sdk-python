@@ -47,6 +47,16 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import DragGaussianWaveform, Frame, Port, PulseSequence
 
+from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
+    CoherenceTime,
+    Fidelity1Q,
+    FidelityType,
+    OneQubitProperties,
+    TwoQubitProperties,
+    GateFidelity2Q,
+)
+
+
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
         "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
@@ -473,6 +483,7 @@ MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": {},
 }
+
 
 @pytest.fixture(
     params=[
@@ -2260,7 +2271,6 @@ def test_run_batch_with_noise_model(
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
 
 
-
 @patch("braket.aws.aws_device.AwsSession")
 def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
     arn = SV1_ARN
@@ -2269,4 +2279,125 @@ def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
     device = AwsDevice(arn)
     error_message = "Creating an emulator from a Braket managed simulator is not supported."
     with pytest.raises(ValueError, match=error_message):
-        emulator = device.emulator
+        emulator = device.emulator()
+
+
+valid_oneQubitProperties = OneQubitProperties(
+    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
+    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
+    oneQubitFidelity=[
+        Fidelity1Q(
+            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+            fidelity=0.99,
+            standardError=None,
+        ),
+        Fidelity1Q(
+            fidelityType=FidelityType(name="READOUT", description=None),
+            fidelity=0.9795,
+            standardError=None,
+        ),
+    ],
+).dict()
+
+valid_twoQubitProperties = TwoQubitProperties(
+    twoQubitGateFidelity=[
+        GateFidelity2Q(
+            direction=None,
+            gateName="CZ",
+            fidelity=0.99,
+            standardError=0.0009,
+            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+        ),
+        GateFidelity2Q(
+            direction=None,
+            gateName="ISwap",
+            fidelity=0.99,
+            standardError=0.0009,
+            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+        )
+    ]
+).dict()
+
+MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_3 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "version": ["1"],
+            "supportedOperations": ["H"],
+            "supportedResultTypes": [
+                {
+                    "maxShots": 20000,
+                    "minShots": 1, "name":
+                    "Probability",
+                    "observables": None
+                }
+            ]
+        }
+    },
+    "paradigm": {
+        "qubitCount": 2,
+        "nativeGateSet": ["ccnot", "cy"],
+        "connectivity": {"fullyConnected": False, "connectivityGraph": {"0": ["1"]}},
+    },
+    "deviceParameters": {},
+    "standardized": {
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties,
+        },
+    },
+}
+
+MOCK_GATE_MODEL_QPU_4 = {
+    "deviceName": "Ankaa-2",
+    "deviceType": "QPU",
+    "providerName": "Rigetti",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_3,
+    "deviceQueueInfo": [
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+        {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+    ],
+}
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_local_emulator(aws_session_init, aws_session):
+    arn = RIGETTI_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_4
+    device = AwsDevice(arn)
+    device._properties = RigettiDeviceCapabilities.parse_obj(
+        MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_3
+    )
+    emulator = device.emulator()
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_local_emulator_not_local(aws_session_init, aws_session):
+    arn = RIGETTI_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_4
+    device = AwsDevice(arn)
+    device._properties = RigettiDeviceCapabilities.parse_obj(
+        MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_3
+    )
+    error_message = "local can only be True"
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator(local=False)

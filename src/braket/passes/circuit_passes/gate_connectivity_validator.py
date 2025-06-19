@@ -101,7 +101,10 @@ provided as edge attributes."
                         else:
                             # just check that the target qubit exists in the connectivity graph
                             target_qubit = instruction.target[0]
-                            if self._graph_node_type()(int(target_qubit)) not in self._gate_connectivity_graph:
+                            if (
+                                self._graph_node_type()(int(target_qubit))
+                                not in self._gate_connectivity_graph
+                            ):
                                 raise ValueError(
                                     f"Qubit {target_qubit} does not exist in the device topology."
                                 )
@@ -138,7 +141,7 @@ provided as edge attributes."
             supported_gates = self._gate_connectivity_graph[e[0]][e[1]]["supported_gates"]
         else:
             raise ValueError(f"{e[0]} is not connected to {e[1]} on this device.")
-        
+
         supported_gates = [gate.lower() for gate in supported_gates]
         if gate_name.lower() not in supported_gates:
             raise ValueError(

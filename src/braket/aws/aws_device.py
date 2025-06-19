@@ -55,6 +55,7 @@ from braket.emulation.local_emulator import LocalEmulator
 from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 
+
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
 
@@ -123,6 +124,7 @@ class AwsDevice(Device):
         if noise_model:
             self._validate_device_noise_model_support(noise_model)
         self._noise_model = noise_model
+        self._emulator = None
 
     def run(
         self,
@@ -595,7 +597,7 @@ class AwsDevice(Device):
 
         Returns:
             Emulator: An emulator for this device, if this is not a simulator device. Raises an
-            exception if an emulator is requested for al simulator device.
+            exception if an emulator is requested for a simulator device.
         """
         if self._arn in [simulator_enum.value for simulator_enum in Devices.Amazon]:
             raise ValueError(
@@ -604,21 +606,12 @@ class AwsDevice(Device):
         if local != True:
             raise ValueError("local can only be True")
 
-        self._emulator = self._setup_local_emulator()
-        return self._emulator
-
-    def _setup_local_emulator(self) -> LocalEmulator:
-        """
-        Sets up an LocalEmulator object whose properties mimic that of this AwsDevice.
-        Returns:
-            LocalEmulator: An local emulator with a noise model, compilation passes, and validation passes
-            based on this device's properites.
-        """
         device_properties = self.properties
         if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = standardize_ionq_device_properties(device_properties)
 
-        return LocalEmulator.from_device_properties(device_properties)
+        self._emulator = LocalEmulator.from_device_properties(device_properties)
+        return self._emulator
 
     @staticmethod
     def get_devices(

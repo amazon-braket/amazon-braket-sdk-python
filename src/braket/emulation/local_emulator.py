@@ -21,7 +21,7 @@ from braket.passes.circuit_passes import (
     QubitCountValidator,
     GateValidator,
     ConnectivityValidator,
-    GateConnectivityValidator
+    GateConnectivityValidator,
 )
 from braket.circuits.translations import BRAKET_GATES
 
@@ -33,6 +33,7 @@ from braket.circuits.noises import (
     TwoQubitDepolarizing,
 )
 from braket.circuits.translations import BRAKET_GATES
+
 
 class LocalEmulator(Emulator):
     """
@@ -123,34 +124,50 @@ class LocalEmulator(Emulator):
         """
         noise_model = NoiseModel()
         for qubit, data in device_em_properties.oneQubitProperties.items():
-            qubit=int(qubit)
+            qubit = int(qubit)
             oneQubitProperty = data.oneQubitFidelity
-            fidelity_names = {fidelity.fidelityType.name: ind for ind, fidelity in enumerate(oneQubitProperty)}
-            
+            fidelity_names = {
+                fidelity.fidelityType.name: ind for ind, fidelity in enumerate(oneQubitProperty)
+            }
+
             # Apply one qubit RB Depolarizing Noise
-            if 'RANDOMIZED_BENCHMARKING' in fidelity_names:
-                one_qubit_fidelity = oneQubitProperty[fidelity_names['RANDOMIZED_BENCHMARKING']].fidelity
-            elif 'SIMULTANEOUS_RANDOMIZED_BENCHMARKING' in fidelity_names:
-                one_qubit_fidelity = oneQubitProperty[fidelity_names['SIMULTANEOUS_RANDOMIZED_BENCHMARKING']].fidelity
+            if "RANDOMIZED_BENCHMARKING" in fidelity_names:
+                one_qubit_fidelity = oneQubitProperty[
+                    fidelity_names["RANDOMIZED_BENCHMARKING"]
+                ].fidelity
+            elif "SIMULTANEOUS_RANDOMIZED_BENCHMARKING" in fidelity_names:
+                one_qubit_fidelity = oneQubitProperty[
+                    fidelity_names["SIMULTANEOUS_RANDOMIZED_BENCHMARKING"]
+                ].fidelity
             else:
-                raise ValueError(f"No valid one-qubit RB data found for qubit {qubit} in oneQubitProperties.")
-            
+                raise ValueError(
+                    f"No valid one-qubit RB data found for qubit {qubit} in oneQubitProperties."
+                )
+
             one_qubit_depolarizing_rate = 1 - one_qubit_fidelity
-            noise_model.add_noise(Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit))
-            
+            noise_model.add_noise(
+                Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit)
+            )
+
             # Apply one qubit READOUT noise
-            readout_error_rate = 1 - oneQubitProperty[fidelity_names['READOUT']].fidelity
+            readout_error_rate = 1 - oneQubitProperty[fidelity_names["READOUT"]].fidelity
             noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))
-            
+
         for edge, data in device_em_properties.twoQubitProperties.items():
             qubits = [int(qubit) for qubit in edge.split("-")]
             twoQubitGateFidelity = data.twoQubitGateFidelity
-            
-            valid_gate_names = {gate_fidelity.gateName.lower(): ind for ind, gate_fidelity in enumerate(twoQubitGateFidelity) if gate_fidelity.gateName.lower() in BRAKET_GATES}
-            
+
+            valid_gate_names = {
+                gate_fidelity.gateName.lower(): ind
+                for ind, gate_fidelity in enumerate(twoQubitGateFidelity)
+                if gate_fidelity.gateName.lower() in BRAKET_GATES
+            }
+
             if len(valid_gate_names) == 0:
-                raise ValueError(f"No valid two-qubit RB data found for edge {edge} in twoQubitProperties.")
-            
+                raise ValueError(
+                    f"No valid two-qubit RB data found for edge {edge} in twoQubitProperties."
+                )
+
             # Apply two qubit RB Depolarizing Noise
             for gate_name, gate_ind in valid_gate_names.items():
                 gate_fidelity = twoQubitGateFidelity[gate_ind]
@@ -164,12 +181,14 @@ class LocalEmulator(Emulator):
         return noise_model
 
     @classmethod
-    def _set_up_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> ConnectivityValidator:
+    def _set_up_connectivity_validator(
+        cls, device_emu_properties: DeviceEmulatorProperties
+    ) -> ConnectivityValidator:
         if device_emu_properties.fully_connected:
             return ConnectivityValidator(
                 qubit_labels=device_emu_properties.qubit_labels,
                 fully_connected=True,
-                directed=False,  
+                directed=False,
                 # Set directed to false because ConnectivityValidator validates
                 # the connectivity regardless if the graph is directed or undirected.
             )
@@ -178,18 +197,22 @@ class LocalEmulator(Emulator):
                 connectivity_graph=device_emu_properties.connectivityGraph,
                 num_qubits=device_emu_properties.qubitCount,
                 qubit_labels=device_emu_properties.qubit_labels,
-                directed=False,  
+                directed=False,
                 # Set directed to false because ConnectivityValidator validates
                 # the connectivity regardless if the graph is directed or undirected.
             )
 
     @classmethod
-    def _set_up_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> GateConnectivityValidator:
+    def _set_up_gate_connectivity_validator(
+        cls, device_emu_properties: DeviceEmulatorProperties
+    ) -> GateConnectivityValidator:
         if device_emu_properties.fully_connected:
             gate_connectivity_graph = {}
             for qubit_1 in device_emu_properties.qubit_labels:
                 for qubit_2 in device_emu_properties.qubit_labels:
-                    gate_connectivity_graph[(qubit_1, qubit_2)] = set(device_emu_properties.nativeGateSet)
+                    gate_connectivity_graph[(qubit_1, qubit_2)] = set(
+                        device_emu_properties.nativeGateSet
+                    )
         else:
             twoQubitProperties = device_emu_properties.twoQubitProperties
             # For non fully connected graph
@@ -202,8 +225,12 @@ class LocalEmulator(Emulator):
                     if not edge_property:
                         gate_connectivity_graph[edge] = set()
                         continue
-                    
-                    edge_supported_gates = [item.gateName.lower() for item in edge_property.twoQubitGateFidelity if item.gateName.lower() in BRAKET_GATES]
+
+                    edge_supported_gates = [
+                        item.gateName.lower()
+                        for item in edge_property.twoQubitGateFidelity
+                        if item.gateName.lower() in BRAKET_GATES
+                    ]
                     gate_connectivity_graph[edge] = set(edge_supported_gates)
 
             reversed_gate_connectivity_graph = {}
@@ -215,41 +242,3 @@ class LocalEmulator(Emulator):
             gate_connectivity_graph.update(reversed_gate_connectivity_graph)
 
         return GateConnectivityValidator(gate_connectivity_graph)
-
-    # @classmethod
-    # def _set_up_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> GateConnectivityValidator:
-    #     if device_emu_properties.fully_connected:
-    #         return cls._set_up_fully_connected_gate_connectivity_validator(device_emu_properties)
-        
-    #     twoQubitProperties = device_emu_properties.twoQubitProperties
-    #     # For non fully connected graph
-    #     gate_connectivity_graph = {}
-    #     for node, neighbors in device_emu_properties.connectivityGraph.items():
-    #         for neighbor in neighbors:
-    #             edge = (int(node), int(neighbor))
-    #             edge_key = "-".join([str(qubit) for qubit in edge])
-    #             edge_property = twoQubitProperties.get(edge_key)
-    #             if not edge_property:
-    #                 gate_connectivity_graph[edge] = set()
-    #                 continue
-                
-    #             edge_supported_gates = [item.gateName.lower() for item in edge_property.twoQubitGateFidelity if item.gateName.lower() in BRAKET_GATES]
-    #             gate_connectivity_graph[edge] = set(edge_supported_gates)
-
-    #     reversed_gate_connectivity_graph = {}
-    #     for edge, edge_property in gate_connectivity_graph.items():
-    #         reversed_edge = (edge[1], edge[0])
-    #         if reversed_edge not in gate_connectivity_graph:
-    #             reversed_gate_connectivity_graph[reversed_edge] = gate_connectivity_graph[edge]
-
-    #     gate_connectivity_graph.update(reversed_gate_connectivity_graph)
-    #     return GateConnectivityValidator(gate_connectivity_graph)
-
-    # @classmethod
-    # def _set_up_fully_connected_gate_connectivity_validator(cls, device_emu_properties: DeviceEmulatorProperties) -> GateConnectivityValidator:
-    #     gate_connectivity_graph = {}
-    #     for qubit_1 in device_emu_properties.qubit_labels:
-    #         for qubit_2 in device_emu_properties.qubit_labels:
-    #             gate_connectivity_graph[(qubit_1, qubit_2)] = set(device_emu_properties.nativeGateSet)
-
-    #     return GateConnectivityValidator(gate_connectivity_graph)
