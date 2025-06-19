@@ -2259,3 +2259,220 @@ def test_run_batch_with_noise_model(
 
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    error_message = "Creating an emulator from a Braket managed simulator is not supported."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator()
+
+
+MOCK_STANDARDIZED_CALIBRATION_JSON_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+        "version": "1",
+    },
+    "oneQubitProperties": {
+        "0": {
+            "T1": {"value": 0.5, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.2, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.99,
+                    "standardError": 1e-2,
+                },
+                {
+                    "fidelityType": {
+                        "name": "SIMULTANEOUS_RANDOMIZED_BENCHMARKING",
+                        "description": None,
+                    },
+                    "fidelity": 0.9934,
+                    "standardError": 0.0065,
+                },
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.958,
+                    "standardError": None,
+                },
+            ],
+        },
+        "1": {
+            "T1": {"value": 0.97, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.234, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.9983,
+                    "standardError": 4e-5,
+                },
+                {
+                    "fidelityType": {
+                        "name": "SIMULTANEOUS_RANDOMIZED_BENCHMARKING",
+                        "description": None,
+                    },
+                    "fidelity": 0.879,
+                    "standardError": 0.00058,
+                },
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.989,
+                    "standardError": None,
+                },
+            ],
+        },
+        "2": {
+            "T1": {"value": 0.8, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.4, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.958,
+                    "standardError": None,
+                },
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.9983,
+                    "standardError": 4e-5,
+                },
+            ],
+        },
+    },
+    "twoQubitProperties": {
+        "0-1": {
+            "twoQubitGateFidelity": [
+                {
+                    "direction": None,
+                    "gateName": "CZ",
+                    "fidelity": 0.9358,
+                    "standardError": 0.01437,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+                {
+                    "direction": None,
+                    "gateName": "Two_Qubit_Clifford",
+                    "fidelity": 0.9,
+                    "standardError": 0.0237,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+                {
+                    "direction": None,
+                    "gateName": "CPhaseShift",
+                    "fidelity": 0.9,
+                    "standardError": 0.01437,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+            ]
+        }
+    },
+}
+
+
+MOCK_RIGETTI_QPU_CAPABILITIES_1 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "version": ["1"],
+            "supportedOperations": ["H", "X", "CNot", "CZ", "Rx", "Ry", "YY"],
+            "supportedResultTypes": [
+                {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
+            ],
+        }
+    },
+    "paradigm": {
+        "qubitCount": 3,
+        "nativeGateSet": ["cz", "prx", "cphaseshift"],
+        "connectivity": {
+            "fullyConnected": False,
+            "connectivityGraph": {"0": ["1", "2"], "1": ["0"], "2": ["0"]},
+        },
+    },
+    "standardized": MOCK_STANDARDIZED_CALIBRATION_JSON_2,
+    "deviceParameters": {},
+}
+
+
+@pytest.fixture
+def rigetti_device_capabilities():
+    return RigettiDeviceCapabilities.parse_obj(MOCK_RIGETTI_QPU_CAPABILITIES_1)
+
+
+MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
+    "amazon-braket-us-test-1-00000000",
+    "tasks",
+)
+
+
+@pytest.fixture
+def mock_rigetti_qpu_device(rigetti_device_capabilities):
+    return {
+        "deviceName": "Ankaa-2",
+        "deviceType": "QPU",
+        "providerName": "Rigetti",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": rigetti_device_capabilities.json(),
+        "deviceQueueInfo": [
+            {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+            {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+            {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+        ],
+    }
+
+
+
+@pytest.fixture
+def aws_session():
+    _boto_session = Mock()
+    _boto_session.region_name = RIGETTI_REGION
+    _boto_session.profile_name = "test-profile"
+
+    creds = Mock()
+    creds.method = "other"
+    _boto_session.get_credentials.return_value = creds
+
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session._custom_default_bucket = False
+    _aws_session.account_id = "00000000"
+    _aws_session.region = RIGETTI_REGION
+    return _aws_session
+
+
+
+@pytest.fixture
+def rigetti_device(aws_session, mock_rigetti_qpu_device):
+    def _device():
+        aws_session.get_device.return_value = mock_rigetti_qpu_device
+        aws_session.search_devices.return_value = [mock_rigetti_qpu_device]
+        return AwsDevice(RIGETTI_ARN, aws_session)
+
+    return _device()
+
+
+def test_local_emulator(rigetti_device):
+    emulator = rigetti_device.emulator()
+
+def test_ionq_emulator_local_is_False(rigetti_device):
+    error_message = "local can only be True."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = rigetti_device.emulator(local=False)

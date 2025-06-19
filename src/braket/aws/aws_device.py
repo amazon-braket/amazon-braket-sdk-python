@@ -601,7 +601,7 @@ class AwsDevice(Device):
                 "Creating an emulator from a Braket managed simulator is not supported."
             )
         if local != True:
-            raise ValueError("local can only be True")
+            raise ValueError("local can only be True.")
 
         self._emulator = LocalEmulator.from_device_properties(self.properties)
         return self._emulator
