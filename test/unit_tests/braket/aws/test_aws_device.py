@@ -2270,13 +2270,3 @@ def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
     error_message = "Creating an emulator from a Braket managed simulator is not supported."
     with pytest.raises(ValueError, match=error_message):
         emulator = device.emulator
-
-@patch("braket.aws.aws_device.AwsSession")
-def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
-    arn = SV1_ARN
-    aws_session_init.return_value = aws_session
-    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
-    device = AwsDevice(arn)
-    error_message = "Creating an emulator from a Braket managed simulator is not supported."
-    with pytest.raises(ValueError, match=error_message):
-        emulator = device.emulator
