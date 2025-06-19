@@ -474,7 +474,6 @@ MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
     "deviceCapabilities": {},
 }
 
-
 @pytest.fixture(
     params=[
         "arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim",
@@ -2259,3 +2258,25 @@ def test_run_batch_with_noise_model(
 
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    error_message = "Creating an emulator from a Braket managed simulator is not supported."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    error_message = "Creating an emulator from a Braket managed simulator is not supported."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator
