@@ -49,6 +49,11 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
+from braket.devices import Devices
+from braket.emulation.emulator import Emulator
+from braket.emulation.local_emulator import LocalEmulator
+from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
+from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -581,6 +586,41 @@ class AwsDevice(Device):
         """
         self._update_pulse_properties()
         return self._ports or {}
+    
+    @property
+    def emulator(self, local=True) -> Emulator:
+        """
+        A device emulator mimics the restrictions and noise of the AWS QPU by validating and
+        compiling programs before running them on a simulated backend. An emulator can be used
+        as a soft check that a program can run the target AwsDevice.
+
+        Returns:
+            Emulator: An emulator for this device, if this is not a simulator device. Raises an
+            exception if an emulator is requested for al simulator device.
+        """
+        if self._arn in [simulator_enum.value for simulator_enum in Devices.Amazon]:
+            raise ValueError(
+                "Creating an emulator from a Braket managed simulator is not supported."
+            )
+        if local != True:
+            raise ValueError("local can only be True")
+
+        if not hasattr(self, "_emulator"):
+            self._emulator = self._setup_local_emulator()
+        return self._emulator
+
+    def _setup_local_emulator(self) -> LocalEmulator:
+        """
+        Sets up an LocalEmulator object whose properties mimic that of this AwsDevice.
+        Returns:
+            LocalEmulator: An local emulator with a noise model, compilation passes, and validation passes
+            based on this device's properites.
+        """
+        device_properties = self.properties
+        if isinstance(device_properties, IqmDeviceCapabilities):
+            device_properties = standardize_ionq_device_properties(device_properties)
+
+        return LocalEmulator.from_device_properties(device_properties)
 
     @staticmethod
     def get_devices(
