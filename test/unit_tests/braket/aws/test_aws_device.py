@@ -2468,8 +2468,9 @@ def rigetti_device(aws_session, mock_rigetti_qpu_device):
 
     return _device()
 
-
-def test_local_emulator(rigetti_device):
+@patch("braket.emulation.Emulator._get_local_simulator_backend")
+def test_local_emulator(mock_backend, rigetti_device):
+    mock_backend.return_value = "dummy_oq3_dm"
     emulator = rigetti_device.emulator()
 
 def test_ionq_emulator_local_is_False(rigetti_device):
