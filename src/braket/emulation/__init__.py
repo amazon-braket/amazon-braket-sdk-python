@@ -13,3 +13,7 @@
 
 from braket.emulation.base_emulator import BaseEmulator  # noqa: F40
 from braket.emulation.emulator import Emulator  # noqa: F40
+from braket.emulation.device_emulator_properties import (
+    DeviceEmulatorProperties,
+)  # noqa: F401
+from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES  # noqa: F401

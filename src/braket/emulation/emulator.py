@@ -28,7 +28,6 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
 class Emulator(Device, BaseEmulator):
-
     _DEFAULT_SIMULATOR_BACKEND = "default"
     _DEFAULT_NOISY_BACKEND = "braket_dm"
 
@@ -106,7 +105,10 @@ class Emulator(Device, BaseEmulator):
         """
         task_specification = self.transform(task_specification, apply_noise_model=False)
         # Don't apply noise model as the local simulator will automatically apply it.
-        return self._backend.run(task_specification, shots, inputs, *args, **kwargs)
+
+        # Remove the verbatim box before submitting to the braket density matrix simulator
+        task_specification_v2 = self._remove_verbatim_box(task_specification)
+        return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
 
     def run_batch(  # noqa: C901
         self,
@@ -177,6 +179,22 @@ class Emulator(Device, BaseEmulator):
             return program
         except Exception as e:
             self._raise_exception(e)
+
+    def _remove_verbatim_box(
+        self, noisy_verbatim_circ: ProgramType) -> ProgramType:
+        """
+        Remove the verbatim box in the noisy circuit before simulating on 
+        local braket density matrix simulator.
+        
+        Args:
+            noisy_verbatim_circ (ProgramType): The input verbatim noisy circuit
+
+        Returns:
+            ProgramType: A verbatim noisy circuit without the verbatim boxes
+        """
+        noisy_verbatim_circ_2 = [instruction for instruction in noisy_verbatim_circ.instructions if "VerbatimBox" not in instruction.operator.name]
+        return Circuit(noisy_verbatim_circ_2)
+    
 
     def validate(self, task_specification: ProgramType) -> None:
         """

@@ -95,6 +95,9 @@ class ConnectivityValidator(ValidationPass[Circuit]):
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
+    def _graph_node_type(self) -> type:
+        return type(list(self._connectivity_graph.nodes)[0])
+
     def validate(self, program: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
@@ -111,12 +114,10 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         """
         # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
-        if not any(
-            [
-                isinstance(instruction.operator, StartVerbatimBox)
-                for instruction in program.instructions
-            ]
-        ):
+        if not any([
+            isinstance(instruction.operator, StartVerbatimBox)
+            for instruction in program.instructions
+        ]):
             return
         for idx in range(len(program.instructions)):
             instruction = program.instructions[idx]
@@ -128,7 +129,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                 else:
                     # just check that the target qubit exists in the connectivity graph
                     target_qubit = instruction.target[0]
-                    if target_qubit not in self._connectivity_graph:
+                    if self._graph_node_type()(int(target_qubit)) not in self._connectivity_graph:
                         raise ValueError(
                             f"Qubit {target_qubit} does not exist in the device topology."
                         )
@@ -157,13 +158,15 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         if len(control_qubits) == 1 and len(target_qubits) == 1:
             gate_connectivity_graph.add_edge(control_qubits[0], target_qubits[0])
         elif len(control_qubits) == 0 and len(target_qubits) == 2:
-            gate_connectivity_graph.add_edges_from(
-                [(target_qubits[0], target_qubits[1]), (target_qubits[1], target_qubits[0])]
-            )
+            gate_connectivity_graph.add_edges_from([
+                (target_qubits[0], target_qubits[1]),
+                (target_qubits[1], target_qubits[0]),
+            ])
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
         for e in gate_connectivity_graph.edges:
+            e = (self._graph_node_type()(int(e[0])), self._graph_node_type()(int(e[1])))
             if not self._connectivity_graph.has_edge(*e):
                 raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
 
