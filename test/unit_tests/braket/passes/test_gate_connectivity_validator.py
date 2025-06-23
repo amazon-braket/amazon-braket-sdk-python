@@ -11,22 +11,26 @@ from braket.passes.circuit_passes import GateConnectivityValidator
 @pytest.fixture
 def basic_4_node_graph():
     G = nx.DiGraph()
-    G.add_edges_from([
-        (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-        (1, 2, {"supported_gates": ["Swap", "CNot"]}),
-        (0, 3, {"supported_gates": ["XX", "XY"]}),
-    ])
+    G.add_edges_from(
+        [
+            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
+            (1, 2, {"supported_gates": ["Swap", "CNot"]}),
+            (0, 3, {"supported_gates": ["XX", "XY"]}),
+        ]
+    )
     return G
 
 
 @pytest.fixture
 def basic_discontiguous_4_node_graph():
     G = nx.DiGraph()
-    G.add_edges_from([
-        (0, 5, {"supported_gates": ["CNot", "CZ"]}),
-        (2, 4, {"supported_gates": ["Swap", "CNot"]}),
-        (3, 0, {"supported_gates": ["XX", "XY"]}),
-    ])
+    G.add_edges_from(
+        [
+            (0, 5, {"supported_gates": ["CNot", "CZ"]}),
+            (2, 4, {"supported_gates": ["Swap", "CNot"]}),
+            (3, 0, {"supported_gates": ["XX", "XY"]}),
+        ]
+    )
     return G
 
 
@@ -106,12 +110,14 @@ def test_directed_graph_construction_from_dict():
         (2, 5): ["XX", "XY", "CNot", "CZ"],
     }
     digraph_representation = nx.DiGraph()
-    digraph_representation.add_edges_from([
-        (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-        (1, 2, {"supported_gates": ["Swap", "CNot", "YY"]}),
-        (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-        (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-    ])
+    digraph_representation.add_edges_from(
+        [
+            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
+            (1, 2, {"supported_gates": ["Swap", "CNot", "YY"]}),
+            (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+            (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+        ]
+    )
     gcc = GateConnectivityValidator(dict_representation)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
 
@@ -155,16 +161,18 @@ def test_undirected_graph_construction_from_dict():
         (2, 5): ["XX", "XY", "CNot", "CZ"],
     }
     digraph_representation = nx.DiGraph()
-    digraph_representation.add_edges_from([
-        (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-        (1, 2, {"supported_gates": ["Swap", "CNot", "YY"]}),
-        (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-        (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-        (1, 0, {"supported_gates": ["CNot", "CZ"]}),
-        (2, 1, {"supported_gates": ["Swap", "CNot", "YY"]}),
-        (2, 0, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-        (5, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
-    ])
+    digraph_representation.add_edges_from(
+        [
+            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
+            (1, 2, {"supported_gates": ["Swap", "CNot", "YY"]}),
+            (0, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+            (2, 5, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+            (1, 0, {"supported_gates": ["CNot", "CZ"]}),
+            (2, 1, {"supported_gates": ["Swap", "CNot", "YY"]}),
+            (2, 0, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+            (5, 2, {"supported_gates": ["XX", "XY", "CNot", "CZ"]}),
+        ]
+    )
     gcc = GateConnectivityValidator(dict_representation, directed=False)
     assert graphs_equal(gcc._gate_connectivity_graph, digraph_representation)
 
@@ -212,11 +220,13 @@ def test_undirected_graph_from_digraph(edges):
     "representation",
     [
         {(0, 1): ["CNot", "CZ"], (1, 0): ["CZ, XX"], (2, 0): ["CNot, YY"]},
-        nx.from_dict_of_dicts({
-            0: {1: {"supported_gates": ["CNot", "CZ"]}},
-            1: {0: {"supported_gates": ["CZ", "XX"]}},
-            2: {2: {"supported_gates": ["CNot", "YY"]}},
-        }),
+        nx.from_dict_of_dicts(
+            {
+                0: {1: {"supported_gates": ["CNot", "CZ"]}},
+                1: {0: {"supported_gates": ["CZ", "XX"]}},
+                2: {2: {"supported_gates": ["CNot", "YY"]}},
+            }
+        ),
     ],
 )
 def create_undirected_graph_with_exisiting_back_edges(representation):
@@ -228,12 +238,14 @@ def create_undirected_graph_with_exisiting_back_edges(representation):
 
     gcc = GateConnectivityValidator(representation, directed=False)
     expected_digraph_representation = nx.DiGraph()
-    expected_digraph_representation.add_edges_from([
-        (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-        (1, 0, {"supported_gates": ["CZ", "XX"]}),
-        (2, 0, {"supported_gates": ["CNot", "YY"]}),
-        (0, 2, {"supported_gates": ["CNot", "YY"]}),
-    ])
+    expected_digraph_representation.add_edges_from(
+        [
+            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
+            (1, 0, {"supported_gates": ["CZ", "XX"]}),
+            (2, 0, {"supported_gates": ["CNot", "YY"]}),
+            (0, 2, {"supported_gates": ["CNot", "YY"]}),
+        ]
+    )
 
     assert graphs_equal(gcc._gate_connectivity_graph, expected_digraph_representation)
 
