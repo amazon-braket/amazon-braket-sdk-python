@@ -188,11 +188,13 @@ def test_input(container, aws_session, creation_kwargs, input_data_config):
 
 
 def test_duplicate_input(container, aws_session, creation_kwargs, input_data_config):
-    input_data_config.append({
-        # this is a duplicate channel
-        "channelName": "single-file",
-        "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
-    })
+    input_data_config.append(
+        {
+            # this is a duplicate channel
+            "channelName": "single-file",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
+        }
+    )
     creation_kwargs.update({"inputDataConfig": input_data_config})
     dupes_not_allowed = "Duplicate channel names not allowed for input data: single-file"
     with pytest.raises(ValueError, match=dupes_not_allowed):
@@ -200,11 +202,13 @@ def test_duplicate_input(container, aws_session, creation_kwargs, input_data_con
 
 
 def test_no_data_input(container, aws_session, creation_kwargs, input_data_config):
-    input_data_config.append({
-        # this channel won't match any data
-        "channelName": "no-data",
-        "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
-    })
+    input_data_config.append(
+        {
+            # this channel won't match any data
+            "channelName": "no-data",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
+        }
+    )
     creation_kwargs.update({"inputDataConfig": input_data_config})
     no_data_found = "No data found for channel 'no-data'"
     with pytest.raises(RuntimeError, match=no_data_found):

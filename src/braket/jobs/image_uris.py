@@ -70,7 +70,7 @@ def _config_for_framework(framework: Framework) -> dict[str, str]:
         dict[str, str]: Dict that contains the configuration for the specified framework.
     """
     fname = os.path.join(os.path.dirname(__file__), "image_uri_config", f"{framework.lower()}.json")
-    with open(fname, encoding="utf-8") as f:
+    with open(fname) as f:
         return json.load(f)
 
 

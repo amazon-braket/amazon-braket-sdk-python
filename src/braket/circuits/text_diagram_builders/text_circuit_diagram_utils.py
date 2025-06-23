@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
+from typing import Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -42,7 +43,8 @@ def _add_footers(
     # A list of parameters in the circuit to the currently assigned values.
     if circuit.parameters:
         lines.append(
-            f"\nUnassigned parameters: {sorted(circuit.parameters, key=lambda param: param.name)}."
+            "\nUnassigned parameters: "
+            f"{sorted(circuit.parameters, key=lambda param: param.name)}."
         )
 
     return "\n".join(lines)
@@ -115,7 +117,7 @@ def _compute_moment_global_phase(
 
 def _group_items(
     circuit_qubits: QubitSet,
-    items: list[Instruction | ResultType],
+    items: list[Union[Instruction, ResultType]],
 ) -> list[tuple[QubitSet, list[Instruction]]]:
     """
     Group instructions in a moment

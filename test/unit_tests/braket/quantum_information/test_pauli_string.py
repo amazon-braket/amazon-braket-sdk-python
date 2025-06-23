@@ -225,7 +225,7 @@ def test_power(circ, n, circ_res):
     assert circ1 == PauliString(circ_res)
 
 
-@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     "circ, n, operation",
     [

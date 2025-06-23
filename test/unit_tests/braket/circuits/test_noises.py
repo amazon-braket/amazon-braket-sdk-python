@@ -646,10 +646,12 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "#pragma braket noise phase_damping(0.5) $3",
         ),
         (
-            Noise.Kraus([
-                np.eye(4) * np.sqrt(0.9),
-                np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
-            ]),
+            Noise.Kraus(
+                [
+                    np.eye(4) * np.sqrt(0.9),
+                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+                ]
+            ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 5],
             "#pragma braket noise kraus(["
@@ -663,10 +665,12 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0, 0.31622776601683794, 0]]) q[3], q[5]",
         ),
         (
-            Noise.Kraus([
-                np.eye(4) * np.sqrt(0.9),
-                np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
-            ]),
+            Noise.Kraus(
+                [
+                    np.eye(4) * np.sqrt(0.9),
+                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+                ]
+            ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             [3, 5],
             "#pragma braket noise kraus(["
@@ -680,10 +684,12 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0, 0.31622776601683794, 0]]) $3, $5",
         ),
         (
-            Noise.Kraus([
-                np.array([[0.9486833j, 0], [0, 0.9486833j]]),
-                np.array([[0, 0.31622777], [0.31622777, 0]]),
-            ]),
+            Noise.Kraus(
+                [
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ]
+            ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
             "#pragma braket noise kraus(["
@@ -691,10 +697,12 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0.31622777], [0.31622777, 0]]) q[3]",
         ),
         (
-            Noise.Kraus([
-                np.array([[0.9486833j, 0], [0, 0.9486833j]]),
-                np.array([[0, 0.31622777], [0.31622777, 0]]),
-            ]),
+            Noise.Kraus(
+                [
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ]
+            ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             [3],
             "#pragma braket noise kraus(["

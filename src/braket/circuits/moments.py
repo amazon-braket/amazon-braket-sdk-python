@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -90,6 +90,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         ...     print(f"Item {i}")
         ...     print(f"\\tKey: {item[0]}")
         ...     print(f"\\tValue: {item[1]}")
+        ...
         Item 0
             Key: MomentsKey(time=0, qubits=QubitSet([Qubit(0)]))
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(0)]))
@@ -156,7 +157,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(self, instructions: Iterable[Instruction] | Instruction, noise_index: int = 0) -> None:
+    def add(
+        self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
+    ) -> None:
         """Add one or more instructions to self.
 
         Args:

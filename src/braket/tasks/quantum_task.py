@@ -56,7 +56,7 @@ class QuantumTask(ABC):
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: Get
             the quantum task result. Call async_result if you want the result in an
             asynchronous way.
-        """  # noqa: E501
+        """  # noqa E501
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:
@@ -66,7 +66,7 @@ class QuantumTask(ABC):
             asyncio.Task: Get the quantum task result asynchronously.
         """
 
-    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # noqa: B027
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # noqa B027
         """Get task metadata.
 
         Args:

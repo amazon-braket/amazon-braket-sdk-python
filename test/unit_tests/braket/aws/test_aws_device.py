@@ -466,14 +466,6 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "tasks",
 )
 
-MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
-    "deviceName": "Aspen-10",
-    "deviceType": "QPU",
-    "providerName": "Rigetti",
-    "deviceStatus": "OFFLINE",
-    "deviceCapabilities": {},
-}
-
 
 @pytest.fixture(
     params=[
@@ -573,6 +565,17 @@ def test_device_simulator_no_aws_session(aws_session_init, aws_session):
     device = AwsDevice(arn)
     _assert_device_fields(device, MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES, MOCK_GATE_MODEL_SIMULATOR)
     aws_session.get_device.assert_called_with(arn)
+
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    error_message = "Creating an emulator from a Braket managed simulator is not supported."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
@@ -683,15 +686,6 @@ def test_device_refresh_metadata(arn):
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_2
     device.refresh_metadata()
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_2, MOCK_GATE_MODEL_QPU_2)
-
-
-def test_get_device_invalid_capabilities(arn):
-    mock_session = Mock()
-    mock_session.get_device.return_value = MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU
-    mock_session.region = RIGETTI_REGION
-    device = AwsDevice(arn, mock_session)
-    assert device is not None
-    assert device.properties is None
 
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
@@ -1919,6 +1913,7 @@ def test_get_devices_invalid_order_by():
 
 @patch("braket.aws.aws_device.datetime")
 def test_get_device_availability(mock_utc_now):
+
     class Expando:
         pass
 
@@ -1929,11 +1924,13 @@ def test_get_device_availability(mock_utc_now):
             self._properties.service = Expando()
             execution_windows = [
                 DeviceExecutionWindow.parse_raw(
-                    json.dumps({
-                        "executionDay": execution_day,
-                        "windowStartHour": window_start_hour,
-                        "windowEndHour": window_end_hour,
-                    })
+                    json.dumps(
+                        {
+                            "executionDay": execution_day,
+                            "windowStartHour": window_start_hour,
+                            "windowEndHour": window_end_hour,
+                        }
+                    )
                 )
                 for execution_day, window_start_hour, window_end_hour in execution_window_args
             ]
@@ -2035,7 +2032,7 @@ def test_get_device_availability(mock_utc_now):
     for test_set in test_sets:
         for test_item in test_set["test_items"]:
             test_date = test_item[0]
-            mock_utc_now.now.return_value = test_date
+            mock_utc_now.utcnow.return_value = test_date
 
             # flake8: noqa: C501
             for i in range(len(test_item[1])):
@@ -2048,9 +2045,9 @@ def test_get_device_availability(mock_utc_now):
                 )
                 expected = bool(test_item[1][i])
                 actual = device.is_available
-                assert expected == actual, (
-                    f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
-                )
+                assert (
+                    expected == actual
+                ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
 
 
 @pytest.mark.parametrize(
@@ -2116,53 +2113,57 @@ def test_parse_calibration_data():
 @pytest.mark.parametrize(
     "bad_input",
     [
-        ({
-            "gates": {
-                "0": {
-                    "rx": [
-                        {
-                            "name": "rx",
-                            "qubits": ["0"],
-                            "arguments": ["-1.5707963267948966"],
-                            "calibrations": [
-                                {
-                                    "name": "incorrect_instr",
-                                    "arguments": [
-                                        {"name": "qubit", "value": "0", "type": "string"}
-                                    ],
-                                }
-                            ],
-                        }
-                    ]
-                }
-            },
-            "waveforms": {},
-        }),
-        ({
-            "gates": {
-                "0": {
-                    "rx": [
-                        {
-                            "name": "cphaseshift",
-                            "qubits": ["0"],
-                            "arguments": ["-1.5707963267948966"],
-                            "calibrations": [
-                                {
-                                    "name": "delay",
-                                    "arguments": [
-                                        {"name": "bad_value", "value": "1", "type": "float"},
-                                        {"name": "qubit", "value": None, "type": "string"},
-                                    ],
-                                }
-                            ],
-                        }
-                    ]
-                }
-            },
-            "waveforms": {
-                "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
-            },
-        }),
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "rx",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "incorrect_instr",
+                                        "arguments": [
+                                            {"name": "qubit", "value": "0", "type": "string"}
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {},
+            }
+        ),
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "cphaseshift",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "delay",
+                                        "arguments": [
+                                            {"name": "bad_value", "value": "1", "type": "float"},
+                                            {"name": "qubit", "value": None, "type": "string"},
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {
+                    "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
+                },
+            }
+        ),
     ],
 )
 @pytest.mark.xfail(raises=ValueError)

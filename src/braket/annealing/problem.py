@@ -148,6 +148,7 @@ class Problem:
             type=ir.ProblemType[self._problem_type.value],
             linear=self._linear,
             quadratic={
-                ",".join((str(q1), str(q2))): self._quadratic[q1, q2] for q1, q2 in self._quadratic
+                ",".join((str(q1), str(q2))): self._quadratic[(q1, q2)]
+                for q1, q2 in self._quadratic
             },
         )

@@ -16,7 +16,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 
 class CriteriaKey(str, Enum):
@@ -54,7 +54,7 @@ class Criteria(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
+    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Returns a set of key for a given key type.
 
         Args:

@@ -61,16 +61,9 @@ def test_start_and_stop(mock_run, mock_check_output, image_uri, aws_session):
     with _LocalJobContainer(image_uri, aws_session):
         pass
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
     assert mock_check_output.call_count == 2
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 1
@@ -131,16 +124,9 @@ def test_pull_container(
     ):
         pass
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
     assert mock_check_output.call_count == len(check_output)
     mock_run.assert_any_call(["docker", "login", "-u", "AWS", "-p", test_token, repo_uri])
     mock_run.assert_any_call(["docker", "pull", image_uri])
@@ -166,16 +152,9 @@ def test_pull_container_forced_update_invalid_name(
         pass
     mock_logger.warning.assert_called_with(f"Unable to update {local_image_name}.")
     mock_check_output.assert_any_call(["docker", "images", "-q", local_image_name])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
     assert mock_check_output.call_count == 2
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 1
@@ -204,23 +183,12 @@ def test_run_job_success(
         container.run_local_job(env_variables)
         assert container.run_log == "this\nis a\ntest\n"
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "exec",
-        running_container_name,
-        "printenv",
-        "SAGEMAKER_PROGRAM",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "exec", running_container_name, "printenv", "SAGEMAKER_PROGRAM"]
+    )
     assert mock_check_output.call_count == 3
     mock_popen.assert_called_with(
         [
@@ -266,23 +234,12 @@ def test_run_customer_script_fails(
         container.run_local_job(env_variables)
         assert container.run_log == "this\nis a\ntest\nProcess exited with code: 400"
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "exec",
-        running_container_name,
-        "printenv",
-        "SAGEMAKER_PROGRAM",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "exec", running_container_name, "printenv", "SAGEMAKER_PROGRAM"]
+    )
     assert mock_check_output.call_count == 3
     mock_popen.assert_called_with(
         [
@@ -330,7 +287,7 @@ def test_running_throws_exception(
         assert container.run_log == expected_exception
     assert mock_check_output.call_count == 3
     mock_run.assert_called_with(["docker", "stop", running_container_name])
-    mock_logger.exception.assert_called_with(expected_exception)
+    mock_logger.error.assert_called_with(expected_exception)
 
 
 @patch("subprocess.check_output")
@@ -347,24 +304,12 @@ def test_make_dir(mock_run, mock_check_output, repo_uri, image_uri, aws_session)
     with _LocalJobContainer(image_uri, aws_session) as container:
         container.makedir(test_dir_path)
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "exec",
-        running_container_name,
-        "mkdir",
-        "-p",
-        test_dir_path,
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "exec", running_container_name, "mkdir", "-p", test_dir_path]
+    )
     assert mock_check_output.call_count == 3
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 1
@@ -386,30 +331,22 @@ def test_copy_to(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
     with _LocalJobContainer(image_uri, aws_session) as container:
         container.copy_to(source_path, dest_path)
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "exec",
-        running_container_name,
-        "mkdir",
-        "-p",
-        str(PurePosixPath("test", "dest", "dir", "path")),
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "cp",
-        source_path,
-        f"{running_container_name}:{dest_path}",
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        [
+            "docker",
+            "exec",
+            running_container_name,
+            "mkdir",
+            "-p",
+            str(PurePosixPath("test", "dest", "dir", "path")),
+        ]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "cp", source_path, f"{running_container_name}:{dest_path}"]
+    )
     assert mock_check_output.call_count == 4
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 1
@@ -431,22 +368,12 @@ def test_copy_from(mock_run, mock_check_output, repo_uri, image_uri, aws_session
     with _LocalJobContainer(image_uri, aws_session) as container:
         container.copy_from(source_path, dest_path)
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
-    mock_check_output.assert_any_call([
-        "docker",
-        "run",
-        "-d",
-        "--rm",
-        local_image_name,
-        "tail",
-        "-f",
-        "/dev/null",
-    ])
-    mock_check_output.assert_any_call([
-        "docker",
-        "cp",
-        f"{running_container_name}:{source_path}",
-        dest_path,
-    ])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "cp", f"{running_container_name}:{source_path}", dest_path]
+    )
     assert mock_check_output.call_count == 3
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 1

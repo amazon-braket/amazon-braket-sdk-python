@@ -15,9 +15,9 @@ import itertools
 from collections.abc import Iterable
 from typing import Any, ClassVar, Union
 
-import braket.ir.jaqcd as ir
 import numpy as np
 
+import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -1164,7 +1164,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             Iterable[Instruction]: `Iterable` of GeneralizedAmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability=0.9)
+            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability = 0.9)
         """
         return [
             Instruction(
@@ -1366,7 +1366,7 @@ class Kraus(Noise):
             np.array2string(
                 matrix,
                 separator=", ",
-                formatter={"all": format_complex},
+                formatter={"all": lambda x: format_complex(x)},
             ).replace("\n", "")
             for matrix in self._matrices
         )
@@ -1402,7 +1402,7 @@ class Kraus(Noise):
 
         Examples:
             >>> K0 = np.eye(4) * np.sqrt(0.9)
-            >>> K1 = np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1)
+            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * np.sqrt(0.1)
             >>> circ = Circuit().kraus([1, 0], matrices=[K0, K1])
         """
         if 2 ** len(targets) != matrices[0].shape[0]:

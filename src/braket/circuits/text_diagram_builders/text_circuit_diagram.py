@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Literal
+from typing import Literal, Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
@@ -68,6 +68,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         """
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
+    # flake8: noqa: BCS005
     @classmethod
     @abstractmethod
     def _draw_symbol(
@@ -177,7 +178,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         cls,
         col_title: str,
         circuit_qubits: QubitSet,
-        items: list[Instruction | ResultType],
+        items: list[Union[Instruction, ResultType]],
         global_phase: float | None,
     ) -> str:
         """Return a set of columns in the string diagram of the circuit for a list of items.

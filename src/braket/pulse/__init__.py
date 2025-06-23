@@ -14,10 +14,10 @@
 from braket.pulse.frame import Frame  # noqa: F401
 from braket.pulse.port import Port  # noqa: F401
 from braket.pulse.pulse_sequence import PulseSequence  # noqa: F401
-from braket.pulse.waveforms import (
-    ArbitraryWaveform,  # noqa: F401
-    ConstantWaveform,  # noqa: F401
-    DragGaussianWaveform,  # noqa: F401
-    ErfSquareWaveform,  # noqa: F401
-    GaussianWaveform,  # noqa: F401
+from braket.pulse.waveforms import (  # noqa: F401
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    ErfSquareWaveform,
+    GaussianWaveform,
 )

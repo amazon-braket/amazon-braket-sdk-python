@@ -27,10 +27,10 @@ from braket.registers.qubit_set import QubitSet
 
 
 class GateCalibrations:
-    """An object containing gate calibration data. The data represents the mapping on a particular
-    gate on a set of qubits to its calibration to be used by a quantum device. This is represented
-    by a dictionary with keys of `Tuple(Gate, QubitSet)` mapped to a `PulseSequence`.
-    """
+    """An object containing gate calibration data. The data represents the mapping on a particular gate
+    on a set of qubits to its calibration to be used by a quantum device. This is represented by a dictionary
+    with keys of `Tuple(Gate, QubitSet)` mapped to a `PulseSequence`.
+    """  # noqa: E501
 
     def __init__(
         self,
@@ -119,8 +119,8 @@ class GateCalibrations:
         """Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
-            calibration_key (tuple[Gate, QubitSet] | None): An optional key to get a
-                specific defcal. Default: None
+            calibration_key (tuple[Gate, QubitSet] | None): An optional key to get a specific defcal.
+                Default: None
 
         Raises:
             ValueError: Key does not exist in the `GateCalibrations` object.
@@ -128,9 +128,9 @@ class GateCalibrations:
         Returns:
             str: the defcal string for the object.
 
-        """
+        """  # noqa: E501
         if calibration_key is not None:
-            if calibration_key not in self.pulse_sequences:
+            if calibration_key not in self.pulse_sequences.keys():
                 raise ValueError(
                     f"The key {calibration_key} does not exist in this GateCalibrations object."
                 )
@@ -139,22 +139,26 @@ class GateCalibrations:
                 .to_ir()
                 .replace("cal", self._def_cal_gate(calibration_key), 1)
             )
-        return "\n".join(
-            v.to_ir().replace("cal", self._def_cal_gate(k), 1)
-            for (k, v) in self.pulse_sequences.items()
-        )
+        else:
+            defcal = "\n".join(
+                v.to_ir().replace("cal", self._def_cal_gate(k), 1)
+                for (k, v) in self.pulse_sequences.items()
+            )
+            return defcal
 
     def _def_cal_gate(self, gate_key: tuple[Gate, QubitSet]) -> str:
-        return " ".join([
-            "defcal",
-            gate_key[0].to_ir(
-                target=gate_key[1],
-                serialization_properties=OpenQASMSerializationProperties(
-                    QubitReferenceType.PHYSICAL
-                ),
-                ir_type=IRType.OPENQASM,
-            )[:-1],
-        ])
+        return " ".join(
+            [
+                "defcal",
+                gate_key[0].to_ir(
+                    target=gate_key[1],
+                    serialization_properties=OpenQASMSerializationProperties(
+                        QubitReferenceType.PHYSICAL
+                    ),
+                    ir_type=IRType.OPENQASM,
+                )[:-1],
+            ]
+        )
 
     def __eq__(self, other: GateCalibrations):
         return isinstance(other, GateCalibrations) and other.pulse_sequences == self.pulse_sequences

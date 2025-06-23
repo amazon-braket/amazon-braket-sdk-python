@@ -37,31 +37,35 @@ from braket.jobs_data import PersistedJobDataFormat
             "",
             PersistedJobDataFormat.PLAINTEXT,
             {"converged": True, "energy": -0.2},
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {"converged": True, "energy": -0.2},
-                "dataFormat": "plaintext",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {"converged": True, "energy": -0.2},
+                    "dataFormat": "plaintext",
+                }
+            ),
         ),
         (
             "job_pickled_simple_dict",
             "suffix1",
             PersistedJobDataFormat.PICKLED_V4,
             {"converged": True, "energy": -0.2},
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {
-                    "converged": "gASILg==\n",
-                    "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
-                },
-                "dataFormat": "pickled_v4",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {
+                        "converged": "gASILg==\n",
+                        "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
+                    },
+                    "dataFormat": "pickled_v4",
+                }
+            ),
         ),
     ],
 )
@@ -101,31 +105,35 @@ def test_save_job_checkpoint_raises_error_empty_data(checkpoint_data):
             "job_plaintext_simple_dict",
             "",
             PersistedJobDataFormat.PLAINTEXT,
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {"converged": True, "energy": -0.2},
-                "dataFormat": "plaintext",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {"converged": True, "energy": -0.2},
+                    "dataFormat": "plaintext",
+                }
+            ),
             {"converged": True, "energy": -0.2},
         ),
         (
             "job_pickled_simple_dict",
             "",
             PersistedJobDataFormat.PICKLED_V4,
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {
-                    "converged": "gASILg==\n",
-                    "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
-                },
-                "dataFormat": "pickled_v4",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {
+                        "converged": "gASILg==\n",
+                        "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
+                    },
+                    "dataFormat": "pickled_v4",
+                }
+            ),
             {"converged": True, "energy": -0.2},
         ),
     ],
@@ -172,17 +180,19 @@ def test_load_job_checkpoint_raises_error_corrupted_data():
         file_path = f"{tmp_dir}/{job_name}_{file_suffix}.json"
         with open(file_path, "w") as corrupted_file:
             corrupted_file.write(
-                json.dumps({
-                    "braketSchemaHeader": {
-                        "name": "braket.jobs_data.persisted_job_data",
-                        "version": "1",
-                    },
-                    "dataDictionary": {
-                        "converged": "gASILg==\n",
-                        "energy": "gASVCgBHv--corrupted---\n",
-                    },
-                    "dataFormat": "pickled_v4",
-                })
+                json.dumps(
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.jobs_data.persisted_job_data",
+                            "version": "1",
+                        },
+                        "dataDictionary": {
+                            "converged": "gASILg==\n",
+                            "energy": "gASVCgBHv--corrupted---\n",
+                        },
+                        "dataFormat": "pickled_v4",
+                    }
+                )
             )
 
         with patch.dict(
@@ -221,29 +231,33 @@ def test_save_and_load_job_checkpoint():
         (
             PersistedJobDataFormat.PLAINTEXT,
             {"converged": True, "energy": -0.2},
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {"converged": True, "energy": -0.2},
-                "dataFormat": "plaintext",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {"converged": True, "energy": -0.2},
+                    "dataFormat": "plaintext",
+                }
+            ),
         ),
         (
             PersistedJobDataFormat.PICKLED_V4,
             {"converged": True, "energy": -0.2},
-            json.dumps({
-                "braketSchemaHeader": {
-                    "name": "braket.jobs_data.persisted_job_data",
-                    "version": "1",
-                },
-                "dataDictionary": {
-                    "converged": "gASILg==\n",
-                    "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
-                },
-                "dataFormat": "pickled_v4",
-            }),
+            json.dumps(
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {
+                        "converged": "gASILg==\n",
+                        "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n",
+                    },
+                    "dataFormat": "pickled_v4",
+                }
+            ),
         ),
     ],
 )

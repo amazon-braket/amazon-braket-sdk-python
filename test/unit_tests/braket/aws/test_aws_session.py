@@ -44,18 +44,9 @@ def boto_session():
 
 
 @pytest.fixture
-def boto_config():
-    _boto_config = Mock()
-    _boto_config._user_provided_options = {}
-    return _boto_config
-
-
-@pytest.fixture
 def braket_client():
     _braket_client = Mock()
     _braket_client.meta.region_name = "us-west-2"
-    _braket_client._client_config = Mock()
-    _braket_client._client_config._user_provided_options = {}
     return _braket_client
 
 
@@ -176,31 +167,31 @@ def throttling_response():
 
 
 def test_initializes_boto_client_if_required(boto_session):
-    aws_session = AwsSession(boto_session=boto_session)
-    boto_session.client.assert_any_call("braket", config=aws_session._config, endpoint_url=None)
+    AwsSession(boto_session=boto_session)
+    boto_session.client.assert_any_call("braket", config=None, endpoint_url=None)
 
 
-def test_user_supplied_braket_client(boto_config):
+def test_user_supplied_braket_client():
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
     braket_client.meta.region_name = "foobar"
-    braket_client._client_config = boto_config
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     assert aws_session.braket_client == braket_client
 
 
 @patch.dict("os.environ", {"BRAKET_ENDPOINT": "some-endpoint"})
-def test_config(boto_session, boto_config):
-    aws_session = AwsSession(boto_session=boto_session, config=boto_config)
+def test_config(boto_session):
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config)
     boto_session.client.assert_any_call(
         "braket",
-        config=aws_session._config,
+        config=config,
         endpoint_url="some-endpoint",
     )
 
 
-def test_region(boto_config):
+def test_region():
     boto_region = "boto-region"
     braket_region = "braket-region"
 
@@ -208,7 +199,6 @@ def test_region(boto_config):
     boto_session.region_name = boto_region
     braket_client = Mock()
     braket_client.meta.region_name = braket_region
-    braket_client._client_config = boto_config
 
     assert (
         AwsSession(
@@ -280,27 +270,40 @@ def test_ecr(aws_session):
 
 
 @patch("os.path.exists")
-@pytest.mark.parametrize("metadata_file_exists", [True, False])
-def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, boto_config):
+@pytest.mark.parametrize(
+    "metadata_file_exists, initial_user_agent",
+    [
+        (True, None),
+        (False, None),
+        (True, ""),
+        (False, ""),
+        (True, "Boto3/1.17.18 Python/3.7.10"),
+        (False, "Boto3/1.17.18 Python/3.7.10 exec-env/AWS_Lambda_python3.7"),
+    ],
+)
+def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial_user_agent):
     request = Mock()
     request.headers = HTTPMessage()
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
     braket_client.meta.region_name = "foobar"
-    braket_client._client_config = boto_config
-
     nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
     os_path_exists_mock.return_value = metadata_file_exists
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-    os_path_exists_mock.assert_called_with(nbi_metadata_path)
-
     expected_user_agent = (
         f"BraketSdk/{braket_sdk.__version__} "
         f"BraketSchemas/{braket_schemas.__version__} "
         f"NotebookInstance/{0 if metadata_file_exists else None}"
     )
-    assert aws_session._braket_user_agents == expected_user_agent
+    os_path_exists_mock.assert_called_with(nbi_metadata_path)
+
+    if initial_user_agent is not None:
+        request.headers.add_header("User-Agent", initial_user_agent)
+        expected_user_agent = f"{initial_user_agent} {expected_user_agent}"
+
+    aws_session._add_braket_user_agents_handler(request)
+    assert request.headers.get("User-Agent") == expected_user_agent
 
 
 @patch("braket.aws.aws_session.active_trackers")
@@ -314,7 +317,7 @@ def test_add_cost_tracker_count(active_trackers_mock, aws_session):
     request.headers.add_header.assert_called_with("Braket-Trackers", "0")
 
 
-def test_retrieve_s3_object_body_success(boto_session, boto_config):
+def test_retrieve_s3_object_body_success(boto_session):
     bucket_name = "braket-integ-test"
     filename = "tasks/test_task_1.json"
 
@@ -329,14 +332,16 @@ def test_retrieve_s3_object_body_success(boto_session, boto_config):
     mock_read_object.decode.return_value = json.dumps(TEST_S3_OBJ_CONTENTS)
     json.dumps(TEST_S3_OBJ_CONTENTS)
 
-    aws_session = AwsSession(boto_session=boto_session, config=None)
+    aws_session = AwsSession(boto_session=boto_session)
     return_value = aws_session.retrieve_s3_object_body(bucket_name, filename)
     assert return_value == json.dumps(TEST_S3_OBJ_CONTENTS)
-    boto_session.resource.assert_called_with("s3", config=aws_session._config)
+    boto_session.resource.assert_called_with("s3", config=None)
 
-    aws_session = AwsSession(boto_session=boto_session, config=boto_config)
-    aws_session.retrieve_s3_object_body(bucket_name, filename)
-    boto_session.resource.assert_called_with("s3", config=aws_session._config)
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config).retrieve_s3_object_body(
+        bucket_name, filename
+    )
+    boto_session.resource.assert_called_with("s3", config=config)
 
 
 @pytest.mark.xfail(raises=ClientError)
@@ -1319,13 +1324,13 @@ def test_get_log_events(aws_session, next_token):
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
-    aws_session.add_braket_user_agent("foo/bar")
+    aws_session._braket_user_agents = "foo/bar"
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
     boto_session_init.assert_called_with(
         region_name="us-west-2",
         profile_name="test-profile",
     )
-    assert "foo/bar" in copied_session._braket_user_agents
+    assert copied_session._braket_user_agents == "foo/bar"
     assert copied_session._default_bucket is None
 
 

@@ -14,39 +14,12 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import time
-import warnings
 from functools import singledispatch
 from logging import Logger, getLogger
 from typing import Any, ClassVar, Optional, Union
 
 import boto3
-from braket.device_schema import GateModelParameters
-from braket.device_schema.dwave import (
-    Dwave2000QDeviceParameters,
-    DwaveAdvantageDeviceParameters,
-    DwaveDeviceParameters,
-)
-from braket.device_schema.dwave.dwave_2000Q_device_level_parameters_v1 import (
-    Dwave2000QDeviceLevelParameters,
-)
-from braket.device_schema.dwave.dwave_advantage_device_level_parameters_v1 import (
-    DwaveAdvantageDeviceLevelParameters,
-)
-from braket.device_schema.ionq import IonqDeviceParameters
-from braket.device_schema.oqc import OqcDeviceParameters
-from braket.device_schema.rigetti import RigettiDeviceParameters
-from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
-from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.schema_common import BraketSchemaBase
-from braket.task_result import (
-    AnalogHamiltonianSimulationTaskResult,
-    AnnealingTaskResult,
-    GateModelTaskResult,
-    PhotonicModelTaskResult,
-)
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -63,8 +36,33 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializableProgram,
 )
+from braket.device_schema import GateModelParameters
+from braket.device_schema.dwave import (
+    Dwave2000QDeviceParameters,
+    DwaveAdvantageDeviceParameters,
+    DwaveDeviceParameters,
+)
+from braket.device_schema.dwave.dwave_2000Q_device_level_parameters_v1 import (
+    Dwave2000QDeviceLevelParameters,
+)
+from braket.device_schema.dwave.dwave_advantage_device_level_parameters_v1 import (
+    DwaveAdvantageDeviceLevelParameters,
+)
+from braket.device_schema.ionq import IonqDeviceParameters
+from braket.device_schema.oqc import OqcDeviceParameters
+from braket.device_schema.rigetti import RigettiDeviceParameters
+from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation import ErrorMitigation
+from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.schema_common import BraketSchemaBase
+from braket.task_result import (
+    AnalogHamiltonianSimulationTaskResult,
+    AnnealingTaskResult,
+    GateModelTaskResult,
+    PhotonicModelTaskResult,
+)
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
@@ -94,21 +92,23 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Circuit
-        | Problem
-        | OpenQASMProgram
-        | BlackbirdProgram
-        | PulseSequence
-        | AnalogHamiltonianSimulation,
+        task_specification: Union[
+            Circuit,
+            Problem,
+            OpenQASMProgram,
+            BlackbirdProgram,
+            PulseSequence,
+            AnalogHamiltonianSimulation,
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        device_parameters: Optional[dict[str, Any]] = None,
+        device_parameters: dict[str, Any] | None = None,
         disable_qubit_rewiring: bool = False,
-        tags: Optional[dict[str, str]] = None,
-        inputs: Optional[dict[str, float]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        tags: dict[str, str] | None = None,
+        inputs: dict[str, float] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         quiet: bool = False,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -175,7 +175,7 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `braket.aws.aws_quantum_simulator.AwsQuantumSimulator.run()`
             `braket.aws.aws_qpu.AwsQpu.run()`
-        """  # noqa: E501
+        """  # noqa E501
         if len(s3_destination_folder) != 2:
             raise ValueError(
                 "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
@@ -193,14 +193,16 @@ class AwsQuantumTask(QuantumTask):
         gate_definitions = gate_definitions or {}
 
         if reservation_arn:
-            create_task_kwargs.update({
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
-            })
+            create_task_kwargs.update(
+                {
+                    "associations": [
+                        {
+                            "arn": reservation_arn,
+                            "type": "RESERVATION_TIME_WINDOW_ARN",
+                        }
+                    ]
+                }
+            )
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
@@ -226,12 +228,11 @@ class AwsQuantumTask(QuantumTask):
     def __init__(
         self,
         arn: str,
-        aws_session: Optional[AwsSession] = None,
+        aws_session: AwsSession | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
-        **kwargs,
     ):
         """Initializes an `AwsQuantumTask`.
 
@@ -249,22 +250,16 @@ class AwsQuantumTask(QuantumTask):
                 position. Default is `False`.
 
         Examples:
-            >>> task = AwsQuantumTask(arn="task_arn")
+            >>> task = AwsQuantumTask(arn='task_arn')
             >>> task.state()
             'COMPLETED'
             >>> result = task.result()
             AnnealingQuantumTaskResult(...)
 
-            >>> task = AwsQuantumTask(arn="task_arn", poll_timeout_seconds=300)
+            >>> task = AwsQuantumTask(arn='task_arn', poll_timeout_seconds=300)
             >>> result = task.result()
             GateModelQuantumTaskResult(...)
         """
-        if kwargs:
-            warnings.warn(
-                f"AwsQuantumTask.__init__ received unknown keyword args: {list(kwargs.keys())}",
-                stacklevel=2,
-            )
-
         self._arn: str = arn
         self._aws_session: AwsSession = aws_session or AwsQuantumTask._aws_session_for_task_arn(
             task_arn=arn
@@ -276,8 +271,8 @@ class AwsQuantumTask(QuantumTask):
         self._quiet = quiet
 
         self._metadata: dict[str, Any] = {}
-        self._result: Optional[
-            GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult
+        self._result: Union[
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
         ] = None
 
     @staticmethod
@@ -400,7 +395,9 @@ class AwsQuantumTask(QuantumTask):
 
     def result(
         self,
-    ) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         """Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the quantum task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
@@ -413,7 +410,7 @@ class AwsQuantumTask(QuantumTask):
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: The
             result of the quantum task, if the quantum task completed successfully; returns
             `None` if the quantum task did not complete successfully or the future timed out.
-        """  # noqa: E501
+        """  # noqa E501
         if self._result or (
             self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
         ):
@@ -463,7 +460,9 @@ class AwsQuantumTask(QuantumTask):
 
     async def _wait_for_completion(
         self,
-    ) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         """Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 
         Returns:
@@ -476,7 +475,7 @@ class AwsQuantumTask(QuantumTask):
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
-        """  # noqa: E501
+        """  # noqa E501
         self._logger.debug(f"Task {self._arn}: start polling for completion")
         start_time = time.time()
 
@@ -491,17 +490,18 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 return self._download_result()
-            if task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
+            elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._result = None
                 return None
-            await asyncio.sleep(self._poll_interval_seconds)
+            else:
+                await asyncio.sleep(self._poll_interval_seconds)
 
         # Timed out
         self._logger.warning(
             f"Task {self._arn}: polling for task completion timed out after "
-            f"{time.time() - start_time} seconds. Please increase the timeout; "
-            "this can be done by creating a new AwsQuantumTask with this task's ARN "
-            "and a higher value for the `poll_timeout_seconds` parameter."
+            + f"{time.time() - start_time} seconds. Please increase the timeout; "
+            + "this can be done by creating a new AwsQuantumTask with this task's ARN "
+            + "and a higher value for the `poll_timeout_seconds` parameter."
         )
         self._result = None
         return None
@@ -514,7 +514,9 @@ class AwsQuantumTask(QuantumTask):
 
     def _download_result(
         self,
-    ) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         current_metadata = self.metadata(True)
         result_string = self._aws_session.retrieve_s3_object_body(
             current_metadata["outputS3Bucket"],
@@ -527,10 +529,12 @@ class AwsQuantumTask(QuantumTask):
             "execution_duration": None,
             "has_reservation_arn": self._has_reservation_arn_from_metadata(current_metadata),
         }
-        with contextlib.suppress(AttributeError):
+        try:
             task_event["execution_duration"] = (
                 self._result.additional_metadata.simulatorMetadata.executionDuration
             )
+        except AttributeError:
+            pass
         broadcast_event(_TaskCompletionEvent(**task_event))
         return self._result
 
@@ -546,11 +550,11 @@ class AwsQuantumTask(QuantumTask):
 
 @singledispatch
 def _create_internal(
-    task_specification: Circuit | Problem | BlackbirdProgram,
+    task_specification: Union[Circuit, Problem, BlackbirdProgram],
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     device_arn: str,
-    device_parameters: Union[dict[str, str], BraketSchemaBase],
+    device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: dict[str, float],
     gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
@@ -566,8 +570,7 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     device_arn: str,
-    # Not currently used for OpenQasmProgram
-    _device_parameters: Union[dict[str, str], BraketSchemaBase],
+    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: dict[str, float],
     gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
@@ -735,7 +738,10 @@ def _(
     create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: Union[
-        dict, DwaveDeviceParameters, DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters
+        dict,
+        DwaveDeviceParameters,
+        DwaveAdvantageDeviceParameters,
+        Dwave2000QDeviceParameters,
     ],
     _: bool,
     inputs: dict[str, float],
@@ -792,7 +798,7 @@ def _circuit_device_params_from_dict(
 
 def _create_annealing_device_params(
     device_params: dict[str, Any], device_arn: str
-) -> DwaveAdvantageDeviceParameters | Dwave2000QDeviceParameters:
+) -> Union[DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters]:
     """Gets Annealing Device Parameters.
 
     Args:
@@ -820,14 +826,15 @@ def _create_annealing_device_params(
             device_level_parameters
         )
         return DwaveAdvantageDeviceParameters(deviceLevelParameters=device_level_parameters)
-    if "2000Q" in device_arn:
+    elif "2000Q" in device_arn:
         device_level_parameters = Dwave2000QDeviceLevelParameters.parse_obj(device_level_parameters)
         return Dwave2000QDeviceParameters(deviceLevelParameters=device_level_parameters)
-    raise ValueError(
-        f"Amazon Braket could not find a device with ARN: {device_arn}. "
-        "To continue, make sure that the value of the device_arn parameter "
-        "corresponds to a valid QPU."
-    )
+    else:
+        raise Exception(
+            f"Amazon Braket could not find a device with ARN: {device_arn}. "
+            "To continue, make sure that the value of the device_arn parameter "
+            "corresponds to a valid QPU."
+        )
 
 
 def _create_common_params(
@@ -843,8 +850,8 @@ def _create_common_params(
 
 @singledispatch
 def _format_result(
-    result: GateModelTaskResult | AnnealingTaskResult | PhotonicModelTaskResult,
-) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
+    result: Union[GateModelTaskResult, AnnealingTaskResult, PhotonicModelTaskResult],
+) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
     raise TypeError("Invalid result specification type")
 
 

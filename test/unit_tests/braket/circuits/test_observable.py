@@ -155,7 +155,7 @@ def test_matmul_observable():
 
 
 def test_matmul_non_observable():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         Observable.I() @ "a"
 
 
@@ -196,14 +196,14 @@ def test_observable_coeffs(observable):
 @pytest.mark.parametrize("parameter", ["foo", 1.2, -3])
 def test_only_observables_sum_allowed(observable, parameter):
     add_observables_only = "Can only perform addition between observables."
-    with pytest.raises(TypeError, match=add_observables_only):
+    with pytest.raises(ValueError, match=add_observables_only):
         2 * observable + parameter
 
 
 @pytest.mark.parametrize("parameter", ["foo", 1.2, -3])
 def test_only_observables_subtraction_allowed(observable, parameter):
     add_observables_only = "Can only perform subtraction between observables."
-    with pytest.raises(TypeError, match=add_observables_only):
+    with pytest.raises(ValueError, match=add_observables_only):
         2 * observable - parameter
 
 

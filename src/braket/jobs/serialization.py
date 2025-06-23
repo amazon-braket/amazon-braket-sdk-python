@@ -59,7 +59,7 @@ def deserialize_values(
         the specified `data_format` to plaintext.
     """
     return (
-        {k: pickle.loads(codecs.decode(v.encode(), "base64")) for k, v in data_dictionary.items()}  # noqa: S301
+        {k: pickle.loads(codecs.decode(v.encode(), "base64")) for k, v in data_dictionary.items()}
         if data_format == PersistedJobDataFormat.PICKLED_V4
         else data_dictionary
     )

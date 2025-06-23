@@ -69,13 +69,15 @@ def conflicting_user_defined_frame():
 
 def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
     pulse_sequence = PulseSequence().set_frequency(user_defined_frame, 6e6)
-    expected_str = "\n".join([
-        "OPENQASM 3.0;",
-        "cal {",
-        "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
-        "    set_frequency(user_defined_frame_0, 6000000.0);",
-        "}",
-    ])
+    expected_str = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    set_frequency(user_defined_frame_0, 6000000.0);",
+            "}",
+        ]
+    )
     assert pulse_sequence.to_ir() == expected_str
 
 
@@ -130,38 +132,41 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         )
         .capture_v0(predefined_frame_2)
     )
-    expected_str_unbound = "\n".join([
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[2] psb;",
-        *[
-            f"    input float {parameter};"
-            for parameter in reversed(list(pulse_sequence.parameters))
-        ],
-        "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
-        "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s, sigma_dg * 1s, 0.2, 1, false);",
-        "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
-        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-        "    waveform erf_square_wf = erf_square(length_es * 1s, width_es * 1s, 2.0ns,"
-        " 8.0ns, 1, false);",
-        "    set_frequency(predefined_frame_1, a + 2.0 * c);",
-        "    shift_frequency(predefined_frame_1, a + 2.0 * c);",
-        "    set_phase(predefined_frame_1, a + 2.0 * c);",
-        "    shift_phase(predefined_frame_1, -1.0 * a + -2.0 * c);",
-        "    set_scale(predefined_frame_1, a + 2.0 * c);",
-        "    psb[0] = capture_v0(predefined_frame_1);",
-        "    delay[(a + 2.0 * c) * 1s] predefined_frame_1, predefined_frame_2;",
-        "    delay[(a + 2.0 * c) * 1s] predefined_frame_1;",
-        "    delay[1.0ms] predefined_frame_1;",
-        "    barrier predefined_frame_1, predefined_frame_2;",
-        "    play(predefined_frame_1, gauss_wf);",
-        "    play(predefined_frame_2, drag_gauss_wf);",
-        "    play(predefined_frame_1, constant_wf);",
-        "    play(predefined_frame_2, arb_wf);",
-        "    play(predefined_frame_1, erf_square_wf);",
-        "    psb[1] = capture_v0(predefined_frame_2);",
-        "}",
-    ])
+    expected_str_unbound = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            *[
+                f"    input float {parameter};"
+                for parameter in reversed(list(pulse_sequence.parameters))
+            ],
+            "    waveform gauss_wf = gaussian(length_g * 1s, sigma_g * 1s, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(length_dg * 1s,"
+            " sigma_dg * 1s, 0.2, 1, false);",
+            "    waveform constant_wf = constant(length_c * 1s, 2.0 + 0.3im);",
+            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(length_es * 1s, width_es * 1s, 2.0ns,"
+            " 8.0ns, 1, false);",
+            "    set_frequency(predefined_frame_1, a + 2.0 * c);",
+            "    shift_frequency(predefined_frame_1, a + 2.0 * c);",
+            "    set_phase(predefined_frame_1, a + 2.0 * c);",
+            "    shift_phase(predefined_frame_1, -1.0 * a + -2.0 * c);",
+            "    set_scale(predefined_frame_1, a + 2.0 * c);",
+            "    psb[0] = capture_v0(predefined_frame_1);",
+            "    delay[(a + 2.0 * c) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 2.0 * c) * 1s] predefined_frame_1;",
+            "    delay[1.0ms] predefined_frame_1;",
+            "    barrier predefined_frame_1, predefined_frame_2;",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_2, drag_gauss_wf);",
+            "    play(predefined_frame_1, constant_wf);",
+            "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
+            "    psb[1] = capture_v0(predefined_frame_2);",
+            "}",
+        ]
+    )
     assert pulse_sequence.to_ir() == expected_str_unbound
     assert pulse_sequence.parameters == {
         FreeParameter("a"),
@@ -174,15 +179,17 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         FreeParameter("width_es"),
         FreeParameter("length_es"),
     }
-    b_bound = pulse_sequence.make_bound_pulse_sequence({
-        "c": 2,
-        "length_g": 1e-3,
-        "length_dg": 3e-3,
-        "sigma_dg": 0.4,
-        "length_c": 4e-3,
-        "length_es": 20e-9,
-        "width_es": 12e-9,
-    })
+    b_bound = pulse_sequence.make_bound_pulse_sequence(
+        {
+            "c": 2,
+            "length_g": 1e-3,
+            "length_dg": 3e-3,
+            "sigma_dg": 0.4,
+            "length_c": 4e-3,
+            "length_es": 20e-9,
+            "width_es": 12e-9,
+        }
+    )
     b_bound_call = pulse_sequence(
         c=2,
         length_g=1e-3,
@@ -192,66 +199,70 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         length_es=20e-9,
         width_es=12e-9,
     )
-    expected_str_b_bound = "\n".join([
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[2] psb;",
-        *[f"    input float {parameter};" for parameter in reversed(list(b_bound.parameters))],
-        "    waveform gauss_wf = gaussian(1.0ms, sigma_g * 1s, 1, false);",
-        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-        "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
-        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-        "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
-        "    set_frequency(predefined_frame_1, a + 4.0);",
-        "    shift_frequency(predefined_frame_1, a + 4.0);",
-        "    set_phase(predefined_frame_1, a + 4.0);",
-        "    shift_phase(predefined_frame_1, -1.0 * a + -4.0);",
-        "    set_scale(predefined_frame_1, a + 4.0);",
-        "    psb[0] = capture_v0(predefined_frame_1);",
-        "    delay[(a + 4.0) * 1s] predefined_frame_1, predefined_frame_2;",
-        "    delay[(a + 4.0) * 1s] predefined_frame_1;",
-        "    delay[1.0ms] predefined_frame_1;",
-        "    barrier predefined_frame_1, predefined_frame_2;",
-        "    play(predefined_frame_1, gauss_wf);",
-        "    play(predefined_frame_2, drag_gauss_wf);",
-        "    play(predefined_frame_1, constant_wf);",
-        "    play(predefined_frame_2, arb_wf);",
-        "    play(predefined_frame_1, erf_square_wf);",
-        "    psb[1] = capture_v0(predefined_frame_2);",
-        "}",
-    ])
+    expected_str_b_bound = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            *[f"    input float {parameter};" for parameter in reversed(list(b_bound.parameters))],
+            "    waveform gauss_wf = gaussian(1.0ms, sigma_g * 1s, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
+            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
+            "    set_frequency(predefined_frame_1, a + 4.0);",
+            "    shift_frequency(predefined_frame_1, a + 4.0);",
+            "    set_phase(predefined_frame_1, a + 4.0);",
+            "    shift_phase(predefined_frame_1, -1.0 * a + -4.0);",
+            "    set_scale(predefined_frame_1, a + 4.0);",
+            "    psb[0] = capture_v0(predefined_frame_1);",
+            "    delay[(a + 4.0) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 4.0) * 1s] predefined_frame_1;",
+            "    delay[1.0ms] predefined_frame_1;",
+            "    barrier predefined_frame_1, predefined_frame_2;",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_2, drag_gauss_wf);",
+            "    play(predefined_frame_1, constant_wf);",
+            "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
+            "    psb[1] = capture_v0(predefined_frame_2);",
+            "}",
+        ]
+    )
     assert b_bound.to_ir() == b_bound_call.to_ir() == expected_str_b_bound
     assert pulse_sequence.to_ir() == expected_str_unbound
     assert b_bound.parameters == {FreeParameter("sigma_g"), FreeParameter("a")}
     both_bound = b_bound.make_bound_pulse_sequence({"a": 1, "sigma_g": 0.7})
     both_bound_call = b_bound_call(1, sigma_g=0.7)  # use arg 1 for a
-    expected_str_both_bound = "\n".join([
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[2] psb;",
-        "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
-        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-        "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
-        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-        "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
-        "    set_frequency(predefined_frame_1, 5.0);",
-        "    shift_frequency(predefined_frame_1, 5.0);",
-        "    set_phase(predefined_frame_1, 5.0);",
-        "    shift_phase(predefined_frame_1, -5.0);",
-        "    set_scale(predefined_frame_1, 5.0);",
-        "    psb[0] = capture_v0(predefined_frame_1);",
-        "    delay[5.0s] predefined_frame_1, predefined_frame_2;",
-        "    delay[5.0s] predefined_frame_1;",
-        "    delay[1.0ms] predefined_frame_1;",
-        "    barrier predefined_frame_1, predefined_frame_2;",
-        "    play(predefined_frame_1, gauss_wf);",
-        "    play(predefined_frame_2, drag_gauss_wf);",
-        "    play(predefined_frame_1, constant_wf);",
-        "    play(predefined_frame_2, arb_wf);",
-        "    play(predefined_frame_1, erf_square_wf);",
-        "    psb[1] = capture_v0(predefined_frame_2);",
-        "}",
-    ])
+    expected_str_both_bound = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
+            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(20.0ns, 12.0ns, 2.0ns, 8.0ns, 1, false);",
+            "    set_frequency(predefined_frame_1, 5.0);",
+            "    shift_frequency(predefined_frame_1, 5.0);",
+            "    set_phase(predefined_frame_1, 5.0);",
+            "    shift_phase(predefined_frame_1, -5.0);",
+            "    set_scale(predefined_frame_1, 5.0);",
+            "    psb[0] = capture_v0(predefined_frame_1);",
+            "    delay[5.0s] predefined_frame_1, predefined_frame_2;",
+            "    delay[5.0s] predefined_frame_1;",
+            "    delay[1.0ms] predefined_frame_1;",
+            "    barrier predefined_frame_1, predefined_frame_2;",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_2, drag_gauss_wf);",
+            "    play(predefined_frame_1, constant_wf);",
+            "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
+            "    psb[1] = capture_v0(predefined_frame_2);",
+            "}",
+        ]
+    )
     assert both_bound.to_ir() == both_bound_call.to_ir() == expected_str_both_bound
     assert b_bound.to_ir() == b_bound_call.to_ir() == expected_str_b_bound
     assert pulse_sequence.to_ir() == expected_str_unbound
@@ -339,34 +350,36 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         )
         .capture_v0(predefined_frame_2)
     )
-    expected_str = "\n".join([
-        "OPENQASM 3.0;",
-        "cal {",
-        "    bit[2] psb;",
-        "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
-        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-        "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
-        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-        "    waveform erf_square_wf = erf_square(32.0ns, 20.0ns, 2.0ns, 8.0ns, 1, false);",
-        "    set_frequency(predefined_frame_1, 3000000000.0);",
-        "    shift_frequency(predefined_frame_1, 1000000000.0);",
-        "    set_phase(predefined_frame_1, -0.5);",
-        "    shift_phase(predefined_frame_1, 0.1);",
-        "    set_scale(predefined_frame_1, 0.25);",
-        "    psb[0] = capture_v0(predefined_frame_1);",
-        "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
-        "    delay[1.0us] predefined_frame_1;",
-        "    delay[1.0ms] $0;",
-        "    barrier $0, $1;",
-        "    barrier predefined_frame_1, predefined_frame_2;",
-        "    play(predefined_frame_1, gauss_wf);",
-        "    play(predefined_frame_2, drag_gauss_wf);",
-        "    play(predefined_frame_1, constant_wf);",
-        "    play(predefined_frame_2, arb_wf);",
-        "    play(predefined_frame_1, erf_square_wf);",
-        "    psb[1] = capture_v0(predefined_frame_2);",
-        "}",
-    ])
+    expected_str = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    bit[2] psb;",
+            "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
+            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+            "    waveform erf_square_wf = erf_square(32.0ns, 20.0ns, 2.0ns, 8.0ns, 1, false);",
+            "    set_frequency(predefined_frame_1, 3000000000.0);",
+            "    shift_frequency(predefined_frame_1, 1000000000.0);",
+            "    set_phase(predefined_frame_1, -0.5);",
+            "    shift_phase(predefined_frame_1, 0.1);",
+            "    set_scale(predefined_frame_1, 0.25);",
+            "    psb[0] = capture_v0(predefined_frame_1);",
+            "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
+            "    delay[1.0us] predefined_frame_1;",
+            "    delay[1.0ms] $0;",
+            "    barrier $0, $1;",
+            "    barrier predefined_frame_1, predefined_frame_2;",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_2, drag_gauss_wf);",
+            "    play(predefined_frame_1, constant_wf);",
+            "    play(predefined_frame_2, arb_wf);",
+            "    play(predefined_frame_1, erf_square_wf);",
+            "    psb[1] = capture_v0(predefined_frame_2);",
+            "}",
+        ]
+    )
     assert pulse_sequence.to_ir() == expected_str
 
 

@@ -64,7 +64,8 @@ class Field:
             discretized_pattern = None
         else:
             discretized_pattern = self.pattern.discretize(pattern_resolution)
-        return Field(time_series=discretized_time_series, pattern=discretized_pattern)
+        discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
+        return discretized_field
 
     @staticmethod
     def from_lists(times: list[Decimal], values: list[Decimal], pattern: list[Decimal]) -> Field:
@@ -89,4 +90,6 @@ class Field:
 
         time_series = TimeSeries.from_lists(times=times, values=values)
 
-        return Field(time_series=time_series, pattern=Pattern(pattern))
+        field = Field(time_series=time_series, pattern=Pattern(pattern))
+
+        return field

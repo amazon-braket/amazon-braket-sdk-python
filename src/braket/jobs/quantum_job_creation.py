@@ -279,8 +279,8 @@ def _generate_default_job_name(
     elif not image_uri:
         name = "braket-job-default"
     else:
-        job_type_match = re.search(r"/amazon-braket-(.*)-jobs:", image_uri) or re.search(
-            r"/amazon-braket-([^:/]*)", image_uri
+        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+            "/amazon-braket-([^:/]*)", image_uri
         )
         container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
         name = f"braket-job{container}"
@@ -361,7 +361,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
         importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
         if module is None:
-            raise AssertionError  # noqa: TRY301
+            raise AssertionError
     except (ModuleNotFoundError, AssertionError) as e:
         raise ValueError(f"Entry point module was not found: {importable}") from e
     finally:

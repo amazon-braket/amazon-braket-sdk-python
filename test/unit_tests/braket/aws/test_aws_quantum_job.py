@@ -286,14 +286,16 @@ def result_setup(quantum_job_name):
 
         with open(file_path, "w") as write_file:
             write_file.write(
-                json.dumps({
-                    "braketSchemaHeader": {
-                        "name": "braket.jobs_data.persisted_job_data",
-                        "version": "1",
-                    },
-                    "dataDictionary": {"converged": True, "energy": -0.2},
-                    "dataFormat": "plaintext",
-                })
+                json.dumps(
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.jobs_data.persisted_job_data",
+                            "version": "1",
+                        },
+                        "dataDictionary": {"converged": True, "energy": -0.2},
+                        "dataFormat": "plaintext",
+                    }
+                )
             )
 
         with tarfile.open("model.tar.gz", "w:gz") as tar:
@@ -735,14 +737,16 @@ def test_logs(
     quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
-    assert captured.out == "\n".join((
-        "..",
-        "hi there #1",
-        "hi there #2",
-        "hi there #2a",
-        "hi there #3",
-        "",
-    ))
+    assert captured.out == "\n".join(
+        (
+            "..",
+            "hi there #1",
+            "hi there #2",
+            "hi there #2a",
+            "hi there #3",
+            "",
+        )
+    )
 
 
 def test_logs_queue_progress(
@@ -773,16 +777,18 @@ def test_logs_queue_progress(
     quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
-    assert captured.out == "\n".join((
-        f"Job queue position: {queue_info['position']}",
-        "Running:",
-        "",
-        "hi there #1",
-        "hi there #2",
-        "hi there #2a",
-        "hi there #3",
-        "",
-    ))
+    assert captured.out == "\n".join(
+        (
+            f"Job queue position: {queue_info['position']}",
+            "Running:",
+            "",
+            "hi there #1",
+            "hi there #2",
+            "hi there #2a",
+            "hi there #3",
+            "",
+        )
+    )
 
 
 @patch.dict("os.environ", {"JPY_PARENT_PID": "True"})
@@ -853,19 +859,21 @@ def test_logs_multiple_instances(
     quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
-    assert captured.out == "\n".join((
-        "..",
-        "\x1b[34mhi there #1\x1b[0m",
-        "\x1b[35mhi there #1\x1b[0m",
-        "\x1b[34mhi there #2\x1b[0m",
-        "\x1b[35mhi there #2\x1b[0m",
-        "\x1b[34mhi there #2a\x1b[0m",
-        "\x1b[35mhi there #2a\x1b[0m",
-        "\x1b[34mhi there #3\x1b[0m",
-        "\x1b[35mhi there #3\x1b[0m",
-        "\x1b[35mhi there #4\x1b[0m",
-        "",
-    ))
+    assert captured.out == "\n".join(
+        (
+            "..",
+            "\x1b[34mhi there #1\x1b[0m",
+            "\x1b[35mhi there #1\x1b[0m",
+            "\x1b[34mhi there #2\x1b[0m",
+            "\x1b[35mhi there #2\x1b[0m",
+            "\x1b[34mhi there #2a\x1b[0m",
+            "\x1b[35mhi there #2a\x1b[0m",
+            "\x1b[34mhi there #3\x1b[0m",
+            "\x1b[35mhi there #3\x1b[0m",
+            "\x1b[35mhi there #4\x1b[0m",
+            "",
+        )
+    )
 
 
 def test_logs_error(quantum_job, generate_get_job_response, capsys):

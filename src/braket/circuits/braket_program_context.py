@@ -15,8 +15,6 @@ from collections.abc import Iterable
 from typing import Optional, Union
 
 import numpy as np
-from braket.default_simulator.openqasm.program_context import AbstractProgramContext
-from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
@@ -28,6 +26,8 @@ from braket.circuits.translations import (
     braket_result_to_result_type,
     one_prob_noise_map,
 )
+from braket.default_simulator.openqasm.program_context import AbstractProgramContext
+from braket.ir.jaqcd.program_v1 import Results
 from braket.parametric import FreeParameterExpression
 
 

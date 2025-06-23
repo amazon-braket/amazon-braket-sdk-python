@@ -41,7 +41,8 @@ def test_creation(mock_create):
         1000,
         max_parallel=10,
         reservaion_arn=(
-            "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
     )
     assert batch.size == batch_size
@@ -68,7 +69,8 @@ def test_successful(mock_create):
         1000,
         max_parallel=10,
         reservaion_arn=(
-            "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
     )
     assert batch.size == batch_size
@@ -94,7 +96,8 @@ def test_unsuccessful(mock_create):
         1000,
         max_parallel=10,
         reservaion_arn=(
-            "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
     )
     assert not batch.unfinished
@@ -131,7 +134,8 @@ def test_retry(mock_create):
         1000,
         max_parallel=10,
         reservaion_arn=(
-            "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+            "arn:aws:braket:us-west-2:123456789123:"
+            "reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
     )
     assert not batch.unfinished

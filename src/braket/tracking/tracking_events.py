@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -30,7 +31,7 @@ class _TaskCreationEvent(_TrackingEvent):
 
 @dataclass
 class _TaskCompletionEvent(_TrackingEvent):
-    execution_duration: float | None
+    execution_duration: Optional[float]
     status: str
     has_reservation_arn: bool = False
 

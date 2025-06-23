@@ -72,9 +72,10 @@ class CompilerDirective(Operator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        if ir_type == IRType.OPENQASM:
+        elif ir_type == IRType.OPENQASM:
             return self._to_openqasm()
-        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        else:
+            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the compiler directive."""

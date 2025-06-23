@@ -69,7 +69,7 @@ class _FreeParameterTransformer(QASMTransformer):
             }
             if isinstance(rhs, ast.FloatLiteral):
                 return ast.FloatLiteral(ops[node.op](lhs.value, rhs.value))
-            if isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
+            elif isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
                 return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
         return ast.BinaryExpression(op=node.op, lhs=lhs, rhs=rhs)
 

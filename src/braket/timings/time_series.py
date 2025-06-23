@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
+from typing import Optional
 
 
 @dataclass
@@ -259,7 +260,8 @@ class TimeSeries:
                 f"Boundary handler value {boundary} is not allowed. \
                 Possible options are: 'mean', 'left', 'right'."
             )
-        new_values = [*self.values()[:-1], bndry_val, *other.values()[1:]]
+
+        new_values = self.values()[:-1] + [bndry_val] + other.values()[1:]
 
         for t, v in zip(new_times, new_values):
             new_time_series.put(t, v)
@@ -267,15 +269,15 @@ class TimeSeries:
         return new_time_series
 
     def discretize(
-        self, time_resolution: Decimal | None, value_resolution: Decimal | None
+        self, time_resolution: Optional[Decimal], value_resolution: Optional[Decimal]
     ) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the
         corresponding resolution.
 
         Args:
-            time_resolution (Decimal | None): Time resolution
-            value_resolution (Decimal | None): Value resolution
+            time_resolution (Optional[Decimal]): Time resolution
+            value_resolution (Optional[Decimal]): Value resolution
 
         Returns:
             TimeSeries: A new discretized time series.

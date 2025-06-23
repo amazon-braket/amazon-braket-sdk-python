@@ -31,8 +31,8 @@ IQM_ARN = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
 @pytest.mark.parametrize("arn", [(IONQ_ARN), (SIMULATOR_ARN)])
 def test_unsupported_devices(arn):
     device = AwsDevice(arn)
-    if device.status != "ONLINE":
-        pytest.skip("Device not online")
+    if device.status == "OFFLINE":
+        pytest.skip("Device offline")
 
     circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1])
     error_string = re.escape(
