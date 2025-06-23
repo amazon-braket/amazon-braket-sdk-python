@@ -112,7 +112,7 @@ class LocalEmulator(Emulator):
             ValueError: If the JSON string is invalid.
         """
 
-        device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)
+        device_emu_properties = DeviceEmulatorProperties._from_json(device_properties_json)
         return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
 
     @classmethod

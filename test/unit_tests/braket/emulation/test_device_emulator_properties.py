@@ -83,7 +83,7 @@ def test_basic_instantiation_with_errorMitigation():
 
 
 def test_from_json_1(minimal_valid_json):
-    result = DeviceEmulatorProperties.from_json(minimal_valid_json)
+    result = DeviceEmulatorProperties._from_json(minimal_valid_json)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {}
@@ -98,7 +98,7 @@ def test_from_json_1(minimal_valid_json):
 
 
 def test_from_json_2(minimal_valid_json_with_errorMitigation):
-    result = DeviceEmulatorProperties.from_json(minimal_valid_json_with_errorMitigation)
+    result = DeviceEmulatorProperties._from_json(minimal_valid_json_with_errorMitigation)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {}
@@ -113,7 +113,7 @@ def test_from_json_2(minimal_valid_json_with_errorMitigation):
 
 
 def test_from_json_3(reduced_standardized_json):
-    result = DeviceEmulatorProperties.from_json(reduced_standardized_json)
+    result = DeviceEmulatorProperties._from_json(reduced_standardized_json)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {"0": ["1"]}
@@ -200,7 +200,7 @@ def test_invalid_instantiation_due_to_missing_field(minimal_valid_json, missing_
     else:
         minimal_valid_dict.pop(missing_field)
     with pytest.raises(ValueError):
-        DeviceEmulatorProperties.from_json(json.dumps(minimal_valid_dict))
+        DeviceEmulatorProperties._from_json(json.dumps(minimal_valid_dict))
 
 
 @pytest.mark.parametrize(
@@ -209,10 +209,10 @@ def test_invalid_instantiation_due_to_missing_field(minimal_valid_json, missing_
 )
 def test_invalid_json(invalid_json):
     with pytest.raises(ValueError):
-        DeviceEmulatorProperties.from_json(invalid_json)
+        DeviceEmulatorProperties._from_json(invalid_json)
 
 def test_from_json_non_fully_connected(reduced_standardized_json_2):
-    result = DeviceEmulatorProperties.from_json(reduced_standardized_json_2)
+    result = DeviceEmulatorProperties._from_json(reduced_standardized_json_2)
     assert result.qubitCount == 3
     assert result.nativeGateSet == ["rx", "rz", "iswap"]
     assert result.connectivityGraph == {"0": ["1"], "1": ["0", "2"], "2": ["1"]}
@@ -227,7 +227,7 @@ def test_from_json_non_fully_connected(reduced_standardized_json_2):
     assert result.directed == False
 
 def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3):
-    result = DeviceEmulatorProperties.from_json(reduced_standardized_json_3)
+    result = DeviceEmulatorProperties._from_json(reduced_standardized_json_3)
     assert result.qubitCount == 3
     assert result.nativeGateSet == ['cz', 'prx']
     assert result.connectivityGraph == {"0": ["1"], "1": ["2"]}
