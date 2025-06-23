@@ -182,7 +182,7 @@ class BraketProgramContext(AbstractProgramContext):
 
     def add_verbatim_marker(self, marker: QuantumStatement)->None:
         if isinstance(marker, VerbatimBoxStart):
-            instruction =Instruction(StartVerbatimBox(), target=[])
+            instruction = Instruction(StartVerbatimBox(), target=[])
         elif isinstance(marker, VerbatimBoxEnd):
-            instruction =Instruction(EndVerbatimBox(), target=[])
+            instruction = Instruction(EndVerbatimBox(), target=[])
         self._circuit.add_instruction(instruction)
