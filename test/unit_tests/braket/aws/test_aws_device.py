@@ -2477,3 +2477,4 @@ def test_ionq_emulator_local_is_False(rigetti_device):
     error_message = "local can only be True."
     with pytest.raises(ValueError, match=error_message):
         emulator = rigetti_device.emulator(local=False)
+

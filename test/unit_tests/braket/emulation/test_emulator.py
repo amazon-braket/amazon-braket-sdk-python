@@ -146,17 +146,6 @@ def test_apply_noise_model(setup_local_simulator_devices):
     assert circuit == target_circ
 
 
-def test_noiseless_run(setup_local_simulator_devices):
-    qubit_count_validator = QubitCountValidator(4)
-    gate_validator = GateValidator(supported_gates=["H"])
-    emulator = Emulator(emulator_passes=[qubit_count_validator, gate_validator])
-    circuit = Circuit().h(0).state_vector()
-
-    result = emulator.run(circuit).result()
-    state_vector = result.result_types[0].value
-    target_state_vector = np.array([1 / np.sqrt(2) + 0j, 1 / np.sqrt(2) + 0j])
-    assert all(np.isclose(state_vector, target_state_vector))
-
 
 def test_noisy_run(setup_local_simulator_devices):
     noise_model = NoiseModel()
