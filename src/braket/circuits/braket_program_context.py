@@ -15,8 +15,9 @@ from collections.abc import Iterable
 from typing import Optional, Union
 
 import numpy as np
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxEnd, VerbatimBoxStart
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
-from braket.default_simulator.openqasm.parser.openqasm_ast import VerbatimBoxStart,VerbatimBoxEnd,QuantumStatement
+from braket.default_simulator.openqasm.parser.openqasm_ast import QuantumStatement
 from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
@@ -181,7 +182,7 @@ class BraketProgramContext(AbstractProgramContext):
 
     def add_verbatim_marker(self, marker: QuantumStatement)->None:
         if isinstance(marker, VerbatimBoxStart):
-            instruction =Instruction(StartVerbatimBox(), target=[])
+            instruction = Instruction(StartVerbatimBox(), target=[])
         elif isinstance(marker, VerbatimBoxEnd):
-            instruction =Instruction(EndVerbatimBox(), target=[])
+            instruction = Instruction(EndVerbatimBox(), target=[])
         self._circuit.add_instruction(instruction)
