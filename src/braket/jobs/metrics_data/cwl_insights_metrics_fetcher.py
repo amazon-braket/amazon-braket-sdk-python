@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import time
 from logging import Logger, getLogger
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
@@ -52,9 +52,7 @@ class CwlInsightsMetricsFetcher:
         self._logs_client = aws_session.logs_client
 
     @staticmethod
-    def _get_element_from_log_line(
-        element_name: str, log_line: list[dict[str, Any]]
-    ) -> Optional[str]:
+    def _get_element_from_log_line(element_name: str, log_line: list[dict[str, Any]]) -> str | None:
         """Finds and returns an element of a log line from CloudWatch Insights results.
 
         Args:
@@ -85,12 +83,11 @@ class CwlInsightsMetricsFetcher:
         while time.time() < timeout_time:
             response = self._logs_client.get_query_results(queryId=query_id)
             query_status = response["status"]
-            if query_status in ["Failed", "Cancelled"]:
+            if query_status in {"Failed", "Cancelled"}:
                 raise MetricsRetrievalError(f"Query {query_id} failed with status {query_status}.")
-            elif query_status == "Complete":
+            if query_status == "Complete":
                 return response["results"]
-            else:
-                time.sleep(self._poll_interval_seconds)
+            time.sleep(self._poll_interval_seconds)
         self._logger.warning(f"Timed out waiting for query {query_id}.")
         return []
 
@@ -111,7 +108,7 @@ class CwlInsightsMetricsFetcher:
 
     def _parse_log_query_results(
         self, results: list[Any], metric_type: MetricType, statistic: MetricStatistic
-    ) -> dict[str, list[Union[str, float, int]]]:
+    ) -> dict[str, list[str | float | int]]:
         """Parses CloudWatch Insights results and returns all found metrics.
 
         Args:
@@ -137,7 +134,7 @@ class CwlInsightsMetricsFetcher:
         job_start_time: int | None = None,
         job_end_time: int | None = None,
         stream_prefix: str | None = None,
-    ) -> dict[str, list[Union[str, float, int]]]:
+    ) -> dict[str, list[str | float | int]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:

@@ -15,12 +15,11 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
+from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
 from braket.annealing import ProblemType
-from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
 
 @dataclass
@@ -47,7 +46,7 @@ class AnnealingQuantumTaskResult:
 
     def data(
         self,
-        selected_fields: Optional[list[str]] = None,
+        selected_fields: list[str] | None = None,
         sorted_by: str = "value",
         reverse: bool = False,
     ) -> Generator[tuple]:

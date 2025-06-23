@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 import numpy as np
-
 from braket.task_result import (
     AdditionalMetadata,
     AnalogHamiltonianSimulationTaskResult,
@@ -149,9 +148,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         N_ryd_cnt = np.sum(N_ryd, axis=0)
         N_ground_cnt = np.sum(N_ground, axis=0)
 
-        avg_density = N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
-
-        return avg_density
+        return N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
 
 
 def _equal_sequences(sequence0: np.ndarray, sequence1: np.ndarray) -> bool:

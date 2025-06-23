@@ -14,15 +14,14 @@
 from __future__ import annotations
 
 import json
+import operator
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Optional, TypeVar, Union
+from itertools import starmap
+from typing import Any, TypeVar
 
 import numpy as np
-
-from braket.circuits import Observable, ResultType, StandardObservable
-from braket.circuits.observables import TensorProduct, observable_from_ir
 from braket.ir.jaqcd import Expectation, Probability, Sample, Variance
 from braket.task_result import (
     AdditionalMetadata,
@@ -30,6 +29,9 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+
+from braket.circuits import Observable, ResultType, StandardObservable
+from braket.circuits.observables import TensorProduct, observable_from_ir
 
 T = TypeVar("T")
 
@@ -132,7 +134,7 @@ class GateModelQuantumTaskResult:
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
 
-    def get_compiled_circuit(self) -> Optional[str]:
+    def get_compiled_circuit(self) -> str | None:
         """Get the compiled circuit, if one is available.
 
         Returns:
@@ -143,12 +145,11 @@ class GateModelQuantumTaskResult:
             return None
         if metadata.rigettiMetadata:
             return metadata.rigettiMetadata.compiledProgram
-        elif metadata.oqcMetadata:
+        if metadata.oqcMetadata:
             return metadata.oqcMetadata.compiledProgram
-        elif metadata.iqmMetadata:
+        if metadata.iqmMetadata:
             return metadata.iqmMetadata.compiledProgram
-        else:
-            return None
+        return None
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
@@ -183,10 +184,7 @@ class GateModelQuantumTaskResult:
         """
         shots = sum(measurement_counts.values())
 
-        measurement_probabilities = {
-            key: count / shots for key, count in measurement_counts.items()
-        }
-        return measurement_probabilities
+        return {key: count / shots for key, count in measurement_counts.items()}
 
     @staticmethod
     def measurements_from_measurement_probabilities(
@@ -206,11 +204,9 @@ class GateModelQuantumTaskResult:
             Value is the probability the measurement occurred.
         """
         measurements_list = []
-        for bitstring in measurement_probabilities:
+        for bitstring, prob in measurement_probabilities.items():
             measurement = list(bitstring)
-            individual_measurement_list = [measurement] * int(
-                round(measurement_probabilities[bitstring] * shots)
-            )
+            individual_measurement_list = [measurement] * round(prob * shots)
             measurements_list.extend(individual_measurement_list)
         return np.asarray(measurements_list, dtype=int)
 
@@ -254,8 +250,7 @@ class GateModelQuantumTaskResult:
             return GateModelQuantumTaskResult._from_object_internal_computational_basis_sampling(
                 result
             )
-        else:
-            return GateModelQuantumTaskResult._from_dict_internal_simulator_only(result)
+        return GateModelQuantumTaskResult._from_dict_internal_simulator_only(result)
 
     @classmethod
     def _from_object_internal_computational_basis_sampling(
@@ -355,7 +350,7 @@ class GateModelQuantumTaskResult:
                 elif type == "probability":
                     result_type.value = np.array(result_type.value)
                 elif type == "statevector":
-                    result_type.value = np.array([complex(*value) for value in result_type.value])
+                    result_type.value = np.array(list(starmap(complex, result_type.value)))
 
     @staticmethod
     def _calculate_result_types(
@@ -409,7 +404,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def _selected_measurements(
-        measurements: np.ndarray, measured_qubits: list[int], targets: Optional[list[int]]
+        measurements: np.ndarray, measured_qubits: list[int], targets: list[int] | None
     ) -> np.ndarray:
         if targets is not None and targets != measured_qubits:
             # Only some qubits targeted
@@ -424,14 +419,13 @@ class GateModelQuantumTaskResult:
         measured_qubits: list[int],
         observable: Observable,
         targets: list[int],
-    ) -> Union[T, list[T]]:
+    ) -> T | list[T]:
         if targets:
             return calculate_function(measurements, measured_qubits, observable, targets)
-        else:
-            return [
-                calculate_function(measurements, measured_qubits, observable, [i])
-                for i in measured_qubits
-            ]
+        return [
+            calculate_function(measurements, measured_qubits, observable, [i])
+            for i in measured_qubits
+        ]
 
     @staticmethod
     def _measurements_base_10(measurements: np.ndarray) -> np.ndarray:
@@ -441,7 +435,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def _probability_from_measurements(
-        measurements: np.ndarray, measured_qubits: list[int], targets: Optional[list[int]]
+        measurements: np.ndarray, measured_qubits: list[int], targets: list[int] | None
     ) -> np.ndarray:
         measurements = GateModelQuantumTaskResult._selected_measurements(
             measurements, measured_qubits, targets
@@ -504,11 +498,10 @@ class GateModelQuantumTaskResult:
     def _result_type_hash(rt_type: dict) -> str:
         if hasattr(rt_type, "observable") and isinstance(rt_type.observable, list):
             rt_type.observable = GateModelQuantumTaskResult._replace_neg_zero(rt_type.observable)
-        return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
+        return repr(dict(sorted(dict(rt_type).items(), key=operator.itemgetter(0))))
 
     @staticmethod
-    def _replace_neg_zero(observable_matrix: Union[list, int]) -> Union[list, int]:
+    def _replace_neg_zero(observable_matrix: list | int) -> list | int:
         if isinstance(observable_matrix, list):
             return [GateModelQuantumTaskResult._replace_neg_zero(x) for x in observable_matrix]
-        else:
-            return 0 if observable_matrix == 0 else observable_matrix
+        return 0 if observable_matrix == 0 else observable_matrix

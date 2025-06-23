@@ -15,6 +15,7 @@ import asyncio
 import json
 import threading
 import time
+import warnings
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -202,6 +203,17 @@ def test_id_getter(arn, aws_session):
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_id_setter(quantum_task):
     quantum_task.id = 123
+
+
+def test_no_unknown_kwargs_no_warnings(arn, aws_session):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        AwsQuantumTask(arn, aws_session)
+
+
+def test_unknown_kwarg_warning(arn, aws_session):
+    with pytest.warns(UserWarning):
+        AwsQuantumTask(arn, aws_session, unknown_kwarg=123)
 
 
 def test_metadata(quantum_task):
@@ -696,14 +708,12 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
 
 
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
-    expected_openqasm = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-        ]
-    )
+    expected_openqasm = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+    ])
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
@@ -723,17 +733,15 @@ def test_create_pulse_gate_circuit(
     aws_session, arn, pulse_sequence, device_arn, device_parameters_class
 ):
     pulse_gate_circuit = Circuit().pulse_gate([0, 1], pulse_sequence, "my_PG")
-    expected_openqasm = "\n".join(
-        (
-            "OPENQASM 3.0;",
-            "bit[2] b;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
-        )
-    )
+    expected_openqasm = "\n".join((
+        "OPENQASM 3.0;",
+        "bit[2] b;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+        "b[0] = measure $0;",
+        "b[1] = measure $1;",
+    ))
 
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
@@ -1042,29 +1050,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
-            DwaveDeviceParameters.parse_obj(
-                {
-                    "providerLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            DwaveDeviceParameters.parse_obj({
+                "providerLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
@@ -1119,29 +1125,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
-            Dwave2000QDeviceParameters.parse_obj(
-                {
-                    "deviceLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            Dwave2000QDeviceParameters.parse_obj({
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (

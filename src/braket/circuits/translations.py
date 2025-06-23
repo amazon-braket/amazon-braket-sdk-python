@@ -11,13 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from functools import reduce, singledispatch
-from typing import Union
+from __future__ import annotations
 
-import braket.circuits.gates as braket_gates
-import braket.circuits.result_types as ResultTypes  # noqa: N812
+import operator
+from functools import reduce, singledispatch
+from typing import NoReturn
+
 import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Observable, noises, observables
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -28,6 +28,10 @@ from braket.ir.jaqcd import (
     Variance,
 )
 from braket.ir.jaqcd.program_v1 import Results
+
+import braket.circuits.gates as braket_gates
+import braket.circuits.result_types as ResultTypes  # noqa: N812
+from braket.circuits import Observable, noises, observables
 
 BRAKET_GATES = {
     "gphase": braket_gates.GPhase,
@@ -98,11 +102,11 @@ SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
 }
 
 
-def get_observable(obs: Union[models.Observable, list]) -> Observable:
+def get_observable(obs: models.Observable | list) -> Observable:
     """Gets the observable.
 
     Args:
-        obs (Union[Observable, list]): The observable(s) to get translated.
+        obs (models.Observable | list): The observable(s) to get translated.
 
     Returns:
         Observable: The translated observable.
@@ -111,12 +115,12 @@ def get_observable(obs: Union[models.Observable, list]) -> Observable:
 
 
 @singledispatch
-def _get_observable(obs: Union[models.Observable, list]) -> Observable:
+def _get_observable(obs: models.Observable | list) -> Observable:
     raise NotImplementedError
 
 
 @_get_observable.register(list)
-def _(obs):
+def _(obs: Observable) -> NoReturn:
     raise NotImplementedError
 
 
@@ -125,17 +129,17 @@ def _(name: str):
     return getattr(observables, name.upper())()
 
 
-def get_tensor_product(observable: Union[models.Observable, list]) -> Observable:
+def get_tensor_product(observable: models.Observable | list) -> Observable:
     """Generate an braket circuit observable
 
     Args:
-        observable (Union[Observable, list]): ir observable or a matrix
+        observable (Observable | list): ir observable or a matrix
 
     Returns:
         Observable: braket circuit observable
     """
     circuit_observable = [get_observable(obs) for obs in observable]
-    return reduce(lambda obs1, obs2: obs1 @ obs2, circuit_observable)
+    return reduce(operator.matmul, circuit_observable)
 
 
 @singledispatch

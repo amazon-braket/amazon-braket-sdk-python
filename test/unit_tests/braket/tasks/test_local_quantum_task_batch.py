@@ -21,9 +21,11 @@ from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 
 RESULTS = [
     GateModelQuantumTaskResult(
-        task_metadata=TaskMetadata(
-            **{"id": str(uuid.uuid4()), "deviceId": "default", "shots": 100}
-        ),
+        task_metadata=TaskMetadata(**{
+            "id": str(uuid.uuid4()),
+            "deviceId": "default",
+            "shots": 100,
+        }),
         additional_metadata=None,
         measurements=np.array([[0, 1], [1, 0]]),
         measured_qubits=[0, 1],

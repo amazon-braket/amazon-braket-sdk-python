@@ -15,15 +15,20 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import singledispatch
+from typing import TYPE_CHECKING
 
 import braket.ir.ahs as ir
+from braket.device_schema import DeviceActionType
+
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.local_detuning import LocalDetuning
-from braket.device_schema import DeviceActionType
 from braket.timings.time_series import TimeSeries
+
+if TYPE_CHECKING:
+    from braket.aws import AwsDevice
 
 
 class AnalogHamiltonianSimulation:
@@ -124,7 +129,7 @@ class AnalogHamiltonianSimulation:
             localDetuning=terms[AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY],
         )
 
-    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
+    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
         as Decimal objects with fixed precision based on the capabilities of the device.
 

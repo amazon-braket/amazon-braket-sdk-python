@@ -90,7 +90,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             str: a string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: cls._qubit_line_character() for qubit in circuit_qubits}
-        connections = {qubit: "none" for qubit in circuit_qubits}
+        connections = dict.fromkeys(circuit_qubits, "none")
 
         for item in items:
             (
@@ -106,7 +106,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
                 # Determine if the qubit is part of the item or in the middle of a
                 # multi qubit item.
                 if qubit in target_qubits:
-                    item_qubit_index = [
+                    item_qubit_index = [  # noqa: RUF015
                         index for index, q in enumerate(target_qubits) if q == qubit
                     ][0]
                     power_string = (
@@ -132,8 +132,7 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
                 else:
                     symbols[qubit] = "┼"
 
-        output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
-        return output
+        return cls._create_output(symbols, connections, circuit_qubits, global_phase)
 
     @classmethod
     def _build_parameters(
@@ -184,12 +183,11 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
     @staticmethod
     def _update_connections(qubits: QubitSet, connections: dict[Qubit, str]) -> None:
         if len(qubits) > 1:
-            connections |= {qubit: "both" for qubit in qubits[1:-1]}
+            connections |= dict.fromkeys(qubits[1:-1], "both")
             connections[qubits[-1]] = "above"
             connections[qubits[0]] = "below"
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     def _draw_symbol(
         cls,
@@ -212,15 +210,15 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         top = ""
         bottom = ""
         if symbol in {"C", "N", "SWAP"}:
-            if connection in ["above", "both"]:
+            if connection in {"above", "both"}:
                 top = _fill_symbol(cls._vertical_delimiter(), " ")
-            if connection in ["below", "both"]:
+            if connection in {"below", "both"}:
                 bottom = _fill_symbol(cls._vertical_delimiter(), " ")
             new_symbol = {"C": "●", "N": "◯", "SWAP": "x"}
             # replace SWAP by x
             # the size of the moment remains as if there was a box with 4 characters inside
             symbol = _fill_symbol(new_symbol[symbol], cls._qubit_line_character())
-        elif symbol in ["StartVerbatim", "EndVerbatim"]:
+        elif symbol in {"StartVerbatim", "EndVerbatim"}:
             top, symbol, bottom = cls._build_verbatim_box(symbol, connection)
         elif symbol == "┼":
             top = bottom = _fill_symbol(cls._vertical_delimiter(), " ")
@@ -229,7 +227,10 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
             top, symbol, bottom = cls._build_box(symbol, connection)
 
         output = f"{_fill_symbol(top, ' ', symbols_width)} \n"
-        output += f"{_fill_symbol(symbol, cls._qubit_line_character(), symbols_width)}{cls._qubit_line_character()}\n"
+        output += (
+            f"{_fill_symbol(symbol, cls._qubit_line_character(), symbols_width)}"
+            f"{cls._qubit_line_character()}\n"
+        )
         output += f"{_fill_symbol(bottom, ' ', symbols_width)} \n"
         return output
 
@@ -237,10 +238,10 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
     def _build_box(
         symbol: str, connection: Literal["above", "below", "both", "none"]
     ) -> tuple[str, str, str]:
-        top_edge_symbol = "┴" if connection in ["above", "both"] else "─"
+        top_edge_symbol = "┴" if connection in {"above", "both"} else "─"
         top = f"┌─{_fill_symbol(top_edge_symbol, '─', len(symbol))}─┐"
 
-        bottom_edge_symbol = "┬" if connection in ["below", "both"] else "─"
+        bottom_edge_symbol = "┬" if connection in {"below", "both"} else "─"
         bottom = f"└─{_fill_symbol(bottom_edge_symbol, '─', len(symbol))}─┘"
 
         symbol = f"┤ {symbol} ├"
