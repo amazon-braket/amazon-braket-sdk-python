@@ -53,6 +53,7 @@ from braket.devices import Devices
 from braket.emulation.emulator import Emulator
 from braket.emulation.local_emulator import LocalEmulator
 
+
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
 
@@ -585,7 +586,7 @@ class AwsDevice(Device):
         """
         self._update_pulse_properties()
         return self._ports or {}
-    
+
     def emulator(self, local=True) -> Emulator:
         """
         A device emulator mimics the restrictions and noise of the AWS QPU by validating and

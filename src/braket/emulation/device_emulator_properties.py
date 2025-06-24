@@ -30,6 +30,7 @@ from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPE
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
 
+
 class DeviceEmulatorProperties(BaseModel):
     """Properties for device emulation.
 

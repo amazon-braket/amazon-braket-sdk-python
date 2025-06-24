@@ -55,7 +55,9 @@ valid_oneQubitProperties_v2 = OneQubitProperties(
     T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
     oneQubitFidelity=[
         Fidelity1Q(
-            fidelityType=FidelityType(name="SIMULTANEOUS_RANDOMIZED_BENCHMARKING", description=None),
+            fidelityType=FidelityType(
+                name="SIMULTANEOUS_RANDOMIZED_BENCHMARKING", description=None
+            ),
             fidelity=0.99,
             standardError=None,
         ),
@@ -82,7 +84,7 @@ valid_twoQubitProperties = TwoQubitProperties(
             fidelity=0.99,
             standardError=0.0009,
             fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
-        )        
+        ),
     ]
 ).dict()
 
@@ -286,7 +288,6 @@ invalid_device_properties_dict_2 = {
 }
 
 
-
 reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected = {
     "action": {
         "braket.ir.openqasm.program": {
@@ -306,8 +307,9 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_u
             "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
             "version": "1",
         },
-        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["0", "2"], "2": ["1"]},
-                         "fullyConnected": False
+        "connectivity": {
+            "connectivityGraph": {"0": ["1"], "1": ["0", "2"], "2": ["1"]},
+            "fullyConnected": False,
         },
         "nativeGateSet": ["rx", "rz", "iswap"],
         "qubitCount": 3,
@@ -330,15 +332,16 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_u
             "1": valid_oneQubitProperties,
             "2": valid_oneQubitProperties,
         },
-        "twoQubitProperties": {"0-1": valid_twoQubitProperties,
-                               "1-2": valid_twoQubitProperties
-        },
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties, "1-2": valid_twoQubitProperties},
     },
 }
 
+
 @pytest.fixture
 def reduced_standardized_json_2():
-    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected)
+    return json.dumps(
+        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected
+    )
 
 
 reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed = {
@@ -360,9 +363,7 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_d
             "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
             "version": "1",
         },
-        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2"]},
-                         "fullyConnected": False
-        },
+        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2"]}, "fullyConnected": False},
         "nativeGateSet": ["cz", "prx"],
         "qubitCount": 3,
     },
@@ -384,42 +385,62 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_d
             "1": valid_oneQubitProperties,
             "2": valid_oneQubitProperties,
         },
-        "twoQubitProperties": {"0-1": valid_twoQubitProperties,
-                               "1-2": valid_twoQubitProperties,
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties,
+            "1-2": valid_twoQubitProperties,
         },
     },
 }
 
+
 @pytest.fixture
 def reduced_standardized_json_3():
-    return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed)
+    return json.dumps(
+        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed
+    )
 
 
-reduced_ionq_device_capabilities_dict = {'action': {'braket.ir.openqasm.program': {'actionType': 'braket.ir.openqasm.program',
-                                                                        'supportedOperations': [],
-                                                                        "supportedResultTypes": valid_supportedResultTypes,
-                                                                        'version': ['1']}
-                                                                        },
- 'braketSchemaHeader': {'name': 'braket.device_schema.ionq.ionq_device_capabilities',
-                        'version': '1'},
- 'deviceParameters': {},
- 'paradigm': {'braketSchemaHeader': {'name': 'braket.device_schema.gate_model_qpu_paradigm_properties',
-                                     'version': '1'},
-              'connectivity': {'connectivityGraph': {}, 'fullyConnected': True},
-              'nativeGateSet': ['GPI', 'GPI2', 'MS'],
-              'qubitCount': 25},
- 'provider': {'braketSchemaHeader': {'name': 'braket.device_schema.ionq.ionq_provider_properties',
-                                     'version': '1'},
-              'errorMitigation': {'braket.device_schema.error_mitigation.debias.Debias': {'minimumShots': 2500}},
-              'fidelity': {'1Q': {'mean': 0.9998},
-                           '2Q': {'mean': 0.12345},
-                           'spam': {'mean': 0.9937}},
-              'timing': {'1Q': 0.000135,
-                         '2Q': 0.0006,
-                         'T1': 123.45678,
-                         'T2': 1.0,
-                         'readout': 0.0003,
-                         'reset': 2e-05}},
+reduced_ionq_device_capabilities_dict = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.ionq.ionq_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": True},
+        "nativeGateSet": ["GPI", "GPI2", "MS"],
+        "qubitCount": 25,
+    },
+    "provider": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.ionq.ionq_provider_properties",
+            "version": "1",
+        },
+        "errorMitigation": {
+            "braket.device_schema.error_mitigation.debias.Debias": {"minimumShots": 2500}
+        },
+        "fidelity": {"1Q": {"mean": 0.9998}, "2Q": {"mean": 0.12345}, "spam": {"mean": 0.9937}},
+        "timing": {
+            "1Q": 0.000135,
+            "2Q": 0.0006,
+            "T1": 123.45678,
+            "T2": 1.0,
+            "readout": 0.0003,
+            "reset": 2e-05,
+        },
+    },
     "service": {
         "braketSchemaHeader": {
             "name": "braket.device_schema.device_service_properties",
@@ -435,24 +456,31 @@ reduced_ionq_device_capabilities_dict = {'action': {'braket.ir.openqasm.program'
 def reduced_ionq_device_capabilities_json():
     return json.dumps(reduced_ionq_device_capabilities_dict)
 
+
 @pytest.fixture
 def reduced_ionq_device_capabilities(reduced_ionq_device_capabilities_json):
     return IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json)
 
+
 @pytest.fixture
 def valid_verbatim_circ_garnet():
-    return Circuit().add_verbatim_box(
-        Circuit().prx(1,0,0).cz(1,2).prx(2,np.pi, 0).cz(0,1)
-    )
+    return Circuit().add_verbatim_box(Circuit().prx(1, 0, 0).cz(1, 2).prx(2, np.pi, 0).cz(0, 1))
+
 
 @pytest.fixture
 def valid_verbatim_circ_ankaa3():
     return Circuit().add_verbatim_box(
-        Circuit().rx(0, np.pi).rz(1, np.pi).iswap(0,1).iswap(1,2).rx(2,np.pi)
+        Circuit().rx(0, np.pi).rz(1, np.pi).iswap(0, 1).iswap(1, 2).rx(2, np.pi)
     )
+
 
 @pytest.fixture
 def valid_verbatim_circ_aria1():
     return Circuit().add_verbatim_box(
-        Circuit().gpi(0, 3.14).gpi2(1, 3.14).ms(0,1,3.1,3.2,3.3).ms(1,2,3.1,3.3,4.3).gpi(2,3.14)
+        Circuit()
+        .gpi(0, 3.14)
+        .gpi2(1, 3.14)
+        .ms(0, 1, 3.1, 3.2, 3.3)
+        .ms(1, 2, 3.1, 3.3, 4.3)
+        .gpi(2, 3.14)
     )

@@ -24,7 +24,8 @@ from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiD
 from braket.emulation.local_emulator import LocalEmulator
 from braket.emulation.device_emulator_utils import standardize_ionq_device_properties_json
 
-from conftest import (invalid_device_properties_dict_1, invalid_device_properties_dict_2)
+from conftest import invalid_device_properties_dict_1, invalid_device_properties_dict_2
+
 
 def test_from_json_1(minimal_valid_json):
     emulator = LocalEmulator.from_json(minimal_valid_json)
@@ -52,10 +53,12 @@ def test_from_device_properties_non_fully_connected(reduced_standardized_json_2)
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
 
+
 def test_from_device_properties_non_fully_connected_but_directed(reduced_standardized_json_3):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json_3)
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
+
 
 def test_invalid_instantiation_1(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
@@ -66,6 +69,7 @@ def test_invalid_instantiation_1(reduced_standardized_json):
 def test_invalid_instantiation_2(reduced_standardized_json):
     with pytest.raises(ValueError):
         LocalEmulator.from_device_properties(reduced_standardized_json)
+
 
 @pytest.mark.parametrize(
     "invalid_device_properties_dict",
@@ -78,18 +82,34 @@ def test_noise_model_with_invalid_data(invalid_device_properties_dict):
     with pytest.raises(ValueError):
         LocalEmulator.from_json(json.dumps(invalid_device_properties_dict))
 
-def test_validate_valid_verbatim_circ_garnet(reduced_standardized_json_3, valid_verbatim_circ_garnet):
+
+def test_validate_valid_verbatim_circ_garnet(
+    reduced_standardized_json_3, valid_verbatim_circ_garnet
+):
     emulator = LocalEmulator.from_json(reduced_standardized_json_3)
     emulator.validate(valid_verbatim_circ_garnet)
 
-def test_validate_valid_verbatim_circ_ankaa3(reduced_standardized_json_2, valid_verbatim_circ_ankaa3):
+
+def test_validate_valid_verbatim_circ_ankaa3(
+    reduced_standardized_json_2, valid_verbatim_circ_ankaa3
+):
     emulator = LocalEmulator.from_json(reduced_standardized_json_2)
     emulator.validate(valid_verbatim_circ_ankaa3)
 
-def test_validate_valid_verbatim_circ_aria_1(reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1):
-    emulator = LocalEmulator.from_json(standardize_ionq_device_properties_json(reduced_ionq_device_capabilities_json))
+
+def test_validate_valid_verbatim_circ_aria_1(
+    reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1
+):
+    emulator = LocalEmulator.from_json(
+        standardize_ionq_device_properties_json(reduced_ionq_device_capabilities_json)
+    )
     emulator.validate(valid_verbatim_circ_aria1)
 
-def test_validate_valid_verbatim_circ_aria_1_v2(reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1):
-    emulator = LocalEmulator.from_device_properties(IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json))
+
+def test_validate_valid_verbatim_circ_aria_1_v2(
+    reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1
+):
+    emulator = LocalEmulator.from_device_properties(
+        IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json)
+    )
     emulator.validate(valid_verbatim_circ_aria1)

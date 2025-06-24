@@ -146,7 +146,6 @@ def test_apply_noise_model(setup_local_simulator_devices):
     assert circuit == target_circ
 
 
-
 def test_noisy_run(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))

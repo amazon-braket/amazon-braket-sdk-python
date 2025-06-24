@@ -17,13 +17,10 @@ from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.emulation.emulator import Emulator
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 
-from braket.passes.circuit_passes import (
-    QubitCountValidator,
-    GateValidator
-)
+from braket.passes.circuit_passes import QubitCountValidator, GateValidator
 from braket.passes.device_emulator_validators import (
     set_up_connectivity_validator,
-    set_up_gate_connectivity_validator
+    set_up_gate_connectivity_validator,
 )
 from braket.circuits.translations import BRAKET_GATES
 
@@ -180,4 +177,3 @@ class LocalEmulator(Emulator):
                 )
 
         return noise_model
-

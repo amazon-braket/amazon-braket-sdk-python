@@ -180,21 +180,23 @@ class Emulator(Device, BaseEmulator):
         except Exception as e:
             self._raise_exception(e)
 
-    def _remove_verbatim_box(
-        self, noisy_verbatim_circ: ProgramType) -> ProgramType:
+    def _remove_verbatim_box(self, noisy_verbatim_circ: ProgramType) -> ProgramType:
         """
-        Remove the verbatim box in the noisy circuit before simulating on 
+        Remove the verbatim box in the noisy circuit before simulating on
         local braket density matrix simulator.
-        
+
         Args:
             noisy_verbatim_circ (ProgramType): The input verbatim noisy circuit
 
         Returns:
             ProgramType: A verbatim noisy circuit without the verbatim boxes
         """
-        noisy_verbatim_circ_2 = [instruction for instruction in noisy_verbatim_circ.instructions if "VerbatimBox" not in instruction.operator.name]
+        noisy_verbatim_circ_2 = [
+            instruction
+            for instruction in noisy_verbatim_circ.instructions
+            if "VerbatimBox" not in instruction.operator.name
+        ]
         return Circuit(noisy_verbatim_circ_2)
-    
 
     def validate(self, task_specification: ProgramType) -> None:
         """

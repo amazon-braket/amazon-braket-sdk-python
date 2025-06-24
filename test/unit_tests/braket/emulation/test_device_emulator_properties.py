@@ -211,28 +211,40 @@ def test_invalid_json(invalid_json):
     with pytest.raises(ValueError):
         DeviceEmulatorProperties._from_json(invalid_json)
 
+
 def test_from_json_non_fully_connected(reduced_standardized_json_2):
     result = DeviceEmulatorProperties._from_json(reduced_standardized_json_2)
     assert result.qubitCount == 3
     assert result.nativeGateSet == ["rx", "rz", "iswap"]
     assert result.connectivityGraph == {"0": ["1"], "1": ["0", "2"], "2": ["1"]}
     assert (
-        result.oneQubitProperties["2"] == result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
+        result.oneQubitProperties["2"]
+        == result.oneQubitProperties["1"]
+        == result.oneQubitProperties["0"]
+        == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["0-1"] == result.twoQubitProperties["1-2"] == valid_twoQubitProperties
+    assert (
+        result.twoQubitProperties["0-1"]
+        == result.twoQubitProperties["1-2"]
+        == valid_twoQubitProperties
+    )
     assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == False
 
+
 def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3):
     result = DeviceEmulatorProperties._from_json(reduced_standardized_json_3)
     assert result.qubitCount == 3
-    assert result.nativeGateSet == ['cz', 'prx']
+    assert result.nativeGateSet == ["cz", "prx"]
     assert result.connectivityGraph == {"0": ["1"], "1": ["2"]}
     assert (
-        result.oneQubitProperties["2"] == result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
+        result.oneQubitProperties["2"]
+        == result.oneQubitProperties["1"]
+        == result.oneQubitProperties["0"]
+        == valid_oneQubitProperties
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes

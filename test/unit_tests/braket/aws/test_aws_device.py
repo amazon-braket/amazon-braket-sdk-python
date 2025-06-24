@@ -2260,6 +2260,7 @@ def test_run_batch_with_noise_model(
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
 
+
 @patch("braket.aws.aws_device.AwsSession")
 def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
     arn = SV1_ARN
@@ -2437,7 +2438,6 @@ def mock_rigetti_qpu_device(rigetti_device_capabilities):
     }
 
 
-
 @pytest.fixture
 def aws_session():
     _boto_session = Mock()
@@ -2458,7 +2458,6 @@ def aws_session():
     return _aws_session
 
 
-
 @pytest.fixture
 def rigetti_device(aws_session, mock_rigetti_qpu_device):
     def _device():
@@ -2468,13 +2467,12 @@ def rigetti_device(aws_session, mock_rigetti_qpu_device):
 
     return _device()
 
-@patch("braket.emulation.Emulator._get_local_simulator_backend")
-def test_local_emulator(mock_backend, rigetti_device):
-    mock_backend.return_value = "dummy_oq3_dm"
+
+def test_local_emulator(rigetti_device):
     emulator = rigetti_device.emulator()
+
 
 def test_ionq_emulator_local_is_False(rigetti_device):
     error_message = "local can only be True."
     with pytest.raises(ValueError, match=error_message):
         emulator = rigetti_device.emulator(local=False)
-

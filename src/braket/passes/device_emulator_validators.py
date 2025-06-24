@@ -15,8 +15,9 @@ from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.passes.circuit_passes import ConnectivityValidator, GateConnectivityValidator
 from braket.circuits.translations import BRAKET_GATES
 
+
 def set_up_connectivity_validator(
-    device_emu_properties: DeviceEmulatorProperties
+    device_emu_properties: DeviceEmulatorProperties,
 ) -> ConnectivityValidator:
     if device_emu_properties.fully_connected:
         return ConnectivityValidator(
@@ -36,8 +37,9 @@ def set_up_connectivity_validator(
             # the connectivity regardless if the graph is directed or undirected.
         )
 
+
 def set_up_gate_connectivity_validator(
-    device_emu_properties: DeviceEmulatorProperties
+    device_emu_properties: DeviceEmulatorProperties,
 ) -> GateConnectivityValidator:
     if device_emu_properties.fully_connected:
         gate_connectivity_graph = {}
