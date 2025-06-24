@@ -208,7 +208,7 @@ def test_invalid_instantiation_due_to_missing_field(minimal_valid_json, missing_
     ["1", "[1,2]"],
 )
 def test_invalid_json(invalid_json):
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         DeviceEmulatorProperties._from_json(invalid_json)
 
 

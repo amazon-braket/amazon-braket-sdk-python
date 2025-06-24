@@ -47,12 +47,14 @@ class GateValidator(ValidationPass[Circuit]):
                 BRAKET_GATES[gate.lower()] for gate in supported_gates
             )
         except KeyError as e:
-            raise ValueError(f"Input {str(e)} in supported_gates is not a valid Braket gate name.")
+            raise ValueError(
+                f"Input {e!s} in supported_gates is not a valid Braket gate name."
+            ) from e
 
         try:
             self._native_gates = frozenset(BRAKET_GATES[gate.lower()] for gate in native_gates)
         except KeyError as e:
-            raise ValueError(f"Input {str(e)} in native_gates is not a valid Braket gate name.")
+            raise ValueError(f"Input {e!s} in native_gates is not a valid Braket gate name.") from e
 
     def validate(self, program: Circuit) -> None:
         """
@@ -78,7 +80,7 @@ class GateValidator(ValidationPass[Circuit]):
                     instruction = program.instructions[idx]
                     if isinstance(instruction.operator, Gate):
                         gate = instruction.operator
-                        if not type(gate) in self._native_gates:
+                        if type(gate) not in self._native_gates:
                             raise ValueError(
                                 f"Gate {gate.name} is not a native gate for this device."
                             )
@@ -89,7 +91,7 @@ class GateValidator(ValidationPass[Circuit]):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
             elif isinstance(instruction.operator, Gate):
                 gate = instruction.operator
-                if not type(gate) in self._supported_gates:
+                if type(gate) not in self._supported_gates:
                     raise ValueError(f"Gate {gate.name} is not a supported gate for this device.")
             idx += 1
 

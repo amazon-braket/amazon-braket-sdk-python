@@ -11,22 +11,20 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.device_schema.result_type import ResultType
-from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
-    OneQubitProperties,
-    TwoQubitProperties,
-)
-from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 import json
-from braket.circuits.translations import BRAKET_GATES
+
+from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+from braket.device_schema.result_type import ResultType
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     CoherenceTime,
     Fidelity1Q,
     FidelityType,
+    GateFidelity2Q,
     OneQubitProperties,
     TwoQubitProperties,
-    GateFidelity2Q,
 )
+
+from braket.circuits.translations import BRAKET_GATES
 
 DEFAULT_SUPPORTED_RESULT_TYPES = [
     ResultType(name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
@@ -112,8 +110,8 @@ def standardize_ionq_device_properties(
             "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
             "version": "1",
         },
-        "oneQubitProperties": {i: oneQubitProperties for i in range(num_qubits)},
-        "twoQubitProperties": {edge: twoQubitProperties for edge in all_edges},
+        "oneQubitProperties": dict.fromkeys(range(num_qubits), oneQubitProperties),
+        "twoQubitProperties": dict.fromkeys(all_edges, twoQubitProperties),
     }
 
     device_properties.paradigm.nativeGateSet = [

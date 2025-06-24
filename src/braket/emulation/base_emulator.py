@@ -13,13 +13,14 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Union
+from collections.abc import Iterable
+from typing import Optional, Union
 
 from braket.passes import BasePass, ProgramType, ValidationPass
 
 
 class BaseEmulator:
-    def __init__(self, emulator_passes: Iterable[BasePass] = None):
+    def __init__(self, emulator_passes: Optional[Iterable[BasePass]] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
     def transform(self, task_specification: ProgramType) -> ProgramType:

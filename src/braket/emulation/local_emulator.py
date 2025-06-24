@@ -12,18 +12,10 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
-from typing import Any, Dict, Union, Tuple, Iterable
+
+from typing import Any, Union
+
 from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.emulation.emulator import Emulator
-from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
-
-from braket.passes.circuit_passes import QubitCountValidator, GateValidator
-from braket.passes.device_emulator_validators import (
-    set_up_connectivity_validator,
-    set_up_gate_connectivity_validator,
-)
-from braket.circuits.translations import BRAKET_GATES
-
 
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
 from braket.circuits.noises import (
@@ -31,11 +23,20 @@ from braket.circuits.noises import (
     Depolarizing,
     TwoQubitDepolarizing,
 )
+from braket.circuits.translations import BRAKET_GATES
+from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
+from braket.emulation.emulator import Emulator
+from braket.passes.circuit_passes import GateValidator, QubitCountValidator
+from braket.passes.device_emulator_validators import (
+    set_up_connectivity_validator,
+    set_up_gate_connectivity_validator,
+)
 
 
 class LocalEmulator(Emulator):
     """
-    A local emulator that mimics the restrictions and noises of a QPU based on the provided device properties.
+    A local emulator that mimics the restrictions and noises of a QPU based on the provided device
+    properties.
     """
 
     @classmethod
@@ -48,7 +49,8 @@ class LocalEmulator(Emulator):
         """Create a LocalEmulator instance from device properties.
 
         Args:
-            device_properties (Union[DeviceCapabilities, DeviceEmulatorProperties]): The device properties to use for emulation.
+            device_properties (Union[DeviceCapabilities, DeviceEmulatorProperties]): The device
+                properties to use for emulation.
             backend (str): The backend to use for simulation. Default is "braket_dm".
             **kwargs (Any): Additional keyword arguments to pass to the LocalEmulator constructor.
 
@@ -67,12 +69,13 @@ class LocalEmulator(Emulator):
                 device_properties
             )
         else:
-            raise ValueError(
-                f"device_properties must be an instance of either DeviceCapabilities or DeviceEmulatorProperties, not {type(device_properties)}."
+            raise TypeError(
+                f"device_properties must be an instance of either DeviceCapabilities or "
+                f"DeviceEmulatorProperties, not {type(device_properties)}."
             )
 
         if backend != "braket_dm":
-            raise ValueError(f"backend can only be `braket_dm`.")
+            raise ValueError("backend can only be `braket_dm`.")
 
         # Create a noise model based on the provided device properties
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
@@ -113,7 +116,9 @@ class LocalEmulator(Emulator):
         return cls.from_device_properties(device_emu_properties, backend=backend, **kwargs)
 
     @classmethod
-    def _setup_basic_noise_model_strategy(cls, device_em_properties: DeviceEmulatorProperties):
+    def _setup_basic_noise_model_strategy(
+        cls, device_em_properties: DeviceEmulatorProperties
+    ) -> NoiseModel:
         """
         Apply a basic noise model strategy consisting of:
             - 1 Qubit RB Depolarizing Noise
@@ -121,8 +126,8 @@ class LocalEmulator(Emulator):
             - 2 Qubit Gate Depolarizing Noise
         """
         noise_model = NoiseModel()
-        for qubit, data in device_em_properties.oneQubitProperties.items():
-            qubit = int(qubit)
+        for qubit_str, data in device_em_properties.oneQubitProperties.items():
+            qubit = int(qubit_str)
             oneQubitProperty = data.oneQubitFidelity
             fidelity_names = {
                 fidelity.fidelityType.name: ind for ind, fidelity in enumerate(oneQubitProperty)

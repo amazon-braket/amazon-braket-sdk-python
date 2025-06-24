@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.passes.circuit_passes import ConnectivityValidator, GateConnectivityValidator
-from braket.circuits.translations import BRAKET_GATES
 
 
 def set_up_connectivity_validator(
@@ -27,15 +27,14 @@ def set_up_connectivity_validator(
             # Set directed to false because ConnectivityValidator validates
             # the connectivity regardless if the graph is directed or undirected.
         )
-    else:
-        return ConnectivityValidator(
-            connectivity_graph=device_emu_properties.connectivityGraph,
-            num_qubits=device_emu_properties.qubitCount,
-            qubit_labels=device_emu_properties.qubit_labels,
-            directed=False,
-            # Set directed to false because ConnectivityValidator validates
-            # the connectivity regardless if the graph is directed or undirected.
-        )
+    return ConnectivityValidator(
+        connectivity_graph=device_emu_properties.connectivityGraph,
+        num_qubits=device_emu_properties.qubitCount,
+        qubit_labels=device_emu_properties.qubit_labels,
+        directed=False,
+        # Set directed to false because ConnectivityValidator validates
+        # the connectivity regardless if the graph is directed or undirected.
+    )
 
 
 def set_up_gate_connectivity_validator(
@@ -45,9 +44,7 @@ def set_up_gate_connectivity_validator(
         gate_connectivity_graph = {}
         for qubit_1 in device_emu_properties.qubit_labels:
             for qubit_2 in device_emu_properties.qubit_labels:
-                gate_connectivity_graph[(qubit_1, qubit_2)] = set(
-                    device_emu_properties.nativeGateSet
-                )
+                gate_connectivity_graph[qubit_1, qubit_2] = set(device_emu_properties.nativeGateSet)
     else:
         twoQubitProperties = device_emu_properties.twoQubitProperties
         # For non fully connected graph
@@ -72,7 +69,7 @@ def set_up_gate_connectivity_validator(
         for edge, edge_property in gate_connectivity_graph.items():
             reversed_edge = (edge[1], edge[0])
             if reversed_edge not in gate_connectivity_graph:
-                reversed_gate_connectivity_graph[reversed_edge] = gate_connectivity_graph[edge]
+                reversed_gate_connectivity_graph[reversed_edge] = edge_property
 
         gate_connectivity_graph.update(reversed_gate_connectivity_graph)
 

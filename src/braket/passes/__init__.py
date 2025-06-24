@@ -11,5 +11,5 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.passes.base_pass import BasePass, ProgramType  # noqa: F40
-from braket.passes.validation_pass import ValidationPass  # noqa: F40
+from braket.passes.base_pass import BasePass, ProgramType  # noqa: F401
+from braket.passes.validation_pass import ValidationPass  # noqa: F401

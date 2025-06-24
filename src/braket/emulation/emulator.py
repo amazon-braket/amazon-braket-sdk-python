@@ -14,17 +14,26 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
+
+from braket.ir.openqasm import Program as OpenQasmProgram
 
 from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.base_emulator import BaseEmulator
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.passes import BasePass, ProgramType
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
+
+# Create a module-level logger
+logger = logging.getLogger(__name__)
+
+
+class EmulatorError(Exception):
+    """Custom exception for emulator-related errors."""
 
 
 class Emulator(Device, BaseEmulator):
@@ -38,7 +47,7 @@ class Emulator(Device, BaseEmulator):
         self,
         backend: str = "default",
         noise_model: Optional[NoiseModel] = None,
-        emulator_passes: Iterable[BasePass] = None,
+        emulator_passes: Optional[Iterable[BasePass]] = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
@@ -65,7 +74,7 @@ class Emulator(Device, BaseEmulator):
         """
         if backend == "default":
             if noise_model:
-                logging.info(
+                logger.info(
                     "Setting LocalSimulator backend to use 'braket_dm' \
                         because a NoiseModel was provided."
                 )
@@ -110,7 +119,7 @@ class Emulator(Device, BaseEmulator):
         task_specification_v2 = self._remove_verbatim_box(task_specification)
         return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
 
-    def run_batch(  # noqa: C901
+    def run_batch(
         self,
         task_specifications: Union[
             Union[Circuit, OpenQasmProgram],
@@ -174,9 +183,14 @@ class Emulator(Device, BaseEmulator):
         """
         try:
             program = super().transform(task_specification)
-            if apply_noise_model and self.noise_model:
-                return self._noise_model.apply(program)
-            return program
+            return (
+                self._noise_model.apply(program)
+                if apply_noise_model and self.noise_model
+                else program
+            )
+            # if apply_noise_model and self.noise_model:
+            #     return self._noise_model.apply(program)
+            # return program
         except Exception as e:
             self._raise_exception(e)
 
@@ -219,4 +233,4 @@ class Emulator(Device, BaseEmulator):
         Args:
             exception (Exception): The exception to modify and raise.
         """
-        raise Exception(str(exception) + f" ({self._name})") from exception
+        raise EmulatorError(str(exception) + f" ({self._name})") from exception

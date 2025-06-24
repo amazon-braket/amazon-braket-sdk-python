@@ -43,15 +43,14 @@ from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.noise_model import NoiseModel
+from braket.devices import Devices
 from braket.devices.device import Device
+from braket.emulation.emulator import Emulator
+from braket.emulation.local_emulator import LocalEmulator
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
-
-from braket.devices import Devices
-from braket.emulation.emulator import Emulator
-from braket.emulation.local_emulator import LocalEmulator
 
 
 class AwsDeviceType(str, Enum):
@@ -587,7 +586,7 @@ class AwsDevice(Device):
         self._update_pulse_properties()
         return self._ports or {}
 
-    def emulator(self, local=True) -> Emulator:
+    def emulator(self, local: bool = True) -> Emulator:
         """
         A device emulator mimics the restrictions and noise of the AWS QPU by validating and
         compiling programs before running them on a simulated backend. An emulator can be used
@@ -601,7 +600,7 @@ class AwsDevice(Device):
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."
             )
-        if local != True:
+        if not local:
             raise ValueError("local can only be True.")
 
         self._emulator = LocalEmulator.from_device_properties(self.properties)

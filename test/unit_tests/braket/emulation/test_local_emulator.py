@@ -67,7 +67,7 @@ def test_invalid_instantiation_1(reduced_standardized_json):
 
 
 def test_invalid_instantiation_2(reduced_standardized_json):
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         LocalEmulator.from_device_properties(reduced_standardized_json)
 
 

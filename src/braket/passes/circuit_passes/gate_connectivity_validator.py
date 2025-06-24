@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Dict, Iterable, Tuple, Union
+from collections.abc import Iterable
+from typing import Any, Union
 
 from networkx import DiGraph
 from networkx.utils import graphs_equal
@@ -26,8 +27,8 @@ from braket.registers.qubit_set import QubitSet
 class GateConnectivityValidator(ValidationPass[Circuit]):
     def __init__(
         self,
-        gate_connectivity_graph: Union[Dict[Tuple[Any, Any], Iterable[str]], DiGraph],
-        directed=True,
+        gate_connectivity_graph: Union[dict[tuple[Any, Any], Iterable[str]], DiGraph],
+        directed: bool = True,
     ):
         super().__init__()
         if isinstance(gate_connectivity_graph, dict):
@@ -55,20 +56,19 @@ provided as edge attributes."
                     self._gate_connectivity_graph.add_edge(
                         *back_edge, supported_gates=supported_gates
                     )
-                else:
-                    # check that the supported gate sets are identical
-                    if (
-                        self._gate_connectivity_graph[u][v]["supported_gates"]
-                        != self._gate_connectivity_graph[v][u]["supported_gates"]
-                    ):
-                        raise ValueError(
-                            f"Connectivity Graph marked as undirected\
+                # check that the supported gate sets are identical
+                elif (
+                    self._gate_connectivity_graph[u][v]["supported_gates"]
+                    != self._gate_connectivity_graph[v][u]["supported_gates"]
+                ):
+                    raise ValueError(
+                        f"Connectivity Graph marked as undirected\
                                 but edges ({u}, {v}) and ({v}, {u}) have different supported\
                                 gate sets."
-                        )
+                    )
 
     def _graph_node_type(self) -> type:
-        return type(list(self._gate_connectivity_graph.nodes)[0])
+        return type(next(iter(self._gate_connectivity_graph.nodes)))
 
     def validate(self, program: Circuit) -> None:
         """
@@ -83,33 +83,56 @@ provided as edge attributes."
             ValueError if any of the gate operations use qubits or qubit edges that don't exist
             in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
-        for idx in range(len(program.instructions)):
+        idx = 0
+        while idx < len(program.instructions):
             instruction = program.instructions[idx]
             if isinstance(instruction.operator, StartVerbatimBox):
+                idx = self._process_verbatim_box(program, idx)
+            else:
                 idx += 1
-                while idx < len(program.instructions) and not isinstance(
-                    program.instructions[idx].operator, EndVerbatimBox
-                ):
-                    instruction = program.instructions[idx]
-                    if isinstance(instruction.operator, Gate):
-                        if (
-                            instruction.operator.qubit_count == 2
-                        ):  # Assuming only maximum 2-qubit native gates are supported
-                            self._validate_instruction_connectivity(
-                                instruction.operator.name, instruction.control, instruction.target
-                            )
-                        else:
-                            # just check that the target qubit exists in the connectivity graph
-                            target_qubit = instruction.target[0]
-                            if (
-                                self._graph_node_type()(int(target_qubit))
-                                not in self._gate_connectivity_graph
-                            ):
-                                raise ValueError(
-                                    f"Qubit {target_qubit} does not exist in the device topology."
-                                )
-                    idx += 1
-                idx += 1
+
+    def _process_verbatim_box(self, program: Circuit, start_idx: int) -> int:
+        """
+        Process instructions within a verbatim box.
+
+        Args:
+            program: The quantum program containing instructions
+            start_idx: The index of the StartVerbatimBox instruction
+
+        Returns:
+            int: The index after the EndVerbatimBox instruction
+        """
+        idx = start_idx + 1
+        while idx < len(program.instructions) and not isinstance(
+            program.instructions[idx].operator, EndVerbatimBox
+        ):
+            instruction = program.instructions[idx]
+            if isinstance(instruction.operator, Gate):
+                self._validate_gate_in_verbatim(instruction)
+            idx += 1
+        return idx + 1  # Skip past the EndVerbatimBox
+
+    def _validate_gate_in_verbatim(self, instruction: Any) -> None:
+        """
+        Validate a gate instruction within a verbatim box.
+
+        Args:
+            instruction: The gate instruction to validate
+
+        Raises:
+            ValueError: If the gate is not supported by the device topology
+        """
+        if (
+            instruction.operator.qubit_count == 2
+        ):  # Assuming only maximum 2-qubit native gates are supported
+            self._validate_instruction_connectivity(
+                instruction.operator.name, instruction.control, instruction.target
+            )
+        else:
+            # just check that the target qubit exists in the connectivity graph
+            target_qubit = instruction.target[0]
+            if self._graph_node_type()(int(target_qubit)) not in self._gate_connectivity_graph:
+                raise ValueError(f"Qubit {target_qubit} does not exist in the device topology.")
 
     def _validate_instruction_connectivity(
         self, gate_name: str, control_qubits: QubitSet, target_qubits: QubitSet

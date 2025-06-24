@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from networkx import DiGraph, complete_graph, from_dict_of_lists
 from networkx.utils import graphs_equal
@@ -27,7 +27,7 @@ from braket.registers.qubit_set import QubitSet
 class ConnectivityValidator(ValidationPass[Circuit]):
     def __init__(
         self,
-        connectivity_graph: Optional[Union[Dict[int, Iterable[int]], DiGraph]] = None,
+        connectivity_graph: Optional[Union[dict[int, Iterable[int]], DiGraph]] = None,
         fully_connected: bool = False,
         num_qubits: Optional[int] = None,
         qubit_labels: Optional[Union[Iterable[int], QubitSet]] = None,
@@ -76,7 +76,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                         provided if fully_connected is True."
                 )
             self._connectivity_graph = complete_graph(
-                num_qubits if num_qubits else qubit_labels, create_using=DiGraph()
+                num_qubits or qubit_labels, create_using=DiGraph()
             )
         elif not isinstance(connectivity_graph, DiGraph):
             try:
@@ -87,7 +87,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                 raise ValueError(
                     f"connectivity_graph must be a valid DiGraph or a dictionary\
                         mapping integers (nodes) to a list of integers (adjancency lists): {e}"
-                )
+                ) from e
         else:
             self._connectivity_graph = connectivity_graph
 
@@ -96,7 +96,7 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
     def _graph_node_type(self) -> type:
-        return type(list(self._connectivity_graph.nodes)[0])
+        return type(next(iter(self._connectivity_graph.nodes)))
 
     def validate(self, program: Circuit) -> None:
         """
@@ -114,10 +114,10 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         """
         # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
-        if not any([
+        if not any(
             isinstance(instruction.operator, StartVerbatimBox)
             for instruction in program.instructions
-        ]):
+        ):
             return
         for idx in range(len(program.instructions)):
             instruction = program.instructions[idx]
@@ -165,10 +165,15 @@ class ConnectivityValidator(ValidationPass[Circuit]):
         else:
             raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
-        for e in gate_connectivity_graph.edges:
-            e = (self._graph_node_type()(int(e[0])), self._graph_node_type()(int(e[1])))
-            if not self._connectivity_graph.has_edge(*e):
-                raise ValueError(f"{e[0]} is not connected to qubit {e[1]} in this device.")
+        for edge in gate_connectivity_graph.edges:
+            typed_edge = (
+                self._graph_node_type()(int(edge[0])),
+                self._graph_node_type()(int(edge[1])),
+            )
+            if not self._connectivity_graph.has_edge(*typed_edge):
+                raise ValueError(
+                    f"{typed_edge[0]} is not connected to qubit {typed_edge[1]} in this device."
+                )
 
     def __eq__(self, other: ValidationPass) -> bool:
         return isinstance(other, ConnectivityValidator) and graphs_equal(
