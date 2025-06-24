@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "OQpy: OpenQASM 3 + OpenPulse in Python"
+abstract: >
+  The goal of oqpy ("ock-pie") is to make it easy to generate OpenQASM 3 + OpenPulse
+  in Python. The oqpy library builds off of the openqasm3 and openpulse packages,
+  which serve as Python reference implementations of the abstract syntax tree (AST)
+  for the OpenQASM 3 and OpenPulse grammars.
+authors:
+  - family-names: Reinhold
+    given-names: Philip
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0002-8141-1842"
+  - family-names: Teo
+    given-names: Stephanie
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0002-6762-7313"
+  - family-names: Jaskula
+    given-names: Jean-Christophe
+    affiliation: "AWS Quantum Technologies"
+    orcid: "https://orcid.org/0000-0002-3379-229X"
+  - family-names: Chen
+    given-names: Li
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0002-1700-7503"
+  - family-names: Thorgrimsson
+    given-names: Brandur
+    affiliation: "Atlantic Quantum"
+    orcid: "https://orcid.org/0000-0002-4491-1717"
+  - family-names: Mishra
+    given-names: Anurag
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0003-1325-4387"
+  - family-names: D'Ewart
+    given-names: Mitch
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0001-8916-560X"
+  - family-names: Shaffer
+    given-names: Ryan
+    affiliation: "AWS Quantum Technologies"
+    orcid: "https://orcid.org/0000-0002-3196-4529"
+  - family-names: Davis
+    given-names: Erik
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0001-7696-2538"
+  - family-names: Chen
+    given-names: Yi-Ting
+    affiliation: "AWS Quantum Technologies"
+    orcid: "https://orcid.org/0000-0001-7340-5402"
+  - family-names: Sivarajah
+    given-names: Prasahnt
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0002-9383-8624"
+  - family-names: Karalekas
+    given-names: Peter
+    affiliation: "AWS Center for Quantum Computing"
+    orcid: "https://orcid.org/0000-0001-6031-4800"
+license: Apache-2.0
+keywords:
+  - openqasm
+  - quantum
+repository-code: "https://github.com/openqasm/oqpy"
+doi: 10.5281/zenodo.7349265

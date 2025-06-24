@@ -1,0 +1,164 @@
+Metadata-Version: 2.4
+Name: amazon-braket-default-simulator
+Version: 1.26.7
+Summary: An open source quantum circuit simulator to be run locally with the Amazon Braket SDK
+Home-page: https://github.com/amazon-braket/amazon-braket-default-simulator-python
+Author: Amazon Web Services
+License: Apache License 2.0
+Keywords: Amazon AWS Quantum
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >= 3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: NOTICE
+Requires-Dist: numpy
+Requires-Dist: opt_einsum
+Requires-Dist: pydantic>2
+Requires-Dist: scipy
+Requires-Dist: sympy
+Requires-Dist: antlr4-python3-runtime==4.9.2
+Requires-Dist: amazon-braket-schemas>=1.21.2
+Provides-Extra: test
+Requires-Dist: pre-commit; extra == "test"
+Requires-Dist: pylint; extra == "test"
+Requires-Dist: pytest==7.2.0; extra == "test"
+Requires-Dist: pytest-benchmark; extra == "test"
+Requires-Dist: pytest-cov; extra == "test"
+Requires-Dist: pytest-rerunfailures; extra == "test"
+Requires-Dist: pytest-xdist; extra == "test"
+Requires-Dist: ruff; extra == "test"
+Requires-Dist: sphinx; extra == "test"
+Requires-Dist: sphinx-rtd-theme; extra == "test"
+Requires-Dist: sphinxcontrib-apidoc; extra == "test"
+Requires-Dist: tox; extra == "test"
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: license-file
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Amazon Braket Default Simulator
+
+[![Latest Version](https://img.shields.io/pypi/v/amazon-braket-default-simulator.svg)](https://pypi.python.org/pypi/amazon-braket-default-simulator)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-default-simulator.svg)](https://pypi.python.org/pypi/amazon-braket-default-simulator)
+[![Build status](https://github.com/amazon-braket/amazon-braket-default-simulator-python/actions/workflows/python-package.yml/badge.svg)](https://github.com/amazon-braket/amazon-braket-default-simulator-python/actions/workflows/python-package.yml)
+[![codecov](https://codecov.io/gh/amazon-braket/amazon-braket-default-simulator-python/branch/main/graph/badge.svg?token=FZEG1AQU3S)](https://codecov.io/gh/amazon-braket/amazon-braket-default-simulator-python)
+[![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-default-simulator-python.svg?logo=read-the-docs)](https://amazon-braket-default-simulator-python.readthedocs.io/en/latest/?badge=latest)
+
+The Amazon Braket Default Simulator is a Python open source library that provides an implementation of a quantum simulator 
+that you can run locally. You can use the simulator to test quantum tasks that you construct for the [Amazon Braket SDK](https://github.com/amazon-braket/amazon-braket-sdk-python)
+before you submit them to the Amazon Braket service for execution.
+
+## Setting up Amazon Braket Default Simulator Python
+You must have the [Amazon Braket SDK](https://github.com/amazon-braket/amazon-braket-sdk-python) installed to use the local simulator.
+Follow the instructions in the [README](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/README.md) for setup.
+
+**Checking the version of the default simulator**
+
+You can check your currently installed version of `amazon-braket-default-simulator` with `pip show`:
+
+```bash
+pip show amazon-braket-default-simulator
+```
+
+or alternatively from within Python:
+
+```
+>>> from braket import default_simulator
+>>> default_simulator.__version__
+```
+
+## Usage
+The quantum simulator implementations `StateVectorSimulator` and `DensityMatrixSimulator` plug into the `LocalSimulator` interface in 
+[Amazon Braket SDK](https://github.com/amazon-braket/amazon-braket-sdk-python), with the `backend` parameters as `"braket_sv"` and `"braket_dm"`, respectively.
+Alternatively, to use `StateVectorSimulator`, you can instantiate `LocalSimulator` with no arguments or with `backend="default"`: 
+
+**Executing a circuit using the default simulator**
+```python
+from braket.circuits import Circuit
+from braket.devices import LocalSimulator
+
+device = LocalSimulator()
+
+bell = Circuit().h(0).cnot(0, 1)
+print(device.run(bell, shots=100).result().measurement_counts)
+```
+
+## Documentation
+
+Detailed documentation, including the API reference, can be found on [Read the Docs](https://amazon-braket-default-simulator-python.readthedocs.io/en/latest/)
+
+**To generate the API Reference HTML in your local environment**
+
+First, install tox:
+
+```bash
+pip install tox
+```
+
+To generate the HTML, first change directories (`cd`) to position the cursor in the `amazon-braket-default-simulator-python` directory. Then, run the following command to generate the HTML documentation files:
+
+```bash
+tox -e docs
+```
+
+To view the generated documentation, open the following file in a browser:
+`../amazon-braket-default-simulator-python/build/documentation/html/index.html`
+
+## Testing
+
+If you want to contribute to the project, be sure to run unit tests and get a successful result 
+before you submit a pull request. To run the unit tests, first install the test dependencies using the following command:
+
+```bash
+pip install -e "amazon-braket-default-simulator-python[test]"
+```
+
+To run the unit tests:
+
+```bash
+tox -e unit-tests
+```
+
+You can also pass in various pytest arguments to run selected tests:
+
+```bash
+tox -e unit-tests -- your-arguments
+```
+
+For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+
+To run linters and doc generators and unit tests:
+
+```bash
+tox
+```
+
+To run the performance tests:
+
+```bash
+tox -e performance-tests
+```
+
+These tests will compare the performance of a series of simulator executions for your changes against the latest commit on the main branch.
+*Note*: The execution times for the performance tests are affected by the other processes running on the system.
+In order to get stable results, stop other applications when running these tests.
+
+## License
+
+This project is licensed under the Apache-2.0 License.
+

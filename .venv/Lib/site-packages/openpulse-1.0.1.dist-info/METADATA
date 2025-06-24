@@ -1,0 +1,48 @@
+Metadata-Version: 2.1
+Name: openpulse
+Version: 1.0.1
+Summary: Reference OpenPulse AST in Python
+Home-page: https://github.com/openqasm/openpulse/
+Author: OpenQASM Contributors
+License: Apache 2.0 Software License
+Keywords: openqasm quantum openpulse
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Scientific/Engineering
+Description-Content-Type: text/markdown; variant=GFM
+Requires-Dist: antlr4-python3-runtime<4.14,>=4.7
+Requires-Dist: openqasm3[parser]<2.0,>=1.0.0
+Requires-Dist: importlib-metadata; python_version < "3.10"
+Provides-Extra: all
+Requires-Dist: pytest>=6.0; extra == "all"
+Requires-Dist: pyyaml; extra == "all"
+Provides-Extra: tests
+Requires-Dist: pytest>=6.0; extra == "tests"
+Requires-Dist: pyyaml; extra == "tests"
+
+# OpenPulse Python Reference
+
+[![License](https://img.shields.io/github/license/openqasm/openqasm.svg)](https://opensource.org/licenses/Apache-2.0)<!-- long-description-skip-begin -->[![Release](https://img.shields.io/pypi/v/openpulse)](https://pypi.org/project/openpulse)<!-- long-description-skip-end -->
+
+OpenPulse is a concrete implementation of pulse grammar for `cal` and `defcal` body.
+It reuses the classical types and statements from openqasm3.
+
+The package is structured similarly to `openqasm3` with the modules:
+
+* `openpulse.ast`: The AST nodes. Identical nodes from `openqasm3.ast` are re-exported.
+
+* `openpulse.parser`: A parser similar to `openqasm3.parser`, but for OpenPulse.
+
+* `tests`: A set of unit tests.
+
+* No visitor module as `openqasm3.visitor` can be reused.
+
+The OpenPulse grammar introduce the following:
+
+* Pulse types: `port`, `frame` and `waveform`.
+* Extension to OpenQASM 3 classical type to consume the pulse types.
