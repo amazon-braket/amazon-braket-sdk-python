@@ -19,9 +19,8 @@ import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
-from braket.circuits.measure import Measure
 from braket.circuits.moments import MomentType
-from braket.circuits.noise import Noise
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit_set import QubitSet
 
@@ -129,9 +128,10 @@ def _group_items(
     """
     groupings = []
     for item in items:
-        # Can only print Gate, Noise and Measure operators for instructions at the moment
+        # Can only print QuantumOperator and CompilerDirective operators for instructions at
+        # the moment
         if isinstance(item, Instruction) and not isinstance(
-            item.operator, (Gate, Noise, CompilerDirective, Measure)
+            item.operator, (CompilerDirective, QuantumOperator)
         ):
             continue
 
