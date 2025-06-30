@@ -16,13 +16,13 @@ from typing import Optional, Union
 
 import numpy as np
 from braket.default_simulator.openqasm.interpreter import VerbatimBoxEnd, VerbatimBoxStart
-from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.default_simulator.openqasm.parser.openqasm_ast import QuantumStatement
+from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
-from braket.circuits.compiler_directives import StartVerbatimBox,EndVerbatimBox
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
@@ -180,7 +180,7 @@ class BraketProgramContext(AbstractProgramContext):
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
 
-    def add_verbatim_marker(self, marker: QuantumStatement)->None:
+    def add_verbatim_marker(self, marker: QuantumStatement) -> None:
         if isinstance(marker, VerbatimBoxStart):
             instruction = Instruction(StartVerbatimBox(), target=[])
         elif isinstance(marker, VerbatimBoxEnd):
