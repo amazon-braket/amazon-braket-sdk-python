@@ -11,8 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-Version number (major.minor.patch[-label])
-"""
+import pytest
 
-__version__ = "1.94.1.dev0"
+from braket.experimental_capabilities.experimental_capability_context import (
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
+)
+
+
+@pytest.fixture(autouse=True)
+def reset_capabilities_context():
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable()
