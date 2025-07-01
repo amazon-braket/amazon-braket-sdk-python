@@ -32,6 +32,7 @@ from braket.ir.jaqcd.program_v1 import Results
 import braket.circuits.gates as braket_gates
 import braket.circuits.result_types as ResultTypes  # noqa: N812
 from braket.circuits import Observable, noises, observables
+from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
 BRAKET_GATES = {
     "gphase": braket_gates.GPhase,
@@ -74,6 +75,8 @@ BRAKET_GATES = {
     "prx": braket_gates.PRx,
     "ms": braket_gates.MS,
     "unitary": braket_gates.Unitary,
+    "cc_prx": CCPRx,
+    "measure_ff": MeasureFF,
 }
 
 one_prob_noise_map = {

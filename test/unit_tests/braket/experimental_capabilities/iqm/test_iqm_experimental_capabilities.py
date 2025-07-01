@@ -28,6 +28,8 @@ from braket.experimental_capabilities.experimental_capability_context import (
     ExperimentalCapabilityContextError,
 )
 from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
+from braket.ir.openqasm import Program as OpenQasmProgram
+import numpy as np
 
 
 def test_ccprx_invalid_capability_context():
@@ -167,3 +169,38 @@ def test_example_expected_to_fail():
     with pytest.raises(Exception):
         circuit.cc_prx(1, math.pi / 2, math.pi / 2, 0)
         circuit.measure_ff(1, 0)
+
+
+def test_measureff_ccprx_from_ir():
+    """Test that circuits with both standard and experimental gates can be reconstructed from IR."""
+    with EnableExperimentalCapability():
+        openqasm_source = """
+        OPENQASM 3.0;
+        bit[2] b;
+        #pragma braket verbatim
+        box{
+            prx(3.141592653589793, 0.0) $1;
+            measure_ff(0) $1;
+            cc_prx(3.141592653589793, 0.0, 0) $1;
+        }
+        """
+        ir = OpenQasmProgram(source=openqasm_source)
+        circuit_from_ir = Circuit.from_ir(ir)
+
+        assert len(circuit_from_ir.instructions) == 3
+
+        assert circuit_from_ir.instructions[0].operator.name == "PRx"
+        assert isinstance(circuit_from_ir.instructions[1].operator, MeasureFF)
+        assert isinstance(circuit_from_ir.instructions[2].operator, CCPRx)
+
+        instruction = circuit_from_ir.instructions[1]
+        params = instruction.operator.parameters
+        assert params[0] == 0
+        assert instruction.target == [1]
+
+        instruction = circuit_from_ir.instructions[2]
+        params = instruction.operator.parameters
+        assert np.isclose(params[0], 3.141592653589793)
+        assert np.isclose(params[1], 0)
+        assert params[2] == 0
+        assert instruction.target == [1]
