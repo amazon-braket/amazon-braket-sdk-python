@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.95.0 (2025-07-01)
+
+### Features
+
+ * support from_ir for cc_prx and measure_ff
+
 ## v1.94.0 (2025-06-26)
 
 ### Features
