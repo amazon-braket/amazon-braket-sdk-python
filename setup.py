@@ -43,6 +43,7 @@ setup(
         "openqasm3",
         "sympy",
         "backports.entry-points-selectable",
+        "matplotlib",
     ],
     extras_require={
         "test": [
