@@ -186,19 +186,23 @@ def test_measureff_ccprx_from_ir():
         """
         ir = OpenQasmProgram(source=openqasm_source)
         circuit_from_ir = Circuit.from_ir(ir)
+        assert len(circuit_from_ir.instructions) == 5
 
-        assert len(circuit_from_ir.instructions) == 3
 
-        assert circuit_from_ir.instructions[0].operator.name == "PRx"
-        assert isinstance(circuit_from_ir.instructions[1].operator, MeasureFF)
-        assert isinstance(circuit_from_ir.instructions[2].operator, CCPRx)
+        assert circuit_from_ir.instructions[0].operator.name == "StartVerbatimBox"
 
-        instruction = circuit_from_ir.instructions[1]
+        assert circuit_from_ir.instructions[1].operator.name == "PRx"
+        assert isinstance(circuit_from_ir.instructions[2].operator, MeasureFF)
+        assert isinstance(circuit_from_ir.instructions[3].operator, CCPRx)
+        
+        assert circuit_from_ir.instructions[4].operator.name == "EndVerbatimBox"
+
+        instruction = circuit_from_ir.instructions[2]
         params = instruction.operator.parameters
         assert params[0] == 0
         assert instruction.target == [1]
 
-        instruction = circuit_from_ir.instructions[2]
+        instruction = circuit_from_ir.instructions[3]
         params = instruction.operator.parameters
         assert np.isclose(params[0], 3.141592653589793)
         assert np.isclose(params[1], 0)
