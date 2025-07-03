@@ -35,6 +35,7 @@ from braket.circuits import (
     noise,
     observables,
 )
+from braket.circuits.braket_program_context import BraketProgramContext
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.measure import Measure
 from braket.circuits.noises import BitFlip
@@ -45,6 +46,8 @@ from braket.circuits.serialization import (
     QubitReferenceType,
 )
 from braket.circuits.translations import braket_result_to_result_type
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxEnd, VerbatimBoxStart
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import (
     DragGaussianWaveform,
@@ -973,6 +976,30 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
     expected_circ.measure(1)
     actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
     assert actual_circ == expected_circ
+
+def test_add_start_marker():
+    context = BraketProgramContext()
+    context.add_verbatim_marker(VerbatimBoxStart())
+    instructions = context.circuit.instructions
+    assert len(instructions) == 1
+    assert isinstance(instructions[0].operator, StartVerbatimBox)
+
+def test_add_end_marker():
+    context = BraketProgramContext()
+    context.add_verbatim_marker(VerbatimBoxEnd())
+    instructions = context.circuit.instructions
+    assert len(instructions) == 1
+    assert isinstance(instructions[0].operator, EndVerbatimBox)
+
+
+def test_add_verbatim_invalid_marker():
+    context = BraketProgramContext()
+    
+    class InvalidMarker:
+        pass
+
+    with pytest.raises(TypeError, match="Unsupported marker type"):
+        context.add_verbatim_marker(InvalidMarker())
 
 
 def test_add_with_instruction_with_default(cnot_instr):
