@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.95.0 (2025-07-01)
+
+### Features
+
+ * support from_ir for cc_prx and measure_ff
+
+## v1.94.0 (2025-06-26)
+
+### Features
+
+ * support IQM dynamic circuit capabilities
+
+## v1.93.0 (2025-06-11)
+
+### Features
+
+ * add factory methods for AHS AtomArrangements
+
+## v1.92.0 (2025-06-10)
+
+### Features
+
+ * Measure Criteria for readout error to target measurement operations
+
 ## v1.91.2 (2025-04-22)
 
 ### Bug Fixes and Other Changes

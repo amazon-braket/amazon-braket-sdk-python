@@ -13,6 +13,7 @@
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation  # noqa: F401
 from braket.ahs.atom_arrangement import AtomArrangement, AtomArrangementItem, SiteType  # noqa: F401
+from braket.ahs.canvas import Canvas  # noqa: F401
 from braket.ahs.discretization_types import DiscretizationProperties  # noqa: F401
 from braket.ahs.driving_field import DrivingField  # noqa: F401
 from braket.ahs.field import Field  # noqa: F401
