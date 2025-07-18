@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.96.0 (2025-07-17)
+
+### Features
+
+ * Add Emerald
+
+### Bug Fixes and Other Changes
+
+ * positional param issue for shots in tests
+
 ## v1.95.0 (2025-07-01)
 
 ### Features
