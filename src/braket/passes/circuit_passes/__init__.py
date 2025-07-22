@@ -21,3 +21,6 @@ from braket.passes.circuit_passes.gate_validator import GateValidator  # noqa: F
 from braket.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
     QubitCountValidator,
 )
+from braket.passes.circuit_passes.result_type_validator import (  # noqa: F401
+    ResultTypeValidator,
+)
