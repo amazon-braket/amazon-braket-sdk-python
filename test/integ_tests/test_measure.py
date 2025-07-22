@@ -48,7 +48,7 @@ def test_unsupported_devices(arn):
 def test_measure_on_local_sim(sim):
     circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1])
     device = LocalSimulator(sim)
-    result = device.run(circ, SHOTS).result()
+    result = device.run(circ, shots=SHOTS).result()
     assert len(result.measurements[0]) == 2
     assert result.measured_qubits == [0, 1]
 
@@ -59,7 +59,7 @@ def test_measure_on_supported_devices(arn):
     if not device.is_available:
         pytest.skip("Device offline")
     circ = Circuit().h(0).cnot(0, 1).measure([0])
-    result = device.run(circ, SHOTS).result()
+    result = device.run(circ, shots=SHOTS).result()
     assert len(result.measurements[0]) == 1
     assert result.measured_qubits == [0]
 
@@ -72,7 +72,7 @@ def test_measure_on_supported_devices(arn):
     ],
 )
 def test_measure_targets(circuit, expected_measured_qubits):
-    result = DEVICE.run(circuit, SHOTS).result()
+    result = DEVICE.run(circuit, shots=SHOTS).result()
     assert result.measured_qubits == expected_measured_qubits
     assert len(result.measurements[0]) == len(expected_measured_qubits)
 
@@ -80,6 +80,6 @@ def test_measure_targets(circuit, expected_measured_qubits):
 def test_measure_with_noise():
     device = LocalSimulator("braket_dm")
     circuit = Circuit().x(0).x(1).bit_flip(0, probability=0.1).measure(0)
-    result = device.run(circuit, SHOTS).result()
+    result = device.run(circuit, shots=SHOTS).result()
     assert result.measured_qubits == [0]
     assert len(result.measurements[0]) == 1
