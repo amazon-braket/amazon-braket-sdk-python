@@ -89,7 +89,10 @@ class LocalEmulator(Emulator):
         emulator.add_pass(set_up_connectivity_validator(device_em_properties))
         emulator.add_pass(set_up_gate_connectivity_validator(device_em_properties))
         emulator.add_pass(
-            ResultTypeValidator([rt.name for rt in device_em_properties.supportedResultTypes])
+            ResultTypeValidator(
+                [rt.name for rt in device_em_properties.supportedResultTypes],
+                device_em_properties.connectivityGraph,
+            )
         )
 
         return emulator
