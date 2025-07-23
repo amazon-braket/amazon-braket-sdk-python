@@ -2476,3 +2476,49 @@ def test_ionq_emulator_local_is_False(rigetti_device):
     error_message = "local can only be True."
     with pytest.raises(ValueError, match=error_message):
         emulator = rigetti_device.emulator(local=False)
+
+
+@patch("braket.aws.aws_device.LocalEmulator.from_device_properties")
+@patch("braket.aws.aws_device.AwsDevice._get_session_and_initialize")
+def test_emulator_with_ankaa_device(mock_get_session, mock_from_device_properties):
+    mock_session = Mock()
+    mock_emulator = Mock()
+    mock_from_device_properties.return_value = mock_emulator
+    mock_get_session.return_value = mock_session
+
+    # Create a device with "Ankaa" in the name
+    device = AwsDevice(RIGETTI_ARN, mock_session)
+    device._name = "Ankaa-1"
+    device._properties = Mock()
+    device._type = "QPU"  # Set the device type directly
+
+    # Call emulator method
+    device.emulator()
+
+    # Verify AnkaaRxValidator was added
+    mock_emulator.add_pass.assert_called_once()
+    args, _ = mock_emulator.add_pass.call_args
+    assert "AnkaaRxValidator" in str(args[0].__class__)
+
+
+@patch("braket.aws.aws_device.LocalEmulator.from_device_properties")
+@patch("braket.aws.aws_device.AwsDevice._get_session_and_initialize")
+def test_emulator_with_aria_device(mock_get_session, mock_from_device_properties):
+    mock_session = Mock()
+    mock_emulator = Mock()
+    mock_from_device_properties.return_value = mock_emulator
+    mock_get_session.return_value = mock_session
+
+    # Create a device with "Aria" in the name
+    device = AwsDevice(IONQ_ARN, mock_session)
+    device._name = "Aria-1"
+    device._properties = Mock()
+    device._type = "QPU"  # Set the device type directly
+
+    # Call emulator method
+    device.emulator()
+
+    # Verify AriaMSValidator was added
+    mock_emulator.add_pass.assert_called_once()
+    args, _ = mock_emulator.add_pass.call_args
+    assert "AriaMSValidator" in str(args[0].__class__)

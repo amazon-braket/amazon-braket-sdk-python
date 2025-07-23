@@ -18,6 +18,11 @@ from braket.passes.circuit_passes.gate_connectivity_validator import (  # noqa: 
     GateConnectivityValidator,
 )
 from braket.passes.circuit_passes.gate_validator import GateValidator  # noqa: F401
+from braket.passes.circuit_passes.gate_value_validator import (  # noqa: F401
+    AnkaaRxValidator,
+    AriaMSValidator,
+    GateValueValidator,
+)
 from braket.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
     QubitCountValidator,
 )
