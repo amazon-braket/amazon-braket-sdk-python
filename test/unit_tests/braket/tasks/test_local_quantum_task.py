@@ -57,5 +57,5 @@ def test_async():
 
 
 def test_str():
-    expected = "LocalQuantumTask('id':{})".format(TASK.id)
+    expected = f"LocalQuantumTask('id':{TASK.id})"
     assert str(TASK) == expected

@@ -16,7 +16,6 @@ from __future__ import annotations
 import numbers
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Union
 
 import numpy as np
 
@@ -27,7 +26,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
-from braket.registers.qubit_set import QubitSet
+from braket.registers import QubitInput, QubitSet, QubitSetInput
 
 
 class Observable(QuantumOperator):
@@ -37,23 +36,33 @@ class Observable(QuantumOperator):
     `ResultType.Expectation` to specify the measurement basis.
     """
 
-    def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
+    def __init__(
+        self, qubit_count: int, ascii_symbols: Sequence[str], targets: QubitSetInput | None = None
+    ):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        targets = QubitSet(targets)
+        if targets and (num_targets := len(targets)) != qubit_count:
+            raise ValueError(
+                f"Length of target {num_targets} does not match qubit count {qubit_count}"
+            )
+        self._targets = targets
         self._coef = 1
 
     def _unscaled(self) -> Observable:
-        return Observable(qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols)
+        return Observable(
+            qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols, targets=self._targets
+        )
 
     def to_ir(
         self,
-        target: QubitSet | None = None,
+        target: QubitSetInput | None = None,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties | None = None,
-    ) -> Union[str, list[Union[str, list[list[list[float]]]]]]:
+    ) -> str | list[str | list[list[list[float]]]]:
         """Returns the IR representation for the observable
 
         Args:
-            target (QubitSet | None): target qubit(s). Defaults to None.
+            target (QubitSetInput | None): target qubit(s). Defaults to None.
             ir_type(IRType) : The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
             serialization_properties (SerializationProperties | None): The serialization properties
@@ -61,7 +70,7 @@ class Observable(QuantumOperator):
                 properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
-            Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
+            str | list[str | list[list[list[float]]]]: The IR representation for
             the observable.
 
         Raises:
@@ -70,7 +79,7 @@ class Observable(QuantumOperator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -81,29 +90,36 @@ class Observable(QuantumOperator):
             return self._to_openqasm(
                 serialization_properties or OpenQASMSerializationProperties(), target
             )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def _to_jaqcd(self) -> list[Union[str, list[list[list[float]]]]]:
+    def _to_jaqcd(self) -> list[str | list[list[list[float]]]]:
         """Returns the JAQCD representation of the observable."""
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        target: QubitSet | None = None,
+        targets: QubitSetInput | None = None,
     ) -> str:
         """Returns the openqasm string representation of the result type.
 
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            target (QubitSet | None): target qubit(s). Defaults to None.
+            targets (QubitSetInput | None): target qubit(s). Defaults to None.
 
         Returns:
             str: Representing the openqasm representation of the result type.
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
+
+    @property
+    def targets(self) -> QubitSet | None:
+        """QubitSet | None: The target qubits of this observable
+
+        If `None`, this is provided by the enclosing result type.
+        """
+        return self._targets
 
     @property
     def coefficient(self) -> int:
@@ -159,7 +175,7 @@ class Observable(QuantumOperator):
         if isinstance(other, Observable):
             return Observable.TensorProduct([self, other])
 
-        raise ValueError("Can only perform tensor products between observables.")
+        raise TypeError("Can only perform tensor products between observables.")
 
     def __mul__(self, other: Observable) -> Observable:
         """Scalar multiplication"""
@@ -174,18 +190,22 @@ class Observable(QuantumOperator):
 
     def __add__(self, other: Observable):
         if not isinstance(other, Observable):
-            raise ValueError("Can only perform addition between observables.")
+            raise TypeError("Can only perform addition between observables.")
 
         return Observable.Sum([self, other])
 
     def __sub__(self, other: Observable):
         if not isinstance(other, Observable):
-            raise ValueError("Can only perform subtraction between observables.")
+            raise TypeError("Can only perform subtraction between observables.")
 
         return self + (-1 * other)
 
     def __repr__(self) -> str:
-        return f"{self.name}('qubit_count': {self.qubit_count})"
+        return (
+            f"{self.name}('qubit_count': {self._qubit_count})"
+            if not self._targets
+            else f"{self.name}('qubit_count': {self._qubit_count}, 'target': {self._targets})"
+        )
 
     def __eq__(self, other: Observable) -> bool:
         if isinstance(other, Observable):
@@ -198,8 +218,12 @@ class StandardObservable(Observable):
     eigenvalues of (+1, -1).
     """
 
-    def __init__(self, ascii_symbols: Sequence[str]):
-        super().__init__(qubit_count=1, ascii_symbols=ascii_symbols)
+    def __init__(self, ascii_symbols: Sequence[str], target: QubitInput | None = None):
+        super().__init__(
+            qubit_count=1,
+            ascii_symbols=ascii_symbols,
+            targets=[target] if target is not None else None,
+        )
         self._eigenvalues = (1.0, -1.0)  # immutable
 
     def _unscaled(self) -> StandardObservable:

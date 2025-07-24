@@ -54,14 +54,12 @@ class QubitInitializationCriteria(InitializationCriteria):
 
         Returns:
             Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
-            QUBIT will return a set of qubit targets that are relevant to this Critera, or
+            QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
-            if self._qubits is None:
-                return CriteriaKeyResult.ALL
-            return set(self._qubits)
+            return CriteriaKeyResult.ALL if self._qubits is None else set(self._qubits)
         return set()
 
     def to_dict(self) -> dict:

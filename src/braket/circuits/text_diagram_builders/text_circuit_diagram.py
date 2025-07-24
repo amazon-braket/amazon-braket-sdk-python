@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Literal, Union
+from typing import Literal
 
 import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
@@ -68,7 +68,6 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         """
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     @abstractmethod
     def _draw_symbol(
@@ -81,7 +80,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
 
         Args:
             symbol (str): the gate name
-            symbols_width (int): size of the expected output. The ouput will be filled with
+            symbols_width (int): size of the expected output. The output will be filled with
                 cls._qubit_line_character() if needed.
             connection (Literal["above", "below", "both", "none"]): specifies if a connection
                 will be drawn above and/or below the box.
@@ -178,7 +177,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         cls,
         col_title: str,
         circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
+        items: list[Instruction | ResultType],
         global_phase: float | None,
     ) -> str:
         """Return a set of columns in the string diagram of the circuit for a list of items.
@@ -229,7 +228,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         qubits: QubitSet,
         global_phase: float | None,
     ) -> str:
-        """Creates the ouput for a single column:
+        """Creates the output for a single column:
             a. If there was one or more gphase gate, create a first line with the total global
             phase shift ending with the _vertical_delimiter() class attribute, e.g. 0.14|
             b. for each qubit, append the text representation produces by cls._draw_symbol
@@ -244,7 +243,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         Returns:
             str: a string representing a diagram column.
         """
-        symbols_width = max([len(symbol) for symbol in symbols.values()]) + cls._box_pad()
+        symbols_width = max(len(symbol) for symbol in symbols.values()) + cls._box_pad()
         output = ""
 
         if global_phase is not None:

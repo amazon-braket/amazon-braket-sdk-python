@@ -153,7 +153,7 @@ def test_getitem():
 
 
 def test_iter(moments):
-    assert [key for key in moments] == list(moments.keys())
+    assert list(moments) == list(moments.keys())
 
 
 def test_len():

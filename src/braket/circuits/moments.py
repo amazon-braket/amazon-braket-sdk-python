@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -90,7 +90,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
         ...     print(f"Item {i}")
         ...     print(f"\\tKey: {item[0]}")
         ...     print(f"\\tValue: {item[1]}")
-        ...
         Item 0
             Key: MomentsKey(time=0, qubits=QubitSet([Qubit(0)]))
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(0)]))
@@ -157,9 +156,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(
-        self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
-    ) -> None:
+    def add(self, instructions: Iterable[Instruction] | Instruction, noise_index: int = 0) -> None:
         """Add one or more instructions to self.
 
         Args:
@@ -238,7 +235,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             time = 0
 
         while MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
-            noise_index = noise_index + 1
+            noise_index += 1
 
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
@@ -257,6 +254,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_readout_noise = []
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
+        last_measure = self._depth
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
@@ -264,6 +262,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 key_readout_noise.append(key)
             elif key.moment_type == MomentType.INITIALIZATION_NOISE:
                 key_initialization_noise.append(key)
+            elif key.moment_type == MomentType.MEASURE:
+                last_measure = key.time
+                key_noise.append(key)
             else:
                 key_noise.append(key)
 
@@ -272,7 +273,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         for key in key_noise:
             sorted_moment[key] = moment_copy[key]
         # find the max time in the circuit and make it the time for readout noise
-        max_time = max(self._depth - 1, 0)
+        max_time = max(last_measure - 1, 0)
 
         for key in key_readout_noise:
             sorted_moment[
@@ -286,7 +287,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._max_times.get(qubit, -1)
 
     #
-    # Implement abstract methods, default to calling selfs underlying dictionary
+    # Implement abstract methods, default to calling `self`'s underlying dictionary
     #
 
     def keys(self) -> KeysView[MomentsKey]:
@@ -337,9 +338,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def __ne__(self, other: Moments):
         result = self.__eq__(other)
-        if result is not NotImplemented:
-            return not result
-        return NotImplemented
+        return not result if result is not NotImplemented else NotImplemented
 
     def __repr__(self):
         return self._moments.__repr__()

@@ -13,7 +13,7 @@
 
 import concurrent.futures
 import math
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 import numpy as np
 
@@ -26,11 +26,11 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import GateModelQuantumTaskResult
 
 
-def get_tol(shots: int) -> Dict[str, float]:
+def get_tol(shots: int) -> dict[str, float]:
     return {"atol": 0.2, "rtol": 0.3} if shots else {"atol": 0.01, "rtol": 0}
 
 
-def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
+def qubit_ordering_testing(device: Device, run_kwargs: dict[str, Any]):
     # |110> should get back value of "110"
     state_110 = Circuit().x(0).x(1).i(2)
     result = device.run(state_110, **run_kwargs).result()
@@ -51,8 +51,8 @@ def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
 def no_result_types_testing(
     program: Union[Circuit, OpenQasmProgram],
     device: Device,
-    run_kwargs: Dict[str, Any],
-    expected: Dict[str, float],
+    run_kwargs: dict[str, Any],
+    expected: dict[str, float],
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
@@ -63,14 +63,14 @@ def no_result_types_testing(
     assert len(result.measurements) == shots
 
 
-def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def no_result_types_bell_pair_testing(device: Device, run_kwargs: dict[str, Any]):
     bell = Circuit().h(0).cnot(0, 1)
     bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
     for task in (bell, bell_qasm):
         no_result_types_testing(task, device, run_kwargs, {"00": 0.5, "11": 0.5})
 
 
-def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_observable_not_in_instructions(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     bell = (
@@ -90,7 +90,7 @@ def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict
 def result_types_zero_shots_bell_pair_testing(
     device: Device,
     include_state_vector: bool,
-    run_kwargs: Dict[str, Any],
+    run_kwargs: dict[str, Any],
     include_amplitude: bool = True,
 ):
     circuit = (
@@ -128,7 +128,7 @@ def result_types_zero_shots_bell_pair_testing(
             assert np.isclose(amplitude["11"], 1 / np.sqrt(2))
 
 
-def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability()
@@ -143,7 +143,7 @@ def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: 
         )
 
 
-def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability(0)
@@ -158,7 +158,7 @@ def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwar
         )
 
 
-def result_types_nonzero_shots_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_nonzero_shots_bell_pair_testing(device: Device, run_kwargs: dict[str, Any]):
     circuit = (
         Circuit()
         .h(0)
@@ -188,7 +188,7 @@ def result_types_nonzero_shots_bell_pair_testing(device: Device, run_kwargs: Dic
 
 
 def result_types_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: dict[str, Any], test_program: bool = True
 ):
     shots = run_kwargs["shots"]
     theta = 0.543
@@ -202,7 +202,7 @@ def result_types_hermitian_testing(
     )
     if shots:
         circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 0))
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM)) if test_program else (circuit,)
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -215,7 +215,7 @@ def result_types_hermitian_testing(
 
 
 def result_types_all_selected_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: dict[str, Any], test_program: bool = True
 ):
     shots = run_kwargs["shots"]
     theta = 0.543
@@ -231,7 +231,7 @@ def result_types_all_selected_testing(
     if shots:
         circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 1))
 
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM)) if test_program else (circuit,)
 
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
@@ -280,224 +280,229 @@ def assert_variance_expectation_sample_result(
     assert np.allclose(variance, expected_var, **tol)
 
 
-def result_types_tensor_x_y_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_x_y_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
     obs = Observable.X() @ Observable.Y()
     obs_targets = [0, 2]
+    expected_mean = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+    expected_var = (
+        8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
+        - np.cos(2 * (theta - phi))
+        - np.cos(2 * (theta + phi))
+        + 2 * np.cos(2 * theta)
+        + 2 * np.cos(2 * phi)
+        + 14
+    ) / 16
+    expected_eigs = get_pauli_eigenvalues(1)
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
-
-        expected_mean = np.sin(theta) * np.sin(phi) * np.sin(varphi)
-        expected_var = (
-            8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
-            - np.cos(2 * (theta - phi))
-            - np.cos(2 * (theta + phi))
-            + 2 * np.cos(2 * theta)
-            + 2 * np.cos(2 * phi)
-            + 14
-        ) / 16
-        expected_eigs = get_pauli_eigenvalues(1)
 
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_tensor_z_z_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_z_z_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
     obs = Observable.Z() @ Observable.Z()
     obs_targets = [0, 2]
+    expected_mean = 0.849694136476246
+    expected_var = 0.27801987443788634
+    expected_eigs = get_pauli_eigenvalues(1)
+
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
-
-        expected_mean = 0.849694136476246
-        expected_var = 0.27801987443788634
-        expected_eigs = get_pauli_eigenvalues(1)
 
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_tensor_hermitian_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_hermitian_hermitian_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
     matrix1 = np.array([[1, 2], [2, 4]])
-    matrix2 = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    matrix2 = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Hermitian(matrix1) @ Observable.Hermitian(matrix2)
     obs_targets = [0, 1, 2]
+    expected_mean = -4.30215023196904
+    expected_var = 370.71292282796804
+    expected_eigs = np.array([-70.90875406, -31.04969387, 0, 3.26468993, 38.693758])
+
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
-
-        expected_mean = -4.30215023196904
-        expected_var = 370.71292282796804
-        expected_eigs = np.array([-70.90875406, -31.04969387, 0, 3.26468993, 38.693758])
 
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_tensor_z_h_y_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_z_h_y_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
     obs = Observable.Z() @ Observable.H() @ Observable.Y()
     obs_targets = [0, 1, 2]
+    expected_mean = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
+    expected_var = (
+        3
+        + np.cos(2 * phi) * np.cos(varphi) ** 2
+        - np.cos(2 * theta) * np.sin(varphi) ** 2
+        - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
+    ) / 4
+    expected_eigs = get_pauli_eigenvalues(1)
+
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
-        expected_mean = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(
-            2
-        )
-        expected_var = (
-            3
-            + np.cos(2 * phi) * np.cos(varphi) ** 2
-            - np.cos(2 * theta) * np.sin(varphi) ** 2
-            - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
-        ) / 4
-        expected_eigs = get_pauli_eigenvalues(1)
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_tensor_z_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_z_hermitian_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Z() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
+    expected_mean = 0.5 * (
+        -6 * np.cos(theta) * (np.cos(varphi) + 1)
+        - 2 * np.sin(varphi) * (np.cos(theta) + np.sin(phi) - 2 * np.cos(phi))
+        + 3 * np.cos(varphi) * np.sin(phi)
+        + np.sin(phi)
+    )
+    expected_var = (
+        1057
+        - np.cos(2 * phi)
+        + 12 * (27 + np.cos(2 * phi)) * np.cos(varphi)
+        - 2 * np.cos(2 * varphi) * np.sin(phi) * (16 * np.cos(phi) + 21 * np.sin(phi))
+        + 16 * np.sin(2 * phi)
+        - 8 * (-17 + np.cos(2 * phi) + 2 * np.sin(2 * phi)) * np.sin(varphi)
+        - 8 * np.cos(2 * theta) * (3 + 3 * np.cos(varphi) + np.sin(varphi)) ** 2
+        - 24 * np.cos(phi) * (np.cos(phi) + 2 * np.sin(phi)) * np.sin(2 * varphi)
+        - 8
+        * np.cos(theta)
+        * (
+            4
+            * np.cos(phi)
+            * (
+                4
+                + 8 * np.cos(varphi)
+                + np.cos(2 * varphi)
+                - (1 + 6 * np.cos(varphi)) * np.sin(varphi)
+            )
+            + np.sin(phi)
+            * (
+                15
+                + 8 * np.cos(varphi)
+                - 11 * np.cos(2 * varphi)
+                + 42 * np.sin(varphi)
+                + 3 * np.sin(2 * varphi)
+            )
+        )
+    ) / 16
+
+    z_array = np.diag([1, -1])
+    expected_eigs = np.linalg.eigvalsh(np.kron(z_array, array))
+
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
-        expected_mean = 0.5 * (
-            -6 * np.cos(theta) * (np.cos(varphi) + 1)
-            - 2 * np.sin(varphi) * (np.cos(theta) + np.sin(phi) - 2 * np.cos(phi))
-            + 3 * np.cos(varphi) * np.sin(phi)
-            + np.sin(phi)
-        )
-        expected_var = (
-            1057
-            - np.cos(2 * phi)
-            + 12 * (27 + np.cos(2 * phi)) * np.cos(varphi)
-            - 2 * np.cos(2 * varphi) * np.sin(phi) * (16 * np.cos(phi) + 21 * np.sin(phi))
-            + 16 * np.sin(2 * phi)
-            - 8 * (-17 + np.cos(2 * phi) + 2 * np.sin(2 * phi)) * np.sin(varphi)
-            - 8 * np.cos(2 * theta) * (3 + 3 * np.cos(varphi) + np.sin(varphi)) ** 2
-            - 24 * np.cos(phi) * (np.cos(phi) + 2 * np.sin(phi)) * np.sin(2 * varphi)
-            - 8
-            * np.cos(theta)
-            * (
-                4
-                * np.cos(phi)
-                * (
-                    4
-                    + 8 * np.cos(varphi)
-                    + np.cos(2 * varphi)
-                    - (1 + 6 * np.cos(varphi)) * np.sin(varphi)
-                )
-                + np.sin(phi)
-                * (
-                    15
-                    + 8 * np.cos(varphi)
-                    - 11 * np.cos(2 * varphi)
-                    + 42 * np.sin(varphi)
-                    + 3 * np.sin(2 * varphi)
-                )
-            )
-        ) / 16
-
-        z_array = np.diag([1, -1])
-        expected_eigs = np.linalg.eigvalsh(np.kron(z_array, array))
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs = Observable.Y() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
+    expected_mean = 1.4499810303182408
+    expected_var = 74.03174647518193
+    y_array = np.array([[0, -1j], [1j, 0]])
+    expected_eigs = np.linalg.eigvalsh(np.kron(y_array, array))
+
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
     tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
-        expected_mean = 1.4499810303182408
-        expected_var = 74.03174647518193
-        y_array = np.array([[0, -1j], [1j, 0]])
-        expected_eigs = np.linalg.eigvalsh(np.kron(y_array, array))
         assert_variance_expectation_sample_result(
             result, shots, expected_var, expected_mean, expected_eigs
         )
 
 
-def result_types_noncommuting_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_noncommuting_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = 0
     theta = 0.432
     phi = 0.123
     varphi = -0.543
-    array = np.array(
-        [
-            [-6, 2 + 1j, -3, -5 + 2j],
-            [2 - 1j, 0, 2 - 1j, -5 + 4j],
-            [-3, 2 + 1j, 0, -4 + 3j],
-            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
-        ]
-    )
+    array = np.array([
+        [-6, 2 + 1j, -3, -5 + 2j],
+        [2 - 1j, 0, 2 - 1j, -5 + 4j],
+        [-3, 2 + 1j, 0, -4 + 3j],
+        [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+    ])
     obs1 = Observable.X() @ Observable.Y()
     obs1_targets = [0, 2]
     obs2 = Observable.Z() @ Observable.Z()
     obs2_targets = [0, 2]
     obs3 = Observable.Y() @ Observable.Hermitian(array)
     obs3_targets = [0, 1, 2]
+    expected_mean1 = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+    expected_var1 = (
+        8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
+        - np.cos(2 * (theta - phi))
+        - np.cos(2 * (theta + phi))
+        + 2 * np.cos(2 * theta)
+        + 2 * np.cos(2 * phi)
+        + 14
+    ) / 16
+
+    expected_mean2 = 0.849694136476246
+    expected_mean3 = 1.4499810303182408
+
     circuit = (
         get_result_types_three_qubit_circuit(theta, phi, varphi, obs1, obs1_targets, shots)
         .expectation(obs2, obs2_targets)
@@ -507,25 +512,13 @@ def result_types_noncommuting_testing(device: Device, run_kwargs: Dict[str, Any]
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
-        expected_mean1 = np.sin(theta) * np.sin(phi) * np.sin(varphi)
-        expected_var1 = (
-            8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
-            - np.cos(2 * (theta - phi))
-            - np.cos(2 * (theta + phi))
-            + 2 * np.cos(2 * theta)
-            + 2 * np.cos(2 * phi)
-            + 14
-        ) / 16
-
-        expected_mean2 = 0.849694136476246
-        expected_mean3 = 1.4499810303182408
         assert np.allclose(result.values[0], expected_var1)
         assert np.allclose(result.values[1], expected_mean1)
         assert np.allclose(result.values[2], expected_mean2)
         assert np.allclose(result.values[3], expected_mean3)
 
 
-def result_types_noncommuting_flipped_targets_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_noncommuting_flipped_targets_testing(device: Device, run_kwargs: dict[str, Any]):
     circuit = (
         Circuit()
         .h(0)
@@ -540,7 +533,7 @@ def result_types_noncommuting_flipped_targets_testing(device: Device, run_kwargs
         assert np.allclose(result.values[1], np.sqrt(2) / 2)
 
 
-def result_types_noncommuting_all(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_noncommuting_all(device: Device, run_kwargs: dict[str, Any]):
     array = np.array([[1, 2j], [-2j, 0]])
     circuit = (
         Circuit()
@@ -556,7 +549,7 @@ def result_types_noncommuting_all(device: Device, run_kwargs: Dict[str, Any]):
         assert np.allclose(result.values[1], [0, 0])
 
 
-def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def multithreaded_bell_pair_testing(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     bell = Circuit().h(0).cnot(0, 1)
@@ -581,7 +574,7 @@ def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
             assert len(result.measurements) == shots
 
 
-def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: Dict[str, Any]):
+def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().x(0).x(1).bit_flip(0, 0.1).probability()
@@ -596,7 +589,7 @@ def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: Dict
         )
 
 
-def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict[str, Any]):
+def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     K0 = np.eye(4) * np.sqrt(0.9)
@@ -615,7 +608,7 @@ def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict
         )
 
 
-def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
+def batch_bell_pair_testing(device: AwsDevice, run_kwargs: dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuits = [Circuit().h(0).cnot(0, 1) for _ in range(10)]
@@ -630,7 +623,7 @@ def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
         assert [task.result() for task in batch.tasks] == results
 
 
-def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
+def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: dict[str, Any]):
     openqasm_string = (
         "OPENQASM 3;"
         "qubit[2] q;"
@@ -649,7 +642,7 @@ def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
 
 
 def openqasm_noisy_circuit_1qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any]
+    device: Device, run_kwargs: dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
@@ -675,7 +668,7 @@ def openqasm_noisy_circuit_1qubit_noise_full_probability(
         )
 
 
-def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: dict[str, Any]):
     openqasm_string = (
         "OPENQASM 3;"
         "qubit[2] q;"

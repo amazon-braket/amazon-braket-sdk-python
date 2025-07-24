@@ -14,7 +14,7 @@
 import json
 import textwrap
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,6 +27,7 @@ from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit, FreeParameter, Gate, Noise
 from braket.circuits.noise_model import GateCriteria, NoiseModel, NoiseModelInstruction
+from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.devices import LocalSimulator, local_simulator
@@ -41,73 +42,67 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
 
-GATE_MODEL_RESULT = GateModelTaskResult(
-    **{
-        "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-        "measuredQubits": [0, 1],
-        "taskMetadata": {
-            "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
-            "id": "task_arn",
-            "shots": 100,
-            "deviceId": "default",
+GATE_MODEL_RESULT = GateModelTaskResult(**{
+    "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+    "measuredQubits": [0, 1],
+    "taskMetadata": {
+        "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+        "id": "task_arn",
+        "shots": 100,
+        "deviceId": "default",
+    },
+    "additionalMetadata": {
+        "action": {
+            "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+            "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
         },
-        "additionalMetadata": {
-            "action": {
-                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
-                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
-            },
-        },
-    }
-)
+    },
+})
 
-ANNEALING_RESULT = AnnealingTaskResult(
-    **{
-        "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-        "solutionCounts": [3, 2, 4],
-        "values": [0.0, 1.0, 2.0],
-        "variableCount": 4,
-        "taskMetadata": {
-            "id": "task_arn",
-            "shots": 100,
-            "deviceId": "device_id",
+ANNEALING_RESULT = AnnealingTaskResult(**{
+    "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+    "solutionCounts": [3, 2, 4],
+    "values": [0.0, 1.0, 2.0],
+    "variableCount": 4,
+    "taskMetadata": {
+        "id": "task_arn",
+        "shots": 100,
+        "deviceId": "device_id",
+    },
+    "additionalMetadata": {
+        "action": {
+            "type": "ISING",
+            "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
+            "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
         },
-        "additionalMetadata": {
-            "action": {
-                "type": "ISING",
-                "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
-                "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
-            },
-            "dwaveMetadata": {
-                "activeVariables": [0],
-                "timing": {
-                    "qpuSamplingTime": 100,
-                    "qpuAnnealTimePerSample": 20,
-                    "qpuAccessTime": 10917,
-                    "qpuAccessOverheadTime": 3382,
-                    "qpuReadoutTimePerSample": 274,
-                    "qpuProgrammingTime": 9342,
-                    "qpuDelayTimePerSample": 21,
-                    "postProcessingOverheadTime": 117,
-                    "totalPostProcessingTime": 117,
-                    "totalRealTime": 10917,
-                    "runTimeChip": 1575,
-                    "annealTimePerRun": 20,
-                    "readoutTimePerRun": 274,
-                },
+        "dwaveMetadata": {
+            "activeVariables": [0],
+            "timing": {
+                "qpuSamplingTime": 100,
+                "qpuAnnealTimePerSample": 20,
+                "qpuAccessTime": 10917,
+                "qpuAccessOverheadTime": 3382,
+                "qpuReadoutTimePerSample": 274,
+                "qpuProgrammingTime": 9342,
+                "qpuDelayTimePerSample": 21,
+                "postProcessingOverheadTime": 117,
+                "totalPostProcessingTime": 117,
+                "totalRealTime": 10917,
+                "runTimeChip": 1575,
+                "annealTimePerRun": 20,
+                "readoutTimePerRun": 274,
             },
         },
-    }
-)
+    },
+})
 
-AHS_RESULT = AnalogHamiltonianSimulationTaskResult(
-    **{
-        "taskMetadata": {
-            "id": "rydberg",
-            "shots": 100,
-            "deviceId": "rydbergLocalSimulator",
-        },
-    }
-)
+AHS_RESULT = AnalogHamiltonianSimulationTaskResult(**{
+    "taskMetadata": {
+        "id": "rydberg",
+        "shots": 100,
+        "deviceId": "rydbergLocalSimulator",
+    },
+})
 
 
 class DummyCircuitSimulator(BraketSimulator):
@@ -116,47 +111,50 @@ class DummyCircuitSimulator(BraketSimulator):
         program: ir.jaqcd.Program,
         qubits: int,
         shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
+        inputs: Optional[dict[str, float]],
         *args,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
 
     @property
     def properties(self) -> DeviceCapabilities:
-        return DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "11:00",
-                            "windowEndHour": "12:00",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
+        return DeviceCapabilities.parse_obj({
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "11:00",
+                        "windowEndHour": "12:00",
+                    }
+                ],
+                "shotsRange": [1, 10],
+            },
+            "action": {
+                "braket.ir.openqasm.program": {
+                    "actionType": "braket.ir.openqasm.program",
+                    "version": ["1"],
                 },
-                "action": {
-                    "braket.ir.openqasm.program": {
-                        "actionType": "braket.ir.openqasm.program",
-                        "version": ["1"],
-                    },
-                    "braket.ir.jaqcd.program": {
-                        "actionType": "braket.ir.jaqcd.program",
-                        "version": ["1"],
-                    },
+                "braket.ir.jaqcd.program": {
+                    "actionType": "braket.ir.jaqcd.program",
+                    "version": ["1"],
                 },
-                "deviceParameters": {},
-            }
-        )
+            },
+            "deviceParameters": {},
+        })
 
 
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+        self,
+        program: ir.jaqcd.Program,
+        qubits: Optional[int] = None,
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
         self._shots = shots
@@ -165,27 +163,25 @@ class DummyJaqcdSimulator(BraketSimulator):
 
     @property
     def properties(self) -> DeviceCapabilities:
-        return DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "11:00",
-                            "windowEndHour": "12:00",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
+        return DeviceCapabilities.parse_obj({
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "11:00",
+                        "windowEndHour": "12:00",
+                    }
+                ],
+                "shotsRange": [1, 10],
+            },
+            "action": {
+                "braket.ir.jaqcd.program": {
+                    "actionType": "braket.ir.jaqcd.program",
+                    "version": ["1"],
                 },
-                "action": {
-                    "braket.ir.jaqcd.program": {
-                        "actionType": "braket.ir.jaqcd.program",
-                        "version": ["1"],
-                    },
-                },
-                "deviceParameters": {},
-            }
-        )
+            },
+            "deviceParameters": {},
+        })
 
     def assert_shots(self, shots):
         assert self._shots == shots
@@ -205,105 +201,115 @@ class DummyProgramSimulator(BraketSimulator):
 
     @property
     def properties(self) -> DeviceCapabilities:
-        device_properties = DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "00:00",
-                            "windowEndHour": "23:59:59",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
-                },
-                "action": {
-                    "braket.ir.openqasm.program": {
-                        "actionType": "braket.ir.openqasm.program",
-                        "version": ["1"],
+        device_properties = DeviceCapabilities.parse_obj({
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "00:00",
+                        "windowEndHour": "23:59:59",
                     }
-                },
-                "deviceParameters": {},
-            }
-        )
-        oq3_action = OpenQASMDeviceActionProperties.parse_raw(
-            json.dumps(
-                {
+                ],
+                "shotsRange": [1, 10],
+            },
+            "action": {
+                "braket.ir.openqasm.program": {
                     "actionType": "braket.ir.openqasm.program",
                     "version": ["1"],
-                    "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
-                    "supportedResultTypes": [
-                        {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
-                    ],
-                    "supportedPragmas": [
-                        "braket_unitary_matrix",
-                        "braket_result_type_sample",
-                        "braket_result_type_expectation",
-                        "braket_result_type_variance",
-                        "braket_result_type_probability",
-                        "braket_result_type_state_vector",
-                    ],
                 }
-            )
+            },
+            "deviceParameters": {},
+        })
+        oq3_action = OpenQASMDeviceActionProperties.parse_raw(
+            json.dumps({
+                "actionType": "braket.ir.openqasm.program",
+                "version": ["1"],
+                "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+                "supportedResultTypes": [
+                    {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                ],
+                "supportedPragmas": [
+                    "braket_unitary_matrix",
+                    "braket_result_type_sample",
+                    "braket_result_type_expectation",
+                    "braket_result_type_variance",
+                    "braket_result_type_probability",
+                    "braket_result_type_state_vector",
+                ],
+            })
         )
         device_properties.action[DeviceActionType.OPENQASM] = oq3_action
         return device_properties
 
 
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+class DummySerializableProgramSimulator(DummyProgramSimulator):
+    def run(
+        self,
+        program: SerializableProgram,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelQuantumTaskResult:
+        return GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
 class DummyProgramDensityMatrixSimulator(BraketSimulator):
     def run(
         self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._shots = shots
         return GATE_MODEL_RESULT
 
     @property
     def properties(self) -> DeviceCapabilities:
-        device_properties = DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "11:00",
-                            "windowEndHour": "12:00",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
-                },
-                "action": {},
-                "deviceParameters": {},
-            }
-        )
+        device_properties = DeviceCapabilities.parse_obj({
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "11:00",
+                        "windowEndHour": "12:00",
+                    }
+                ],
+                "shotsRange": [1, 10],
+            },
+            "action": {},
+            "deviceParameters": {},
+        })
         oq3_action = OpenQASMDeviceActionProperties.parse_raw(
-            json.dumps(
-                {
-                    "actionType": "braket.ir.openqasm.program",
-                    "version": ["1"],
-                    "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
-                    "supportedResultTypes": [
-                        {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
-                    ],
-                    "supportedPragmas": [
-                        "braket_noise_bit_flip",
-                        "braket_noise_depolarizing",
-                        "braket_noise_kraus",
-                        "braket_noise_pauli_channel",
-                        "braket_noise_generalized_amplitude_damping",
-                        "braket_noise_amplitude_damping",
-                        "braket_noise_phase_flip",
-                        "braket_noise_phase_damping",
-                        "braket_noise_two_qubit_dephasing",
-                        "braket_noise_two_qubit_depolarizing",
-                        "braket_unitary_matrix",
-                        "braket_result_type_sample",
-                        "braket_result_type_expectation",
-                        "braket_result_type_variance",
-                        "braket_result_type_probability",
-                        "braket_result_type_density_matrix",
-                    ],
-                }
-            )
+            json.dumps({
+                "actionType": "braket.ir.openqasm.program",
+                "version": ["1"],
+                "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+                "supportedResultTypes": [
+                    {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                ],
+                "supportedPragmas": [
+                    "braket_noise_bit_flip",
+                    "braket_noise_depolarizing",
+                    "braket_noise_kraus",
+                    "braket_noise_pauli_channel",
+                    "braket_noise_generalized_amplitude_damping",
+                    "braket_noise_amplitude_damping",
+                    "braket_noise_phase_flip",
+                    "braket_noise_phase_damping",
+                    "braket_noise_two_qubit_dephasing",
+                    "braket_noise_two_qubit_depolarizing",
+                    "braket_unitary_matrix",
+                    "braket_result_type_sample",
+                    "braket_result_type_expectation",
+                    "braket_result_type_variance",
+                    "braket_result_type_probability",
+                    "braket_result_type_density_matrix",
+                ],
+            })
         )
         device_properties.action[DeviceActionType.OPENQASM] = oq3_action
         return device_properties
@@ -315,27 +321,25 @@ class DummyAnnealingSimulator(BraketSimulator):
 
     @property
     def properties(self) -> DeviceCapabilities:
-        return DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "11:00",
-                            "windowEndHour": "12:00",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
-                },
-                "action": {
-                    "braket.ir.annealing.problem": {
-                        "actionType": "braket.ir.annealing.problem",
-                        "version": ["1"],
+        return DeviceCapabilities.parse_obj({
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "11:00",
+                        "windowEndHour": "12:00",
                     }
-                },
-                "deviceParameters": {},
-            }
-        )
+                ],
+                "shotsRange": [1, 10],
+            },
+            "action": {
+                "braket.ir.annealing.problem": {
+                    "actionType": "braket.ir.annealing.problem",
+                    "version": ["1"],
+                }
+            },
+            "deviceParameters": {},
+        })
 
 
 class DummyRydbergSimulator(BraketSimulator):
@@ -489,19 +493,17 @@ def test_run_gate_model_inputs():
     task = sim.run(circuit, inputs={"theta": 2}, shots=10)
     dummy.run.assert_called_with(
         Program(
-            source="\n".join(
-                (
-                    "OPENQASM 3.0;",
-                    "input float theta;",
-                    "bit[1] b;",
-                    "qubit[1] q;",
-                    "rx(theta) q[0];",
-                    "b[0] = measure q[0];",
-                )
-            ),
+            source="\n".join((
+                "OPENQASM 3.0;",
+                "input float theta;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "rx(theta) q[0];",
+                "b[0] = measure q[0];",
+            )),
             inputs={"theta": 2},
         ),
-        10,
+        shots=10,
     )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
@@ -524,7 +526,7 @@ def test_run_program_model_inputs():
     task = sim.run(program, inputs=update_inputs, shots=10)
     assert program.inputs == inputs
     program.inputs.update(update_inputs)
-    dummy.run.assert_called_with(program, 10)
+    dummy.run.assert_called_with(program, shots=10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
@@ -533,7 +535,7 @@ def test_run_jaqcd_only():
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
-    dummy.assert_qubits(2)
+    dummy.assert_qubits(None)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
@@ -552,6 +554,42 @@ cnot q[0], q[1];
 c = measure q;
 """
         )
+    )
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_serializable_program_model():
+    dummy = DummySerializableProgramSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(
+        DummySerializableProgram(
+            source="""
+qubit[2] q;
+bit[2] c;
+h q[0];
+cnot q[0], q[1];
+c = measure q;
+"""
+        )
+    )
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_serializable_program_model_with_inputs():
+    dummy = DummySerializableProgramSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(
+        DummySerializableProgram(
+            source="""
+input float a;
+qubit[2] q;
+bit[2] c;
+h q[0];
+cnot q[0], q[1];
+c = measure q;
+"""
+        ),
+        inputs={"a": 0.1},
     )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
@@ -675,7 +713,7 @@ def test_run_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs={}),
-        4,
+        shots=4,
     )
 
 
@@ -698,8 +736,7 @@ def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
         _ = device.run(circuit, shots=4)
 
     expected_warning = (
-        "The noise model of the device is applied to a circuit that already has noise "
-        "instructions."
+        "The noise model of the device is applied to a circuit that already has noise instructions."
     )
     expected_circuit = textwrap.dedent(
         """
@@ -715,7 +752,7 @@ def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs={}),
-        4,
+        shots=4,
     )
     assert w[-1].message.__str__() == expected_warning
 
@@ -743,6 +780,6 @@ def test_run_openqasm_with_noise_model(mock_run, noise_model):
 
     mock_run.assert_called_with(
         Program(source=expected_circuit, inputs=None),
-        4,
+        shots=4,
     )
     assert w[-1].message.__str__() == expected_warning

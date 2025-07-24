@@ -216,7 +216,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Aspen-10",
+    "deviceName": "Ankaa-2",
     "deviceType": "QPU",
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
@@ -466,6 +466,14 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "tasks",
 )
 
+MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
+    "deviceName": "Aspen-10",
+    "deviceType": "QPU",
+    "providerName": "Rigetti",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": {},
+}
+
 
 @pytest.fixture(
     params=[
@@ -677,6 +685,15 @@ def test_device_refresh_metadata(arn):
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_2, MOCK_GATE_MODEL_QPU_2)
 
 
+def test_get_device_invalid_capabilities(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert device is not None
+    assert device.properties is None
+
+
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
         "name": "braket.device_schema.pulse.pulse_device_action_properties",
@@ -833,7 +850,7 @@ def test_gate_calibration_refresh_no_url(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
 
-    assert device.refresh_gate_calibrations() == None
+    assert device.refresh_gate_calibrations() is None
 
 
 @patch("urllib.request.urlopen")
@@ -945,7 +962,7 @@ def test_repr(arn):
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
-    expected = "Device('name': {}, 'arn': {})".format(device.name, device.arn)
+    expected = f"Device('name': {device.name}, 'arn': {device.arn})"
     assert repr(device) == expected
 
 
@@ -1451,7 +1468,7 @@ def test_run_device_poll_interval_kwargs(
     capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
     capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
     properties = {
-        "deviceName": "Aspen-10",
+        "deviceName": "Ankaa-2",
         "deviceType": "QPU",
         "providerName": "provider1",
         "deviceStatus": "OFFLINE",
@@ -1753,6 +1770,16 @@ def test_get_devices(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1763,7 +1790,7 @@ def test_get_devices(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN, OQC_ARN],
         provider_names=["Amazon Braket", "D-Wave", "IonQ", "OQC"],
@@ -1858,6 +1885,16 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1867,7 +1904,7 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         statuses=["ONLINE"],
         aws_session=aws_session,
@@ -1882,7 +1919,7 @@ def test_get_devices_invalid_order_by():
 
 @patch("braket.aws.aws_device.datetime")
 def test_get_device_availability(mock_utc_now):
-    class Expando(object):
+    class Expando:
         pass
 
     class MockDevice(AwsDevice):
@@ -1890,19 +1927,16 @@ def test_get_device_availability(mock_utc_now):
             self._status = status
             self._properties = Expando()
             self._properties.service = Expando()
-            execution_windows = []
-            for execution_day, window_start_hour, window_end_hour in execution_window_args:
-                execution_windows.append(
-                    DeviceExecutionWindow.parse_raw(
-                        json.dumps(
-                            {
-                                "executionDay": execution_day,
-                                "windowStartHour": window_start_hour,
-                                "windowEndHour": window_end_hour,
-                            }
-                        )
-                    )
+            execution_windows = [
+                DeviceExecutionWindow.parse_raw(
+                    json.dumps({
+                        "executionDay": execution_day,
+                        "windowStartHour": window_start_hour,
+                        "windowEndHour": window_end_hour,
+                    })
                 )
+                for execution_day, window_start_hour, window_end_hour in execution_window_args
+            ]
             self._properties.service.executionWindows = execution_windows
 
     test_sets = (
@@ -2001,7 +2035,7 @@ def test_get_device_availability(mock_utc_now):
     for test_set in test_sets:
         for test_item in test_set["test_items"]:
             test_date = test_item[0]
-            mock_utc_now.utcnow.return_value = test_date
+            mock_utc_now.now.return_value = test_date
 
             # flake8: noqa: C501
             for i in range(len(test_item[1])):
@@ -2014,9 +2048,9 @@ def test_get_device_availability(mock_utc_now):
                 )
                 expected = bool(test_item[1][i])
                 actual = device.is_available
-                assert (
-                    expected == actual
-                ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                assert expected == actual, (
+                    f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                )
 
 
 @pytest.mark.parametrize(
@@ -2041,7 +2075,7 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
 def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    device = AwsDevice(DWAVE_ARN, mock_session)
+    AwsDevice(DWAVE_ARN, mock_session)
 
 
 def test_parse_calibration_data():
@@ -2082,57 +2116,53 @@ def test_parse_calibration_data():
 @pytest.mark.parametrize(
     "bad_input",
     [
-        (
-            {
-                "gates": {
-                    "0": {
-                        "rx": [
-                            {
-                                "name": "rx",
-                                "qubits": ["0"],
-                                "arguments": ["-1.5707963267948966"],
-                                "calibrations": [
-                                    {
-                                        "name": "incorrect_instr",
-                                        "arguments": [
-                                            {"name": "qubit", "value": "0", "type": "string"}
-                                        ],
-                                    }
-                                ],
-                            }
-                        ]
-                    }
-                },
-                "waveforms": {},
-            }
-        ),
-        (
-            {
-                "gates": {
-                    "0": {
-                        "rx": [
-                            {
-                                "name": "cphaseshift",
-                                "qubits": ["0"],
-                                "arguments": ["-1.5707963267948966"],
-                                "calibrations": [
-                                    {
-                                        "name": "delay",
-                                        "arguments": [
-                                            {"name": "bad_value", "value": "1", "type": "float"},
-                                            {"name": "qubit", "value": None, "type": "string"},
-                                        ],
-                                    }
-                                ],
-                            }
-                        ]
-                    }
-                },
-                "waveforms": {
-                    "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
-                },
-            }
-        ),
+        ({
+            "gates": {
+                "0": {
+                    "rx": [
+                        {
+                            "name": "rx",
+                            "qubits": ["0"],
+                            "arguments": ["-1.5707963267948966"],
+                            "calibrations": [
+                                {
+                                    "name": "incorrect_instr",
+                                    "arguments": [
+                                        {"name": "qubit", "value": "0", "type": "string"}
+                                    ],
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "waveforms": {},
+        }),
+        ({
+            "gates": {
+                "0": {
+                    "rx": [
+                        {
+                            "name": "cphaseshift",
+                            "qubits": ["0"],
+                            "arguments": ["-1.5707963267948966"],
+                            "calibrations": [
+                                {
+                                    "name": "delay",
+                                    "arguments": [
+                                        {"name": "bad_value", "value": "1", "type": "float"},
+                                        {"name": "qubit", "value": None, "type": "string"},
+                                    ],
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "waveforms": {
+                "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
+            },
+        }),
     ],
 )
 @pytest.mark.xfail(raises=ValueError)

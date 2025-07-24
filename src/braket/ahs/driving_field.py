@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
@@ -24,9 +22,9 @@ from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 class DrivingField(Hamiltonian):
     def __init__(
         self,
-        amplitude: Union[Field, TimeSeries],
-        phase: Union[Field, TimeSeries],
-        detuning: Union[Field, TimeSeries],
+        amplitude: Field | TimeSeries,
+        phase: Field | TimeSeries,
+        detuning: Field | TimeSeries,
     ) -> None:
         r"""Creates a Hamiltonian term :math:`H_{drive}` for the driving field
         that coherently transfers atoms from the ground state to the Rydberg state
@@ -122,17 +120,23 @@ class DrivingField(Hamiltonian):
         """
         driving_parameters = properties.rydberg.rydbergGlobal
         time_resolution = driving_parameters.timeResolution
+
+        amplitude_value_resolution = driving_parameters.rabiFrequencyResolution
         discretized_amplitude = self.amplitude.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.rabiFrequencyResolution,
+            value_resolution=amplitude_value_resolution,
         )
+
+        phase_value_resolution = driving_parameters.phaseResolution
         discretized_phase = self.phase.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.phaseResolution,
+            value_resolution=phase_value_resolution,
         )
+
+        detuning_value_resolution = driving_parameters.detuningResolution
         discretized_detuning = self.detuning.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.detuningResolution,
+            value_resolution=detuning_value_resolution,
         )
         return DrivingField(
             amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
@@ -175,6 +179,4 @@ class DrivingField(Hamiltonian):
             detuning.put(t, detuning_value)
             phase.put(t, phase_value)
 
-        drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
-
-        return drive
+        return DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)

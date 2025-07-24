@@ -15,18 +15,24 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import singledispatch
+from typing import TYPE_CHECKING
 
 import braket.ir.ahs as ir
+from braket.device_schema import DeviceActionType
+
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.shifting_field import ShiftingField
-from braket.device_schema import DeviceActionType
+from braket.ahs.local_detuning import LocalDetuning
+from braket.timings.time_series import TimeSeries
+
+if TYPE_CHECKING:
+    from braket.aws import AwsDevice
 
 
 class AnalogHamiltonianSimulation:
-    SHIFTING_FIELDS_PROPERTY = "shifting_fields"
+    LOCAL_DETUNING_PROPERTY = "local_detuning"
     DRIVING_FIELDS_PROPERTY = "driving_fields"
 
     def __init__(self, register: AtomArrangement, hamiltonian: Hamiltonian) -> None:
@@ -48,6 +54,52 @@ class AnalogHamiltonianSimulation:
     def hamiltonian(self) -> Hamiltonian:
         """Hamiltonian: The hamiltonian to simulate."""
         return self._hamiltonian
+
+    @staticmethod
+    def from_ir(source: ir.Program) -> AnalogHamiltonianSimulation:
+        """Converts the canonical intermediate representation into
+        the Analog Hamiltonian Simulation.
+
+        Args:
+            source (ir.Program): The IR representation of the circuit.
+
+        Returns:
+            AnalogHamiltonianSimulation: The Analog Hamiltonian Simulation.
+        """
+        atom_arrangement = AtomArrangement()
+        for site, fill in zip(source.setup.ahs_register.sites, source.setup.ahs_register.filling):
+            atom_arrangement.add(
+                coordinate=site, site_type=SiteType.FILLED if fill == 1 else SiteType.VACANT
+            )
+        hamiltonian = Hamiltonian()
+        for term in source.hamiltonian.drivingFields:
+            amplitude = TimeSeries.from_lists(
+                times=term.amplitude.time_series.times,
+                values=term.amplitude.time_series.values,
+            )
+            phase = TimeSeries.from_lists(
+                times=term.phase.time_series.times,
+                values=term.phase.time_series.values,
+            )
+            detuning = TimeSeries.from_lists(
+                times=term.detuning.time_series.times,
+                values=term.detuning.time_series.values,
+            )
+            hamiltonian += DrivingField(
+                amplitude=amplitude,
+                phase=phase,
+                detuning=detuning,
+            )
+        for term in source.hamiltonian.localDetuning:
+            hamiltonian += LocalDetuning.from_lists(
+                times=term.magnitude.time_series.times,
+                values=term.magnitude.time_series.values,
+                pattern=term.magnitude.pattern,
+            )
+        return AnalogHamiltonianSimulation(
+            register=atom_arrangement,
+            hamiltonian=hamiltonian,
+        )
 
     def to_ir(self) -> ir.Program:
         """Converts the Analog Hamiltonian Simulation into the canonical intermediate
@@ -74,10 +126,10 @@ class AnalogHamiltonianSimulation:
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
             drivingFields=terms[AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY],
-            shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
+            localDetuning=terms[AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY],
         )
 
-    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
+    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
         as Decimal objects with fixed precision based on the capabilities of the device.
 
@@ -116,8 +168,8 @@ def _get_term_ir(
 
 
 @_get_term_ir.register
-def _(term: ShiftingField) -> tuple[str, ir.ShiftingField]:
-    return AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY, ir.ShiftingField(
+def _(term: LocalDetuning) -> tuple[str, ir.LocalDetuning]:
+    return AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY, ir.LocalDetuning(
         magnitude=ir.PhysicalField(
             time_series=ir.TimeSeries(
                 times=term.magnitude.time_series.times(),

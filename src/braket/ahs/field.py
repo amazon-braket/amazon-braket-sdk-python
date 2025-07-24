@@ -16,7 +16,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Optional
 
-from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.pattern import Pattern
 from braket.timings.time_series import TimeSeries
 
@@ -44,8 +43,8 @@ class Field:
 
     def discretize(
         self,
-        time_resolution: Decimal,
-        value_resolution: Decimal,
+        time_resolution: Optional[Decimal] = None,
+        value_resolution: Optional[Decimal] = None,
         pattern_resolution: Optional[Decimal] = None,
     ) -> Field:
         """Creates a discretized version of the field,
@@ -53,24 +52,41 @@ class Field:
         closest multiple of their corresponding resolutions.
 
         Args:
-            time_resolution (Decimal): Time resolution
-            value_resolution (Decimal): Value resolution
+            time_resolution (Optional[Decimal]): Time resolution
+            value_resolution (Optional[Decimal]): Value resolution
             pattern_resolution (Optional[Decimal]): Pattern resolution
 
         Returns:
             Field: A new discretized field.
-
-        Raises:
-            ValueError: if pattern_resolution is None, but there is a Pattern
         """
         discretized_time_series = self.time_series.discretize(time_resolution, value_resolution)
         if self.pattern is None:
             discretized_pattern = None
         else:
-            if pattern_resolution is None:
-                raise DiscretizationError(
-                    f"{self.pattern} is defined but has no pattern_resolution defined"
-                )
             discretized_pattern = self.pattern.discretize(pattern_resolution)
-        discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
-        return discretized_field
+        return Field(time_series=discretized_time_series, pattern=discretized_pattern)
+
+    @staticmethod
+    def from_lists(times: list[Decimal], values: list[Decimal], pattern: list[Decimal]) -> Field:
+        """Builds Field from lists of time points, values and pattern.
+
+        Args:
+            times (list[Decimal]): The time points of the field
+            values (list[Decimal]): The values of the field
+            pattern (list[Decimal]): The pattern of the field
+
+        Raises:
+            ValueError: If the length of times and values differs.
+
+        Returns:
+            Field: Field.
+        """
+        if not (len(times) == len(values)):
+            raise ValueError(
+                f"The lengths of the lists for times({len(times)}) and values({len(values)})\
+                are not equal"
+            )
+
+        time_series = TimeSeries.from_lists(times=times, values=values)
+
+        return Field(time_series=time_series, pattern=Pattern(pattern))

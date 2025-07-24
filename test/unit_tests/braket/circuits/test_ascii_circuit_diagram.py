@@ -20,6 +20,7 @@ from braket.circuits import (
     FreeParameter,
     Gate,
     Instruction,
+    Noise,
     Observable,
     Operator,
 )
@@ -97,7 +98,7 @@ def test_one_gate_with_zero_global_phase():
 
 
 def test_one_gate_one_qubit_rotation_with_unicode():
-    theta = FreeParameter("\u03B8")
+    theta = FreeParameter("\u03b8")
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
@@ -113,7 +114,7 @@ def test_one_gate_one_qubit_rotation_with_unicode():
 
 
 def test_one_gate_with_parametric_expression_global_phase_():
-    theta = FreeParameter("\u03B8")
+    theta = FreeParameter("\u03b8")
     circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
     expected = (
         "T  : |0| 1 |    2    |",
@@ -740,19 +741,19 @@ def test_noise_multi_probabilities():
 
 def test_noise_multi_probabilities_with_parameter():
     a = FreeParameter("a")
-    b = FreeParameter("b")
     c = FreeParameter("c")
-    circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
+    d = FreeParameter("d")
+    circ = Circuit().h(0).x(1).pauli_channel(1, a, c, d)
     expected = (
         "T  : |     0     |",
         "                  ",
         "q0 : -H-----------",
         "                  ",
-        "q1 : -X-PC(a,b,c)-",
+        "q1 : -X-PC(a,c,d)-",
         "",
         "T  : |     0     |",
         "",
-        "Unassigned parameters: [a, b, c].",
+        "Unassigned parameters: [a, c, d].",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -933,5 +934,25 @@ def test_measure_multiple_instructions_after():
         "q4 : -----------X---",
         "",
         "T  : |0|1|2|3|4|5|6|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_measure_with_readout_noise():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .measure([0, 1])
+    )
+    expected = (
+        "T  : |0|    1    |2|",
+        "                    ",
+        "q0 : -H-C---------M-",
+        "        |           ",
+        "q1 : ---X-BF(0.1)-M-",
+        "",
+        "T  : |0|    1    |2|",
     )
     _assert_correct_diagram(circ, expected)

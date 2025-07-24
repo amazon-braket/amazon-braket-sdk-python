@@ -14,14 +14,12 @@
 from __future__ import annotations
 
 import re
-from functools import reduce
-from typing import Union
 
 import braket.ir.jaqcd as ir
+
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
-from braket.circuits.observables import Sum
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
@@ -68,9 +66,7 @@ class StateVector(ResultType):
         return ResultType.StateVector()
 
     def __eq__(self, other: StateVector) -> bool:
-        if isinstance(other, StateVector):
-            return True
-        return False
+        return isinstance(other, StateVector)
 
     def __copy__(self) -> StateVector:
         return type(self)()
@@ -98,7 +94,7 @@ class DensityMatrix(ResultType):
                 full density matrix is returned.
 
         Examples:
-            >>> ResultType.DensityMatrix(target=[0, 1])
+            >>> result_types.DensityMatrix(target=[0, 1])
         """
         self._target = QubitSet(target)
         ascii_symbols = ["DensityMatrix"] * len(self._target) if self._target else ["DensityMatrix"]
@@ -121,8 +117,7 @@ class DensityMatrix(ResultType):
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
-        else:
-            return ir.DensityMatrix.construct()
+        return ir.DensityMatrix.construct()
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
@@ -179,7 +174,7 @@ class AdjointGradient(ObservableParameterResultType):
         self,
         observable: Observable,
         target: list[QubitSetInput] | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ):
         """Inits an `AdjointGradient`.
 
@@ -200,22 +195,19 @@ class AdjointGradient(ObservableParameterResultType):
 
 
         Examples:
-            >>> ResultType.AdjointGradient(observable=Observable.Z(),
+            >>> result_types.AdjointGradient(observable=observables.Z(0),
+                                        parameters=["alpha", "beta"])
+            >>> result_types.AdjointGradient(observable=observables.Z(),
                                         target=0, parameters=["alpha", "beta"])
 
-            >>> tensor_product = Observable.Y() @ Observable.Z()
-            >>> hamiltonian = Observable.Y() @ Observable.Z() + Observable.H()
-            >>> ResultType.AdjointGradient(
+            >>> tensor_product = observables.Y(0) @ observables.Z(1)
+            >>> hamiltonian = observables.Y(0) @ observables.Z(1) + observables.H(0)
+            >>> result_types.AdjointGradient(
             >>>     observable=tensor_product,
-            >>>     target=[[0, 1], [2]],
             >>>     parameters=["alpha", "beta"],
             >>> )
         """
-        if isinstance(observable, Sum):
-            target_qubits = reduce(QubitSet.union, map(QubitSet, target), QubitSet())
-        else:
-            target_qubits = QubitSet(target)
-
+        target_qubits = QubitSet(target if target is not None else observable.targets)
         super().__init__(
             ascii_symbols=[f"AdjointGradient({observable.ascii_symbols[0]})"] * len(target_qubits),
             observable=observable,
@@ -225,7 +217,7 @@ class AdjointGradient(ObservableParameterResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -242,7 +234,7 @@ class AdjointGradient(ObservableParameterResultType):
     def adjoint_gradient(
         observable: Observable,
         target: list[QubitSetInput] | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ) -> ResultType:
         """Registers this function into the circuit class.
 
@@ -261,9 +253,9 @@ class AdjointGradient(ObservableParameterResultType):
             ResultType: gradient computed via adjoint differentiation as a requested result type
 
         Examples:
-            >>> alpha, beta = FreeParameter('alpha'), FreeParameter('beta')
+            >>> alpha, beta = FreeParameter("alpha"), FreeParameter("beta")
             >>> circ = Circuit().h(0).h(1).rx(0, alpha).yy(0, 1, beta).adjoint_gradient(
-            >>>     observable=Observable.Z(), target=[0], parameters=[alpha, beta]
+            >>>     observable=observables.Z(0), parameters=[alpha, beta]
             >>> )
         """
         return ResultType.AdjointGradient(
@@ -290,13 +282,13 @@ class Amplitude(ResultType):
                 state is not a list of strings of '0' and '1'
 
         Examples:
-            >>> ResultType.Amplitude(state=['01', '10'])
+            >>> result_types.Amplitude(state=["01", "10"])
         """
         if (
             not state
             or not isinstance(state, list)
             or not all(
-                isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude)
+                isinstance(amplitude, str) and re.fullmatch(r"^[01]+$", amplitude)
                 for amplitude in state
             )
         ):
@@ -334,9 +326,7 @@ class Amplitude(ResultType):
         return ResultType.Amplitude(state=state)
 
     def __eq__(self, other: Amplitude):
-        if isinstance(other, Amplitude):
-            return self.state == other.state
-        return False
+        return self.state == other.state if isinstance(other, Amplitude) else False
 
     def __repr__(self):
         return f"Amplitude(state={self.state})"
@@ -371,7 +361,7 @@ class Probability(ResultType):
                 circuit.
 
         Examples:
-            >>> ResultType.Probability(target=[0, 1])
+            >>> result_types.Probability(target=[0, 1])
         """
         self._target = QubitSet(target)
         ascii_symbols = ["Probability"] * len(self._target) if self._target else ["Probability"]
@@ -394,8 +384,7 @@ class Probability(ResultType):
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
-        else:
-            return ir.Probability.construct()
+        return ir.Probability.construct()
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
@@ -424,9 +413,7 @@ class Probability(ResultType):
         return ResultType.Probability(target=target)
 
     def __eq__(self, other: Probability) -> bool:
-        if isinstance(other, Probability):
-            return self.target == other.target
-        return False
+        return self.target == other.target if isinstance(other, Probability) else False
 
     def __repr__(self) -> str:
         return f"Probability(target={self.target})"
@@ -459,16 +446,18 @@ class Expectation(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput | None): Target qubits that the
-                result type is requested for. Default is `None`, which means the observable must
-                operate only on 1 qubit and it is applied to all qubits in parallel.
-
+            target (QubitSetInput | None): Target qubits that the result type is requested for.
+                If not provided, the observable's target will be used instead. If neither exist,
+                then it is applied to all qubits in parallel; in this case the observable must
+                operate only on 1 qubit.
+                Default: `None`.
 
         Examples:
-            >>> ResultType.Expectation(observable=Observable.Z(), target=0)
+            >>> result_types.Expectation(observable=observables.Z(0))
+            >>> result_types.Expectation(observable=observables.Z(), target=0)
 
-            >>> tensor_product = Observable.Y() @ Observable.Z()
-            >>> ResultType.Expectation(observable=tensor_product, target=[0, 1])
+            >>> tensor_product = observables.Y(0) @ observables.Z(1)
+            >>> result_types.Expectation(observable=tensor_product)
         """
         super().__init__(
             ascii_symbols=[f"Expectation({obs_ascii})" for obs_ascii in observable.ascii_symbols],
@@ -481,12 +470,11 @@ class Expectation(ObservableResultType):
             return ir.Expectation.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Expectation.construct(observable=self.observable.to_ir())
+        return ir.Expectation.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -507,7 +495,7 @@ class Expectation(ObservableResultType):
             ResultType: expectation as a requested result type
 
         Examples:
-            >>> circ = Circuit().expectation(observable=Observable.Z(), target=0)
+            >>> circ = Circuit().expectation(observable=observables.Z(0))
         """
         return ResultType.Expectation(observable=observable, target=target)
 
@@ -532,15 +520,18 @@ class Sample(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput | None): Target qubits that the
-                result type is requested for. Default is `None`, which means the observable must
-                operate only on 1 qubit and it is applied to all qubits in parallel.
+            target (QubitSetInput | None): Target qubits that the result type is requested for.
+                If not provided, the observable's target will be used instead. If neither exist,
+                then it is applied to all qubits in parallel; in this case the observable must
+                operate only on 1 qubit.
+                Default: `None`.
 
         Examples:
-            >>> ResultType.Sample(observable=Observable.Z(), target=0)
+            >>> result_types.Sample(observable=observables.Z(0))
+            >>> result_types.Sample(observable=observables.Z(), target=0)
 
-            >>> tensor_product = Observable.Y() @ Observable.Z()
-            >>> ResultType.Sample(observable=tensor_product, target=[0, 1])
+            >>> tensor_product = observables.Y(0) @ observables.Z(1)
+            >>> result_types.Sample(observable=tensor_product)
         """
         super().__init__(
             ascii_symbols=[f"Sample({obs_ascii})" for obs_ascii in observable.ascii_symbols],
@@ -553,12 +544,11 @@ class Sample(ObservableResultType):
             return ir.Sample.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Sample.construct(observable=self.observable.to_ir())
+        return ir.Sample.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -579,7 +569,7 @@ class Sample(ObservableResultType):
             ResultType: sample as a requested result type
 
         Examples:
-            >>> circ = Circuit().sample(observable=Observable.Z(), target=0)
+            >>> circ = Circuit().sample(observable=observables.Z(0))
         """
         return ResultType.Sample(observable=observable, target=target)
 
@@ -605,19 +595,22 @@ class Variance(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput | None): Target qubits that the
-                result type is requested for. Default is `None`, which means the observable must
-                operate only on 1 qubit and it is applied to all qubits in parallel.
+            target (QubitSetInput | None): Target qubits that the result type is requested for.
+                If not provided, the observable's target will be used instead. If neither exist,
+                then it is applied to all qubits in parallel; in this case the observable must
+                operate only on 1 qubit.
+                Default: `None`.
 
         Raises:
             ValueError: If the observable's qubit count does not equal the number of target
                 qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
-            >>> ResultType.Variance(observable=Observable.Z(), target=0)
+            >>> result_types.Variance(observable=observables.Z(0))
+            >>> result_types.Variance(observable=observables.Z(), target=0)
 
-            >>> tensor_product = Observable.Y() @ Observable.Z()
-            >>> ResultType.Variance(observable=tensor_product, target=[0, 1])
+            >>> tensor_product = observables.Y(0) @ observables.Z(1)
+            >>> result_types.Variance(observable=tensor_product)
         """
         super().__init__(
             ascii_symbols=[f"Variance({obs_ascii})" for obs_ascii in observable.ascii_symbols],
@@ -630,12 +623,11 @@ class Variance(ObservableResultType):
             return ir.Variance.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
-        else:
-            return ir.Variance.construct(observable=self.observable.to_ir())
+        return ir.Variance.construct(observable=self.observable.to_ir())
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
-            target=self.target,
+            target=self._target,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
@@ -656,7 +648,7 @@ class Variance(ObservableResultType):
             ResultType: variance as a requested result type
 
         Examples:
-            >>> circ = Circuit().variance(observable=Observable.Z(), target=0)
+            >>> circ = Circuit().variance(observable=observables.Z(0))
         """
         return ResultType.Variance(observable=observable, target=target)
 

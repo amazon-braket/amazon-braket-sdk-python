@@ -61,15 +61,15 @@ class _FreeParameterTransformer(QASMTransformer):
         """
         lhs = self.visit(node.lhs)
         rhs = self.visit(node.rhs)
-        ops = {
-            ast.BinaryOperator["+"]: operator.add,
-            ast.BinaryOperator["*"]: operator.mul,
-            ast.BinaryOperator["**"]: operator.pow,
-        }
         if isinstance(lhs, ast.FloatLiteral):
+            ops = {
+                ast.BinaryOperator["+"]: operator.add,
+                ast.BinaryOperator["*"]: operator.mul,
+                ast.BinaryOperator["**"]: operator.pow,
+            }
             if isinstance(rhs, ast.FloatLiteral):
                 return ast.FloatLiteral(ops[node.op](lhs.value, rhs.value))
-            elif isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
+            if isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
                 return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
         return ast.BinaryExpression(op=node.op, lhs=lhs, rhs=rhs)
 

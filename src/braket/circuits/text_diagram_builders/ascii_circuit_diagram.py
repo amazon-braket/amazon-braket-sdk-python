@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Literal, Union
+from typing import Literal
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -74,7 +74,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
     def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
+        items: list[Instruction | ResultType],
         global_phase: float | None = None,
     ) -> str:
         """Return a column in the ASCII string diagram of the circuit for a given list of items.
@@ -88,7 +88,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
             str: an ASCII string diagram for the specified moment in time for a column.
         """
         symbols = {qubit: cls._qubit_line_character() for qubit in circuit_qubits}
-        connections = {qubit: "none" for qubit in circuit_qubits}
+        connections = dict.fromkeys(circuit_qubits, "none")
 
         for item in items:
             if isinstance(item, ResultType) and not item.target:
@@ -124,9 +124,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                     target_qubits = item.target
                 control_qubits = getattr(item, "control", QubitSet())
                 control_state = getattr(item, "control_state", "1" * len(control_qubits))
-                map_control_qubit_states = {
-                    qubit: state for qubit, state in zip(control_qubits, control_state)
-                }
+                map_control_qubit_states = dict(zip(control_qubits, control_state))
 
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
@@ -137,7 +135,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 # Determine if the qubit is part of the item or in the middle of a
                 # multi qubit item.
                 if qubit in target_qubits:
-                    item_qubit_index = [
+                    item_qubit_index = [  # noqa: RUF015
                         index for index, q in enumerate(target_qubits) if q == qubit
                     ][0]
                     power_string = (
@@ -166,11 +164,9 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 if target_and_control and qubit != min(target_and_control):
                     connections[qubit] = "above"
 
-        output = cls._create_output(symbols, connections, circuit_qubits, global_phase)
-        return output
+        return cls._create_output(symbols, connections, circuit_qubits, global_phase)
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     def _draw_symbol(
         cls, symbol: str, symbols_width: int, connection: Literal["above", "below", "both", "none"]
@@ -179,7 +175,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
         Args:
             symbol (str): the gate name
-            symbols_width (int): size of the expected output. The ouput will be filled with
+            symbols_width (int): size of the expected output. The output will be filled with
                 cls._qubit_line_character() if needed.
             connection (Literal["above", "below", "both", "none"]): character indicating
                 if the gate also involve a qubit with a lower index.
@@ -187,9 +183,12 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         Returns:
             str: a string representing the symbol.
         """
-        connection_char = cls._vertical_delimiter() if connection in ["above"] else " "
-        output = "{0:{width}}\n".format(connection_char, width=symbols_width + 1)
-        output += "{0:{fill}{align}{width}}\n".format(
-            symbol, fill=cls._qubit_line_character(), align="<", width=symbols_width + 1
+        connection_char = cls._vertical_delimiter() if connection == "above" else " "
+        return "{0:{width}}\n".format(
+            connection_char, width=symbols_width + 1
+        ) + "{0:{fill}{align}{width}}\n".format(
+            symbol,
+            fill=cls._qubit_line_character(),
+            align="<",
+            width=symbols_width + 1,
         )
-        return output

@@ -26,6 +26,7 @@ from braket.pulse.frame import Frame
 from braket.pulse.waveforms import (
     ConstantWaveform,
     DragGaussianWaveform,
+    ErfSquareWaveform,
     GaussianWaveform,
     Waveform,
 )
@@ -48,7 +49,7 @@ class _ParseState:
     frame_data: dict[str, _FrameState]
 
 
-class _ApproximationParser(QASMVisitor[_ParseState]):
+class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
     """Walk the AST and build the output signal amplitude, frequency and phases
     for each channel.
     """
@@ -145,15 +146,13 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
         Returns:
             Union[dict, None]: Returns a dict if WaveformType, None otherwise.
-        """
+        """  # noqa: DOC202
         identifier = self.visit(node.identifier, context)
-        if type(node.type) == ast.WaveformType:
+        if type(node.type) is ast.WaveformType:
             context.variables[identifier] = self.visit(node.init_expression, context)
-        elif type(node.type) == ast.FrameType:
+        elif type(node.type) is ast.FrameType:
             pass
-        elif type(node.type) == ast.PortType:
-            pass
-        else:
+        elif type(node.type) is not ast.PortType:
             raise NotImplementedError
 
     def visit_DelayInstruction(self, node: ast.DelayInstruction, context: _ParseState) -> None:
@@ -171,7 +170,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -189,16 +188,13 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.QuantumBarrier): The quantum barrier.
             context (_ParseState): The parse state context.
-
-        Returns:
-            None: No return value.
         """
         frames = self._get_frame_parameters(node.qubits, context)
         if len(frames) == 0:
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -235,8 +231,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """
         if node.name in context.variables:
             return context.variables[node.name]
-        else:
-            return node.name
+        return node.name
 
     def visit_UnaryExpression(self, node: ast.UnaryExpression, context: _ParseState) -> bool:
         """Visit Unary Expression.
@@ -255,15 +250,13 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """
         if node.op == ast.UnaryOperator["-"]:
             return -1 * self.visit(node.expression, context)
-        elif node.op == ast.UnaryOperator["!"]:
+        if node.op == ast.UnaryOperator["!"]:
             return not self.visit(node.expression, context)
-        elif node.op == ast.UnaryOperator["~"]:
+        if node.op == ast.UnaryOperator["~"]:
             return ~self.visit(node.expression, context)
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
-    # flake8: noqa: C901
-    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:
+    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # noqa: C901, PLR0911, PLR0912
         """Visit Binary Expression.
             node.lhs, node.rhs, node.op
             1+2
@@ -288,44 +281,43 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
         if node.op == op["+"]:
             return lhs + rhs
-        elif node.op == op["-"]:
+        if node.op == op["-"]:
             return lhs - rhs
-        elif node.op == op["*"]:
+        if node.op == op["*"]:
             return lhs * rhs
-        elif node.op == op["/"]:
+        if node.op == op["/"]:
             return lhs / rhs
-        elif node.op == op["%"]:
+        if node.op == op["%"]:
             return lhs % rhs
-        elif node.op == op["**"]:
+        if node.op == op["**"]:
             return lhs**rhs
-        elif node.op == op[">"]:
+        if node.op == op[">"]:
             return lhs > rhs
-        elif node.op == op["<"]:
+        if node.op == op["<"]:
             return lhs < rhs
-        elif node.op == op[">="]:
+        if node.op == op[">="]:
             return lhs >= rhs
-        elif node.op == op["<="]:
+        if node.op == op["<="]:
             return lhs <= rhs
-        elif node.op == op["=="]:
+        if node.op == op["=="]:
             return lhs == rhs
-        elif node.op == op["!="]:
+        if node.op == op["!="]:
             return lhs != rhs
-        elif node.op == op["&&"]:
+        if node.op == op["&&"]:
             return lhs and rhs
-        elif node.op == op["||"]:
+        if node.op == op["||"]:
             return lhs or rhs
-        elif node.op == op["|"]:
+        if node.op == op["|"]:
             return lhs | rhs
-        elif node.op == op["^"]:
+        if node.op == op["^"]:
             return lhs ^ rhs
-        elif node.op == op["&"]:
+        if node.op == op["&"]:
             return lhs & rhs
-        elif node.op == op["<<"]:
+        if node.op == op["<<"]:
             return lhs << rhs
-        elif node.op == op[">>"]:
+        if node.op == op[">>"]:
             return lhs >> rhs
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
     def visit_ArrayLiteral(self, node: ast.ArrayLiteral, context: _ParseState) -> list[Any]:
         """Visit Array Literal.
@@ -391,7 +383,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Returns:
             bool: The parsed boolean value.
         """
-        return True if node.value else False
+        return bool(node.value)
 
     def visit_DurationLiteral(self, node: ast.DurationLiteral, context: _ParseState) -> float:
         """Visit Duration Literal.
@@ -470,6 +462,20 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         value = self.visit(node.arguments[1], context)
         context.frame_data[frame].scale = value
 
+    def swap_phases(self, node: ast.FunctionCall, context: _ParseState) -> None:
+        """A 'swap_phases' Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+        """
+        frame1 = self.visit(node.arguments[0], context)
+        frame2 = self.visit(node.arguments[1], context)
+        phase1 = context.frame_data[frame1].phase
+        phase2 = context.frame_data[frame2].phase
+        context.frame_data[frame1].phase = phase2
+        context.frame_data[frame2].phase = phase1
+
     def capture_v0(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'capture_v0' Function call.
 
@@ -477,7 +483,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
         """
-        pass
 
     def play(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'play' Function call.
@@ -489,9 +494,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Raises:
             NotImplementedError: Raises if not of type
                 [ast.Identifier, ast.FunctionCall, ast.ArrayLiteral]
-
-        Returns:
-            None: Returns None
         """
         frame_id = self.visit(node.arguments[0], context)
         if isinstance(node.arguments[1], ast.ArrayLiteral):
@@ -501,7 +503,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)
             elif isinstance(amps, str):
-                raise NameError(f"waveform '{amps}' is not defined.")
+                raise NameError(f"waveform '{amps}' is not defined.")  # noqa: TRY004
         else:
             raise NotImplementedError
         frame_data = context.frame_data[frame_id]
@@ -552,19 +554,30 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         args = [self.visit(arg, context) for arg in node.arguments]
         return DragGaussianWaveform(*args)
 
+    def erf_square(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
+        """A 'erf_square' Waveform Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+
+        Returns:
+            Waveform: The waveform object representing the function call.
+        """
+        args = [self.visit(arg, context) for arg in node.arguments]
+        return ErfSquareWaveform(*args)
+
 
 def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:
-    frame_states = {}
-    for frameId, frame in frames.items():
-        frame_states[frameId] = _FrameState(
-            frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)
-        )
-    return frame_states
+    return {
+        frameId: _FrameState(frame.port.dt, frame.frequency, frame.phase % (2 * np.pi))
+        for frameId, frame in frames.items()
+    }
 
 
 def _init_qubit_frame_mapping(frames: dict[str, Frame]) -> dict[str, list[str]]:
     mapping = {}
-    for frameId in frames.keys():
+    for frameId in frames:
         if m := (
             re.search(r"q(\d+)_q(\d+)_[a-z_]+", frameId) or re.search(r"[rq](\d+)_[a-z_]+", frameId)
         ):

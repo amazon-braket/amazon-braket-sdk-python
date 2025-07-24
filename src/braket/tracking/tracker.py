@@ -50,7 +50,7 @@ class Tracker:
         Returns:
             Tracker: self.
         """
-        return self.__enter__()
+        return self.__enter__()  # noqa: PLC2801
 
     def stop(self) -> Tracker:
         """Stop tracking resources with this tracker.
@@ -91,7 +91,7 @@ class Tracker:
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "qpu" in details["device"]:
-                total_cost = total_cost + _get_qpu_task_cost(task_arn, details)
+                total_cost += _get_qpu_task_cost(task_arn, details)
         return total_cost
 
     def simulator_tasks_cost(self) -> Decimal:
@@ -114,7 +114,7 @@ class Tracker:
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "simulator" in details["device"]:
-                total_cost = total_cost + _get_simulator_task_cost(task_arn, details)
+                total_cost += _get_simulator_task_cost(task_arn, details)
         return total_cost
 
     def quantum_tasks_statistics(self) -> dict[str, dict[str, Any]]:
@@ -122,7 +122,7 @@ class Tracker:
 
         Returns:
             dict[str, dict[str, Any]]: A dictionary where each key is a device arn, and maps to
-            a dictionary sumarizing the quantum tasks run on the device. The summary includes the
+            a dictionary summarizing the quantum tasks run on the device. The summary includes the
             total shots sent to the device and the most recent status of the quantum tasks
             created on this device. For finished quantum tasks on simulator devices, the summary
             also includes the duration of the simulation.
@@ -142,7 +142,7 @@ class Tracker:
                  'billed_execution_duration' : datetime.timedelta(seconds=6, microseconds=123456)}}
         """
         stats = {}
-        for _, details in self._resources.items():
+        for details in self._resources.values():
             device_stats = stats.get(details["device"], {})
 
             shots = device_stats.get("shots", 0) + details["shots"]
@@ -212,7 +212,7 @@ class Tracker:
 
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
-    if details["status"] in ["FAILED", "CANCELLED"] or details.get("has_reservation_arn"):
+    if details["status"] in {"FAILED", "CANCELLED"} or details.get("has_reservation_arn"):
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
@@ -271,7 +271,7 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
         product_family = "Simulator Task"
         operation = "CompleteTask"
         if details["status"] == "FAILED" and device_name == "TN1":
-            # Rehersal step of TN1 can fail and charges still apply.
+            # Rehearsal step of TN1 can fail and charges still apply.
             operation = "FailedTask"
 
     search_dict = {
@@ -291,10 +291,8 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
     if duration_price["Currency"] != "USD":
         raise ValueError(f"Expected USD, found {duration_price['Currency']}")
 
-    duration_cost = (
+    return (
         Decimal(duration_price["PricePerUnit"])
         * Decimal(details["billed_duration"] / timedelta(milliseconds=1))
         / Decimal(timedelta(**{duration_price["Unit"]: 1}) / timedelta(milliseconds=1))
     )
-
-    return duration_cost

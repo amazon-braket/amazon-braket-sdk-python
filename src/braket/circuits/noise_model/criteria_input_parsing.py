@@ -84,6 +84,4 @@ def parse_qubit_input(
         if qubit_count == 1:
             return {item[0] for item in qubits}
         return {tuple(item) for item in qubits}
-    if qubit_count > 1:
-        return {tuple(qubits)}
-    return set(qubits)
+    return {tuple(qubits)} if qubit_count > 1 else set(qubits)

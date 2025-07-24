@@ -15,6 +15,7 @@ import asyncio
 import json
 import threading
 import time
+import warnings
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -33,6 +34,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters, error_mitigation
 from braket.device_schema.dwave import (
@@ -90,7 +92,7 @@ def quantum_task_quiet(aws_session):
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=4)
 
 
 @pytest.fixture
@@ -121,6 +123,19 @@ def problem():
 @pytest.fixture
 def openqasm_program():
     return OpenQASMProgram(source="OPENQASM 3.0; h $0;")
+
+
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+@pytest.fixture
+def serializable_program():
+    return DummySerializableProgram(source="OPENQASM 3.0; h $0;")
 
 
 @pytest.fixture
@@ -172,7 +187,7 @@ def test_equality(arn, aws_session):
 
 
 def test_str(quantum_task):
-    expected = "AwsQuantumTask('id/taskArn':'{}')".format(quantum_task.id)
+    expected = f"AwsQuantumTask('id/taskArn':'{quantum_task.id}')"
     assert str(quantum_task) == expected
 
 
@@ -188,6 +203,17 @@ def test_id_getter(arn, aws_session):
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_id_setter(quantum_task):
     quantum_task.id = 123
+
+
+def test_no_unknown_kwargs_no_warnings(arn, aws_session):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        AwsQuantumTask(arn, aws_session)
+
+
+def test_unknown_kwarg_warning(arn, aws_session):
+    with pytest.warns(UserWarning):
+        AwsQuantumTask(arn, aws_session, unknown_kwarg=123)
 
 
 def test_metadata(quantum_task):
@@ -614,6 +640,20 @@ def test_create_openqasm_program_em_serialized(aws_session, arn, openqasm_progra
     )
 
 
+def test_create_serializable_program(aws_session, arn, serializable_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, serializable_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        OpenQASMProgram(source=serializable_program.to_ir()).json(),
+        S3_TARGET,
+        shots,
+    )
+
+
 def test_create_blackbird_program(aws_session, arn, blackbird_program):
     aws_session.create_quantum_task.return_value = arn
     shots = 21
@@ -668,14 +708,12 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
 
 
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
-    expected_openqasm = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-        ]
-    )
+    expected_openqasm = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+    ])
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
@@ -695,17 +733,15 @@ def test_create_pulse_gate_circuit(
     aws_session, arn, pulse_sequence, device_arn, device_parameters_class
 ):
     pulse_gate_circuit = Circuit().pulse_gate([0, 1], pulse_sequence, "my_PG")
-    expected_openqasm = "\n".join(
-        (
-            "OPENQASM 3.0;",
-            "bit[2] b;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
-        )
-    )
+    expected_openqasm = "\n".join((
+        "OPENQASM 3.0;",
+        "bit[2] b;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+        "b[0] = measure $0;",
+        "b[1] = measure $1;",
+    ))
 
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
@@ -1014,29 +1050,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
-            DwaveDeviceParameters.parse_obj(
-                {
-                    "providerLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            DwaveDeviceParameters.parse_obj({
+                "providerLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
@@ -1091,29 +1125,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
-            Dwave2000QDeviceParameters.parse_obj(
-                {
-                    "deviceLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            Dwave2000QDeviceParameters.parse_obj({
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
@@ -1216,20 +1248,16 @@ def _assert_create_quantum_task_called_with(
     }
 
     if device_parameters is not None:
-        test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
+        test_kwargs["deviceParameters"] = device_parameters.json(exclude_none=True)
     if tags is not None:
-        test_kwargs.update({"tags": tags})
+        test_kwargs["tags"] = tags
     if reservation_arn:
-        test_kwargs.update(
+        test_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 
