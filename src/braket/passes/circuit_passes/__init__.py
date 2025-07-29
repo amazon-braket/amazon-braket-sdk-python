@@ -23,6 +23,9 @@ from braket.passes.circuit_passes.gate_value_validator import (  # noqa: F401
     AriaMSValidator,
     GateValueValidator,
 )
+from braket.passes.circuit_passes.not_implemented_validator import (  # noqa: F401
+    NotImplementedValidator,
+)
 from braket.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
     QubitCountValidator,
 )

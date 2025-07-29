@@ -26,7 +26,12 @@ from braket.circuits.noises import (
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.emulation.emulator import Emulator
-from braket.passes.circuit_passes import GateValidator, QubitCountValidator, ResultTypeValidator
+from braket.passes.circuit_passes import (
+    GateValidator,
+    NotImplementedValidator,
+    QubitCountValidator,
+    ResultTypeValidator,
+)
 from braket.passes.device_emulator_validators import (
     set_up_connectivity_validator,
     set_up_gate_connectivity_validator,
@@ -88,6 +93,7 @@ class LocalEmulator(Emulator):
         emulator.add_pass(GateValidator(native_gates=device_em_properties.nativeGateSet))
         emulator.add_pass(set_up_connectivity_validator(device_em_properties))
         emulator.add_pass(set_up_gate_connectivity_validator(device_em_properties))
+        emulator.add_pass(NotImplementedValidator(require_verbatim_box=True))
         emulator.add_pass(
             ResultTypeValidator(
                 [rt.name for rt in device_em_properties.supportedResultTypes],
