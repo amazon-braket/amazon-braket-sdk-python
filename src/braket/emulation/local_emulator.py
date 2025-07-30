@@ -18,6 +18,7 @@ from typing import Any, Union
 from braket.device_schema.device_capabilities import DeviceCapabilities
 
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
+from braket.circuits.noise_model.measure_criteria import MeasureCriteria
 from braket.circuits.noises import (
     BitFlip,
     Depolarizing,
@@ -167,6 +168,7 @@ class LocalEmulator(Emulator):
             # Apply one qubit READOUT noise
             readout_error_rate = 1 - oneQubitProperty[fidelity_names["READOUT"]].fidelity
             noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))
+            noise_model.add_noise(BitFlip(readout_error_rate), MeasureCriteria(qubits=qubit))
 
         for edge, data in device_em_properties.twoQubitProperties.items():
             qubits = [int(qubit) for qubit in edge.split("-")]

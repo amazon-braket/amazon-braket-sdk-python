@@ -136,14 +136,28 @@ def test_apply_noise_model(setup_local_simulator_devices):
     circuit = Circuit().h(0)
     circuit = emulator.transform(circuit)
 
-    noisy_circuit = Circuit().h(0).apply_gate_noise(BitFlip(0.1), Gate.H)
+    noisy_circuit = Circuit().h(0).apply_gate_noise(BitFlip(0.1), Gate.H).measure(target_qubits=[0])
     assert circuit == noisy_circuit
 
-    circuit = Circuit().h(0)
+    circuit = Circuit().h(0).measure(target_qubits=[0])
     circuit = emulator.transform(circuit, apply_noise_model=False)
 
-    target_circ = Circuit().h(0)
+    target_circ = Circuit().h(0).measure(target_qubits=[0])
     assert circuit == target_circ
+
+
+def test_remove_verbatim_box(setup_local_simulator_devices):
+    noise_model = NoiseModel()
+    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
+    emulator = Emulator(noise_model=noise_model)
+
+    circuit = Circuit().h(0)
+    circuit = Circuit().add_verbatim_box(circuit).probability()
+    circuit = emulator._remove_verbatim_box(circuit)
+
+    target_circuit = Circuit().h(0).probability()
+
+    assert circuit == target_circuit
 
 
 def test_noisy_run(setup_local_simulator_devices):

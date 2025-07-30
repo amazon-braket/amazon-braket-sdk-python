@@ -20,6 +20,7 @@ from typing import Any, Optional, Union
 from braket.ir.openqasm import Program as OpenQasmProgram
 
 from braket.circuits import Circuit
+from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
@@ -112,6 +113,7 @@ class Emulator(Device, BaseEmulator):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
+
         task_specification = self.transform(task_specification, apply_noise_model=False)
         # Don't apply noise model as the local simulator will automatically apply it.
 
@@ -181,6 +183,18 @@ class Emulator(Device, BaseEmulator):
             ProgramType: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
+
+        # Apply measurement manually if the circuit has no measurement and no result type
+        # This set of readout error is applied even if apply_noise_model is False
+        # because when we use the noise model to apply readout error to the circuit,
+        # the readout error is applied if and only if there is measurement or result type
+        # in the circuit
+        has_measurement = any(
+            isinstance(instr.operator, Measure) for instr in task_specification.instructions
+        )
+        if (not has_measurement) and len(task_specification.result_types) == 0:
+            task_specification.measure(target_qubits=task_specification.qubits)
+
         try:
             program = super().transform(task_specification)
             return (
@@ -210,7 +224,11 @@ class Emulator(Device, BaseEmulator):
             for instruction in noisy_verbatim_circ.instructions
             if "VerbatimBox" not in instruction.operator.name
         ]
-        return Circuit(noisy_verbatim_circ_2)
+        noisy_verbatim_circ_3 = Circuit(noisy_verbatim_circ_2)
+        for result_type in noisy_verbatim_circ.result_types:
+            noisy_verbatim_circ_3.add(result_type)
+
+        return noisy_verbatim_circ_3
 
     def validate(self, task_specification: ProgramType) -> None:
         """
