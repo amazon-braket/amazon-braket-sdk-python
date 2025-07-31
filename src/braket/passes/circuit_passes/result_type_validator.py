@@ -14,14 +14,17 @@
 from collections.abc import Iterable
 from typing import Optional
 
+from braket.device_schema.result_type import ResultType
+
 from braket.circuits import Circuit
+from braket.circuits.result_type import ObservableResultType
 from braket.passes import ValidationPass
 
 
 class ResultTypeValidator(ValidationPass[Circuit]):
     def __init__(
         self,
-        supported_result_types: Optional[Iterable[str]] = None,
+        supported_result_types: Optional[Iterable[ResultType]] = None,
         connectivity_graph: Optional[dict[str, list[str]]] = None,
     ):
         """
@@ -41,7 +44,10 @@ class ResultTypeValidator(ValidationPass[Circuit]):
         if connectivity_graph is None:
             raise ValueError("Connectivity graph must be provided.")
 
-        self._supported_result_types = frozenset(supported_result_types)
+        self._supported_result_types = {
+            result_type.name: result_type.observables for result_type in supported_result_types
+        }
+
         self._connectivity_graph = connectivity_graph
 
     def validate(self, program: Circuit) -> None:
@@ -62,6 +68,15 @@ class ResultTypeValidator(ValidationPass[Circuit]):
                     f"Result type {result_type.name} is not a supported result type "
                     f"for this device."
                 )
+
+            if isinstance(result_type, ObservableResultType):
+                observable_name = result_type.observable.name.lower()
+                if observable_name not in self._supported_result_types[result_type.name]:
+                    raise ValueError(
+                        f"Observable {observable_name} is not supported for result type "
+                        f"{result_type.name} on this device. Supported observables are: "
+                        f"{self._supported_result_types[result_type.name]}."
+                    )
 
             # Check if target qubits are valid qubits in the device
             target = result_type.target

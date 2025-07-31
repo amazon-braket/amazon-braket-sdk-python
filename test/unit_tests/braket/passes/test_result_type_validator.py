@@ -1,15 +1,15 @@
 import pytest
-
-from braket.circuits import Circuit
+import re
+from braket.circuits import Circuit, Observable
 from braket.circuits.observables import X, Y, Z, H, I
+from braket.device_schema.result_type import ResultType
 from braket.passes.circuit_passes.result_type_validator import ResultTypeValidator
-
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 
 @pytest.fixture
 def supported_result_types():
-    return [result_type.name for result_type in DEFAULT_SUPPORTED_RESULT_TYPES]
+    return DEFAULT_SUPPORTED_RESULT_TYPES
 
 
 @pytest.fixture
@@ -68,11 +68,10 @@ def test_invalid_instantiation():
 @pytest.mark.parametrize(
     "result_types_1, result_types_2",
     [
-        (["Expectation"], ["Expectation"]),
-        (["Probability", "Sample"], ["Sample", "Probability"]),
+        ([ResultType(name="Probability")], [ResultType(name="Probability")]),
         (
-            ["Expectation", "Probability", "Sample", "Variance"],
-            ["Variance", "Sample", "Probability", "Expectation"],
+            [ResultType(name="Probability"), ResultType(name="Variance", observables=["x"])],
+            [ResultType(name="Variance", observables=["x"]), ResultType(name="Probability")],
         ),
     ],
 )
@@ -86,12 +85,10 @@ def test_equality(result_types_1, result_types_2):
 @pytest.mark.parametrize(
     "result_types_1, result_types_2",
     [
-        (["Expectation"], ["Probability"]),
-        (["Probability"], ["Probability", "Sample"]),
-        (["Probability", "Sample"], ["Sample"]),
+        ([ResultType(name="Probability")], [ResultType(name="Variance", observables=["x"])]),
         (
-            ["Expectation", "Probability", "Sample"],
-            ["Expectation", "Probability", "Sample", "Variance"],
+            [ResultType(name="Variance", observables=["x"])],
+            [ResultType(name="Variance", observables=["y"])],
         ),
     ],
 )
@@ -122,4 +119,21 @@ def test_invalid_qubit_target():
     with pytest.raises(
         ValueError, match="Qubit 1 in result type Expectation is not a valid qubit for this device."
     ):
-        ResultTypeValidator(["Expectation", "Probability"], connectivity_graph).validate(circuit)
+        ResultTypeValidator(
+            [ResultType(name="Expectation", observables=["x", "y", "z", "h", "i"])],
+            connectivity_graph,
+        ).validate(circuit)
+
+
+def test_observables(supported_result_types, connectivity_graph):
+    circuit = Circuit().h(0).cnot(0, 1).sample(Observable.Z(0) @ Observable.Z(1))
+    observable_name = circuit.result_types[0].observable.name.lower()
+    error_messasge = re.escape(
+        f"Observable {observable_name} is not supported for result type Sample on this device. "
+        f"Supported observables are: [\'x\', \'y\', \'z\', \'h\', \'i\']."
+    )
+    with pytest.raises(
+        ValueError,
+        match=error_messasge,
+    ):
+        ResultTypeValidator(supported_result_types, connectivity_graph).validate(circuit)

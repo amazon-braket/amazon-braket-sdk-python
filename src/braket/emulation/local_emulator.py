@@ -97,7 +97,7 @@ class LocalEmulator(Emulator):
         emulator.add_pass(NotImplementedValidator(require_verbatim_box=True))
         emulator.add_pass(
             ResultTypeValidator(
-                [rt.name for rt in device_em_properties.supportedResultTypes],
+                device_em_properties.supportedResultTypes,
                 device_em_properties.connectivityGraph,
             )
         )
