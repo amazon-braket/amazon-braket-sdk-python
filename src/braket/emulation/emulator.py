@@ -22,6 +22,7 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.circuits import Circuit
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
+from braket.circuits.result_types import Probability
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.base_emulator import BaseEmulator
@@ -184,7 +185,9 @@ class Emulator(Device, BaseEmulator):
             exists for this emulator and apply_noise_model is true.
         """
 
-        # Apply measurement manually if the circuit has no measurement and no result type
+        # Apply measurement manually if either of the following cases hold
+        # 1. The circuit has no measurement and no result type
+        # 2. The circuit has Probability result type
         # This set of readout error is applied even if apply_noise_model is False
         # because when we use the noise model to apply readout error to the circuit,
         # the readout error is applied if and only if there is measurement or result type
@@ -194,6 +197,10 @@ class Emulator(Device, BaseEmulator):
         )
         if (not has_measurement) and len(task_specification.result_types) == 0:
             task_specification.measure(target_qubits=task_specification.qubits)
+
+        task_specification = self._apply_readout_error_to_probability_qubits(
+            task_specification, self.noise_model
+        )
 
         try:
             program = super().transform(task_specification)
@@ -229,6 +236,61 @@ class Emulator(Device, BaseEmulator):
             noisy_verbatim_circ_3.add(result_type)
 
         return noisy_verbatim_circ_3
+
+    def _apply_readout_error_to_probability_qubits(
+        self, circuit: Circuit, noise_model: NoiseModel
+    ) -> Circuit:
+        """Apply readout error from a noise model to qubits that have probability result types.
+
+        This function identifies qubits that are targets of probability result types in the circuit
+        and applies readout error from the noise model to those qubits.
+
+        Args:
+            circuit (Circuit): The quantum circuit to apply readout error to.
+            noise_model (NoiseModel): The noise model containing readout error to apply.
+
+        Returns:
+            Circuit: A new circuit with readout error applied to qubits with probability result
+            types.
+        """
+
+        if noise_model is None:
+            return circuit
+
+        # Create a new circuit to avoid modifying the original
+        new_circuit = Circuit()
+
+        # Copy all instructions from the original circuit
+        for instruction in circuit.instructions:
+            new_circuit.add_instruction(instruction)
+
+        # Copy all result types from the original circuit
+        for result_type in circuit.result_types:
+            new_circuit.add_result_type(result_type)
+
+        # Find qubits with probability result types
+        probability_qubits = set()
+        for result_type in circuit.result_types:
+            if isinstance(result_type, Probability):
+                # If target is empty, it means all qubits in the circuit
+                if not result_type.target:
+                    probability_qubits.update(circuit.qubits)
+                else:
+                    probability_qubits.update(result_type.target)
+
+        # Get readout noise instructions from the noise model
+        readout_noise_instructions = noise_model.get_instructions_by_type().readout_noise
+
+        # Apply readout noise to each qubit with a probability result type
+        for qubit in probability_qubits:
+            for noise_instruction in readout_noise_instructions:
+                # Apply the readout noise to the qubit
+                target_qubits = noise_instruction.criteria._qubits
+                if qubit in target_qubits:
+                    new_circuit.apply_readout_noise(noise_instruction.noise, qubit)
+                    break  # Only apply the readout error once
+
+        return new_circuit
 
     def validate(self, task_specification: ProgramType) -> None:
         """
