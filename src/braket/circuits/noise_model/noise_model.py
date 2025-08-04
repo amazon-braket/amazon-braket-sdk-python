@@ -421,15 +421,15 @@ def _apply_noise_on_observable_result_types(
     for result_type in result_types:
         if isinstance(result_type, ObservableResultType):
             target_qubits = list(result_type.target)
-            if len(target_qubits) == 0:
-                target_qubits = circuit.qubits
             for item_index, item in enumerate(readout_noise_instructions):
                 item_criteria = item.criteria
                 if isinstance(
                     item_criteria, ObservableCriteria
                 ) and item_criteria.result_type_matches(result_type):
                     for target_qubit in target_qubits:
-                        noise_to_apply[target_qubit].add(item_index)
+                        if target_qubit in item_criteria._qubits:
+                            noise_to_apply[target_qubit].add(item_index)
+
     for qubit in noise_to_apply:
         for noise_item_index in noise_to_apply[qubit]:
             item = readout_noise_instructions[noise_item_index]
