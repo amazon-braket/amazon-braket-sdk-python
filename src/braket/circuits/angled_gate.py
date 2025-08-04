@@ -367,7 +367,7 @@ def _angles_equal(
 
 
 @_angles_equal.register
-def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):  # noqa: FURB118
+def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
     return angle_1 == angle_2
 
 
