@@ -580,7 +580,6 @@ def test_measurecriteria_for_circuit_with_observable_resulttype():
     noise_model.add_noise(BitFlip(0.1), MeasureCriteria(qubits=[0]))
 
     circ = Circuit().h(0).sample(observable=Observable.Z())
-    print(circ)
     noisy_circuit = noise_model.apply(circ)
 
     assert noisy_circuit == circ  # no effect
