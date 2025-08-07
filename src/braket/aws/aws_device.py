@@ -56,8 +56,9 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 _DEVICE_PASSES = {
     Devices.IonQ.Aria1: [AriaMSValidator()],
     Devices.IonQ.Aria2: [AriaMSValidator()],
-    Devices.Rigetti.Ankaa3: [AnkaaRxValidator()]
+    Devices.Rigetti.Ankaa3: [AnkaaRxValidator()],
 }
+
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -605,7 +606,7 @@ class AwsDevice(Device):  # noqa: PLR0904
 
         if self._emulator is not None:
             return self._emulator
-        
+
         if self._type == AwsDeviceType.SIMULATOR:
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."

@@ -130,7 +130,7 @@ def test_observables(supported_result_types, connectivity_graph):
     observable_name = circuit.result_types[0].observable.name.lower()
     error_messasge = re.escape(
         f"Observable {observable_name} is not supported for result type Sample on this device. "
-        f"Supported observables are: [\'x\', \'y\', \'z\', \'h\', \'i\']."
+        f"Supported observables are: ['x', 'y', 'z', 'h', 'i']."
     )
     with pytest.raises(
         ValueError,

@@ -2470,6 +2470,8 @@ def rigetti_device(aws_session, mock_rigetti_qpu_device):
 
 def test_local_emulator(rigetti_device):
     emulator = rigetti_device.emulator()
+    emulator_v2 = rigetti_device.emulator()
+    assert emulator == emulator_v2
 
 
 @patch("braket.aws.aws_device.LocalEmulator.from_device_properties")
