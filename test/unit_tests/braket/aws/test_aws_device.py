@@ -2472,12 +2472,6 @@ def test_local_emulator(rigetti_device):
     emulator = rigetti_device.emulator()
 
 
-def test_ionq_emulator_local_is_False(rigetti_device):
-    error_message = "local can only be True."
-    with pytest.raises(ValueError, match=error_message):
-        emulator = rigetti_device.emulator(local=False)
-
-
 @patch("braket.aws.aws_device.LocalEmulator.from_device_properties")
 @patch("braket.aws.aws_device.AwsDevice._get_session_and_initialize")
 def test_emulator_with_ankaa_device(mock_get_session, mock_from_device_properties):

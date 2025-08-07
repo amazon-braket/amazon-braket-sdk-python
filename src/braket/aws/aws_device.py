@@ -587,7 +587,7 @@ class AwsDevice(Device):  # noqa: PLR0904
         self._update_pulse_properties()
         return self._ports or {}
 
-    def emulator(self, local: bool = True) -> Emulator:
+    def emulator(self) -> Emulator:
         """
         A device emulator mimics the restrictions and noise of the AWS QPU by validating and
         compiling programs before running them on a simulated backend. An emulator can be used
@@ -601,8 +601,6 @@ class AwsDevice(Device):  # noqa: PLR0904
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."
             )
-        if not local:
-            raise ValueError("local can only be True.")
 
         self._emulator = LocalEmulator.from_device_properties(self.properties)
 
