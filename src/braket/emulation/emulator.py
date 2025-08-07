@@ -20,6 +20,7 @@ from typing import Any, Optional, Union
 from braket.ir.openqasm import Program as OpenQasmProgram
 
 from braket.circuits import Circuit
+from braket.circuits.compiler_directives import StartVerbatimBox, EndVerbatimBox
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.result_types import Probability
@@ -29,6 +30,7 @@ from braket.emulation.pass_manager import PassManager
 from braket.passes import BasePass, ProgramType
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
+
 
 # Create a module-level logger
 logger = logging.getLogger(__name__)
@@ -229,7 +231,8 @@ class Emulator(Device, PassManager):
         noisy_verbatim_circ_2 = [
             instruction
             for instruction in noisy_verbatim_circ.instructions
-            if "VerbatimBox" not in instruction.operator.name
+            if not isinstance(instruction.operator, StartVerbatimBox)
+            and not isinstance(instruction.operator, EndVerbatimBox)
         ]
         noisy_verbatim_circ_3 = Circuit(noisy_verbatim_circ_2)
         for result_type in noisy_verbatim_circ.result_types:
