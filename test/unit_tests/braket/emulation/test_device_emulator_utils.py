@@ -34,7 +34,7 @@ def test_standardize_ionq_device_properties_json(reduced_ionq_device_capabilitie
     device_properties_json = standardize_ionq_device_properties_json(
         reduced_ionq_device_capabilities_json
     )
-    device_em_properties = DeviceEmulatorProperties._from_json(device_properties_json)
+    device_em_properties = DeviceEmulatorProperties.from_json(device_properties_json)
     assert device_em_properties.qubitCount == 25
     assert device_em_properties.nativeGateSet == ["gpi", "gpi2", "ms"]
     assert device_em_properties.connectivityGraph == {}

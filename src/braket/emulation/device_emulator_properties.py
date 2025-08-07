@@ -186,11 +186,11 @@ class DeviceEmulatorProperties(BaseModel):
         if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = standardize_ionq_device_properties(device_properties)
         if isinstance(device_properties, DeviceCapabilities):
-            return cls._from_json(device_properties.json())
+            return cls.from_json(device_properties.json())
         raise ValueError("device_properties has to be an instance of DeviceCapabilities.")
 
     @classmethod
-    def _from_json(cls, device_properties_json: str) -> "DeviceEmulatorProperties":
+    def from_json(cls, device_properties_json: str) -> "DeviceEmulatorProperties":
         properties_dict = json.loads(device_properties_json)
         if not isinstance(properties_dict, dict):
             raise TypeError("device_properties_json must be a json of a dictionary")
