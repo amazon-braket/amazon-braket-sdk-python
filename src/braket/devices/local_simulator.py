@@ -17,7 +17,7 @@ import sys
 from functools import singledispatchmethod
 from itertools import repeat
 from os import cpu_count
-from typing import Any, Optional
+from typing import Any
 
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.ir.ahs import Program as AHSProgram
@@ -61,7 +61,7 @@ class LocalSimulator(Device):
     def __init__(
         self,
         backend: str | BraketSimulator = "default",
-        noise_model: Optional[NoiseModel] = None,
+        noise_model: NoiseModel | None = None,
     ):
         """Initializes a `LocalSimulator`.
 
@@ -91,7 +91,7 @@ class LocalSimulator(Device):
         | AnalogHamiltonianSimulation
         | SerializableProgram,
         shots: int = 0,
-        inputs: Optional[dict[str, float]] = None,
+        inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> LocalQuantumTask:
@@ -190,7 +190,7 @@ class LocalSimulator(Device):
         if single_input:
             inputs = repeat(inputs)
 
-        tasks_and_inputs = zip(task_specifications, inputs)
+        tasks_and_inputs = zip(task_specifications, inputs, strict=False)
 
         if single_task and single_input:
             tasks_and_inputs = [next(tasks_and_inputs)]
@@ -259,7 +259,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: Optional[int]):
+    def _(self, circuit: Circuit, inputs: dict[str, float] | None, shots: int | None):
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
@@ -272,7 +272,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register
-    def _(self, program: OpenQASMProgram, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program: OpenQASMProgram, inputs: dict[str, float] | None, _shots: int):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
@@ -286,7 +286,7 @@ class LocalSimulator(Device):
         return program
 
     @_construct_payload.register
-    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program: SerializableProgram, inputs: dict[str, float] | None, _shots: int):
         inputs_copy = inputs.copy() if inputs is not None else {}
         return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM), inputs=inputs_copy)
 

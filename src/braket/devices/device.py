@@ -13,7 +13,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.device_schema import DeviceActionType
 from braket.ir.openqasm import Program
@@ -43,9 +43,9 @@ class Device(ABC):
     @abstractmethod
     def run(
         self,
-        task_specification: Union[Circuit, Problem],
-        shots: Optional[int],
-        inputs: Optional[dict[str, float]],
+        task_specification: Circuit | Problem,
+        shots: int | None,
+        inputs: dict[str, float] | None,
         *args,
         **kwargs,
     ) -> QuantumTask:
@@ -70,13 +70,10 @@ class Device(ABC):
     @abstractmethod
     def run_batch(
         self,
-        task_specifications: Union[
-            Union[Circuit, Problem],
-            list[Union[Circuit, Problem]],
-        ],
-        shots: Optional[int],
-        max_parallel: Optional[int],
-        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]],
+        task_specifications: Circuit | Problem | list[Circuit | Problem],
+        shots: int | None,
+        max_parallel: int | None,
+        inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTaskBatch:
@@ -131,8 +128,8 @@ class Device(ABC):
             )
 
     def _apply_noise_model_to_circuit(
-        self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
-    ) -> Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]:
+        self, task_specification: Circuit | Problem | Program | AnalogHamiltonianSimulation
+    ) -> Circuit | Problem | Program | AnalogHamiltonianSimulation:
         if isinstance(task_specification, Circuit):
             for instruction in task_specification.instructions:
                 if isinstance(instruction.operator, Noise):

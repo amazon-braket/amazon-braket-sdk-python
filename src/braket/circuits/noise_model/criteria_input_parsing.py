@@ -12,15 +12,14 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional, Union
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(
-    operators: Union[QuantumOperator, Iterable[QuantumOperator]],
-) -> Optional[set[QuantumOperator]]:
+    operators: QuantumOperator | Iterable[QuantumOperator],
+) -> set[QuantumOperator] | None:
     """Processes the quantum operator input to __init__ to validate and return a set of
     QuantumOperators.
 
@@ -46,8 +45,8 @@ def parse_operator_input(
 
 
 def parse_qubit_input(
-    qubits: Optional[QubitSetInput], expected_qubit_count: Optional[int] = 0
-) -> Optional[set[Union[int, tuple[int]]]]:
+    qubits: QubitSetInput | None, expected_qubit_count: int | None = 0
+) -> set[int | tuple[int]] | None:
     """Processes the qubit input to __init__ to validate and return a set of qubit targets.
 
     Args:
