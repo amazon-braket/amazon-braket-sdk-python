@@ -19,7 +19,7 @@ from typing import Optional, Union
 from braket.passes import BasePass, ProgramType, ValidationPass
 
 
-class BaseEmulator:
+class PassManager:
     def __init__(self, emulator_passes: Optional[Iterable[BasePass]] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
@@ -53,7 +53,7 @@ class BaseEmulator:
             if isinstance(emulator_pass, ValidationPass):
                 emulator_pass(task_specification)
 
-    def add_pass(self, emulator_pass: Union[Iterable[BasePass], BasePass]) -> BaseEmulator:
+    def add_pass(self, emulator_pass: Union[Iterable[BasePass], BasePass]) -> PassManager:
         """
         Append a new BasePass or a list of BasePass objects.
 
@@ -64,7 +64,7 @@ class BaseEmulator:
                 emulator.
 
         Returns:
-            BaseEmulator: Returns an updated self.
+            PassManager: Returns an updated self.
 
         Raises:
             TypeError: If the input is not an iterable or an Pass.

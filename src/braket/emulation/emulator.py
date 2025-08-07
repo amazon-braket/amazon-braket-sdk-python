@@ -25,7 +25,7 @@ from braket.circuits.noise_model import NoiseModel
 from braket.circuits.result_types import Probability
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
-from braket.emulation.base_emulator import BaseEmulator
+from braket.emulation.pass_manager import PassManager
 from braket.passes import BasePass, ProgramType
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
@@ -38,7 +38,7 @@ class EmulatorError(Exception):
     """Custom exception for emulator-related errors."""
 
 
-class Emulator(Device, BaseEmulator):
+class Emulator(Device, PassManager):
     _DEFAULT_SIMULATOR_BACKEND = "default"
     _DEFAULT_NOISY_BACKEND = "braket_dm"
 
@@ -53,7 +53,7 @@ class Emulator(Device, BaseEmulator):
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
-        BaseEmulator.__init__(self, emulator_passes)
+        PassManager.__init__(self, emulator_passes)
         self._noise_model = noise_model
 
         backend_name = self._get_local_simulator_backend(backend, noise_model)
