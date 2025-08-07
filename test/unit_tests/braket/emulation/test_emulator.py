@@ -61,8 +61,7 @@ def test_basic_invalidate(basic_emulator):
     """
     circuit = Circuit().x(range(6))
     match_string = re.escape(
-        f"Circuit must use at most 4 qubits, \
-but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
+        f"Circuit must use at most 4 qubits, but uses {circuit.qubit_count} qubits."
     )
     with pytest.raises(Exception, match=match_string):
         basic_emulator.transform(circuit)
@@ -121,8 +120,7 @@ def test_validation_only_pass(setup_local_simulator_devices):
 
     circuit = Circuit().h(range(5))
     match_string = re.escape(
-        f"Circuit must use at most 4 qubits, \
-but uses {circuit.qubit_count} qubits. (DeviceEmulator)"
+        f"Circuit must use at most 4 qubits, but uses {circuit.qubit_count} qubits."
     )
     with pytest.raises(Exception, match=match_string):
         emulator.validate(circuit)

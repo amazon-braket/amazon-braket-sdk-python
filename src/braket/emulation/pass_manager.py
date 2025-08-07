@@ -18,6 +18,8 @@ from typing import Optional, Union
 
 from braket.passes import BasePass, ProgramType, ValidationPass
 
+class EmulatorValidationError(Exception):
+    """Custom exception validation errors from emulators."""
 
 class PassManager:
     def __init__(self, emulator_passes: Optional[Iterable[BasePass]] = None):
@@ -49,9 +51,13 @@ class PassManager:
             task_specification (ProgramType): The program to validate with this
                 emulator's validation passes.
         """
-        for emulator_pass in self._emulator_passes:
-            if isinstance(emulator_pass, ValidationPass):
-                emulator_pass(task_specification)
+
+        try:
+            for emulator_pass in self._emulator_passes:
+                if isinstance(emulator_pass, ValidationPass):
+                    emulator_pass(task_specification)
+        except Exception as e:
+            self._raise_exception(e)
 
     def add_pass(self, emulator_pass: Union[Iterable[BasePass], BasePass]) -> PassManager:
         """
@@ -77,3 +83,14 @@ class PassManager:
         else:
             raise TypeError("emulator_pass must be an Pass or an iterable of Pass")
         return self
+
+
+    def _raise_exception(self, exception: Exception) -> None:
+        """
+        Wrapper for exceptions, appends the emulator's name to the exception
+        note.
+
+        Args:
+            exception (Exception): The exception to modify and raise.
+        """
+        raise EmulatorValidationError(str(exception)) from exception

@@ -36,10 +36,6 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 logger = logging.getLogger(__name__)
 
 
-class EmulatorError(Exception):
-    """Custom exception for emulator-related errors."""
-
-
 class Emulator(Device, PassManager):
     _DEFAULT_SIMULATOR_BACKEND = "default"
     _DEFAULT_NOISY_BACKEND = "braket_dm"
@@ -204,18 +200,12 @@ class Emulator(Device, PassManager):
             task_specification, self.noise_model
         )
 
-        try:
-            program = super().transform(task_specification)
-            return (
-                self._noise_model.apply(program)
-                if apply_noise_model and self.noise_model
-                else program
-            )
-            # if apply_noise_model and self.noise_model:
-            #     return self._noise_model.apply(program)
-            # return program
-        except Exception as e:
-            self._raise_exception(e)
+        program = super().transform(task_specification)
+        return (
+            self._noise_model.apply(program)
+            if apply_noise_model and self.noise_model
+            else program
+        )
 
     def _remove_verbatim_box(self, noisy_verbatim_circ: ProgramType) -> ProgramType:
         """
@@ -294,26 +284,3 @@ class Emulator(Device, PassManager):
                     break  # Only apply the readout error once
 
         return new_circuit
-
-    def validate(self, task_specification: ProgramType) -> None:
-        """
-        Runs only Passes that are ValidationPass, i.e. all non-modifying
-        validation passes on the input program.
-
-        Args:
-            task_specification (ProgramType): The input program to validate.
-        """
-        try:
-            super().validate(task_specification)
-        except Exception as e:
-            self._raise_exception(e)
-
-    def _raise_exception(self, exception: Exception) -> None:
-        """
-        Wrapper for exceptions, appends the emulator's name to the exception
-        note.
-
-        Args:
-            exception (Exception): The exception to modify and raise.
-        """
-        raise EmulatorError(str(exception) + f" ({self._name})") from exception
