@@ -2481,8 +2481,8 @@ def test_emulator_with_ankaa_device(mock_get_session, mock_from_device_propertie
     mock_get_session.return_value = mock_session
 
     # Create a device with "Ankaa" in the name
-    device = AwsDevice(RIGETTI_ARN, mock_session)
-    device._name = "Ankaa-1"
+    device = AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-3", mock_session)
+    device._name = "Ankaa-3"
     device._properties = Mock()
     device._type = "QPU"  # Set the device type directly
 
@@ -2504,7 +2504,7 @@ def test_emulator_with_aria_device(mock_get_session, mock_from_device_properties
     mock_get_session.return_value = mock_session
 
     # Create a device with "Aria" in the name
-    device = AwsDevice(IONQ_ARN, mock_session)
+    device = AwsDevice("arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1", mock_session)
     device._name = "Aria-1"
     device._properties = Mock()
     device._type = "QPU"  # Set the device type directly

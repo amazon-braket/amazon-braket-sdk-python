@@ -53,6 +53,11 @@ from braket.passes.circuit_passes import AnkaaRxValidator, AriaMSValidator
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
+_DEVICE_PASSES = {
+    Devices.IonQ.Aria1: [AriaMSValidator()],
+    Devices.IonQ.Aria2: [AriaMSValidator()],
+    Devices.Rigetti.Ankaa3: [AnkaaRxValidator()]
+}
 
 class AwsDeviceType(str, Enum):
     """Possible AWS device types"""
@@ -597,6 +602,10 @@ class AwsDevice(Device):  # noqa: PLR0904
             Emulator: An emulator for this device, if this is not a simulator device. Raises an
             exception if an emulator is requested for a simulator device.
         """
+
+        if self._emulator is not None:
+            return self._emulator
+        
         if self._type == AwsDeviceType.SIMULATOR:
             raise ValueError(
                 "Creating an emulator from a Braket managed simulator is not supported."
@@ -605,11 +614,8 @@ class AwsDevice(Device):  # noqa: PLR0904
         self._emulator = LocalEmulator.from_device_properties(self.properties)
 
         # Add device-specific gate value validators
-        if "Ankaa" in self.name:
-            self._emulator.add_pass(AnkaaRxValidator())
-
-        if "Aria" in self.name:
-            self._emulator.add_pass(AriaMSValidator())
+        for validator in _DEVICE_PASSES.get(self.arn, []):
+            self._emulator.add_pass(validator)
 
         return self._emulator
 
