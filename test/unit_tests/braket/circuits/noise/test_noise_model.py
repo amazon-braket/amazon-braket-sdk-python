@@ -575,6 +575,7 @@ def test_apply_readout_noise_result_type_only():
     for instr in noisy_circuit.instructions:
         assert not (isinstance(instr.operator, BitFlip) and instr.target == [1])
 
+
 def test_measurecriteria_for_circuit_with_observable_resulttype():
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), MeasureCriteria(qubits=[0]))
