@@ -56,8 +56,7 @@ class PassManager:
 
         try:
             for emulator_pass in self._emulator_passes:
-                if isinstance(emulator_pass, ValidationPass):
-                    emulator_pass(task_specification)
+                emulator_pass(task_specification)
         except Exception as e:
             self._raise_exception(e)
 
