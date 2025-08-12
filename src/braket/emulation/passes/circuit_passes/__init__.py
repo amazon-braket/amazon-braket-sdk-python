@@ -11,24 +11,24 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.passes.circuit_passes.connectivity_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.connectivity_validator import (  # noqa: F401
     ConnectivityValidator,
 )
-from braket.passes.circuit_passes.gate_connectivity_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.gate_connectivity_validator import (  # noqa: F401
     GateConnectivityValidator,
 )
-from braket.passes.circuit_passes.gate_validator import GateValidator  # noqa: F401
-from braket.passes.circuit_passes.gate_value_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.gate_validator import GateValidator  # noqa: F401
+from braket.emulation.passes.circuit_passes.gate_value_validator import (  # noqa: F401
     AnkaaRxValidator,
     AriaMSValidator,
     GateValueValidator,
 )
-from braket.passes.circuit_passes.not_implemented_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.not_implemented_validator import (  # noqa: F401
     NotImplementedValidator,
 )
-from braket.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
     QubitCountValidator,
 )
-from braket.passes.circuit_passes.result_type_validator import (  # noqa: F401
+from braket.emulation.passes.circuit_passes.result_type_validator import (  # noqa: F401
     ResultTypeValidator,
 )

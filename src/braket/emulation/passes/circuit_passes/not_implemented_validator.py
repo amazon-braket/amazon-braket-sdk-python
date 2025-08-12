@@ -16,7 +16,7 @@ from typing import Optional
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.passes import ValidationPass
+from braket.emulation.passes import ValidationPass
 
 UNSUPPORTED_GATES = ["cc_prx", "measure_ff"]
 

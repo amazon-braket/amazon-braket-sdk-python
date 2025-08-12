@@ -20,7 +20,7 @@ from networkx.utils import graphs_equal
 from braket.circuits.circuit import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
-from braket.passes import ValidationPass
+from braket.emulation.passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 

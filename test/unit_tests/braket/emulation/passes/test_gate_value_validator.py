@@ -16,7 +16,7 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.circuits.gates import Rx, MS
-from braket.passes.circuit_passes import AnkaaRxValidator, AriaMSValidator, GateValueValidator
+from braket.emulation.passes.circuit_passes import AnkaaRxValidator, AriaMSValidator, GateValueValidator
 
 
 def test_ankaa_rx_validator_valid_angles():

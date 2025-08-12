@@ -4,7 +4,7 @@ import pytest
 from braket.circuits import Circuit, Gate, Instruction
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.noises import BitFlip
-from braket.passes.circuit_passes import GateValidator
+from braket.emulation.passes.circuit_passes import GateValidator
 
 
 @pytest.fixture

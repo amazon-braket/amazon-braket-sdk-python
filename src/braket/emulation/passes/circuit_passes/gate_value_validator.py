@@ -15,7 +15,7 @@ import math
 
 from braket.circuits import Circuit
 from braket.circuits.gates import MS, Rx
-from braket.passes import ValidationPass
+from braket.emulation.passes import ValidationPass
 
 
 class GateValueValidator(ValidationPass[Circuit]):

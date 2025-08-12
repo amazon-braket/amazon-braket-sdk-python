@@ -27,13 +27,13 @@ from braket.circuits.noises import (
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.emulation.emulator import Emulator
-from braket.passes.circuit_passes import (
+from braket.emulation.passes.circuit_passes import (
     GateValidator,
     NotImplementedValidator,
     QubitCountValidator,
     ResultTypeValidator,
 )
-from braket.passes.device_emulator_validators import (
+from braket.emulation.passes.device_emulator_validators import (
     set_up_connectivity_validator,
     set_up_gate_connectivity_validator,
 )

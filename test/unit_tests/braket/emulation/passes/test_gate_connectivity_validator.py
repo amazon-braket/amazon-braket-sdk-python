@@ -5,7 +5,7 @@ from networkx.utils import graphs_equal
 
 from braket.circuits import Circuit, Gate
 from braket.circuits.noises import BitFlip
-from braket.passes.circuit_passes import GateConnectivityValidator
+from braket.emulation.passes.circuit_passes import GateConnectivityValidator
 
 
 @pytest.fixture

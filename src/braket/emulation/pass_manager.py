@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Optional, Union
 
-from braket.passes import BasePass, ProgramType, ValidationPass
+from braket.emulation.passes import ProgramType, ValidationPass
 
 
 class EmulatorValidationError(Exception):
@@ -24,7 +24,7 @@ class EmulatorValidationError(Exception):
 
 
 class PassManager:
-    def __init__(self, emulator_passes: Optional[Iterable[BasePass]] = None):
+    def __init__(self, emulator_passes: Optional[Iterable[ValidationPass]] = None):
         self._emulator_passes = emulator_passes if emulator_passes is not None else []
 
     def transform(self, task_specification: ProgramType) -> ProgramType:
@@ -61,12 +61,12 @@ class PassManager:
         except Exception as e:
             self._raise_exception(e)
 
-    def add_pass(self, emulator_pass: Union[Iterable[BasePass], BasePass]) -> PassManager:
+    def add_pass(self, emulator_pass: Union[Iterable[ValidationPass], ValidationPass]) -> PassManager:
         """
-        Append a new BasePass or a list of BasePass objects.
+        Append a new ValidationPass or a list of ValidationPass objects.
 
         Args:
-            emulator_pass (Union[Iterable[BasePass], BasePass]): Either a
+            emulator_pass (Union[Iterable[ValidationPass], ValidationPass]): Either a
                 single Pass object or a list of Pass objects that
                 will be used in validation and program compilation passes by this
                 emulator.
@@ -80,7 +80,7 @@ class PassManager:
         """
         if isinstance(emulator_pass, Iterable):
             self._emulator_passes.extend(emulator_pass)
-        elif isinstance(emulator_pass, BasePass):
+        elif isinstance(emulator_pass, ValidationPass):
             self._emulator_passes.append(emulator_pass)
         else:
             raise TypeError("emulator_pass must be an Pass or an iterable of Pass")

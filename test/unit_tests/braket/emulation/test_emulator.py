@@ -10,13 +10,8 @@ from braket.circuits.noises import BitFlip
 from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulator
 from braket.devices import local_simulator
 from braket.emulation import Emulator
-from braket.passes import BasePass, ProgramType
-from braket.passes.circuit_passes import GateValidator, QubitCountValidator
-
-
-class AlwaysFailPass(BasePass[ProgramType]):
-    def run(self, program: ProgramType):
-        raise ValueError("This pass always raises an error.")
+from braket.emulation.passes import ProgramType, ValidationPass
+from braket.emulation.passes.circuit_passes import GateValidator, QubitCountValidator
 
 
 @pytest.fixture
@@ -115,8 +110,7 @@ def test_update_noise_model(empty_emulator):
 
 def test_validation_only_pass(setup_local_simulator_devices):
     qubit_count_validator = QubitCountValidator(4)
-    bad_pass = AlwaysFailPass()
-    emulator = Emulator(emulator_passes=[bad_pass, qubit_count_validator])
+    emulator = Emulator(emulator_passes=[qubit_count_validator])
 
     circuit = Circuit().h(range(5))
     match_string = re.escape(

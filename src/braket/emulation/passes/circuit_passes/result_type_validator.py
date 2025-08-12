@@ -18,7 +18,7 @@ from braket.device_schema.result_type import ResultType
 
 from braket.circuits import Circuit
 from braket.circuits.result_type import ObservableResultType
-from braket.passes import ValidationPass
+from braket.emulation.passes import ValidationPass
 
 
 class ResultTypeValidator(ValidationPass[Circuit]):

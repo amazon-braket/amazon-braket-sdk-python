@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from braket.circuits import Circuit
-from braket.passes import ValidationPass
+from braket.emulation.passes import ValidationPass
 
 
 class QubitCountValidator(ValidationPass[Circuit]):

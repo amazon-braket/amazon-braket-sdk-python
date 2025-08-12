@@ -13,12 +13,13 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
-from braket.passes.base_pass import BasePass, ProgramType
+ProgramType = TypeVar("ProgramType")
 
 
-class ValidationPass(BasePass[ProgramType]):
+class ValidationPass(ABC, Generic[ProgramType]):
     @abstractmethod
     def validate(self, program: ProgramType) -> None:
         """
@@ -43,3 +44,6 @@ class ValidationPass(BasePass[ProgramType]):
         """
         self.validate(program)
         return program
+        
+    def __call__(self, program: ProgramType) -> ProgramType:
+        return self.run(program)

@@ -14,8 +14,8 @@
 import pytest
 
 from braket.circuits import Circuit
-from braket.passes.circuit_passes import NotImplementedValidator
-from braket.passes.circuit_passes.not_implemented_validator import UNSUPPORTED_GATES
+from braket.emulation.passes.circuit_passes import NotImplementedValidator
+from braket.emulation.passes.circuit_passes.not_implemented_validator import UNSUPPORTED_GATES
 
 
 def test_validate_circuit_with_verbatim_box():

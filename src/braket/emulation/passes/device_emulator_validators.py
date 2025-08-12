@@ -13,7 +13,7 @@
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
-from braket.passes.circuit_passes import ConnectivityValidator, GateConnectivityValidator
+from braket.emulation.passes.circuit_passes import ConnectivityValidator, GateConnectivityValidator
 
 
 def set_up_connectivity_validator(

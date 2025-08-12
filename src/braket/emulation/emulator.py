@@ -27,7 +27,7 @@ from braket.circuits.result_types import Probability
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.pass_manager import PassManager
-from braket.passes import BasePass, ProgramType
+from braket.emulation.passes import ProgramType, ValidationPass
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -46,7 +46,7 @@ class Emulator(Device, PassManager):
         self,
         backend: str = "default",
         noise_model: Optional[NoiseModel] = None,
-        emulator_passes: Optional[Iterable[BasePass]] = None,
+        emulator_passes: Optional[Iterable[ValidationPass]] = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")

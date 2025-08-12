@@ -3,7 +3,7 @@ import re
 from braket.circuits import Circuit, Observable
 from braket.circuits.observables import X, Y, Z, H, I
 from braket.device_schema.result_type import ResultType
-from braket.passes.circuit_passes.result_type_validator import ResultTypeValidator
+from braket.emulation.passes.circuit_passes.result_type_validator import ResultTypeValidator
 from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
 
 
