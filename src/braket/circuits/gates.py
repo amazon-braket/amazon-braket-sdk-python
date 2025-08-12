@@ -3764,6 +3764,10 @@ class PulseGate(Gate, Parameterizable):
         r"""Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
+    @property
+    def requires_physical_qubits(self) -> bool:
+        return True
+
     def bind_values(self, **kwargs) -> PulseGate:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.

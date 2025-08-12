@@ -15,9 +15,31 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, Union
 
-from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
+from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+
+from braket.ahs import AnalogHamiltonianSimulation
+from braket.circuits import Circuit
+from braket.circuits.serialization import SerializableProgram
+from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
+from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, ProgramSetQuantumTaskResult
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
-from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
+
+TaskSpecification = Union[
+    Circuit,
+    SerializableProgram,
+    ProgramSet,
+    OpenQASMProgram,
+    OpenQASMProgramSet,
+    AnalogHamiltonianSimulation,
+    PulseSequence,
+]
+TaskResult = Union[
+    GateModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
+    AnalogHamiltonianSimulationQuantumTaskResult,
+]
 
 
 class QuantumTask(ABC):
@@ -47,16 +69,13 @@ class QuantumTask(ABC):
     @abstractmethod
     def result(
         self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    ) -> TaskResult:
         """Get the quantum task result.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: Get
-            the quantum task result. Call async_result if you want the result in an
-            asynchronous way.
-        """  # noqa: E501
+            TaskResult: Get the quantum task result.
+            Call async_result if you want the result in an asynchronous way.
+        """
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:

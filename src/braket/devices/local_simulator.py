@@ -22,12 +22,14 @@ from typing import Any, Optional
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.ir.openqasm.program_set_v1 import ProgramSet as OpenQASMProgramSet
 from braket.simulator import BraketSimulator
 from braket.task_result import (
     AnalogHamiltonianSimulationTaskResult,
     AnnealingTaskResult,
     GateModelTaskResult,
 )
+from braket.task_result.program_set_task_result_v1 import ProgramSetTaskResult
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -36,12 +38,15 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.devices.device import Device
+from braket.program_sets import ProgramSet
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
 from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
+from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult
+from braket.tasks.quantum_task import TaskSpecification
 
 if sys.version_info.minor == 9:
     from backports.entry_points_selectable import entry_points
@@ -66,7 +71,7 @@ class LocalSimulator(Device):
         """Initializes a `LocalSimulator`.
 
         Args:
-            backend (Union[str, BraketSimulator]): The name of the simulator backend or
+            backend (str | BraketSimulator): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
             noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
@@ -85,12 +90,8 @@ class LocalSimulator(Device):
 
     def run(
         self,
-        task_specification: Circuit
-        | Problem
-        | OpenQASMProgram
-        | AnalogHamiltonianSimulation
-        | SerializableProgram,
-        shots: int = 0,
+        task_specification: TaskSpecification,
+        shots: int | None = None,
         inputs: Optional[dict[str, float]] = None,
         *args: Any,
         **kwargs: Any,
@@ -98,8 +99,7 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram]):
-                The quantum task specification.
+            task_specification (TaskSpecification): The quantum task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the quantum task specification.
@@ -122,39 +122,35 @@ class LocalSimulator(Device):
             >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
-        """  # noqa: E501
+        """
         if self._noise_model:
             task_specification = self._apply_noise_model_to_circuit(task_specification)
         payload = self._construct_payload(task_specification, inputs, shots)
+        shots = shots if shots is not None else self._default_shots(task_specification)
         result = self._delegate.run(payload, *args, shots=shots, **kwargs)
-        return LocalQuantumTask(self._to_result_object(result))
+        return LocalQuantumTask(
+            self._to_result_object(result, task_specification=task_specification)
+        )
 
     def run_batch(
         self,
-        task_specifications: Circuit
-        | Problem
-        | OpenQASMProgram
-        | AnalogHamiltonianSimulation
-        | SerializableProgram
-        | list[
-            Circuit | Problem | OpenQASMProgram | AnalogHamiltonianSimulation | SerializableProgram
-        ],
-        shots: int | None = 0,
-        max_parallel: int | None = None,
-        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        task_specifications: TaskSpecification | list[TaskSpecification],
+        shots: Optional[int] = 0,
+        max_parallel: Optional[int] = None,
+        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
         *args,
         **kwargs,
     ) -> LocalQuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, OpenQASMProgram, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
+            task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of quantum task specification.
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
             max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel. Default
                 is the number of logical CPUs.
-            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be passed
+            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated with
                 this value. Default: {}.
 
@@ -254,12 +250,12 @@ class LocalSimulator(Device):
         self,
         task_specification: Any,
         inputs: dict[str, float] | None,
-        shots: int | None,
+        shots: int,
     ) -> Any:
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: Optional[int]):
+    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: int):
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
@@ -284,6 +280,26 @@ class LocalSimulator(Device):
                 inputs=inputs_copy,
             )
         return program
+
+    @_construct_payload.register
+    def _(self, program_set: ProgramSet, inputs: Optional[dict[str, float]], _shots: int):
+        if inputs:
+            raise ValueError(
+                "Inputs for program sets must be provided in the program set object. "
+                "Include your input parameters when creating program sets. "
+                "`device.run()` does not support the `inputs` argument for program set."
+            )
+        return program_set.to_ir()
+
+    @_construct_payload.register
+    def _(self, program_set: OpenQASMProgramSet, inputs: Optional[dict[str, float]], _shots: int):
+        if inputs:
+            raise ValueError(
+                "Inputs for program sets must be provided in the program set object. "
+                "Include your input parameters when creating program sets. "
+                "`device.run()` does not support the `inputs` argument for program set."
+            )
+        return program_set
 
     @_construct_payload.register
     def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots: int):
@@ -318,23 +334,37 @@ class LocalSimulator(Device):
         return problem.to_ir()
 
     @singledispatchmethod
-    def _to_result_object(self, result: Any) -> Any:
+    def _to_result_object(self, result: Any, **kwargs) -> Any:
         raise NotImplementedError(f"Unsupported task result type {type(result)}")
 
     @_to_result_object.register
-    def _(self, result: GateModelQuantumTaskResult) -> GateModelQuantumTaskResult:
+    def _(self, result: GateModelQuantumTaskResult, **kwargs) -> GateModelQuantumTaskResult:
         return result
 
     @_to_result_object.register
-    def _(self, result: GateModelTaskResult) -> GateModelQuantumTaskResult:
+    def _(self, result: GateModelTaskResult, **kwargs) -> GateModelQuantumTaskResult:
         return GateModelQuantumTaskResult.from_object(result)
 
     @_to_result_object.register
     def _(
-        self, result: AnalogHamiltonianSimulationTaskResult
+        self, result: ProgramSetTaskResult, task_specification: Optional[TaskSpecification] = None
+    ):
+        return ProgramSetQuantumTaskResult.from_object(result, task_specification)
+
+    @_to_result_object.register
+    def _(
+        self, result: AnalogHamiltonianSimulationTaskResult, **kwargs
     ) -> AnalogHamiltonianSimulationQuantumTaskResult:
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)
 
     @_to_result_object.register
-    def _(self, result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
+    def _(self, result: AnnealingTaskResult, **kwargs) -> AnnealingQuantumTaskResult:
         return AnnealingQuantumTaskResult.from_object(result)
+
+    @staticmethod
+    def _default_shots(task_specification: TaskSpecification) -> int:
+        if isinstance(task_specification, (ProgramSet, OpenQASMProgramSet)):
+            if not task_specification.shots_per_executable:
+                raise ValueError("Shots must be specified in program set or during task creation")
+            return task_specification.total_shots
+        return 0
