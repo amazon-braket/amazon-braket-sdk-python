@@ -14,7 +14,6 @@
 import json
 
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
-from braket.device_schema.result_type import ResultType
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     CoherenceTime,
     Fidelity1Q,

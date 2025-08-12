@@ -44,6 +44,6 @@ class ValidationPass(ABC, Generic[ProgramType]):
         """
         self.validate(program)
         return program
-        
+
     def __call__(self, program: ProgramType) -> ProgramType:
         return self.run(program)

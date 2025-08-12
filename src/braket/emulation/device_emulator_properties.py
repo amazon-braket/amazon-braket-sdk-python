@@ -25,7 +25,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     TwoQubitProperties,
 )
-from pydantic.v1 import BaseModel, conint, constr, root_validator, validator
+from pydantic.v1 import BaseModel, conint, constr, root_validator
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_utils import (

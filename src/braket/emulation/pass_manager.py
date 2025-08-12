@@ -61,7 +61,9 @@ class PassManager:
         except Exception as e:
             self._raise_exception(e)
 
-    def add_pass(self, emulator_pass: Union[Iterable[ValidationPass], ValidationPass]) -> PassManager:
+    def add_pass(
+        self, emulator_pass: Union[Iterable[ValidationPass], ValidationPass]
+    ) -> PassManager:
         """
         Append a new ValidationPass or a list of ValidationPass objects.
 
