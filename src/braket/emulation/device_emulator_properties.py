@@ -12,8 +12,11 @@
 # language governing permissions and limitations under the License.
 
 import json
+import pkgutil
+import sys
 from importlib import import_module
 
+import braket.device_schema.error_mitigation as error_mitigation_pkg
 from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.error_mitigation.error_mitigation_properties import (
     ErrorMitigationProperties,
@@ -28,9 +31,10 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 from pydantic.v1 import BaseModel, conint, constr, root_validator
 
 from braket.circuits.translations import BRAKET_GATES
-from braket.emulation.device_emulator_utils import (
-    standardize_ionq_device_properties,
-)
+from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
+
+for _, name, _ in pkgutil.iter_modules(error_mitigation_pkg.__path__):
+    import_module(f"{error_mitigation_pkg.__name__}.{name}")
 
 
 class DeviceEmulatorProperties(BaseModel):
@@ -197,9 +201,9 @@ class DeviceEmulatorProperties(BaseModel):
             errorMitigation = {}
             for k, v in em.items():
                 split = k.rsplit(".", 1)
-                errorMitigation[getattr(import_module(split[0]), split[1])] = (
-                    ErrorMitigationProperties(minimumShots=v["minimumShots"])
-                )
+                mod = sys.modules[split[0]]
+                attr = getattr(mod, split[1])
+                errorMitigation[attr] = ErrorMitigationProperties(minimumShots=v["minimumShots"])
         else:
             errorMitigation = {}
 
