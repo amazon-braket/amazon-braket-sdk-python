@@ -11,6 +11,5 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES  # noqa: F401
 from braket.emulation.emulator import Emulator  # noqa: F401
 from braket.emulation.pass_manager import PassManager  # noqa: F401

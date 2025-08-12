@@ -29,7 +29,6 @@ from pydantic.v1 import BaseModel, conint, constr, root_validator, validator
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_utils import (
-    DEFAULT_SUPPORTED_RESULT_TYPES,
     standardize_ionq_device_properties,
 )
 
@@ -49,9 +48,7 @@ class DeviceEmulatorProperties(BaseModel):
             details
         twoQubitProperties (dict[str, TwoQubitProperties]): Properties of two-qubit calibration
             details
-        supportedResultTypes (list[ResultType]): List of supported result types. The valid result
-            types include those in the DEFAULT_SUPPORTED_RESULT_TYPES. Default is
-            DEFAULT_SUPPORTED_RESULT_TYPES.
+        supportedResultTypes (list[ResultType]): List of supported result types.
         errorMitigation (dict[ErrorMitigationScheme, ErrorMitigationProperties]): Error mitigation
             settings. If it is an empty dictionary, then no error mitigation. Default is {}.
     """
@@ -66,7 +63,7 @@ class DeviceEmulatorProperties(BaseModel):
     connectivityGraph: dict[NonNegativeIntStr, list[NonNegativeIntStr]]
     oneQubitProperties: dict[NonNegativeIntStr, OneQubitProperties]
     twoQubitProperties: dict[TwoNonNegativeIntsStr, TwoQubitProperties]
-    supportedResultTypes: list[ResultType] = DEFAULT_SUPPORTED_RESULT_TYPES
+    supportedResultTypes: list[ResultType]
     errorMitigation: dict[type[ErrorMitigationScheme], ErrorMitigationProperties] = {}
 
     @root_validator
@@ -132,19 +129,6 @@ class DeviceEmulatorProperties(BaseModel):
             cls.node_validator(node_2, qubit_labels, "twoQubitProperties")
 
         return values
-
-    @validator("supportedResultTypes", pre=False)
-    @classmethod
-    def validate_supportedResultTypes(cls, supportedResultTypes: list) -> list:
-        valid_result_types = [rt.name for rt in DEFAULT_SUPPORTED_RESULT_TYPES]
-
-        for result_type in supportedResultTypes:
-            # Check if result type is one of the valid types
-            if result_type.name not in valid_result_types:
-                raise ValueError(
-                    f"Invalid result type. Must be one of: {', '.join(valid_result_types)}"
-                )
-        return supportedResultTypes
 
     @property
     def qubit_labels(self) -> list:

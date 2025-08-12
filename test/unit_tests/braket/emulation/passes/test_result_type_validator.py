@@ -4,12 +4,12 @@ from braket.circuits import Circuit, Observable
 from braket.circuits.observables import X, Y, Z, H, I
 from braket.device_schema.result_type import ResultType
 from braket.emulation.passes.circuit_passes.result_type_validator import ResultTypeValidator
-from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
-
 
 @pytest.fixture
 def supported_result_types():
-    return DEFAULT_SUPPORTED_RESULT_TYPES
+    names = ["Sample", "Expectation", "Variance", "Probability"]
+    observables = ["x", "y", "z", "h", "i"]
+    return [ResultType(name=name, observables=observables) for name in names]
 
 
 @pytest.fixture

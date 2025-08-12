@@ -25,8 +25,6 @@ from braket.device_schema.error_mitigation.error_mitigation_properties import (
 )
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
-from braket.emulation.device_emulator_utils import DEFAULT_SUPPORTED_RESULT_TYPES
-
 from conftest import (
     valid_oneQubitProperties,
     valid_oneQubitProperties_v2,
@@ -44,6 +42,7 @@ def test_basic_instantiation():
         connectivityGraph={"0": ["1"], "1": ["0"]},
         oneQubitProperties={"0": valid_oneQubitProperties, "1": valid_oneQubitProperties},
         twoQubitProperties={"0-1": valid_twoQubitProperties},
+        supportedResultTypes=valid_supportedResultTypes,
     )
     assert result.qubitCount == 2
     assert result.nativeGateSet == ["cz", "prx"]
@@ -52,7 +51,7 @@ def test_basic_instantiation():
         result.oneQubitProperties["0"] == result.oneQubitProperties["1"] == valid_oneQubitProperties
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
+    assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
@@ -67,6 +66,7 @@ def test_basic_instantiation_with_errorMitigation():
         oneQubitProperties={"0": valid_oneQubitProperties, "1": valid_oneQubitProperties},
         twoQubitProperties={"0-1": valid_twoQubitProperties},
         errorMitigation={Debias: ErrorMitigationProperties(minimumShots=2500)},
+        supportedResultTypes=valid_supportedResultTypes,
     )
     assert result.qubitCount == 2
     assert result.nativeGateSet == ["cz", "prx"]
@@ -75,7 +75,7 @@ def test_basic_instantiation_with_errorMitigation():
         result.oneQubitProperties["0"] == result.oneQubitProperties["1"] == valid_oneQubitProperties
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == DEFAULT_SUPPORTED_RESULT_TYPES
+    assert result.supportedResultTypes == valid_supportedResultTypes
     assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
@@ -156,8 +156,6 @@ def test_yet_another_way_of_instantiation(valid_input):
         ("nativeGateSet", ["not_a_Braket_gate"]),
         ("connectivityGraph", {2: [0]}),
         ("connectivityGraph", {0: [2]}),
-        ("supportedResultTypes", ["not_a_ResultType"]),
-        ("supportedResultTypes", [ResultType(name="not_a_valid_ResultType")]),
         ("oneQubitProperties", {"2": valid_oneQubitProperties}),
         ("oneQubitProperties", {"0": valid_oneQubitProperties}),
         (

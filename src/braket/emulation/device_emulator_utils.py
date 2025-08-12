@@ -26,15 +26,6 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 
 from braket.circuits.translations import BRAKET_GATES
 
-DEFAULT_SUPPORTED_RESULT_TYPES = [
-    ResultType(name="Sample", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
-    ResultType(
-        name="Expectation", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000
-    ),
-    ResultType(name="Variance", observables=["x", "y", "z", "h", "i"], minShots=1, maxShots=20000),
-    ResultType(name="Probability", observables=None, minShots=1, maxShots=20000),
-]
-
 
 def standardize_ionq_device_properties_json(device_properties_json: str) -> str:
     device_properties_dict = json.loads(device_properties_json)
