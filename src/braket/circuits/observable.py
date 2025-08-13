@@ -28,6 +28,11 @@ from braket.circuits.serialization import (
 )
 from braket.registers import QubitInput, QubitSet, QubitSetInput
 
+EULER_OBSERVABLE_PREFIX = "_OBSERVABLE_"
+EULER_Z1_PREFIX = f"{EULER_OBSERVABLE_PREFIX}THETA_"
+EULER_X_PREFIX = f"{EULER_OBSERVABLE_PREFIX}PHI_"
+EULER_Z2_PREFIX = f"{EULER_OBSERVABLE_PREFIX}OMEGA_"
+
 
 class Observable(QuantumOperator):
     """Class `Observable` to represent a quantum observable.
@@ -123,29 +128,23 @@ class Observable(QuantumOperator):
 
     @property
     def coefficient(self) -> int:
-        """The coefficient of the observable.
-
-        Returns:
-            int: coefficient value of the observable.
-        """
+        """int: coefficient value of the observable."""
         return self._coef
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        """Returns the basis rotation gates for this observable.
+        """tuple[Gate, ...]: The basis rotation gates for this observable."""
+        raise NotImplementedError
 
-        Returns:
-            tuple[Gate, ...]: The basis rotation gates for this observable.
-        """
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        """dict[str, float]: A mapping of standardized free parameter name to ZXZ Euler angle value
+        that diagonalizes this observable."""
         raise NotImplementedError
 
     @property
     def eigenvalues(self) -> np.ndarray:
-        """Returns the eigenvalues of this observable.
-
-        Returns:
-            np.ndarray: The eigenvalues of this observable.
-        """
+        """np.ndarray: The eigenvalues of this observable."""
         raise NotImplementedError
 
     def eigenvalue(self, index: int) -> float:
@@ -242,3 +241,11 @@ class StandardObservable(Observable):
             f"{self.coefficient if self.coefficient != 1 else ''}{ascii_symbol}"
             for ascii_symbol in self._ascii_symbols
         )
+
+
+def euler_angle_parameter_names(target: QubitInput) -> tuple[str, str, str]:
+    return (
+        f"{EULER_Z1_PREFIX}{int(target)}",
+        f"{EULER_X_PREFIX}{int(target)}",
+        f"{EULER_Z2_PREFIX}{int(target)}",
+    )

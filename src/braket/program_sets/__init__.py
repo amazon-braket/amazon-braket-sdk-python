@@ -11,18 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.tasks import QuantumTaskBatch
-from braket.tasks.quantum_task import TaskResult
-
-
-class LocalQuantumTaskBatch(QuantumTaskBatch):
-    """Executes a batch of quantum tasks in parallel.
-
-    Since this class is instantiated with the results, cancel() and run_async() are unsupported.
-    """
-
-    def __init__(self, results: list[TaskResult]):
-        self._results = results
-
-    def results(self) -> list[TaskResult]:
-        return self._results
+from braket.program_sets.circuit_binding import CircuitBinding  # noqa: F401
+from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike  # noqa: F401
+from braket.program_sets.program_set import ProgramSet  # noqa: F401

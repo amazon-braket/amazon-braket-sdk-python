@@ -18,38 +18,34 @@ from braket.circuits import compiler_directives
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.serialization import IRType
 
-testdata = [
-    (
-        compiler_directives.StartVerbatimBox,
-        ir.StartVerbatimBox,
-        "#pragma braket verbatim\nbox{",
-        compiler_directives.EndVerbatimBox,
-    ),
-    (
-        compiler_directives.EndVerbatimBox,
-        ir.EndVerbatimBox,
-        "}",
-        compiler_directives.StartVerbatimBox,
-    ),
-]
 
+@pytest.mark.parametrize(
+    "testclass,irclass,openqasm_str,counterpart",
+    [
+        (
+            compiler_directives.StartVerbatimBox,
+            ir.StartVerbatimBox,
+            "#pragma braket verbatim\nbox{",
+            compiler_directives.EndVerbatimBox,
+        ),
+        (
+            compiler_directives.EndVerbatimBox,
+            ir.EndVerbatimBox,
+            "}",
+            compiler_directives.StartVerbatimBox,
+        ),
+    ],
+)
+def test_verbatim(testclass, irclass, openqasm_str, counterpart):
+    directive = testclass()
+    assert directive.counterpart() == counterpart()
+    assert directive.requires_physical_qubits
 
-@pytest.mark.parametrize("testclass,irclass,openqasm_str,counterpart", testdata)
-def test_counterpart(testclass, irclass, openqasm_str, counterpart):
-    assert testclass().counterpart() == counterpart()
+    assert directive.to_ir(ir_type=IRType.JAQCD) == irclass()
+    assert directive.to_ir(ir_type=IRType.OPENQASM) == openqasm_str
 
-
-@pytest.mark.parametrize("testclass,irclass,openqasm_str,counterpart", testdata)
-def test_to_ir(testclass, irclass, openqasm_str, counterpart):
-    assert testclass().to_ir(ir_type=IRType.JAQCD) == irclass()
-    assert testclass().to_ir(ir_type=IRType.OPENQASM) == openqasm_str
-
-
-@pytest.mark.parametrize("testclass,irclass,openqasm_str,counterpart", testdata)
-def test_equality(testclass, irclass, openqasm_str, counterpart):
-    op1 = testclass()
-    op2 = testclass()
-    assert op1 == op2
-    assert op1 is not op2
-    assert op1 != CompilerDirective(ascii_symbols=["foo"])
-    assert op1 != "not a directive"
+    op = testclass()
+    assert directive == op
+    assert directive is not op
+    assert directive != CompilerDirective(ascii_symbols=["foo"])
+    assert directive != "not a directive"

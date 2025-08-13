@@ -23,7 +23,7 @@ from typing import ClassVar
 import numpy as np
 
 from braket.circuits.gate import Gate
-from braket.circuits.observable import Observable, StandardObservable
+from braket.circuits.observable import Observable, StandardObservable, euler_angle_parameter_names
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
     is_hermitian,
@@ -125,6 +125,11 @@ class I(Observable):  # noqa: E742
         return ()
 
     @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: 0, params[2]: 0}
+
+    @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
 
@@ -183,6 +188,11 @@ class X(StandardObservable):
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return (Gate.H(),)
 
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: np.pi / 2, params[1]: np.pi / 2, params[2]: np.pi / 2}
+
 
 Observable.register_observable(X)
 
@@ -229,6 +239,11 @@ class Y(StandardObservable):
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return Gate.Z(), Gate.S(), Gate.H()
 
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: np.pi / 2, params[2]: np.pi / 2}
+
 
 Observable.register_observable(Y)
 
@@ -274,6 +289,11 @@ class Z(StandardObservable):
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return ()
+
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: 0, params[2]: 0}
 
 
 Observable.register_observable(Z)
@@ -411,6 +431,13 @@ class TensorProduct(Observable):
         return tuple(gates)
 
     @property
+    def euler_angles(self) -> dict[str, float]:
+        angles = {}
+        for obs in self.factors:
+            angles.update(obs.euler_angles)
+        return angles
+
+    @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
 
@@ -449,14 +476,17 @@ class TensorProduct(Observable):
         for i in range(len(self._factors)):
             quotient, remainder = divmod(quotient, self._factor_dimensions[i])
             product *= self._factors[-i - 1].eigenvalue(remainder)
-        self._eigenvalue_indices[index] = product
-        return self.coefficient * self._eigenvalue_indices[index]
+        self._eigenvalue_indices[index] = self.coefficient * product
+        return self._eigenvalue_indices[index]
 
     def __repr__(self):
         return "TensorProduct(" + ", ".join([repr(o) for o in self.factors]) + ")"
 
     def __eq__(self, other: TensorProduct):
         return self.matrix_equivalence(other)
+
+    def __len__(self):
+        return len(self._factors)
 
     @staticmethod
     def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
@@ -580,6 +610,9 @@ class Sum(Observable):
 
     def __eq__(self, other: Sum):
         return repr(self) == repr(other)
+
+    def __len__(self):
+        return len(self._summands)
 
     @staticmethod
     def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
