@@ -15,11 +15,6 @@ import pytest
 import json
 import numpy as np
 
-from braket.device_schema.result_type import ResultType
-from braket.device_schema.error_mitigation.debias import Debias
-from braket.device_schema.error_mitigation.error_mitigation_properties import (
-    ErrorMitigationProperties,
-)
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     CoherenceTime,
     Fidelity1Q,
@@ -205,7 +200,6 @@ def valid_input():
         },
         "twoQubitProperties": {"0-1": valid_twoQubitProperties},
         "supportedResultTypes": valid_supportedResultTypes,
-        "errorMitigation": {Debias: ErrorMitigationProperties(minimumShots=2500)},
     }
     return input
 

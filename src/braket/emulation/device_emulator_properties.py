@@ -12,16 +12,8 @@
 # language governing permissions and limitations under the License.
 
 import json
-import pkgutil
-import sys
-from importlib import import_module
 
-import braket.device_schema.error_mitigation as error_mitigation_pkg
 from braket.device_schema.device_capabilities import DeviceCapabilities
-from braket.device_schema.error_mitigation.error_mitigation_properties import (
-    ErrorMitigationProperties,
-)
-from braket.device_schema.error_mitigation.error_mitigation_scheme import ErrorMitigationScheme
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.device_schema.result_type import ResultType
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
@@ -32,9 +24,6 @@ from pydantic.v1 import BaseModel, conint, constr, root_validator
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.device_emulator_utils import standardize_ionq_device_properties
-
-for _, name, _ in pkgutil.iter_modules(error_mitigation_pkg.__path__):
-    import_module(f"{error_mitigation_pkg.__name__}.{name}")
 
 
 class DeviceEmulatorProperties(BaseModel):
@@ -53,8 +42,6 @@ class DeviceEmulatorProperties(BaseModel):
         twoQubitProperties (dict[str, TwoQubitProperties]): Properties of two-qubit calibration
             details
         supportedResultTypes (list[ResultType]): List of supported result types.
-        errorMitigation (dict[ErrorMitigationScheme, ErrorMitigationProperties]): Error mitigation
-            settings. If it is an empty dictionary, then no error mitigation. Default is {}.
     """
 
     NonNegativeIntStr = constr(regex=r"^(0|[1-9][0-9]*)$")  # non-negative integers
@@ -68,7 +55,6 @@ class DeviceEmulatorProperties(BaseModel):
     oneQubitProperties: dict[NonNegativeIntStr, OneQubitProperties]
     twoQubitProperties: dict[TwoNonNegativeIntsStr, TwoQubitProperties]
     supportedResultTypes: list[ResultType]
-    errorMitigation: dict[type[ErrorMitigationScheme], ErrorMitigationProperties] = {}
 
     @root_validator
     @classmethod
@@ -193,20 +179,6 @@ class DeviceEmulatorProperties(BaseModel):
                 "The action in device_properties_json must have key `braket.ir.openqasm.program`."
             )
 
-        if "provider" in properties_dict:
-            if properties_dict["provider"]:
-                em = properties_dict["provider"].get("errorMitigation") or {}
-            else:
-                em = {}
-            errorMitigation = {}
-            for k, v in em.items():
-                split = k.rsplit(".", 1)
-                mod = sys.modules[split[0]]
-                attr = getattr(mod, split[1])
-                errorMitigation[attr] = ErrorMitigationProperties(minimumShots=v["minimumShots"])
-        else:
-            errorMitigation = {}
-
         return DeviceEmulatorProperties(
             qubitCount=properties_dict["paradigm"]["qubitCount"],
             nativeGateSet=properties_dict["paradigm"]["nativeGateSet"],
@@ -216,5 +188,4 @@ class DeviceEmulatorProperties(BaseModel):
             supportedResultTypes=properties_dict["action"]["braket.ir.openqasm.program"][
                 "supportedResultTypes"
             ],
-            errorMitigation=errorMitigation,
         )

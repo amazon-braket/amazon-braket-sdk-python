@@ -2281,6 +2281,7 @@ def test_run_program_set_default_shots(aws_quantum_task_mock, aws_session_init, 
     assert aws_quantum_task_mock.call_args_list[0][0][2] == program_set
     assert aws_quantum_task_mock.call_args_list[0][0][4] == -1
 
+
 @patch("braket.aws.aws_device.AwsSession")
 def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
     arn = SV1_ARN

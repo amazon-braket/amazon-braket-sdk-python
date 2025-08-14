@@ -24,10 +24,6 @@ from braket.emulation.device_emulator_utils import (
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
 from conftest import valid_supportedResultTypes
-from braket.device_schema.error_mitigation.debias import Debias
-from braket.device_schema.error_mitigation.error_mitigation_properties import (
-    ErrorMitigationProperties,
-)
 
 
 def test_standardize_ionq_device_properties_json(reduced_ionq_device_capabilities_json):
@@ -57,9 +53,6 @@ def test_standardize_ionq_device_properties_json(reduced_ionq_device_capabilitie
             )
 
     assert device_em_properties.supportedResultTypes == valid_supportedResultTypes
-    assert device_em_properties.errorMitigation == {
-        Debias: ErrorMitigationProperties(minimumShots=2500)
-    }
     assert device_em_properties.qubit_labels == list(range(25))
     assert device_em_properties.fully_connected == True
     assert device_em_properties.directed == False

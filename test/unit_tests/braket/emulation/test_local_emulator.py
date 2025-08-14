@@ -32,11 +32,6 @@ def test_from_json_1(minimal_valid_json):
     assert isinstance(emulator, LocalEmulator)
 
 
-def test_from_json_1(minimal_valid_json_with_errorMitigation):
-    emulator = LocalEmulator.from_json(minimal_valid_json_with_errorMitigation)
-    assert isinstance(emulator, LocalEmulator)
-
-
 def test_from_json_3(reduced_standardized_json):
     emulator = LocalEmulator.from_json(reduced_standardized_json)
     assert isinstance(emulator, LocalEmulator)

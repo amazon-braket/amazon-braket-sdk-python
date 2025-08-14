@@ -18,11 +18,7 @@ from pydantic.v1 import ValidationError
 from braket.emulation.device_emulator_properties import (
     DeviceEmulatorProperties,
 )
-from braket.device_schema.result_type import ResultType
-from braket.device_schema.error_mitigation.debias import Debias
-from braket.device_schema.error_mitigation.error_mitigation_properties import (
-    ErrorMitigationProperties,
-)
+
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
 from conftest import (
@@ -52,31 +48,6 @@ def test_basic_instantiation():
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
-    assert result.qubit_labels == [0, 1]
-    assert result.fully_connected == True
-    assert result.directed == False
-
-
-def test_basic_instantiation_with_errorMitigation():
-    result = DeviceEmulatorProperties(
-        qubitCount=2,
-        nativeGateSet=["cz", "prx"],
-        connectivityGraph={"0": ["1"], "1": ["0"]},
-        oneQubitProperties={"0": valid_oneQubitProperties, "1": valid_oneQubitProperties},
-        twoQubitProperties={"0-1": valid_twoQubitProperties},
-        errorMitigation={Debias: ErrorMitigationProperties(minimumShots=2500)},
-        supportedResultTypes=valid_supportedResultTypes,
-    )
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
-    assert (
-        result.oneQubitProperties["0"] == result.oneQubitProperties["1"] == valid_oneQubitProperties
-    )
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
@@ -91,22 +62,6 @@ def test_from_json_1(minimal_valid_json):
     assert result.oneQubitProperties["1"] == valid_oneQubitProperties_v2
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
-    assert result.qubit_labels == [0, 1]
-    assert result.fully_connected == True
-    assert result.directed == False
-
-
-def test_from_json_2(minimal_valid_json_with_errorMitigation):
-    result = DeviceEmulatorProperties.from_json(minimal_valid_json_with_errorMitigation)
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == {}
-    assert result.oneQubitProperties["0"] == valid_oneQubitProperties
-    assert result.oneQubitProperties["1"] == valid_oneQubitProperties_v2
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {Debias: ErrorMitigationProperties(minimumShots=2500)}
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
@@ -122,7 +77,6 @@ def test_from_json_3(reduced_standardized_json):
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == True
@@ -139,7 +93,6 @@ def test_from_device_properties(reduced_standardized_json):
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1]
 
 
@@ -158,11 +111,6 @@ def test_yet_another_way_of_instantiation(valid_input):
         ("connectivityGraph", {0: [2]}),
         ("oneQubitProperties", {"2": valid_oneQubitProperties}),
         ("oneQubitProperties", {"0": valid_oneQubitProperties}),
-        (
-            "errorMitigation",
-            {"not_a_ErrorMitigationScheme_subclass": ErrorMitigationProperties(minimumShots=2500)},
-        ),
-        ("errorMitigation", {Debias: "not_a_ErrorMitigationProperties"}),
     ],
 )
 def test_invalid_device_emulator_properties(valid_input, field, invalid_values):
@@ -227,7 +175,6 @@ def test_from_json_non_fully_connected(reduced_standardized_json_2):
         == valid_twoQubitProperties
     )
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == False
@@ -246,7 +193,6 @@ def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3)
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.errorMitigation == {}
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == True
