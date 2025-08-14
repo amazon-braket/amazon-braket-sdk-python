@@ -11,18 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.tasks import QuantumTaskBatch
-from braket.tasks.quantum_task import TaskResult
+from braket.circuits import Circuit
+from braket.circuits.serialization import IRType
 
 
-class LocalQuantumTaskBatch(QuantumTaskBatch):
-    """Executes a batch of quantum tasks in parallel.
+def get_circuit_source(circuit):
+    return circuit.to_ir(IRType.OPENQASM).source
 
-    Since this class is instantiated with the results, cancel() and run_async() are unsupported.
-    """
 
-    def __init__(self, results: list[TaskResult]):
-        self._results = results
-
-    def results(self) -> list[TaskResult]:
-        return self._results
+def ghz(n):
+    circuit = Circuit().h(0)
+    for i in range(n - 1):
+        circuit.cnot(i, i + 1)
+    return circuit

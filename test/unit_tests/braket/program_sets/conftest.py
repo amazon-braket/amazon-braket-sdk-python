@@ -11,18 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.tasks import QuantumTaskBatch
-from braket.tasks.quantum_task import TaskResult
+import pytest
+
+from braket.circuits import Circuit
+from braket.parametric import FreeParameter
 
 
-class LocalQuantumTaskBatch(QuantumTaskBatch):
-    """Executes a batch of quantum tasks in parallel.
-
-    Since this class is instantiated with the results, cancel() and run_async() are unsupported.
-    """
-
-    def __init__(self, results: list[TaskResult]):
-        self._results = results
-
-    def results(self) -> list[TaskResult]:
-        return self._results
+@pytest.fixture
+def circuit_rx_parametrized() -> Circuit:
+    return Circuit().rx(0, FreeParameter("theta"))

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
 from typing import Any, TypeVar
 
@@ -42,8 +42,8 @@ from braket.circuits.noise_helpers import (
     check_noise_target_unitary,
     wrap_with_list,
 )
-from braket.circuits.observable import Observable
-from braket.circuits.observables import TensorProduct
+from braket.circuits.observable import Observable, euler_angle_parameter_names
+from braket.circuits.observables import Sum, TensorProduct
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.result_type import (
     ObservableParameterResultType,
@@ -240,6 +240,30 @@ class Circuit:  # noqa: PLR0904
             set[FreeParameter]: The `FreeParameters` in the Circuit.
         """
         return self._parameters
+
+    def with_euler_angles(self, observables: Sequence[Observable] | Sum) -> Circuit:
+        """Returns a copy of the circuit with parametrized Euler angles on the observables' qubits
+
+        Args:
+            observables (Sequence[Observable] | Sum): The observables to measure,
+                or a Sum Hamiltonian
+
+        Returns:
+            Circuit: A new circuit with parametrized ZXZ Euler angle rotations appended to the end
+            on each qubit targeted by any of the observables.
+        """
+        new_circuit = Circuit(self)
+        targets = (
+            {target for obs in observables.summands for target in obs.targets}
+            if isinstance(observables, Sum)
+            else {target for obs in observables for target in obs.targets}
+        )
+        for target in targets:
+            params = euler_angle_parameter_names(target)
+            new_circuit.rz(target, FreeParameter(params[0]))
+            new_circuit.rx(target, FreeParameter(params[1]))
+            new_circuit.rz(target, FreeParameter(params[2]))
+        return new_circuit
 
     def add_result_type(
         self,
@@ -1247,10 +1271,23 @@ class Circuit:  # noqa: PLR0904
                     "serialization_properties must be of type OpenQASMSerializationProperties "
                     "for IRType.OPENQASM."
                 )
-            return self._to_openqasm(
-                serialization_properties or OpenQASMSerializationProperties(),
-                gate_definitions.copy(),
-            )
+            if not serialization_properties:
+                qubit_reference_type = (
+                    QubitReferenceType.PHYSICAL
+                    if (
+                        gate_definitions
+                        or any(
+                            instruction.operator.requires_physical_qubits
+                            for instruction in self.instructions
+                        )
+                    )
+                    else QubitReferenceType.VIRTUAL
+                )
+                serialization_properties = OpenQASMSerializationProperties(
+                    qubit_reference_type=qubit_reference_type
+                )
+
+            return self._to_openqasm(serialization_properties, gate_definitions.copy())
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     @staticmethod

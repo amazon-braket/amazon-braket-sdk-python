@@ -14,12 +14,8 @@ from __future__ import annotations
 
 import asyncio
 
-from braket.tasks import (
-    AnnealingQuantumTaskResult,
-    GateModelQuantumTaskResult,
-    PhotonicModelQuantumTaskResult,
-    QuantumTask,
-)
+from braket.tasks import QuantumTask
+from braket.tasks.quantum_task import TaskResult
 
 
 class LocalQuantumTask(QuantumTask):
@@ -28,12 +24,7 @@ class LocalQuantumTask(QuantumTask):
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """
 
-    def __init__(
-        self,
-        result: GateModelQuantumTaskResult
-        | AnnealingQuantumTaskResult
-        | PhotonicModelQuantumTaskResult,
-    ):
+    def __init__(self, result: TaskResult):
         self._id = result.task_metadata.id
         self._result = result
 
@@ -58,9 +49,7 @@ class LocalQuantumTask(QuantumTask):
         """
         return "COMPLETED"
 
-    def result(
-        self,
-    ) -> GateModelQuantumTaskResult | AnnealingQuantumTaskResult | PhotonicModelQuantumTaskResult:
+    def result(self) -> TaskResult:
         return self._result
 
     def async_result(self) -> asyncio.Task:
