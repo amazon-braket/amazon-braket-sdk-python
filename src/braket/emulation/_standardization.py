@@ -26,7 +26,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 from braket.circuits.translations import BRAKET_GATES
 
 
-def standardize_ionq_device_properties_json(device_properties_json: str) -> str:
+def _standardize_ionq_device_properties_json(device_properties_json: str) -> str:
     device_properties_dict = json.loads(device_properties_json)
     if (
         device_properties_dict["braketSchemaHeader"]["name"]
@@ -35,10 +35,10 @@ def standardize_ionq_device_properties_json(device_properties_json: str) -> str:
         raise ValueError("The input json should be that for IonQ devices.")
 
     device_properties = IonqDeviceCapabilities.parse_raw(device_properties_json)
-    return standardize_ionq_device_properties(device_properties).json()
+    return _standardize_ionq_device_properties(device_properties).json()
 
 
-def standardize_ionq_device_properties(
+def _standardize_ionq_device_properties(
     device_properties: IonqDeviceCapabilities,
 ) -> IonqDeviceCapabilities:
     if (

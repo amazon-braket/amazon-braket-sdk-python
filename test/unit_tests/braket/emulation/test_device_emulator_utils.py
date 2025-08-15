@@ -17,9 +17,9 @@ from braket.emulation.device_emulator_properties import (
     DeviceEmulatorProperties,
 )
 
-from braket.emulation.device_emulator_utils import (
-    standardize_ionq_device_properties_json,
-    standardize_ionq_device_properties,
+from braket.emulation._standardization import (
+    _standardize_ionq_device_properties_json,
+    _standardize_ionq_device_properties,
 )
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 
@@ -27,7 +27,7 @@ from conftest import valid_supportedResultTypes
 
 
 def test_standardize_ionq_device_properties_json(reduced_ionq_device_capabilities_json):
-    device_properties_json = standardize_ionq_device_properties_json(
+    device_properties_json = _standardize_ionq_device_properties_json(
         reduced_ionq_device_capabilities_json
     )
     device_em_properties = DeviceEmulatorProperties.from_json(device_properties_json)
@@ -59,17 +59,17 @@ def test_standardize_ionq_device_properties_json(reduced_ionq_device_capabilitie
 
 
 def test_standardize_ionq_device_properties(reduced_ionq_device_capabilities):
-    device_properties = standardize_ionq_device_properties(reduced_ionq_device_capabilities)
+    device_properties = _standardize_ionq_device_properties(reduced_ionq_device_capabilities)
     device_em_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
     assert device_em_properties.qubitCount == 25
 
 
 def test_invalid_standardize_ionq_device_properties_json(reduced_standardized_json_3):
     with pytest.raises(ValueError):
-        standardize_ionq_device_properties_json(reduced_standardized_json_3)
+        _standardize_ionq_device_properties_json(reduced_standardized_json_3)
 
 
 def test_invalid_standardize_ionq_device_properties(reduced_standardized_json_3):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json_3)
     with pytest.raises(ValueError):
-        standardize_ionq_device_properties(device_properties)
+        _standardize_ionq_device_properties(device_properties)
