@@ -14,36 +14,35 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
 
-ProgramType = TypeVar("ProgramType")
+from braket.circuits import Circuit
 
 
-class ValidationPass(ABC, Generic[ProgramType]):
+class ValidationPass(ABC, Circuit):
     @abstractmethod
-    def validate(self, program: ProgramType) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         An emulator validator is used to perform some non-modifying validation
-        pass on an input program. Implementations of validate should return
-        nothing if the input program passes validation and raise an error otherwise.
+        pass on an input circuit. Implementations of validate should return
+        nothing if the input circuit passes validation and raise an error otherwise.
 
         Args:
-            program (ProgramType): The program to be evaluated against this criteria.
+            circuit (Circuit): The circuit to be evaluated against this criteria.
         """
         raise NotImplementedError
 
-    def run(self, program: ProgramType) -> ProgramType:
+    def run(self, circuit: Circuit) -> Circuit:
         """
-        Validate the input program and return the program, unmodified.
+        Validate the input circuit and return the circuit, unmodified.
 
         Args:
-            program (ProgramType): The program to validate.
+            circuit (Circuit): The circuit to validate.
 
         Returns:
-            ProgramType: The unmodified progam passed in as input.
+            Circuit: The unmodified circuit passed in as input.
         """
-        self.validate(program)
-        return program
+        self.validate(circuit)
+        return circuit
 
-    def __call__(self, program: ProgramType) -> ProgramType:
-        return self.run(program)
+    def __call__(self, circuit: Circuit) -> Circuit:
+        return self.run(circuit)

@@ -11,4 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.emulation.passes.validation_pass import ProgramType, ValidationPass  # noqa: F401
+from braket.emulation.passes.validation_pass import ValidationPass  # noqa: F401

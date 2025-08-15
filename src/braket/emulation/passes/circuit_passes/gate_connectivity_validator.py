@@ -23,7 +23,7 @@ from braket.emulation.passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
 
 
-class GateConnectivityValidator(ValidationPass[Circuit]):
+class GateConnectivityValidator(ValidationPass):
     def __init__(
         self,
         gate_connectivity_graph: Union[dict[tuple[Any, Any], Iterable[str]], DiGraph],

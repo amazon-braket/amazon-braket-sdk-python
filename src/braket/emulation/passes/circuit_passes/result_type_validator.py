@@ -21,7 +21,7 @@ from braket.circuits.result_type import ObservableResultType
 from braket.emulation.passes import ValidationPass
 
 
-class ResultTypeValidator(ValidationPass[Circuit]):
+class ResultTypeValidator(ValidationPass):
     def __init__(
         self,
         supported_result_types: Optional[Iterable[ResultType]] = None,

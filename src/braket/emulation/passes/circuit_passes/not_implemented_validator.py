@@ -21,7 +21,7 @@ from braket.emulation.passes import ValidationPass
 UNSUPPORTED_GATES = ["cc_prx", "measure_ff"]
 
 
-class NotImplementedValidator(ValidationPass[Circuit]):
+class NotImplementedValidator(ValidationPass):
     """
     A validator that checks for features that are not implemented in the emulator.
     Currently checks for:

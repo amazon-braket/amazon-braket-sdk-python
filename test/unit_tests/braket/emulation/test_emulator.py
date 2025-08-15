@@ -1,7 +1,6 @@
 import re
 from unittest.mock import Mock
 
-import numpy as np
 import pytest
 
 from braket.circuits import Circuit, Gate, Observable
@@ -10,7 +9,6 @@ from braket.circuits.noises import BitFlip
 from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulator
 from braket.devices import local_simulator
 from braket.emulation import Emulator
-from braket.emulation.passes import ProgramType, ValidationPass
 from braket.emulation.passes.circuit_passes import GateValidator, QubitCountValidator
 
 

@@ -15,7 +15,7 @@ from braket.circuits import Circuit
 from braket.emulation.passes import ValidationPass
 
 
-class QubitCountValidator(ValidationPass[Circuit]):
+class QubitCountValidator(ValidationPass):
     """
     A simple validator class that checks that an input program does not use more qubits
     than available on a device, as set during this validator's instantiation.

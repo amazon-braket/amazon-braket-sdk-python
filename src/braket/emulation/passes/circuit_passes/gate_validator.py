@@ -21,7 +21,7 @@ from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.passes import ValidationPass
 
 
-class GateValidator(ValidationPass[Circuit]):
+class GateValidator(ValidationPass):
     def __init__(
         self,
         supported_gates: Optional[Iterable[str]] = None,

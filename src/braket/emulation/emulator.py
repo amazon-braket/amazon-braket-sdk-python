@@ -27,7 +27,7 @@ from braket.circuits.result_types import Probability
 from braket.devices import Device
 from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.pass_manager import PassManager
-from braket.emulation.passes import ProgramType, ValidationPass
+from braket.emulation.passes import ValidationPass
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -163,22 +163,20 @@ class Emulator(Device, PassManager):
         self._noise_model = noise_model
         self._backend = LocalSimulator(backend="braket_dm", noise_model=noise_model)
 
-    def transform(
-        self, task_specification: ProgramType, apply_noise_model: bool = True
-    ) -> ProgramType:
+    def transform(self, task_specification: Circuit, apply_noise_model: bool = True) -> Circuit:
         """
         Passes the input program through all Pass objects contained in this
         emulator and applies the emulator's noise model, if it exists, before
         returning the compiled program.
 
         Args:
-            task_specification (ProgramType): The input program to validate and
+            task_specification (Circuit): The input program to validate and
                 compile based on this emulator's Passes
             apply_noise_model (bool): If true, apply this emulator's noise model
                 to the compiled program before returning the final program.
 
         Returns:
-            ProgramType: A compiled program with a noise model applied, if one
+            Circuit: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
 
@@ -204,16 +202,16 @@ class Emulator(Device, PassManager):
             self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
         )
 
-    def _remove_verbatim_box(self, noisy_verbatim_circ: ProgramType) -> ProgramType:
+    def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
         """
         Remove the verbatim box in the noisy circuit before simulating on
         local braket density matrix simulator.
 
         Args:
-            noisy_verbatim_circ (ProgramType): The input verbatim noisy circuit
+            noisy_verbatim_circ (Circuit): The input verbatim noisy circuit
 
         Returns:
-            ProgramType: A verbatim noisy circuit without the verbatim boxes
+            Circuit: A verbatim noisy circuit without the verbatim boxes
         """
         noisy_verbatim_circ_2 = [
             instruction
