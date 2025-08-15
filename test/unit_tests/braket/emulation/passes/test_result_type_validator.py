@@ -66,7 +66,6 @@ def test_invalid_instantiation():
         ResultTypeValidator(["Expectation"], None)
 
 
-
 def test_invalid_qubit_target():
     """
     Test that ResultTypeValidator raises an error when a result type targets a qubit

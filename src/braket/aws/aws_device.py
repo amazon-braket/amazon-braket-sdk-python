@@ -40,23 +40,15 @@ from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.noise_model import NoiseModel
-from braket.devices import Devices
 from braket.devices.device import Device
 from braket.emulation.emulator import Emulator
 from braket.emulation.local_emulator import LocalEmulator
-from braket.emulation.passes.circuit_passes import AnkaaRxValidator, AriaMSValidator
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
 from braket.program_sets import ProgramSet
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.tasks.quantum_task import TaskSpecification
-
-_DEVICE_PASSES = {
-    Devices.IonQ.Aria1: [AriaMSValidator()],
-    Devices.IonQ.Aria2: [AriaMSValidator()],
-    Devices.Rigetti.Ankaa3: [AnkaaRxValidator()],
-}
 
 
 class AwsDeviceType(str, Enum):
@@ -598,10 +590,6 @@ class AwsDevice(Device):  # noqa: PLR0904
             )
 
         self._emulator = LocalEmulator.from_device_properties(self.properties)
-
-        # Add device-specific gate value validators
-        for validator in _DEVICE_PASSES.get(self.arn, []):
-            self._emulator.add_pass(validator)
 
         return self._emulator
 
