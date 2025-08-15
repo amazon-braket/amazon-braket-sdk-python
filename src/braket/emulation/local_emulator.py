@@ -137,8 +137,36 @@ class LocalEmulator(Emulator):
             - 1 Qubit RB Depolarizing Noise
             - 1 Qubit Readout Error
             - 2 Qubit Gate Depolarizing Noise
+
+        Args:
+            device_em_properties (DeviceEmulatorProperties): The device emulator properties.
+
+        Returns:
+            NoiseModel: A noise model configured with the appropriate noise channels.
         """
         noise_model = NoiseModel()
+
+        # Add one-qubit noise channels
+        cls._add_one_qubit_noise(noise_model, device_em_properties)
+
+        # Add two-qubit noise channels
+        cls._add_two_qubit_noise(noise_model, device_em_properties)
+
+        return noise_model
+
+    @classmethod
+    def _add_one_qubit_noise(
+        cls, noise_model: NoiseModel, device_em_properties: DeviceEmulatorProperties
+    ) -> None:
+        """
+        Add one-qubit noise channels to the noise model:
+        - One-qubit depolarizing noise based on RB fidelity
+        - One-qubit readout error
+
+        Args:
+            noise_model (NoiseModel): The noise model to add noise channels to.
+            device_em_properties (DeviceEmulatorProperties): The device emulator properties.
+        """
         for qubit_str, data in device_em_properties.oneQubitProperties.items():
             qubit = int(qubit_str)
             oneQubitProperty = data.oneQubitFidelity
@@ -170,6 +198,18 @@ class LocalEmulator(Emulator):
             noise_model.add_noise(BitFlip(readout_error_rate), ObservableCriteria(qubits=qubit))
             noise_model.add_noise(BitFlip(readout_error_rate), MeasureCriteria(qubits=qubit))
 
+    @classmethod
+    def _add_two_qubit_noise(
+        cls, noise_model: NoiseModel, device_em_properties: DeviceEmulatorProperties
+    ) -> None:
+        """
+        Add two-qubit noise channels to the noise model:
+        - Two-qubit depolarizing noise based on gate fidelity
+
+        Args:
+            noise_model (NoiseModel): The noise model to add noise channels to.
+            device_em_properties (DeviceEmulatorProperties): The device emulator properties.
+        """
         for edge, data in device_em_properties.twoQubitProperties.items():
             qubits = [int(qubit) for qubit in edge.split("-")]
             twoQubitGateFidelity = data.twoQubitGateFidelity
@@ -194,5 +234,3 @@ class LocalEmulator(Emulator):
                     TwoQubitDepolarizing(two_qubit_depolarizing_rate),
                     GateCriteria(gate, [(qubits[0], qubits[1]), (qubits[1], qubits[0])]),
                 )
-
-        return noise_model
