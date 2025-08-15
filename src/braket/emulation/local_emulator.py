@@ -80,9 +80,6 @@ class LocalEmulator(Emulator):
                 f"DeviceEmulatorProperties, not {type(device_properties)}."
             )
 
-        if backend != "braket_dm":
-            raise ValueError("backend can only be `braket_dm`.")
-
         # Create a noise model based on the provided device properties
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 

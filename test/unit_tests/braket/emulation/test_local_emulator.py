@@ -54,13 +54,6 @@ def test_from_device_properties_non_fully_connected_but_directed(reduced_standar
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
 
-
-def test_invalid_instantiation_1(reduced_standardized_json):
-    device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
-    with pytest.raises(ValueError):
-        LocalEmulator.from_device_properties(device_properties, backend="braket_sv")
-
-
 def test_invalid_instantiation_2(reduced_standardized_json):
     with pytest.raises(TypeError):
         LocalEmulator.from_device_properties(reduced_standardized_json)
