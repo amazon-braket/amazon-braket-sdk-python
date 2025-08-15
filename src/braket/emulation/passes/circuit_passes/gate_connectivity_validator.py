@@ -15,7 +15,6 @@ from collections.abc import Iterable
 from typing import Any, Union
 
 from networkx import DiGraph
-from networkx.utils import graphs_equal
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
@@ -170,8 +169,3 @@ provided as edge attributes."
             raise ValueError(
                 f"Qubit pair ({e[0]}, {e[1]}) does not support gate {gate_name} on this device."
             )
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return isinstance(other, GateConnectivityValidator) and graphs_equal(
-            self._gate_connectivity_graph, other._gate_connectivity_graph
-        )

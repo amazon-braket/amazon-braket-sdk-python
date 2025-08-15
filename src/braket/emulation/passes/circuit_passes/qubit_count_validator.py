@@ -43,6 +43,3 @@ class QubitCountValidator(ValidationPass[Circuit]):
                 f"Circuit must use at most {self._qubit_count} qubits, \
 but uses {circuit.qubit_count} qubits."
             )
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return isinstance(other, QubitCountValidator) and self._qubit_count == other._qubit_count

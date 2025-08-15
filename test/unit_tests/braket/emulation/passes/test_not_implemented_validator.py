@@ -67,24 +67,6 @@ def test_validate_circuit_without_requiring_verbatim_box():
     validator.validate(circuit)
 
 
-def test_validator_equality():
-    """Test that validators with the same parameters are equal."""
-    validator1 = NotImplementedValidator(
-        unsupported_gates=UNSUPPORTED_GATES, require_verbatim_box=True
-    )
-    validator2 = NotImplementedValidator(
-        unsupported_gates=UNSUPPORTED_GATES, require_verbatim_box=True
-    )
-    validator3 = NotImplementedValidator(unsupported_gates=["xyz"], require_verbatim_box=True)
-    validator4 = NotImplementedValidator(
-        unsupported_gates=UNSUPPORTED_GATES, require_verbatim_box=False
-    )
-
-    assert validator1 == validator2
-    assert validator1 != validator3
-    assert validator1 != validator4
-
-
 def test_default_unsupported_gates():
     """Test that the default unsupported gates are used when not specified."""
     validator = NotImplementedValidator()

@@ -87,10 +87,3 @@ class ResultTypeValidator(ValidationPass[Circuit]):
                         f"Qubit {int(qubit)} in result type {result_type.name} "
                         f"is not a valid qubit for this device."
                     )
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return (
-            isinstance(other, ResultTypeValidator)
-            and self._supported_result_types == other._supported_result_types
-            and self._connectivity_graph == other._connectivity_graph
-        )

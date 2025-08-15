@@ -94,10 +94,3 @@ class GateValidator(ValidationPass[Circuit]):
                 if type(gate) not in self._supported_gates:
                     raise ValueError(f"Gate {gate.name} is not a supported gate for this device.")
             idx += 1
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return (
-            isinstance(other, GateValidator)
-            and self._supported_gates == other._supported_gates
-            and self._native_gates == other._native_gates
-        )

@@ -71,10 +71,3 @@ class NotImplementedValidator(ValidationPass[Circuit]):
                 gate = instruction.operator
                 if gate.name.lower() in [g.lower() for g in self._unsupported_gates]:
                     raise ValueError(f"Gate {gate.name} is not supported by this emulator")
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return (
-            isinstance(other, NotImplementedValidator)
-            and self._unsupported_gates == other._unsupported_gates
-            and self._require_verbatim_box == other._require_verbatim_box
-        )

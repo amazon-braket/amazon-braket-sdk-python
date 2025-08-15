@@ -45,11 +45,3 @@ def test_invalid_circuits(qubit_count, circuit):
 but uses {circuit.qubit_count} qubits.",
     ):
         QubitCountValidator(qubit_count).validate(circuit)
-
-
-def test_equality():
-    qcc_1 = QubitCountValidator(1)
-    qcc_2 = QubitCountValidator(2)
-
-    assert qcc_1 != qcc_2
-    assert qcc_1 == QubitCountValidator(1)

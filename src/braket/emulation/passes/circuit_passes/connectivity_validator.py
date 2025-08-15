@@ -15,7 +15,6 @@ from collections.abc import Iterable
 from typing import Optional, Union
 
 from networkx import DiGraph, complete_graph, from_dict_of_lists
-from networkx.utils import graphs_equal
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
@@ -174,8 +173,3 @@ class ConnectivityValidator(ValidationPass[Circuit]):
                 raise ValueError(
                     f"{typed_edge[0]} is not connected to qubit {typed_edge[1]} in this device."
                 )
-
-    def __eq__(self, other: ValidationPass) -> bool:
-        return isinstance(other, ConnectivityValidator) and graphs_equal(
-            self._connectivity_graph, other._connectivity_graph
-        )

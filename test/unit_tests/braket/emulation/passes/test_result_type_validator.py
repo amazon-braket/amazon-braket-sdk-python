@@ -66,44 +66,6 @@ def test_invalid_instantiation():
         ResultTypeValidator(["Expectation"], None)
 
 
-@pytest.mark.parametrize(
-    "result_types_1, result_types_2",
-    [
-        ([ResultType(name="Probability")], [ResultType(name="Probability")]),
-        (
-            [ResultType(name="Probability"), ResultType(name="Variance", observables=["x"])],
-            [ResultType(name="Variance", observables=["x"]), ResultType(name="Probability")],
-        ),
-    ],
-)
-def test_equality(result_types_1, result_types_2):
-    connectivity_graph = {"0": ["1"], "1": ["0"]}
-    assert ResultTypeValidator(result_types_1, connectivity_graph) == ResultTypeValidator(
-        result_types_2, connectivity_graph
-    )
-
-
-@pytest.mark.parametrize(
-    "result_types_1, result_types_2",
-    [
-        ([ResultType(name="Probability")], [ResultType(name="Variance", observables=["x"])]),
-        (
-            [ResultType(name="Variance", observables=["x"])],
-            [ResultType(name="Variance", observables=["y"])],
-        ),
-    ],
-)
-def test_inequality(result_types_1, result_types_2):
-    connectivity_graph = {"0": ["1"], "1": ["0"]}
-    assert ResultTypeValidator(result_types_1, connectivity_graph) != ResultTypeValidator(
-        result_types_2, connectivity_graph
-    )
-
-    # Test inequality with different connectivity graphs
-    assert ResultTypeValidator(result_types_1, {"0": ["1"], "1": ["0"]}) != ResultTypeValidator(
-        result_types_1, {"0": ["1", "2"], "1": ["0"], "2": ["0"]}
-    )
-
 
 def test_invalid_qubit_target():
     """

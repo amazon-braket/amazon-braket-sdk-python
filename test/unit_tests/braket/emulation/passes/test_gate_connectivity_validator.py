@@ -170,45 +170,6 @@ def test_undirected_graph_construction_from_dict():
 
 
 @pytest.mark.parametrize(
-    "edges",
-    [
-        [(0, 1, {"supported_gates": ["CNot, CZ"]})],
-        [(0, 1, {"supported_gates": ["CNot", "CZ"]}), (1, 0, {"supported_gates": ["CNot", "CZ"]})],
-        [
-            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-            (1, 2, {"supported_gates": ["CNot", "CZ", "XX"]}),
-            (2, 3, {"supported_gates": ["CZ"]}),
-            (2, 1, {"supported_gates": ["CNot", "CZ", "XX"]}),
-        ],
-        [
-            (0, 1, {"supported_gates": ["CNot", "CZ"]}),
-            (1, 2, {"supported_gates": ["CNot", "CZ"]}),
-            (4, 2, {"supported_gates": ["CNot", "CZ"]}),
-            (3, 2, {"supported_gates": ["CNot", "CZ"]}),
-        ],
-    ],
-)
-def test_undirected_graph_from_digraph(edges):
-    """
-    Check that undirected topologies created from a digraph correctly add all possible
-    back edges to the validator's connectivity graph.
-    """
-    directed_graph = nx.DiGraph()
-    directed_graph.add_edges_from(edges)
-    undirected_graph = directed_graph.copy()
-
-    for edge in edges:
-        if (edge[1], edge[0]) not in undirected_graph.edges:
-            undirected_graph.add_edges_from([(edge[1], edge[0], edge[2])])
-
-    gcc = GateConnectivityValidator(directed_graph, directed=False)
-    assert graphs_equal(gcc._gate_connectivity_graph, undirected_graph)
-
-    gcc_other = GateConnectivityValidator(undirected_graph)
-    assert gcc_other == gcc
-
-
-@pytest.mark.parametrize(
     "representation",
     [
         {(0, 1): ["CNot", "CZ"], (1, 0): ["CZ, XX"], (2, 0): ["CNot, YY"]},

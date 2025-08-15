@@ -137,13 +137,6 @@ def test_invalid_1_qubit_gates(six_node_digraph, circuit):
         ConnectivityValidator(six_node_digraph).validate(circuit)
 
 
-def test_equality_graph_created_with_dict(six_node_digraph):
-    graph = {0: [1, 3], 1: [0, 2, 10], 2: [1, 3, 11], 10: [1, 11], 11: [2, 10]}
-    criteria_from_digraph = ConnectivityValidator(six_node_digraph)
-    criteria_from_dict = ConnectivityValidator(graph)
-    assert criteria_from_dict == criteria_from_digraph
-
-
 @pytest.mark.parametrize(
     "connectivity_graph, fully_connected, num_qubits, qubit_labels, directed",
     [

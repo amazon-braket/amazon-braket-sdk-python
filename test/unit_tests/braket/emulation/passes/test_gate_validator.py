@@ -151,28 +151,3 @@ def test_invalid_circuits(basic_gate_set, circuit):
     """
     with pytest.raises(ValueError):
         GateValidator(basic_gate_set[0], basic_gate_set[1]).validate(circuit)
-
-
-@pytest.mark.parametrize(
-    "gate_set_1, gate_set_2",
-    [
-        (["h"], ["h"]),
-        (["cnot", "h"], ["h", "cnot"]),
-        (["phaseshift", "cnot", "rx", "ry"], ["ry", "rx", "cnot", "phaseshift"]),
-    ],
-)
-def test_equality(gate_set_1, gate_set_2):
-    assert GateValidator(gate_set_1) == GateValidator(gate_set_2)
-
-
-@pytest.mark.parametrize(
-    "gate_set_1, gate_set_2",
-    [
-        (["h"], ["x"]),
-        (["cnot"], ["h", "cnot"]),
-        (["cnot", "h"], ["h"]),
-        (["phaseshift", "cnot", "ms", "ry"], ["ry", "rx", "cnot", "ms"]),
-    ],
-)
-def test_inequality(gate_set_1, gate_set_2):
-    assert GateValidator(gate_set_1) != GateValidator(gate_set_2)
