@@ -16,7 +16,7 @@ from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.emulation.passes.circuit_passes import ConnectivityValidator, GateConnectivityValidator
 
 
-def set_up_connectivity_validator(
+def _set_up_connectivity_validator(
     device_emu_properties: DeviceEmulatorProperties,
 ) -> ConnectivityValidator:
     if device_emu_properties.fully_connected:
@@ -37,7 +37,7 @@ def set_up_connectivity_validator(
     )
 
 
-def set_up_gate_connectivity_validator(
+def _set_up_gate_connectivity_validator(
     device_emu_properties: DeviceEmulatorProperties,
 ) -> GateConnectivityValidator:
     if device_emu_properties.fully_connected:
