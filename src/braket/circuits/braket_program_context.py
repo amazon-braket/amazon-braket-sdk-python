@@ -15,7 +15,7 @@ from collections.abc import Iterable
 from typing import Optional, Union
 
 import numpy as np
-from braket.default_simulator.openqasm.interpreter import VerbatimBoxEnd, VerbatimBoxStart
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.default_simulator.openqasm.parser.openqasm_ast import QuantumStatement
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
@@ -180,11 +180,12 @@ class BraketProgramContext(AbstractProgramContext):
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
 
-    def add_verbatim_marker(self, marker: QuantumStatement) -> None:
-        if isinstance(marker, VerbatimBoxStart):
+    def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
+        if marker == VerbatimBoxDelimiter.START_VERBATIM:
             instruction = Instruction(StartVerbatimBox(), target=[])
-        elif isinstance(marker, VerbatimBoxEnd):
+        elif marker == VerbatimBoxDelimiter.END_VERBATIM:
             instruction = Instruction(EndVerbatimBox(), target=[])
         else:
             raise TypeError("Unsupported marker type")
         self._circuit.add_instruction(instruction)
+

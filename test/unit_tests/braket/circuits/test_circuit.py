@@ -47,7 +47,7 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.translations import braket_result_to_result_type
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.default_simulator.openqasm.interpreter import VerbatimBoxEnd, VerbatimBoxStart
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import (
     DragGaussianWaveform,
@@ -979,14 +979,14 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
 
 def test_add_start_marker():
     context = BraketProgramContext()
-    context.add_verbatim_marker(VerbatimBoxStart())
+    context.add_verbatim_marker(VerbatimBoxDelimiter.START_VERBATIM)
     instructions = context.circuit.instructions
     assert len(instructions) == 1
     assert isinstance(instructions[0].operator, StartVerbatimBox)
 
 def test_add_end_marker():
     context = BraketProgramContext()
-    context.add_verbatim_marker(VerbatimBoxEnd())
+    context.add_verbatim_marker(VerbatimBoxDelimiter.END_VERBATIM)
     instructions = context.circuit.instructions
     assert len(instructions) == 1
     assert isinstance(instructions[0].operator, EndVerbatimBox)
