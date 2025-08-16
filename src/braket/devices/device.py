@@ -11,19 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from braket.device_schema import DeviceActionType
-from braket.ir.openqasm import Program
 
-from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
-from braket.annealing.problem import Problem
 from braket.circuits import Circuit, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
-from braket.tasks.quantum_task import QuantumTask
+from braket.tasks.quantum_task import QuantumTask, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
@@ -43,7 +42,7 @@ class Device(ABC):
     @abstractmethod
     def run(
         self,
-        task_specification: Union[Circuit, Problem],
+        task_specification: TaskSpecification,
         shots: Optional[int],
         inputs: Optional[dict[str, float]],
         *args,
@@ -53,7 +52,7 @@ class Device(ABC):
         or an annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]): Specification of a quantum task
+            task_specification (TaskSpecification): Specification of a quantum task
                 to run on device.
             shots (Optional[int]): The number of times to run the quantum task on the device.
                 Default is `None`.
@@ -70,26 +69,23 @@ class Device(ABC):
     @abstractmethod
     def run_batch(
         self,
-        task_specifications: Union[
-            Union[Circuit, Problem],
-            list[Union[Circuit, Problem]],
-        ],
+        task_specifications: TaskSpecification | list[TaskSpecification],
         shots: Optional[int],
         max_parallel: Optional[int],
-        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]],
+        inputs: Optional[dict[str, float] | list[dict[str, float]]],
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem], list[Union[Circuit, Problem]]]):
+            task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of circuits or problems to run on device.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
             max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device.
-            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be
+            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value.
             *args (Any):  Arbitrary arguments.
@@ -131,8 +127,8 @@ class Device(ABC):
             )
 
     def _apply_noise_model_to_circuit(
-        self, task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]
-    ) -> Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]:
+        self, task_specification: TaskSpecification
+    ) -> TaskSpecification:
         if isinstance(task_specification, Circuit):
             for instruction in task_specification.instructions:
                 if isinstance(instruction.operator, Noise):

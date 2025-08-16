@@ -665,19 +665,16 @@ def test_measure_verbatim_box():
         .add_instruction(Instruction(Measure(), 0))
     )
     expected_ir = OpenQasmProgram(
-        source="\n".join(
-            [
-                "OPENQASM 3.0;",
-                "bit[1] b;",
-                "qubit[2] q;",
-                "#pragma braket verbatim",
-                "box{",
-                "x q[0];",
-                "x q[1];",
-                "}",
-                "b[0] = measure q[0];",
-            ]
-        ),
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "bit[1] b;",
+            "#pragma braket verbatim",
+            "box{",
+            "x $0;",
+            "x $1;",
+            "}",
+            "b[0] = measure $0;",
+        ]),
         inputs={},
     )
     assert circ == expected
@@ -1329,28 +1326,25 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
             .expectation(observable=Observable.I(), target=0),
             None,
             OpenQasmProgram(
-                source="\n".join(
-                    [
-                        "OPENQASM 3.0;",
-                        "qubit[5] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
-                        + "(3.0ms, 400.0ms, 0.2, 1, false);",
-                        "}",
-                        "defcal z $0, $1 {",
-                        "    set_frequency(predefined_frame_1, 6000000.0);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "defcal rx(0.15) $0 {",
-                        "    set_frequency(predefined_frame_1, 6000000.0);",
-                        "    play(predefined_frame_1, drag_gauss_wf);",
-                        "}",
-                        "rx(0.15) q[0];",
-                        "rx(0.3) q[4];",
-                        "#pragma braket noise bit_flip(0.2) q[3]",
-                        "#pragma braket result expectation i(q[0])",
-                    ]
-                ),
+                source="\n".join([
+                    "OPENQASM 3.0;",
+                    "cal {",
+                    "    waveform drag_gauss_wf = drag_gaussian"
+                    + "(3.0ms, 400.0ms, 0.2, 1, false);",
+                    "}",
+                    "defcal z $0, $1 {",
+                    "    set_frequency(predefined_frame_1, 6000000.0);",
+                    "    play(predefined_frame_1, drag_gauss_wf);",
+                    "}",
+                    "defcal rx(0.15) $0 {",
+                    "    set_frequency(predefined_frame_1, 6000000.0);",
+                    "    play(predefined_frame_1, drag_gauss_wf);",
+                    "}",
+                    "rx(0.15) $0;",
+                    "rx(0.3) $4;",
+                    "#pragma braket noise bit_flip(0.2) $3",
+                    "#pragma braket result expectation i($0)",
+                ]),
                 inputs={},
             ),
         ),
