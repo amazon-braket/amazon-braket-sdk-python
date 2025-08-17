@@ -13,7 +13,6 @@
 
 import pytest
 import json
-from pydantic.v1 import ValidationError
 
 from braket.emulation.device_emulator_properties import (
     DeviceEmulatorProperties,
@@ -26,7 +25,6 @@ from conftest import (
     valid_oneQubitProperties_v2,
     valid_twoQubitProperties,
     valid_supportedResultTypes,
-    valid_connectivityGraph,
     valid_nativeGateSet,
 )
 
@@ -96,27 +94,36 @@ def test_from_device_properties(reduced_standardized_json):
     assert result.qubit_labels == [0, 1]
 
 
-def test_yet_another_way_of_instantiation(valid_input):
-    result = DeviceEmulatorProperties.parse_obj(valid_input)
+def test_yet_another_way_of_instantiation(minimal_valid_json):
+    result = DeviceEmulatorProperties.from_json(minimal_valid_json)
     assert result.qubitCount == 2
-    assert result.connectivityGraph == valid_connectivityGraph
+    assert result.connectivityGraph == {}
     assert result.qubit_labels == [0, 1]
 
 
 @pytest.mark.parametrize(
     "field, invalid_values",
     [
-        ("nativeGateSet", ["not_a_Braket_gate"]),
-        ("connectivityGraph", {2: [0]}),
-        ("connectivityGraph", {0: [2]}),
-        ("oneQubitProperties", {"2": valid_oneQubitProperties}),
-        ("oneQubitProperties", {"0": valid_oneQubitProperties}),
+        ("paradigm.nativeGateSet", ["not_a_Braket_gate"]),
+        ("paradigm.connectivity.connectivityGraph", {2: [0]}),
+        ("paradigm.connectivity.connectivityGraph", {0: [2]}),
+        ("standardized.oneQubitProperties", {"2": valid_oneQubitProperties}),
+        ("standardized.oneQubitProperties", {"0": valid_oneQubitProperties}),
     ],
 )
-def test_invalid_device_emulator_properties(valid_input, field, invalid_values):
-    with pytest.raises(ValidationError):
-        valid_input[field] = invalid_values
-        DeviceEmulatorProperties.parse_obj(valid_input)
+def test_invalid_device_emulator_properties(minimal_valid_json, field, invalid_values):
+    with pytest.raises(ValueError):
+        minimal_invalid_json_dict = json.loads(minimal_valid_json)
+
+        # replace with invalid values
+        field_split = field.split(".")
+        pointer = minimal_invalid_json_dict
+        for k in field_split[:-1]:
+            pointer = pointer[k]
+        pointer[field_split[-1]] = invalid_values
+
+        minimal_invalid_json_dict[field] = invalid_values
+        DeviceEmulatorProperties.from_json(json.dumps(minimal_invalid_json_dict))
 
 
 @pytest.mark.parametrize(

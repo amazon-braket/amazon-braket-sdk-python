@@ -188,22 +188,6 @@ def reduced_standardized_json():
     return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict)
 
 
-@pytest.fixture
-def valid_input():
-    input = {
-        "qubitCount": 2,
-        "nativeGateSet": ["cz", "prx", "s"],
-        "connectivityGraph": valid_connectivityGraph,
-        "oneQubitProperties": {
-            "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
-        },
-        "twoQubitProperties": {"0-1": valid_twoQubitProperties},
-        "supportedResultTypes": valid_supportedResultTypes,
-    }
-    return input
-
-
 # invalid oneQubitProperties without 1q rb data
 invalid_oneQubitProperties = OneQubitProperties(
     T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),

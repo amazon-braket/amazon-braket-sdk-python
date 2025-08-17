@@ -20,13 +20,12 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     TwoQubitProperties,
 )
-from pydantic.v1 import BaseModel, conint, constr, root_validator
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation._standardization import _standardize_ionq_device_properties
 
 
-class DeviceEmulatorProperties(BaseModel):
+class DeviceEmulatorProperties:
     """Properties for device emulation.
 
     Args:
@@ -44,55 +43,66 @@ class DeviceEmulatorProperties(BaseModel):
         supportedResultTypes (list[ResultType]): List of supported result types.
     """
 
-    NonNegativeIntStr = constr(regex=r"^(0|[1-9][0-9]*)$")  # non-negative integers
-    TwoNonNegativeIntsStr = constr(
-        regex=r"^(0|[1-9][0-9]*)-(0|[1-9][0-9]*)$"
-    )  # two non-negative integers connected by "-"
+    def __init__(
+        self,
+        qubitCount: int,
+        nativeGateSet: list[str],
+        connectivityGraph: dict[str, list[str]],
+        oneQubitProperties: dict[str, OneQubitProperties],
+        twoQubitProperties: dict[str, TwoQubitProperties],
+        supportedResultTypes: list[ResultType],
+    ):
+        """Initialize a DeviceEmulatorProperties instance."""
+        # Validate inputs
+        self.validate_nativeGateSet(nativeGateSet)
+        self.validate_oneQubitProperties(oneQubitProperties, qubitCount)
 
-    qubitCount: conint(strict=True, ge=1)
-    nativeGateSet: list[str]
-    connectivityGraph: dict[NonNegativeIntStr, list[NonNegativeIntStr]]
-    oneQubitProperties: dict[NonNegativeIntStr, OneQubitProperties]
-    twoQubitProperties: dict[TwoNonNegativeIntsStr, TwoQubitProperties]
-    supportedResultTypes: list[ResultType]
+        # Get qubit labels for further validation
+        indices = list(oneQubitProperties.keys())
+        qubit_labels = sorted(int(x) for x in indices)
 
-    @root_validator
-    @classmethod
-    def validate_nativeGateSet(cls, values: dict) -> dict:
-        nativeGateSet = values.get("nativeGateSet")
+        self.validate_connectivityGraph(connectivityGraph, qubit_labels)
+        self.validate_twoQubitProperties(twoQubitProperties, qubit_labels)
+
+        # Store properties
+        self.qubitCount = qubitCount
+        self.nativeGateSet = nativeGateSet
+        self.connectivityGraph = connectivityGraph
+        self.oneQubitProperties = oneQubitProperties
+        self.twoQubitProperties = twoQubitProperties
+        self.supportedResultTypes = supportedResultTypes
+
+    @staticmethod
+    def validate_nativeGateSet(nativeGateSet: list[str]) -> None:
+        """Validate that all gates in nativeGateSet are valid Braket gates."""
         valid_gates = ", ".join(BRAKET_GATES.keys())
         for gate in nativeGateSet:
             if gate not in BRAKET_GATES:
                 raise ValueError(
                     f"Gate '{gate}' is not a valid Braket gate. Valid gates are: {valid_gates}"
                 )
-        return values
 
-    @root_validator
-    @classmethod
-    def validate_oneQubitProperties(cls, values: dict) -> dict:
-        oneQubitProperties = values["oneQubitProperties"]
-        qubitCount = values.get("qubitCount")
+    @staticmethod
+    def validate_oneQubitProperties(
+        oneQubitProperties: dict[str, OneQubitProperties], qubitCount: int
+    ) -> None:
+        """Validate oneQubitProperties."""
         if len(oneQubitProperties) != qubitCount:
             raise ValueError("The length of oneQubitProperties should be the same as qubitCount")
 
-        return values
-
-    @classmethod
-    def node_validator(cls, node: str, qubit_labels: list[int], field_name: str) -> None:
+    @staticmethod
+    def node_validator(node: str, qubit_labels: list[int], field_name: str) -> None:
+        """Validate that a node represents a valid qubit index."""
         if int(node) not in qubit_labels:
             raise ValueError(
                 f"Node {node} in {field_name} must represent a valid qubit index in {qubit_labels}."
             )
 
-    @root_validator
     @classmethod
-    def validate_connectivityGraph(cls, values: dict) -> dict:
-        connectivityGraph = values.get("connectivityGraph")
-        oneQubitProperties = values.get("oneQubitProperties")
-        indices = list(oneQubitProperties.keys())
-        qubit_labels = sorted(int(x) for x in indices)
-
+    def validate_connectivityGraph(
+        cls, connectivityGraph: dict[str, list[str]], qubit_labels: list[int]
+    ) -> None:
+        """Validate connectivityGraph."""
         for node, neighbors in connectivityGraph.items():
             cls.node_validator(node, qubit_labels, "connectivityGraph")
 
@@ -103,25 +113,19 @@ class DeviceEmulatorProperties(BaseModel):
                         f"in `qubit_labels`."
                     )
 
-        return values
-
-    @root_validator
     @classmethod
-    def validate_twoQubitProperties(cls, values: dict) -> dict:
-        twoQubitProperties = values["twoQubitProperties"]
-        oneQubitProperties = values.get("oneQubitProperties")
-        indices = list(oneQubitProperties.keys())
-        qubit_labels = sorted(int(x) for x in indices)
-
+    def validate_twoQubitProperties(
+        cls, twoQubitProperties: dict[str, TwoQubitProperties], qubit_labels: list[int]
+    ) -> None:
+        """Validate twoQubitProperties."""
         for edge in twoQubitProperties:
             node_1, node_2 = edge.split("-")
             cls.node_validator(node_1, qubit_labels, "twoQubitProperties")
             cls.node_validator(node_2, qubit_labels, "twoQubitProperties")
 
-        return values
-
     @property
-    def qubit_labels(self) -> list:
+    def qubit_labels(self) -> list[int]:
+        """Get the sorted list of qubit indices."""
         indices = list(self.oneQubitProperties.keys())
         return sorted(int(x) for x in indices)
 
@@ -157,6 +161,7 @@ class DeviceEmulatorProperties(BaseModel):
     def from_device_properties(
         cls, device_properties: DeviceCapabilities
     ) -> "DeviceEmulatorProperties":
+        """Create a DeviceEmulatorProperties instance from DeviceCapabilities."""
         if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = _standardize_ionq_device_properties(device_properties)
         if isinstance(device_properties, DeviceCapabilities):
@@ -165,6 +170,7 @@ class DeviceEmulatorProperties(BaseModel):
 
     @classmethod
     def from_json(cls, device_properties_json: str) -> "DeviceEmulatorProperties":
+        """Create a DeviceEmulatorProperties instance from a JSON string."""
         properties_dict = json.loads(device_properties_json)
         if not isinstance(properties_dict, dict):
             raise TypeError("device_properties_json must be a json of a dictionary")
@@ -172,20 +178,35 @@ class DeviceEmulatorProperties(BaseModel):
         required_keys = ["paradigm", "standardized"]
         for key in required_keys:
             if (key not in properties_dict) or (properties_dict[key] is None):
-                raise ValueError(f"device_properties_json have non-empty value for key {key}")
+                raise ValueError(f"device_properties_json must have non-empty value for key {key}")
 
         if "braket.ir.openqasm.program" not in properties_dict["action"]:
             raise ValueError(
                 "The action in device_properties_json must have key `braket.ir.openqasm.program`."
             )
 
+        # Convert dictionary representations to OneQubitProperties and TwoQubitProperties objects
+        one_qubit_props = {}
+        for key, value in properties_dict["standardized"]["oneQubitProperties"].items():
+            one_qubit_props[key] = OneQubitProperties.parse_obj(value)
+
+        two_qubit_props = {}
+        for key, value in properties_dict["standardized"]["twoQubitProperties"].items():
+            two_qubit_props[key] = TwoQubitProperties.parse_obj(value)
+
+        # Convert dictionary representations to ResultType objects
+        result_types = [
+            ResultType.parse_obj(value)
+            for value in properties_dict["action"]["braket.ir.openqasm.program"][
+                "supportedResultTypes"
+            ]
+        ]
+
         return DeviceEmulatorProperties(
             qubitCount=properties_dict["paradigm"]["qubitCount"],
             nativeGateSet=properties_dict["paradigm"]["nativeGateSet"],
             connectivityGraph=properties_dict["paradigm"]["connectivity"]["connectivityGraph"],
-            oneQubitProperties=properties_dict["standardized"]["oneQubitProperties"],
-            twoQubitProperties=properties_dict["standardized"]["twoQubitProperties"],
-            supportedResultTypes=properties_dict["action"]["braket.ir.openqasm.program"][
-                "supportedResultTypes"
-            ],
+            oneQubitProperties=one_qubit_props,
+            twoQubitProperties=two_qubit_props,
+            supportedResultTypes=result_types,
         )
