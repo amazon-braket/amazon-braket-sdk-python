@@ -65,7 +65,7 @@ def test_add_pass_single(empty_emulator):
     qubit_count_validator = QubitCountValidator(4)
     emulator.add_pass(qubit_count_validator)
 
-    assert emulator._emulator_passes == [qubit_count_validator]
+    assert emulator._pass_manager._emulator_passes == [qubit_count_validator]
 
 
 def test_bad_add_pass(empty_emulator):
@@ -81,7 +81,7 @@ def test_add_pass_multiple(setup_local_simulator_devices):
     gate_validator = GateValidator(supported_gates=["H", "CNot"])
 
     emulator.add_pass([qubit_count_validator, gate_validator])
-    assert emulator._emulator_passes == [
+    assert emulator._pass_manager._emulator_passes == [
         native_gate_validator,
         qubit_count_validator,
         gate_validator,
