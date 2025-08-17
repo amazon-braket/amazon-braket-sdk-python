@@ -65,8 +65,9 @@ class ResultTypeValidator(ValidationPass):
         for result_type in program.result_types:
             if result_type.name not in self._supported_result_types:
                 raise ValueError(
-                    f"Result type {result_type.name} is not a supported result type "
-                    f"for this device."
+                    f"The result type {result_type.name} is not a supported "
+                    f"result type for this device. Check the device documentation "
+                    f"for a list of supported result types."
                 )
 
             if isinstance(result_type, ObservableResultType):
@@ -85,5 +86,7 @@ class ResultTypeValidator(ValidationPass):
                 if qubit_str not in self._connectivity_graph:
                     raise ValueError(
                         f"Qubit {int(qubit)} in result type {result_type.name} "
-                        f"is not a valid qubit for this device."
+                        f"is not a valid qubit for this device. "
+                        f"The set of valid qubits can be found in the connectivity graph "
+                        f"of the device."
                     )

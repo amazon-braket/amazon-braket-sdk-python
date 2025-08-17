@@ -63,11 +63,17 @@ class NotImplementedValidator(ValidationPass):
             )
 
             if not has_verbatim_box:
-                raise ValueError("Input circuit must have a verbatim box")
+                raise ValueError(
+                    "The input circuit must have a verbatim box. "
+                    "Add a verbatim box to the circuit, and try again."
+                )
 
         # Check if the circuit has any unsupported gates
         for instruction in program.instructions:
             if isinstance(instruction.operator, Gate):
                 gate = instruction.operator
                 if gate.name.lower() in [g.lower() for g in self._unsupported_gates]:
-                    raise ValueError(f"Gate {gate.name} is not supported by this emulator")
+                    raise ValueError(
+                        f"The gate {gate.name} is not supported by this emulator. "
+                        f"Check the device documentation for a list of supported gates."
+                    )

@@ -30,7 +30,10 @@ def test_validate_circuit_without_verbatim_box():
     """Test that a circuit without a verbatim box fails validation."""
     circuit = Circuit().h(0).cnot(0, 1)
     validator = NotImplementedValidator()
-    with pytest.raises(ValueError, match="Input circuit must have a verbatim box"):
+    with pytest.raises(
+        ValueError,
+        match="The input circuit must have a verbatim box. Add a verbatim box to the circuit, and try again.",
+    ):
         validator.validate(circuit)
 
 
@@ -55,7 +58,10 @@ def test_validate_circuit_with_custom_unsupported_gates():
     # Add our mock H gate to the instructions
     circuit.instructions.append(MockInstruction(MockGate()))
 
-    with pytest.raises(ValueError, match="Gate H is not supported by this emulator"):
+    with pytest.raises(
+        ValueError,
+        match="The gate H is not supported by this emulator. Check the device documentation for a list of supported gates.",
+    ):
         validator.validate(circuit)
 
 

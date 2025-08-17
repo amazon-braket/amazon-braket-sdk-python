@@ -79,7 +79,8 @@ def test_invalid_qubit_target():
 
     # The validator should raise an error because qubit 1 is not in the device
     with pytest.raises(
-        ValueError, match="Qubit 1 in result type Expectation is not a valid qubit for this device."
+        ValueError,
+        match="Qubit 1 in result type Expectation is not a valid qubit for this device. The set of valid qubits can be found in the connectivity graph of the device.",
     ):
         ResultTypeValidator(
             [ResultType(name="Expectation", observables=["x", "y", "z", "h", "i"])],
