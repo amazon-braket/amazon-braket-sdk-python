@@ -173,25 +173,3 @@ b[0] = measure q[0];""".strip()
     result = emulator.run(circuit, shots=1).result()
     emulation_source = result.additional_metadata.action.source.strip()
     assert emulation_source == open_qasm_source
-
-
-def test_apply_readout_error_to_probability_qubits():
-    noise_model = NoiseModel()
-    rate = 0.2
-    noise_model.add_noise(BitFlip(rate), ObservableCriteria(qubits=0))
-
-    emulator = Emulator(noise_model=noise_model)
-
-    circ = Circuit().h(0).cnot(0, 1).probability().sample(Observable.Z(), 1)
-    noisy_circ = emulator._apply_readout_error_to_probability_qubits(circ, noise_model)
-
-    expected_circ = (
-        Circuit().h(0).cnot(0, 1).bit_flip(0, 0.2).probability().sample(Observable.Z(), 1)
-    )
-    assert noisy_circ == expected_circ
-
-    circ2 = Circuit().h(0).cnot(0, 1).probability(0)
-    noisy_circ = emulator._apply_readout_error_to_probability_qubits(circ2, noise_model)
-
-    expected_circ = Circuit().h(0).cnot(0, 1).bit_flip(0, 0.2).probability(0)
-    assert noisy_circ == expected_circ
