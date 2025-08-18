@@ -26,11 +26,6 @@ from braket.emulation.local_emulator import LocalEmulator
 from conftest import invalid_device_properties_dict_1, invalid_device_properties_dict_2
 
 
-def test_from_json_1(minimal_valid_json):
-    emulator = LocalEmulator.from_json(minimal_valid_json)
-    assert isinstance(emulator, LocalEmulator)
-
-
 def test_from_json_3(reduced_standardized_json):
     emulator = LocalEmulator.from_json(reduced_standardized_json)
     assert isinstance(emulator, LocalEmulator)

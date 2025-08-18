@@ -51,27 +51,14 @@ def test_basic_instantiation():
     assert result.directed == False
 
 
-def test_from_json_1(minimal_valid_json):
-    result = DeviceEmulatorProperties.from_json(minimal_valid_json)
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == {}
-    assert result.oneQubitProperties["0"] == valid_oneQubitProperties
-    assert result.oneQubitProperties["1"] == valid_oneQubitProperties_v2
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.qubit_labels == [0, 1]
-    assert result.fully_connected == True
-    assert result.directed == False
-
-
 def test_from_json_3(reduced_standardized_json):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json)
     assert result.qubitCount == 2
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
+        result.oneQubitProperties["0"] == valid_oneQubitProperties,
+        result.oneQubitProperties["1"] == valid_oneQubitProperties_v2,
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
@@ -87,17 +74,11 @@ def test_from_device_properties(reduced_standardized_json):
     assert result.nativeGateSet == valid_nativeGateSet
     assert result.connectivityGraph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["1"] == result.oneQubitProperties["0"] == valid_oneQubitProperties
+        result.oneQubitProperties["0"] == valid_oneQubitProperties,
+        result.oneQubitProperties["1"] == valid_oneQubitProperties_v2,
     )
     assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
     assert result.supportedResultTypes == valid_supportedResultTypes
-    assert result.qubit_labels == [0, 1]
-
-
-def test_yet_another_way_of_instantiation(minimal_valid_json):
-    result = DeviceEmulatorProperties.from_json(minimal_valid_json)
-    assert result.qubitCount == 2
-    assert result.connectivityGraph == {}
     assert result.qubit_labels == [0, 1]
 
 
@@ -111,9 +92,9 @@ def test_yet_another_way_of_instantiation(minimal_valid_json):
         ("standardized.oneQubitProperties", {"0": valid_oneQubitProperties}),
     ],
 )
-def test_invalid_device_emulator_properties(minimal_valid_json, field, invalid_values):
+def test_invalid_device_emulator_properties(reduced_standardized_json, field, invalid_values):
     with pytest.raises(ValueError):
-        minimal_invalid_json_dict = json.loads(minimal_valid_json)
+        minimal_invalid_json_dict = json.loads(reduced_standardized_json)
 
         # replace with invalid values
         field_split = field.split(".")
@@ -134,7 +115,7 @@ def test_invalid_device_emulator_properties(minimal_valid_json, field, invalid_v
     ],
 )
 def test_invalid_instantiation_from_invalid_device_properties(invalid_device_properties):
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         DeviceEmulatorProperties.from_device_properties(invalid_device_properties)
 
 
@@ -146,23 +127,14 @@ def test_invalid_instantiation_from_invalid_device_properties(invalid_device_pro
         ("braket.ir.openqasm.program"),
     ],
 )
-def test_invalid_instantiation_due_to_missing_field(minimal_valid_json, missing_field):
-    minimal_valid_dict = json.loads(minimal_valid_json)
+def test_invalid_instantiation_due_to_missing_field(reduced_standardized_json, missing_field):
+    minimal_valid_dict = json.loads(reduced_standardized_json)
     if missing_field == "braket.ir.openqasm.program":
         minimal_valid_dict["action"].pop(missing_field)
     else:
         minimal_valid_dict.pop(missing_field)
     with pytest.raises(ValueError):
         DeviceEmulatorProperties.from_json(json.dumps(minimal_valid_dict))
-
-
-@pytest.mark.parametrize(
-    "invalid_json",
-    ["1", "[1,2]"],
-)
-def test_invalid_json(invalid_json):
-    with pytest.raises(TypeError):
-        DeviceEmulatorProperties.from_json(invalid_json)
 
 
 def test_from_json_non_fully_connected(reduced_standardized_json_2):

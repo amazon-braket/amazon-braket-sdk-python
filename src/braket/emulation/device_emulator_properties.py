@@ -20,6 +20,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     TwoQubitProperties,
 )
+from braket.schema_common.schema_base import BraketSchemaBase
 
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation._standardization import _standardize_ionq_device_properties
@@ -162,18 +163,15 @@ class DeviceEmulatorProperties:
         cls, device_properties: DeviceCapabilities
     ) -> "DeviceEmulatorProperties":
         """Create a DeviceEmulatorProperties instance from DeviceCapabilities."""
+
+        if not isinstance(device_properties, DeviceCapabilities):
+            raise TypeError("device_properties has to be an instance of DeviceCapabilities.")
+
         if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = _standardize_ionq_device_properties(device_properties)
-        if isinstance(device_properties, DeviceCapabilities):
-            return cls.from_json(device_properties.json())
-        raise ValueError("device_properties has to be an instance of DeviceCapabilities.")
 
-    @classmethod
-    def from_json(cls, device_properties_json: str) -> "DeviceEmulatorProperties":
-        """Create a DeviceEmulatorProperties instance from a JSON string."""
+        device_properties_json = device_properties.json()
         properties_dict = json.loads(device_properties_json)
-        if not isinstance(properties_dict, dict):
-            raise TypeError("device_properties_json must be a json of a dictionary")
 
         required_keys = ["paradigm", "standardized"]
         for key in required_keys:
@@ -210,3 +208,9 @@ class DeviceEmulatorProperties:
             twoQubitProperties=two_qubit_props,
             supportedResultTypes=result_types,
         )
+
+    @classmethod
+    def from_json(cls, device_properties_json: str) -> "DeviceEmulatorProperties":
+        """Create a DeviceEmulatorProperties instance from a JSON string."""
+
+        return cls.from_device_properties(BraketSchemaBase.parse_raw_schema(device_properties_json))
