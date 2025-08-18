@@ -16,7 +16,6 @@ from typing import Optional, Union
 
 import numpy as np
 from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
-from braket.default_simulator.openqasm.parser.openqasm_ast import QuantumStatement
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
@@ -188,4 +187,3 @@ class BraketProgramContext(AbstractProgramContext):
         else:
             raise TypeError("Unsupported marker type")
         self._circuit.add_instruction(instruction)
-
