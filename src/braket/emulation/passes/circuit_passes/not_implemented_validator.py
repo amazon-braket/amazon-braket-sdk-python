@@ -17,6 +17,7 @@ from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 
 UNSUPPORTED_GATES = ["cc_prx", "measure_ff"]
 
@@ -55,6 +56,11 @@ class NotImplementedValidator(ValidationPass):
             ValueError: If the circuit does not have a verbatim box when required.
             ValueError: If the circuit contains any unsupported gates.
         """
+
+        # Validate out ProgramSet
+        if isinstance(program, ProgramSet):
+            raise TypeError("ProgramSet is not supported yet.")
+
         # Check if the circuit has a verbatim box when required
         if self._require_verbatim_box:
             has_verbatim_box = any(

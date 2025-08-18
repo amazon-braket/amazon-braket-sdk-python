@@ -16,25 +16,29 @@ import pytest
 from braket.circuits import Circuit
 from braket.emulation.passes.circuit_passes import NotImplementedValidator
 from braket.emulation.passes.circuit_passes.not_implemented_validator import UNSUPPORTED_GATES
+from braket.program_sets import ProgramSet
 
 
-def test_validate_circuit_with_verbatim_box():
+@pytest.fixture
+def default_not_implemented_validator():
+    return NotImplementedValidator()
+
+
+def test_validate_circuit_with_verbatim_box(default_not_implemented_validator):
     """Test that a circuit with a verbatim box passes validation."""
     circuit = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1))
-    validator = NotImplementedValidator()
     # Should not raise an exception
-    validator.validate(circuit)
+    default_not_implemented_validator.validate(circuit)
 
 
-def test_validate_circuit_without_verbatim_box():
+def test_validate_circuit_without_verbatim_box(default_not_implemented_validator):
     """Test that a circuit without a verbatim box fails validation."""
     circuit = Circuit().h(0).cnot(0, 1)
-    validator = NotImplementedValidator()
     with pytest.raises(
         ValueError,
         match="The input circuit must have a verbatim box. Add a verbatim box to the circuit, and try again.",
     ):
-        validator.validate(circuit)
+        default_not_implemented_validator.validate(circuit)
 
 
 def test_validate_circuit_with_custom_unsupported_gates():
@@ -73,7 +77,12 @@ def test_validate_circuit_without_requiring_verbatim_box():
     validator.validate(circuit)
 
 
-def test_default_unsupported_gates():
+def test_default_unsupported_gates(default_not_implemented_validator):
     """Test that the default unsupported gates are used when not specified."""
-    validator = NotImplementedValidator()
-    assert validator._unsupported_gates == UNSUPPORTED_GATES
+    assert default_not_implemented_validator._unsupported_gates == UNSUPPORTED_GATES
+
+
+def test_program_set(default_not_implemented_validator):
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1), Circuit().rx(0, 0)])
+    with pytest.raises(TypeError):
+        default_not_implemented_validator.validate(program_set)
