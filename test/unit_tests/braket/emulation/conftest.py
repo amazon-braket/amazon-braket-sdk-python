@@ -11,10 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import pytest
 import json
 import numpy as np
+import pytest
 
+from braket.circuits import Circuit
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
     CoherenceTime,
     Fidelity1Q,
@@ -23,73 +24,153 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     TwoQubitProperties,
     GateFidelity2Q,
 )
-
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 
-from braket.circuits import Circuit
+#################################################
+# Common test data for device property fixtures
+#################################################
 
-valid_oneQubitProperties = OneQubitProperties(
-    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
-    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
-    oneQubitFidelity=[
-        Fidelity1Q(
-            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
-            fidelity=0.99,
-            standardError=None,
-        ),
-        Fidelity1Q(
-            fidelityType=FidelityType(name="READOUT", description=None),
-            fidelity=0.9795,
-            standardError=None,
-        ),
-    ],
-).dict()
 
-valid_oneQubitProperties_v2 = OneQubitProperties(
-    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
-    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
-    oneQubitFidelity=[
-        Fidelity1Q(
-            fidelityType=FidelityType(
-                name="SIMULTANEOUS_RANDOMIZED_BENCHMARKING", description=None
-            ),
-            fidelity=0.99,
-            standardError=None,
-        ),
-        Fidelity1Q(
-            fidelityType=FidelityType(name="READOUT", description=None),
-            fidelity=0.9795,
-            standardError=None,
-        ),
-    ],
-).dict()
+def create_one_qubit_properties(fidelity_types):
+    """
+    Create OneQubitProperties with specified fidelity types.
 
-valid_twoQubitProperties = TwoQubitProperties(
-    twoQubitGateFidelity=[
-        GateFidelity2Q(
-            direction=None,
-            gateName="CZ",
-            fidelity=0.99,
-            standardError=0.0009,
-            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
-        ),
-        GateFidelity2Q(
-            direction=None,
-            gateName="ISwap",
-            fidelity=0.99,
-            standardError=0.0009,
-            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
-        ),
-    ]
-).dict()
+    Args:
+        fidelity_types (list): List of fidelity type names to include
 
-valid_connectivityGraph = {"0": ["1"], "1": ["0"]}
-valid_nativeGateSet = ["cz", "prx"]
+    Returns:
+        dict: OneQubitProperties as a dictionary
+    """
+    fidelities = []
+
+    for fidelity_type in fidelity_types:
+        fidelities.append(
+            Fidelity1Q(
+                fidelityType=FidelityType(name=fidelity_type, description=None),
+                fidelity=0.99 if fidelity_type != "READOUT" else 0.9795,
+                standardError=None,
+            )
+        )
+
+    return OneQubitProperties(
+        T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
+        T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
+        oneQubitFidelity=fidelities,
+    ).dict()
+
+
+def create_two_qubit_properties(gate_names):
+    """
+    Create TwoQubitProperties with specified gate names.
+
+    Args:
+        gate_names (list): List of gate names to include
+
+    Returns:
+        dict: TwoQubitProperties as a dictionary
+    """
+    gate_fidelities = []
+
+    for gate_name in gate_names:
+        gate_fidelities.append(
+            GateFidelity2Q(
+                direction=None,
+                gateName=gate_name,
+                fidelity=0.99,
+                standardError=0.0009,
+                fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
+            )
+        )
+
+    return TwoQubitProperties(twoQubitGateFidelity=gate_fidelities).dict()
+
+
+# Valid one-qubit properties with RANDOMIZED_BENCHMARKING fidelity
+valid_oneQubitProperties = create_one_qubit_properties(["RANDOMIZED_BENCHMARKING", "READOUT"])
+
+# Valid one-qubit properties with SIMULTANEOUS_RANDOMIZED_BENCHMARKING fidelity
+valid_oneQubitProperties_v2 = create_one_qubit_properties([
+    "SIMULTANEOUS_RANDOMIZED_BENCHMARKING",
+    "READOUT",
+])
+
+# Valid two-qubit properties with CZ and ISwap gates
+valid_twoQubitProperties = create_two_qubit_properties(["CZ", "ISwap"])
+
+# Common supported result types
 valid_supportedResultTypes = [
     {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
 ]
 
-minimal_valid_device_properties_dict = {
+# Common native gate sets
+valid_nativeGateSet = ["cz", "prx"]
+
+#################################################
+# Invalid device properties for testing
+#################################################
+
+# Invalid one-qubit properties without 1q rb data
+invalid_oneQubitProperties = create_one_qubit_properties(["READOUT"])
+
+# Invalid two-qubit properties without valid Braket gates
+invalid_twoQubitProperties = create_two_qubit_properties(["not_a_braket_gate"])
+
+# Invalid device properties with missing one-qubit RB data
+invalid_device_properties_dict_1 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.iqm.iqm_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+        "updatedAt": "2024-04-04T01:10:02.869136",
+    },
+    "deviceParameters": {},
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1.0"],
+        }
+    },
+    "paradigm": {
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
+        "nativeGateSet": valid_nativeGateSet,
+        "qubitCount": 2,
+    },
+    "standardized": {
+        "oneQubitProperties": {
+            "0": invalid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties,
+        },
+    },
+}
+
+# Invalid device properties with invalid two-qubit gate names
+invalid_device_properties_dict_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.iqm.iqm_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+        "updatedAt": "2024-04-04T01:10:02.869136",
+    },
+    "deviceParameters": {},
     "action": {
         "braket.ir.openqasm.program": {
             "actionType": "braket.ir.openqasm.program",
@@ -106,14 +187,19 @@ minimal_valid_device_properties_dict = {
     "standardized": {
         "oneQubitProperties": {
             "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties_v2,
+            "1": valid_oneQubitProperties,
         },
         "twoQubitProperties": {
-            "0-1": valid_twoQubitProperties,
+            "0-1": invalid_twoQubitProperties,
         },
     },
 }
 
+#################################################
+# IQM device property fixtures
+#################################################
+
+# IQM device properties with simple connectivity
 reduced_standardized_gate_model_qpu_device_properties_dict = {
     "action": {
         "braket.ir.openqasm.program": {
@@ -153,101 +239,85 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
         },
         "oneQubitProperties": {
             "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties_v2,
         },
         "twoQubitProperties": {"0-1": valid_twoQubitProperties},
     },
 }
 
-
-@pytest.fixture
-def minimal_valid_json():
-    return json.dumps(minimal_valid_device_properties_dict)
+# IQM device properties with directed connectivity
+reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.iqm.iqm_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2"]}, "fullyConnected": False},
+        "nativeGateSet": ["cz", "prx"],
+        "qubitCount": 3,
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+    },
+    "standardized": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+            "version": "1",
+        },
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+            "2": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {
+            "0-1": valid_twoQubitProperties,
+            "1-2": valid_twoQubitProperties,
+        },
+    },
+}
 
 
 @pytest.fixture
 def reduced_standardized_json():
+    """
+    Fixture providing a JSON string of IQM device properties with simple connectivity.
+    """
     return json.dumps(reduced_standardized_gate_model_qpu_device_properties_dict)
 
 
-# invalid oneQubitProperties without 1q rb data
-invalid_oneQubitProperties = OneQubitProperties(
-    T1=CoherenceTime(value=2e-5, standardError=None, unit="S"),
-    T2=CoherenceTime(value=8e-6, standardError=None, unit="S"),
-    oneQubitFidelity=[
-        Fidelity1Q(
-            fidelityType=FidelityType(name="READOUT", description=None),
-            fidelity=0.9795,
-            standardError=None,
-        ),
-    ],
-).dict()
-
-# invalid twoQubitProperties without valid Braket gates
-invalid_twoQubitProperties = TwoQubitProperties(
-    twoQubitGateFidelity=[
-        GateFidelity2Q(
-            direction=None,
-            gateName="not_a_braket_gate",
-            fidelity=0.99,
-            standardError=0.0009,
-            fidelityType=FidelityType(name="RANDOMIZED_BENCHMARKING", description=None),
-        )
-    ]
-).dict()
-
-invalid_device_properties_dict_1 = {
-    "action": {
-        "braket.ir.openqasm.program": {
-            "actionType": "braket.ir.openqasm.program",
-            "supportedOperations": [],
-            "supportedResultTypes": valid_supportedResultTypes,
-            "version": ["1.0"],
-        }
-    },
-    "paradigm": {
-        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
-        "nativeGateSet": valid_nativeGateSet,
-        "qubitCount": 2,
-    },
-    "standardized": {
-        "oneQubitProperties": {
-            "0": invalid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
-        },
-        "twoQubitProperties": {
-            "0-1": valid_twoQubitProperties,
-        },
-    },
-}
+@pytest.fixture
+def reduced_standardized_json_3():
+    """
+    Fixture providing a JSON string of IQM device properties with directed connectivity.
+    """
+    return json.dumps(
+        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed
+    )
 
 
-invalid_device_properties_dict_2 = {
-    "action": {
-        "braket.ir.openqasm.program": {
-            "actionType": "braket.ir.openqasm.program",
-            "supportedOperations": [],
-            "supportedResultTypes": valid_supportedResultTypes,
-            "version": ["1.0"],
-        }
-    },
-    "paradigm": {
-        "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
-        "nativeGateSet": valid_nativeGateSet,
-        "qubitCount": 2,
-    },
-    "standardized": {
-        "oneQubitProperties": {
-            "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
-        },
-        "twoQubitProperties": {
-            "0-1": invalid_twoQubitProperties,
-        },
-    },
-}
+#################################################
+# Rigetti device property fixtures
+#################################################
 
-
+# Rigetti device properties with undirected connectivity
 reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected = {
     "action": {
         "braket.ir.openqasm.program": {
@@ -299,67 +369,19 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_u
 
 @pytest.fixture
 def reduced_standardized_json_2():
+    """
+    Fixture providing a JSON string of Rigetti device properties with undirected connectivity.
+    """
     return json.dumps(
         reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected
     )
 
 
-reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed = {
-    "action": {
-        "braket.ir.openqasm.program": {
-            "actionType": "braket.ir.openqasm.program",
-            "supportedOperations": [],
-            "supportedResultTypes": valid_supportedResultTypes,
-            "version": ["1"],
-        }
-    },
-    "braketSchemaHeader": {
-        "name": "braket.device_schema.iqm.iqm_device_capabilities",
-        "version": "1",
-    },
-    "deviceParameters": {},
-    "paradigm": {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
-            "version": "1",
-        },
-        "connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2"]}, "fullyConnected": False},
-        "nativeGateSet": ["cz", "prx"],
-        "qubitCount": 3,
-    },
-    "service": {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.device_service_properties",
-            "version": "1",
-        },
-        "executionWindows": [],
-        "shotsRange": [1, 20000],
-    },
-    "standardized": {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
-            "version": "1",
-        },
-        "oneQubitProperties": {
-            "0": valid_oneQubitProperties,
-            "1": valid_oneQubitProperties,
-            "2": valid_oneQubitProperties,
-        },
-        "twoQubitProperties": {
-            "0-1": valid_twoQubitProperties,
-            "1-2": valid_twoQubitProperties,
-        },
-    },
-}
+#################################################
+# IonQ device property fixtures
+#################################################
 
-
-@pytest.fixture
-def reduced_standardized_json_3():
-    return json.dumps(
-        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_directed
-    )
-
-
+# IonQ device properties with fully connected topology
 reduced_ionq_device_capabilities_dict = {
     "action": {
         "braket.ir.openqasm.program": {
@@ -414,21 +436,38 @@ reduced_ionq_device_capabilities_dict = {
 
 @pytest.fixture
 def reduced_ionq_device_capabilities_json():
+    """
+    Fixture providing a JSON string of IonQ device properties.
+    """
     return json.dumps(reduced_ionq_device_capabilities_dict)
 
 
 @pytest.fixture
 def reduced_ionq_device_capabilities(reduced_ionq_device_capabilities_json):
+    """
+    Fixture providing an IonqDeviceCapabilities object.
+    """
     return IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json)
+
+
+#################################################
+# Circuit fixtures
+#################################################
 
 
 @pytest.fixture
 def valid_verbatim_circ_garnet():
+    """
+    Fixture providing a valid verbatim circuit for Garnet device.
+    """
     return Circuit().add_verbatim_box(Circuit().prx(1, 0, 0).cz(1, 2).prx(2, np.pi, 0).cz(0, 1))
 
 
 @pytest.fixture
 def valid_verbatim_circ_ankaa3():
+    """
+    Fixture providing a valid verbatim circuit for Ankaa-3 device.
+    """
     return Circuit().add_verbatim_box(
         Circuit().rx(0, np.pi).rz(1, np.pi).iswap(0, 1).iswap(1, 2).rx(2, np.pi)
     )
@@ -436,6 +475,9 @@ def valid_verbatim_circ_ankaa3():
 
 @pytest.fixture
 def valid_verbatim_circ_aria1():
+    """
+    Fixture providing a valid verbatim circuit for Aria-1 device.
+    """
     return Circuit().add_verbatim_box(
         Circuit()
         .gpi(0, 3.14)
