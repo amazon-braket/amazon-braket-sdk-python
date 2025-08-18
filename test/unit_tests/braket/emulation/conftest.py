@@ -89,14 +89,6 @@ valid_supportedResultTypes = [
     {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
 ]
 
-dict_errorMitigation = {
-    "provider": {
-        "errorMitigation": {
-            "braket.device_schema.error_mitigation.debias.Debias": {"minimumShots": 2500}
-        }
-    }
-}
-
 minimal_valid_device_properties_dict = {
     "action": {
         "braket.ir.openqasm.program": {
@@ -120,11 +112,6 @@ minimal_valid_device_properties_dict = {
             "0-1": valid_twoQubitProperties,
         },
     },
-}
-
-minimal_valid_device_properties_dict_with_errorMitigation = {
-    **minimal_valid_device_properties_dict,
-    **dict_errorMitigation,
 }
 
 reduced_standardized_gate_model_qpu_device_properties_dict = {
@@ -176,11 +163,6 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
 @pytest.fixture
 def minimal_valid_json():
     return json.dumps(minimal_valid_device_properties_dict)
-
-
-@pytest.fixture
-def minimal_valid_json_with_errorMitigation():
-    return json.dumps(minimal_valid_device_properties_dict_with_errorMitigation)
 
 
 @pytest.fixture
