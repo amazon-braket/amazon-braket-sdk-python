@@ -34,6 +34,11 @@ from braket.jobs.image_uris import Framework, retrieve_image
             Framework.PL_PYTORCH,
             "292282985366.dkr.ecr.us-west-2.amazonaws.com/amazon-braket-pytorch-jobs:latest",
         ),
+        (
+            "us-west-1",
+            Framework.CUDAQ,
+            "292282985366.dkr.ecr.us-west-1.amazonaws.com/amazon-braket-cudaq-jobs:latest",
+        ),
     ],
 )
 def test_retrieve_image_default_version(region, framework, expected_uri):
