@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
@@ -24,18 +23,6 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 )
 
 from braket.circuits.translations import BRAKET_GATES
-
-
-def _standardize_ionq_device_properties_json(device_properties_json: str) -> str:
-    device_properties_dict = json.loads(device_properties_json)
-    if (
-        device_properties_dict["braketSchemaHeader"]["name"]
-        != "braket.device_schema.ionq.ionq_device_capabilities"
-    ):
-        raise ValueError("The input json should be that for IonQ devices.")
-
-    device_properties = IonqDeviceCapabilities.parse_raw(device_properties_json)
-    return _standardize_ionq_device_properties(device_properties).json()
 
 
 def _standardize_ionq_device_properties(
