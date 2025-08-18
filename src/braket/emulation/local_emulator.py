@@ -87,7 +87,9 @@ class LocalEmulator(Emulator):
         emulator = cls(backend=backend, noise_model=noise_model, **kwargs)
 
         # Add the passes for validation
-        emulator.add_pass(NotImplementedValidator(require_verbatim_box=True)) # Need to be the first validator
+        emulator.add_pass(
+            NotImplementedValidator(require_verbatim_box=True)
+        )  # Need to be the first validator
         emulator.add_pass(QubitCountValidator(device_em_properties.qubitCount))
         emulator.add_pass(GateValidator(native_gates=device_em_properties.nativeGateSet))
         emulator.add_pass(_set_up_connectivity_validator(device_em_properties))
