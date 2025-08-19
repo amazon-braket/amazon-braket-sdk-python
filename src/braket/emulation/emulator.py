@@ -120,15 +120,7 @@ class Emulator(Device):
 
     def run_batch(
         self,
-        task_specifications: Union[
-            Union[Circuit, OpenQasmProgram],
-            list[
-                Union[
-                    Circuit,
-                    OpenQasmProgram,
-                ]
-            ],
-        ],
+        task_specifications: TaskSpecification | Sequence[TaskSpecification]
         shots: Optional[int] = 0,
         max_parallel: Optional[int] = None,
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,

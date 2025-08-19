@@ -39,7 +39,7 @@ class GateValidator(ValidationPass):
             gate are not supported by the Braket BDK.
         """
         supported_gates, native_gates = (supported_gates or []), (native_gates or [])
-        if not len(supported_gates) and not len(native_gates):
+        if not supported_gates and not native_gates:
             raise ValueError("Supported gate set or native gate set must be provided.")
 
         try:
