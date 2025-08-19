@@ -14,10 +14,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Any, Optional, Union
-
-from braket.ir.openqasm import Program as OpenQasmProgram
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
@@ -28,6 +26,7 @@ from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
 from braket.tasks import QuantumTask
+from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 # Create a module-level logger
@@ -82,10 +81,7 @@ class Emulator(Device):
 
     def run(
         self,
-        task_specification: Union[
-            Circuit,
-            OpenQasmProgram,
-        ],
+        task_specification: TaskSpecification,
         shots: Optional[int] = 0,
         inputs: Optional[dict[str, float]] = None,
         *args: Any,
@@ -120,7 +116,7 @@ class Emulator(Device):
 
     def run_batch(
         self,
-        task_specifications: TaskSpecification | Sequence[TaskSpecification]
+        task_specifications: TaskSpecification | Sequence[TaskSpecification],
         shots: Optional[int] = 0,
         max_parallel: Optional[int] = None,
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
