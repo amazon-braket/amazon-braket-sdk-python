@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Union
 
 from braket.device_schema.device_capabilities import DeviceCapabilities
 
@@ -50,7 +50,7 @@ class LocalEmulator(Emulator):
         cls,
         device_properties: Union[DeviceCapabilities, DeviceEmulatorProperties],
         backend: str = "braket_dm",
-        **kwargs: Any,
+        **kwargs,
     ) -> LocalEmulator:
         """Create a LocalEmulator instance from device properties.
 
@@ -58,7 +58,7 @@ class LocalEmulator(Emulator):
             device_properties (Union[DeviceCapabilities, DeviceEmulatorProperties]): The device
                 properties to use for emulation.
             backend (str): The backend to use for simulation. Default is "braket_dm".
-            **kwargs (Any): Additional keyword arguments to pass to the LocalEmulator constructor.
+            **kwargs: Additional keyword arguments to pass to the LocalEmulator constructor.
 
         Returns:
             LocalEmulator: A new LocalEmulator instance configured with the given properties.
@@ -83,39 +83,35 @@ class LocalEmulator(Emulator):
         # Create a noise model based on the provided device properties
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 
-        # Initialize with device properties and specified backend
-        emulator = cls(backend=backend, noise_model=noise_model, **kwargs)
-
-        # Add the passes for validation
-        emulator.add_pass(
-            NotImplementedValidator(require_verbatim_box=True)
-        )  # Need to be the first validator
-        emulator.add_pass(QubitCountValidator(device_em_properties.qubitCount))
-        emulator.add_pass(GateValidator(native_gates=device_em_properties.nativeGateSet))
-        emulator.add_pass(_set_up_connectivity_validator(device_em_properties))
-        emulator.add_pass(_set_up_gate_connectivity_validator(device_em_properties))
-        emulator.add_pass(
+        emulator_passes = [
+            NotImplementedValidator(require_verbatim_box=True),
+            QubitCountValidator(device_em_properties.qubitCount),
+            GateValidator(native_gates=device_em_properties.nativeGateSet),
+            _set_up_connectivity_validator(device_em_properties),
+            _set_up_gate_connectivity_validator(device_em_properties),
             ResultTypeValidator(
                 device_em_properties.supportedResultTypes,
                 device_em_properties.connectivityGraph,
-            )
-        )
+            ),
+        ]
 
-        return emulator
+        return cls(
+            backend=backend, noise_model=noise_model, emulator_passes=emulator_passes, **kwargs
+        )
 
     @classmethod
     def from_json(
         cls,
         device_properties_json: str,
         backend: str = "braket_dm",
-        **kwargs: Any,
+        **kwargs,
     ) -> LocalEmulator:
         """Create a LocalEmulator instance from a device properties JSON string.
 
         Args:
             device_properties_json (str): Device properties JSON string.
             backend (str): The backend to use for simulation. Defaults to "braket_dm".
-            **kwargs (Any): Additional keyword arguments to pass to the Emulator constructor.
+            **kwargs: Additional keyword arguments to pass to the Emulator constructor.
 
         Returns:
             LocalEmulator: A new LocalEmulator instance configured with the given properties.

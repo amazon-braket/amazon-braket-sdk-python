@@ -30,7 +30,7 @@ def empty_emulator(setup_local_simulator_devices):
 @pytest.fixture
 def basic_emulator(empty_emulator):
     qubit_count_validator = QubitCountValidator(4)
-    return empty_emulator.add_pass(emulator_pass=[qubit_count_validator])
+    return Emulator(emulator_passes=[qubit_count_validator])
 
 
 def test_empty_emulator_validation(empty_emulator):
@@ -58,34 +58,6 @@ def test_basic_invalidate(basic_emulator):
     )
     with pytest.raises(Exception, match=match_string):
         basic_emulator.transform(circuit)
-
-
-def test_add_pass_single(empty_emulator):
-    emulator = empty_emulator
-    qubit_count_validator = QubitCountValidator(4)
-    emulator.add_pass(qubit_count_validator)
-
-    assert emulator._pass_manager._emulator_passes == [qubit_count_validator]
-
-
-def test_bad_add_pass(empty_emulator):
-    emulator = empty_emulator
-    with pytest.raises(TypeError):
-        emulator.add_pass(None)
-
-
-def test_add_pass_multiple(setup_local_simulator_devices):
-    native_gate_validator = GateValidator(native_gates=["CZ", "PRx"])
-    emulator = Emulator(emulator_passes=[native_gate_validator])
-    qubit_count_validator = QubitCountValidator(4)
-    gate_validator = GateValidator(supported_gates=["H", "CNot"])
-
-    emulator.add_pass([qubit_count_validator, gate_validator])
-    assert emulator._pass_manager._emulator_passes == [
-        native_gate_validator,
-        qubit_count_validator,
-        gate_validator,
-    ]
 
 
 def test_use_correct_backend_if_noise_model(setup_local_simulator_devices):

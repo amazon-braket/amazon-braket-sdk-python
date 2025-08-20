@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Optional, Union
+from typing import Optional
 
 from braket.circuits import Circuit
 from braket.emulation.passes import ValidationPass
@@ -60,33 +60,6 @@ class PassManager:
                 emulator_pass(task_specification)
         except Exception as e:
             self._raise_exception(e)
-
-    def add_pass(
-        self, emulator_pass: Union[Iterable[ValidationPass], ValidationPass]
-    ) -> PassManager:
-        """
-        Append a new ValidationPass or a list of ValidationPass objects.
-
-        Args:
-            emulator_pass (Union[Iterable[ValidationPass], ValidationPass]): Either a
-                single Pass object or a list of Pass objects that
-                will be used in validation and program compilation passes by this
-                emulator.
-
-        Returns:
-            PassManager: Returns an updated self.
-
-        Raises:
-            TypeError: If the input is not an iterable or an Pass.
-
-        """
-        if isinstance(emulator_pass, Iterable):
-            self._emulator_passes.extend(emulator_pass)
-        elif isinstance(emulator_pass, ValidationPass):
-            self._emulator_passes.append(emulator_pass)
-        else:
-            raise TypeError("emulator_pass must be an Pass or an iterable of Pass")
-        return self
 
     def _raise_exception(self, exception: Exception) -> None:
         """

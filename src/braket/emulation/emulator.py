@@ -218,22 +218,3 @@ class Emulator(Device):
                 emulator's validation passes.
         """
         self._pass_manager.validate(task_specification)
-
-    def add_pass(self, emulator_pass: Union[Iterable[ValidationPass], ValidationPass]) -> Emulator:
-        """
-        Append a new ValidationPass or a list of ValidationPass objects.
-
-        Args:
-            emulator_pass (Union[Iterable[ValidationPass], ValidationPass]): Either a
-                single Pass object or a list of Pass objects that
-                will be used in validation and program compilation passes by this
-                emulator.
-
-        Returns:
-            Emulator: Returns an updated self.
-
-        Raises:
-            TypeError: If the input is not an iterable or an Pass.
-        """
-        self._pass_manager.add_pass(emulator_pass)
-        return self
