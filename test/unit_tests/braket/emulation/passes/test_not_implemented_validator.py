@@ -14,14 +14,13 @@
 import pytest
 
 from braket.circuits import Circuit
-from braket.emulation.passes.circuit_passes import NotImplementedValidator
-from braket.emulation.passes.circuit_passes.not_implemented_validator import UNSUPPORTED_GATES
+from braket.emulation.passes.circuit_passes import _NotImplementedValidator
 from braket.program_sets import ProgramSet
 
 
 @pytest.fixture
 def default_not_implemented_validator():
-    return NotImplementedValidator()
+    return _NotImplementedValidator()
 
 
 def test_validate_circuit_with_verbatim_box(default_not_implemented_validator):
@@ -39,48 +38,6 @@ def test_validate_circuit_without_verbatim_box(default_not_implemented_validator
         match="The input circuit must have a verbatim box. Add a verbatim box to the circuit, and try again.",
     ):
         default_not_implemented_validator.validate(circuit)
-
-
-def test_validate_circuit_with_custom_unsupported_gates():
-    """Test that a circuit with a custom unsupported gate fails validation."""
-    # Create a circuit with a verbatim box that includes an H gate
-    circuit = Circuit().add_verbatim_box(Circuit().h(0))
-
-    # Create a validator with custom unsupported gates including "h"
-    validator = NotImplementedValidator(unsupported_gates=["h"])
-
-    # Create a mock instruction with an H gate
-    class MockGate:
-        @property
-        def name(self):
-            return "H"  # Note: uppercase H to match actual gate name
-
-    class MockInstruction:
-        def __init__(self, operator):
-            self.operator = operator
-
-    # Add our mock H gate to the instructions
-    circuit.instructions.append(MockInstruction(MockGate()))
-
-    with pytest.raises(
-        ValueError,
-        match="The gate H is not supported by this emulator. Check the device documentation for a list of supported gates.",
-    ):
-        validator.validate(circuit)
-
-
-def test_validate_circuit_without_requiring_verbatim_box():
-    """Test that a circuit without a verbatim box passes validation when not required."""
-    circuit = Circuit().h(0).cnot(0, 1)
-    validator = NotImplementedValidator(require_verbatim_box=False)
-    # Should not raise an exception
-    validator.validate(circuit)
-
-
-def test_default_unsupported_gates(default_not_implemented_validator):
-    """Test that the default unsupported gates are used when not specified."""
-    assert default_not_implemented_validator._unsupported_gates == UNSUPPORTED_GATES
-
 
 def test_program_set(default_not_implemented_validator):
     program_set = ProgramSet([Circuit().h(0).cnot(0, 1), Circuit().rx(0, 0)])

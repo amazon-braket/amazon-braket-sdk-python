@@ -19,7 +19,7 @@ from braket.emulation.passes.circuit_passes.gate_connectivity_validator import (
 )
 from braket.emulation.passes.circuit_passes.gate_validator import GateValidator  # noqa: F401
 from braket.emulation.passes.circuit_passes.not_implemented_validator import (  # noqa: F401
-    NotImplementedValidator,
+    _NotImplementedValidator,
 )
 from braket.emulation.passes.circuit_passes.qubit_count_validator import (  # noqa: F401
     QubitCountValidator,

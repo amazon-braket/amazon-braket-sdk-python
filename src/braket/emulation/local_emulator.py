@@ -33,7 +33,7 @@ from braket.emulation.passes._device_emulator_validators import (
 )
 from braket.emulation.passes.circuit_passes import (
     GateValidator,
-    NotImplementedValidator,
+    _NotImplementedValidator,
     QubitCountValidator,
     ResultTypeValidator,
 )
@@ -84,7 +84,7 @@ class LocalEmulator(Emulator):
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 
         passes = [
-            NotImplementedValidator(require_verbatim_box=True),
+            _NotImplementedValidator(),
             QubitCountValidator(device_em_properties.qubitCount),
             GateValidator(native_gates=device_em_properties.nativeGateSet),
             _set_up_connectivity_validator(device_em_properties),

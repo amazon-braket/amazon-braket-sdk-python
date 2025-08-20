@@ -18,43 +18,26 @@ from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
 from braket.program_sets import ProgramSet
+from braket.tasks.quantum_task import TaskSpecification
 
-UNSUPPORTED_GATES = ["cc_prx", "measure_ff"]
-
-
-class NotImplementedValidator(ValidationPass):
+class _NotImplementedValidator(ValidationPass):
     """
     A validator that checks for features that are not implemented in the emulator.
     Currently checks for:
     1. Verbatim boxes - raises an error if the circuit does not have a verbatim box
-    2. Unsupported gates - raises an error if the circuit contains any unsupported gates
+    2. ProgramSet - raises an error if the program is a ProgramSet
     """
 
-    def __init__(
-        self,
-        unsupported_gates: Optional[list[str]] = None,
-        require_verbatim_box: bool = True,
-    ):
-        """
-        Args:
-            unsupported_gates (Optional[list[str]]): A list of gate names that are not supported.
-                Default is UNSUPPORTED_GATES.
-            require_verbatim_box (bool): Whether to require a verbatim box in the circuit.
-                Default is True.
-        """
-        self._unsupported_gates = unsupported_gates or UNSUPPORTED_GATES
-        self._require_verbatim_box = require_verbatim_box
-
-    def validate(self, program: Circuit) -> None:
+    def validate(self, program: TaskSpecification) -> None:
         """
         Validates that the circuit does not contain any unsupported features.
 
         Args:
-            program (Circuit): The Braket circuit to validate.
+            program (TaskSpecification): The program to validate.
 
         Raises:
-            ValueError: If the circuit does not have a verbatim box when required.
-            ValueError: If the circuit contains any unsupported gates.
+            ValueError: If the program does not have a verbatim box when required.
+            TypeError: If the program is a ProgramSet
         """
 
         # Validate out ProgramSet
@@ -62,24 +45,13 @@ class NotImplementedValidator(ValidationPass):
             raise TypeError("ProgramSet is not supported yet.")
 
         # Check if the circuit has a verbatim box when required
-        if self._require_verbatim_box:
-            has_verbatim_box = any(
-                isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox))
-                for instruction in program.instructions
+        has_verbatim_box = any(
+            isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox))
+            for instruction in program.instructions
+        )
+
+        if not has_verbatim_box:
+            raise ValueError(
+                "The input circuit must have a verbatim box. "
+                "Add a verbatim box to the circuit, and try again."
             )
-
-            if not has_verbatim_box:
-                raise ValueError(
-                    "The input circuit must have a verbatim box. "
-                    "Add a verbatim box to the circuit, and try again."
-                )
-
-        # Check if the circuit has any unsupported gates
-        for instruction in program.instructions:
-            if isinstance(instruction.operator, Gate):
-                gate = instruction.operator
-                if gate.name.lower() in [g.lower() for g in self._unsupported_gates]:
-                    raise ValueError(
-                        f"The gate {gate.name} is not supported by this emulator. "
-                        f"Check the device documentation for a list of supported gates."
-                    )
