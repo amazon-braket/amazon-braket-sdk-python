@@ -13,7 +13,6 @@
 
 import time
 from logging import Logger, getLogger
-from typing import Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
@@ -122,7 +121,7 @@ class CwlMetricsFetcher:
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> dict[str, list[Union[str, float, int]]]:
+    ) -> dict[str, list[str | float | int]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:

@@ -20,7 +20,7 @@ from collections.abc import Generator
 # Support for reading logs
 #
 ##############################################################################
-from typing import ClassVar, NamedTuple, Optional
+from typing import ClassVar, NamedTuple
 
 from botocore.exceptions import ClientError
 
@@ -165,7 +165,7 @@ def flush_log_streams(
     has_streams: bool,
     color_wrap: ColorWrap,
     state: list[str],
-    queue_position: Optional[str] = None,
+    queue_position: str | None = None,
 ) -> bool:
     """Flushes log streams to stdout.
 

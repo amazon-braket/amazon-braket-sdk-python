@@ -164,4 +164,4 @@ def _strict_zip(*args) -> zip:
     length = len(next(it))
     if not all(len(lst) == length for lst in it):
         raise ValueError("Lists must be of equal length")
-    return zip(*args)
+    return zip(*args, strict=False)

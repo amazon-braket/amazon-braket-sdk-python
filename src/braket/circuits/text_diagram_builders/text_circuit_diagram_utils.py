@@ -131,7 +131,7 @@ def _group_items(
         # Can only print QuantumOperator and CompilerDirective operators for instructions at
         # the moment
         if isinstance(item, Instruction) and not isinstance(
-            item.operator, (CompilerDirective, QuantumOperator)
+            item.operator, CompilerDirective | QuantumOperator
         ):
             continue
 

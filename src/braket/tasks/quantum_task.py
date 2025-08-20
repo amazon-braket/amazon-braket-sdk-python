@@ -13,7 +13,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
@@ -26,20 +26,20 @@ from braket.pulse import PulseSequence
 from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, ProgramSetQuantumTaskResult
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
 
-TaskSpecification = Union[
-    Circuit,
-    SerializableProgram,
-    ProgramSet,
-    OpenQASMProgram,
-    OpenQASMProgramSet,
-    AnalogHamiltonianSimulation,
-    PulseSequence,
-]
-TaskResult = Union[
-    GateModelQuantumTaskResult,
-    ProgramSetQuantumTaskResult,
-    AnalogHamiltonianSimulationQuantumTaskResult,
-]
+TaskSpecification = (
+    Circuit
+    | SerializableProgram
+    | ProgramSet
+    | OpenQASMProgram
+    | OpenQASMProgramSet
+    | AnalogHamiltonianSimulation
+    | PulseSequence
+)
+TaskResult = (
+    GateModelQuantumTaskResult
+    | ProgramSetQuantumTaskResult
+    | AnalogHamiltonianSimulationQuantumTaskResult
+)
 
 
 class QuantumTask(ABC):
