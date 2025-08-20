@@ -44,11 +44,11 @@ class Emulator(Device):
         self,
         backend: str = "default",
         noise_model: Optional[NoiseModel] = None,
-        emulator_passes: Optional[Iterable[ValidationPass]] = None,
+        passes: Optional[Iterable[ValidationPass]] = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
-        self._pass_manager = PassManager(emulator_passes)
+        self._pass_manager = PassManager(passes)
         self._noise_model = noise_model
 
         backend_name = self._get_local_simulator_backend(backend, noise_model)

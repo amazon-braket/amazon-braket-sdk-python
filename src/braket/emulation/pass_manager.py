@@ -25,8 +25,8 @@ class EmulatorValidationError(Exception):
 
 
 class PassManager:
-    def __init__(self, emulator_passes: Optional[Iterable[ValidationPass]] = None):
-        self._emulator_passes = emulator_passes if emulator_passes is not None else []
+    def __init__(self, passes: Optional[Iterable[ValidationPass]] = None):
+        self._passes = passes if passes is not None else []
 
     def transform(self, task_specification: Circuit) -> Circuit:
         """
@@ -41,7 +41,7 @@ class PassManager:
             Circuit: A "compiled" program of the same type as the input.
 
         """
-        for emulator_pass in self._emulator_passes:
+        for emulator_pass in self._passes:
             task_specification = emulator_pass(task_specification)
         return task_specification
 
@@ -56,7 +56,7 @@ class PassManager:
         """
 
         try:
-            for emulator_pass in self._emulator_passes:
+            for emulator_pass in self._passes:
                 emulator_pass(task_specification)
         except Exception as e:
             self._raise_exception(e)

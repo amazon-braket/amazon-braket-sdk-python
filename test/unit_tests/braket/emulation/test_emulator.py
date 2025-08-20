@@ -30,7 +30,7 @@ def empty_emulator(setup_local_simulator_devices):
 @pytest.fixture
 def basic_emulator(empty_emulator):
     qubit_count_validator = QubitCountValidator(4)
-    return Emulator(emulator_passes=[qubit_count_validator])
+    return Emulator(passes=[qubit_count_validator])
 
 
 def test_empty_emulator_validation(empty_emulator):
@@ -80,7 +80,7 @@ def test_update_noise_model(empty_emulator):
 
 def test_validation_only_pass(setup_local_simulator_devices):
     qubit_count_validator = QubitCountValidator(4)
-    emulator = Emulator(emulator_passes=[qubit_count_validator])
+    emulator = Emulator(passes=[qubit_count_validator])
 
     circuit = Circuit().h(range(5))
     match_string = re.escape(
@@ -130,7 +130,7 @@ def test_noisy_run(setup_local_simulator_devices):
     gate_validator = GateValidator(supported_gates=["H"])
     emulator = Emulator(
         backend="braket_dm",
-        emulator_passes=[qubit_count_validator, gate_validator],
+        passes=[qubit_count_validator, gate_validator],
         noise_model=noise_model,
     )
 

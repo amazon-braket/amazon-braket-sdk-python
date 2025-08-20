@@ -83,7 +83,7 @@ class LocalEmulator(Emulator):
         # Create a noise model based on the provided device properties
         noise_model = cls._setup_basic_noise_model_strategy(device_em_properties)
 
-        emulator_passes = [
+        passes = [
             NotImplementedValidator(require_verbatim_box=True),
             QubitCountValidator(device_em_properties.qubitCount),
             GateValidator(native_gates=device_em_properties.nativeGateSet),
@@ -96,7 +96,7 @@ class LocalEmulator(Emulator):
         ]
 
         return cls(
-            backend=backend, noise_model=noise_model, emulator_passes=emulator_passes, **kwargs
+            backend=backend, noise_model=noise_model, passes=passes, **kwargs
         )
 
     @classmethod
