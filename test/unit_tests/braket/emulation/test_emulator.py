@@ -53,7 +53,7 @@ def test_basic_invalidate(basic_emulator):
         f"Circuit must use at most 4 qubits, but uses {circuit.qubit_count} qubits."
     )
     with pytest.raises(Exception, match=match_string):
-        basic_emulator.transform(circuit)
+        basic_emulator.validate(circuit)
 
 
 def test_apply_noise_model():
