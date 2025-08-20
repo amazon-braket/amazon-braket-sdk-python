@@ -15,11 +15,12 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
 
+from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+
 from braket.ahs import AnalogHamiltonianSimulation
 from braket.circuits import Circuit
 from braket.circuits.serialization import SerializableProgram
-from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 from braket.program_sets import ProgramSet
 from braket.pulse import PulseSequence
 from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, ProgramSetQuantumTaskResult

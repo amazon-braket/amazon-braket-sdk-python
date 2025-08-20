@@ -17,11 +17,7 @@ import operator
 from functools import reduce, singledispatch
 from typing import NoReturn
 
-import braket.circuits.gates as braket_gates
-import braket.circuits.result_types as ResultTypes  # noqa: N812
 import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Observable, noises, observables
-from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -32,6 +28,11 @@ from braket.ir.jaqcd import (
     Variance,
 )
 from braket.ir.jaqcd.program_v1 import Results
+
+import braket.circuits.gates as braket_gates
+import braket.circuits.result_types as ResultTypes  # noqa: N812
+from braket.circuits import Observable, noises, observables
+from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
 BRAKET_GATES = {
     "gphase": braket_gates.GPhase,

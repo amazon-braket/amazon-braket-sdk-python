@@ -15,10 +15,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+
 from braket.circuits import Circuit, Gate, Observable
 from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
-from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 from braket.program_sets.circuit_binding import CircuitBinding
 from braket.program_sets.parameter_sets import _strict_zip
 from braket.pulse import PulseSequence

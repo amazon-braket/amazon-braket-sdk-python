@@ -15,11 +15,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from braket.ir.openqasm import Program
+
 from braket.circuits import Circuit, Gate, Observable
 from braket.circuits.observable import euler_angle_parameter_names
 from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
-from braket.ir.openqasm import Program
 from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike
 from braket.pulse import PulseSequence
 from braket.registers import QubitSet

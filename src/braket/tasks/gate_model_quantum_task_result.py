@@ -22,9 +22,6 @@ from itertools import starmap
 from typing import Any, TypeVar
 
 import numpy as np
-
-from braket.circuits import Observable, ResultType
-from braket.circuits.observables import observable_from_ir
 from braket.ir.jaqcd import Expectation, Probability, Sample, Variance
 from braket.task_result import (
     AdditionalMetadata,
@@ -32,6 +29,9 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+
+from braket.circuits import Observable, ResultType
+from braket.circuits.observables import observable_from_ir
 from braket.tasks.measurement_utils import (
     expectation_from_measurements,
     measurement_counts_from_measurements,

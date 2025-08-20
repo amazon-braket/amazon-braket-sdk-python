@@ -17,10 +17,10 @@ from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any
 
+import braket.ir.jaqcd as ir
 import numpy as np
 from oqpy import Program
 
-import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
     AngledGate,

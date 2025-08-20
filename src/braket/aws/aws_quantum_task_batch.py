@@ -18,14 +18,15 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
 from typing import Any
 
+from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
+
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.circuits.gate import Gate
-from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task import TaskResult, TaskSpecification
