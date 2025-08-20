@@ -39,6 +39,7 @@ def test_validate_circuit_without_verbatim_box(default_not_implemented_validator
     ):
         default_not_implemented_validator.validate(circuit)
 
+
 def test_program_set(default_not_implemented_validator):
     program_set = ProgramSet([Circuit().h(0).cnot(0, 1), Circuit().rx(0, 0)])
     with pytest.raises(TypeError):

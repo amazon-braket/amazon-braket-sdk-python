@@ -11,14 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Optional
-
-from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
 from braket.program_sets import ProgramSet
 from braket.tasks.quantum_task import TaskSpecification
+
 
 class _NotImplementedValidator(ValidationPass):
     """

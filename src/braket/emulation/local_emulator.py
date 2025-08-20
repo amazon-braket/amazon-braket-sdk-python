@@ -33,9 +33,9 @@ from braket.emulation.passes._device_emulator_validators import (
 )
 from braket.emulation.passes.circuit_passes import (
     GateValidator,
-    _NotImplementedValidator,
     QubitCountValidator,
     ResultTypeValidator,
+    _NotImplementedValidator,
 )
 
 
@@ -95,9 +95,7 @@ class LocalEmulator(Emulator):
             ),
         ]
 
-        return cls(
-            backend=backend, noise_model=noise_model, passes=passes, **kwargs
-        )
+        return cls(backend=backend, noise_model=noise_model, passes=passes, **kwargs)
 
     @classmethod
     def from_json(
