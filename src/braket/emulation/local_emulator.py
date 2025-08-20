@@ -25,6 +25,7 @@ from braket.circuits.noises import (
     TwoQubitDepolarizing,
 )
 from braket.circuits.translations import BRAKET_GATES
+from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.device_emulator_properties import DeviceEmulatorProperties
 from braket.emulation.emulator import Emulator
 from braket.emulation.passes._device_emulator_validators import (
@@ -95,7 +96,8 @@ class LocalEmulator(Emulator):
             ),
         ]
 
-        return cls(backend=backend, noise_model=noise_model, passes=passes, **kwargs)
+        local_backend = LocalSimulator(backend=backend, noise_model=noise_model)
+        return cls(backend=local_backend, noise_model=noise_model, passes=passes, **kwargs)
 
     @classmethod
     def from_json(

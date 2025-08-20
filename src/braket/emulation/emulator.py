@@ -13,36 +13,28 @@
 
 from __future__ import annotations
 
-import logging
-from collections.abc import Iterable, Sequence
-from typing import Any, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Optional
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
-from braket.devices.local_simulator import LocalSimulator
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
-# Create a module-level logger
-logger = logging.getLogger(__name__)
-
 
 class Emulator(Device):
-    _DEFAULT_SIMULATOR_BACKEND = "default"
-    _DEFAULT_NOISY_BACKEND = "braket_dm"
-
     """An emulator is a simulation device that more closely resembles
     the capabilities and constraints of a real device or of a specific device model."""
 
     def __init__(
         self,
-        backend: str = "default",
+        backend: Device,
         noise_model: Optional[NoiseModel] = None,
         passes: Optional[Iterable[ValidationPass]] = None,
         **kwargs,
@@ -50,34 +42,7 @@ class Emulator(Device):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
         self._pass_manager = PassManager(passes)
         self._noise_model = noise_model
-
-        backend_name = self._get_local_simulator_backend(backend, noise_model)
-        self._backend = LocalSimulator(backend=backend_name, noise_model=noise_model)
-
-    def _get_local_simulator_backend(
-        self, backend: str, noise_model: Optional[NoiseModel] = None
-    ) -> str:
-        """
-        Returns the name of the backend to use with the local simulator.
-
-        Args:
-            backend (str): The name of the backend requested by the customer, or default if none
-                were provided.
-            noise_model (Optional[NoiseModel]): A noise model to use with the emulator, if at all.
-                If a noise model is provided, the density matrix simulator is used.
-
-        Returns:
-            str: The name of the backend to pass into the LocalSimulator constructor.
-        """
-        if backend == "default":
-            if noise_model:
-                logger.info(
-                    "Setting LocalSimulator backend to use 'braket_dm' \
-                        because a NoiseModel was provided."
-                )
-                return Emulator._DEFAULT_NOISY_BACKEND
-            return Emulator._DEFAULT_SIMULATOR_BACKEND
-        return backend
+        self._backend = backend
 
     def run(
         self,
@@ -116,12 +81,12 @@ class Emulator(Device):
 
     def run_batch(
         self,
-        task_specifications: TaskSpecification | Sequence[TaskSpecification],
-        shots: Optional[int] = 0,
-        max_parallel: Optional[int] = None,
-        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
-        *args,
-        **kwargs,
+        task_specifications: TaskSpecification | list[TaskSpecification],
+        shots: Optional[int],
+        max_parallel: Optional[int],
+        inputs: Optional[dict[str, float] | list[dict[str, float]]],
+        *args: Any,
+        **kwargs: Any,
     ) -> QuantumTaskBatch:
         raise NotImplementedError("Emulator.run_batch() is not implemented yet.")
 
@@ -137,18 +102,6 @@ class Emulator(Device):
             NoiseModel: This emulator's noise model.
         """
         return self._noise_model
-
-    @noise_model.setter
-    def noise_model(self, noise_model: NoiseModel) -> None:
-        """
-        Setter method for the Emulator noise_model property. Re-instantiates
-        the backend with the new NoiseModel object.
-
-        Args:
-            noise_model (NoiseModel): The new noise model.
-        """
-        self._noise_model = noise_model
-        self._backend = LocalSimulator(backend="braket_dm", noise_model=noise_model)
 
     def transform(self, task_specification: Circuit, apply_noise_model: bool = True) -> Circuit:
         """

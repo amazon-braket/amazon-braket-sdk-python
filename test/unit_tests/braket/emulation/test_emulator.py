@@ -10,27 +10,23 @@ from braket.default_simulator import DensityMatrixSimulator, StateVectorSimulato
 from braket.devices import local_simulator
 from braket.emulation import Emulator
 from braket.emulation.passes.circuit_passes import GateValidator, QubitCountValidator
+from braket.devices.local_simulator import LocalSimulator
 
 
 @pytest.fixture
-def setup_local_simulator_devices():
-    mock_circuit_entry = Mock()
-    mock_circuit_dm_entry = Mock()
-    mock_circuit_entry.load.return_value = StateVectorSimulator
-    mock_circuit_dm_entry.load.return_value = DensityMatrixSimulator
-    _simulator_devices = {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
-    local_simulator._simulator_devices.update(_simulator_devices)
+def local_dm_simulator():
+    return LocalSimulator("braket_dm", noise_model=NoiseModel())
 
 
 @pytest.fixture
-def empty_emulator(setup_local_simulator_devices):
-    return Emulator()
-
-
-@pytest.fixture
-def basic_emulator(empty_emulator):
+def basic_emulator(local_dm_simulator):
     qubit_count_validator = QubitCountValidator(4)
-    return Emulator(passes=[qubit_count_validator])
+    return Emulator(local_dm_simulator, passes=[qubit_count_validator])
+
+
+@pytest.fixture
+def empty_emulator(local_dm_simulator):
+    return Emulator(local_dm_simulator)
 
 
 def test_empty_emulator_validation(empty_emulator):
@@ -60,40 +56,11 @@ def test_basic_invalidate(basic_emulator):
         basic_emulator.transform(circuit)
 
 
-def test_use_correct_backend_if_noise_model(setup_local_simulator_devices):
-    noise_model = NoiseModel()
-    emulator = Emulator(noise_model=noise_model)
-    assert emulator._backend.name == "DensityMatrixSimulator"
-
-
-def test_update_noise_model(empty_emulator):
-    emulator = empty_emulator
-    assert emulator._backend.name == "StateVectorSimulator"
-    noise_model = NoiseModel()
-    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H()))
-
-    emulator.noise_model = noise_model
-    assert emulator._backend.name == "DensityMatrixSimulator"
-    assert emulator._backend._noise_model == noise_model
-    assert emulator.noise_model == noise_model
-
-
-def test_validation_only_pass(setup_local_simulator_devices):
-    qubit_count_validator = QubitCountValidator(4)
-    emulator = Emulator(passes=[qubit_count_validator])
-
-    circuit = Circuit().h(range(5))
-    match_string = re.escape(
-        f"Circuit must use at most 4 qubits, but uses {circuit.qubit_count} qubits."
-    )
-    with pytest.raises(Exception, match=match_string):
-        emulator.validate(circuit)
-
-
-def test_apply_noise_model(setup_local_simulator_devices):
+def test_apply_noise_model():
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-    emulator = Emulator(noise_model=noise_model)
+    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
+    emulator = Emulator(local_backend, noise_model=noise_model)
 
     circuit = Circuit().h(0)
     circuit = emulator.transform(circuit)
@@ -108,28 +75,25 @@ def test_apply_noise_model(setup_local_simulator_devices):
     assert circuit == target_circ
 
 
-def test_remove_verbatim_box(setup_local_simulator_devices):
-    noise_model = NoiseModel()
-    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-    emulator = Emulator(noise_model=noise_model)
-
+def test_remove_verbatim_box(basic_emulator):
     circuit = Circuit().h(0)
     circuit = Circuit().add_verbatim_box(circuit).probability()
-    circuit = emulator._remove_verbatim_box(circuit)
+    circuit = basic_emulator._remove_verbatim_box(circuit)
 
     target_circuit = Circuit().h(0).probability()
 
     assert circuit == target_circuit
 
 
-def test_noisy_run(setup_local_simulator_devices):
+def test_noisy_run():
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
 
     qubit_count_validator = QubitCountValidator(4)
     gate_validator = GateValidator(supported_gates=["H"])
+    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
     emulator = Emulator(
-        backend="braket_dm",
+        backend=local_backend,
         passes=[qubit_count_validator, gate_validator],
         noise_model=noise_model,
     )
