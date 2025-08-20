@@ -458,17 +458,20 @@ class Circuit:  # noqa: PLR0904
         Raises:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
-        if self._measure_targets:
-            measure_on_target_mapping = target_mapping and any(
-                targ in self._measure_targets for targ in target_mapping.values()
-            )
-            if (
-                # check if there is a measure instruction on the targeted qubit(s)
-                measure_on_target_mapping
-                or any(tar in self._measure_targets for tar in QubitSet(target))
-                or any(tar in self._measure_targets for tar in QubitSet(instruction.target))
-            ):
-                raise ValueError("cannot apply instruction to measured qubits.")
+        if not self._measure_targets:
+            return
+
+        if target:
+            mapped_target_qubits = QubitSet(target)
+        elif target_mapping:
+            mapped_target_qubits = QubitSet([
+                target_mapping[qubit] for qubit in QubitSet(instruction.target)
+            ])
+        else:  # both `target` and `target_mapping` is None
+            mapped_target_qubits = QubitSet(instruction.target)
+
+        if any(qubit in self._measure_targets for qubit in mapped_target_qubits):
+            raise ValueError("cannot apply instruction to measured qubits.")
 
     def add_instruction(
         self,
