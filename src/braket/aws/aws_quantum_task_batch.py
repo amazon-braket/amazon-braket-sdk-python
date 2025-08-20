@@ -16,9 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import TYPE_CHECKING, Any
-from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
+from typing import Any
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -26,6 +24,8 @@ from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.circuits.gate import Gate
+from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task import TaskResult, TaskSpecification
@@ -155,11 +155,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         gate_definitions = gate_definitions or {}
 
         single_task_type = (
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            AnalogHamiltonianSimulation,
+            Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         )
         single_input_type = dict
         single_gate_definitions_type = dict
@@ -182,7 +178,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 batch_length = arg_length
 
         for i in range(len(arg_lengths)):
-            if isinstance(args[i], (dict, single_task_type)):
+            if isinstance(args[i], dict | single_task_type):
                 args[i] = repeat(args[i], batch_length)
 
         tasks_inputs_definitions = list(zip(*args, strict=False))

@@ -23,6 +23,19 @@ from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
+
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
+from braket.annealing.problem import Problem
+from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
+from braket.circuits.circuit import Circuit, Gate, QubitSet
+from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+    SerializableProgram,
+)
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
@@ -39,9 +52,12 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+from braket.program_sets import ProgramSet
+from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
     AnalogHamiltonianSimulationTaskResult,
@@ -50,22 +66,6 @@ from braket.task_result import (
     PhotonicModelTaskResult,
     ProgramSetTaskResult,
 )
-
-from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
-from braket.annealing.problem import Problem
-from braket.aws.aws_session import AwsSession
-from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
-from braket.circuits.circuit import Circuit, Gate, QubitSet
-from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.circuits.serialization import (
-    IRType,
-    OpenQASMSerializationProperties,
-    QubitReferenceType,
-    SerializableProgram,
-)
-from braket.error_mitigation import ErrorMitigation
-from braket.program_sets import ProgramSet
-from braket.pulse.pulse_sequence import PulseSequence
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
@@ -228,7 +228,7 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
         quiet: bool = False,
-        task_specification: Optional[TaskSpecification] = None,
+        task_specification: TaskSpecification | None = None,
         **kwargs,
     ):
         """Initializes an `AwsQuantumTask`.
@@ -653,10 +653,10 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     _device_arn: str,
-    _device_parameters: Union[dict, BraketSchemaBase],
+    _device_parameters: dict | BraketSchemaBase,
     _disable_qubit_rewiring: bool,
     _inputs: dict[str, float],
-    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None,
     *args,
     **kwargs,
 ):
@@ -675,10 +675,10 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: dict[str, Any],
     _device_arn: str,
-    _device_parameters: Union[dict, BraketSchemaBase],
+    _device_parameters: dict | BraketSchemaBase,
     _disable_qubit_rewiring: bool,
     _inputs: dict[str, float],
-    _gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    _gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None,
     *args,
     **kwargs,
 ):

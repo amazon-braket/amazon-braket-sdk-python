@@ -85,7 +85,7 @@ class _FreeParameterTransformer(QASMTransformer):
         """
         expression = self.visit(node.expression)
         if (
-            isinstance(expression, (ast.FloatLiteral, ast.DurationLiteral))
+            isinstance(expression, ast.FloatLiteral | ast.DurationLiteral)
             and node.op == ast.UnaryOperator["-"]
         ):
             return type(expression)(-expression.value)

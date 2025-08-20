@@ -24,13 +24,6 @@ from typing import Any, ClassVar
 
 import pydantic
 from botocore.errorfactory import ClientError
-from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
-from braket.device_schema.dwave import DwaveProviderProperties
-
-# TODO: Remove device_action module once this is added to init in the schemas repo
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
-from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
-from braket.schema_common import BraketSchemaBase
 from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -40,12 +33,19 @@ from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.noise_model import NoiseModel
+from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
+from braket.device_schema.dwave import DwaveProviderProperties
+
+# TODO: Remove device_action module once this is added to init in the schemas repo
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.devices.device import Device
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
 from braket.program_sets import ProgramSet
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
+from braket.schema_common import BraketSchemaBase
 from braket.tasks.quantum_task import TaskSpecification
 
 
@@ -122,8 +122,8 @@ class AwsDevice(Device):
     def run(
         self,
         task_specification: TaskSpecification,
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float | None = None,
         inputs: dict[str, float] | None = None,
@@ -223,9 +223,9 @@ class AwsDevice(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
-        max_parallel: Optional[int] = None,
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
+        max_parallel: int | None = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -530,8 +530,8 @@ class AwsDevice(Device):
             return from_edgelist(edges, create_using=DiGraph())
         return None
 
-    def _default_shots(self, task_specification: Optional[TaskSpecification] = None) -> int:
-        if isinstance(task_specification, (ProgramSet, OpenQASMProgramSet)):
+    def _default_shots(self, task_specification: TaskSpecification | None = None) -> int:
+        if isinstance(task_specification, ProgramSet | OpenQASMProgramSet):
             return AwsDevice.DEFAULT_SHOTS_PROGRAM_SET
         return (
             AwsDevice.DEFAULT_SHOTS_QPU

@@ -17,12 +17,17 @@ import warnings
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional
 
 import boto3
 import numpy as np
 from botocore.client import BaseClient
+
+from braket.circuits import Observable
+from braket.circuits.observable import EULER_OBSERVABLE_PREFIX
+from braket.circuits.observables import Sum
 from braket.ir.openqasm import Program
+from braket.program_sets import CircuitBinding, ParameterSets, ProgramSet
+from braket.program_sets.parameter_sets import _strict_zip
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
     AdditionalMetadata,
@@ -32,12 +37,6 @@ from braket.task_result import (
     ProgramSetTaskMetadata,
     ProgramSetTaskResult,
 )
-
-from braket.circuits import Observable
-from braket.circuits.observable import EULER_OBSERVABLE_PREFIX
-from braket.circuits.observables import Sum
-from braket.program_sets import CircuitBinding, ParameterSets, ProgramSet
-from braket.program_sets.parameter_sets import _strict_zip
 from braket.tasks.measurement_utils import (
     expectation_from_measurements,
     measurement_counts_from_measurements,
@@ -334,7 +333,7 @@ class ProgramSetQuantumTaskResult:
 
     @staticmethod
     def from_object(
-        result_schema: ProgramSetTaskResult, program_set: Optional[ProgramSet] = None
+        result_schema: ProgramSetTaskResult, program_set: ProgramSet | None = None
     ) -> ProgramSetQuantumTaskResult:
         """
         Create ProgramSetQuantumTaskResult from ProgramSetTaskResult object.

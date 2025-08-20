@@ -43,7 +43,7 @@ class Canvas:
             raise ValueError("Canvas must have at least 3 boundary points")
 
         for i, point in enumerate(boundary_points):
-            if not isinstance(point, (tuple, list)) or len(point) != 2:
+            if not isinstance(point, tuple | list) or len(point) != 2:
                 raise TypeError(f"Boundary point {i} must be a tuple/list of length 2")
 
             for j, coord in enumerate(point):

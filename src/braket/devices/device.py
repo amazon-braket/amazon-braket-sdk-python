@@ -17,11 +17,10 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
-from braket.device_schema import DeviceActionType
-
 from braket.circuits import Circuit, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
+from braket.device_schema import DeviceActionType
 from braket.tasks.quantum_task import QuantumTask, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 

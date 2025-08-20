@@ -496,7 +496,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
         frame_id = self.visit(node.arguments[0], context)
         if isinstance(node.arguments[1], ast.ArrayLiteral):
             amps = self.visit(node.arguments[1], context)
-        elif isinstance(node.arguments[1], (ast.Identifier, ast.FunctionCall)):
+        elif isinstance(node.arguments[1], ast.Identifier | ast.FunctionCall):
             amps = self.visit(node.arguments[1], context)
             if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)

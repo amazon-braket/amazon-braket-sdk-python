@@ -20,10 +20,6 @@ from typing import Any, TypeVar
 
 import numpy as np
 import oqpy
-from braket.default_simulator.openqasm.interpreter import Interpreter
-from braket.ir.jaqcd import Program as JaqcdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.ir.openqasm.program_v1 import io_type
 from sympy import Expr
 
 from braket.circuits import compiler_directives
@@ -58,6 +54,10 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
+from braket.default_simulator.openqasm.interpreter import Interpreter
+from braket.ir.jaqcd import Program as JaqcdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
@@ -1440,7 +1440,7 @@ class Circuit:  # noqa: PLR0904
                 # Corresponding defcals with fixed arguments have been added
                 # in _get_frames_waveforms_from_instrs
                 if isinstance(gate, Parameterizable) and any(
-                    not isinstance(parameter, (float, int, complex))
+                    not isinstance(parameter, float | int | complex)
                     for parameter in gate.parameters
                 ):
                     continue

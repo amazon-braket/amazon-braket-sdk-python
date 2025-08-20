@@ -16,7 +16,6 @@ from __future__ import annotations
 import re
 
 import braket.ir.jaqcd as ir
-
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
