@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from braket.circuits import Circuit
 
 
-class ValidationPass(ABC, Circuit):
+class ValidationPass(ABC):
     @abstractmethod
     def validate(self, circuit: Circuit) -> None:
         """
