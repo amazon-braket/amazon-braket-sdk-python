@@ -17,7 +17,7 @@ import sys
 from functools import singledispatchmethod
 from itertools import repeat
 from os import cpu_count
-from typing import Any, Optional
+from typing import Any
 
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.ir.ahs import Program as AHSProgram
@@ -66,7 +66,7 @@ class LocalSimulator(Device):
     def __init__(
         self,
         backend: str | BraketSimulator = "default",
-        noise_model: Optional[NoiseModel] = None,
+        noise_model: NoiseModel | None = None,
     ):
         """Initializes a `LocalSimulator`.
 
@@ -92,7 +92,7 @@ class LocalSimulator(Device):
         self,
         task_specification: TaskSpecification,
         shots: int | None = None,
-        inputs: Optional[dict[str, float]] = None,
+        inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> LocalQuantumTask:
@@ -135,9 +135,9 @@ class LocalSimulator(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: Optional[int] = 0,
-        max_parallel: Optional[int] = None,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
+        shots: int | None = 0,
+        max_parallel: int | None = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
         *args,
         **kwargs,
     ) -> LocalQuantumTaskBatch:
@@ -173,7 +173,7 @@ class LocalSimulator(Device):
 
         single_task = isinstance(
             task_specifications,
-            (Circuit, OpenQASMProgram, Problem, AnalogHamiltonianSimulation),
+            Circuit | OpenQASMProgram | Problem | AnalogHamiltonianSimulation,
         )
 
         single_input = isinstance(inputs, dict)
@@ -186,7 +186,7 @@ class LocalSimulator(Device):
         if single_input:
             inputs = repeat(inputs)
 
-        tasks_and_inputs = zip(task_specifications, inputs)
+        tasks_and_inputs = zip(task_specifications, inputs, strict=False)
 
         if single_task and single_input:
             tasks_and_inputs = [next(tasks_and_inputs)]
@@ -255,7 +255,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
     @_construct_payload.register
-    def _(self, circuit: Circuit, inputs: Optional[dict[str, float]], shots: int):
+    def _(self, circuit: Circuit, inputs: dict[str, float] | None, shots: int):
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
             validate_circuit_and_shots(circuit, shots)
@@ -268,7 +268,7 @@ class LocalSimulator(Device):
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register
-    def _(self, program: OpenQASMProgram, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program: OpenQASMProgram, inputs: dict[str, float] | None, _shots: int):
         simulator = self._delegate
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
@@ -282,7 +282,7 @@ class LocalSimulator(Device):
         return program
 
     @_construct_payload.register
-    def _(self, program_set: ProgramSet, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program_set: ProgramSet, inputs: dict[str, float] | None, _shots: int):
         if inputs:
             raise ValueError(
                 "Inputs for program sets must be provided in the program set object. "
@@ -292,7 +292,7 @@ class LocalSimulator(Device):
         return program_set.to_ir()
 
     @_construct_payload.register
-    def _(self, program_set: OpenQASMProgramSet, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program_set: OpenQASMProgramSet, inputs: dict[str, float] | None, _shots: int):
         if inputs:
             raise ValueError(
                 "Inputs for program sets must be provided in the program set object. "
@@ -302,7 +302,7 @@ class LocalSimulator(Device):
         return program_set
 
     @_construct_payload.register
-    def _(self, program: SerializableProgram, inputs: Optional[dict[str, float]], _shots: int):
+    def _(self, program: SerializableProgram, inputs: dict[str, float] | None, _shots: int):
         inputs_copy = inputs.copy() if inputs is not None else {}
         return OpenQASMProgram(source=program.to_ir(ir_type=IRType.OPENQASM), inputs=inputs_copy)
 
@@ -346,9 +346,7 @@ class LocalSimulator(Device):
         return GateModelQuantumTaskResult.from_object(result)
 
     @_to_result_object.register
-    def _(
-        self, result: ProgramSetTaskResult, task_specification: Optional[TaskSpecification] = None
-    ):
+    def _(self, result: ProgramSetTaskResult, task_specification: TaskSpecification | None = None):
         return ProgramSetQuantumTaskResult.from_object(result, task_specification)
 
     @_to_result_object.register
@@ -363,7 +361,7 @@ class LocalSimulator(Device):
 
     @staticmethod
     def _default_shots(task_specification: TaskSpecification) -> int:
-        if isinstance(task_specification, (ProgramSet, OpenQASMProgramSet)):
+        if isinstance(task_specification, ProgramSet | OpenQASMProgramSet):
             if not task_specification.shots_per_executable:
                 raise ValueError("Shots must be specified in program set or during task creation")
             return task_specification.total_shots

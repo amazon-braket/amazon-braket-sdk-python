@@ -17,7 +17,6 @@ import warnings
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional
 
 import boto3
 import numpy as np
@@ -334,7 +333,7 @@ class ProgramSetQuantumTaskResult:
 
     @staticmethod
     def from_object(
-        result_schema: ProgramSetTaskResult, program_set: Optional[ProgramSet] = None
+        result_schema: ProgramSetTaskResult, program_set: ProgramSet | None = None
     ) -> ProgramSetQuantumTaskResult:
         """
         Create ProgramSetQuantumTaskResult from ProgramSetTaskResult object.

@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Any, Optional
+from typing import Any
 
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -58,14 +58,13 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
         gate_definitions: (
-            Optional[
-                dict[tuple[Gate, QubitSet], PulseSequence]
-                | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-            ]
+            dict[tuple[Gate, QubitSet], PulseSequence]
+            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+            | None
         ) = None,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ):
@@ -142,11 +141,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     @staticmethod
     def _tasks_inputs_gatedefs(
         task_specifications: TaskSpecification | list[TaskSpecification],
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
-        gate_definitions: Optional[
-            dict[tuple[Gate, QubitSet], PulseSequence]
-            | list[dict[tuple[Gate, QubitSet], PulseSequence]],
-        ] = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence]
+        | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+        | None = None,
     ) -> list[
         tuple[
             TaskSpecification,
@@ -158,11 +156,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         gate_definitions = gate_definitions or {}
 
         single_task_type = (
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            AnalogHamiltonianSimulation,
+            Circuit | Problem | OpenQasmProgram | BlackbirdProgram | AnalogHamiltonianSimulation
         )
         single_input_type = dict
         single_gate_definitions_type = dict
@@ -172,7 +166,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         batch_length = 1
         arg_lengths = []
-        for arg, single_arg_type in zip(args, single_arg_types):
+        for arg, single_arg_type in zip(args, single_arg_types, strict=False):
             arg_length = 1 if isinstance(arg, single_arg_type) else len(arg)
             arg_lengths.append(arg_length)
 
@@ -185,10 +179,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 batch_length = arg_length
 
         for i in range(len(arg_lengths)):
-            if isinstance(args[i], (dict, single_task_type)):
+            if isinstance(args[i], dict | single_task_type):
                 args[i] = repeat(args[i], batch_length)
 
-        tasks_inputs_definitions = list(zip(*args))
+        tasks_inputs_definitions = list(zip(*args, strict=False))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
@@ -211,14 +205,13 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
         gate_definitions: (
-            Optional[
-                dict[tuple[Gate, QubitSet], PulseSequence]
-                | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-            ]
+            dict[tuple[Gate, QubitSet], PulseSequence]
+            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
+            | None
         ) = None,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -270,8 +263,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        inputs: dict[str, float] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
         *args,
         **kwargs,
@@ -326,7 +319,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
             self._unsuccessful = {
-                task.id for task, result in zip(self._tasks, self._results) if not result
+                task.id
+                for task, result in zip(self._tasks, self._results, strict=False)
+                if not result
             }
 
         retries = 0
@@ -376,14 +371,16 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             *self._aws_quantum_task_args,
             **self._aws_quantum_task_kwargs,
         )
-        for index, task in zip(unsuccessful_indices, retried_tasks):
+        for index, task in zip(unsuccessful_indices, retried_tasks, strict=False):
             self._tasks[index] = task
 
         retried_results = AwsQuantumTaskBatch._retrieve_results(retried_tasks, self._max_workers)
-        for index, result in zip(unsuccessful_indices, retried_results):
+        for index, result in zip(unsuccessful_indices, retried_results, strict=False):
             self._results[index] = result
         self._unsuccessful = {
-            task.id for task, result in zip(retried_tasks, retried_results) if not result
+            task.id
+            for task, result in zip(retried_tasks, retried_results, strict=False)
+            if not result
         }
         return not self._unsuccessful
 

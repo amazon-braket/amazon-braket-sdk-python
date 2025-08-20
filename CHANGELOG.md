@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.98.0 (2025-08-20)
+
+### Features
+
+ * add cudaq container image uri
+
+### Documentation Changes
+
+ * Add Python 3.12, 3.13 to supported versions
+
 ## v1.97.0 (2025-08-13)
 
 ### Features

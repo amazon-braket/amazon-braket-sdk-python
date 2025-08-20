@@ -20,7 +20,7 @@ import urllib.request
 import warnings
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import pydantic
 from botocore.errorfactory import ClientError
@@ -73,7 +73,7 @@ class AwsDevice(Device):  # noqa: PLR0904
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET: ClassVar[Optional[dict[str, str]]] = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar[dict[str, str] | None] = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -85,8 +85,8 @@ class AwsDevice(Device):  # noqa: PLR0904
     def __init__(
         self,
         arn: str,
-        aws_session: Optional[AwsSession] = None,
-        noise_model: Optional[NoiseModel] = None,
+        aws_session: AwsSession | None = None,
+        noise_model: NoiseModel | None = None,
     ):
         """Initializes an `AwsDevice`.
 
@@ -125,13 +125,13 @@ class AwsDevice(Device):  # noqa: PLR0904
     def run(
         self,
         task_specification: TaskSpecification,
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[float] = None,
-        inputs: Optional[dict[str, float]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        reservation_arn: Optional[str] = None,
+        poll_interval_seconds: float | None = None,
+        inputs: dict[str, float] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
@@ -226,15 +226,15 @@ class AwsDevice(Device):  # noqa: PLR0904
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
-        max_parallel: Optional[int] = None,
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
+        max_parallel: int | None = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[dict[str, float] | list[dict[str, float]]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        reservation_arn: Optional[str] = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -404,7 +404,7 @@ class AwsDevice(Device):  # noqa: PLR0904
         return self._arn
 
     @property
-    def gate_calibrations(self) -> Optional[GateCalibrations]:
+    def gate_calibrations(self) -> GateCalibrations | None:
         """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
         If a QPU does not expose these calibrations, None is returned.
 
@@ -533,8 +533,8 @@ class AwsDevice(Device):  # noqa: PLR0904
             return from_edgelist(edges, create_using=DiGraph())
         return None
 
-    def _default_shots(self, task_specification: Optional[TaskSpecification] = None) -> int:
-        if isinstance(task_specification, (ProgramSet, OpenQASMProgramSet)):
+    def _default_shots(self, task_specification: TaskSpecification | None = None) -> int:
+        if isinstance(task_specification, ProgramSet | OpenQASMProgramSet):
             return AwsDevice.DEFAULT_SHOTS_PROGRAM_SET
         return (
             AwsDevice.DEFAULT_SHOTS_QPU
@@ -595,13 +595,13 @@ class AwsDevice(Device):  # noqa: PLR0904
 
     @staticmethod
     def get_devices(
-        arns: Optional[list[str]] = None,
-        names: Optional[list[str]] = None,
-        types: Optional[list[AwsDeviceType]] = None,
-        statuses: Optional[list[str]] = None,
-        provider_names: Optional[list[str]] = None,
+        arns: list[str] | None = None,
+        names: list[str] | None = None,
+        types: list[AwsDeviceType] | None = None,
+        statuses: list[str] | None = None,
+        provider_names: list[str] | None = None,
         order_by: str = "name",
-        aws_session: Optional[AwsSession] = None,
+        aws_session: AwsSession | None = None,
     ) -> list[AwsDevice]:
         """Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
@@ -775,7 +775,7 @@ class AwsDevice(Device):  # noqa: PLR0904
 
         return QueueDepthInfo(**queue_info)
 
-    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
+    def refresh_gate_calibrations(self) -> GateCalibrations | None:
         """Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
