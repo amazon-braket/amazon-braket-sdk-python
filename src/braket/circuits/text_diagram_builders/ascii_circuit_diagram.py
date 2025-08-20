@@ -124,7 +124,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                     target_qubits = item.target
                 control_qubits = getattr(item, "control", QubitSet())
                 control_state = getattr(item, "control_state", "1" * len(control_qubits))
-                map_control_qubit_states = dict(zip(control_qubits, control_state))
+                map_control_qubit_states = dict(zip(control_qubits, control_state, strict=False))
 
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))

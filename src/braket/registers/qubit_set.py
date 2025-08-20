@@ -14,13 +14,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Union
+from typing import Any
 
 from boltons.setutils import IndexedSet
 
 from braket.registers.qubit import Qubit, QubitInput
 
-QubitSetInput = Union[QubitInput, Iterable[QubitInput]]
+QubitSetInput = QubitInput | Iterable[QubitInput]
 
 
 def _flatten(other: Any) -> Any:

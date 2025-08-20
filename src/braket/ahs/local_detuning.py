@@ -79,7 +79,7 @@ class LocalDetuning(Hamiltonian):
             raise ValueError("The length of the times and values lists must be equal.")
 
         magnitude = TimeSeries()
-        for t, v in zip(times, values):
+        for t, v in zip(times, values, strict=False):
             magnitude.put(t, v)
         return LocalDetuning(Field(magnitude, Pattern(pattern)))
 
