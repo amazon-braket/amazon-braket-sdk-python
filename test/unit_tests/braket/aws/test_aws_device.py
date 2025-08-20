@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import io
 import json
 import os
@@ -21,6 +22,8 @@ from urllib.error import URLError
 import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
+
+from braket.program_sets import ProgramSet
 from common_test_utils import (
     DM1_ARN,
     DWAVE_ARN,
@@ -1073,20 +1076,24 @@ def test_device_non_qpu_region_error(mock_copy_session):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_no_extra(aws_quantum_task_mock, device, circuit):
+def test_run_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
         circuit,
+        s3_destination_folder,
+        AwsDevice.DEFAULT_SHOTS_QPU,
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit):
+def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
         circuit,
+        s3_destination_folder,
+        AwsDevice.DEFAULT_SHOTS_QPU,
         reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
 
@@ -1415,6 +1422,7 @@ def test_run_with_kwargs(aws_quantum_task_mock, device, circuit, s3_destination_
         device,
         circuit,
         s3_destination_folder,
+        shots=AwsDevice.DEFAULT_SHOTS_QPU,
         extra_kwargs={"bar": 1, "baz": 2},
     )
 
@@ -2259,3 +2267,16 @@ def test_run_batch_with_noise_model(
 
     expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
     assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_program_set_default_shots(aws_quantum_task_mock, aws_session_init, aws_session):
+    arn = RIGETTI_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(arn)
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)])
+    _ = device.run(program_set)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == program_set
+    assert aws_quantum_task_mock.call_args_list[0][0][4] == -1

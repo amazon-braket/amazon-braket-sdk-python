@@ -29,6 +29,10 @@ class StartVerbatimBox(CompilerDirective):
     def counterpart(self) -> CompilerDirective:
         return EndVerbatimBox()
 
+    @property
+    def requires_physical_qubits(self) -> bool:
+        return True
+
     def _to_jaqcd(self, *args, **kwargs) -> Any:
         return ir.StartVerbatimBox.construct()
 
@@ -46,6 +50,10 @@ class EndVerbatimBox(CompilerDirective):
 
     def counterpart(self) -> CompilerDirective:
         return StartVerbatimBox()
+
+    @property
+    def requires_physical_qubits(self) -> bool:
+        return True
 
     def _to_jaqcd(self, *args, **kwargs) -> Any:
         return ir.EndVerbatimBox.construct()

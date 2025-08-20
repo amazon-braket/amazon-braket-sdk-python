@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import math
 import textwrap
 import warnings
 from typing import Any, Optional
@@ -32,12 +33,19 @@ from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
+from braket.ir.openqasm.program_set_v1 import ProgramSet as OpenQASMProgramSet
+from braket.program_sets import ProgramSet
+from braket.program_sets.circuit_binding import CircuitBinding
 from braket.simulator import BraketSimulator
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult, ProgramSetTaskResult
 from braket.task_result.analog_hamiltonian_simulation_task_result_v1 import (
     AnalogHamiltonianSimulationTaskResult,
 )
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks import (
+    AnnealingQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
+)
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
@@ -56,6 +64,111 @@ GATE_MODEL_RESULT = GateModelTaskResult(**{
             "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
             "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
         },
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+            },
+        },
+    },
+})
+
+PROGRAM_SET_RESULT = ProgramSetTaskResult(**{
+    "braketSchemaHeader": {
+        "name": "braket.task_result.program_set_task_result",
+        "version": "1",
+    },
+    "programResults": [
+        {
+            "braketSchemaHeader": {"name": "braket.task_result.program_result", "version": "1"},
+            "executableResults": [
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.task_result.program_set_executable_result",
+                        "version": "1",
+                    },
+                    "measurements": [
+                        [0, 0],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                        [0, 0],
+                        [0, 0],
+                        [1, 1],
+                        [1, 1],
+                        [1, 1],
+                        [0, 0],
+                        [1, 1],
+                        [0, 0],
+                    ],
+                    "measuredQubits": [0, 1],
+                    "inputsIndex": 0,
+                },
+                {
+                    "braketSchemaHeader": {
+                        "name": "braket.task_result.program_set_executable_failure",
+                        "version": "1",
+                    },
+                    "inputsIndex": 0,
+                    "failureMetadata": {
+                        "failureReason": "QPU was sick, should be good again after getting some sleep",
+                        "retryable": True,
+                        "category": "DEVICE",
+                    },
+                },
+            ],
+            "source": {
+                "braketSchemaHeader": {"name": "braket.ir.openqasm.program", "version": "1"},
+                "source": "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\nh q[0];\ncnot q[0], q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];",  # noqa
+                "inputs": {"theta": [0.12, 2.1]},
+            },
+            "additionalMetadata": {
+                "simulatorMetadata": {
+                    "braketSchemaHeader": {
+                        "name": "braket.task_result.simulator_metadata",
+                        "version": "1",
+                    },
+                    "executionDuration": 50,
+                }
+            },
+        }
+    ],
+    "taskMetadata": {
+        "braketSchemaHeader": {
+            "name": "braket.task_result.program_set_task_metadata",
+            "version": "1",
+        },
+        "id": "arn:aws:braket:us-west-2:667256736152:quantum-task/bfebc86f-e4ed-4d6f-8131-addd1a49d6dc",  # noqa
+        "deviceId": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        "requestedShots": 120,
+        "successfulShots": 100,
+        "programMetadata": [{"executables": [{}]}],
+        "deviceParameters": {
+            "braketSchemaHeader": {
+                "name": "braket.device_schema.simulators.gate_model_simulator_device_parameters",
+                "version": "1",
+            },
+            "paradigmParameters": {
+                "braketSchemaHeader": {
+                    "name": "braket.device_schema.gate_model_parameters",
+                    "version": "1",
+                },
+                "qubitCount": 5,
+                "disableQubitRewiring": False,
+            },
+        },
+        "createdAt": "2024-10-15T19:06:58.986Z",
+        "endedAt": "2024-10-15T19:07:00.382Z",
+        "status": "COMPLETED",
+        "totalFailedExecutables": 1,
     },
 })
 
@@ -240,6 +353,15 @@ class DummyProgramSimulator(BraketSimulator):
         )
         device_properties.action[DeviceActionType.OPENQASM] = oq3_action
         return device_properties
+
+
+class DummyProgramSetSimulator(DummyProgramSimulator):
+    def run(
+        self,
+        program_set: OpenQASMProgramSet,
+        shots: int,
+    ) -> ProgramSetTaskResult:
+        return PROGRAM_SET_RESULT
 
 
 class DummySerializableProgram(SerializableProgram):
@@ -783,3 +905,151 @@ def test_run_openqasm_with_noise_model(mock_run, noise_model):
         shots=4,
     )
     assert w[-1].message.__str__() == expected_warning
+
+
+@pytest.fixture
+def program_set():
+    circ1 = Circuit().x(0).x(1)
+    circ2 = Circuit().z(0).z(1)
+    return ProgramSet([circ1, circ2])
+
+
+@pytest.fixture
+def program_set_ir():
+    return OpenQASMProgramSet(
+        programs=[
+            Program(
+                source=(
+                    "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\n"
+                    "x q[0];\nx q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];"
+                ),
+                inputs={},
+            ),
+            Program(
+                source=(
+                    "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\n"
+                    "z q[0];\nz q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];"
+                ),
+                inputs={},
+            ),
+        ],
+    )
+
+
+@patch.object(LocalSimulator, "_to_result_object")
+@patch.object(DummyProgramSetSimulator, "run")
+def test_run_program_set(mock_run, mock_to_result_object, program_set, program_set_ir):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    device.run(program_set, shots=10)
+    expected_program_set_ir = program_set_ir
+    mock_run.assert_called_with(
+        expected_program_set_ir,
+        shots=10,
+    )
+
+
+@patch.object(LocalSimulator, "_to_result_object")
+@patch.object(DummyProgramSetSimulator, "run")
+def test_run_program_set_with_inputs(mock_run, mock_to_result_object):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    circuit = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet(
+        CircuitBinding(circuit, input_sets=[{"theta": math.pi}, {"theta": 2 * math.pi}])
+    )
+
+    device.run(program_set, shots=10)
+    expected_program_set_ir = OpenQASMProgramSet(
+        programs=[
+            Program(
+                source=(
+                    "OPENQASM 3.0;\ninput float theta;\nbit[1] b;\nqubit[1] q;\n"
+                    "rx(theta) q[0];\nb[0] = measure q[0];"
+                ),
+                inputs={"theta": [3.141592653589793, 6.283185307179586]},
+            ),
+        ],
+    )
+    mock_run.assert_called_with(
+        expected_program_set_ir,
+        shots=10,
+    )
+
+
+@patch.object(LocalSimulator, "_to_result_object")
+@patch.object(DummyProgramSetSimulator, "run")
+def test_run_program_set_shots(mock_run, mock_to_result_object):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    circuit = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet(
+        CircuitBinding(circuit, input_sets=[{"theta": math.pi}, {"theta": 2 * math.pi}]),
+        shots_per_executable=10,
+    )
+
+    device.run(program_set)
+    expected_program_set_ir = OpenQASMProgramSet(
+        programs=[
+            Program(
+                source=(
+                    "OPENQASM 3.0;\ninput float theta;\nbit[1] b;\nqubit[1] q;\n"
+                    "rx(theta) q[0];\nb[0] = measure q[0];"
+                ),
+                inputs={"theta": [3.141592653589793, 6.283185307179586]},
+            ),
+        ],
+    )
+    mock_run.assert_called_with(
+        expected_program_set_ir,
+        shots=20,
+    )
+
+
+def test_run_program_set_invalid_shots():
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    circuit = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet(
+        CircuitBinding(circuit, input_sets=[{"theta": math.pi}, {"theta": 2 * math.pi}])
+    )
+
+    with pytest.raises(ValueError):
+        device.run(program_set)
+
+
+@patch.object(LocalSimulator, "_to_result_object")
+@patch.object(DummyProgramSetSimulator, "run")
+def test_run_program_set_ir(mock_run, mock_to_result_object, program_set_ir):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+
+    device.run(program_set_ir, shots=10)
+    mock_run.assert_called_with(
+        program_set_ir,
+        shots=10,
+    )
+
+
+def test_program_set_result(program_set_ir):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    expected = ProgramSetQuantumTaskResult.from_object(PROGRAM_SET_RESULT)
+    actual = device.run(program_set_ir, shots=10).result()
+    assert expected.task_metadata == actual.task_metadata
+    assert expected.programs == actual.programs
+    assert expected.num_executables == actual.num_executables
+
+
+def test_run_program_set_with_inputs_invalid(program_set):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    with pytest.raises(ValueError):
+        _ = device.run(program_set, shots=10, inputs={"foo": "0.1"})
+
+
+def test_run_program_set_ir_with_inputs_invalid(program_set_ir):
+    dummy_sim = DummyProgramSetSimulator()
+    device = LocalSimulator(dummy_sim)
+    with pytest.raises(ValueError):
+        _ = device.run(program_set_ir, shots=10, inputs={"foo": "0.2"})

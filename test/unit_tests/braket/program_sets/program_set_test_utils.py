@@ -11,8 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-Version number (major.minor.patch[-label])
-"""
+from braket.circuits import Circuit
+from braket.circuits.serialization import IRType
 
-__version__ = "1.98.1.dev0"
+
+def get_circuit_source(circuit):
+    return circuit.to_ir(IRType.OPENQASM).source
+
+
+def ghz(n):
+    circuit = Circuit().h(0)
+    for i in range(n - 1):
+        circuit.cnot(i, i + 1)
+    return circuit

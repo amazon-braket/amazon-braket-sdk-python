@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.98.0 (2025-08-20)
+
+### Features
+
+ * add cudaq container image uri
+
+### Documentation Changes
+
+ * Add Python 3.12, 3.13 to supported versions
+
+## v1.97.0 (2025-08-13)
+
+### Features
+
+ * Program sets
+
+## v1.96.1 (2025-08-05)
+
+### Bug Fixes and Other Changes
+
+ * Fix applying readout error with ObservableResultType and MeasureCriteria
+
 ## v1.96.0 (2025-07-17)
 
 ### Features

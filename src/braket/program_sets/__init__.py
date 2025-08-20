@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-Version number (major.minor.patch[-label])
-"""
-
-__version__ = "1.98.1.dev0"
+from braket.program_sets.circuit_binding import CircuitBinding  # noqa: F401
+from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike  # noqa: F401
+from braket.program_sets.program_set import ProgramSet  # noqa: F401

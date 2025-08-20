@@ -33,5 +33,10 @@ class Operator(ABC):
         If the operator is passed in a request, this method is called before it is passed.
 
         Returns:
-            Any: The the canonical intermediate representation of the operator.
+            Any: The canonical intermediate representation of the operator.
         """
+
+    @property
+    def requires_physical_qubits(self) -> bool:
+        """bool: Whether a circuit using this operator requires qubits to be physical."""
+        return False
