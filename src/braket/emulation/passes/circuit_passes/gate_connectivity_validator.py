@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Union
+from typing import Any
 
 from networkx import DiGraph
 
@@ -26,7 +26,7 @@ from braket.registers.qubit_set import QubitSet
 class GateConnectivityValidator(ValidationPass):
     def __init__(
         self,
-        gate_connectivity_graph: Union[dict[tuple[Any, Any], Iterable[str]], DiGraph],
+        gate_connectivity_graph: dict[tuple[Any, Any], Iterable[str]] | DiGraph,
         directed: bool = True,
     ):
         super().__init__()

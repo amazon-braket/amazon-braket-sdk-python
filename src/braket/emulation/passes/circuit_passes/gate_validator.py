@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
@@ -24,8 +23,8 @@ from braket.emulation.passes import ValidationPass
 class GateValidator(ValidationPass):
     def __init__(
         self,
-        supported_gates: Optional[Iterable[str]] = None,
-        native_gates: Optional[Iterable[str]] = None,
+        supported_gates: Iterable[str] | None = None,
+        native_gates: Iterable[str] | None = None,
     ):
         """
         Args:

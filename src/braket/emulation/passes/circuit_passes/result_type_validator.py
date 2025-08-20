@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional
 
 from braket.device_schema.result_type import ResultType
 
@@ -24,8 +23,8 @@ from braket.emulation.passes import ValidationPass
 class ResultTypeValidator(ValidationPass):
     def __init__(
         self,
-        supported_result_types: Optional[Iterable[ResultType]] = None,
-        connectivity_graph: Optional[dict[str, list[str]]] = None,
+        supported_result_types: Iterable[ResultType] | None = None,
+        connectivity_graph: dict[str, list[str]] | None = None,
     ):
         """
         Args:

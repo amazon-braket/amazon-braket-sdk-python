@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional, Union
 
 from networkx import DiGraph, complete_graph, from_dict_of_lists
 
@@ -26,10 +25,10 @@ from braket.registers.qubit_set import QubitSet
 class ConnectivityValidator(ValidationPass):
     def __init__(
         self,
-        connectivity_graph: Optional[Union[dict[int, Iterable[int]], DiGraph]] = None,
+        connectivity_graph: dict[int, Iterable[int]] | DiGraph | None = None,
         fully_connected: bool = False,
-        num_qubits: Optional[int] = None,
-        qubit_labels: Optional[Union[Iterable[int], QubitSet]] = None,
+        num_qubits: int | None = None,
+        qubit_labels: Iterable[int] | QubitSet | None = None,
         directed: bool = True,
     ):
         """

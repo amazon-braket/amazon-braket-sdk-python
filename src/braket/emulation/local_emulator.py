@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 from braket.device_schema.device_capabilities import DeviceCapabilities
 
 from braket.circuits.noise_model import GateCriteria, NoiseModel, ObservableCriteria
@@ -49,7 +47,7 @@ class LocalEmulator(Emulator):
     @classmethod
     def from_device_properties(
         cls,
-        device_properties: Union[DeviceCapabilities, DeviceEmulatorProperties],
+        device_properties: DeviceCapabilities | DeviceEmulatorProperties,
         backend: str = "braket_dm",
         **kwargs,
     ) -> LocalEmulator:

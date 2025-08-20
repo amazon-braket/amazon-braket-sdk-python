@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Optional
 
 from braket.circuits import Circuit
 from braket.emulation.passes import ValidationPass
@@ -25,7 +24,7 @@ class EmulatorValidationError(Exception):
 
 
 class PassManager:
-    def __init__(self, passes: Optional[Iterable[ValidationPass]] = None):
+    def __init__(self, passes: Iterable[ValidationPass] | None = None):
         self._passes = passes if passes is not None else []
 
     def transform(self, task_specification: Circuit) -> Circuit:

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
@@ -35,8 +35,8 @@ class Emulator(Device):
     def __init__(
         self,
         backend: Device,
-        noise_model: Optional[NoiseModel] = None,
-        passes: Optional[Iterable[ValidationPass]] = None,
+        noise_model: NoiseModel | None = None,
+        passes: Iterable[ValidationPass] | None = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
@@ -47,8 +47,8 @@ class Emulator(Device):
     def run(
         self,
         task_specification: TaskSpecification,
-        shots: Optional[int] = 0,
-        inputs: Optional[dict[str, float]] = None,
+        shots: int | None = 0,
+        inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTask:
@@ -82,9 +82,9 @@ class Emulator(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: Optional[int],
-        max_parallel: Optional[int],
-        inputs: Optional[dict[str, float] | list[dict[str, float]]],
+        shots: int | None,
+        max_parallel: int | None,
+        inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTaskBatch:
