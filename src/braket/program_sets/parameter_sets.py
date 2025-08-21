@@ -156,12 +156,3 @@ class ParameterSets:
             raise ValueError("Can only populate one of kwargs or key-value pairs")
         if (keys is not None and values is None) or (values is not None and keys is None):
             raise ValueError("Both keys and values must be specified")
-
-
-def _strict_zip(*args) -> zip:
-    # TODO: Remove and replace all usage with zip(..., strict=True) once we drop Python 3.9 support
-    it = iter(args)
-    length = len(next(it))
-    if not all(len(lst) == length for lst in it):
-        raise ValueError("Lists must be of equal length")
-    return zip(*args, strict=False)
