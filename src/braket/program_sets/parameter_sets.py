@@ -60,7 +60,7 @@ class ParameterSets:
             else:
                 raise TypeError(f"Unsupported type {type(parameter_sets)} for ParameterSets")
         elif keys:
-            self._inputs = ParameterSets._mapping_to_dict(dict(_strict_zip(keys, values)))
+            self._inputs = ParameterSets._mapping_to_dict(dict(zip(keys, values, strict=True)))
         elif kwargs:
             self._inputs = ParameterSets._mapping_to_dict(kwargs)
         else:
@@ -96,7 +96,7 @@ class ParameterSets:
     def __mul__(self, other: ParameterSetsLike):
         other_cast = other if isinstance(other, ParameterSets) else ParameterSets(other)
         product = {
-            k: list(sum(_strict_zip(*([v] * len(other_cast))), ()))
+            k: list(sum(zip(*([v] * len(other_cast)), strict=True), ()))
             for k, v in self.as_dict().items()
         }
         other_multiplied = {k: v * len(self) for k, v in (other_cast.as_dict() or {}).items()}

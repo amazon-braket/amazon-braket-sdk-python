@@ -636,7 +636,7 @@ class Circuit:  # noqa: PLR0904
         if target is not None:
             keys = sorted(circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values, strict=False))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
@@ -702,7 +702,7 @@ class Circuit:  # noqa: PLR0904
         if target is not None:
             keys = sorted(verbatim_circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values, strict=False))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
@@ -1548,7 +1548,7 @@ class Circuit:  # noqa: PLR0904
                 )
                 additional_calibrations[bound_key] = calibration(**{
                     p.name if isinstance(p, FreeParameterExpression) else p: v
-                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=False)
+                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=True)
                 })
         return additional_calibrations
 
