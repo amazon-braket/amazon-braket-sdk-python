@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits import circuit
 from braket.circuits.angled_gate import _multi_angled_ascii_characters
@@ -98,9 +98,9 @@ class ExperimentalQuantumOperator(QuantumOperator):
 
     def to_ir(
         self,
-        target: Optional[QubitSet] = None,
+        target: QubitSet | None = None,
         ir_type: IRType = IRType.OPENQASM,
-        serialization_properties: Optional[SerializationProperties] = None,
+        serialization_properties: SerializationProperties | None = None,
         **kwargs: Any,
     ) -> Any:
         """Convert this operator to its IR representation.

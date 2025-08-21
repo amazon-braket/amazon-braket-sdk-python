@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from braket.device_schema import DeviceActionType
 
@@ -43,8 +43,8 @@ class Device(ABC):
     def run(
         self,
         task_specification: TaskSpecification,
-        shots: Optional[int],
-        inputs: Optional[dict[str, float]],
+        shots: int | None,
+        inputs: dict[str, float] | None,
         *args,
         **kwargs,
     ) -> QuantumTask:
@@ -70,9 +70,9 @@ class Device(ABC):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: Optional[int],
-        max_parallel: Optional[int],
-        inputs: Optional[dict[str, float] | list[dict[str, float]]],
+        shots: int | None,
+        max_parallel: int | None,
+        inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTaskBatch:
