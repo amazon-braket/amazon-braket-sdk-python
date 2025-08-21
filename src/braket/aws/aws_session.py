@@ -435,8 +435,12 @@ class AwsSession:  # noqa: PLR0904
             base_dir = Path()
             relative_prefix = local_prefix
         print(relative_prefix)
-        print(base_dir.glob(f"{relative_prefix}*"))
-        print(base_dir.glob(f"{relative_prefix}*/**/*"))
+        print("hello")
+        for f in base_dir.glob(f"{relative_prefix}*"):
+            print(f)
+        print("world")
+        for f in base_dir.glob(f"{relative_prefix}*/**/*"):
+            print(f)
         print("goodbye")
         for file in itertools.chain(
             # files that match the prefix
