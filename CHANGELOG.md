@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.99.0 (2025-08-21)
+
+### Deprecations and Removals
+
+ * Drop Python 3.9, support 3.12, 3.13
+
+### Bug Fixes and Other Changes
+
+ * validation on measured qubits
+ * Make `zip` strict
+
+### Documentation Changes
+
+ * Use latest for doc generation
+
 ## v1.98.0 (2025-08-20)
 
 ### Features
