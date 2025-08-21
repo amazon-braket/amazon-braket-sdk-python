@@ -14,7 +14,17 @@ from braket.devices.local_simulator import LocalSimulator
 
 
 @pytest.fixture
-def local_dm_simulator():
+def setup_local_simulator_devices():
+    mock_circuit_entry = Mock()
+    mock_circuit_dm_entry = Mock()
+    mock_circuit_entry.load.return_value = StateVectorSimulator
+    mock_circuit_dm_entry.load.return_value = DensityMatrixSimulator
+    _simulator_devices = {"default": mock_circuit_entry, "braket_dm": mock_circuit_dm_entry}
+    local_simulator._simulator_devices.update(_simulator_devices)
+
+
+@pytest.fixture
+def local_dm_simulator(setup_local_simulator_devices):
     return LocalSimulator("braket_dm", noise_model=NoiseModel())
 
 
@@ -56,7 +66,7 @@ def test_basic_invalidate(basic_emulator):
         basic_emulator.validate(circuit)
 
 
-def test_apply_noise_model():
+def test_apply_noise_model(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
     local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
@@ -85,7 +95,7 @@ def test_remove_verbatim_box(basic_emulator):
     assert circuit == target_circuit
 
 
-def test_noisy_run():
+def test_noisy_run(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
 
