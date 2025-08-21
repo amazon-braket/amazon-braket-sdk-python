@@ -36,7 +36,6 @@ from braket.circuits import Observable
 from braket.circuits.observable import EULER_OBSERVABLE_PREFIX
 from braket.circuits.observables import Sum
 from braket.program_sets import CircuitBinding, ParameterSets, ProgramSet
-from braket.program_sets.parameter_sets import _strict_zip
 from braket.tasks.measurement_utils import (
     expectation_from_measurements,
     measurement_counts_from_measurements,
@@ -409,7 +408,7 @@ class ProgramSetQuantumTaskResult:
     ) -> list[CompositeEntry | MeasuredEntry]:
         if program_set:
             entries = []
-            for entry, result in _strict_zip(program_set.entries, program_results):
+            for entry, result in zip(program_set.entries, program_results, strict=True):
                 entries.append(
                     # The program has observables available to compute
                     ProgramSetQuantumTaskResult._result_to_entry(

@@ -458,17 +458,20 @@ class Circuit:  # noqa: PLR0904
         Raises:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
-        if self._measure_targets:
-            measure_on_target_mapping = target_mapping and any(
-                targ in self._measure_targets for targ in target_mapping.values()
-            )
-            if (
-                # check if there is a measure instruction on the targeted qubit(s)
-                measure_on_target_mapping
-                or any(tar in self._measure_targets for tar in QubitSet(target))
-                or any(tar in self._measure_targets for tar in QubitSet(instruction.target))
-            ):
-                raise ValueError("cannot apply instruction to measured qubits.")
+        if not self._measure_targets:
+            return
+
+        if target:
+            mapped_target_qubits = QubitSet(target)
+        elif target_mapping:
+            mapped_target_qubits = QubitSet([
+                target_mapping[qubit] for qubit in QubitSet(instruction.target)
+            ])
+        else:  # both `target` and `target_mapping` is None
+            mapped_target_qubits = QubitSet(instruction.target)
+
+        if any(qubit in self._measure_targets for qubit in mapped_target_qubits):
+            raise ValueError("cannot apply instruction to measured qubits.")
 
     def add_instruction(
         self,
@@ -636,7 +639,7 @@ class Circuit:  # noqa: PLR0904
         if target is not None:
             keys = sorted(circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values, strict=False))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
@@ -702,7 +705,7 @@ class Circuit:  # noqa: PLR0904
         if target is not None:
             keys = sorted(verbatim_circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values, strict=False))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
@@ -1548,7 +1551,7 @@ class Circuit:  # noqa: PLR0904
                 )
                 additional_calibrations[bound_key] = calibration(**{
                     p.name if isinstance(p, FreeParameterExpression) else p: v
-                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=False)
+                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=True)
                 })
         return additional_calibrations
 

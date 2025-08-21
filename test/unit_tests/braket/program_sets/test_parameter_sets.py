@@ -14,7 +14,7 @@
 import numpy as np
 import pytest
 
-from braket.program_sets.parameter_sets import ParameterSets, _strict_zip
+from braket.program_sets.parameter_sets import ParameterSets
 
 
 def test_dict():
@@ -155,9 +155,3 @@ def test_kwargs_mismatched():
 def test_add_mismatch():
     with pytest.raises(ValueError):
         ParameterSets({"theta": [1, 2, 3], "phi": [4, 5, 6]}) + [{"theta": 3}, {"theta": 10}]
-
-
-@pytest.mark.parametrize("lists", [[[1, 2, 2], [2, 3, 4], [1, 2]], [[1, 2], [1, 2, 3]]])
-def test_strict_zip_mismatch(lists):
-    with pytest.raises(ValueError):
-        _strict_zip(*lists)
