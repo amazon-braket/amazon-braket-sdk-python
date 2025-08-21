@@ -188,13 +188,12 @@ def test_measureff_ccprx_from_ir():
         circuit_from_ir = Circuit.from_ir(ir)
         assert len(circuit_from_ir.instructions) == 5
 
-
         assert circuit_from_ir.instructions[0].operator.name == "StartVerbatimBox"
 
         assert circuit_from_ir.instructions[1].operator.name == "PRx"
         assert isinstance(circuit_from_ir.instructions[2].operator, MeasureFF)
         assert isinstance(circuit_from_ir.instructions[3].operator, CCPRx)
-        
+
         assert circuit_from_ir.instructions[4].operator.name == "EndVerbatimBox"
 
         instruction = circuit_from_ir.instructions[2]

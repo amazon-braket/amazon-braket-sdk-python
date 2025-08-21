@@ -20,12 +20,12 @@ from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
-from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
+    COMPILER_DIRECTIVES,
     braket_result_to_result_type,
     one_prob_noise_map,
 )
@@ -67,8 +67,7 @@ class BraketProgramContext(AbstractProgramContext):
             target (tuple[int]): Unused
             phase_value (float): The phase value to be applied
         """
-        instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
-        self._circuit.add_instruction(instruction)
+        self._circuit.gphase(phase_value)
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
@@ -177,10 +176,4 @@ class BraketProgramContext(AbstractProgramContext):
             self._circuit.add_instruction(instruction)
 
     def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
-        if marker == VerbatimBoxDelimiter.START_VERBATIM:
-            instruction = Instruction(StartVerbatimBox(), target=[])
-        elif marker == VerbatimBoxDelimiter.END_VERBATIM:
-            instruction = Instruction(EndVerbatimBox(), target=[])
-        else:
-            raise TypeError("Unsupported marker type")
-        self._circuit.add_instruction(instruction)
+        self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))
