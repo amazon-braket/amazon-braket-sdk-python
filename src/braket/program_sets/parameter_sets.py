@@ -60,7 +60,7 @@ class ParameterSets:
             else:
                 raise TypeError(f"Unsupported type {type(parameter_sets)} for ParameterSets")
         elif keys:
-            self._inputs = ParameterSets._mapping_to_dict(dict(_strict_zip(keys, values)))
+            self._inputs = ParameterSets._mapping_to_dict(dict(zip(keys, values, strict=True)))
         elif kwargs:
             self._inputs = ParameterSets._mapping_to_dict(kwargs)
         else:
@@ -96,7 +96,7 @@ class ParameterSets:
     def __mul__(self, other: ParameterSetsLike):
         other_cast = other if isinstance(other, ParameterSets) else ParameterSets(other)
         product = {
-            k: list(sum(_strict_zip(*([v] * len(other_cast))), ()))
+            k: list(sum(zip(*([v] * len(other_cast)), strict=True), ()))
             for k, v in self.as_dict().items()
         }
         other_multiplied = {k: v * len(self) for k, v in (other_cast.as_dict() or {}).items()}
@@ -156,12 +156,3 @@ class ParameterSets:
             raise ValueError("Can only populate one of kwargs or key-value pairs")
         if (keys is not None and values is None) or (values is not None and keys is None):
             raise ValueError("Both keys and values must be specified")
-
-
-def _strict_zip(*args) -> zip:
-    # TODO: Remove and replace all usage with zip(..., strict=True) once we drop Python 3.9 support
-    it = iter(args)
-    length = len(next(it))
-    if not all(len(lst) == length for lst in it):
-        raise ValueError("Lists must be of equal length")
-    return zip(*args, strict=False)
