@@ -429,21 +429,11 @@ class AwsSession:  # noqa: PLR0904
         """
         # support absolute paths
         if Path(local_prefix).is_absolute():
-            print("absolute")
             base_dir = Path(Path(local_prefix).anchor)
             relative_prefix = str(Path(local_prefix).relative_to(base_dir))
         else:
-            print("relative")
             base_dir = Path()
             relative_prefix = local_prefix
-        print(relative_prefix)
-        print("hello")
-        for f in base_dir.glob(f"{relative_prefix}*"):
-            print(f)
-        print("world")
-        for f in base_dir.glob(f"{relative_prefix}*/**/*"):
-            print(f)
-        print("goodbye")
         for file in itertools.chain(
             # files that match the prefix
             base_dir.glob(f"{relative_prefix}*"),
