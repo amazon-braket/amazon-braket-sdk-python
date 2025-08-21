@@ -21,7 +21,6 @@ from braket.circuits import Circuit, Gate, Observable
 from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
 from braket.program_sets.circuit_binding import CircuitBinding
-from braket.program_sets.parameter_sets import _strict_zip
 from braket.pulse import PulseSequence
 from braket.registers import QubitSet
 
@@ -226,7 +225,9 @@ def _zip_circuit_bindings(
         return ProgramSet(
             [
                 CircuitBinding(circuit, [input_set], [observable])
-                for input_set, observable in _strict_zip(input_sets, circuit_binding.observables)
+                for input_set, observable in zip(
+                    input_sets, circuit_binding.observables, strict=True
+                )
             ],
             shots_per_executable,
         )
@@ -242,7 +243,7 @@ def _zip_circuit_bindings(
     return ProgramSet(
         [
             CircuitBinding(circuit, [input_set], [observable])
-            for input_set, observable in _strict_zip(inputs_list, observables)
+            for input_set, observable in zip(inputs_list, observables, strict=True)
         ],
         shots_per_executable,
     )
@@ -262,7 +263,9 @@ def _zip_circuits(
         return ProgramSet(
             [
                 CircuitBinding(circuit, [input_set], [observable])
-                for circuit, input_set, observable in _strict_zip(circuits, input_sets, observables)
+                for circuit, input_set, observable in zip(
+                    circuits, input_sets, observables, strict=True
+                )
             ],
             shots_per_executable,
         )
@@ -272,7 +275,7 @@ def _zip_circuits(
         return ProgramSet(
             [
                 CircuitBinding(circuit, [input_set], None)
-                for circuit, input_set in _strict_zip(circuits, input_sets)
+                for circuit, input_set in zip(circuits, input_sets, strict=True)
             ],
             shots_per_executable,
         )
@@ -282,7 +285,7 @@ def _zip_circuits(
         return ProgramSet(
             [
                 CircuitBinding(circuit, None, [observable])
-                for circuit, observable in _strict_zip(circuits, observables)
+                for circuit, observable in zip(circuits, observables, strict=True)
             ],
             shots_per_executable,
         )
