@@ -29,14 +29,23 @@ def local_dm_simulator(setup_local_simulator_devices):
 
 
 @pytest.fixture
-def basic_emulator(local_dm_simulator):
+def empty_emulator(local_dm_simulator):
+    return Emulator(local_dm_simulator)
+
+
+@pytest.fixture
+def noiseless_emulator(local_dm_simulator):
     qubit_count_validator = QubitCountValidator(4)
     return Emulator(local_dm_simulator, passes=[qubit_count_validator])
 
 
 @pytest.fixture
-def empty_emulator(local_dm_simulator):
-    return Emulator(local_dm_simulator)
+def noisy_emulator(setup_local_simulator_devices):
+    noise_model = NoiseModel()
+    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
+    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
+    qubit_count_validator = QubitCountValidator(4)
+    return Emulator(local_backend, noise_model=noise_model, passes=[qubit_count_validator])
 
 
 def test_empty_emulator_validation(empty_emulator):
@@ -45,16 +54,16 @@ def test_empty_emulator_validation(empty_emulator):
     emulator.validate(circuit)
 
 
-def test_basic_emulator(basic_emulator):
+def test_noiseless_emulator(noiseless_emulator):
     """
     Should not error out when passed a valid circuit.
     """
     circuit = Circuit().cnot(0, 1)
-    circuit = basic_emulator.transform(circuit)
+    circuit = noiseless_emulator.transform(circuit)
     assert circuit == circuit
 
 
-def test_basic_invalidate(basic_emulator):
+def test_basic_invalidate(noiseless_emulator):
     """
     Emulator should raise an error thrown by the QubitCountValidator.
     """
@@ -63,51 +72,34 @@ def test_basic_invalidate(basic_emulator):
         f"Circuit must use at most 4 qubits, but uses {circuit.qubit_count} qubits."
     )
     with pytest.raises(Exception, match=match_string):
-        basic_emulator.validate(circuit)
+        noiseless_emulator.validate(circuit)
 
 
-def test_apply_noise_model(setup_local_simulator_devices):
-    noise_model = NoiseModel()
-    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
-    emulator = Emulator(local_backend, noise_model=noise_model)
-
+def test_apply_noise_model(noisy_emulator):
     circuit = Circuit().h(0)
-    circuit = emulator.transform(circuit)
+    circuit = noisy_emulator.transform(circuit)
 
     noisy_circuit = Circuit().h(0).apply_gate_noise(BitFlip(0.1), Gate.H).measure(target_qubits=[0])
     assert circuit == noisy_circuit
 
     circuit = Circuit().h(0).measure(target_qubits=[0])
-    circuit = emulator.transform(circuit, apply_noise_model=False)
+    circuit = noisy_emulator.transform(circuit, apply_noise_model=False)
 
     target_circ = Circuit().h(0).measure(target_qubits=[0])
     assert circuit == target_circ
 
 
-def test_remove_verbatim_box(basic_emulator):
+def test_remove_verbatim_box(noiseless_emulator):
     circuit = Circuit().h(0)
     circuit = Circuit().add_verbatim_box(circuit).probability()
-    circuit = basic_emulator._remove_verbatim_box(circuit)
+    circuit = noiseless_emulator._remove_verbatim_box(circuit)
 
     target_circuit = Circuit().h(0).probability()
 
     assert circuit == target_circuit
 
 
-def test_noisy_run(setup_local_simulator_devices):
-    noise_model = NoiseModel()
-    noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-
-    qubit_count_validator = QubitCountValidator(4)
-    gate_validator = GateValidator(supported_gates=["H"])
-    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
-    emulator = Emulator(
-        backend=local_backend,
-        passes=[qubit_count_validator, gate_validator],
-        noise_model=noise_model,
-    )
-
+def test_noisy_run(noisy_emulator):
     circuit = Circuit().h(0)
     open_qasm_source = """OPENQASM 3.0;
 bit[1] b;
@@ -116,6 +108,6 @@ h q[0];
 #pragma braket noise bit_flip(0.1) q[0]
 b[0] = measure q[0];""".strip()
 
-    result = emulator.run(circuit, shots=1).result()
+    result = noisy_emulator.run(circuit, shots=1).result()
     emulation_source = result.additional_metadata.action.source.strip()
     assert emulation_source == open_qasm_source
