@@ -840,6 +840,19 @@ def test_measure_gate_after_measurement():
     assert circ == expected
 
 
+def test_measure_add_circuit_target_mapping():
+    circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    circuit = Circuit().add_circuit(circuit, target_mapping={0: 1, 1: 0})
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [1, 0]))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circuit == expected
+
+
 def test_to_ir_with_measure():
     circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 2])
     expected_ir = OpenQasmProgram(
