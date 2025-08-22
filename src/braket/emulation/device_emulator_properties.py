@@ -55,15 +55,15 @@ class DeviceEmulatorProperties:
     ):
         """Initialize a DeviceEmulatorProperties instance."""
         # Validate inputs
-        self.validate_nativeGateSet(nativeGateSet)
-        self.validate_oneQubitProperties(oneQubitProperties, qubitCount)
+        self._validate_native_gate_set(nativeGateSet)
+        self._validate_one_qubit_properties(oneQubitProperties, qubitCount)
 
         # Get qubit labels for further validation
         indices = list(oneQubitProperties.keys())
         qubit_labels = sorted(int(x) for x in indices)
 
-        self.validate_connectivityGraph(connectivityGraph, qubit_labels)
-        self.validate_twoQubitProperties(twoQubitProperties, qubit_labels)
+        self._validate_connectivity_graph(connectivityGraph, qubit_labels)
+        self._validate_two_qubit_properties(twoQubitProperties, qubit_labels)
 
         # Store properties
         self.qubitCount = qubitCount
@@ -74,7 +74,7 @@ class DeviceEmulatorProperties:
         self.supportedResultTypes = supportedResultTypes
 
     @staticmethod
-    def validate_nativeGateSet(nativeGateSet: list[str]) -> None:
+    def _validate_native_gate_set(nativeGateSet: list[str]) -> None:
         """Validate that all gates in nativeGateSet are valid Braket gates."""
         valid_gates = ", ".join(BRAKET_GATES.keys())
         for gate in nativeGateSet:
@@ -84,7 +84,7 @@ class DeviceEmulatorProperties:
                 )
 
     @staticmethod
-    def validate_oneQubitProperties(
+    def _validate_one_qubit_properties(
         oneQubitProperties: dict[str, OneQubitProperties], qubitCount: int
     ) -> None:
         """Validate oneQubitProperties."""
@@ -92,7 +92,7 @@ class DeviceEmulatorProperties:
             raise ValueError("The length of oneQubitProperties should be the same as qubitCount")
 
     @staticmethod
-    def node_validator(node: str, qubit_labels: list[int], field_name: str) -> None:
+    def _node_validator(node: str, qubit_labels: list[int], field_name: str) -> None:
         """Validate that a node represents a valid qubit index."""
         if int(node) not in qubit_labels:
             raise ValueError(
@@ -100,12 +100,12 @@ class DeviceEmulatorProperties:
             )
 
     @classmethod
-    def validate_connectivityGraph(
+    def _validate_connectivity_graph(
         cls, connectivityGraph: dict[str, list[str]], qubit_labels: list[int]
     ) -> None:
         """Validate connectivityGraph."""
         for node, neighbors in connectivityGraph.items():
-            cls.node_validator(node, qubit_labels, "connectivityGraph")
+            cls._node_validator(node, qubit_labels, "connectivityGraph")
 
             for neighbor in neighbors:
                 if int(neighbor) not in qubit_labels:
@@ -115,14 +115,14 @@ class DeviceEmulatorProperties:
                     )
 
     @classmethod
-    def validate_twoQubitProperties(
+    def _validate_two_qubit_properties(
         cls, twoQubitProperties: dict[str, TwoQubitProperties], qubit_labels: list[int]
     ) -> None:
         """Validate twoQubitProperties."""
         for edge in twoQubitProperties:
             node_1, node_2 = edge.split("-")
-            cls.node_validator(node_1, qubit_labels, "twoQubitProperties")
-            cls.node_validator(node_2, qubit_labels, "twoQubitProperties")
+            cls._node_validator(node_1, qubit_labels, "twoQubitProperties")
+            cls._node_validator(node_2, qubit_labels, "twoQubitProperties")
 
     @property
     def qubit_labels(self) -> list[int]:
