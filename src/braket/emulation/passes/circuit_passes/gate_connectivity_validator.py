@@ -69,13 +69,13 @@ provided as edge attributes."
     def _graph_node_type(self) -> type:
         return type(next(iter(self._gate_connectivity_graph.nodes)))
 
-    def validate(self, program: Circuit) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         Verifies that any multiqubit gates used within a verbatim box are supported
         by the devices gate connectivity defined by this criteria.
 
         Args:
-            program (Circuit): The circuit whose gate instructions need to be validated
+            circuit (Circuit): The circuit whose gate instructions need to be validated
                 against this validator's gate connectivity graph.
 
         Raises:
@@ -83,29 +83,29 @@ provided as edge attributes."
             in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
         idx = 0
-        while idx < len(program.instructions):
-            instruction = program.instructions[idx]
+        while idx < len(circuit.instructions):
+            instruction = circuit.instructions[idx]
             if isinstance(instruction.operator, StartVerbatimBox):
-                idx = self._process_verbatim_box(program, idx)
+                idx = self._process_verbatim_box(circuit, idx)
             else:
                 idx += 1
 
-    def _process_verbatim_box(self, program: Circuit, start_idx: int) -> int:
+    def _process_verbatim_box(self, circuit: Circuit, start_idx: int) -> int:
         """
         Process instructions within a verbatim box.
 
         Args:
-            program: The quantum program containing instructions
+            circuit: The quantum circuit containing instructions
             start_idx: The index of the StartVerbatimBox instruction
 
         Returns:
             int: The index after the EndVerbatimBox instruction
         """
         idx = start_idx + 1
-        while idx < len(program.instructions) and not isinstance(
-            program.instructions[idx].operator, EndVerbatimBox
+        while idx < len(circuit.instructions) and not isinstance(
+            circuit.instructions[idx].operator, EndVerbatimBox
         ):
-            instruction = program.instructions[idx]
+            instruction = circuit.instructions[idx]
             if isinstance(instruction.operator, Gate):
                 self._validate_gate_in_verbatim(instruction)
             idx += 1

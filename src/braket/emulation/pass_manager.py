@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from braket.circuits import Circuit
 from braket.emulation.passes import ValidationPass
+from braket.tasks.quantum_task import TaskSpecification
 
 
 class EmulatorValidationError(Exception):
@@ -27,30 +27,30 @@ class PassManager:
     def __init__(self, passes: Iterable[ValidationPass] | None = None):
         self._passes = passes if passes is not None else []
 
-    def transform(self, task_specification: Circuit) -> Circuit:
+    def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
         This method passes the input program through the Passes contained
         within this emulator. An emulator pass may simply validate a program or may
         modify or entirely transform the program (to an equivalent quantum program).
 
         Args:
-            task_specification (Circuit): The program to run the emulator passes on.
+            task_specification (TaskSpecification): The program to run the emulator passes on.
 
         Returns:
-            Circuit: A "compiled" program of the same type as the input.
+            TaskSpecification: A "compiled" program of the same type as the input.
 
         """
         for emulator_pass in self._passes:
             task_specification = emulator_pass(task_specification)
         return task_specification
 
-    def validate(self, task_specification: Circuit) -> None:
+    def validate(self, task_specification: TaskSpecification) -> None:
         """
         This method passes the input program through Passes that perform
         only validation, without modifying the input program.
 
         Args:
-            task_specification (Circuit): The program to validate with this
+            task_specification (TaskSpecification): The program to validate with this
                 emulator's validation passes.
         """
 

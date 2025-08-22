@@ -15,12 +15,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from braket.circuits import Circuit
+from braket.tasks.quantum_task import TaskSpecification
 
 
 class ValidationPass(ABC):
     @abstractmethod
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, task_specification: TaskSpecification) -> None:
         """
         An emulator validator is used to perform some non-modifying validation
         pass on an input circuit. Implementations of validate should return
@@ -31,7 +31,7 @@ class ValidationPass(ABC):
         """
         raise NotImplementedError
 
-    def run(self, circuit: Circuit) -> Circuit:
+    def run(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
         Validate the input circuit and return the circuit, unmodified.
 
@@ -41,8 +41,8 @@ class ValidationPass(ABC):
         Returns:
             Circuit: The unmodified circuit passed in as input.
         """
-        self.validate(circuit)
-        return circuit
+        self.validate(task_specification)
+        return task_specification
 
-    def __call__(self, circuit: Circuit) -> Circuit:
-        return self.run(circuit)
+    def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
+        return self.run(task_specification)

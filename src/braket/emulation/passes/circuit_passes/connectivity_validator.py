@@ -96,7 +96,7 @@ class ConnectivityValidator(ValidationPass):
     def _graph_node_type(self) -> type:
         return type(next(iter(self._connectivity_graph.nodes)))
 
-    def validate(self, program: Circuit) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
         device connectivity definied by this validator. If any sub-circuit of the
@@ -104,7 +104,7 @@ class ConnectivityValidator(ValidationPass):
         in the circuit.
 
         Args:
-            program (Circuit): The Braket circuit whose gate operations to
+            circuit (Circuit): The Braket circuit whose gate operations to
                 validate.
 
         Raises:
@@ -114,11 +114,11 @@ class ConnectivityValidator(ValidationPass):
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
         if not any(
             isinstance(instruction.operator, StartVerbatimBox)
-            for instruction in program.instructions
+            for instruction in circuit.instructions
         ):
             return
-        for idx in range(len(program.instructions)):
-            instruction = program.instructions[idx]
+        for idx in range(len(circuit.instructions)):
+            instruction = circuit.instructions[idx]
             if isinstance(instruction.operator, Gate):
                 if (
                     instruction.operator.qubit_count == 2

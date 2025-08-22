@@ -49,19 +49,19 @@ class ResultTypeValidator(ValidationPass):
 
         self._connectivity_graph = connectivity_graph
 
-    def validate(self, program: Circuit) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         Checks that all result types used in the circuit are in this validator's
         supported result types set and that the target qubits are valid qubits in the device.
 
         Args:
-            program (Circuit): The Braket circuit whose result types to validate.
+            circuit (Circuit): The Braket circuit whose result types to validate.
 
         Raises:
             ValueError: If a result type is not in this validator's supported result types set
                 or if a target qubit is not a valid qubit in the device.
         """
-        for result_type in program.result_types:
+        for result_type in circuit.result_types:
             if result_type.name not in self._supported_result_types:
                 raise ValueError(
                     f"The result type {result_type.name} is not a supported "

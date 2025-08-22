@@ -55,28 +55,28 @@ class GateValidator(ValidationPass):
         except KeyError as e:
             raise ValueError(f"Input {e!s} in native_gates is not a valid Braket gate name.") from e
 
-    def validate(self, program: Circuit) -> None:
+    def validate(self, circuit: Circuit) -> None:
         """
         Checks that all non-verbatim gates used in the circuit are in this validator's
         supported gate set and that all verbatim gates used in the circuit are in this
         validator's native gate set.
 
         Args:
-            program (Circuit): The Braket circuit whose gates to validate.
+            circuit (Circuit): The Braket circuit whose gates to validate.
 
         Raises:
             ValueError: If a gate operation or verbatim gate operation is not in this validator's
             supported or native gate set, respectively.
         """
         idx = 0
-        while idx < len(program.instructions):
-            instruction = program.instructions[idx]
+        while idx < len(circuit.instructions):
+            instruction = circuit.instructions[idx]
             if isinstance(instruction.operator, StartVerbatimBox):
                 idx += 1
-                while idx < len(program.instructions) and not isinstance(
-                    program.instructions[idx].operator, EndVerbatimBox
+                while idx < len(circuit.instructions) and not isinstance(
+                    circuit.instructions[idx].operator, EndVerbatimBox
                 ):
-                    instruction = program.instructions[idx]
+                    instruction = circuit.instructions[idx]
                     if isinstance(instruction.operator, Gate):
                         gate = instruction.operator
                         if type(gate) not in self._native_gates:
@@ -84,8 +84,8 @@ class GateValidator(ValidationPass):
                                 f"Gate {gate.name} is not a native gate for this device."
                             )
                     idx += 1
-                if idx == len(program.instructions) or not isinstance(
-                    program.instructions[idx].operator, EndVerbatimBox
+                if idx == len(circuit.instructions) or not isinstance(
+                    circuit.instructions[idx].operator, EndVerbatimBox
                 ):
                     raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
             elif isinstance(instruction.operator, Gate):

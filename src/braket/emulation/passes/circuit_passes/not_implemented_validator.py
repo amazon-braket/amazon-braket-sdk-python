@@ -27,7 +27,7 @@ class _NotImplementedValidator(ValidationPass):
 
     def validate(self, program: TaskSpecification) -> None:
         """
-        Validates that the circuit does not contain any unsupported features.
+        Validates that the program does not contain any unsupported features.
 
         Args:
             program (TaskSpecification): The program to validate.
@@ -41,7 +41,7 @@ class _NotImplementedValidator(ValidationPass):
         if isinstance(program, ProgramSet):
             raise TypeError("ProgramSet is not supported yet.")
 
-        # Check if the circuit has a verbatim box when required
+        # Check if the program has a verbatim box when required
         has_verbatim_box = any(
             isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox))
             for instruction in program.instructions

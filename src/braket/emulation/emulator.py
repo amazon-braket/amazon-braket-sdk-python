@@ -103,20 +103,22 @@ class Emulator(Device):
         """
         return self._noise_model
 
-    def transform(self, task_specification: Circuit, apply_noise_model: bool = True) -> Circuit:
+    def transform(
+        self, task_specification: TaskSpecification, apply_noise_model: bool = True
+    ) -> TaskSpecification:
         """
         Passes the input program through all Pass objects contained in this
         emulator and applies the emulator's noise model, if it exists, before
         returning the compiled program.
 
         Args:
-            task_specification (Circuit): The input program to validate and
+            task_specification (TaskSpecification): The input program to validate and
                 compile based on this emulator's Passes
             apply_noise_model (bool): If true, apply this emulator's noise model
                 to the compiled program before returning the final program.
 
         Returns:
-            Circuit: A compiled program with a noise model applied, if one
+            TaskSpecification: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
 
@@ -144,10 +146,10 @@ class Emulator(Device):
         local braket density matrix simulator.
 
         Args:
-            noisy_verbatim_circ (Circuit): The input verbatim noisy circuit
+            noisy_verbatim_circ (TaskSpecification): The input verbatim noisy program
 
         Returns:
-            Circuit: A verbatim noisy circuit without the verbatim boxes
+            TaskSpecification: A verbatim noisy program without the verbatim boxes
         """
         noisy_verbatim_circ_2 = [
             instruction
@@ -161,13 +163,13 @@ class Emulator(Device):
 
         return noisy_verbatim_circ_3
 
-    def validate(self, task_specification: Circuit) -> None:
+    def validate(self, task_specification: TaskSpecification) -> None:
         """
         This method passes the input program through Passes that perform
         only validation, without modifying the input program.
 
         Args:
-            task_specification (Circuit): The program to validate with this
+            task_specification (TaskSpecification): The program to validate with this
                 emulator's validation passes.
         """
         self._pass_manager.validate(task_specification)
