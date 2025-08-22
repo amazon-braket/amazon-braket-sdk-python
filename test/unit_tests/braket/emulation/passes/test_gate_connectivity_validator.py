@@ -208,6 +208,7 @@ def create_undirected_graph_with_exisiting_back_edges(representation):
         Circuit().add_verbatim_box(Circuit().swap(1, 2).xx(0, 3, np.pi / 2).iswap(0, 1)),
         Circuit().add_verbatim_box(Circuit().cnot(0, 3)),
         Circuit().add_instruction(Instruction(StartVerbatimBox())),
+        Circuit().add_instruction(Instruction(StartVerbatimBox())).add_instruction(Instruction(StartVerbatimBox())),
         Circuit().add_instruction(Instruction(EndVerbatimBox())),
     ],
 )
