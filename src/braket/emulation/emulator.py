@@ -95,7 +95,7 @@ class Emulator(Device):
         *args: Any,
         **kwargs: Any,
     ) -> QuantumTaskBatch:
-        raise NotImplementedError("Emulator.run_batch() is not implemented yet.")
+        raise NotImplementedError("Emulator does not support run_batch.")
 
     @property
     def noise_model(self) -> NoiseModel:
