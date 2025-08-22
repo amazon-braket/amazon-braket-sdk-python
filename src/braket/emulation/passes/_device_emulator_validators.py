@@ -41,7 +41,7 @@ def _set_up_gate_connectivity_validator(
     device_emu_properties: DeviceEmulatorProperties,
 ) -> GateConnectivityValidator:
     directed = device_emu_properties.directed
-    
+
     if device_emu_properties.fully_connected:
         gate_connectivity_graph = {}
         for qubit_1 in device_emu_properties.qubit_labels:
