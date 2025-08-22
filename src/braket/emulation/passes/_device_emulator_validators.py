@@ -40,6 +40,8 @@ def _set_up_connectivity_validator(
 def _set_up_gate_connectivity_validator(
     device_emu_properties: DeviceEmulatorProperties,
 ) -> GateConnectivityValidator:
+    directed = device_emu_properties.directed
+    
     if device_emu_properties.fully_connected:
         gate_connectivity_graph = {}
         for qubit_1 in device_emu_properties.qubit_labels:
@@ -48,31 +50,16 @@ def _set_up_gate_connectivity_validator(
                     device_emu_properties.native_gate_set
                 )
     else:
-        twoQubitProperties = device_emu_properties.two_qubit_properties
         # For non fully connected graph
         gate_connectivity_graph = {}
-        for node, neighbors in device_emu_properties.connectivity_graph.items():
-            for neighbor in neighbors:
-                edge = (int(node), int(neighbor))
-                edge_key = "-".join([str(qubit) for qubit in edge])
-                edge_property = twoQubitProperties.get(edge_key)
-                if not edge_property:
-                    gate_connectivity_graph[edge] = set()
-                    continue
+        for edge, edge_property in device_emu_properties.two_qubit_properties.items():
+            vertices = edge.split("-")
+            edge_int = tuple(int(vertex) for vertex in vertices)
+            edge_supported_gates = [
+                item.gateName.lower()
+                for item in edge_property.twoQubitGateFidelity
+                if item.gateName.lower() in BRAKET_GATES
+            ]
+            gate_connectivity_graph[edge_int] = set(edge_supported_gates)
 
-                edge_supported_gates = [
-                    item.gateName.lower()
-                    for item in edge_property.twoQubitGateFidelity
-                    if item.gateName.lower() in BRAKET_GATES
-                ]
-                gate_connectivity_graph[edge] = set(edge_supported_gates)
-
-        reversed_gate_connectivity_graph = {}
-        for edge, edge_property in gate_connectivity_graph.items():
-            reversed_edge = (edge[1], edge[0])
-            if reversed_edge not in gate_connectivity_graph:
-                reversed_gate_connectivity_graph[reversed_edge] = edge_property
-
-        gate_connectivity_graph.update(reversed_gate_connectivity_graph)
-
-    return GateConnectivityValidator(gate_connectivity_graph)
+    return GateConnectivityValidator(gate_connectivity_graph, directed=directed)
