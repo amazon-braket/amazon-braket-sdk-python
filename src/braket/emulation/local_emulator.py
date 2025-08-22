@@ -211,7 +211,7 @@ class LocalEmulator(Emulator):
                 if gate_fidelity.gateName.lower() in BRAKET_GATES
             }
 
-            if len(valid_gate_names) == 0:
+            if not valid_gate_names:
                 raise ValueError(
                     f"No valid two-qubit RB data found for edge {edge} in twoQubitProperties."
                 )
