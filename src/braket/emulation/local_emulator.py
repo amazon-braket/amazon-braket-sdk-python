@@ -54,7 +54,7 @@ class LocalEmulator(Emulator):
         """Create a LocalEmulator instance from device properties.
 
         Args:
-            device_properties (Union[DeviceCapabilities, DeviceEmulatorProperties]): The device
+            device_properties (DeviceCapabilities, DeviceEmulatorProperties): The device
                 properties to use for emulation.
             backend (str): The backend to use for simulation. Default is "braket_dm".
             **kwargs: Additional keyword arguments to pass to the LocalEmulator constructor.
@@ -63,7 +63,8 @@ class LocalEmulator(Emulator):
             LocalEmulator: A new LocalEmulator instance configured with the given properties.
 
         Raises:
-            ValueError: If the backend is not the local density matrix simulator
+            TypeError: If the device_properties is not a DeviceCapabilities or
+                DeviceEmulatorProperties object
         """
 
         # Instantiate an instance of DeviceEmulatorProperties
@@ -109,13 +110,10 @@ class LocalEmulator(Emulator):
         Args:
             device_properties_json (str): Device properties JSON string.
             backend (str): The backend to use for simulation. Defaults to "braket_dm".
-            **kwargs: Additional keyword arguments to pass to the Emulator constructor.
+            **kwargs: Additional keyword arguments to pass to the LocalEmulator constructor.
 
         Returns:
             LocalEmulator: A new LocalEmulator instance configured with the given properties.
-
-        Raises:
-            ValueError: If the JSON string is invalid.
         """
 
         device_emu_properties = DeviceEmulatorProperties.from_json(device_properties_json)

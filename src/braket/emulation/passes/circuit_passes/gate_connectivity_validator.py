@@ -29,6 +29,22 @@ class GateConnectivityValidator(ValidationPass):
         gate_connectivity_graph: dict[tuple[Any, Any], Iterable[str]] | DiGraph,
         directed: bool = True,
     ):
+        """
+        A GateConnectivityValidator instance takes in a gate connectivity graph and validates that
+        a circuit that uses verbatim circuits makes valid hardware gate references in single
+        and two-qubit gate operations on the corresponding edges.
+
+        Args:
+            gate_connectivity_graph (dict[tuple[Any, Any], Iterable[str]], DiGraph, optional):
+                Either a sparse matrix or DiGraph representation of the supported gates for the
+                edges on the device.
+            directed (bool): Denotes if the connectivity graph is directed or undirected. If
+                the connectivity graph is undirected, this constructor attempts to fill in any
+                missing back edges.
+
+        Raises:
+            ValueError: If the inputs do not correctly yield a gate connectivity graph.
+        """
         super().__init__()
         if isinstance(gate_connectivity_graph, dict):
             self._gate_connectivity_graph = DiGraph()

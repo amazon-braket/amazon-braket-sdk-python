@@ -29,8 +29,17 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
 class Emulator(Device):
-    """An emulator is a simulation device that more closely resembles
-    the capabilities and constraints of a real device or of a specific device model."""
+    """
+    An emulator is a simulation device that more closely resembles the capabilities and constraints
+    of a real device or of a specific device model.
+
+    Args:
+        backend (Device): The backend device to use for emulation.
+        noise_model (NoiseModel, optional): A noise model to apply to the emulated circuits.
+            Defaults to None.
+        passes (Iterable[ValidationPass], optional): A list of validation passes to apply to the
+            emulated circuits. Defaults to None.
+    """
 
     def __init__(
         self,
@@ -58,15 +67,13 @@ class Emulator(Device):
         the program on the emulator's backend.
 
         Args:
-            task_specification (Union[Circuit, OpenQasmProgram]): Specification of a quantum task
+            task_specification (TaskSpecification): Specification of a quantum task
                 to run on device.
-            shots (Optional[int]): The number of times to run the quantum task on the device.
+            shots (int, optional): The number of times to run the quantum task on the device.
                 Default is `None`.
-            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+            inputs (dict[str, float], optional): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
                 Not all devices and IR formats support inputs. Default: {}.
-            *args (Any):  Arbitrary arguments.
-            **kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
@@ -122,9 +129,7 @@ class Emulator(Device):
             exists for this emulator and apply_noise_model is true.
         """
 
-        # Apply measurement manually if either of the following cases hold
-        # 1. The circuit has no measurement and no result type
-        # 2. The circuit has Probability result type
+        # Apply measurement manually if the circuit has no measurement and no result type
         # This set of readout error is applied even if apply_noise_model is False
         # because when we use the noise model to apply readout error to the circuit,
         # the readout error is applied if and only if there is measurement or result type
@@ -146,10 +151,10 @@ class Emulator(Device):
         local braket density matrix simulator.
 
         Args:
-            noisy_verbatim_circ (TaskSpecification): The input verbatim noisy program
+            noisy_verbatim_circ (Circuit): The input verbatim noisy program
 
         Returns:
-            TaskSpecification: A verbatim noisy program without the verbatim boxes
+            Circuit: A verbatim noisy program without the verbatim boxes
         """
         noisy_verbatim_circ_2 = [
             instruction

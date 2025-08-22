@@ -27,10 +27,13 @@ class GateValidator(ValidationPass):
         native_gates: Iterable[str] | None = None,
     ):
         """
+        A GateValidator instance validates that a circuit uses the supported gates of the device, or
+            native gates within a verbatim box if any.
+
         Args:
-            supported_gates (Optional[Iterable[str]]): A list of gates supported outside of
+            supported_gates (Iterable[str], optional): A list of gates supported outside of
                 verbatim modeby the emulator. A gate is a Braket gate name.
-            native_gates (Optional[Iterable[str]]): A list of gates supported inside of
+            native_gates (Iterable[str], optional): A list of gates supported inside of
                 verbatim mode by the emulator.
 
         Raises:

@@ -30,7 +30,7 @@ class PassManager:
     def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
         This method passes the input program through the Passes contained
-        within this emulator. An emulator pass may simply validate a program or may
+        within this pass manager. A pass may simply validate a program or may
         modify or entirely transform the program (to an equivalent quantum program).
 
         Args:
@@ -62,8 +62,7 @@ class PassManager:
 
     def _raise_exception(self, exception: Exception) -> None:
         """
-        Wrapper for exceptions, appends the emulator's name to the exception
-        note.
+        Wrapper for exceptions enable modifyint the exception message if needed.
 
         Args:
             exception (Exception): The exception to modify and raise.

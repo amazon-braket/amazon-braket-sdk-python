@@ -16,12 +16,17 @@ from braket.emulation.passes import ValidationPass
 
 
 class QubitCountValidator(ValidationPass):
-    """
-    A simple validator class that checks that an input program does not use more qubits
-    than available on a device, as set during this validator's instantiation.
-    """
-
     def __init__(self, qubit_count: int):
+        """
+        A QubitCountValidator instance validates that a circuit does not use more qubits
+        than available on a device.
+
+        Args:
+            qubit_count (int): The number of qubits on the device
+
+        Raises:
+            ValueError: If the circuit uses more qubits than available on a device.
+        """
         if qubit_count <= 0:
             raise ValueError(f"qubit_count ({qubit_count}) must be a positive integer.")
         self._qubit_count = qubit_count

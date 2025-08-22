@@ -23,23 +23,24 @@ class ValidationPass(ABC):
     def validate(self, task_specification: TaskSpecification) -> None:
         """
         An emulator validator is used to perform some non-modifying validation
-        pass on an input circuit. Implementations of validate should return
-        nothing if the input circuit passes validation and raise an error otherwise.
+        pass on an input program. Implementations of validate should return
+        nothing if the input program passes validation and raise an error otherwise.
 
         Args:
-            circuit (Circuit): The circuit to be evaluated against this criteria.
+            task_specification (TaskSpecification): The program to be evaluated against this
+                criteria.
         """
         raise NotImplementedError
 
     def run(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
-        Validate the input circuit and return the circuit, unmodified.
+        Validate the input program and return the program, unmodified.
 
         Args:
-            circuit (Circuit): The circuit to validate.
+            task_specification (TaskSpecification): The program to validate.
 
         Returns:
-            Circuit: The unmodified circuit passed in as input.
+            TaskSpecification: The unmodified program passed in as input.
         """
         self.validate(task_specification)
         return task_specification

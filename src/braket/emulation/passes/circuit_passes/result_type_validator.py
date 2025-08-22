@@ -27,6 +27,9 @@ class ResultTypeValidator(ValidationPass):
         connectivity_graph: dict[str, list[str]] | None = None,
     ):
         """
+        A ResultTypeValidator instance validates that the result types of a circuit are supported on
+            the device.
+
         Args:
             supported_result_types (Optional[Iterable[str]]): A list of result types supported
                 by the emulator. A result type is a Braket result type name.
