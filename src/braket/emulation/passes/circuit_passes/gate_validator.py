@@ -73,7 +73,7 @@ class GateValidator(ValidationPass):
         """
         in_verbatim = False
         for instruction in circuit.instructions:
-            if isinstance(instruction.operator, StartVerbatimBox) or isinstance(instruction.operator, EndVerbatimBox):
+            if isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox)):
                 in_verbatim = not in_verbatim
                 continue
             if isinstance(instruction.operator, Gate):
@@ -81,12 +81,9 @@ class GateValidator(ValidationPass):
                 if in_verbatim:
                     if type(gate) not in self._native_gates:
                         raise ValueError(f"Gate {gate.name} is not a native gate for this device.")
-                else:
-                    if type(gate) not in self._supported_gates:
-                        raise ValueError(
-                            f"Gate {gate.name} is not a supported gate for this device."
-                        )
+                elif type(gate) not in self._supported_gates:
+                    raise ValueError(f"Gate {gate.name} is not a supported gate for this device.")
 
         # Check for unclosed verbatim box
         if in_verbatim:
-            raise ValueError(f"No end verbatim box found for the circuit.")
+            raise ValueError("No end verbatim box found for the circuit.")

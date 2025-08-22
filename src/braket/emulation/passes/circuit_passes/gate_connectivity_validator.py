@@ -101,7 +101,7 @@ provided as edge attributes."
 
         in_verbatim = False
         for instruction in circuit.instructions:
-            if isinstance(instruction.operator, StartVerbatimBox) or isinstance(instruction.operator, EndVerbatimBox):
+            if isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox)):
                 in_verbatim = not in_verbatim
                 continue
 
@@ -110,7 +110,7 @@ provided as edge attributes."
 
         # Check for unclosed verbatim box
         if in_verbatim:
-            raise ValueError(f"No end verbatim box found for the circuit.")
+            raise ValueError("No end verbatim box found for the circuit.")
 
     def _validate_gate_in_verbatim(self, instruction: Any) -> None:
         """
