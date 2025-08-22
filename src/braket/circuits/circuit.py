@@ -435,6 +435,20 @@ class Circuit:  # noqa: PLR0904
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
 
+    def _map_target_qubits(
+        self,
+        source_qubits: QubitSetInput,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> QubitSet:
+        if target:
+            mapped_target_qubits = target
+        elif target_mapping:
+            mapped_target_qubits = [target_mapping[qubit] for qubit in source_qubits]
+        else:  # both `target` and `target_mapping` is None
+            mapped_target_qubits = source_qubits
+        return QubitSet(mapped_target_qubits)
+
     def _check_if_qubit_measured(
         self,
         instruction: Instruction,
@@ -461,16 +475,10 @@ class Circuit:  # noqa: PLR0904
         if not self._measure_targets:
             return
 
-        if target:
-            mapped_target_qubits = QubitSet(target)
-        elif target_mapping:
-            mapped_target_qubits = QubitSet([
-                target_mapping[qubit] for qubit in QubitSet(instruction.target)
-            ])
-        else:  # both `target` and `target_mapping` is None
-            mapped_target_qubits = QubitSet(instruction.target)
-
-        if any(qubit in self._measure_targets for qubit in mapped_target_qubits):
+        if any(
+            qubit in self._measure_targets
+            for qubit in self._map_target_qubits(instruction.target, target, target_mapping)
+        ):
             raise ValueError("cannot apply instruction to measured qubits.")
 
     def add_instruction(
@@ -530,7 +538,7 @@ class Circuit:  # noqa: PLR0904
 
         # Update measure targets if instruction is a measurement
         if isinstance(instruction.operator, Measure):
-            measure_target = target or instruction.target[0]
+            measure_target = self._map_target_qubits(instruction.target, target, target_mapping)[0]
             self._measure_targets = (self._measure_targets or []) + [measure_target]
 
         if not target_mapping and not target:
