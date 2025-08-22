@@ -129,11 +129,11 @@ class Emulator(Device):
             exists for this emulator and apply_noise_model is true.
         """
 
-        # Apply measurement manually if the circuit has no measurement and no result type
-        # This set of readout error is applied even if apply_noise_model is False
-        # because when we use the noise model to apply readout error to the circuit,
+        # Apply measurement manually if the circuit has no measurement and no result type.
+        # This ensures that the noise model can apply readout error to the circuit, since
         # the readout error is applied if and only if there is measurement or result type
-        # in the circuit
+        # in the circuit. The measurement operations should be added even if apply_noise_model
+        # is False.
         has_measurement = any(
             isinstance(instr.operator, Measure) for instr in task_specification.instructions
         )
