@@ -66,12 +66,12 @@ class DeviceEmulatorProperties:
         self._validate_two_qubit_properties(twoQubitProperties, qubit_labels)
 
         # Store properties
-        self.qubitCount = qubitCount
-        self.nativeGateSet = nativeGateSet
-        self.connectivityGraph = connectivityGraph
-        self.oneQubitProperties = oneQubitProperties
-        self.twoQubitProperties = twoQubitProperties
-        self.supportedResultTypes = supportedResultTypes
+        self._qubit_count = qubitCount
+        self._native_gate_set = nativeGateSet
+        self._connectivity_graph = connectivityGraph
+        self._one_qubit_properties = oneQubitProperties
+        self._two_qubit_properties = twoQubitProperties
+        self._supported_result_types = supportedResultTypes
 
     @staticmethod
     def _validate_native_gate_set(nativeGateSet: list[str]) -> None:
@@ -127,7 +127,7 @@ class DeviceEmulatorProperties:
     @property
     def qubit_labels(self) -> list[int]:
         """Get the sorted list of qubit indices."""
-        indices = list(self.oneQubitProperties.keys())
+        indices = list(self.one_qubit_properties.keys())
         return sorted(int(x) for x in indices)
 
     @property
@@ -137,26 +137,50 @@ class DeviceEmulatorProperties:
         Note: We treat the graph as undirected, and determine if it is
             a complete graph by counting the number of distinct edges
         """
-        if not self.connectivityGraph:
+        if not self.connectivity_graph:
             return True
 
         edges = set()
-        for node, neighbors in self.connectivityGraph.items():
+        for node, neighbors in self.connectivity_graph.items():
             edges_node = [(int(node), int(neighbor)) for neighbor in neighbors]
             edges_node = [(min(edge), max(edge)) for edge in edges_node]
             edges.update(edges_node)
 
-        return len(edges) == self.qubitCount * (self.qubitCount - 1) / 2
+        return len(edges) == self.qubit_count * (self.qubit_count - 1) / 2
 
     @property
     def directed(self) -> bool:
         """Determine if the connectivity graph is a directed graph."""
-        for node, neighbors in self.connectivityGraph.items():
+        for node, neighbors in self.connectivity_graph.items():
             for neighbor in neighbors:
                 # If neighbor doesn't link back to node, it's directed
-                if node not in self.connectivityGraph.get(neighbor, []):
+                if node not in self.connectivity_graph.get(neighbor, []):
                     return True
         return False
+
+    @property
+    def qubit_count(self) -> int:
+        return self._qubit_count
+
+    @property
+    def native_gate_set(self) -> list[str]:
+        return self._native_gate_set
+
+    @property
+    def connectivity_graph(self) -> list[str]:
+        return self._connectivity_graph
+
+    @property
+    def one_qubit_properties(self) -> dict[str, OneQubitProperties]:
+        return self._one_qubit_properties
+
+    @property
+    def two_qubit_properties(self) -> dict[str, TwoQubitProperties]:
+        return self._two_qubit_properties
+
+    @property
+    def supported_result_types(self) -> list[ResultType]:
+        return self._supported_result_types
 
     @classmethod
     def from_device_properties(

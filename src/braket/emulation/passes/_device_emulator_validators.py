@@ -28,8 +28,8 @@ def _set_up_connectivity_validator(
             # the connectivity regardless if the graph is directed or undirected.
         )
     return ConnectivityValidator(
-        connectivity_graph=device_emu_properties.connectivityGraph,
-        num_qubits=device_emu_properties.qubitCount,
+        connectivity_graph=device_emu_properties.connectivity_graph,
+        num_qubits=device_emu_properties.qubit_count,
         qubit_labels=device_emu_properties.qubit_labels,
         directed=False,
         # Set directed to false because ConnectivityValidator validates
@@ -44,12 +44,14 @@ def _set_up_gate_connectivity_validator(
         gate_connectivity_graph = {}
         for qubit_1 in device_emu_properties.qubit_labels:
             for qubit_2 in device_emu_properties.qubit_labels:
-                gate_connectivity_graph[qubit_1, qubit_2] = set(device_emu_properties.nativeGateSet)
+                gate_connectivity_graph[qubit_1, qubit_2] = set(
+                    device_emu_properties.native_gate_set
+                )
     else:
-        twoQubitProperties = device_emu_properties.twoQubitProperties
+        twoQubitProperties = device_emu_properties.two_qubit_properties
         # For non fully connected graph
         gate_connectivity_graph = {}
-        for node, neighbors in device_emu_properties.connectivityGraph.items():
+        for node, neighbors in device_emu_properties.connectivity_graph.items():
             for neighbor in neighbors:
                 edge = (int(node), int(neighbor))
                 edge_key = "-".join([str(qubit) for qubit in edge])

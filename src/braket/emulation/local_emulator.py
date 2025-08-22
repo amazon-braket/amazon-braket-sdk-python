@@ -85,13 +85,13 @@ class LocalEmulator(Emulator):
 
         passes = [
             _NotImplementedValidator(),
-            QubitCountValidator(device_em_properties.qubitCount),
-            GateValidator(native_gates=device_em_properties.nativeGateSet),
+            QubitCountValidator(device_em_properties.qubit_count),
+            GateValidator(native_gates=device_em_properties.native_gate_set),
             _set_up_connectivity_validator(device_em_properties),
             _set_up_gate_connectivity_validator(device_em_properties),
             ResultTypeValidator(
-                device_em_properties.supportedResultTypes,
-                device_em_properties.connectivityGraph,
+                device_em_properties.supported_result_types,
+                device_em_properties.connectivity_graph,
             ),
         ]
 
@@ -158,7 +158,7 @@ class LocalEmulator(Emulator):
             noise_model (NoiseModel): The noise model to add noise channels to.
             device_em_properties (DeviceEmulatorProperties): The device emulator properties.
         """
-        for qubit_str, data in device_em_properties.oneQubitProperties.items():
+        for qubit_str, data in device_em_properties.one_qubit_properties.items():
             qubit = int(qubit_str)
             oneQubitProperty = data.oneQubitFidelity
             fidelity_names = {
@@ -201,7 +201,7 @@ class LocalEmulator(Emulator):
             noise_model (NoiseModel): The noise model to add noise channels to.
             device_em_properties (DeviceEmulatorProperties): The device emulator properties.
         """
-        for edge, data in device_em_properties.twoQubitProperties.items():
+        for edge, data in device_em_properties.two_qubit_properties.items():
             qubits = [int(qubit) for qubit in edge.split("-")]
             twoQubitGateFidelity = data.twoQubitGateFidelity
 

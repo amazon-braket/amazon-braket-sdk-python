@@ -38,14 +38,16 @@ def test_basic_instantiation():
         twoQubitProperties={"0-1": valid_twoQubitProperties},
         supportedResultTypes=valid_supportedResultTypes,
     )
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"0": ["1"], "1": ["0"]}
+    assert result.qubit_count == 2
+    assert result.native_gate_set == ["cz", "prx"]
+    assert result.connectivity_graph == {"0": ["1"], "1": ["0"]}
     assert (
-        result.oneQubitProperties["0"] == result.oneQubitProperties["1"] == valid_oneQubitProperties
+        result.one_qubit_properties["0"]
+        == result.one_qubit_properties["1"]
+        == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
+    assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
+    assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == False
@@ -53,15 +55,15 @@ def test_basic_instantiation():
 
 def test_from_json_3(reduced_standardized_json):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json)
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == {"0": ["1"]}
+    assert result.qubit_count == 2
+    assert result.native_gate_set == valid_nativeGateSet
+    assert result.connectivity_graph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["0"] == valid_oneQubitProperties,
-        result.oneQubitProperties["1"] == valid_oneQubitProperties_v2,
+        result.one_qubit_properties["0"] == valid_oneQubitProperties,
+        result.one_qubit_properties["1"] == valid_oneQubitProperties_v2,
     )
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
+    assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
+    assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1]
     assert result.fully_connected == True
     assert result.directed == True
@@ -70,15 +72,15 @@ def test_from_json_3(reduced_standardized_json):
 def test_from_device_properties(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
     result = DeviceEmulatorProperties.from_device_properties(device_properties)
-    assert result.qubitCount == 2
-    assert result.nativeGateSet == valid_nativeGateSet
-    assert result.connectivityGraph == {"0": ["1"]}
+    assert result.qubit_count == 2
+    assert result.native_gate_set == valid_nativeGateSet
+    assert result.connectivity_graph == {"0": ["1"]}
     assert (
-        result.oneQubitProperties["0"] == valid_oneQubitProperties,
-        result.oneQubitProperties["1"] == valid_oneQubitProperties_v2,
+        result.one_qubit_properties["0"] == valid_oneQubitProperties,
+        result.one_qubit_properties["1"] == valid_oneQubitProperties_v2,
     )
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
+    assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
+    assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1]
 
 
@@ -139,21 +141,21 @@ def test_invalid_instantiation_due_to_missing_field(reduced_standardized_json, m
 
 def test_from_json_non_fully_connected(reduced_standardized_json_2):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json_2)
-    assert result.qubitCount == 3
-    assert result.nativeGateSet == ["rx", "rz", "iswap"]
-    assert result.connectivityGraph == {"0": ["1"], "1": ["0", "2"], "2": ["1"]}
+    assert result.qubit_count == 3
+    assert result.native_gate_set == ["rx", "rz", "iswap"]
+    assert result.connectivity_graph == {"0": ["1"], "1": ["0", "2"], "2": ["1"]}
     assert (
-        result.oneQubitProperties["2"]
-        == result.oneQubitProperties["1"]
-        == result.oneQubitProperties["0"]
+        result.one_qubit_properties["2"]
+        == result.one_qubit_properties["1"]
+        == result.one_qubit_properties["0"]
         == valid_oneQubitProperties
     )
     assert (
-        result.twoQubitProperties["0-1"]
-        == result.twoQubitProperties["1-2"]
+        result.two_qubit_properties["0-1"]
+        == result.two_qubit_properties["1-2"]
         == valid_twoQubitProperties
     )
-    assert result.supportedResultTypes == valid_supportedResultTypes
+    assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == False
@@ -161,17 +163,17 @@ def test_from_json_non_fully_connected(reduced_standardized_json_2):
 
 def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3):
     result = DeviceEmulatorProperties.from_json(reduced_standardized_json_3)
-    assert result.qubitCount == 3
-    assert result.nativeGateSet == ["cz", "prx"]
-    assert result.connectivityGraph == {"0": ["1"], "1": ["2"]}
+    assert result.qubit_count == 3
+    assert result.native_gate_set == ["cz", "prx"]
+    assert result.connectivity_graph == {"0": ["1"], "1": ["2"]}
     assert (
-        result.oneQubitProperties["2"]
-        == result.oneQubitProperties["1"]
-        == result.oneQubitProperties["0"]
+        result.one_qubit_properties["2"]
+        == result.one_qubit_properties["1"]
+        == result.one_qubit_properties["0"]
         == valid_oneQubitProperties
     )
-    assert result.twoQubitProperties["0-1"] == valid_twoQubitProperties
-    assert result.supportedResultTypes == valid_supportedResultTypes
+    assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
+    assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == True

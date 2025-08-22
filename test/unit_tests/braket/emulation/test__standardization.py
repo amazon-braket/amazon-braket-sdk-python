@@ -26,7 +26,7 @@ from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabil
 def test_standardize_ionq_device_properties(reduced_ionq_device_capabilities):
     device_properties = _standardize_ionq_device_properties(reduced_ionq_device_capabilities)
     device_em_properties = DeviceEmulatorProperties.from_device_properties(device_properties)
-    assert device_em_properties.qubitCount == 25
+    assert device_em_properties.qubit_count == 25
 
 
 def test_invalid_standardize_ionq_device_properties(reduced_standardized_json_3):
