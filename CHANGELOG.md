@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.100.0 (2025-08-22)
+
+### Features
+
+ * `add_verbatim_marker()` method to `BraketProgramContext` class for updated `Circuit.from_ir`
+
+### Bug Fixes and Other Changes
+
+ * caching measured qubits
+ * resolve failing tests on py312 on windows
+
 ## v1.99.0 (2025-08-21)
 
 ### Deprecations and Removals
