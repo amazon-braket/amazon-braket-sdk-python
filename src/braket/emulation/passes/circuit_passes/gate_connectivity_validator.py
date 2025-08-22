@@ -98,34 +98,19 @@ provided as edge attributes."
             ValueError if any of the gate operations use qubits or qubit edges that don't exist
             in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
-        idx = 0
-        while idx < len(circuit.instructions):
-            instruction = circuit.instructions[idx]
-            if isinstance(instruction.operator, StartVerbatimBox):
-                idx = self._process_verbatim_box(circuit, idx)
-            else:
-                idx += 1
 
-    def _process_verbatim_box(self, circuit: Circuit, start_idx: int) -> int:
-        """
-        Process instructions within a verbatim box.
+        in_verbatim = False
+        for instruction in circuit.instructions:
+            if isinstance(instruction.operator, StartVerbatimBox) or isinstance(instruction.operator, EndVerbatimBox):
+                in_verbatim = not in_verbatim
+                continue
 
-        Args:
-            circuit: The quantum circuit containing instructions
-            start_idx: The index of the StartVerbatimBox instruction
-
-        Returns:
-            int: The index after the EndVerbatimBox instruction
-        """
-        idx = start_idx + 1
-        while idx < len(circuit.instructions) and not isinstance(
-            circuit.instructions[idx].operator, EndVerbatimBox
-        ):
-            instruction = circuit.instructions[idx]
-            if isinstance(instruction.operator, Gate):
+            if isinstance(instruction.operator, Gate) and in_verbatim:
                 self._validate_gate_in_verbatim(instruction)
-            idx += 1
-        return idx + 1  # Skip past the EndVerbatimBox
+
+        # Check for unclosed verbatim box
+        if in_verbatim:
+            raise ValueError(f"No end verbatim box found for the circuit.")
 
     def _validate_gate_in_verbatim(self, instruction: Any) -> None:
         """

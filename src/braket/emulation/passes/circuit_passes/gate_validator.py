@@ -71,28 +71,22 @@ class GateValidator(ValidationPass):
             ValueError: If a gate operation or verbatim gate operation is not in this validator's
             supported or native gate set, respectively.
         """
-        idx = 0
-        while idx < len(circuit.instructions):
-            instruction = circuit.instructions[idx]
-            if isinstance(instruction.operator, StartVerbatimBox):
-                idx += 1
-                while idx < len(circuit.instructions) and not isinstance(
-                    circuit.instructions[idx].operator, EndVerbatimBox
-                ):
-                    instruction = circuit.instructions[idx]
-                    if isinstance(instruction.operator, Gate):
-                        gate = instruction.operator
-                        if type(gate) not in self._native_gates:
-                            raise ValueError(
-                                f"Gate {gate.name} is not a native gate for this device."
-                            )
-                    idx += 1
-                if idx == len(circuit.instructions) or not isinstance(
-                    circuit.instructions[idx].operator, EndVerbatimBox
-                ):
-                    raise ValueError(f"No end verbatim box found at index {idx} in the circuit.")
-            elif isinstance(instruction.operator, Gate):
+        in_verbatim = False
+        for instruction in circuit.instructions:
+            if isinstance(instruction.operator, StartVerbatimBox) or isinstance(instruction.operator, EndVerbatimBox):
+                in_verbatim = not in_verbatim
+                continue
+            if isinstance(instruction.operator, Gate):
                 gate = instruction.operator
-                if type(gate) not in self._supported_gates:
-                    raise ValueError(f"Gate {gate.name} is not a supported gate for this device.")
-            idx += 1
+                if in_verbatim:
+                    if type(gate) not in self._native_gates:
+                        raise ValueError(f"Gate {gate.name} is not a native gate for this device.")
+                else:
+                    if type(gate) not in self._supported_gates:
+                        raise ValueError(
+                            f"Gate {gate.name} is not a supported gate for this device."
+                        )
+
+        # Check for unclosed verbatim box
+        if in_verbatim:
+            raise ValueError(f"No end verbatim box found for the circuit.")
