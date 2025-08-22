@@ -14,6 +14,7 @@
 from collections.abc import Iterable
 
 import numpy as np
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
@@ -24,6 +25,7 @@ from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
+    COMPILER_DIRECTIVES,
     braket_result_to_result_type,
     one_prob_noise_map,
 )
@@ -65,8 +67,7 @@ class BraketProgramContext(AbstractProgramContext):
             target (tuple[int]): Unused
             phase_value (float): The phase value to be applied
         """
-        instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
-        self._circuit.add_instruction(instruction)
+        self._circuit.gphase(phase_value)
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
@@ -173,3 +174,6 @@ class BraketProgramContext(AbstractProgramContext):
             index = classical_targets[iter] if classical_targets else iter
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
+
+    def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
+        self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))

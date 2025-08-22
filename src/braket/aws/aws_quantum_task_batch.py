@@ -166,7 +166,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         batch_length = 1
         arg_lengths = []
-        for arg, single_arg_type in zip(args, single_arg_types, strict=False):
+        for arg, single_arg_type in zip(args, single_arg_types, strict=True):
             arg_length = 1 if isinstance(arg, single_arg_type) else len(arg)
             arg_lengths.append(arg_length)
 
@@ -182,7 +182,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             if isinstance(args[i], dict | single_task_type):
                 args[i] = repeat(args[i], batch_length)
 
-        tasks_inputs_definitions = list(zip(*args, strict=False))
+        tasks_inputs_definitions = list(zip(*args, strict=True))
 
         for task_specification, input_map, _gate_definitions in tasks_inputs_definitions:
             if isinstance(task_specification, Circuit):
@@ -320,7 +320,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
             self._unsuccessful = {
                 task.id
-                for task, result in zip(self._tasks, self._results, strict=False)
+                for task, result in zip(self._tasks, self._results, strict=True)
                 if not result
             }
 
@@ -371,15 +371,15 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             *self._aws_quantum_task_args,
             **self._aws_quantum_task_kwargs,
         )
-        for index, task in zip(unsuccessful_indices, retried_tasks, strict=False):
+        for index, task in zip(unsuccessful_indices, retried_tasks, strict=True):
             self._tasks[index] = task
 
         retried_results = AwsQuantumTaskBatch._retrieve_results(retried_tasks, self._max_workers)
-        for index, result in zip(unsuccessful_indices, retried_results, strict=False):
+        for index, result in zip(unsuccessful_indices, retried_results, strict=True):
             self._results[index] = result
         self._unsuccessful = {
             task.id
-            for task, result in zip(retried_tasks, retried_results, strict=False)
+            for task, result in zip(retried_tasks, retried_results, strict=True)
             if not result
         }
         return not self._unsuccessful

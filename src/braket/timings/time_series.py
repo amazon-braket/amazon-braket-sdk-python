@@ -115,7 +115,7 @@ class TimeSeries:
             )
 
         ts = TimeSeries()
-        for t, v in zip(times, values, strict=False):
+        for t, v in zip(times, values, strict=True):
             ts.put(t, v)
         return ts
 
@@ -181,7 +181,7 @@ class TimeSeries:
         new_time_series = TimeSeries()
         new_times = self.times() + other.times()
         new_values = self.values() + other.values()
-        for t, v in zip(new_times, new_values, strict=False):
+        for t, v in zip(new_times, new_values, strict=True):
             new_time_series.put(t, v)
 
         return new_time_series
@@ -261,7 +261,7 @@ class TimeSeries:
             )
         new_values = [*self.values()[:-1], bndry_val, *other.values()[1:]]
 
-        for t, v in zip(new_times, new_values, strict=False):
+        for t, v in zip(new_times, new_values, strict=True):
             new_time_series.put(t, v)
 
         return new_time_series

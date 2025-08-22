@@ -173,7 +173,7 @@ class DrivingField(Hamiltonian):
         phase = TimeSeries()
 
         for t, amplitude_value, detuning_value, phase_value in zip(
-            times, amplitudes, detunings, phases, strict=False
+            times, amplitudes, detunings, phases, strict=True
         ):
             amplitude.put(t, amplitude_value)
             detuning.put(t, detuning_value)
