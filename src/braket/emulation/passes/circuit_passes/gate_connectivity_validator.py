@@ -101,20 +101,17 @@ provided as edge attributes."
 
         in_verbatim = False
         for instruction in circuit.instructions:
-        operator = instruction.operator
-        if isinstance(operator, Gate) and in_verbatim:
-            self._validate_gate_in_verbatim(instruction)
-        elif isinstance(operator, StartVerbatimBox):
-            if in_verbatim:
-                raise ValueError("Already in verbatim box")
-            verbatim = True
-        elif isinstance(operator, EndVerbatimBox):
-            if not in_verbatim:
-                raise ValueError("Already outside of verbatim box")
-            verbatim = False
-
-            if isinstance(instruction.operator, Gate) and in_verbatim:
+            operator = instruction.operator
+            if isinstance(operator, Gate) and in_verbatim:
                 self._validate_gate_in_verbatim(instruction)
+            elif isinstance(operator, StartVerbatimBox):
+                if in_verbatim:
+                    raise ValueError("Already in verbatim box")
+                in_verbatim = True
+            elif isinstance(operator, EndVerbatimBox):
+                if not in_verbatim:
+                    raise ValueError("Already outside of verbatim box")
+                in_verbatim = False
 
         # Check for unclosed verbatim box
         if in_verbatim:

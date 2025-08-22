@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit, Gate, Instruction
-from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.noises import BitFlip
 from braket.emulation.passes.circuit_passes import GateValidator
 
@@ -143,6 +143,7 @@ def test_invalid_instantiation(supported_gates, native_gates, error_message):
         .add_verbatim_box(Circuit().cz(1, 2).prx(range(5), np.pi / 4, np.pi / 2).cz(2, 6))
         .prx(range(4), np.pi / 4, np.pi / 6),
         Circuit().add_instruction(Instruction(StartVerbatimBox())),
+        Circuit().add_instruction(Instruction(EndVerbatimBox())),
     ],
 )
 def test_invalid_circuits(basic_gate_set, circuit):

@@ -75,11 +75,7 @@ class GateValidator(ValidationPass):
         for instruction in circuit.instructions:
             operator = instruction.operator
             if isinstance(operator, Gate):
-                if in_verbatim:
-                    if type(operator) not in self._native_gates:
-                        raise ValueError(f"Gate {operator.name} is not a native gate for this device.")
-                elif type(operator) not in self._supported_gates:
-                    raise ValueError(f"Gate {operator.name} is not a supported gate for this device.")
+                self._validate_gate(in_verbatim, operator)
             elif isinstance(operator, StartVerbatimBox):
                 if in_verbatim:
                     raise ValueError("Already in verbatim box")
@@ -92,3 +88,10 @@ class GateValidator(ValidationPass):
         # Check for unclosed verbatim box
         if in_verbatim:
             raise ValueError("No end verbatim box found for the circuit.")
+
+    def _validate_gate(self, in_verbatim: bool, operator: Gate) -> None:
+        if in_verbatim:
+            if type(operator) not in self._native_gates:
+                raise ValueError(f"Gate {operator.name} is not a native gate for this device.")
+        elif type(operator) not in self._supported_gates:
+            raise ValueError(f"Gate {operator.name} is not a supported gate for this device.")

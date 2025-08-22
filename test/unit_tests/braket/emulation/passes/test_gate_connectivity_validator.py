@@ -4,7 +4,7 @@ import pytest
 from networkx.utils import graphs_equal
 
 from braket.circuits import Circuit, Gate, Instruction
-from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.noises import BitFlip
 from braket.emulation.passes.circuit_passes import GateConnectivityValidator
 
@@ -208,6 +208,7 @@ def create_undirected_graph_with_exisiting_back_edges(representation):
         Circuit().add_verbatim_box(Circuit().swap(1, 2).xx(0, 3, np.pi / 2).iswap(0, 1)),
         Circuit().add_verbatim_box(Circuit().cnot(0, 3)),
         Circuit().add_instruction(Instruction(StartVerbatimBox())),
+        Circuit().add_instruction(Instruction(EndVerbatimBox())),
     ],
 )
 def test_invalid_circuits(basic_4_node_graph, circuit):
