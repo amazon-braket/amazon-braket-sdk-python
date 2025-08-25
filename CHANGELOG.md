@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.100.1 (2025-08-25)
+
+### Bug Fixes and Other Changes
+
+ * update local sim version dependency
+
 ## v1.100.0 (2025-08-22)
 
 ### Features
