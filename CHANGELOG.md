@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.101.0 (2025-08-25)
+
+### Features
+
+ * Emulators with circuit validation and noise models
+
 ## v1.100.1 (2025-08-25)
 
 ### Bug Fixes and Other Changes
