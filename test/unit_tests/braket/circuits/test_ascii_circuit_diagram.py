@@ -956,3 +956,17 @@ def test_measure_with_readout_noise():
         "T  : |0|    1    |2|",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_circuit_visualization():
+    circ = Circuit().barrier(target=[0, 100])
+    expected = (
+        "T    : |0 |",
+        "           ",
+        "q0   : -||-",
+        "        |  ",
+        "q100 : -||-",
+        "",
+        "T    : |0 |",
+    )
+    _assert_correct_diagram(circ, expected)
