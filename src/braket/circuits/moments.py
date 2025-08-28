@@ -174,8 +174,10 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
         operator = instruction.operator
         if isinstance(operator, CompilerDirective):
-            time = self._update_qubit_times(self._qubits)
-            self._moments[MomentsKey(time, None, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
+            qubit_range = instruction.target.union(instruction.control)
+            time = self._update_qubit_times(qubit_range if qubit_range else self._qubits)
+            self._moments[MomentsKey(time, qubit_range, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
+            self._qubits.update(qubit_range)
             self._depth = time + 1
             self._time_all_qubits = time
         elif isinstance(operator, Noise):

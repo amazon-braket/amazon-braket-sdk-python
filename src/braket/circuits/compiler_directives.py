@@ -60,3 +60,42 @@ class EndVerbatimBox(CompilerDirective):
 
     def _to_openqasm(self) -> str:
         return "}"
+
+
+class Barrier(CompilerDirective):
+    r"""Barrier compiler directive."""
+
+    def __init__(self, qubit_indices: list[int]):
+        super().__init__(["||"])
+        self._qubit_indices = qubit_indices
+
+    @property
+    def qubit_indices(self) -> list[int]:
+        return self._qubit_indices
+
+    @property
+    def qubit_count(self) -> int:
+        return len(self._qubit_indices)
+
+    def __eq__(self, other):
+        if isinstance(other, Barrier):
+            return self._qubit_indices == other._qubit_indices
+        return super().__eq__(other)
+
+    def _to_jaqcd(self) -> Any:
+        raise NotImplementedError("Barrier is not supported in JAQCD")
+
+    def to_ir(self, target, ir_type, serialization_properties=None, **kwargs):
+        if ir_type.name == "OPENQASM":
+            if target:
+                qubits = ", ".join(serialization_properties.format_target(int(q)) for q in target)
+                return f"barrier {qubits};"
+            else:
+                return "barrier;"
+        return super().to_ir(target, ir_type, serialization_properties, **kwargs)
+
+    def _to_openqasm(self) -> str:
+        return "barrier"
+
+
+
