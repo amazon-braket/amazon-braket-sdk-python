@@ -103,10 +103,14 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
                 ascii_symbol = item.ascii_symbols[0]
-                marker = "*" * len(ascii_symbol)
-                num_after = len(circuit_qubits) - 1
-                after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol, *after]
+                # Special handling for barriers - use actual symbols for target qubits
+                if item.operator.name == "Barrier":
+                    ascii_symbols = item.ascii_symbols
+                else:
+                    marker = "*" * len(ascii_symbol)
+                    num_after = len(circuit_qubits) - 1
+                    after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+                    ascii_symbols = [ascii_symbol, *after]
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -150,10 +154,11 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                         )
                         else ""
                     )
+                    idx = 0 if (isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective) and item.operator.name == "Barrier") else item_qubit_index
                     symbols[qubit] = (
-                        f"({ascii_symbols[item_qubit_index]}{power_string})"
+                        f"({ascii_symbols[idx]}{power_string})"
                         if power_string
-                        else ascii_symbols[item_qubit_index]
+                        else ascii_symbols[idx]
                     )
                 elif qubit in control_qubits:
                     symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"

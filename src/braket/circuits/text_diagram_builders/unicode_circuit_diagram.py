@@ -209,12 +209,12 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         """
         top = ""
         bottom = ""
-        if symbol in {"C", "N", "SWAP"}:
+        if symbol in {"C", "N", "SWAP", "||"}:
             if connection in {"above", "both"}:
                 top = _fill_symbol(cls._vertical_delimiter(), " ")
             if connection in {"below", "both"}:
                 bottom = _fill_symbol(cls._vertical_delimiter(), " ")
-            new_symbol = {"C": "●", "N": "◯", "SWAP": "x"}
+            new_symbol = {"C": "●", "N": "◯", "SWAP": "x", "||": "▒"}
             # replace SWAP by x
             # the size of the moment remains as if there was a box with 4 characters inside
             symbol = _fill_symbol(new_symbol[symbol], cls._qubit_line_character())
