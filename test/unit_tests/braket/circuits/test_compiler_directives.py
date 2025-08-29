@@ -53,23 +53,22 @@ def test_verbatim(testclass, irclass, openqasm_str, counterpart):
 
 
 def test_barrier():
-    
     barrier = compiler_directives.Barrier([0, 1, 2])
     assert barrier.qubit_indices == [0, 1, 2]
     assert barrier.qubit_count == 3
     assert barrier.ascii_symbols == ("||",)
     assert barrier._to_openqasm() == "barrier"
-    
+
     with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):
         barrier._to_jaqcd()
-    
+
     props = OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL)
     result = barrier.to_ir([0, 1, 2], IRType.OPENQASM, props)
     assert result == "barrier q[0], q[1], q[2];"
-    
+
     result = barrier.to_ir([], IRType.OPENQASM, props)
     assert result == "barrier;"
-    
+
     barrier2 = compiler_directives.Barrier([0, 1, 2])
     barrier3 = compiler_directives.Barrier([0, 1])
     assert barrier == barrier2

@@ -71,6 +71,58 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
+    def _process_result_type_item(cls, item: ResultType, circuit_qubits: QubitSet) -> tuple:
+        """Process a ResultType item and return its properties."""
+        target_qubits = circuit_qubits
+        control_qubits = QubitSet()
+        target_and_control = target_qubits.union(control_qubits)
+        qubits = circuit_qubits
+        ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+
+    @classmethod
+    def _process_compiler_directive_item(cls, item: Instruction, circuit_qubits: QubitSet) -> tuple:
+        """Process a CompilerDirective item and return its properties."""
+        target_qubits = circuit_qubits
+        control_qubits = QubitSet()
+        target_and_control = target_qubits.union(control_qubits)
+        qubits = circuit_qubits
+        ascii_symbol = item.ascii_symbols[0]
+
+        if item.operator.name == "Barrier":
+            ascii_symbols = item.ascii_symbols
+        else:
+            marker = "*" * len(ascii_symbol)
+            num_after = len(circuit_qubits) - 1
+            after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+            ascii_symbols = [ascii_symbol, *after]
+
+        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+
+    @classmethod
+    def _process_gphase_item(cls, circuit_qubits: QubitSet) -> tuple:
+        """Process a GPhase item and return its properties."""
+        target_qubits = circuit_qubits
+        control_qubits = QubitSet()
+        target_and_control = QubitSet()
+        qubits = circuit_qubits
+        ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
+        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+
+    @classmethod
+    def _process_regular_item(cls, item: Instruction) -> tuple:
+        """Process a regular item and return its properties."""
+        if isinstance(item.target, list):
+            target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+        else:
+            target_qubits = item.target
+        control_qubits = getattr(item, "control", QubitSet())
+        target_and_control = target_qubits.union(control_qubits)
+        qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+        ascii_symbols = item.ascii_symbols
+        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+
+    @classmethod
     def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,
@@ -92,48 +144,27 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
         for item in items:
             if isinstance(item, ResultType) and not item.target:
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = circuit_qubits
-                ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
+                    cls._process_result_type_item(item, circuit_qubits)
+                )
             elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = circuit_qubits
-                ascii_symbol = item.ascii_symbols[0]
-                # Special handling for barriers - use actual symbols for target qubits
-                if item.operator.name == "Barrier":
-                    ascii_symbols = item.ascii_symbols
-                else:
-                    marker = "*" * len(ascii_symbol)
-                    num_after = len(circuit_qubits) - 1
-                    after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                    ascii_symbols = [ascii_symbol, *after]
+                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
+                    cls._process_compiler_directive_item(item, circuit_qubits)
+                )
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
                 and item.operator.name == "GPhase"
             ):
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = QubitSet()
-                qubits = circuit_qubits
-                ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
+                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
+                    cls._process_gphase_item(circuit_qubits)
+                )
             else:
-                if isinstance(item.target, list):
-                    target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
-                else:
-                    target_qubits = item.target
-                control_qubits = getattr(item, "control", QubitSet())
+                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
+                    cls._process_regular_item(item)
+                )
                 control_state = getattr(item, "control_state", "1" * len(control_qubits))
                 map_control_qubit_states = dict(zip(control_qubits, control_state, strict=True))
-
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
-
-                ascii_symbols = item.ascii_symbols
 
             for qubit in qubits:
                 # Determine if the qubit is part of the item or in the middle of a
@@ -154,7 +185,15 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                         )
                         else ""
                     )
-                    idx = 0 if (isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective) and item.operator.name == "Barrier") else item_qubit_index
+                    idx = (
+                        0
+                        if (
+                            isinstance(item, Instruction)
+                            and isinstance(item.operator, CompilerDirective)
+                            and item.operator.name == "Barrier"
+                        )
+                        else item_qubit_index
+                    )
                     symbols[qubit] = (
                         f"({ascii_symbols[idx]}{power_string})"
                         if power_string

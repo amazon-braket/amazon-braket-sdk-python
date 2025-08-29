@@ -16,6 +16,8 @@ from typing import Any
 import braket.ir.jaqcd as ir
 
 from braket.circuits.compiler_directive import CompilerDirective
+from braket.circuits.serialization import IRType, SerializationProperties
+from braket.registers.qubit_set import QubitSet
 
 
 class StartVerbatimBox(CompilerDirective):
@@ -77,7 +79,7 @@ class Barrier(CompilerDirective):
     def qubit_count(self) -> int:
         return len(self._qubit_indices)
 
-    def __eq__(self, other):
+    def __eq__(self, other: CompilerDirective) -> bool:
         if isinstance(other, Barrier):
             return self._qubit_indices == other._qubit_indices
         return super().__eq__(other)
@@ -85,17 +87,19 @@ class Barrier(CompilerDirective):
     def _to_jaqcd(self) -> Any:
         raise NotImplementedError("Barrier is not supported in JAQCD")
 
-    def to_ir(self, target, ir_type, serialization_properties=None, **kwargs):
+    def to_ir(
+        self,
+        target: QubitSet | None,
+        ir_type: IRType,
+        serialization_properties: SerializationProperties | None = None,
+        **kwargs,
+    ) -> Any:
         if ir_type.name == "OPENQASM":
             if target:
                 qubits = ", ".join(serialization_properties.format_target(int(q)) for q in target)
                 return f"barrier {qubits};"
-            else:
-                return "barrier;"
+            return "barrier;"
         return super().to_ir(target, ir_type, serialization_properties, **kwargs)
 
     def _to_openqasm(self) -> str:
         return "barrier"
-
-
-

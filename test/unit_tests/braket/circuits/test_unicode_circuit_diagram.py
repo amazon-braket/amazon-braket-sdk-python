@@ -1134,6 +1134,8 @@ def test_barrier_circuit_visualization_without_other_gates():
         "T    : │  0   │",
     )
     _assert_correct_diagram(circ, expected)
+
+
 def test_barrier_circuit_visualization_with_other_gates():
     # Test barrier with sparse qubit targets that would cause IndexError
     circ = Circuit().x(0).barrier(target=[0, 100]).h(3)
