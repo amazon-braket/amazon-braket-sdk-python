@@ -185,11 +185,9 @@ class NoiseModel:
             match item.criteria:
                 case InitializationCriteria():
                     init_noise.append(item)
-                case MeasureCriteria():
-                    readout_noise.append(item)
                 case CircuitInstructionCriteria():
                     gate_noise.append(item)
-                case ResultTypeCriteria():
+                case MeasureCriteria() | ResultTypeCriteria():
                     readout_noise.append(item)
         return NoiseModelInstructions(
             initialization_noise=init_noise,
