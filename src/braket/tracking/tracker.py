@@ -176,23 +176,18 @@ class Tracker:
     def _recieve_internal(self, event: _TrackingEvent) -> None:
         resources = self._resources
         match event:
-            case _TaskCreationEvent(arn=arn, shots=shots, is_job_task=is_job_task, device=device):
+            case _TaskCreationEvent(arn, shots, is_job_task, device):
                 resources[arn] = {
                     "shots": shots,
                     "device": device,
                     "status": "CREATED",
                     "job_task": is_job_task,
                 }
-            case _TaskStatusEvent(arn=arn, status=status):
+            case _TaskStatusEvent(arn, status):
                 # Update task data corresponding to the arn only if it exists in resources
                 if arn in resources:
                     resources[arn]["status"] = status
-            case _TaskCompletionEvent(
-                arn=arn,
-                execution_duration=execution_duration,
-                status=status,
-                has_reservation_arn=has_reservation_arn,
-            ):
+            case _TaskCompletionEvent(arn, execution_duration, status, has_reservation_arn):
                 # Update task completion data corresponding to the arn
                 # only if it exists in resources
                 if arn in resources:
