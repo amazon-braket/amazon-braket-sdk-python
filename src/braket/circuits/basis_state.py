@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from functools import singledispatch
-
 import numpy as np
 
 
@@ -63,34 +61,29 @@ class BasisState:
 BasisStateInput = int | list[int] | str | BasisState
 
 
-@singledispatch
 def _as_tuple(state: BasisStateInput, size: int) -> tuple:
-    size = size if size is not None else len(state)
-    if state and len(state) > size:
-        raise ValueError(
-            "State value represents a binary sequence of length greater "
-            "than the specified number of qubits."
-        )
-    return (0,) * (size - len(state)) + tuple(state)
-
-
-@_as_tuple.register
-def _(state: int, size: int):
-    if size is not None and state >= 2**size:
-        raise ValueError(
-            "State value represents a binary sequence of length greater "
-            "than the specified number of qubits."
-        )
-    return tuple(int(x) for x in np.binary_repr(state, size))
-
-
-@_as_tuple.register
-def _(state: str, size: int):
-    size = size if size is not None else len(state)
-    if len(state) > size:
-        raise ValueError(
-            "State value represents a binary sequence of length greater "
-            "than the specified number of qubits."
-        )
-    # left-pad to match state size
-    return (0,) * (size - len(state)) + tuple(int(x) for x in state)
+    match state:
+        case int():
+            if size is not None and state >= 2**size:
+                raise ValueError(
+                    "State value represents a binary sequence of length greater "
+                    "than the specified number of qubits."
+                )
+            return tuple(int(x) for x in np.binary_repr(state, size))
+        case str():
+            size = size if size is not None else len(state)
+            if len(state) > size:
+                raise ValueError(
+                    "State value represents a binary sequence of length greater "
+                    "than the specified number of qubits."
+                )
+            # left-pad to match state size
+            return (0,) * (size - len(state)) + tuple(int(x) for x in state)
+        case _:
+            size = size if size is not None else len(state)
+            if state and len(state) > size:
+                raise ValueError(
+                    "State value represents a binary sequence of length greater "
+                    "than the specified number of qubits."
+                )
+            return (0,) * (size - len(state)) + tuple(state)

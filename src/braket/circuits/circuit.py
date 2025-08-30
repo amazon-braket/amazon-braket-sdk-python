@@ -72,7 +72,7 @@ SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., Subroutin
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
 
-class Circuit:  # noqa: PLR0904
+class Circuit:
     """A representation of a quantum circuit that contains the instructions to be performed on a
     quantum device and the requested result types.
 

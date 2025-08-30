@@ -891,37 +891,21 @@ def _create_program_set_task(aws_session: AwsSession, **create_task_kwargs: dict
         raise ClientError(response, e.operation_name) from e
 
 
-@singledispatch
 def _format_result(
     result: GateModelTaskResult | ProgramSetTaskResult | AnalogHamiltonianSimulationTaskResult,
     task_specification: TaskSpecification,
 ) -> TaskResult:
-    raise TypeError("Invalid result specification type")
-
-
-@_format_result.register
-def _(result: GateModelTaskResult, _: TaskSpecification) -> GateModelQuantumTaskResult:
-    GateModelQuantumTaskResult.cast_result_types(result)
-    return GateModelQuantumTaskResult.from_object(result)
-
-
-@_format_result.register
-def _(result: ProgramSetTaskResult, program_set: ProgramSet) -> ProgramSetQuantumTaskResult:
-    return ProgramSetQuantumTaskResult.from_object(result, program_set=program_set)
-
-
-@_format_result.register
-def _(result: AnnealingTaskResult, _: TaskSpecification) -> AnnealingQuantumTaskResult:
-    return AnnealingQuantumTaskResult.from_object(result)
-
-
-@_format_result.register
-def _(result: PhotonicModelTaskResult, _: TaskSpecification) -> PhotonicModelQuantumTaskResult:
-    return PhotonicModelQuantumTaskResult.from_object(result)
-
-
-@_format_result.register
-def _(
-    result: AnalogHamiltonianSimulationTaskResult, _: TaskSpecification
-) -> AnalogHamiltonianSimulationQuantumTaskResult:
-    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)
+    match result:
+        case GateModelTaskResult():
+            GateModelQuantumTaskResult.cast_result_types(result)
+            return GateModelQuantumTaskResult.from_object(result)
+        case ProgramSetTaskResult():
+            return ProgramSetQuantumTaskResult.from_object(result, program_set=task_specification)
+        case AnalogHamiltonianSimulationTaskResult():
+            return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)
+        case AnnealingTaskResult():
+            return AnnealingQuantumTaskResult.from_object(result)
+        case PhotonicModelTaskResult():
+            return PhotonicModelQuantumTaskResult.from_object(result)
+        case _:
+            raise TypeError("Invalid result specification type")
