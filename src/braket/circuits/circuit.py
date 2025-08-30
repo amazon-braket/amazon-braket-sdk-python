@@ -729,6 +729,29 @@ class Circuit:  # noqa: PLR0904
             self._has_compiler_directives = True
         return self
 
+    def barrier(self, target: QubitSetInput | None = None) -> Circuit:
+        """Add a barrier compiler directive to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier.
+            If None, applies to all qubits in the circuit.
+
+        Returns:
+            Circuit: self
+
+        Examples:
+            >>> circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
+            >>> circ = Circuit().h(0).h(1).barrier()  # barrier on all qubits
+        """
+        target_qubits = self.qubits if target is None else QubitSet(target)
+
+        if target_qubits:
+            self.add_instruction(
+                Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
+            )
+            self._has_compiler_directives = True
+        return self
+
     def _add_measure(self, target_qubits: QubitSetInput) -> None:
         """Adds a measure instruction to the the circuit
 

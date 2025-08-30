@@ -956,3 +956,34 @@ def test_measure_with_readout_noise():
         "T  : |0|    1    |2|",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_circuit_visualization_without_other_gates():
+    circ = Circuit().barrier(target=[0, 100])
+    expected = (
+        "T    : |0 |",
+        "           ",
+        "q0   : -||-",
+        "        |  ",
+        "q100 : -||-",
+        "",
+        "T    : |0 |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_circuit_visualization_with_other_gates():
+    # Test barrier with sparse qubit targets that would cause IndexError
+    circ = Circuit().x(0).barrier(target=[0, 100]).h(3)
+    expected = (
+        "T    : |0|1 |2|",
+        "               ",
+        "q0   : -X-||---",
+        "          |    ",
+        "q3   : ---||-H-",
+        "          |    ",
+        "q100 : ---||---",
+        "",
+        "T    : |0|1 |2|",
+    )
+    _assert_correct_diagram(circ, expected)
