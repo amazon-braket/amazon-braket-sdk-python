@@ -16,7 +16,6 @@ from __future__ import annotations
 import copy
 import math
 from collections.abc import Sequence
-from functools import singledispatch
 
 from sympy import Float
 
@@ -358,16 +357,12 @@ class TripleAngledGate(Gate, Parameterizable):
         return hash((self.name, self.angle_1, self.angle_2, self.angle_3, self.qubit_count))
 
 
-@singledispatch
 def _angles_equal(
     angle_1: FreeParameterExpression | float, angle_2: FreeParameterExpression | float
 ) -> bool:
+    if isinstance(angle_1, FreeParameterExpression):
+        return angle_1 == angle_2
     return isinstance(angle_2, float) and math.isclose(angle_1, angle_2)
-
-
-@_angles_equal.register
-def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
-    return angle_1 == angle_2
 
 
 def angled_ascii_characters(gate: str, angle: FreeParameterExpression | float) -> str:

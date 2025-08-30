@@ -341,15 +341,14 @@ class GateModelQuantumTaskResult:
         """
         if gate_model_task_result.resultTypes:
             for result_type in gate_model_task_result.resultTypes:
-                type = result_type.type.type
-                if type == "amplitude":
-                    for state in result_type.value:
-                        result_type.value[state] = complex(*result_type.value[state])
-
-                elif type == "probability":
-                    result_type.value = np.array(result_type.value)
-                elif type == "statevector":
-                    result_type.value = np.array(list(starmap(complex, result_type.value)))
+                match result_type.type.type:
+                    case "amplitude":
+                        for state in result_type.value:
+                            result_type.value[state] = complex(*result_type.value[state])
+                    case "probability":
+                        result_type.value = np.array(result_type.value)
+                    case "statevector":
+                        result_type.value = np.array(list(starmap(complex, result_type.value)))
 
     @staticmethod
     def _calculate_result_types(
@@ -363,41 +362,41 @@ class GateModelQuantumTaskResult:
             ir_observable = result_type.get("observable")
             observable = observable_from_ir(ir_observable) if ir_observable else None
             targets = result_type.get("targets")
-            rt_type = result_type["type"]
-            if rt_type == "probability":
-                value = GateModelQuantumTaskResult._probability_from_measurements(
-                    measurements, measured_qubits, targets
-                )
-                casted_result_type = Probability(targets=targets)
-            elif rt_type == "sample":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    samples_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Sample(targets=targets, observable=ir_observable)
-            elif rt_type == "variance":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    GateModelQuantumTaskResult._variance_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Variance(targets=targets, observable=ir_observable)
-            elif rt_type == "expectation":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    expectation_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Expectation(targets=targets, observable=ir_observable)
-            else:
-                raise ValueError(f"Unknown result type {rt_type}")
+            match rt_type := result_type["type"]:
+                case "probability":
+                    value = GateModelQuantumTaskResult._probability_from_measurements(
+                        measurements, measured_qubits, targets
+                    )
+                    casted_result_type = Probability(targets=targets)
+                case "sample":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        samples_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Sample(targets=targets, observable=ir_observable)
+                case "variance":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        GateModelQuantumTaskResult._variance_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Variance(targets=targets, observable=ir_observable)
+                case "expectation":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        expectation_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Expectation(targets=targets, observable=ir_observable)
+                case _:
+                    raise ValueError(f"Unknown result type {rt_type}")
             result_types.append(ResultTypeValue.construct(type=casted_result_type, value=value))
         return result_types
 

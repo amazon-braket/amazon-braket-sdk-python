@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Union
 from unittest.mock import Mock
 
 import numpy as np
@@ -1158,7 +1157,7 @@ def verify_results(results, expected_amplitudes, expected_frequencies, expected_
         assert _all_close(results.phases[frame_id], expected_phases[frame_id], 1e-10)
 
 
-def to_dict(frames: Union[Frame, list]):
+def to_dict(frames: Frame | list):
     if not isinstance(frames, list):
         frames = [frames]
     frame_dict = dict()
