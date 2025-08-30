@@ -16,7 +16,7 @@ import math
 import sys
 import textwrap
 import warnings
-from typing import Any, Optional
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -224,8 +224,8 @@ class DummyCircuitSimulator(BraketSimulator):
         self,
         program: ir.jaqcd.Program,
         qubits: int,
-        shots: Optional[int],
-        inputs: Optional[dict[str, float]],
+        shots: int | None,
+        inputs: dict[str, float] | None,
         *args,
         **kwargs,
     ) -> dict[str, Any]:
@@ -264,8 +264,8 @@ class DummyJaqcdSimulator(BraketSimulator):
     def run(
         self,
         program: ir.jaqcd.Program,
-        qubits: Optional[int] = None,
-        shots: Optional[int] = None,
+        qubits: int | None = None,
+        shots: int | None = None,
         *args,
         **kwargs,
     ) -> dict[str, Any]:
@@ -385,7 +385,7 @@ class DummySerializableProgramSimulator(DummyProgramSimulator):
 
 class DummyProgramDensityMatrixSimulator(BraketSimulator):
     def run(
-        self, program: ir.openqasm.Program, shots: Optional[int], *args, **kwargs
+        self, program: ir.openqasm.Program, shots: int | None, *args, **kwargs
     ) -> dict[str, Any]:
         self._shots = shots
         return GATE_MODEL_RESULT

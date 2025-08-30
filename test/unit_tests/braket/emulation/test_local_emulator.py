@@ -14,9 +14,6 @@
 import pytest
 import json
 
-from braket.emulation.device_emulator_properties import (
-    DeviceEmulatorProperties,
-)
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiDeviceCapabilities
