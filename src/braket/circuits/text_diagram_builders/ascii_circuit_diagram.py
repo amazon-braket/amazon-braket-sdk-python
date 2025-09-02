@@ -125,7 +125,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
-                ascii_symbols = [cls._qubit_line_character()] * len(circuit_qubits)
+                ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
