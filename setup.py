@@ -55,7 +55,8 @@ setup(
             "pylint",
             "pytest",
             "pytest-cov",
-            "pytest-rerunfailures",
+            # https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+            "pytest-rerunfailures<16.0",
             "pytest-xdist[psutil]",
             "tox",
         ],
