@@ -79,11 +79,6 @@ class Barrier(CompilerDirective):
     def qubit_count(self) -> int:
         return len(self._qubit_indices)
 
-    def __eq__(self, other: CompilerDirective) -> bool:
-        if isinstance(other, Barrier):
-            return self._qubit_indices == other._qubit_indices
-        return super().__eq__(other)
-
     def _to_jaqcd(self) -> Any:
         raise NotImplementedError("Barrier is not supported in JAQCD")
 
