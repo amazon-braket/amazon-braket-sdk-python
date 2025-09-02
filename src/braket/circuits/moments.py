@@ -174,7 +174,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
         operator = instruction.operator
         if isinstance(operator, CompilerDirective):
-            qubit_range = instruction.target.union(instruction.control)
+            qubit_range = instruction.target.union(instruction.control or QubitSet())
             time = self._update_qubit_times(qubit_range or self._qubits)
             self._moments[MomentsKey(time, qubit_range, MomentType.COMPILER_DIRECTIVE, 0)] = (
                 instruction
