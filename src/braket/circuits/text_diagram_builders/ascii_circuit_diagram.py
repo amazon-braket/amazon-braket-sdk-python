@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -23,6 +23,14 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
 from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagram
 from braket.registers.qubit_set import QubitSet
+
+
+class ItemProperties(NamedTuple):
+    target_qubits: QubitSet
+    control_qubits: QubitSet
+    target_and_control: QubitSet
+    qubits: QubitSet
+    ascii_symbols: list[str]
 
 
 class AsciiCircuitDiagram(TextCircuitDiagram):
@@ -71,56 +79,66 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
-    def _process_result_type_item(cls, item: ResultType, circuit_qubits: QubitSet) -> tuple:
-        """Process a ResultType item and return its properties."""
-        target_qubits = circuit_qubits
-        control_qubits = QubitSet()
-        target_and_control = target_qubits.union(control_qubits)
-        qubits = circuit_qubits
-        ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
-        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+    def _get_item_properties(
+        cls, item: Instruction | ResultType, circuit_qubits: QubitSet
+    ) -> ItemProperties:
+        """Extract properties for any circuit item."""
+        # Global result type
+        if isinstance(item, ResultType) and not item.target:
+            return ItemProperties(
+                circuit_qubits,
+                QubitSet(),
+                circuit_qubits,
+                circuit_qubits,
+                [item.ascii_symbols[0]] * len(circuit_qubits),
+            )
 
-    @classmethod
-    def _process_compiler_directive_item(cls, item: Instruction, circuit_qubits: QubitSet) -> tuple:
-        """Process a CompilerDirective item and return its properties."""
-        target_qubits = circuit_qubits
-        control_qubits = QubitSet()
-        target_and_control = target_qubits.union(control_qubits)
-        qubits = circuit_qubits
-        ascii_symbol = item.ascii_symbols[0]
+        # Barriers and compiler directives
+        if isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+            symbols = (
+                item.ascii_symbols
+                if item.operator.name == "Barrier"
+                else cls._build_directive_symbols(item, circuit_qubits)
+            )
+            return ItemProperties(
+                circuit_qubits, QubitSet(), circuit_qubits, circuit_qubits, symbols
+            )
 
-        if item.operator.name == "Barrier":
-            ascii_symbols = item.ascii_symbols
-        else:
-            marker = "*" * len(ascii_symbol)
-            num_after = len(circuit_qubits) - 1
-            after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-            ascii_symbols = [ascii_symbol, *after]
+        # Global phase gate
+        if (
+            isinstance(item, Instruction)
+            and isinstance(item.operator, Gate)
+            and item.operator.name == "GPhase"
+        ):
+            return ItemProperties(
+                circuit_qubits,
+                QubitSet(),
+                QubitSet(),
+                circuit_qubits,
+                [cls._qubit_line_character()] * len(circuit_qubits),
+            )
 
-        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
-
-    @classmethod
-    def _process_gphase_item(cls, circuit_qubits: QubitSet) -> tuple:
-        """Process a GPhase item and return its properties."""
-        target_qubits = circuit_qubits
-        control_qubits = QubitSet()
-        target_and_control = QubitSet()
-        qubits = circuit_qubits
-        ascii_symbols = cls._qubit_line_character() * len(circuit_qubits)
-        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
-
-    @classmethod
-    def _process_regular_item(cls, item: Instruction) -> tuple:
-        """Process a regular item and return its properties."""
-        if isinstance(item.target, list):
-            target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
-        else:
-            target_qubits = item.target
+        # Regular gates
+        target_qubits = (
+            item.target
+            if not isinstance(item.target, list)
+            else reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+        )
         control_qubits = getattr(item, "control", QubitSet())
         target_and_control = target_qubits.union(control_qubits)
         qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
-        ascii_symbols = item.ascii_symbols
-        return target_qubits, control_qubits, target_and_control, qubits, ascii_symbols
+        return ItemProperties(
+            target_qubits, control_qubits, target_and_control, qubits, item.ascii_symbols
+        )
+
+    @classmethod
+    def _build_directive_symbols(cls, item: Instruction, circuit_qubits: QubitSet) -> list[str]:
+        """Build symbols for non-barrier compiler directives."""
+        symbol = item.ascii_symbols[0]
+        if len(circuit_qubits) <= 1:
+            return [symbol]
+        marker = "*" * len(symbol)
+        return [symbol] + ["|"] * (len(circuit_qubits) - 2) + [marker]
 
     @classmethod
     def _create_diagram_column(
@@ -143,35 +161,21 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         connections = dict.fromkeys(circuit_qubits, "none")
 
         for item in items:
-            if isinstance(item, ResultType) and not item.target:
-                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
-                    cls._process_result_type_item(item, circuit_qubits)
-                )
-            elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
-                    cls._process_compiler_directive_item(item, circuit_qubits)
-                )
-            elif (
-                isinstance(item, Instruction)
-                and isinstance(item.operator, Gate)
-                and item.operator.name == "GPhase"
-            ):
-                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
-                    cls._process_gphase_item(circuit_qubits)
-                )
-            else:
-                target_qubits, control_qubits, target_and_control, qubits, ascii_symbols = (
-                    cls._process_regular_item(item)
-                )
-                control_state = getattr(item, "control_state", "1" * len(control_qubits))
-                map_control_qubit_states = dict(zip(control_qubits, control_state, strict=True))
+            props = cls._get_item_properties(item, circuit_qubits)
 
-            for qubit in qubits:
+            map_control_qubit_states = {}
+            if props.control_qubits:
+                control_state = getattr(item, "control_state", "1" * len(props.control_qubits))
+                map_control_qubit_states = dict(
+                    zip(props.control_qubits, control_state, strict=True)
+                )
+
+            for qubit in props.qubits:
                 # Determine if the qubit is part of the item or in the middle of a
                 # multi qubit item.
-                if qubit in target_qubits:
+                if qubit in props.target_qubits:
                     item_qubit_index = [  # noqa: RUF015
-                        index for index, q in enumerate(target_qubits) if q == qubit
+                        index for index, q in enumerate(props.target_qubits) if q == qubit
                     ][0]
                     power_string = (
                         f"^{power}"
@@ -181,7 +185,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                             # when a user has a gate genuinely named C, but
                             # is necessary to enable proper printing of custom
                             # gates with built-in control qubits
-                            and ascii_symbols[item_qubit_index] != "C"
+                            and props.ascii_symbols[item_qubit_index] != "C"
                         )
                         else ""
                     )
@@ -195,17 +199,17 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                         else item_qubit_index
                     )
                     symbols[qubit] = (
-                        f"({ascii_symbols[idx]}{power_string})"
+                        f"({props.ascii_symbols[idx]}{power_string})"
                         if power_string
-                        else ascii_symbols[idx]
+                        else props.ascii_symbols[idx]
                     )
-                elif qubit in control_qubits:
+                elif qubit in props.control_qubits:
                     symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
                 else:
                     symbols[qubit] = "|"
 
                 # Set the margin to be a connector if not on the first qubit
-                if target_and_control and qubit != min(target_and_control):
+                if props.target_and_control and qubit != min(props.target_and_control):
                     connections[qubit] = "above"
 
         return cls._create_output(symbols, connections, circuit_qubits, global_phase)
