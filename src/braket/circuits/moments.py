@@ -177,8 +177,12 @@ class Moments(Mapping[MomentsKey, Instruction]):
             qubit_range = instruction.target.union(instruction.control or QubitSet())
             time = self._handle_compiler_directive(operator, qubit_range)
             # For barriers without qubits, use empty qubit set for the key
-            key_qubits = QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
-            self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
+            key_qubits = (
+                QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
+            )
+            self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = (
+                instruction
+            )
             self._qubits.update(qubit_range)
             self._depth = time + 1
         elif isinstance(operator, Noise):

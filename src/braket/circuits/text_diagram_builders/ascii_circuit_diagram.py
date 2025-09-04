@@ -176,7 +176,11 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
                 # Set the margin to be a connector if not on the first qubit
                 if target_and_control and qubit != min(target_and_control):
-                    is_barrier = isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective) and item.operator.name == "Barrier"
+                    is_barrier = (
+                        isinstance(item, Instruction)
+                        and isinstance(item.operator, CompilerDirective)
+                        and item.operator.name == "Barrier"
+                    )
                     # Add vertical lines for non-barriers or global barriers (no target)
                     if not is_barrier or not item.target:
                         connections[qubit] = "above"
