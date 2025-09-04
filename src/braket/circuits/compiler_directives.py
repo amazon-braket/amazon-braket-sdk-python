@@ -65,7 +65,7 @@ class EndVerbatimBox(CompilerDirective):
 
 
 class Barrier(CompilerDirective):
-    r"""Barrier compiler directive."""
+    """Barrier compiler directive."""
 
     def __init__(self, qubit_indices: list[int]):
         super().__init__(["||"])
