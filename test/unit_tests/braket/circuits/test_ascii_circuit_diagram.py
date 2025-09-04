@@ -14,6 +14,7 @@
 import numpy as np
 import pytest
 
+from braket.circuits.compiler_directives import Barrier
 from braket.circuits import (
     AsciiCircuitDiagram,
     Circuit,
@@ -308,6 +309,42 @@ def test_overlapping_qubits():
         "q3 : ---X---",
         "",
         "T  : | 0 |1|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_single_qubit():
+    circ = Circuit().x(0).x(1).barrier(target=[0]).h(2)
+    expected = (
+        "T  : |0|1 |",
+        "           ",
+        "q0 : -X-||-",
+        "           ",
+        "q1 : -X----",
+        "           ",
+        "q2 : -H----",
+        "",
+        "T  : |0|1 |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_global_with_vertical_lines():
+    from braket.circuits.compiler_directives import Barrier
+
+    circ = Circuit().x(0).x(1)
+    circ.add_instruction(Instruction(Barrier([]), []))
+    circ.h(2)
+    expected = (
+        "T  : |0|1 |2|",
+        "             ",
+        "q0 : -X-||---",
+        "        |    ",
+        "q1 : -X-||---",
+        "        |    ",
+        "q2 : ---||-H-",
+        "",
+        "T  : |0|1 |2|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -964,7 +1001,7 @@ def test_barrier_circuit_visualization_without_other_gates():
         "T    : |0 |",
         "           ",
         "q0   : -||-",
-        "        |  ",
+        "           ",
         "q100 : -||-",
         "",
         "T    : |0 |",
@@ -975,14 +1012,48 @@ def test_barrier_circuit_visualization_without_other_gates():
 def test_barrier_circuit_visualization_with_other_gates():
     circ = Circuit().x(0).barrier(target=[0, 100]).h(3)
     expected = (
-        "T    : |0|1 |2|",
-        "               ",
-        "q0   : -X-||---",
-        "          |    ",
-        "q3   : ---||-H-",
-        "          |    ",
-        "q100 : ---||---",
+        "T    : |0|1 |",
+        "             ",
+        "q0   : -X-||-",
+        "             ",
+        "q3   : -H----",
+        "             ",
+        "q100 : ---||-",
         "",
-        "T    : |0|1 |2|",
+        "T    : |0|1 |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_multiple_qubits_with_gates():
+    circ = Circuit().x(0).x(1).barrier(target=[0, 1]).h(0).h(2)
+    expected = (
+        "T  : |0|1 |2|",
+        "             ",
+        "q0 : -X-||-H-",
+        "             ",
+        "q1 : -X-||---",
+        "             ",
+        "q2 : -H------",
+        "",
+        "T  : |0|1 |2|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_barrier_global_with_vertical_lines():
+    circ = Circuit().x(0).x(1)
+    circ.add_instruction(Instruction(Barrier([]), []))
+    circ.h(2)
+    expected = (
+        "T  : |0|1 |2|",
+        "             ",
+        "q0 : -X-||---",
+        "        |    ",
+        "q1 : -X-||---",
+        "        |    ",
+        "q2 : ---||-H-",
+        "",
+        "T  : |0|1 |2|",
     )
     _assert_correct_diagram(circ, expected)
