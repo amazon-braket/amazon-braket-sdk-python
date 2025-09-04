@@ -98,15 +98,28 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 qubits = circuit_qubits
                 ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
             elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-                target_qubits = circuit_qubits
-                control_qubits = QubitSet()
-                target_and_control = target_qubits.union(control_qubits)
-                qubits = circuit_qubits
-                ascii_symbol = item.ascii_symbols[0]
-                marker = "*" * len(ascii_symbol)
-                num_after = len(circuit_qubits) - 1
-                after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol, *after]
+                if item.operator.name == "Barrier":
+                    target_qubits = item.target
+                    if not target_qubits:
+                        # Barrier without qubits - single barrier across all qubits
+                        target_qubits = circuit_qubits
+                        qubits = circuit_qubits
+                        ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+                    else:
+                        # Barrier with specific qubits
+                        qubits = target_qubits
+                        ascii_symbols = [item.ascii_symbols[0]] * len(target_qubits)
+                    target_and_control = target_qubits
+                else:
+                    target_qubits = circuit_qubits
+                    control_qubits = QubitSet()
+                    target_and_control = target_qubits.union(control_qubits)
+                    qubits = circuit_qubits
+                    ascii_symbol = item.ascii_symbols[0]
+                    marker = "*" * len(ascii_symbol)
+                    num_after = len(circuit_qubits) - 1
+                    after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+                    ascii_symbols = [ascii_symbol, *after]
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
@@ -150,15 +163,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                         )
                         else ""
                     )
-                    idx = (
-                        0
-                        if (
-                            isinstance(item, Instruction)
-                            and isinstance(item.operator, CompilerDirective)
-                            and item.operator.name == "Barrier"
-                        )
-                        else item_qubit_index
-                    )
+                    idx = item_qubit_index
                     symbols[qubit] = (
                         f"({ascii_symbols[idx]}{power_string})"
                         if power_string
@@ -171,7 +176,10 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
                 # Set the margin to be a connector if not on the first qubit
                 if target_and_control and qubit != min(target_and_control):
-                    connections[qubit] = "above"
+                    is_barrier = isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective) and item.operator.name == "Barrier"
+                    # Add vertical lines for non-barriers or global barriers (no target)
+                    if not is_barrier or not item.target:
+                        connections[qubit] = "above"
 
         return cls._create_output(symbols, connections, circuit_qubits, global_phase)
 
