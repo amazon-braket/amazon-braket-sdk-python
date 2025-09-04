@@ -57,7 +57,6 @@ def test_barrier():
     assert barrier.qubit_indices == [0, 1, 2]
     assert barrier.qubit_count == 3
     assert barrier.ascii_symbols == ("||",)
-    assert barrier._to_openqasm() == "barrier"
     assert repr(barrier) == "Barrier"
 
     with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):

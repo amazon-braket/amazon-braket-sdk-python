@@ -95,6 +95,3 @@ class Barrier(CompilerDirective):
                 return f"barrier {qubits};"
             return "barrier;"
         return super().to_ir(target, ir_type, serialization_properties, **kwargs)
-
-    def _to_openqasm(self) -> str:
-        return "barrier"
