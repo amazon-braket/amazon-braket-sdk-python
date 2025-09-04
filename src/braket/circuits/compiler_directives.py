@@ -68,7 +68,7 @@ class Barrier(CompilerDirective):
     r"""Barrier compiler directive."""
 
     def __init__(self, qubit_indices: list[int]):
-        super().__init__(["||" for _ in qubit_indices])
+        super().__init__(["||"])
         self._qubit_indices = qubit_indices
 
     @property
