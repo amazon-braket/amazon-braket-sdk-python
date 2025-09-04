@@ -143,10 +143,19 @@ def _group_items(
             and item.operator.name == "GPhase"
         ):
             qubit_range = QubitSet()
-        elif (isinstance(item, ResultType) and not item.target) or (
-            isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
-        ):
+        elif isinstance(item, ResultType) and not item.target:
             qubit_range = circuit_qubits
+        elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+            if item.operator.name == "Barrier":
+                # Barriers affect their target qubits, or all qubits if no target specified
+                # Check if this is a global barrier (targets all existing qubits at creation time)
+                if not item.target or len(item.target) == 0:
+                    qubit_range = circuit_qubits
+                else:
+                    qubit_range = item.target
+            else:
+                # Other compiler directives affect all qubits
+                qubit_range = circuit_qubits
         else:
             if isinstance(item.target, list):
                 target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
