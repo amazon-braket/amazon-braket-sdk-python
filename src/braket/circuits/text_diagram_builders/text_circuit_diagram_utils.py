@@ -112,6 +112,44 @@ def _compute_moment_global_phase(
     return global_phase + moment_phase if global_phase is not None else None
 
 
+def _get_qubit_range_for_item(item: Instruction | ResultType, circuit_qubits: QubitSet) -> QubitSet:
+    """Get the qubit range for a given item."""
+    if (
+        isinstance(item, Instruction)
+        and isinstance(item.operator, Gate)
+        and item.operator.name == "GPhase"
+    ):
+        return QubitSet()
+
+    if isinstance(item, ResultType) and not item.target:
+        return circuit_qubits
+
+    if isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+        return _get_compiler_directive_qubit_range(item, circuit_qubits)
+
+    return _get_standard_qubit_range(item)
+
+
+def _get_compiler_directive_qubit_range(item: Instruction, circuit_qubits: QubitSet) -> QubitSet:
+    """Get qubit range for compiler directive instructions."""
+    if item.operator.name == "Barrier":
+        if not item.target or len(item.target) == 0:
+            return circuit_qubits
+        return item.target
+    return circuit_qubits
+
+
+def _get_standard_qubit_range(item: Instruction | ResultType) -> QubitSet:
+    """Get qubit range for standard instructions and result types."""
+    if isinstance(item.target, list):
+        target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+    else:
+        target = item.target
+    control = getattr(item, "control", QubitSet())
+    target_and_control = target.union(control)
+    return QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+
+
 def _group_items(
     circuit_qubits: QubitSet,
     items: list[Instruction | ResultType],
@@ -128,42 +166,13 @@ def _group_items(
     """
     groupings = []
     for item in items:
-        # Can only print QuantumOperator and CompilerDirective operators for instructions at
-        # the moment
+        # Can only print QuantumOperator and CompilerDirective operators for instructions
         if isinstance(item, Instruction) and not isinstance(
             item.operator, CompilerDirective | QuantumOperator
         ):
             continue
 
-        # As a zero-qubit gate, GPhase can be grouped with anything. We set qubit_range
-        # to an empty list and we just add it to the first group below.
-        if (
-            isinstance(item, Instruction)
-            and isinstance(item.operator, Gate)
-            and item.operator.name == "GPhase"
-        ):
-            qubit_range = QubitSet()
-        elif isinstance(item, ResultType) and not item.target:
-            qubit_range = circuit_qubits
-        elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
-            if item.operator.name == "Barrier":
-                # Barriers affect their target qubits, or all qubits if no target specified
-                # Check if this is a global barrier (targets all existing qubits at creation time)
-                if not item.target or len(item.target) == 0:
-                    qubit_range = circuit_qubits
-                else:
-                    qubit_range = item.target
-            else:
-                # Other compiler directives affect all qubits
-                qubit_range = circuit_qubits
-        else:
-            if isinstance(item.target, list):
-                target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
-            else:
-                target = item.target
-            control = getattr(item, "control", QubitSet())
-            target_and_control = target.union(control)
-            qubit_range = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+        qubit_range = _get_qubit_range_for_item(item, circuit_qubits)
 
         found_grouping = False
         for group in groupings:
