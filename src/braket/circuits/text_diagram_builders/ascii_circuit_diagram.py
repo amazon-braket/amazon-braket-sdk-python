@@ -71,19 +71,6 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
-    def _get_compiler_directive_symbols(
-        cls, item: Instruction, circuit_qubits: QubitSet
-    ) -> list[str]:
-        """Get symbols for compiler directives, handling barriers specially."""
-        if item.operator.name == "Barrier":
-            return item.ascii_symbols
-        ascii_symbol = item.ascii_symbols[0]
-        marker = "*" * len(ascii_symbol)
-        num_after = len(circuit_qubits) - 1
-        after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-        return [ascii_symbol, *after]
-
-    @classmethod
     def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,
@@ -115,7 +102,11 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
-                ascii_symbols = cls._get_compiler_directive_symbols(item, circuit_qubits)
+                ascii_symbol = item.ascii_symbols[0]
+                marker = "*" * len(ascii_symbol)
+                num_after = len(circuit_qubits) - 1
+                after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+                ascii_symbols = [ascii_symbol, *after]
             elif (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, Gate)
