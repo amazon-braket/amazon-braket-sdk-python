@@ -1414,7 +1414,7 @@ class U(TripleAngledGate):
 
         .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
                 \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                e^{i \phi} \sin{(\theta/2)} &  e^{i (\phi + \lambda)} \cos{(\theta/2)}
                 \end{bmatrix}.
 
     Args:
@@ -1489,7 +1489,7 @@ class U(TripleAngledGate):
 
             .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
                     \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                    e^{i \phi} \sin{(\theta/2)} & e^{i (\phi + \lambda)} \cos{(\theta/2)}
                     \end{bmatrix}.
 
         Args:
