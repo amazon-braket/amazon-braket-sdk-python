@@ -15,6 +15,7 @@ import json
 import os
 from enum import Enum
 from functools import cache
+from ./environment_variables import get_job_device_arn
 
 
 class Framework(str, Enum):
@@ -39,7 +40,7 @@ def built_in_images(region: str) -> set[str]:
 
 
 @cache
-def retrieve_image(framework: Framework, region: str) -> str:
+def retrieve_image(framework: Framework, region: str=None) -> str:
     """Retrieves the ECR URI for the Docker image matching the specified arguments.
 
     Args:
@@ -56,6 +57,9 @@ def retrieve_image(framework: Framework, region: str) -> str:
     # Validate framework
     framework = Framework(framework)
     config = _config_for_framework(framework)
+    if region is None:
+        device_arn = get_job_device_arn()
+        region = device_arn.split(":")[3]
     registry = _registry_for_region(config, region)
     tag = f"{config['repository']}:latest"
     return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
