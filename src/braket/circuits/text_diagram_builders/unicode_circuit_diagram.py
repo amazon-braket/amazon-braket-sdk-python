@@ -140,14 +140,34 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
     ) -> tuple:
         map_control_qubit_states = {}
 
-        if (isinstance(item, ResultType) and not item.target) or (
-            isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
-        ):
+        if isinstance(item, ResultType) and not item.target:
             target_qubits = circuit_qubits
             control_qubits = QubitSet()
             qubits = circuit_qubits
             ascii_symbols = [item.ascii_symbols[0]] * len(qubits)
             cls._update_connections(qubits, connections)
+        elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+            if item.operator.name == "Barrier":
+                if not item.target:
+                    # Barrier without qubits - single barrier across all qubits WITH connections
+                    target_qubits = circuit_qubits
+                    qubits = circuit_qubits
+                    ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+                    cls._update_connections(circuit_qubits, connections)
+                else:
+                    # Barrier with specific qubits - only add connections for global barriers
+                    target_qubits = item.target
+                    qubits = target_qubits
+                    ascii_symbols = [item.ascii_symbols[0]] * len(target_qubits)
+                    # Specific barriers get no vertical lines
+                    # (Global barriers are handled above with no target)
+                control_qubits = QubitSet()
+            else:
+                target_qubits = circuit_qubits
+                control_qubits = QubitSet()
+                qubits = circuit_qubits
+                ascii_symbols = [item.ascii_symbols[0]] * len(qubits)
+                cls._update_connections(qubits, connections)
         elif (
             isinstance(item, Instruction)
             and isinstance(item.operator, Gate)
@@ -209,12 +229,12 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         """
         top = ""
         bottom = ""
-        if symbol in {"C", "N", "SWAP"}:
+        if symbol in {"C", "N", "SWAP", "||"}:
             if connection in {"above", "both"}:
                 top = _fill_symbol(cls._vertical_delimiter(), " ")
             if connection in {"below", "both"}:
                 bottom = _fill_symbol(cls._vertical_delimiter(), " ")
-            new_symbol = {"C": "●", "N": "◯", "SWAP": "x"}
+            new_symbol = {"C": "●", "N": "◯", "SWAP": "x", "||": "▒"}
             # replace SWAP by x
             # the size of the moment remains as if there was a box with 4 characters inside
             symbol = _fill_symbol(new_symbol[symbol], cls._qubit_line_character())
