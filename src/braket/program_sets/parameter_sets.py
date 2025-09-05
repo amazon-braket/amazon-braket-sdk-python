@@ -51,14 +51,15 @@ class ParameterSets:
         """
         ParameterSets._validate_combinations(parameter_sets, keys=keys, values=values, **kwargs)
         if parameter_sets:
-            if isinstance(parameter_sets, ParameterSets):
-                self._inputs = parameter_sets._inputs
-            elif isinstance(parameter_sets, Mapping):
-                self._inputs = ParameterSets._mapping_to_dict(parameter_sets)
-            elif isinstance(parameter_sets, Sequence):
-                self._inputs = ParameterSets._sequence_to_dict(parameter_sets)
-            else:
-                raise TypeError(f"Unsupported type {type(parameter_sets)} for ParameterSets")
+            match parameter_sets:
+                case ParameterSets(_inputs=inputs):
+                    self._inputs = inputs
+                case Mapping():
+                    self._inputs = ParameterSets._mapping_to_dict(parameter_sets)
+                case Sequence():
+                    self._inputs = ParameterSets._sequence_to_dict(parameter_sets)
+                case _:
+                    raise TypeError(f"Unsupported type {type(parameter_sets)} for ParameterSets")
         elif keys:
             self._inputs = ParameterSets._mapping_to_dict(dict(zip(keys, values, strict=True)))
         elif kwargs:

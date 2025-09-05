@@ -14,10 +14,8 @@
 from __future__ import annotations
 
 import operator
-from functools import reduce, singledispatch
-from typing import NoReturn
+from functools import reduce
 
-import braket.ir.jaqcd.shared_models as models
 from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.ir.jaqcd import (
     Amplitude,
@@ -31,8 +29,7 @@ from braket.ir.jaqcd import (
 from braket.ir.jaqcd.program_v1 import Results
 
 import braket.circuits.gates as braket_gates
-import braket.circuits.result_types as ResultTypes  # noqa: N812
-from braket.circuits import Observable, noises, observables
+from braket.circuits import Observable, ResultType, noises, observables, result_types
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
@@ -112,89 +109,47 @@ SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
 }
 
 
-def get_observable(obs: models.Observable | list) -> Observable:
-    """Gets the observable.
-
-    Args:
-        obs (models.Observable | list): The observable(s) to get translated.
-
-    Returns:
-        Observable: The translated observable.
-    """
-    return _get_observable(obs)
-
-
-@singledispatch
-def _get_observable(obs: models.Observable | list) -> Observable:
+def _get_observable(obs: str) -> Observable:
+    if isinstance(obs, str):
+        return getattr(observables, obs.upper())()
     raise NotImplementedError
 
 
-@_get_observable.register(list)
-def _(obs: Observable) -> NoReturn:
-    raise NotImplementedError
-
-
-@_get_observable.register(str)
-def _(name: str):
-    return getattr(observables, name.upper())()
-
-
-def get_tensor_product(observable: models.Observable | list) -> Observable:
+def get_tensor_product(observable: list[str]) -> Observable:
     """Generate an braket circuit observable
 
     Args:
-        observable (Observable | list): ir observable or a matrix
+        observable (list[str]): ir observable or a matrix
 
     Returns:
         Observable: braket circuit observable
     """
-    circuit_observable = [get_observable(obs) for obs in observable]
+    circuit_observable = [_get_observable(obs) for obs in observable]
     return reduce(operator.matmul, circuit_observable)
 
 
-@singledispatch
-def _braket_result_to_result_type(result: Results) -> None:
-    raise TypeError(f"Result type {type(result).__name__} is not supported")
-
-
-def braket_result_to_result_type(result: Results) -> None:
+def braket_result_to_result_type(result: Results) -> ResultType:
     return _braket_result_to_result_type(result)
 
 
-@_braket_result_to_result_type.register(Amplitude)
-def _(result: Results) -> Amplitude:
-    return ResultTypes.Amplitude(state=result.states)
-
-
-@_braket_result_to_result_type.register(Expectation)
-def _(result: Results) -> Expectation:
-    tensor_product = get_tensor_product(result.observable)
-
-    return ResultTypes.Expectation(observable=tensor_product, target=result.targets)
-
-
-@_braket_result_to_result_type.register(Probability)
-def _(result: Results) -> Probability:
-    return ResultTypes.Probability(result.targets)
-
-
-@_braket_result_to_result_type.register(Sample)
-def _(result: Results) -> Sample:
-    tensor_product = get_tensor_product(result.observable)
-    return ResultTypes.Sample(observable=tensor_product, target=result.targets)
-
-
-@_braket_result_to_result_type.register(StateVector)
-def _(result: Results) -> StateVector:
-    return ResultTypes.StateVector()
-
-
-@_braket_result_to_result_type.register(DensityMatrix)
-def _(result: Results):
-    return ResultTypes.DensityMatrix(target=result.targets)
-
-
-@_braket_result_to_result_type.register(Variance)
-def _(result: Results):
-    tensor_product = get_tensor_product(result.observable)
-    return ResultTypes.Variance(observable=tensor_product, target=result.targets)
+def _braket_result_to_result_type(result: Results) -> ResultType:
+    match result:
+        case Expectation(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Expectation(observable=tensor_product, target=targets)
+        case Variance(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Variance(observable=tensor_product, target=targets)
+        case Sample(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Sample(observable=tensor_product, target=targets)
+        case Probability(targets=targets):
+            return result_types.Probability(targets)
+        case Amplitude(states=states):
+            return result_types.Amplitude(state=states)
+        case StateVector():
+            return result_types.StateVector()
+        case DensityMatrix(targets=targets):
+            return result_types.DensityMatrix(target=targets)
+        case _:
+            raise TypeError(f"Result type {type(result).__name__} is not supported")
