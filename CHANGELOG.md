@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.0 (2025-09-08)
+
+### Features
+
+ * add barrier instruction
+
 ## v1.101.0.post0 (2025-09-03)
 
 ### Documentation Changes
