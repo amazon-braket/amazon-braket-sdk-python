@@ -129,6 +129,8 @@ class Emulator(Device):
             exists for this emulator and apply_noise_model is true.
         """
 
+        program = self._pass_manager.transform(task_specification)
+
         # Apply measurement manually if the circuit has no measurement and no result type.
         # This ensures that the noise model can apply readout error to the circuit, since
         # the readout error is applied if and only if there is measurement or result type
@@ -140,7 +142,6 @@ class Emulator(Device):
         if (not has_measurement) and len(task_specification.result_types) == 0:
             task_specification.measure(target_qubits=task_specification.qubits)
 
-        program = self._pass_manager.transform(task_specification)
         return (
             self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
         )
