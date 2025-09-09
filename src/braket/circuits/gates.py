@@ -15,12 +15,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Optional, Union
+from typing import Any
 
+import braket.ir.jaqcd as ir
 import numpy as np
 from oqpy import Program
 
-import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
     AngledGate,
@@ -101,8 +101,8 @@ class H(Gate):
     def h(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Hadamard gate.
@@ -179,8 +179,8 @@ class I(Gate):  # noqa: E742
     def i(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Identity gate.
@@ -237,7 +237,7 @@ class GPhase(AngledGate):
         ValueError: If `angle` is not present
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         # Avoid parent constructor because _qubit_count must be zero
         self._qubit_count = self.fixed_qubit_count()
         self._ascii_symbols = []
@@ -269,10 +269,10 @@ class GPhase(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def gphase(
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction | Iterable[Instruction]:
         r"""Global phase gate.
@@ -375,8 +375,8 @@ class X(Gate):
     def x(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Pauli-X gate.
@@ -455,8 +455,8 @@ class Y(Gate):
     def y(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Pauli-Y gate.
@@ -535,8 +535,8 @@ class Z(Gate):
     def z(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Pauli-Z gate.
@@ -613,8 +613,8 @@ class S(Gate):
     def s(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""S gate.
@@ -691,8 +691,8 @@ class Si(Gate):
     def si(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Conjugate transpose of S gate.
@@ -769,8 +769,8 @@ class T(Gate):
     def t(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""T gate.
@@ -847,8 +847,8 @@ class Ti(Gate):
     def ti(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Conjugate transpose of T gate.
@@ -925,8 +925,8 @@ class V(Gate):
     def v(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Square root of X gate (V gate).
@@ -1003,8 +1003,8 @@ class Vi(Gate):
     def vi(
         target: QubitSetInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Conjugate transpose of square root of X gate (conjugate transpose of V).
@@ -1062,7 +1062,7 @@ class Rx(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1097,10 +1097,10 @@ class Rx(AngledGate):
     @circuit.subroutine(register=True)
     def rx(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""X-axis rotation gate.
@@ -1155,7 +1155,7 @@ class Ry(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1190,10 +1190,10 @@ class Ry(AngledGate):
     @circuit.subroutine(register=True)
     def ry(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Y-axis rotation gate.
@@ -1249,7 +1249,7 @@ class Rz(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1279,10 +1279,10 @@ class Rz(AngledGate):
     @circuit.subroutine(register=True)
     def rz(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Z-axis rotation gate.
@@ -1337,7 +1337,7 @@ class PhaseShift(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1365,10 +1365,10 @@ class PhaseShift(AngledGate):
     @circuit.subroutine(register=True)
     def phaseshift(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Phase shift gate.
@@ -1420,7 +1420,7 @@ class U(TripleAngledGate):
 
         .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
                 \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                e^{i \phi} \sin{(\theta/2)} &  e^{i (\phi + \lambda)} \cos{(\theta/2)}
                 \end{bmatrix}.
 
     Args:
@@ -1431,9 +1431,9 @@ class U(TripleAngledGate):
 
     def __init__(
         self,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
-        angle_3: Union[FreeParameterExpression, float],
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
+        angle_3: FreeParameterExpression | float,
     ):
         super().__init__(
             angle_1=angle_1,
@@ -1453,21 +1453,19 @@ class U(TripleAngledGate):
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
-        _theta = self.angle_1
-        _phi = self.angle_2
-        _lambda = self.angle_3
-        return np.array(
+        theta_ = self.angle_1
+        phi_ = self.angle_2
+        lambda_ = self.angle_3
+        return np.array([
             [
-                [
-                    np.cos(_theta / 2),
-                    -np.exp(1j * _lambda) * np.sin(_theta / 2),
-                ],
-                [
-                    np.exp(1j * _phi) * np.sin(_theta / 2),
-                    np.exp(1j * (_phi + _lambda)) * np.cos(_theta / 2),
-                ],
-            ]
-        )
+                np.cos(theta_ / 2),
+                -np.exp(1j * lambda_) * np.sin(theta_ / 2),
+            ],
+            [
+                np.exp(1j * phi_) * np.sin(theta_ / 2),
+                np.exp(1j * (phi_ + lambda_)) * np.cos(theta_ / 2),
+            ],
+        ])
 
     def adjoint(self) -> list[Gate]:
         return [U(-self.angle_1, -self.angle_3, -self.angle_2)]
@@ -1483,12 +1481,12 @@ class U(TripleAngledGate):
     @circuit.subroutine(register=True)
     def u(
         target: QubitSetInput,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
-        angle_3: Union[FreeParameterExpression, float],
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
+        angle_3: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""Generalized single-qubit rotation gate.
@@ -1497,7 +1495,7 @@ class U(TripleAngledGate):
 
             .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
                     \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                    e^{i \phi} \sin{(\theta/2)} & e^{i (\phi + \lambda)} \cos{(\theta/2)}
                     \end{bmatrix}.
 
         Args:
@@ -1664,8 +1662,8 @@ class Swap(Gate):
         target1: QubitInput,
         target2: QubitInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""Swap gate.
@@ -1756,8 +1754,8 @@ class ISwap(Gate):
         target1: QubitInput,
         target2: QubitInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""ISwap gate.
@@ -1817,7 +1815,7 @@ class PSwap(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1857,10 +1855,10 @@ class PSwap(AngledGate):
     def pswap(
         target1: QubitInput,
         target2: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""PSwap gate.
@@ -1924,7 +1922,7 @@ class XY(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1971,10 +1969,10 @@ class XY(AngledGate):
     def xy(
         target1: QubitInput,
         target2: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""XY gate.
@@ -2035,7 +2033,7 @@ class CPhaseShift(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2064,7 +2062,7 @@ class CPhaseShift(AngledGate):
     def cphaseshift(
         control: QubitSetInput,
         target: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         power: float = 1,
     ) -> Instruction:
         r"""Controlled phase shift gate.
@@ -2120,7 +2118,7 @@ class CPhaseShift00(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2149,7 +2147,7 @@ class CPhaseShift00(AngledGate):
     def cphaseshift00(
         control: QubitSetInput,
         target: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         power: float = 1,
     ) -> Instruction:
         r"""Controlled phase shift gate for phasing the \|00> state.
@@ -2205,7 +2203,7 @@ class CPhaseShift01(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2234,7 +2232,7 @@ class CPhaseShift01(AngledGate):
     def cphaseshift01(
         control: QubitSetInput,
         target: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         power: float = 1,
     ) -> Instruction:
         r"""Controlled phase shift gate for phasing the \|01> state.
@@ -2290,7 +2288,7 @@ class CPhaseShift10(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2319,7 +2317,7 @@ class CPhaseShift10(AngledGate):
     def cphaseshift10(
         control: QubitSetInput,
         target: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         power: float = 1,
     ) -> Instruction:
         r"""Controlled phase shift gate for phasing the \\|10> state.
@@ -2628,8 +2626,8 @@ class ECR(Gate):
         target1: QubitInput,
         target2: QubitInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""An echoed RZX(pi/2) gate (ECR gate).
@@ -2691,7 +2689,7 @@ class XX(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2738,10 +2736,10 @@ class XX(AngledGate):
     def xx(
         target1: QubitInput,
         target2: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""Ising XX coupling gate.
@@ -2804,7 +2802,7 @@ class YY(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2851,10 +2849,10 @@ class YY(AngledGate):
     def yy(
         target1: QubitInput,
         target2: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""Ising YY coupling gate.
@@ -2917,7 +2915,7 @@ class ZZ(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -2957,10 +2955,10 @@ class ZZ(AngledGate):
     def zz(
         target1: QubitInput,
         target2: QubitInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""Ising ZZ coupling gate.
@@ -3064,8 +3062,8 @@ class CCNot(Gate):
         control2: QubitInput,
         target: QubitInput,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""CCNOT gate or Toffoli gate.
@@ -3228,7 +3226,7 @@ class GPi(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -3240,12 +3238,10 @@ class GPi(AngledGate):
         return "gpi"
 
     def to_matrix(self) -> np.ndarray:
-        return np.array(
-            [
-                [0, np.exp(-1j * self.angle)],
-                [np.exp(1j * self.angle), 0],
-            ]
-        )
+        return np.array([
+            [0, np.exp(-1j * self.angle)],
+            [np.exp(1j * self.angle), 0],
+        ])
 
     def adjoint(self) -> list[Gate]:
         return [GPi(self.angle)]
@@ -3261,10 +3257,10 @@ class GPi(AngledGate):
     @circuit.subroutine(register=True)
     def gpi(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""IonQ GPi gate.
@@ -3324,8 +3320,8 @@ class PRx(DoubleAngledGate):
 
     def __init__(
         self,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
     ):
         super().__init__(
             angle_1=angle_1,
@@ -3346,18 +3342,16 @@ class PRx(DoubleAngledGate):
         """
         theta = self.angle_1
         phi = self.angle_2
-        return np.array(
+        return np.array([
             [
-                [
-                    np.cos(theta / 2),
-                    -1j * np.exp(-1j * phi) * np.sin(theta / 2),
-                ],
-                [
-                    -1j * np.exp(1j * phi) * np.sin(theta / 2),
-                    np.cos(theta / 2),
-                ],
-            ]
-        )
+                np.cos(theta / 2),
+                -1j * np.exp(-1j * phi) * np.sin(theta / 2),
+            ],
+            [
+                -1j * np.exp(1j * phi) * np.sin(theta / 2),
+                np.cos(theta / 2),
+            ],
+        ])
 
     def adjoint(self) -> list[Gate]:
         return [PRx(-self.angle_1, self.angle_2)]
@@ -3373,11 +3367,11 @@ class PRx(DoubleAngledGate):
     @circuit.subroutine(register=True)
     def prx(
         target: QubitSetInput,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""PhaseRx gate.
@@ -3437,7 +3431,7 @@ class GPi2(AngledGate):
         angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameterExpression, float]):
+    def __init__(self, angle: FreeParameterExpression | float):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -3449,12 +3443,10 @@ class GPi2(AngledGate):
         return "gpi2"
 
     def to_matrix(self) -> np.ndarray:
-        return np.array(
-            [
-                [1, -1j * np.exp(-1j * self.angle)],
-                [-1j * np.exp(1j * self.angle), 1],
-            ]
-        ) / np.sqrt(2)
+        return np.array([
+            [1, -1j * np.exp(-1j * self.angle)],
+            [-1j * np.exp(1j * self.angle), 1],
+        ]) / np.sqrt(2)
 
     def adjoint(self) -> list[Gate]:
         return [GPi2(self.angle + np.pi)]
@@ -3470,10 +3462,10 @@ class GPi2(AngledGate):
     @circuit.subroutine(register=True)
     def gpi2(
         target: QubitSetInput,
-        angle: Union[FreeParameterExpression, float],
+        angle: FreeParameterExpression | float,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""IonQ GPi2 gate.
@@ -3539,9 +3531,9 @@ class MS(TripleAngledGate):
 
     def __init__(
         self,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
-        angle_3: Union[FreeParameterExpression, float] = np.pi / 2,
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
+        angle_3: FreeParameterExpression | float = np.pi / 2,
     ):
         super().__init__(
             angle_1=angle_1,
@@ -3556,34 +3548,32 @@ class MS(TripleAngledGate):
         return "ms"
 
     def to_matrix(self) -> np.ndarray:
-        return np.array(
+        return np.array([
             [
-                [
-                    np.cos(self.angle_3 / 2),
-                    0,
-                    0,
-                    -1j * np.exp(-1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
-                ],
-                [
-                    0,
-                    np.cos(self.angle_3 / 2),
-                    -1j * np.exp(-1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
-                    0,
-                ],
-                [
-                    0,
-                    -1j * np.exp(1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
-                    np.cos(self.angle_3 / 2),
-                    0,
-                ],
-                [
-                    -1j * np.exp(1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
-                    0,
-                    0,
-                    np.cos(self.angle_3 / 2),
-                ],
-            ]
-        )
+                np.cos(self.angle_3 / 2),
+                0,
+                0,
+                -1j * np.exp(-1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
+            ],
+            [
+                0,
+                np.cos(self.angle_3 / 2),
+                -1j * np.exp(-1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
+                0,
+            ],
+            [
+                0,
+                -1j * np.exp(1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
+                np.cos(self.angle_3 / 2),
+                0,
+            ],
+            [
+                -1j * np.exp(1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
+                0,
+                0,
+                np.cos(self.angle_3 / 2),
+            ],
+        ])
 
     def adjoint(self) -> list[Gate]:
         return [MS(self.angle_1 + np.pi, self.angle_2, self.angle_3)]
@@ -3600,12 +3590,12 @@ class MS(TripleAngledGate):
     def ms(
         target1: QubitInput,
         target2: QubitInput,
-        angle_1: Union[FreeParameterExpression, float],
-        angle_2: Union[FreeParameterExpression, float],
-        angle_3: Union[FreeParameterExpression, float] = np.pi / 2,
+        angle_1: FreeParameterExpression | float,
+        angle_2: FreeParameterExpression | float,
+        angle_3: FreeParameterExpression | float = np.pi / 2,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
         r"""IonQ Mølmer-Sørensen gate.
@@ -3701,7 +3691,7 @@ class Unitary(Gate):
         formatted_matrix = np.array2string(
             self._matrix,
             separator=", ",
-            formatter={"all": lambda x: format_complex(x)},
+            formatter={"all": format_complex},
             threshold=float("inf"),
         ).replace("\n", "")
 
@@ -3738,9 +3728,9 @@ class Unitary(Gate):
                 or is not unitary,
 
         Examples:
-            >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
+            >>> circ = Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0])
         """
-        # todo: handle controlled unitary
+        # TODO: handle controlled unitary
         if 2 ** len(targets) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the targets")
 
@@ -3780,6 +3770,10 @@ class PulseGate(Gate, Parameterizable):
         r"""Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
+    @property
+    def requires_physical_qubits(self) -> bool:
+        return True
+
     def bind_values(self, **kwargs) -> PulseGate:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
@@ -3810,8 +3804,8 @@ class PulseGate(Gate, Parameterizable):
         pulse_sequence: PulseSequence,
         display_name: str = "PG",
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
         r"""Arbitrary pulse gate which provides the ability to embed custom pulse sequences
@@ -3938,7 +3932,6 @@ def format_complex(number: complex) -> str:
             return f"{number.real}"
         imag_sign = "+" if number.imag > 0 else "-"
         return f"{number.real} {imag_sign} {abs(number.imag)}im"
-    elif number.imag:
+    if number.imag:
         return f"{number.imag}im"
-    else:
-        return "0"
+    return "0"

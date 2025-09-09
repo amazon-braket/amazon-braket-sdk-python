@@ -28,8 +28,8 @@ from braket.tracking.tracker import MIN_SIMULATOR_DURATION
     "qpu",
     [
         "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony",
-        "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-        "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3",
+        "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet",
+        "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2",
     ],
 )
 def test_qpu_tracking(qpu):

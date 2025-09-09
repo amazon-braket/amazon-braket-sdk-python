@@ -16,7 +16,7 @@ from __future__ import annotations
 import builtins
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Union
+from typing import Any
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
@@ -68,7 +68,7 @@ class PulseSequence:
         return self._free_parameters.copy()
 
     def set_frequency(
-        self, frame: Frame, frequency: Union[float, FreeParameterExpression]
+        self, frame: Frame, frequency: float | FreeParameterExpression
     ) -> PulseSequence:
         """Adds an instruction to set the frequency of the frame to the specified `frequency` value.
 
@@ -87,7 +87,7 @@ class PulseSequence:
         return self
 
     def shift_frequency(
-        self, frame: Frame, frequency: Union[float, FreeParameterExpression]
+        self, frame: Frame, frequency: float | FreeParameterExpression
     ) -> PulseSequence:
         """Adds an instruction to shift the frequency of the frame by the specified `frequency`
         value.
@@ -106,9 +106,7 @@ class PulseSequence:
         self._frames[frame.id] = frame
         return self
 
-    def set_phase(
-        self, frame: Frame, phase: Union[float, FreeParameterExpression]
-    ) -> PulseSequence:
+    def set_phase(self, frame: Frame, phase: float | FreeParameterExpression) -> PulseSequence:
         """Adds an instruction to set the phase of the frame to the specified `phase` value.
 
         Args:
@@ -125,9 +123,7 @@ class PulseSequence:
         self._frames[frame.id] = frame
         return self
 
-    def shift_phase(
-        self, frame: Frame, phase: Union[float, FreeParameterExpression]
-    ) -> PulseSequence:
+    def shift_phase(self, frame: Frame, phase: float | FreeParameterExpression) -> PulseSequence:
         """Adds an instruction to shift the phase of the frame by the specified `phase` value.
 
         Args:
@@ -144,9 +140,27 @@ class PulseSequence:
         self._frames[frame.id] = frame
         return self
 
-    def set_scale(
-        self, frame: Frame, scale: Union[float, FreeParameterExpression]
+    def swap_phases(
+        self,
+        frame_1: Frame,
+        frame_2: Frame,
     ) -> PulseSequence:
+        """Adds an instruction to swap the phases between two frames.
+
+        Args:
+            frame_1 (Frame): First frame for which to swap the phase.
+            frame_2 (Frame): Second frame for which to swap the phase.
+
+        Returns:
+            PulseSequence: self, with the instruction added.
+        """
+        _validate_uniqueness(self._frames, [frame_1, frame_2])
+        self._program.function_call("swap_phases", [frame_1, frame_2])
+        self._frames[frame_1.id] = frame_1
+        self._frames[frame_2.id] = frame_2
+        return self
+
+    def set_scale(self, frame: Frame, scale: float | FreeParameterExpression) -> PulseSequence:
         """Adds an instruction to set the scale on the frame to the specified `scale` value.
 
         Args:
@@ -165,8 +179,8 @@ class PulseSequence:
 
     def delay(
         self,
-        qubits_or_frames: Union[Frame, list[Frame], QubitSet],
-        duration: Union[float, FreeParameterExpression],
+        qubits_or_frames: Frame | list[Frame] | QubitSet,
+        duration: float | FreeParameterExpression,
     ) -> PulseSequence:
         """Adds an instruction to advance the frame clock by the specified `duration` value.
 
@@ -192,7 +206,7 @@ class PulseSequence:
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
-    def barrier(self, qubits_or_frames: Union[list[Frame], QubitSet]) -> PulseSequence:
+    def barrier(self, qubits_or_frames: list[Frame] | QubitSet) -> PulseSequence:
         """Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
@@ -329,7 +343,7 @@ class PulseSequence:
 
     def _register_free_parameters(
         self,
-        parameter: Union[float, FreeParameterExpression],
+        parameter: float | FreeParameterExpression,
     ) -> None:
         if isinstance(parameter, FreeParameterExpression) and isinstance(
             parameter.expression, Expr
@@ -347,14 +361,13 @@ class PulseSequence:
         }
         if argument["type"] in nonprimitive_arg_type:
             return nonprimitive_arg_type[argument["type"]](argument["value"])
-        else:
-            return getattr(builtins, argument["type"])(argument["value"])
+        return getattr(builtins, argument["type"])(argument["value"])
 
     @classmethod
     def _parse_from_calibration_schema(
         cls, calibration: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> PulseSequence:
-        """Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26. # noqa: E501
+        """Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
 
         Args:
             calibration (dict): The pulse instruction to parse
@@ -402,9 +415,7 @@ class PulseSequence:
             instr_function(**instr_args)
         return calibration_sequence
 
-    def __call__(
-        self, arg: Any | None = None, **kwargs: Union[FreeParameter, str]
-    ) -> PulseSequence:
+    def __call__(self, arg: Any | None = None, **kwargs: FreeParameter | str) -> PulseSequence:
         """Implements the call function to easily make a bound PulseSequence.
 
         Args:
@@ -433,7 +444,7 @@ class PulseSequence:
 
 
 def _validate_uniqueness(
-    mapping: dict[str, Any], values: Union[Frame, Waveform, list[Frame], list[Waveform]]
+    mapping: dict[str, Any], values: Frame | Waveform | list[Frame] | list[Waveform]
 ) -> None:
     if not isinstance(values, list):
         values = [values]

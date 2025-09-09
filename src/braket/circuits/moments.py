@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -90,7 +90,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
         ...     print(f"Item {i}")
         ...     print(f"\\tKey: {item[0]}")
         ...     print(f"\\tValue: {item[1]}")
-        ...
         Item 0
             Key: MomentsKey(time=0, qubits=QubitSet([Qubit(0)]))
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(0)]))
@@ -157,9 +156,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(
-        self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
-    ) -> None:
+    def add(self, instructions: Iterable[Instruction] | Instruction, noise_index: int = 0) -> None:
         """Add one or more instructions to self.
 
         Args:
@@ -177,10 +174,17 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
         operator = instruction.operator
         if isinstance(operator, CompilerDirective):
-            time = self._update_qubit_times(self._qubits)
-            self._moments[MomentsKey(time, None, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
+            qubit_range = instruction.target.union(instruction.control or QubitSet())
+            time = self._handle_compiler_directive(operator, qubit_range)
+            # For barriers without qubits, use empty qubit set for the key
+            key_qubits = (
+                QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
+            )
+            self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = (
+                instruction
+            )
+            self._qubits.update(qubit_range)
             self._depth = time + 1
-            self._time_all_qubits = time
         elif isinstance(operator, Noise):
             self.add_noise(instruction)
         elif isinstance(operator, Gate) and operator.name == "GPhase":
@@ -285,6 +289,17 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         self._moments = sorted_moment
 
+    def _handle_compiler_directive(self, operator: CompilerDirective, qubit_range: QubitSet) -> int:
+        """Handle compiler directive and return the time slot."""
+        if operator.name == "Barrier" and not qubit_range:
+            time = self._get_qubit_times(self._qubits) + 1
+            self._time_all_qubits = time
+        else:
+            time = self._update_qubit_times(qubit_range or self._qubits)
+            if operator.name != "Barrier":
+                self._time_all_qubits = time
+        return time
+
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         # -1 if qubit is unoccupied because the first instruction will have an index of 0
         return self._max_times.get(qubit, -1)
@@ -310,7 +325,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self.sort_moments()
         return self._moments.values()
 
-    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction:
+    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction | Any | None:
         """Get the instruction in self by key.
 
         Args:

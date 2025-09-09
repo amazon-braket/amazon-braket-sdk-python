@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from itertools import groupby
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 
@@ -35,7 +35,7 @@ class Gate(QuantumOperator):
     the metadata that defines what a gate is and what it does.
     """
 
-    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(self, qubit_count: int | None, ascii_symbols: Sequence[str]):
         """Initializes a `Gate`.
 
         Args:
@@ -51,12 +51,12 @@ class Gate(QuantumOperator):
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
-        # todo: implement ascii symbols for control modifier
+        # TODO: implement ascii symbols for control modifier
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     @property
     def _qasm_name(self) -> NotImplementedError:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def adjoint(self) -> list[Gate]:
         """Returns a list of gates that implement the adjoint of this gate.
@@ -72,10 +72,10 @@ class Gate(QuantumOperator):
         self,
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: Optional[SerializationProperties] = None,
+        serialization_properties: SerializationProperties | None = None,
         *,
-        control: Optional[QubitSet] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSet | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Any:
         r"""Returns IR object of quantum operator and target
@@ -112,7 +112,7 @@ class Gate(QuantumOperator):
             if control or power != 1:
                 raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -127,8 +127,7 @@ class Gate(QuantumOperator):
                 control_state=control_state,
                 power=power,
             )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         """Returns the JAQCD representation of the gate.
@@ -146,8 +145,8 @@ class Gate(QuantumOperator):
         target: QubitSet,
         serialization_properties: OpenQASMSerializationProperties,
         *,
-        control: Optional[QubitSet] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSet | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> str:
         """Returns the OpenQASM string representation of the gate.

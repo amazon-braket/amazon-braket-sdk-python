@@ -118,8 +118,9 @@ def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
         eigs = np.array([1, -1])
         eigs.setflags(write=False)
         return eigs
-    eigs = np.concatenate(
-        [get_pauli_eigenvalues(num_qubits - 1), -get_pauli_eigenvalues(num_qubits - 1)]
-    )
+    eigs = np.concatenate([
+        get_pauli_eigenvalues(num_qubits - 1),
+        -get_pauli_eigenvalues(num_qubits - 1),
+    ])
     eigs.setflags(write=False)
     return eigs

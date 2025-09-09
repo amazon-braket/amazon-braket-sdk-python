@@ -18,35 +18,37 @@ import json
 import os
 import urllib.request
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
+import pydantic
 from botocore.errorfactory import ClientError
-from networkx import DiGraph, complete_graph, from_edgelist
-
-from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
-from braket.annealing.problem import Problem
-from braket.aws.aws_quantum_task import AwsQuantumTask
-from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
-from braket.aws.aws_session import AwsSession
-from braket.aws.queue_information import QueueDepthInfo, QueueType
-from braket.circuits import Circuit, Gate, QubitSet
-from braket.circuits.gate_calibrations import GateCalibrations
-from braket.circuits.noise_model import NoiseModel
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 
 # TODO: Remove device_action module once this is added to init in the schemas repo
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+from braket.schema_common import BraketSchemaBase
+from networkx import DiGraph, complete_graph, from_edgelist
+
+from braket.aws.aws_quantum_task import AwsQuantumTask
+from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
+from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QueueDepthInfo, QueueType
+from braket.circuits import Gate, QubitSet
+from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.noise_model import NoiseModel
 from braket.devices.device import Device
-from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.emulation.emulator import Emulator
+from braket.emulation.local_emulator import LocalEmulator
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import _is_float
+from braket.program_sets import ProgramSet
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
-from braket.schema_common import BraketSchemaBase
+from braket.tasks.quantum_task import TaskSpecification
 
 
 class AwsDeviceType(str, Enum):
@@ -56,7 +58,7 @@ class AwsDeviceType(str, Enum):
     QPU = "QPU"
 
 
-class AwsDevice(Device):
+class AwsDevice(Device):  # noqa: PLR0904
     """Amazon Braket implementation of a device.
     Use this class to retrieve the latest metadata about the device and to run a quantum task on the
     device.
@@ -66,23 +68,25 @@ class AwsDevice(Device):
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
+    DEFAULT_SHOTS_PROGRAM_SET = -1
     DEFAULT_MAX_PARALLEL = 10
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET: ClassVar[dict[str, str | None]] = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar[dict[str, str] | None] = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
         "Cphaseshift": "CPhaseShift",
         "Xy": "XY",
+        "Iswap": "ISwap",
     }
 
     def __init__(
         self,
         arn: str,
-        aws_session: Optional[AwsSession] = None,
-        noise_model: Optional[NoiseModel] = None,
+        aws_session: AwsSession | None = None,
+        noise_model: NoiseModel | None = None,
     ):
         """Initializes an `AwsDevice`.
 
@@ -116,23 +120,17 @@ class AwsDevice(Device):
         if noise_model:
             self._validate_device_noise_model_support(noise_model)
         self._noise_model = noise_model
+        self._emulator = None
 
     def run(
         self,
-        task_specification: Union[
-            Circuit,
-            Problem,
-            OpenQasmProgram,
-            BlackbirdProgram,
-            PulseSequence,
-            AnalogHamiltonianSimulation,
-        ],
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
+        task_specification: TaskSpecification,
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[float] = None,
-        inputs: Optional[dict[str, float]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        poll_interval_seconds: float | None = None,
+        inputs: dict[str, float] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
@@ -141,9 +139,9 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]):
-                Specification of quantum task (circuit, OpenQASM program or AHS program)
-                to run on device.
+            task_specification (TaskSpecification):
+                Specification of quantum task (circuit, OpenQASM program, program set,
+                pulse sequence or AHS program) to run on the device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
@@ -201,7 +199,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
-        """  # noqa E501
+        """  # noqa: E501
         if self._noise_model:
             task_specification = self._apply_noise_model_to_circuit(task_specification)
         return AwsQuantumTask.create(
@@ -215,7 +213,7 @@ class AwsDevice(Device):
                 else None
             )
             or (self._aws_session.default_bucket(), "tasks"),
-            shots if shots is not None else self._default_shots,
+            shots if shots is not None else self._default_shots(task_specification),
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
@@ -227,44 +225,25 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: Union[
-            Union[
-                Circuit,
-                Problem,
-                OpenQasmProgram,
-                BlackbirdProgram,
-                PulseSequence,
-                AnalogHamiltonianSimulation,
-            ],
-            list[
-                Union[
-                    Circuit,
-                    Problem,
-                    OpenQasmProgram,
-                    BlackbirdProgram,
-                    PulseSequence,
-                    AnalogHamiltonianSimulation,
-                ]
-            ],
-        ],
-        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
-        shots: Optional[int] = None,
-        max_parallel: Optional[int] = None,
+        task_specifications: TaskSpecification | list[TaskSpecification],
+        s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
+        shots: int | None = None,
+        max_parallel: int | None = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        reservation_arn: Optional[str] = None,
+        inputs: dict[str, float] | list[dict[str, float]] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], list[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
-                Single instance or list of circuits, annealing problems, pulse sequences,
-                or photonics program to run on device.
+            task_specifications (TaskSpecification | list[TaskSpecification]):
+                Single instance or list of task specifications (circuits, OpenQASM programs,
+                pulse sequences or AHS programs) to run on the device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
@@ -280,7 +259,7 @@ class AwsDevice(Device):
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be
+            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
             gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
@@ -298,7 +277,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
-        """  # noqa E501
+        """  # noqa: E501
         if self._noise_model:
             task_specifications = [
                 self._apply_noise_model_to_circuit(task_specification)
@@ -315,7 +294,7 @@ class AwsDevice(Device):
                 else None
             )
             or (self._aws_session.default_bucket(), "tasks"),
-            shots if shots is not None else self._default_shots,
+            shots if shots is not None else self._default_shots(),
             max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
@@ -348,33 +327,36 @@ class AwsDevice(Device):
         )
         try:
             self._populate_properties(region_session)
-            return region_session
         except ClientError as e:
             raise (
                 ValueError(f"'{self._arn}' not found")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
             ) from e
+        else:
+            return region_session
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
         try:
             self._populate_properties(session)
-            return session
         except ClientError as e:
             if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                raise e
+                raise
             if "qpu" not in self._arn:
                 raise ValueError(f"Simulator '{self._arn}' not found in '{current_region}'") from e
+        else:
+            return session
         # Search remaining regions for QPU
         for region in frozenset(AwsDevice.REGIONS) - {current_region}:
             region_session = AwsSession.copy_session(session, region)
             try:
                 self._populate_properties(region_session)
-                return region_session
             except ClientError as e:
                 if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                    raise e
+                    raise
+            else:
+                return region_session
         raise ValueError(f"QPU '{self._arn}' not found")
 
     def _populate_properties(self, session: AwsSession) -> None:
@@ -383,13 +365,21 @@ class AwsDevice(Device):
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
-        device_poll_interval = self._properties.service.getTaskPollIntervalMillis
-        self._poll_interval_seconds = (
-            device_poll_interval / 1000.0
-            if device_poll_interval
-            else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
-        )
+        try:
+            self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
+            device_poll_interval = self._properties.service.getTaskPollIntervalMillis
+            self._poll_interval_seconds = (
+                device_poll_interval / 1000.0
+                if device_poll_interval
+                else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
+            )
+        except (pydantic.v1.ValidationError, pydantic.ValidationError):
+            warnings.warn(
+                f"Unable to determine device capabilities for '{self._arn}'."
+                " Please make sure you are using the latest version of amazon-braket-schemas.",
+                stacklevel=1,
+            )
+            self._poll_interval_seconds = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
         self._topology_graph = None
         self._frames = None
         self._ports = None
@@ -414,7 +404,7 @@ class AwsDevice(Device):
         return self._arn
 
     @property
-    def gate_calibrations(self) -> Optional[GateCalibrations]:
+    def gate_calibrations(self) -> GateCalibrations | None:
         """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
         If a QPU does not expose these calibrations, None is returned.
 
@@ -438,7 +428,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.utcnow()
+        current_datetime_utc = datetime.now(tz=timezone.utc)
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
@@ -536,18 +526,20 @@ class AwsDevice(Device):
                 i = item[0]
                 edges.extend([(int(i), int(j)) for j in item[1]])
             return from_edgelist(edges, create_using=DiGraph())
-        elif hasattr(self.properties, "provider") and isinstance(
+        if hasattr(self.properties, "provider") and isinstance(
             self.properties.provider, DwaveProviderProperties
         ):
             edges = self.properties.provider.couplers
             return from_edgelist(edges, create_using=DiGraph())
-        else:
-            return None
+        return None
 
-    @property
-    def _default_shots(self) -> int:
+    def _default_shots(self, task_specification: TaskSpecification | None = None) -> int:
+        if isinstance(task_specification, ProgramSet | OpenQASMProgramSet):
+            return AwsDevice.DEFAULT_SHOTS_PROGRAM_SET
         return (
-            AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
+            AwsDevice.DEFAULT_SHOTS_QPU
+            if self._type == AwsDeviceType.QPU
+            else AwsDevice.DEFAULT_SHOTS_SIMULATOR
         )
 
     @property
@@ -578,23 +570,46 @@ class AwsDevice(Device):
         self._update_pulse_properties()
         return self._ports or {}
 
+    def emulator(self) -> Emulator:
+        """
+        A device emulator mimics the restrictions and noise of the AWS QPU by validating and
+        compiling programs before running them on a simulated backend. An emulator can be used
+        as a soft check that a program can run the target AwsDevice.
+
+        Returns:
+            Emulator: An emulator for this device, if this is not a simulator device. Raises an
+            exception if an emulator is requested for a simulator device.
+        """
+
+        if self._emulator is not None:
+            return self._emulator
+
+        if self._type == AwsDeviceType.SIMULATOR:
+            raise ValueError(
+                "Creating an emulator from a Braket managed simulator is not supported."
+            )
+
+        self._emulator = LocalEmulator.from_device_properties(self.properties)
+
+        return self._emulator
+
     @staticmethod
     def get_devices(
-        arns: Optional[list[str]] = None,
-        names: Optional[list[str]] = None,
-        types: Optional[list[AwsDeviceType]] = None,
-        statuses: Optional[list[str]] = None,
-        provider_names: Optional[list[str]] = None,
+        arns: list[str] | None = None,
+        names: list[str] | None = None,
+        types: list[AwsDeviceType] | None = None,
+        statuses: list[str] | None = None,
+        provider_names: list[str] | None = None,
         order_by: str = "name",
-        aws_session: Optional[AwsSession] = None,
+        aws_session: AwsSession | None = None,
     ) -> list[AwsDevice]:
         """Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Examples:
-            >>> AwsDevice.get_devices(provider_names=['Rigetti'], statuses=['ONLINE'])
-            >>> AwsDevice.get_devices(order_by='provider_name')
-            >>> AwsDevice.get_devices(types=['SIMULATOR'])
+            >>> AwsDevice.get_devices(provider_names=["Rigetti"], statuses=["ONLINE"])
+            >>> AwsDevice.get_devices(order_by="provider_name")
+            >>> AwsDevice.get_devices(types=["SIMULATOR"])
 
         Args:
             arns (Optional[list[str]]): device ARN filter, default is `None`
@@ -760,7 +775,7 @@ class AwsDevice(Device):
 
         return QueueDepthInfo(**queue_info)
 
-    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
+    def refresh_gate_calibrations(self) -> GateCalibrations | None:
         """Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
@@ -778,7 +793,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(
+                with urllib.request.urlopen(  # noqa: S310
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(
@@ -794,8 +809,8 @@ class AwsDevice(Device):
 
     def _parse_waveforms(self, waveforms_json: dict) -> dict:
         waveforms = {}
-        for waveform in waveforms_json:
-            parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
+        for waveform in waveforms_json.values():
+            parsed_waveform = _parse_waveform_from_calibration_schema(waveform)
             waveforms[parsed_waveform.id] = parsed_waveform
         return waveforms
 
