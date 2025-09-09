@@ -584,3 +584,31 @@ def test_measurecriteria_for_circuit_with_observable_resulttype():
     noisy_circuit = noise_model.apply(circ)
 
     assert noisy_circuit == circ  # no effect
+
+
+
+def test_apply_noise_on_probability_result_types():
+    noise_model = NoiseModel()
+    rate_observable = 0.1
+    rate_measure = 0.2
+    noise_model.add_noise(BitFlip(rate_observable), ObservableCriteria(qubits=0))
+    noise_model.add_noise(BitFlip(rate_measure), MeasureCriteria(qubits=0))
+    noise_model.add_noise(BitFlip(rate_measure), MeasureCriteria(qubits=1))
+    noise_model.add_noise(BitFlip(rate_observable), ObservableCriteria(qubits=1))
+    
+    readout_noise_instructions = noise_model.get_instructions_by_type().readout_noise
+
+    circ_1 = Circuit().h(0).cnot(0, 1).probability().sample(Observable.Z(), 1)
+
+    noisy_circ = noise_model._apply_noise_on_probability_result_types(circ_1, readout_noise_instructions)
+
+    expected_circ = (
+        Circuit().h(0).cnot(0, 1).bit_flip(0, rate_observable).bit_flip(1, rate_measure).probability().sample(Observable.Z(), 1)
+    )
+    assert noisy_circ == expected_circ
+
+    circ2 = Circuit().h(0).cnot(0, 1).probability(0)
+    noisy_circ = emulator._apply_readout_error_to_probability_qubits(circ2, noise_model)
+
+    expected_circ = Circuit().h(0).cnot(0, 1).bit_flip(0, 0.2).probability(0)
+    assert noisy_circ == expected_circ

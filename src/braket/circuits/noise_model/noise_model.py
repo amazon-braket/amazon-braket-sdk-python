@@ -29,7 +29,7 @@ from braket.circuits.noise_model.observable_criteria import ObservableCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.result_types import ObservableResultType
 from braket.registers.qubit_set import QubitSetInput
-
+from braket.circuits.result_types import Probability
 
 @dataclass
 class NoiseModelInstruction:
@@ -334,7 +334,8 @@ class NoiseModel:
             return circuit
 
         new_circuit = _apply_noise_on_measurements(circuit, readout_noise_instructions)
-        return _apply_noise_on_observable_result_types(new_circuit, readout_noise_instructions)
+        new_circuit = _apply_noise_on_observable_result_types(new_circuit, readout_noise_instructions)
+        return _apply_noise_on_probability_result_types(new_circuit, readout_noise_instructions)
 
     @classmethod
     def _items_to_string(
@@ -464,3 +465,41 @@ def _apply_noise_on_measurements(
     for result_type in circuit.result_types:
         new_circuit.add_result_type(result_type)
     return new_circuit
+
+def _apply_noise_on_probability_result_types(
+    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
+) -> Circuit:
+    """Apply readout error to qubits that have only probability result types.
+
+    Args:
+        circuit (Circuit): The quantum circuit to apply readout error to.
+        readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
+            to apply.
+
+    Returns:
+        Circuit: A new circuit with readout error applied to qubits with probability result
+        types.
+    """
+
+    # Find qubits with only probability result types
+    qubits_with_only_probability_result_type = set()
+    for result_type in circuit.result_types:
+        if isinstance(result_type, Probability):
+            # If target is empty, it means all qubits in the circuit
+            if not result_type.target:
+                qubits_with_only_probability_result_type.update(circuit.qubits)
+            else:
+                qubits_with_only_probability_result_type.update(result_type.target)
+
+    # Apply readout noise to each qubit with a probability result type
+    for qubit in qubits_with_only_probability_result_type:
+        for noise_instruction in readout_noise_instructions:
+            # Apply the readout noise to the qubit
+            target_qubits = noise_instruction.criteria._qubits
+            if qubit in target_qubits:
+                circuit.apply_readout_noise(noise_instruction.noise, qubit)
+                # Only apply the first readout error in noise_instruction
+                # if there are multiple readout noise instructions applied to the same qubit
+                break
+
+    return circuit
