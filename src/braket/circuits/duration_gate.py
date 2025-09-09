@@ -17,7 +17,6 @@ import math
 from collections.abc import Sequence
 from enum import Enum
 from functools import singledispatch
-from typing import Optional, Union
 
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -44,8 +43,8 @@ class DurationGate(Gate, Parameterizable):
 
     def __init__(
         self,
-        duration: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        duration: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes an `DurationGate`.
@@ -75,7 +74,7 @@ class DurationGate(Gate, Parameterizable):
             self._parameters = [float(duration)]
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
@@ -86,7 +85,7 @@ class DurationGate(Gate, Parameterizable):
         return self._parameters
 
     @property
-    def duration(self) -> Union[FreeParameterExpression, float]:
+    def duration(self) -> FreeParameterExpression | float:
         """Returns the duration of the gate
 
         Returns:
@@ -122,8 +121,8 @@ class DurationGate(Gate, Parameterizable):
 
 @singledispatch
 def _durations_equal(
-    duration_1: Union[FreeParameterExpression, float],
-    duration_2: Union[FreeParameterExpression, float],
+    duration_1: FreeParameterExpression | float,
+    duration_2: FreeParameterExpression | float,
 ) -> bool:
     return isinstance(duration_2, float) and math.isclose(duration_1, duration_2)
 
@@ -133,7 +132,7 @@ def _(duration_1: FreeParameterExpression, duration_2: FreeParameterExpression):
     return duration_1 == duration_2
 
 
-def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
+def _duration_str(duration: FreeParameterExpression | float) -> str:
     """Returns the string represtntion of the duration of the gate.
 
     Returns:
@@ -151,23 +150,21 @@ def _duration_str(duration: Union[FreeParameterExpression, float]) -> str:
     """
     if isinstance(duration, FreeParameterExpression):
         return str(duration)
-    else:
-        # Currently, duration is truncated to 2 decimal places.
-        # Same as angle in AngledGate).
-        DURATION_MAX_DIGITS = 2
+    # Currently, duration is truncated to 2 decimal places.
+    # Same as angle in AngledGate).
+    DURATION_MAX_DIGITS = 2
 
-        if duration >= 1:
-            return f"{round(duration, DURATION_MAX_DIGITS)}{SiTimeUnit.s}"
-        elif duration >= 1e-3:
-            return f"{round(1e3 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ms}"
-        elif duration >= 1e-6:
-            return f"{round(1e6 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.us}"
-        else:
-            return f"{round(1e9 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ns}"
+    if duration >= 1:
+        return f"{round(duration, DURATION_MAX_DIGITS)}{SiTimeUnit.s}"
+    if duration >= 1e-3:
+        return f"{round(1e3 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ms}"
+    if duration >= 1e-6:
+        return f"{round(1e6 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.us}"
+    return f"{round(1e9 * duration, DURATION_MAX_DIGITS)}{SiTimeUnit.ns}"
 
 
 def duration_ascii_characters(
-    gate_name: str, duration: Union[FreeParameterExpression, float]
+    gate_name: str, duration: FreeParameterExpression | float
 ) -> str:
     """Generates a formatted ascii representation of a duration gate.
 

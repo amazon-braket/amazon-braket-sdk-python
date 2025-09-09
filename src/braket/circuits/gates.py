@@ -3847,40 +3847,10 @@ class PulseGate(Gate, Parameterizable):
 Gate.register_gate(PulseGate)
 
 
-class Barrier(Gate):
-    r"""Barrier gate."""
-
-    def __init__(self, qubit_count):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=["||"] * qubit_count)
-
-    def bind_values(self, **kwargs) -> Any:
-        raise NotImplementedError
-
-    @property
-    def _qasm_name(self) -> str:
-        return "barrier"
-
-    @staticmethod
-    @circuit.subroutine(register=True)
-    def barrier(target: QubitSetInput) -> Instruction:
-        r"""Barrier gate.
-
-        Args:
-            target (QubitSetInput): Target qubit(s)
-
-        Examples:
-            >>> circ = Circuit().barrier(target = [0, 1, 2])
-        """
-        return Instruction(Barrier(len(QubitSet(target))), target=QubitSet(target))
-
-
-Gate.register_gate(Barrier)
-
-
 class Delay(DurationGate):
     r"""Delay gate. Applies delay in seconds."""
 
-    def __init__(self, qubit_count, duration):
+    def __init__(self, qubit_count: int, duration: FreeParameterExpression | float):
         super().__init__(
             qubit_count=qubit_count,
             duration=duration,
@@ -3900,13 +3870,13 @@ class Delay(DurationGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def delay(
-        target: QubitSetInput, duration: Union[FreeParameterExpression, float]
+        target: QubitSetInput, duration: FreeParameterExpression | float
     ) -> Instruction:
         r"""Delay gate. Applies delay in seconds.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            duration (Union[FreeParameterExpression, float]): Delay in
+            duration (FreeParameterExpression | float): Delay in
                 seconds or in expression representation.
 
         Examples:

@@ -78,7 +78,6 @@ testdata = [
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
     (Gate.U, "u", None, [SingleTarget, TripleAngle], {}),
-    (Gate.Barrier, "barrier", None, [SingleTarget, NoMatrixGeneration], {}),
     (Gate.Delay, "delay", None, [SingleTarget, Duration, NoMatrixGeneration], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
     (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
@@ -452,30 +451,6 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "h $4;",
-        ),
-        (
-            Gate.Barrier(1),
-            [4],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "barrier q[4];",
-        ),
-        (
-            Gate.Barrier(1),
-            [4],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "barrier $4;",
-        ),
-        (
-            Gate.Barrier(3),
-            [3, 4, 5],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "barrier q[3], q[4], q[5];",
-        ),
-        (
-            Gate.Barrier(3),
-            [3, 4, 5],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "barrier $3, $4, $5;",
         ),
         (
             Gate.Delay(qubit_count=1, duration=30e-9),
@@ -1419,7 +1394,6 @@ def test_hash(gate):
 @pytest.mark.parametrize(
     "gate, ascii_symbols",
     (
-        (Gate.Barrier(3), ("||",) * 3),
         (Gate.Delay(3, 30e-9), ("delay(30.0ns)",) * 3),
     ),
 )

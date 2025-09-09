@@ -161,20 +161,6 @@ def test_qubit_width():
     _assert_correct_diagram(circ, expected)
 
 
-def test_barrier_circuit_visualization():
-    circ = Circuit().barrier(target=[0, 100])
-    expected = (
-        "T    : |0 |",
-        "           ",
-        "q0   : -||-",
-        "        |  ",
-        "q100 : -||-",
-        "",
-        "T    : |0 |",
-    )
-    _assert_correct_diagram(circ, expected)
-
-
 def test_delay_circuit_visualization():
     circ = Circuit().delay(target=[0, 100], duration=30e-9)
     expected = (
