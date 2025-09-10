@@ -20,6 +20,9 @@ from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiD
 
 from braket.emulation.local_emulator import LocalEmulator
 
+from braket.program_sets import ProgramSet
+from braket.circuits import Circuit
+
 from conftest import invalid_device_properties_dict_1, invalid_device_properties_dict_2
 
 
@@ -91,3 +94,10 @@ def test_validate_valid_verbatim_circ_aria_1_v2(
         IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json)
     )
     emulator.validate(valid_verbatim_circ_aria1)
+
+
+def test_program_set(reduced_standardized_json):
+    emulator = LocalEmulator.from_json(reduced_standardized_json)
+    ps = ProgramSet([Circuit()], shots_per_executable=50)
+    with pytest.raises(TypeError):
+        emulator.run(ps)

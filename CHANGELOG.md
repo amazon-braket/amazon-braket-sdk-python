@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.102.1 (2025-09-10)
+
+### Bug Fixes and Other Changes
+
+ * emulator validation for program sets
+
+## v1.102.0 (2025-09-08)
+
+### Features
+
+ * add barrier instruction
+
 ## v1.101.0.post0 (2025-09-03)
 
 ### Documentation Changes

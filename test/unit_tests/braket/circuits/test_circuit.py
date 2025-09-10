@@ -3589,3 +3589,50 @@ def test_from_ir_round_trip_transformation_with_targeted_measurements():
 
     assert Circuit.from_ir(ir) == Circuit.from_ir(circuit.to_ir("OPENQASM"))
     assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
+
+
+def test_barrier_specific_qubits():
+    circ = Circuit().barrier([0, 1, 2])
+    assert len(circ.instructions) == 1
+    instr = circ.instructions[0]
+    assert isinstance(instr.operator, compiler_directives.Barrier)
+    assert instr.target == QubitSet([0, 1, 2])
+    assert instr.operator.qubit_indices == [0, 1, 2]
+    assert circ.qubits_frozen is True
+
+
+def test_barrier_all_qubits():
+    circ = Circuit().h(0).h(1).barrier()
+    assert len(circ.instructions) == 3
+    barrier_instr = circ.instructions[2]
+    assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
+    assert barrier_instr.target == QubitSet([0, 1])
+
+
+def test_barrier_empty_circuit():
+    circ = Circuit().barrier()
+    assert len(circ.instructions) == 0  # No barrier added to empty circuit
+
+
+def test_barrier_none_target():
+    circ = Circuit().h(0).h(2).barrier(None)
+    barrier_instr = circ.instructions[2]
+    assert barrier_instr.target == QubitSet([0, 2])
+
+
+def test_barrier_openqasm_export_specific_qubits():
+    circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
+    qasm = circ.to_ir(IRType.OPENQASM).source
+    assert "barrier q[0], q[1];" in qasm
+
+
+def test_barrier_openqasm_export_all_qubits():
+    circ = Circuit().h(0).h(1).barrier().cnot(0, 1)
+    qasm = circ.to_ir(IRType.OPENQASM).source
+    assert "barrier q[0], q[1];" in qasm
+
+
+def test_barrier_jaqcd_export_fails():
+    circ = Circuit().h(0).barrier([0, 1])
+    with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):
+        circ.to_ir(IRType.JAQCD)
