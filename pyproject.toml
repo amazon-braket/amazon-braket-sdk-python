@@ -62,6 +62,8 @@ lint.ignore = [
   "N806",    # Vars will break this rule based on technical names.
   "N815",    # Allowing reviwers to do a per case basis
   "PLC2701", # Allow private function access in code
+  "PLR0904", # Too many public methods
+  "PLR0911", # Too many return statements
   "PLR0913", # Too many variables in function
   "PLR0914", # Too many local variables
   "PLR0917", # Too many positional arguments

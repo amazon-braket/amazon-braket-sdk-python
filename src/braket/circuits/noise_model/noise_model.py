@@ -182,14 +182,15 @@ class NoiseModel:
         gate_noise = []
         readout_noise = []
         for item in self._instructions:
-            if isinstance(item.criteria, InitializationCriteria):
-                init_noise.append(item)
-            elif isinstance(item.criteria, MeasureCriteria):
-                readout_noise.append(item)
-            elif isinstance(item.criteria, CircuitInstructionCriteria):
-                gate_noise.append(item)
-            elif isinstance(item.criteria, ResultTypeCriteria):
-                readout_noise.append(item)
+            match item.criteria:
+                case InitializationCriteria():
+                    init_noise.append(item)
+                case MeasureCriteria():
+                    readout_noise.append(item)
+                case CircuitInstructionCriteria():
+                    gate_noise.append(item)
+                case ResultTypeCriteria():
+                    readout_noise.append(item)
         return NoiseModelInstructions(
             initialization_noise=init_noise,
             gate_noise=gate_noise,
