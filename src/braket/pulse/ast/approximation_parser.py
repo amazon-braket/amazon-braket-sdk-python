@@ -49,7 +49,7 @@ class _ParseState:
     frame_data: dict[str, _FrameState]
 
 
-class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
+class _ApproximationParser(QASMVisitor[_ParseState]):
     """Walk the AST and build the output signal amplitude, frequency and phases
     for each channel.
     """
@@ -254,7 +254,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):  # noqa: PLR0904
             return ~self.visit(node.expression, context)
         raise NotImplementedError
 
-    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # noqa: C901, PLR0911, PLR0912
+    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # noqa: C901, PLR0912
         """Visit Binary Expression.
             node.lhs, node.rhs, node.op
             1+2

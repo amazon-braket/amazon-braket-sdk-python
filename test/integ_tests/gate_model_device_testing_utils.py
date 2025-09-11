@@ -13,7 +13,7 @@
 
 import concurrent.futures
 import math
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 
@@ -49,7 +49,7 @@ def qubit_ordering_testing(device: Device, run_kwargs: dict[str, Any]):
 
 
 def no_result_types_testing(
-    program: Union[Circuit, OpenQasmProgram],
+    program: Circuit | OpenQasmProgram,
     device: Device,
     run_kwargs: dict[str, Any],
     expected: dict[str, float],

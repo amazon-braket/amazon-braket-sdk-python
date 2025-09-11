@@ -172,46 +172,48 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._add(instruction, noise_index)
 
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
-        operator = instruction.operator
-        if isinstance(operator, CompilerDirective):
-            qubit_range = instruction.target.union(instruction.control or QubitSet())
-            time = self._handle_compiler_directive(operator, qubit_range)
-            # For barriers without qubits, use empty qubit set for the key
-            key_qubits = (
-                QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
-            )
-            self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = (
-                instruction
-            )
-            self._qubits.update(qubit_range)
-            self._depth = time + 1
-        elif isinstance(operator, Noise):
-            self.add_noise(instruction)
-        elif isinstance(operator, Gate) and operator.name == "GPhase":
-            time = self._get_qubit_times(self._max_times.keys()) + 1
-            self._number_gphase_in_current_moment += 1
-            key = MomentsKey(
-                time,
-                QubitSet([]),
-                MomentType.GLOBAL_PHASE,
-                0,
-                self._number_gphase_in_current_moment,
-            )
-            self._moments[key] = instruction
-        elif isinstance(operator, Measure):
-            qubit_range = instruction.target.union(instruction.control)
-            time = self._get_qubit_times(self._max_times.keys()) + 1
-            self._moments[MomentsKey(time, qubit_range, MomentType.MEASURE, noise_index)] = (
-                instruction
-            )
-            self._qubits.update(qubit_range)
-            self._depth = max(self._depth, time + 1)
-        else:
-            qubit_range = instruction.target.union(instruction.control)
-            time = self._update_qubit_times(qubit_range)
-            self._moments[MomentsKey(time, qubit_range, MomentType.GATE, noise_index)] = instruction
-            self._qubits.update(qubit_range)
-            self._depth = max(self._depth, time + 1)
+        match operator := instruction.operator:
+            case CompilerDirective():
+                qubit_range = instruction.target.union(instruction.control or QubitSet())
+                time = self._handle_compiler_directive(operator, qubit_range)
+                # For barriers without qubits, use empty qubit set for the key
+                key_qubits = (
+                    QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
+                )
+                self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = time + 1
+            case Noise():
+                self.add_noise(instruction)
+            case Gate() if operator.name == "GPhase":
+                time = self._get_qubit_times(self._max_times.keys()) + 1
+                self._number_gphase_in_current_moment += 1
+                key = MomentsKey(
+                    time,
+                    QubitSet([]),
+                    MomentType.GLOBAL_PHASE,
+                    0,
+                    self._number_gphase_in_current_moment,
+                )
+                self._moments[key] = instruction
+            case Measure():
+                qubit_range = instruction.target.union(instruction.control)
+                time = self._get_qubit_times(self._max_times.keys()) + 1
+                self._moments[MomentsKey(time, qubit_range, MomentType.MEASURE, noise_index)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = max(self._depth, time + 1)
+            case _:
+                qubit_range = instruction.target.union(instruction.control)
+                time = self._update_qubit_times(qubit_range)
+                self._moments[MomentsKey(time, qubit_range, MomentType.GATE, noise_index)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = max(self._depth, time + 1)
 
     def _get_qubit_times(self, qubits: QubitSet) -> int:
         return max([self._max_time_for_qubit(qubit) for qubit in qubits] + [self._time_all_qubits])
@@ -265,15 +267,16 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
-            if key.moment_type == MomentType.READOUT_NOISE:
-                key_readout_noise.append(key)
-            elif key.moment_type == MomentType.INITIALIZATION_NOISE:
-                key_initialization_noise.append(key)
-            elif key.moment_type == MomentType.MEASURE:
-                last_measure = key.time
-                key_noise.append(key)
-            else:
-                key_noise.append(key)
+            match key.moment_type:
+                case MomentType.READOUT_NOISE:
+                    key_readout_noise.append(key)
+                case MomentType.INITIALIZATION_NOISE:
+                    key_initialization_noise.append(key)
+                case MomentType.MEASURE:
+                    last_measure = key.time
+                    key_noise.append(key)
+                case _:
+                    key_noise.append(key)
 
         for key in key_initialization_noise:
             sorted_moment[key] = moment_copy[key]
