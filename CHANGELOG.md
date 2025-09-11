@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.2 (2025-09-11)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.10 syntax
+
 ## v1.102.1 (2025-09-10)
 
 ### Bug Fixes and Other Changes
