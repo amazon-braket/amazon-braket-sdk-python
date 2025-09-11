@@ -232,21 +232,20 @@ valid_subroutine_switcher = dict(
 def create_valid_ir_input(irsubclasses):
     input = {}
     for subclass in irsubclasses:
-        input.update(valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
+        input |= valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")()
     return input
 
 
 def create_valid_subroutine_input(irsubclasses, **kwargs):
     input = {}
     for subclass in irsubclasses:
-        input.update(
-            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(**kwargs)
+        input |= valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(
+            **kwargs
         )
     return input
 
 
 def create_valid_target_input(irsubclasses):
-    input = {}
     qubit_set = []
     # based on the concept that control goes first in target input
     for subclass in irsubclasses:
@@ -260,8 +259,8 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif any(
-            subclass == i
+        elif all(
+            subclass != i
             for i in [
                 SingleProbability,
                 SingleProbability_34,
@@ -273,17 +272,15 @@ def create_valid_target_input(irsubclasses):
                 MultiProbability,
             ]
         ):
-            pass
-        else:
             raise ValueError("Invalid subclass")
-    input["target"] = QubitSet(qubit_set)
+    input = {"target": QubitSet(qubit_set)}
     return input
 
 
 def create_valid_noise_class_input(irsubclasses, **kwargs):
     input = {}
     if SingleProbability in irsubclasses:
-        input.update(single_probability_valid_input())
+        input |= single_probability_valid_input()
     if SingleProbability_34 in irsubclasses:
         input.update(single_probability_34_valid_input())
     if SingleProbability_1516 in irsubclasses:
@@ -320,8 +317,8 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif any(
-            subclass == i
+        elif all(
+            subclass != i
             for i in [
                 SingleProbability,
                 SingleProbability_34,
@@ -333,8 +330,6 @@ def calculate_qubit_count(irsubclasses):
                 TwoDimensionalMatrixList,
             ]
         ):
-            pass
-        else:
             raise ValueError("Invalid subclass")
     return qubit_count
 
@@ -365,18 +360,17 @@ def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwa
     )
     if qubit_count == 1:
         multi_targets = [0, 1, 2]
-        instruction_list = []
-        for target in multi_targets:
-            instruction_list.append(
-                Instruction(
-                    operator=testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)),
-                    target=target,
-                )
+        instruction_list = [
+            Instruction(
+                operator=testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)),
+                target=target,
             )
+            for target in multi_targets
+        ]
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
         if SingleProbability in irsubclasses:
-            subroutine_input.update(single_probability_valid_input())
+            subroutine_input |= single_probability_valid_input()
         if SingleProbability_34 in irsubclasses:
             subroutine_input.update(single_probability_34_valid_input())
         if SingleProbability_1516 in irsubclasses:
@@ -489,10 +483,10 @@ def test_parameter_binding(parameterized_noise, params, expected_noise):
 
 
 def test_parameterized_noise():
-    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("b"))
+    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("d"))
     assert noise.probX == FreeParameter("a")
     assert noise.probY == 0.2
-    assert noise.probZ == FreeParameter("b")
+    assert noise.probZ == FreeParameter("d")
 
 
 # Additional Unitary noise tests
@@ -652,12 +646,10 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "#pragma braket noise phase_damping(0.5) $3",
         ),
         (
-            Noise.Kraus(
-                [
-                    np.eye(4) * np.sqrt(0.9),
-                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
-                ]
-            ),
+            Noise.Kraus([
+                np.eye(4) * np.sqrt(0.9),
+                np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+            ]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 5],
             "#pragma braket noise kraus(["
@@ -671,12 +663,10 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0, 0.31622776601683794, 0]]) q[3], q[5]",
         ),
         (
-            Noise.Kraus(
-                [
-                    np.eye(4) * np.sqrt(0.9),
-                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
-                ]
-            ),
+            Noise.Kraus([
+                np.eye(4) * np.sqrt(0.9),
+                np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+            ]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             [3, 5],
             "#pragma braket noise kraus(["
@@ -690,12 +680,10 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0, 0.31622776601683794, 0]]) $3, $5",
         ),
         (
-            Noise.Kraus(
-                [
-                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
-                    np.array([[0, 0.31622777], [0.31622777, 0]]),
-                ]
-            ),
+            Noise.Kraus([
+                np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                np.array([[0, 0.31622777], [0.31622777, 0]]),
+            ]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
             "#pragma braket noise kraus(["
@@ -703,12 +691,10 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0.31622777], [0.31622777, 0]]) q[3]",
         ),
         (
-            Noise.Kraus(
-                [
-                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
-                    np.array([[0, 0.31622777], [0.31622777, 0]]),
-                ]
-            ),
+            Noise.Kraus([
+                np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                np.array([[0, 0.31622777], [0.31622777, 0]]),
+            ]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             [3],
             "#pragma braket noise kraus(["

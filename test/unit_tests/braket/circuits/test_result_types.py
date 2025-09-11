@@ -272,6 +272,25 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
             "#pragma braket result adjoint_gradient expectation(hermitian([[1+0im, 0im], "
             "[0im, 1+0im]]) q[0]) all",
         ),
+        (
+            ResultType.AdjointGradient(
+                Observable.H(0) @ Observable.I(1) + 2 * Observable.Z(2),
+                parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(h(q[0]) @ i(q[1]) + 2 * z(q[2])) "
+            "alpha, beta, gamma",
+        ),
+        (
+            ResultType.AdjointGradient(
+                Observable.H(0) @ Observable.I(1) + 2 * Observable.Z(2),
+                target=[[3, 4], [5]],
+                parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(h(q[3]) @ i(q[4]) + 2 * z(q[5])) "
+            "alpha, beta, gamma",
+        ),
     ],
 )
 def test_result_to_ir_openqasm(result_type, serialization_properties, expected_ir):

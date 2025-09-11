@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -38,7 +38,7 @@ class Noise(QuantumOperator):
     the metadata that defines what the noise channel is and what it does.
     """
 
-    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(self, qubit_count: int | None, ascii_symbols: Sequence[str]):
         """Initializes a `Noise` object.
 
         Args:
@@ -88,7 +88,7 @@ class Noise(QuantumOperator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd(target)
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -99,8 +99,7 @@ class Noise(QuantumOperator):
             return self._to_openqasm(
                 target, serialization_properties or OpenQASMSerializationProperties()
             )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         """Returns the JAQCD representation of the noise.
@@ -137,9 +136,7 @@ class Noise(QuantumOperator):
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
     def __eq__(self, other: Noise):
-        if isinstance(other, Noise):
-            return self.name == other.name
-        return False
+        return self.name == other.name if isinstance(other, Noise) else False
 
     def __repr__(self):
         return f"{self.name}('qubit_count': {self.qubit_count})"
@@ -178,8 +175,8 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probability: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        probability: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
         max_probability: float = 0.5,
     ):
@@ -221,7 +218,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         return f"{self.name}({self.probability})"
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -263,15 +260,15 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         }
 
 
-class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
+class SingleProbabilisticNoise_34(SingleProbabilisticNoise):  # noqa: N801
     """Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
     channels parameterized by a single probability.
     """
 
     def __init__(
         self,
-        probability: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        probability: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `SingleProbabilisticNoise_34`.
@@ -297,15 +294,15 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
         )
 
 
-class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
+class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):  # noqa: N801
     """Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
     parameterized by a single probability.
     """
 
     def __init__(
         self,
-        probability: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        probability: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `SingleProbabilisticNoise_1516`.
@@ -340,8 +337,8 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probabilities: dict[str, Union[FreeParameterExpression, float]],
-        qubit_count: Optional[int],
+        probabilities: dict[str, FreeParameterExpression | float],
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """[summary]
@@ -435,7 +432,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         return self._probabilities
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -468,9 +465,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             dict: A dictionary object that represents this object. It can be converted back
             into this object using the `from_dict()` method.
         """
-        probabilities = {}
-        for pauli_string, prob in self._probabilities.items():
-            probabilities[pauli_string] = _parameter_to_dict(prob)
+        probabilities = {
+            pauli_string: _parameter_to_dict(prob)
+            for pauli_string, prob in self._probabilities.items()
+        }
         return {
             "__class__": self.__class__.__name__,
             "probabilities": probabilities,
@@ -486,10 +484,10 @@ class PauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probX: Union[FreeParameterExpression, float],
-        probY: Union[FreeParameterExpression, float],
-        probZ: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        probX: FreeParameterExpression | float,
+        probY: FreeParameterExpression | float,
+        probZ: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `PauliNoise`.
@@ -523,7 +521,7 @@ class PauliNoise(Noise, Parameterizable):
         self._parameters = [probX, probY, probZ]
 
     @staticmethod
-    def _get_param_float(param: Union[FreeParameterExpression, float], param_name: str) -> float:
+    def _get_param_float(param: FreeParameterExpression | float, param_name: str) -> float:
         """Validates the value of a probability and returns its value.
 
         If param is a free parameter expression, this method returns 0.
@@ -537,12 +535,11 @@ class PauliNoise(Noise, Parameterizable):
         """
         if isinstance(param, FreeParameterExpression):
             return 0
-        else:
-            _validate_param_value(param, param_name)
-            return float(param)
+        _validate_param_value(param, param_name)
+        return float(param)
 
     @property
-    def probX(self) -> Union[FreeParameterExpression, float]:
+    def probX(self) -> FreeParameterExpression | float:
         """The probability of a Pauli X error.
 
         Returns:
@@ -551,7 +548,7 @@ class PauliNoise(Noise, Parameterizable):
         return self._parameters[0]
 
     @property
-    def probY(self) -> Union[FreeParameterExpression, float]:
+    def probY(self) -> FreeParameterExpression | float:
         """The probability of a Pauli Y error.
 
         Returns:
@@ -560,7 +557,7 @@ class PauliNoise(Noise, Parameterizable):
         return self._parameters[1]
 
     @property
-    def probZ(self) -> Union[FreeParameterExpression, float]:
+    def probZ(self) -> FreeParameterExpression | float:
         """The probability of a Pauli Z error.
 
         Returns:
@@ -587,7 +584,7 @@ class PauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -635,11 +632,11 @@ class DampingNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        gamma: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        gamma: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
-        """Initalizes a `DampingNoise`.
+        """Initializes a `DampingNoise`.
 
         Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
@@ -678,7 +675,7 @@ class DampingNoise(Noise, Parameterizable):
         return f"{self.name}({self.gamma})"
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -727,9 +724,9 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def __init__(
         self,
-        gamma: Union[FreeParameterExpression, float],
-        probability: Union[FreeParameterExpression, float],
-        qubit_count: Optional[int],
+        gamma: FreeParameterExpression | float,
+        probability: FreeParameterExpression | float,
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Inits a `GeneralizedAmplitudeDampingNoise`.
@@ -778,7 +775,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return f"{self.name}({self.gamma}, {self.probability})"
 
     @property
-    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[FreeParameterExpression | float]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
@@ -816,7 +813,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
 
 def _validate_param_value(
-    parameter: Union[FreeParameterExpression, float], param_name: str, maximum: float = 1.0
+    parameter: FreeParameterExpression | float, param_name: str, maximum: float = 1.0
 ) -> None:
     """Validates the value of a given parameter.
 
@@ -831,7 +828,7 @@ def _validate_param_value(
         raise ValueError(f"{param_name} must be a real number in the interval [0, {maximum}]")
 
 
-def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, float]:
+def _parameter_to_dict(parameter: FreeParameter | float) -> dict | float:
     """Converts a parameter to a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:

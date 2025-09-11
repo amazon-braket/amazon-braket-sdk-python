@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 import base64
@@ -45,7 +46,7 @@ class _LocalJobContainer:
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
-            force_update (bool): Try to update the container, if an update is availble.
+            force_update (bool): Try to update the container, if an update is available.
                 Default: False
         """
         self._aws_session = aws_session or AwsSession()
@@ -60,7 +61,7 @@ class _LocalJobContainer:
         self._container_name = self._start_container(self.image_uri, self._force_update)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         """Stops and removes the local docker container."""
         self._end_session()
 
@@ -79,9 +80,8 @@ class _LocalJobContainer:
             provided environment variables as part of the runtime.
         """
         env_list = []
-        for key in environment_variables:
-            env_list.append("-e")
-            env_list.append(f"{key}={environment_variables[key]}")
+        for key, val in environment_variables.items():
+            env_list.extend(("-e", f"{key}={val}"))
         return env_list
 
     @staticmethod
@@ -138,8 +138,8 @@ class _LocalJobContainer:
                 "Please pull down the container, or specify a valid ECR URL, "
                 "before proceeding."
             )
-        ecr_url = ecr_pattern_match.group(1)
-        account_id = ecr_pattern_match.group(2)
+        ecr_url = ecr_pattern_match[1]
+        account_id = ecr_pattern_match[2]
         self._login_to_ecr(account_id, ecr_url)
         self._logger.warning("Pulling docker container image. This may take a while.")
         subprocess.run(["docker", "pull", image_uri])
@@ -174,9 +174,16 @@ class _LocalJobContainer:
             except ValueError:
                 self._logger.warning(f"Unable to update {image_uri}.")
 
-        return self._check_output_formatted(
-            ["docker", "run", "-d", "--rm", image_name, "tail", "-f", "/dev/null"]
-        )
+        return self._check_output_formatted([
+            "docker",
+            "run",
+            "-d",
+            "--rm",
+            image_name,
+            "tail",
+            "-f",
+            "/dev/null",
+        ])
 
     def makedir(self, dir_path: str) -> None:
         """Creates a directory path in the container.
@@ -188,13 +195,18 @@ class _LocalJobContainer:
             subprocess.CalledProcessError: If unable to make the directory.
         """
         try:
-            subprocess.check_output(
-                ["docker", "exec", self._container_name, "mkdir", "-p", dir_path]
-            )
+            subprocess.check_output([
+                "docker",
+                "exec",
+                self._container_name,
+                "mkdir",
+                "-p",
+                dir_path,
+            ])
         except subprocess.CalledProcessError as e:
             output = e.output.decode("utf-8").strip()
-            self._logger.error(output)
-            raise e
+            self._logger.exception(output)
+            raise
 
     def copy_to(self, source: str, destination: str) -> None:
         """Copies a local file or directory to the container.
@@ -208,16 +220,24 @@ class _LocalJobContainer:
         """
         dirname = str(PurePosixPath(destination).parent)
         try:
-            subprocess.check_output(
-                ["docker", "exec", self._container_name, "mkdir", "-p", dirname]
-            )
-            subprocess.check_output(
-                ["docker", "cp", source, f"{self._container_name}:{destination}"]
-            )
+            subprocess.check_output([
+                "docker",
+                "exec",
+                self._container_name,
+                "mkdir",
+                "-p",
+                dirname,
+            ])
+            subprocess.check_output([
+                "docker",
+                "cp",
+                source,
+                f"{self._container_name}:{destination}",
+            ])
         except subprocess.CalledProcessError as e:
             output = e.output.decode("utf-8").strip()
-            self._logger.error(output)
-            raise e
+            self._logger.exception(output)
+            raise
 
     def copy_from(self, source: str, destination: str) -> None:
         """Copies a file or directory from the container locally.
@@ -230,13 +250,16 @@ class _LocalJobContainer:
             subprocess.CalledProcessError: If unable to copy.
         """
         try:
-            subprocess.check_output(
-                ["docker", "cp", f"{self._container_name}:{source}", destination]
-            )
+            subprocess.check_output([
+                "docker",
+                "cp",
+                f"{self._container_name}:{source}",
+                destination,
+            ])
         except subprocess.CalledProcessError as e:
             output = e.output.decode("utf-8").strip()
-            self._logger.error(output)
-            raise e
+            self._logger.exception(output)
+            raise
 
     def run_local_job(
         self,
@@ -251,9 +274,13 @@ class _LocalJobContainer:
         Raises:
             ValueError: `start_program_name` is not found.
         """
-        start_program_name = self._check_output_formatted(
-            ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]
-        )
+        start_program_name = self._check_output_formatted([
+            "docker",
+            "exec",
+            self._container_name,
+            "printenv",
+            "SAGEMAKER_PROGRAM",
+        ])
         if not start_program_name:
             raise ValueError(
                 "Start program not found. "
@@ -263,16 +290,14 @@ class _LocalJobContainer:
 
         command = ["docker", "exec", "-w", self.CONTAINER_CODE_PATH]
         command.extend(self._envs_to_list(environment_variables))
-        command.append(self._container_name)
-        command.append("python")
-        command.append(start_program_name)
+        command.extend((self._container_name, "python", start_program_name))
 
         try:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.run_log = _stream_output(process)
         except Exception as e:
             self.run_log = e
-            self._logger.error(e)
+            self._logger.exception(e)  # noqa: TRY401
 
     def _end_session(self) -> None:
         """Stops and removes the local container."""

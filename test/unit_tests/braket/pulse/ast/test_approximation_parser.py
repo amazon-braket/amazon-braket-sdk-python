@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Union
 from unittest.mock import Mock
 
 import numpy as np
@@ -19,7 +18,13 @@ import pytest
 from openpulse import ast
 from oqpy import IntVar
 
-from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
+from braket.pulse import (
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    ErfSquareWaveform,
+    GaussianWaveform,
+)
 from braket.pulse.ast.approximation_parser import _ApproximationParser
 from braket.pulse.frame import Frame
 from braket.pulse.port import Port
@@ -85,7 +90,7 @@ def test_delay_multiple_frames(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["frame1"].put(shift_time_frame1, 0).put(
@@ -104,7 +109,7 @@ def test_delay_multiple_frames(port):
     expected_phases["frame2"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -156,7 +161,7 @@ def test_delay_qubits(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["q0_frame"].put(shift_time_frame1, 0).put(
@@ -177,7 +182,7 @@ def test_delay_qubits(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -230,7 +235,7 @@ def test_delay_no_args(port):
     # Inst2
     # Delay frame1 and frame2 by 10e-9
     # frame2 is 0 from 0ns to 21ns
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 10e-9
 
     expected_amplitudes["q0_frame"].put(shift_time_frame1, 0).put(
@@ -251,7 +256,7 @@ def test_delay_no_args(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(shift_time_frame1 + pulse_length - port.dt, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -348,6 +353,46 @@ def test_set_shift_phase_beyond_2_pi(port):
     expected_phases["frame1"].put(2e-9, 3 * np.pi / 2).put(6e-9, 3 * np.pi / 2)
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
+
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
+def test_swap_phases(port):
+    phase1 = 0.12
+    phase2 = 0.34
+    frequency = 1e8
+    frame1 = Frame(
+        frame_id="frame1", port=port, frequency=frequency, phase=phase1, is_predefined=False
+    )
+    frame2 = Frame(
+        frame_id="frame2", port=port, frequency=frequency, phase=phase2, is_predefined=False
+    )
+    pulse_seq = PulseSequence().delay([], 10e-9).swap_phases(frame1, frame2).delay([], 10e-9)
+    expected_amplitudes = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+
+    # properties of frame1 before swap
+    expected_amplitudes["frame1"].put(0, 0).put(9e-9, 0)
+    expected_frequencies["frame1"].put(0, frequency).put(9e-9, frequency)
+    expected_phases["frame1"].put(0, phase1).put(9e-9, phase1)
+
+    # properties of frame1 after swap
+    expected_amplitudes["frame1"].put(10e-9, 0).put(19e-9, 0)
+    expected_frequencies["frame1"].put(10e-9, frequency).put(19e-9, frequency)
+    expected_phases["frame1"].put(10e-9, phase2).put(19e-9, phase2)
+
+    # properties of frame2 before swap
+    expected_amplitudes["frame2"].put(0, 0).put(9e-9, 0)
+    expected_frequencies["frame2"].put(0, frequency).put(9e-9, frequency)
+    expected_phases["frame2"].put(0, phase2).put(9e-9, phase2)
+
+    # properties of frame2 after swap
+    expected_amplitudes["frame2"].put(10e-9, 0).put(19e-9, 0)
+    expected_frequencies["frame2"].put(10e-9, frequency).put(19e-9, frequency)
+    expected_phases["frame2"].put(10e-9, phase1).put(19e-9, phase1)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -636,7 +681,7 @@ def test_play_drag_gaussian_waveforms(port):
         dtype=np.complex128,
     )
 
-    shift_time = shift_time + 20e-9
+    shift_time += 20e-9
     for t, v in zip(times, values):
         expected_amplitudes["frame1"].put(t + shift_time, v)
         expected_frequencies["frame1"].put(t + shift_time, 1e8)
@@ -644,6 +689,117 @@ def test_play_drag_gaussian_waveforms(port):
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
 
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
+def test_play_erf_square_waveforms(port):
+    frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    erf_square_wf_ZaE_False = ErfSquareWaveform(
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=0.0, amplitude=0.8, zero_at_edges=False
+    )
+    pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_False)
+
+    times = np.arange(0, 1e-8, port.dt)
+    values = np.array(
+        [
+            complex(0.06291968379016318),
+            complex(0.4000000061669033),
+            complex(0.7370803285436436),
+            complex(0.7981289183125405),
+            complex(0.7999911761342559),
+            complex(0.8),
+            complex(0.7999911761342559),
+            complex(0.7981289183125405),
+            complex(0.7370803285436436),
+            complex(0.4000000061669033),
+        ],
+        dtype=np.complex128,
+    )
+
+    expected_amplitudes = {"frame1": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries()}
+
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(t, v)
+        expected_frequencies["frame1"].put(t, 1e8)
+        expected_phases["frame1"].put(t, 0)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
+def test_play_erf_square_waveforms_zero_at_edges(port):
+    frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    erf_square_wf_ZaE_True = ErfSquareWaveform(
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=0.0, amplitude=0.8, zero_at_edges=True
+    )
+    pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_True)
+
+    times = np.arange(0, 1e-8, port.dt)
+    values = np.array(
+        [
+            complex(4.819981832973268e-17),
+            complex(0.36585464564844294),
+            complex(0.731709291296886),
+            complex(0.7979691964131336),
+            complex(0.7999904228990518),
+            complex(0.8),
+            complex(0.7999904228990518),
+            complex(0.7979691964131336),
+            complex(0.731709291296886),
+            complex(0.36585464564844294),
+        ],
+        dtype=np.complex128,
+    )
+
+    expected_amplitudes = {"frame1": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries()}
+
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(t, v)
+        expected_frequencies["frame1"].put(t, 1e8)
+        expected_phases["frame1"].put(t, 0)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
+def test_play_erf_square_waveforms_off_center(port):
+    frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    erf_square_wf_ZaE_False = ErfSquareWaveform(
+        length=1e-8, width=8e-9, sigma=1e-9, off_center=-2e-9, amplitude=0.8, zero_at_edges=False
+    )
+    pulse_seq = PulseSequence().play(frame1, erf_square_wf_ZaE_False)
+
+    times = np.arange(0, 1e-8, port.dt)
+    values = np.array(
+        [
+            complex(0.7370803285436436),
+            complex(0.7981289183125405),
+            complex(0.7999911761342559),
+            complex(0.8),
+            complex(0.7999911761342559),
+            complex(0.7981289183125405),
+            complex(0.7370803285436436),
+            complex(0.4000000061669036),
+            complex(0.0629196837901632),
+            complex(0.0018710940212660543),
+        ],
+        dtype=np.complex128,
+    )
+
+    expected_amplitudes = {"frame1": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries()}
+
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(t, v)
+        expected_frequencies["frame1"].put(t, 1e8)
+        expected_phases["frame1"].put(t, 0)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
@@ -681,7 +837,7 @@ def test_barrier_same_dt(port):
     expected_phases["frame2"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -739,7 +895,7 @@ def test_barrier_no_args(port):
     expected_phases["frame2"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -797,7 +953,7 @@ def test_barrier_qubits(port):
     expected_phases["q0_q1_frame"].put(0, 0).put(11e-9, 0)
 
     # Inst3
-    shift_time_frame1 = shift_time_frame1 + pulse_length
+    shift_time_frame1 += pulse_length
     pulse_length = 16e-9
     times = np.arange(0, pulse_length, port.dt)
     values = 1 * np.ones_like(times)
@@ -1001,8 +1157,8 @@ def verify_results(results, expected_amplitudes, expected_frequencies, expected_
         assert _all_close(results.phases[frame_id], expected_phases[frame_id], 1e-10)
 
 
-def to_dict(frames: Union[Frame, List]):
-    if not isinstance(frames, List):
+def to_dict(frames: Frame | list):
+    if not isinstance(frames, list):
         frames = [frames]
     frame_dict = dict()
     for frame in frames:

@@ -13,11 +13,11 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, ClassVar, Union
-
-import numpy as np
+from typing import Any, ClassVar
 
 import braket.ir.jaqcd as ir
+import numpy as np
+
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -78,7 +78,7 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -128,7 +128,7 @@ class BitFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
@@ -183,7 +183,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -233,7 +233,7 @@ class PhaseFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
@@ -306,9 +306,9 @@ class PauliChannel(PauliNoise):
 
     def __init__(
         self,
-        probX: Union[FreeParameterExpression, float],
-        probY: Union[FreeParameterExpression, float],
-        probZ: Union[FreeParameterExpression, float],
+        probX: FreeParameterExpression | float,
+        probY: FreeParameterExpression | float,
+        probZ: FreeParameterExpression | float,
     ):
         """Creates PauliChannel noise.
 
@@ -459,7 +459,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -584,7 +584,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -709,7 +709,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -953,9 +953,10 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        probabilities = {}
-        for pauli_string, prob in noise["probabilities"].items():
-            probabilities[pauli_string] = _parameter_from_dict(prob)
+        probabilities = {
+            pauli_string: _parameter_from_dict(prob)
+            for pauli_string, prob in noise["probabilities"].items()
+        }
         return TwoQubitPauliChannel(probabilities=probabilities)
 
 
@@ -987,7 +988,7 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1103,8 +1104,8 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def __init__(
         self,
-        gamma: Union[FreeParameterExpression, float],
-        probability: Union[FreeParameterExpression, float],
+        gamma: FreeParameterExpression | float,
+        probability: FreeParameterExpression | float,
     ):
         super().__init__(
             gamma=gamma,
@@ -1163,7 +1164,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             Iterable[Instruction]: `Iterable` of GeneralizedAmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability = 0.9)
+            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability=0.9)
         """
         return [
             Instruction(
@@ -1230,7 +1231,7 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1327,7 +1328,7 @@ class Kraus(Noise):
         """
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
-            if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
+            if int(np.log2(matrix.shape[0])) != int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         self._display_name = display_name
@@ -1365,7 +1366,7 @@ class Kraus(Noise):
             np.array2string(
                 matrix,
                 separator=", ",
-                formatter={"all": lambda x: format_complex(x)},
+                formatter={"all": format_complex},
             ).replace("\n", "")
             for matrix in self._matrices
         )
@@ -1401,7 +1402,7 @@ class Kraus(Noise):
 
         Examples:
             >>> K0 = np.eye(4) * np.sqrt(0.9)
-            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * np.sqrt(0.1)
+            >>> K1 = np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1)
             >>> circ = Circuit().kraus([1, 0], matrices=[K0, K1])
         """
         if 2 ** len(targets) != matrices[0].shape[0]:
@@ -1437,9 +1438,7 @@ class Kraus(Noise):
 Noise.register_noise(Kraus)
 
 
-def _ascii_representation(
-    noise: str, parameters: list[Union[FreeParameterExpression, float]]
-) -> str:
+def _ascii_representation(noise: str, parameters: list[FreeParameterExpression | float]) -> str:
     """Generates a formatted ascii representation of a noise.
 
     Args:
@@ -1449,20 +1448,19 @@ def _ascii_representation(
     Returns:
         str: The ascii representation of the noise.
     """
-    param_list = []
-    for param in parameters:
-        param_list.append(
-            str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}"
-        )
+    param_list = [
+        (str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}")
+        for param in parameters
+    ]
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"
 
 
-def _substitute_value(expr: float, **kwargs) -> Union[FreeParameterExpression, float]:
+def _substitute_value(expr: float, **kwargs) -> FreeParameterExpression | float:
     return expr.subs(kwargs) if isinstance(expr, FreeParameterExpression) else expr
 
 
-def _parameter_from_dict(parameter: Union[dict, float]) -> Union[FreeParameter, float]:
+def _parameter_from_dict(parameter: dict | float) -> FreeParameter | float:
     """Converts a parameter from a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:

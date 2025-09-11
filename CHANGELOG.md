@@ -1,5 +1,432 @@
 # Changelog
 
+## v1.102.2 (2025-09-11)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.10 syntax
+
+## v1.102.1 (2025-09-10)
+
+### Bug Fixes and Other Changes
+
+ * emulator validation for program sets
+
+## v1.102.0 (2025-09-08)
+
+### Features
+
+ * add barrier instruction
+
+## v1.101.0.post0 (2025-09-03)
+
+### Documentation Changes
+
+ * removed "-" sign from u gate doc
+
+## v1.101.0 (2025-08-25)
+
+### Features
+
+ * Emulators with circuit validation and noise models
+
+## v1.100.1 (2025-08-25)
+
+### Bug Fixes and Other Changes
+
+ * update local sim version dependency
+
+## v1.100.0 (2025-08-22)
+
+### Features
+
+ * `add_verbatim_marker()` method to `BraketProgramContext` class for updated `Circuit.from_ir`
+
+### Bug Fixes and Other Changes
+
+ * caching measured qubits
+ * resolve failing tests on py312 on windows
+
+## v1.99.0 (2025-08-21)
+
+### Deprecations and Removals
+
+ * Drop Python 3.9, support 3.12, 3.13
+
+### Bug Fixes and Other Changes
+
+ * validation on measured qubits
+ * Make `zip` strict
+
+### Documentation Changes
+
+ * Use latest for doc generation
+
+## v1.98.0 (2025-08-20)
+
+### Features
+
+ * add cudaq container image uri
+
+### Documentation Changes
+
+ * Add Python 3.12, 3.13 to supported versions
+
+## v1.97.0 (2025-08-13)
+
+### Features
+
+ * Program sets
+
+## v1.96.1 (2025-08-05)
+
+### Bug Fixes and Other Changes
+
+ * Fix applying readout error with ObservableResultType and MeasureCriteria
+
+## v1.96.0 (2025-07-17)
+
+### Features
+
+ * Add Emerald
+
+### Bug Fixes and Other Changes
+
+ * positional param issue for shots in tests
+
+## v1.95.0 (2025-07-01)
+
+### Features
+
+ * support from_ir for cc_prx and measure_ff
+
+## v1.94.0 (2025-06-26)
+
+### Features
+
+ * support IQM dynamic circuit capabilities
+
+## v1.93.0 (2025-06-11)
+
+### Features
+
+ * add factory methods for AHS AtomArrangements
+
+## v1.92.0 (2025-06-10)
+
+### Features
+
+ * Measure Criteria for readout error to target measurement operations
+
+## v1.91.2 (2025-04-22)
+
+### Bug Fixes and Other Changes
+
+ * handling capability upgrade issues
+
+## v1.91.1 (2025-04-21)
+
+### Bug Fixes and Other Changes
+
+ * concatenate time series value with unpacking instead of +
+
+## v1.91.0 (2025-03-18)
+
+### Features
+
+ * Add Forte Enterprise 1
+
+## v1.90.2 (2025-03-10)
+
+### Bug Fixes and Other Changes
+
+ * onboard to use ruff
+
+## v1.90.1 (2025-03-06)
+
+### Bug Fixes and Other Changes
+
+ * Set user agent in Boto3 config object
+ * Update AwsQuantumTask.__init__ signature
+
+## v1.90.0 (2025-02-14)
+
+### Features
+
+ * added ankaa-3 to enum
+
+## v1.89.1 (2025-02-10)
+
+### Bug Fixes and Other Changes
+
+ * decorator job with no inner function
+
+## v1.89.0 (2025-02-10)
+
+### Deprecations and Removals
+
+ * Ankaa-2
+
+### Features
+
+ * support CUDA-Q decorator kernel with hybrid job decorator
+
+## v1.88.3 (2024-12-06)
+
+### Bug Fixes and Other Changes
+
+ * increase timeout for tasks to avoid async polling timeout during…
+
+## v1.88.2.post0 (2024-11-25)
+
+### Documentation Changes
+
+ * add dual navigation buttons and cleanup some docstrings
+
+## v1.88.2 (2024-11-18)
+
+### Bug Fixes and Other Changes
+
+ * Pin cloudpickle==2.2.1
+
+## v1.88.1 (2024-10-21)
+
+### Bug Fixes and Other Changes
+
+ * correct typing for task results methods
+
+## v1.88.0 (2024-09-27)
+
+### Deprecations and Removals
+
+ * Mark Aspen-M-3 as deprecated, replace with Ankaa-2 in tests
+
+### Bug Fixes and Other Changes
+
+ * Update pulse integration tests for Ankaa-2 device
+
+## v1.87.1 (2024-09-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass through inputs for SerializableProgram simulation
+
+## v1.87.0 (2024-09-05)
+
+### Deprecations and Removals
+
+ * Retire IonQ Harmony
+
+### Bug Fixes and Other Changes
+
+ * Return observable target if absent for RT
+
+## v1.86.1 (2024-08-29)
+
+### Bug Fixes and Other Changes
+
+ * Use observable targets for targetless results
+
+## v1.86.0 (2024-08-26)
+
+### Features
+
+ * Rigetti Ankaa
+ * add off_center to erf_square
+
+## v1.85.0 (2024-08-20)
+
+### Features
+
+ * Allow early qubit binding of observables
+
+## v1.84.0 (2024-07-30)
+
+### Features
+
+ * support erf_square and swap_phases
+
+## v1.83.0 (2024-06-28)
+
+### Deprecations and Removals
+
+ * Remove OQC
+
+### Features
+
+ * Use `run_multiple` for local batches
+
+### Documentation Changes
+
+ * update PR title instructions
+
+## v1.82.0 (2024-06-27)
+
+### Features
+
+ * Track classical target indices for measurements
+
+### Bug Fixes and Other Changes
+
+ * Add test to check classical indices used in measurement are preserved between Circuit and OpenQASM Translations.
+
+## v1.81.1 (2024-06-17)
+
+### Bug Fixes and Other Changes
+
+ * Error when FreeParameters are named QASM types
+
+## v1.81.0 (2024-06-13)
+
+### Features
+
+ * Add IQM to get compiled program convenience method
+
+## v1.80.1 (2024-06-10)
+
+### Bug Fixes and Other Changes
+
+ * docs: add stack exchange badge to the readme
+ * Implement `braket.ahs.AnalogHamiltonianSimulation.from_ir()`
+
+## v1.80.0 (2024-05-22)
+
+### Features
+
+ * add support for the ARN region
+ * Add support for SerializableProgram abstraction to Device interface
+
+### Bug Fixes and Other Changes
+
+ * job fixture for endpoint support
+
+## v1.79.1 (2024-05-08)
+
+### Bug Fixes and Other Changes
+
+ * check the qubit set length against observables
+
+## v1.79.0 (2024-05-06)
+
+### Features
+
+ * Direct Reservation context manager
+
+### Documentation Changes
+
+ * correct the example in the measure docstring
+
+## v1.78.0 (2024-04-18)
+
+### Features
+
+ * add phase RX gate
+
+## v1.77.6 (2024-04-17)
+
+### Bug Fixes and Other Changes
+
+ * if rydberg local is not pulled, pass in None
+
+## v1.77.5 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * remove optional discretization fields
+
+## v1.77.4 (2024-04-16)
+
+### Bug Fixes and Other Changes
+
+ * discretize method now takes None as an arg
+
+### Documentation Changes
+
+ * Correct miscellaneous spelling mistakes in docstrings
+
+## v1.77.3.post0 (2024-04-15)
+
+### Documentation Changes
+
+ * correct gphase matrix representation
+
+## v1.77.3 (2024-04-11)
+
+### Bug Fixes and Other Changes
+
+ * measure target qubits are required
+
+## v1.77.2 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * remove shifting field from testing
+
+## v1.77.1 (2024-04-10)
+
+### Bug Fixes and Other Changes
+
+ * add measure qubit targets in braket_program_context
+
+## v1.77.0 (2024-04-10)
+
+### Features
+
+ * rename shifting field to local detuning
+
+## v1.76.3 (2024-04-09)
+
+### Bug Fixes and Other Changes
+
+ * Replace pkg_resources with importlib.metadata
+
+### Documentation Changes
+
+ * Improve gphase unitary matrix definition in docstring
+
+## v1.76.2 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * backwards compatibility for local detuning
+
+## v1.76.1 (2024-04-08)
+
+### Bug Fixes and Other Changes
+
+ * Support single-register measurements in `from_ir`
+ * prevent repeated measurements on a qubit
+
+## v1.76.0 (2024-04-01)
+
+### Features
+
+ * add support for OpenQASM measure on a subset of qubits
+
+### Bug Fixes and Other Changes
+
+ * restore the dependent test back to pennylane
+
+### Documentation Changes
+
+ * fix GPI2 gate matrix representation
+
+## v1.75.0 (2024-03-28)
+
+### Features
+
+ * upgrade to pydantic 2.x
+
+### Bug Fixes and Other Changes
+
+ * change schemas constraint
+
+## v1.74.1 (2024-03-27)
+
+### Bug Fixes and Other Changes
+
+ * temporarily pin the schemas version
+
 ## v1.74.0 (2024-03-21)
 
 ### Features

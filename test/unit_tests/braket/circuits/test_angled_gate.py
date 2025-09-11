@@ -15,7 +15,7 @@ import re
 
 import numpy as np
 import pytest
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
 from braket.circuits.angled_gate import DoubleAngledGate, TripleAngledGate
@@ -131,7 +131,7 @@ def test_np_float_angle_json():
     angled_gate = AngledGate(angle=np.float32(0.15), qubit_count=1, ascii_symbols=["foo"])
     angled_gate_json = BaseModel.construct(target=[0], angle=angled_gate.angle).json()
     match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
-    angle_value = float(match.group(1))
+    angle_value = float(match[1])
     assert angle_value == angled_gate.angle
 
 

@@ -13,7 +13,7 @@
 
 from setuptools import find_namespace_packages, setup
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 with open("src/braket/_sdk/_version.py") as f:
@@ -23,43 +23,48 @@ setup(
     name="amazon-braket-sdk",
     version=version,
     license="Apache License 2.0",
-    python_requires=">= 3.9",
+    python_requires=">= 3.10",
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.20.2",
-        "amazon-braket-default-simulator>=1.19.1",
-        "oqpy~=0.3.5",
-        "setuptools",
+        "amazon-braket-schemas>=1.25.0",
+        "amazon-braket-default-simulator>=1.29.0",
+        "oqpy~=0.3.7",
         "backoff",
         "boltons",
         "boto3>=1.28.53",
+        # SageMaker pinned cloudpickle==2.2.1
+        # see https://github.com/aws/sagemaker-python-sdk/issues/4871
         "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
-        "numpy<2",
+        "numpy",
         "openpulse",
         "openqasm3",
         "sympy",
+        "backports.entry-points-selectable",
     ],
     extras_require={
         "test": [
             "black",
             "botocore",
-            "flake8<=5.0.4",
+            "flake8",
             "isort",
             "jsonschema==3.2.0",
             "pre-commit",
             "pylint",
             "pytest",
             "pytest-cov",
-            "pytest-rerunfailures",
+            # https://github.com/pytest-dev/pytest-rerunfailures/issues/302
+            "pytest-rerunfailures<16.0",
             "pytest-xdist[psutil]",
+            "tox",
+        ],
+        "docs": [
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
-            "tox",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/amazon-braket/amazon-braket-sdk-python",
@@ -78,8 +83,9 @@ setup(
         "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
 )

@@ -63,7 +63,4 @@ class Qubit(int):
         Returns:
             Qubit: The qubit.
         """
-        if isinstance(qubit, Qubit):
-            return qubit
-        else:
-            return Qubit(qubit)
+        return qubit if isinstance(qubit, Qubit) else Qubit(qubit)
