@@ -1,5 +1,89 @@
 # Changelog
 
+## v1.102.2 (2025-09-11)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.10 syntax
+
+## v1.102.1 (2025-09-10)
+
+### Bug Fixes and Other Changes
+
+ * emulator validation for program sets
+
+## v1.102.0 (2025-09-08)
+
+### Features
+
+ * add barrier instruction
+
+## v1.101.0.post0 (2025-09-03)
+
+### Documentation Changes
+
+ * removed "-" sign from u gate doc
+
+## v1.101.0 (2025-08-25)
+
+### Features
+
+ * Emulators with circuit validation and noise models
+
+## v1.100.1 (2025-08-25)
+
+### Bug Fixes and Other Changes
+
+ * update local sim version dependency
+
+## v1.100.0 (2025-08-22)
+
+### Features
+
+ * `add_verbatim_marker()` method to `BraketProgramContext` class for updated `Circuit.from_ir`
+
+### Bug Fixes and Other Changes
+
+ * caching measured qubits
+ * resolve failing tests on py312 on windows
+
+## v1.99.0 (2025-08-21)
+
+### Deprecations and Removals
+
+ * Drop Python 3.9, support 3.12, 3.13
+
+### Bug Fixes and Other Changes
+
+ * validation on measured qubits
+ * Make `zip` strict
+
+### Documentation Changes
+
+ * Use latest for doc generation
+
+## v1.98.0 (2025-08-20)
+
+### Features
+
+ * add cudaq container image uri
+
+### Documentation Changes
+
+ * Add Python 3.12, 3.13 to supported versions
+
+## v1.97.0 (2025-08-13)
+
+### Features
+
+ * Program sets
+
+## v1.96.1 (2025-08-05)
+
+### Bug Fixes and Other Changes
+
+ * Fix applying readout error with ObservableResultType and MeasureCriteria
+
 ## v1.96.0 (2025-07-17)
 
 ### Features

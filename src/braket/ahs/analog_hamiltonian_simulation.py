@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from functools import singledispatch
 from typing import TYPE_CHECKING
 
 import braket.ir.ahs as ir
@@ -67,7 +66,9 @@ class AnalogHamiltonianSimulation:
             AnalogHamiltonianSimulation: The Analog Hamiltonian Simulation.
         """
         atom_arrangement = AtomArrangement()
-        for site, fill in zip(source.setup.ahs_register.sites, source.setup.ahs_register.filling):
+        for site, fill in zip(
+            source.setup.ahs_register.sites, source.setup.ahs_register.filling, strict=True
+        ):
             atom_arrangement.add(
                 coordinate=site, site_type=SiteType.FILLED if fill == 1 else SiteType.VACANT
             )
@@ -160,48 +161,43 @@ class AnalogHamiltonianSimulation:
         )
 
 
-@singledispatch
 def _get_term_ir(
     term: Hamiltonian,
-) -> tuple[str, dict]:
-    raise TypeError(f"Unable to convert Hamiltonian term type {type(term)}.")
-
-
-@_get_term_ir.register
-def _(term: LocalDetuning) -> tuple[str, ir.LocalDetuning]:
-    return AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY, ir.LocalDetuning(
-        magnitude=ir.PhysicalField(
-            time_series=ir.TimeSeries(
-                times=term.magnitude.time_series.times(),
-                values=term.magnitude.time_series.values(),
-            ),
-            pattern=term.magnitude.pattern.series,
-        )
-    )
-
-
-@_get_term_ir.register
-def _(term: DrivingField) -> tuple[str, ir.DrivingField]:
-    return AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY, ir.DrivingField(
-        amplitude=ir.PhysicalField(
-            time_series=ir.TimeSeries(
-                times=term.amplitude.time_series.times(),
-                values=term.amplitude.time_series.values(),
-            ),
-            pattern="uniform",
-        ),
-        phase=ir.PhysicalField(
-            time_series=ir.TimeSeries(
-                times=term.phase.time_series.times(),
-                values=term.phase.time_series.values(),
-            ),
-            pattern="uniform",
-        ),
-        detuning=ir.PhysicalField(
-            time_series=ir.TimeSeries(
-                times=term.detuning.time_series.times(),
-                values=term.detuning.time_series.values(),
-            ),
-            pattern="uniform",
-        ),
-    )
+) -> tuple[str, ir.LocalDetuning | ir.DrivingField]:
+    match term:
+        case LocalDetuning(magnitude=magnitude):
+            return AnalogHamiltonianSimulation.LOCAL_DETUNING_PROPERTY, ir.LocalDetuning(
+                magnitude=ir.PhysicalField(
+                    time_series=ir.TimeSeries(
+                        times=magnitude.time_series.times(),
+                        values=magnitude.time_series.values(),
+                    ),
+                    pattern=magnitude.pattern.series,
+                )
+            )
+        case DrivingField(amplitude=amplitude, phase=phase, detuning=detuning):
+            return AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY, ir.DrivingField(
+                amplitude=ir.PhysicalField(
+                    time_series=ir.TimeSeries(
+                        times=amplitude.time_series.times(),
+                        values=amplitude.time_series.values(),
+                    ),
+                    pattern="uniform",
+                ),
+                phase=ir.PhysicalField(
+                    time_series=ir.TimeSeries(
+                        times=phase.time_series.times(),
+                        values=phase.time_series.values(),
+                    ),
+                    pattern="uniform",
+                ),
+                detuning=ir.PhysicalField(
+                    time_series=ir.TimeSeries(
+                        times=detuning.time_series.times(),
+                        values=detuning.time_series.values(),
+                    ),
+                    pattern="uniform",
+                ),
+            )
+        case _:
+            raise TypeError(f"Unable to convert Hamiltonian term type {type(term)}.")

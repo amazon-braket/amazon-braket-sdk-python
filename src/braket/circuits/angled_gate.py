@@ -16,8 +16,6 @@ from __future__ import annotations
 import copy
 import math
 from collections.abc import Sequence
-from functools import singledispatch
-from typing import Optional
 
 from sympy import Float
 
@@ -32,7 +30,7 @@ class AngledGate(Gate, Parameterizable):
     def __init__(
         self,
         angle: FreeParameterExpression | float,
-        qubit_count: Optional[int],
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes an `AngledGate`.
@@ -130,7 +128,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         self,
         angle_1: FreeParameterExpression | float,
         angle_2: FreeParameterExpression | float,
-        qubit_count: Optional[int],
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Inits a `DoubleAngledGate`.
@@ -243,7 +241,7 @@ class TripleAngledGate(Gate, Parameterizable):
         angle_1: FreeParameterExpression | float,
         angle_2: FreeParameterExpression | float,
         angle_3: FreeParameterExpression | float,
-        qubit_count: Optional[int],
+        qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Inits a `TripleAngledGate`.
@@ -359,16 +357,12 @@ class TripleAngledGate(Gate, Parameterizable):
         return hash((self.name, self.angle_1, self.angle_2, self.angle_3, self.qubit_count))
 
 
-@singledispatch
 def _angles_equal(
     angle_1: FreeParameterExpression | float, angle_2: FreeParameterExpression | float
 ) -> bool:
+    if isinstance(angle_1, FreeParameterExpression):
+        return angle_1 == angle_2
     return isinstance(angle_2, float) and math.isclose(angle_1, angle_2)
-
-
-@_angles_equal.register
-def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):  # noqa: FURB118
-    return angle_1 == angle_2
 
 
 def angled_ascii_characters(gate: str, angle: FreeParameterExpression | float) -> str:
@@ -382,7 +376,7 @@ def angled_ascii_characters(gate: str, angle: FreeParameterExpression | float) -
         str: Returns the ascii representation for an angled gate.
 
     """
-    return f"{gate}({angle:{'.2f' if isinstance(angle, (float, Float)) else ''}})"
+    return f"{gate}({angle:{'.2f' if isinstance(angle, float | Float) else ''}})"
 
 
 def _multi_angled_ascii_characters(
@@ -409,7 +403,7 @@ def _multi_angled_ascii_characters(
         Returns:
             str: The ASCII representation of the angle.
         """
-        return ".2f" if isinstance(angle, (float, Float)) else ""
+        return ".2f" if isinstance(angle, float | Float) else ""
 
     return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
 
