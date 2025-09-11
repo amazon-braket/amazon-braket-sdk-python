@@ -16,6 +16,7 @@ from collections import OrderedDict
 import pytest
 
 from braket.circuits import Gate, Instruction, Moments, MomentsKey, QubitSet
+from braket.circuits.compiler_directives import Barrier
 
 
 def cnot(q1, q2):
@@ -185,3 +186,17 @@ def test_repr(moments):
 
 def test_str(moments):
     assert str(moments) == str(OrderedDict(moments))
+
+
+def test_barrier_with_qubits():
+    """Test barrier with specific qubits."""
+    moments = Moments([h(0), h(1)])
+    moments.add(Instruction(Barrier([0]), [0]))
+    assert moments.depth == 2
+
+
+def test_barrier_without_qubits():
+    """Test barrier without qubits (global)."""
+    moments = Moments([h(0), h(1)])
+    moments.add(Instruction(Barrier([]), []))
+    assert moments.depth == 2

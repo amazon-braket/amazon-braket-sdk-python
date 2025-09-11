@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits import Circuit, Noise
+from braket.circuits import Circuit, noises
 from braket.devices import LocalSimulator
 
 device = LocalSimulator("braket_dm")
@@ -23,7 +23,7 @@ print(device.run(circuit, shots=1000).result().measurement_counts)
 
 
 circuit = Circuit().x(0).x(1)
-noise = Noise.BitFlip(probability=0.1)
+noise = noises.BitFlip(probability=0.1)
 circuit.apply_gate_noise(noise)
 print("Second example: ")
 print(circuit)

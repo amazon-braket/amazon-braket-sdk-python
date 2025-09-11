@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit, FreeParameter, Observable
+from braket.circuits import Circuit, FreeParameter, observables
 from braket.devices import Devices
 from braket.jobs import get_job_device_arn, hybrid_job
 from braket.jobs.metrics import log_metric
@@ -34,7 +34,7 @@ def run_hybrid_job(num_tasks=1):
     circ = Circuit()
     circ.rx(0, FreeParameter("theta"))
     circ.cnot(0, 1)
-    circ.expectation(observable=Observable.X(), target=0)
+    circ.expectation(observable=observables.X(0))
 
     # initial parameter
     theta = 0.0

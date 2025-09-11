@@ -14,12 +14,16 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
 import numpy as np
 import oqpy
+from braket.default_simulator.openqasm.interpreter import Interpreter
+from braket.ir.jaqcd import Program as JaqcdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm.program_v1 import io_type
 from sympy import Expr
 
 from braket.circuits import compiler_directives
@@ -38,8 +42,8 @@ from braket.circuits.noise_helpers import (
     check_noise_target_unitary,
     wrap_with_list,
 )
-from braket.circuits.observable import Observable
-from braket.circuits.observables import TensorProduct
+from braket.circuits.observable import Observable, euler_angle_parameter_names
+from braket.circuits.observables import Sum, TensorProduct
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.result_type import (
     ObservableParameterResultType,
@@ -54,10 +58,6 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
-from braket.default_simulator.openqasm.interpreter import Interpreter
-from braket.ir.jaqcd import Program as JaqcdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
@@ -100,17 +100,15 @@ class Circuit:
             ...     for qubit in target:
             ...         circ += Instruction(Gate.H(), qubit)
             ...     return circ
-            ...
             >>> Circuit.register_subroutine(h_on_all)
             >>> circ = Circuit().h_on_all(range(2))
             >>> for instr in circ.instructions:
             ...     print(instr)
-            ...
             Instruction('operator': 'H', 'target': QubitSet(Qubit(0),))
             Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
         """
 
-        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:
+        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:  # noqa: ANN001
             return self.add(func, *args, **kwargs)
 
         function_name = func.__name__
@@ -137,14 +135,13 @@ class Circuit:
             >>> @circuit.subroutine(register=True)
             >>> def bell_pair(target):
             ...     return Circ().h(target[0]).cnot(target[0:2])
-            ...
-            >>> circ = Circuit(bell_pair, [4,5])
-            >>> circ = Circuit().bell_pair([4,5])
+            >>> circ = Circuit(bell_pair, [4, 5])
+            >>> circ = Circuit().bell_pair([4, 5])
 
         """
         self._moments: Moments = Moments()
         self._result_types: dict[ResultType] = {}
-        self._qubit_observable_mapping: dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
+        self._qubit_observable_mapping: dict[int | Circuit._ALL_QUBITS, Observable] = {}
         self._qubit_observable_target_mapping: dict[int, tuple[int]] = {}
         self._qubit_observable_set = set()
         self._parameters = set()
@@ -244,6 +241,30 @@ class Circuit:
         """
         return self._parameters
 
+    def with_euler_angles(self, observables: Sequence[Observable] | Sum) -> Circuit:
+        """Returns a copy of the circuit with parametrized Euler angles on the observables' qubits
+
+        Args:
+            observables (Sequence[Observable] | Sum): The observables to measure,
+                or a Sum Hamiltonian
+
+        Returns:
+            Circuit: A new circuit with parametrized ZXZ Euler angle rotations appended to the end
+            on each qubit targeted by any of the observables.
+        """
+        new_circuit = Circuit(self)
+        targets = (
+            {target for obs in observables.summands for target in obs.targets}
+            if isinstance(observables, Sum)
+            else {target for obs in observables for target in obs.targets}
+        )
+        for target in targets:
+            params = euler_angle_parameter_names(target)
+            new_circuit.rz(target, FreeParameter(params[0]))
+            new_circuit.rx(target, FreeParameter(params[1]))
+            new_circuit.rz(target, FreeParameter(params[2]))
+        return new_circuit
+
     def add_result_type(
         self,
         result_type: ResultType,
@@ -319,8 +340,8 @@ class Circuit:
             observable = Circuit._extract_observable(result_type_to_add)
             # We can skip this for now for AdjointGradient (the only subtype of this
             # type) because AdjointGradient can only be used when `shots=0`, and the
-            # qubit_observable_mapping is used to generate basis rotation instrunctions
-            # and make sure the observables are simultaneously commuting for `shots>0` mode.
+            # qubit_observable_mapping is used to generate basis rotation instructions
+            # and make sure the observables mutually commute for `shots>0` mode.
             supports_basis_rotation_instructions = not isinstance(
                 result_type_to_add, ObservableParameterResultType
             )
@@ -338,13 +359,12 @@ class Circuit:
         return self
 
     @staticmethod
-    def _extract_observable(result_type: ResultType) -> Optional[Observable]:
+    def _extract_observable(result_type: ResultType) -> Observable | None:
         if isinstance(result_type, ResultType.Probability):
             return Observable.Z()  # computational basis
-        elif isinstance(result_type, ObservableResultType):
+        if isinstance(result_type, ObservableResultType):
             return result_type.observable
-        else:
-            return None
+        return None
 
     def _add_to_qubit_observable_mapping(
         self, observable: Observable, observable_target: QubitSet
@@ -366,9 +386,9 @@ class Circuit:
                 current_observable == identity and new_observable != identity
             )
             if (
-                not add_observable
-                and current_observable != identity
-                and new_observable != identity
+                not add_observable  # noqa: PLR1714
+                and identity != current_observable
+                and identity != new_observable
                 and current_observable != new_observable
             ):
                 return self._encounter_noncommuting_observable()
@@ -390,6 +410,7 @@ class Circuit:
             if all_qubits_observable and all_qubits_observable != observable:
                 return self._encounter_noncommuting_observable()
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
+        return None
 
     @staticmethod
     def _tensor_product_index_dict(
@@ -414,6 +435,20 @@ class Circuit:
         if isinstance(result_type, ObservableResultType) and result_type.target:
             self._qubit_observable_set.update(result_type.target)
 
+    def _map_target_qubits(
+        self,
+        source_qubits: QubitSetInput,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> QubitSet:
+        if target:
+            mapped_target_qubits = target
+        elif target_mapping:
+            mapped_target_qubits = [target_mapping[qubit] for qubit in source_qubits]
+        else:  # both `target` and `target_mapping` is None
+            mapped_target_qubits = source_qubits
+        return QubitSet(mapped_target_qubits)
+
     def _check_if_qubit_measured(
         self,
         instruction: Instruction,
@@ -437,17 +472,14 @@ class Circuit:
         Raises:
             ValueError: If adding a gate or noise operation after a measure instruction.
         """
-        if self._measure_targets:
-            measure_on_target_mapping = target_mapping and any(
-                targ in self._measure_targets for targ in target_mapping.values()
-            )
-            if (
-                # check if there is a measure instruction on the targeted qubit(s)
-                measure_on_target_mapping
-                or any(tar in self._measure_targets for tar in QubitSet(target))
-                or any(tar in self._measure_targets for tar in QubitSet(instruction.target))
-            ):
-                raise ValueError("cannot apply instruction to measured qubits.")
+        if not self._measure_targets:
+            return
+
+        if any(
+            qubit in self._measure_targets
+            for qubit in self._map_target_qubits(instruction.target, target, target_mapping)
+        ):
+            raise ValueError("cannot apply instruction to measured qubits.")
 
     def add_instruction(
         self,
@@ -503,6 +535,11 @@ class Circuit:
 
         # Check if there is a measure instruction on the circuit
         self._check_if_qubit_measured(instruction, target, target_mapping)
+
+        # Update measure targets if instruction is a measurement
+        if isinstance(instruction.operator, Measure):
+            measure_target = self._map_target_qubits(instruction.target, target, target_mapping)[0]
+            self._measure_targets = (self._measure_targets or []) + [measure_target]
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -607,10 +644,10 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
-        elif target is not None:
+        if target is not None:
             keys = sorted(circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
@@ -673,10 +710,10 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
-        elif target is not None:
+        if target is not None:
             keys = sorted(verbatim_circuit.qubits)
             values = target
-            target_mapping = dict(zip(keys, values))
+            target_mapping = dict(zip(keys, values, strict=True))
 
         if verbatim_circuit.result_types:
             raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
@@ -689,6 +726,29 @@ class Circuit:
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+            self._has_compiler_directives = True
+        return self
+
+    def barrier(self, target: QubitSetInput | None = None) -> Circuit:
+        """Add a barrier compiler directive to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier.
+            If None, applies to all qubits in the circuit.
+
+        Returns:
+            Circuit: self
+
+        Examples:
+            >>> circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
+            >>> circ = Circuit().h(0).h(1).barrier()  # barrier on all qubits
+        """
+        target_qubits = self.qubits if target is None else QubitSet(target)
+
+        if target_qubits:
+            self.add_instruction(
+                Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
+            )
             self._has_compiler_directives = True
         return self
 
@@ -710,10 +770,6 @@ class Circuit:
                     target=target,
                 )
             )
-            if self._measure_targets:
-                self._measure_targets.append(target)
-            else:
-                self._measure_targets = [target]
 
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
         """
@@ -759,10 +815,10 @@ class Circuit:
 
     def apply_gate_noise(
         self,
-        noise: Union[type[Noise], Iterable[type[Noise]]],
-        target_gates: Optional[Union[type[Gate], Iterable[type[Gate]]]] = None,
-        target_unitary: Optional[np.ndarray] = None,
-        target_qubits: Optional[QubitSetInput] = None,
+        noise: type[Noise] | Iterable[type[Noise]],
+        target_gates: type[Gate] | Iterable[type[Gate]] | None = None,
+        target_unitary: np.ndarray | None = None,
+        target_qubits: QubitSetInput | None = None,
     ) -> Circuit:
         """Apply `noise` to the circuit according to `target_gates`, `target_unitary` and
         `target_qubits`.
@@ -902,13 +958,12 @@ class Circuit:
 
         if target_unitary is not None:
             return apply_noise_to_gates(self, noise, target_unitary, target_qubits)
-        else:
-            return apply_noise_to_gates(self, noise, target_gates, target_qubits)
+        return apply_noise_to_gates(self, noise, target_gates, target_qubits)
 
     def apply_initialization_noise(
         self,
-        noise: Union[type[Noise], Iterable[type[Noise]]],
-        target_qubits: Optional[QubitSetInput] = None,
+        noise: type[Noise] | Iterable[type[Noise]],
+        target_qubits: QubitSetInput | None = None,
     ) -> Circuit:
         """Apply `noise` at the beginning of the circuit for every qubit (default) or
         target_qubits`.
@@ -938,18 +993,18 @@ class Circuit:
                 not the same as `noise.qubit_count`.
 
         Examples:
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
             >>> print(circ)
 
             >>> noise = Noise.Depolarizing(probability=0.1)
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
             >>> print(circ.apply_initialization_noise(noise))
 
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.apply_initialization_noise(noise, target_qubits = 1))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
+            >>> print(circ.apply_initialization_noise(noise, target_qubits=1))
 
             >>> circ = Circuit()
-            >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
+            >>> print(circ.apply_initialization_noise(noise, target_qubits=[0, 1]))
 
         """
         if (len(self.qubits) == 0) and (target_qubits is None):
@@ -1046,14 +1101,14 @@ class Circuit:
             ValueError: If the value is not a Number
         """
         if not isinstance(val, Number):
-            raise ValueError(
+            raise TypeError(
                 f"Parameters can only be assigned numeric values. Invalid inputs: {val}"
             )
 
     def apply_readout_noise(
         self,
-        noise: Union[type[Noise], Iterable[type[Noise]]],
-        target_qubits: Optional[QubitSetInput] = None,
+        noise: type[Noise] | Iterable[type[Noise]],
+        target_qubits: QubitSetInput | None = None,
     ) -> Circuit:
         """Apply `noise` right before measurement in every qubit (default) or target_qubits`.
 
@@ -1083,18 +1138,18 @@ class Circuit:
                 not the same as `noise.qubit_count`.
 
         Examples:
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
             >>> print(circ)
 
             >>> noise = Noise.Depolarizing(probability=0.1)
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
             >>> print(circ.apply_initialization_noise(noise))
 
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.apply_initialization_noise(noise, target_qubits = 1))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
+            >>> print(circ.apply_initialization_noise(noise, target_qubits=1))
 
             >>> circ = Circuit()
-            >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
+            >>> print(circ.apply_initialization_noise(noise, target_qubits=[0, 1]))
 
         """
         if (len(self.qubits) == 0) and (target_qubits is None):
@@ -1159,12 +1214,11 @@ class Circuit:
 
             >>> @circuit.subroutine()
             >>> def bell_pair(target):
-            ...     return Circuit().h(target[0]).cnot(target[0: 2])
-            ...
-            >>> circ = Circuit().add(bell_pair, [4,5])
+            ...     return Circuit().h(target[0]).cnot(target[0:2])
+            >>> circ = Circuit().add(bell_pair, [4, 5])
         """
 
-        def _flatten(addable: Union[Iterable, AddableTypes]) -> AddableTypes:
+        def _flatten(addable: Iterable | AddableTypes) -> AddableTypes:
             if isinstance(addable, Iterable):
                 for item in addable:
                     yield from _flatten(item)
@@ -1218,7 +1272,7 @@ class Circuit:
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
-    ) -> Union[OpenQasmProgram, JaqcdProgram]:
+    ) -> OpenQasmProgram | JaqcdProgram:
         """Converts the circuit into the canonical intermediate representation.
         If the circuit is sent over the wire, this method is called before it is sent.
 
@@ -1243,7 +1297,7 @@ class Circuit:
         gate_definitions = gate_definitions or {}
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -1251,17 +1305,27 @@ class Circuit:
                     "serialization_properties must be of type OpenQASMSerializationProperties "
                     "for IRType.OPENQASM."
                 )
-            return self._to_openqasm(
-                serialization_properties or OpenQASMSerializationProperties(),
-                gate_definitions.copy(),
-            )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+            if not serialization_properties:
+                qubit_reference_type = (
+                    QubitReferenceType.PHYSICAL
+                    if (
+                        gate_definitions
+                        or any(
+                            instruction.operator.requires_physical_qubits
+                            for instruction in self.instructions
+                        )
+                    )
+                    else QubitReferenceType.VIRTUAL
+                )
+                serialization_properties = OpenQASMSerializationProperties(
+                    qubit_reference_type=qubit_reference_type
+                )
+
+            return self._to_openqasm(serialization_properties, gate_definitions.copy())
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     @staticmethod
-    def from_ir(
-        source: Union[str, OpenQasmProgram], inputs: Optional[dict[str, io_type]] = None
-    ) -> Circuit:
+    def from_ir(source: str | OpenQasmProgram, inputs: dict[str, io_type] | None = None) -> Circuit:
         """Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
@@ -1277,7 +1341,7 @@ class Circuit:
                 inputs_copy.update(inputs)
                 inputs = inputs_copy
             source = source.source
-        from braket.circuits.braket_program_context import BraketProgramContext
+        from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
 
         return Interpreter(BraketProgramContext()).build_circuit(
             source=source,
@@ -1305,24 +1369,20 @@ class Circuit:
     ) -> OpenQasmProgram:
         ir_instructions = self._create_openqasm_header(serialization_properties, gate_definitions)
         openqasm_ir_type = IRType.OPENQASM
-        ir_instructions.extend(
-            [
-                instruction.to_ir(
-                    ir_type=openqasm_ir_type, serialization_properties=serialization_properties
-                )
-                for instruction in self.instructions
-            ]
-        )
+        ir_instructions.extend([
+            instruction.to_ir(
+                ir_type=openqasm_ir_type, serialization_properties=serialization_properties
+            )
+            for instruction in self.instructions
+        ])
 
         if self.result_types:
-            ir_instructions.extend(
-                [
-                    result_type.to_ir(
-                        ir_type=openqasm_ir_type, serialization_properties=serialization_properties
-                    )
-                    for result_type in self.result_types
-                ]
-            )
+            ir_instructions.extend([
+                result_type.to_ir(
+                    ir_type=openqasm_ir_type, serialization_properties=serialization_properties
+                )
+                for result_type in self.result_types
+            ])
         # measure all the qubits if a measure instruction is not provided
         elif self._measure_targets is None:
             qubits = (
@@ -1414,7 +1474,7 @@ class Circuit:
                 # Corresponding defcals with fixed arguments have been added
                 # in _get_frames_waveforms_from_instrs
                 if isinstance(gate, Parameterizable) and any(
-                    not isinstance(parameter, (float, int, complex))
+                    not isinstance(parameter, float | int | complex)
                     for parameter in gate.parameters
                 ):
                     continue
@@ -1442,7 +1502,7 @@ class Circuit:
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence]
     ) -> tuple[dict[str, Frame], dict[str, Waveform]]:
-        from braket.circuits.gates import PulseGate
+        from braket.circuits.gates import PulseGate  # noqa: PLC0415
 
         frames = {}
         waveforms = {}
@@ -1506,11 +1566,11 @@ class Circuit:
                 )
                 if free_parameter_number == 0:
                     continue
-                elif free_parameter_number < len(gate.parameters):
+                if free_parameter_number < len(gate.parameters):
                     raise NotImplementedError(
                         "Calibrations with a partial number of fixed parameters are not supported."
                     )
-                elif any(
+                if any(
                     isinstance(p, FreeParameterExpression) for p in instruction.operator.parameters
                 ):
                     raise NotImplementedError(
@@ -1520,12 +1580,10 @@ class Circuit:
                     type(instruction.operator)(*instruction.operator.parameters),
                     instruction.target,
                 )
-                additional_calibrations[bound_key] = calibration(
-                    **{
-                        p.name if isinstance(p, FreeParameterExpression) else p: v
-                        for p, v in zip(gate.parameters, instruction.operator.parameters)
-                    }
-                )
+                additional_calibrations[bound_key] = calibration(**{
+                    p.name if isinstance(p, FreeParameterExpression) else p: v
+                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=True)
+                })
         return additional_calibrations
 
     def to_unitary(self) -> np.ndarray:
@@ -1536,9 +1594,9 @@ class Circuit:
             `qubit count` > 10.
 
         Returns:
-            np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            circuit as a unitary. For an empty circuit, an empty numpy array is returned
-            (`array([], dtype=complex)`)
+            np.ndarray: A numpy array with shape (2 :sup:`qubit_count`, 2 :sup:`qubit_count`)
+            representing the circuit as a unitary. For an empty circuit, an empty numpy array
+            is returned (`array([], dtype=complex)`)
 
         Raises:
             TypeError: If circuit is not composed only of `Gate` instances,
@@ -1558,8 +1616,7 @@ class Circuit:
         """
         if qubits := self.qubits:
             return calculate_unitary_big_endian(self.instructions, qubits)
-        else:
-            return np.zeros(0, dtype=complex)
+        return np.zeros(0, dtype=complex)
 
     @property
     def qubits_frozen(self) -> bool:
@@ -1610,11 +1667,7 @@ class Circuit:
     def __repr__(self) -> str:
         if not self.result_types:
             return f"Circuit('instructions': {self.instructions})"
-        else:
-            return (
-                f"Circuit('instructions': {self.instructions}"
-                + f", 'result_types': {self.result_types})"
-            )
+        return f"Circuit('instructions': {self.instructions}, 'result_types': {self.result_types})"
 
     def __str__(self):
         return self.diagram()
@@ -1660,11 +1713,9 @@ def subroutine(register: bool = False) -> Callable:
         >>> @circuit.subroutine(register=True)
         >>> def bell_circuit():
         ...     return Circuit().h(0).cnot(0, 1)
-        ...
         >>> circ = Circuit().bell_circuit()
         >>> for instr in circ.instructions:
         ...     print(instr)
-        ...
         Instruction('operator': 'H', 'target': QubitSet(Qubit(0),))
         Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
     """

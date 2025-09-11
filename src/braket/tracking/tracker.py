@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
-from functools import singledispatchmethod
 from typing import Any
 
 from braket.tracking.pricing import price_search
@@ -24,6 +23,7 @@ from braket.tracking.tracking_events import (
     _TaskCompletionEvent,
     _TaskCreationEvent,
     _TaskStatusEvent,
+    _TrackingEvent,
 )
 
 MIN_SIMULATOR_DURATION = timedelta(milliseconds=3000)
@@ -50,7 +50,7 @@ class Tracker:
         Returns:
             Tracker: self.
         """
-        return self.__enter__()
+        return self.__enter__()  # noqa: PLC2801
 
     def stop(self) -> Tracker:
         """Stop tracking resources with this tracker.
@@ -91,7 +91,7 @@ class Tracker:
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "qpu" in details["device"]:
-                total_cost = total_cost + _get_qpu_task_cost(task_arn, details)
+                total_cost += _get_qpu_task_cost(task_arn, details)
         return total_cost
 
     def simulator_tasks_cost(self) -> Decimal:
@@ -114,7 +114,7 @@ class Tracker:
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "simulator" in details["device"]:
-                total_cost = total_cost + _get_simulator_task_cost(task_arn, details)
+                total_cost += _get_simulator_task_cost(task_arn, details)
         return total_cost
 
     def quantum_tasks_statistics(self) -> dict[str, dict[str, Any]]:
@@ -142,7 +142,7 @@ class Tracker:
                  'billed_execution_duration' : datetime.timedelta(seconds=6, microseconds=123456)}}
         """
         stats = {}
-        for _, details in self._resources.items():
+        for details in self._resources.values():
             device_stats = stats.get(details["device"], {})
 
             shots = device_stats.get("shots", 0) + details["shots"]
@@ -173,46 +173,40 @@ class Tracker:
 
         return stats
 
-    @singledispatchmethod
-    def _recieve_internal(self, event: _TaskCreationEvent) -> None:
-        raise ValueError(f"Event type {type(event)} is not supported")
-
-    @_recieve_internal.register
-    def _(self, event: _TaskCreationEvent) -> None:
-        self._resources[event.arn] = {
-            "shots": event.shots,
-            "device": event.device,
-            "status": "CREATED",
-            "job_task": event.is_job_task,
-        }
-
-    @_recieve_internal.register
-    def _(self, event: _TaskStatusEvent) -> None:
+    def _recieve_internal(self, event: _TrackingEvent) -> None:
         resources = self._resources
-        # Update task data corresponding to the arn only if it exists in resources
-        if event.arn in resources:
-            resources[event.arn]["status"] = event.status
-
-    @_recieve_internal.register
-    def _(self, event: _TaskCompletionEvent) -> None:
-        resources = self._resources
-        # Update task completion data corresponding to the arn only if it exists in resources
-        if event.arn in resources:
-            resources[event.arn]["status"] = event.status
-            has_reservation_arn = event.has_reservation_arn
-            resources[event.arn]["has_reservation_arn"] = has_reservation_arn
-            if event.execution_duration:
-                duration = timedelta(milliseconds=event.execution_duration)
-                resources[event.arn]["execution_duration"] = duration
-                resources[event.arn]["billed_duration"] = (
-                    timedelta(milliseconds=0)
-                    if has_reservation_arn
-                    else max(duration, MIN_SIMULATOR_DURATION)
-                )
+        match event:
+            case _TaskCreationEvent(arn, shots, is_job_task, device):
+                resources[arn] = {
+                    "shots": shots,
+                    "device": device,
+                    "status": "CREATED",
+                    "job_task": is_job_task,
+                }
+            case _TaskStatusEvent(arn, status):
+                # Update task data corresponding to the arn only if it exists in resources
+                if arn in resources:
+                    resources[arn]["status"] = status
+            case _TaskCompletionEvent(arn, execution_duration, status, has_reservation_arn):
+                # Update task completion data corresponding to the arn
+                # only if it exists in resources
+                if arn in resources:
+                    resources[arn]["status"] = status
+                    resources[arn]["has_reservation_arn"] = has_reservation_arn
+                    if execution_duration:
+                        duration = timedelta(milliseconds=execution_duration)
+                        resources[arn]["execution_duration"] = duration
+                        resources[arn]["billed_duration"] = (
+                            timedelta(milliseconds=0)
+                            if has_reservation_arn
+                            else max(duration, MIN_SIMULATOR_DURATION)
+                        )
+            case _:
+                raise ValueError(f"Event type {type(event)} is not supported")
 
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
-    if details["status"] in ["FAILED", "CANCELLED"] or details.get("has_reservation_arn"):
+    if details["status"] in {"FAILED", "CANCELLED"} or details.get("has_reservation_arn"):
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
@@ -291,10 +285,8 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
     if duration_price["Currency"] != "USD":
         raise ValueError(f"Expected USD, found {duration_price['Currency']}")
 
-    duration_cost = (
+    return (
         Decimal(duration_price["PricePerUnit"])
         * Decimal(details["billed_duration"] / timedelta(milliseconds=1))
         / Decimal(timedelta(**{duration_price["Unit"]: 1}) / timedelta(milliseconds=1))
     )
-
-    return duration_cost
