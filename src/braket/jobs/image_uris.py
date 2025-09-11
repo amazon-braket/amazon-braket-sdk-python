@@ -15,7 +15,8 @@ import json
 import os
 from enum import Enum
 from functools import cache
-from ./environment_variables import get_job_device_arn
+
+from braket.jobs.environment_variables import get_job_device_arn
 
 
 class Framework(str, Enum):
@@ -40,12 +41,13 @@ def built_in_images(region: str) -> set[str]:
 
 
 @cache
-def retrieve_image(framework: Framework, region: str=None) -> str:
+def retrieve_image(framework: Framework, region: str | None = None) -> str:
     """Retrieves the ECR URI for the Docker image matching the specified arguments.
 
     Args:
         framework (Framework): The name of the framework.
-        region (str): The AWS region for the Docker image.
+        region (str | None): The AWS region for the Docker image. If None, uses the AWS region
+            contained in the hybrid job device ARN. Defaults to None.
 
     Returns:
         str: The ECR URI for the corresponding Amazon Braket Docker image.
