@@ -1,7 +1,20 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Literal, Union
+from typing import Literal
 
 import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
@@ -68,7 +81,6 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         """
 
     # Ignore flake8 issue caused by Literal["above", "below", "both", "none"]
-    # flake8: noqa: BCS005
     @classmethod
     @abstractmethod
     def _draw_symbol(
@@ -178,7 +190,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         cls,
         col_title: str,
         circuit_qubits: QubitSet,
-        items: list[Union[Instruction, ResultType]],
+        items: list[Instruction | ResultType],
         global_phase: float | None,
     ) -> str:
         """Return a set of columns in the string diagram of the circuit for a list of items.

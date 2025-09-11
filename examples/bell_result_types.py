@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits import Circuit, Observable
+from braket.circuits import Circuit, observables
 from braket.devices import LocalSimulator
 
 device = LocalSimulator()
@@ -24,7 +24,7 @@ bell = (
     .h(0)
     .cnot(0, 1)
     .probability(target=[0])
-    .expectation(observable=Observable.Z(), target=[1])
+    .expectation(observable=observables.Z(1))
     .amplitude(state=["00"])
     .state_vector()
 )
@@ -45,9 +45,9 @@ bell = (
     Circuit()
     .h(0)
     .cnot(0, 1)
-    .expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
-    .variance(observable=Observable.Y() @ Observable.X(), target=[0, 1])
-    .sample(observable=Observable.Y() @ Observable.X(), target=[0, 1])
+    .expectation(observable=observables.Y(0) @ observables.X(1))
+    .variance(observable=observables.Y(0) @ observables.X(1))
+    .sample(observable=observables.Y(0) @ observables.X(1))
 )
 
 # When shots>0 for a simulator, probability, expectation, variance are calculated from measurements

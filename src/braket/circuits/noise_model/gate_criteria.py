@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -30,8 +30,8 @@ class GateCriteria(CircuitInstructionCriteria):
 
     def __init__(
         self,
-        gates: Optional[Union[Gate, Iterable[Gate]]] = None,
-        qubits: Optional[QubitSetInput] = None,
+        gates: Gate | Iterable[Gate] | None = None,
+        qubits: QubitSetInput | None = None,
     ):
         """Creates Gate-based Criteria. See instruction_matches() for more details.
 
@@ -66,7 +66,7 @@ class GateCriteria(CircuitInstructionCriteria):
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:

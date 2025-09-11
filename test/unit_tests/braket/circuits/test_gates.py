@@ -1069,8 +1069,8 @@ def test_bind_values_pulse_gate():
     frame = Frame("user_frame", Port("device_port_x", 1e-9), 1e9)
     gate = Gate.PulseGate(
         PulseSequence()
-        .set_frequency(frame, FreeParameter("a") + FreeParameter("b"))
-        .delay(frame, FreeParameter("c")),
+        .set_frequency(frame, FreeParameter("a") + FreeParameter("c"))
+        .delay(frame, FreeParameter("d")),
         qubit_count,
     )
 
@@ -1081,14 +1081,12 @@ def test_bind_values_pulse_gate():
     a_bound = gate.bind_values(a=a)
     a_bound_ir = to_ir(a_bound)
 
-    assert a_bound_ir == "\n".join(
-        [
-            "cal {",
-            "    set_frequency(user_frame, 3.0 + b);",
-            "    delay[c * 1s] user_frame;",
-            "}",
-        ]
-    )
+    assert a_bound_ir == "\n".join([
+        "cal {",
+        "    set_frequency(user_frame, 3.0 + c);",
+        "    delay[d * 1s] user_frame;",
+        "}",
+    ])
 
     assert a_bound_ir == to_ir(
         Gate.PulseGate(gate.pulse_sequence.make_bound_pulse_sequence({"a": a}), qubit_count)

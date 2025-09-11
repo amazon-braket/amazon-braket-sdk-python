@@ -23,6 +23,7 @@ class Framework(str, Enum):
     BASE = "BASE"
     PL_TENSORFLOW = "PL_TENSORFLOW"
     PL_PYTORCH = "PL_PYTORCH"
+    CUDAQ = "CUDAQ"
 
 
 def built_in_images(region: str) -> set[str]:
@@ -70,7 +71,7 @@ def _config_for_framework(framework: Framework) -> dict[str, str]:
         dict[str, str]: Dict that contains the configuration for the specified framework.
     """
     fname = os.path.join(os.path.dirname(__file__), "image_uri_config", f"{framework.lower()}.json")
-    with open(fname) as f:
+    with open(fname, encoding="utf-8") as f:
         return json.load(f)
 
 
