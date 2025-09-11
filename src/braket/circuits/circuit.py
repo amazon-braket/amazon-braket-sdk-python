@@ -72,7 +72,7 @@ SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., Subroutin
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
 
-class Circuit:  # noqa: PLR0904
+class Circuit:
     """A representation of a quantum circuit that contains the instructions to be performed on a
     quantum device and the requested result types.
 
@@ -726,6 +726,29 @@ class Circuit:  # noqa: PLR0904
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+            self._has_compiler_directives = True
+        return self
+
+    def barrier(self, target: QubitSetInput | None = None) -> Circuit:
+        """Add a barrier compiler directive to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier.
+            If None, applies to all qubits in the circuit.
+
+        Returns:
+            Circuit: self
+
+        Examples:
+            >>> circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
+            >>> circ = Circuit().h(0).h(1).barrier()  # barrier on all qubits
+        """
+        target_qubits = self.qubits if target is None else QubitSet(target)
+
+        if target_qubits:
+            self.add_instruction(
+                Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
+            )
             self._has_compiler_directives = True
         return self
 

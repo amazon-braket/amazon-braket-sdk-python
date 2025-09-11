@@ -34,7 +34,7 @@ from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
-class AwsSession:  # noqa: PLR0904
+class AwsSession:
     """Manage interactions with AWS services."""
 
     class S3DestinationFolder(NamedTuple):
