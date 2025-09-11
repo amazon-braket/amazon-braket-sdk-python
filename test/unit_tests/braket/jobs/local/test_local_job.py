@@ -49,32 +49,24 @@ def test_envs():
 @pytest.mark.parametrize(
     "creation_kwargs",
     [
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-                "checkpointConfig": {"localPath": "test/local/path/"},
-            }
-        ),
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-                "checkpointConfig": {},
-            }
-        ),
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-            }
-        ),
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {},
-            }
-        ),
+        ({
+            "jobName": "Test-Job-Name",
+            "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
+            "checkpointConfig": {"localPath": "test/local/path/"},
+        }),
+        ({
+            "jobName": "Test-Job-Name",
+            "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
+            "checkpointConfig": {},
+        }),
+        ({
+            "jobName": "Test-Job-Name",
+            "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
+        }),
+        ({
+            "jobName": "Test-Job-Name",
+            "algorithmSpecification": {},
+        }),
     ],
 )
 @patch("braket.jobs.local.local_job.prepare_quantum_job")

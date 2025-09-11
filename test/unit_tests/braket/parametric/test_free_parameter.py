@@ -21,9 +21,15 @@ def free_parameter():
     return FreeParameter("theta")
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_bad_input():
-    FreeParameter(6)
+    with pytest.raises(ValueError, match="FreeParameter names must be non empty"):
+        FreeParameter("")
+    with pytest.raises(TypeError, match="FreeParameter names must be strings"):
+        FreeParameter(6)
+    with pytest.raises(
+        ValueError, match="FreeParameter names must start with a letter or an underscore"
+    ):
+        FreeParameter(".2")
 
 
 def test_is_free_param(free_parameter):
@@ -61,3 +67,21 @@ def test_sub_successful(free_parameter):
 
 def test_sub_wrong_param(free_parameter):
     assert free_parameter.subs({"alpha": 1}) == FreeParameter("theta")
+
+
+@pytest.mark.parametrize("param_name", ["for", "qubit"])
+def test_error_raised_when_reserved_keyword_used(param_name):
+    with pytest.raises(
+        ValueError,
+        match="FreeParameter names must not be one of the OpenQASM or OpenPulse keywords: ",
+    ):
+        FreeParameter(param_name)
+
+
+@pytest.mark.parametrize("param_name", ["b", "q"])
+def test_error_raised_when_predefined_variable_used(param_name):
+    with pytest.raises(
+        ValueError,
+        match="FreeParameter names must not be one of the Braket reserved variable names: ",
+    ):
+        FreeParameter(param_name)

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -30,11 +30,10 @@ class GateCriteria(CircuitInstructionCriteria):
 
     def __init__(
         self,
-        gates: Optional[Union[Gate, Iterable[Gate]]] = None,
-        qubits: Optional[QubitSetInput] = None,
+        gates: Gate | Iterable[Gate] | None = None,
+        qubits: QubitSetInput | None = None,
     ):
-        """
-        Creates Gate-based Criteria. See instruction_matches() for more details.
+        """Creates Gate-based Criteria. See instruction_matches() for more details.
 
         Args:
             gates (Optional[Union[Gate, Iterable[Gate]]]): A set of relevant Gates. All the Gates
@@ -60,13 +59,14 @@ class GateCriteria(CircuitInstructionCriteria):
         return f"{self.__class__.__name__}(gates={gate_names}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
+        """Returns an Iterable of criteria keys.
+
         Returns:
             Iterable[CriteriaKey]: This Criteria operates on Gates and Qubits.
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
@@ -86,8 +86,8 @@ class GateCriteria(CircuitInstructionCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this
+        class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.

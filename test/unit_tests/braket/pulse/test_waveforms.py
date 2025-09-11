@@ -20,7 +20,13 @@ import pytest
 from oqpy import Program
 
 from braket.circuits.free_parameter import FreeParameter
-from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
+from braket.pulse import (
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    ErfSquareWaveform,
+    GaussianWaveform,
+)
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
@@ -33,13 +39,21 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
     ],
 )
 def test_arbitrary_waveform(amps):
-    id = "arb_wf_x"
-    wf = ArbitraryWaveform(amps, id)
+    waveform_id = "arb_wf_x"
+    wf = ArbitraryWaveform(amps, waveform_id)
     assert wf.amplitudes == list(amps)
-    assert wf.id == id
+    assert wf.id == waveform_id
     oq_exp = wf._to_oqpy_expression()
     assert oq_exp.init_expression == list(amps)
     assert oq_exp.name == wf.id
+
+
+def test_arbitrary_waveform_repr():
+    amps = [1, 4, 5]
+    waveform_id = "arb_wf_x"
+    wf = ArbitraryWaveform(amps, waveform_id)
+    expected = f"ArbitraryWaveform('id': {wf.id}, 'amplitudes': {wf.amplitudes})"
+    assert repr(wf) == expected
 
 
 def test_arbitrary_waveform_default_params():
@@ -74,7 +88,16 @@ def test_constant_waveform():
     assert wf.iq == iq
     assert wf.id == id
 
-    _assert_wf_qasm(wf, "waveform const_wf_x = constant(4000000.0ns, 4);")
+    _assert_wf_qasm(wf, "waveform const_wf_x = constant(4.0ms, 4);")
+
+
+def test_constant_waveform_repr():
+    length = 4e-3
+    iq = 4
+    id = "const_wf_x"
+    wf = ConstantWaveform(length, iq, id)
+    expected = f"ConstantWaveform('id': {wf.id}, 'length': {wf.length}, 'iq': {wf.iq})"
+    assert repr(wf) == expected
 
 
 def test_constant_waveform_default_params():
@@ -101,14 +124,13 @@ def test_constant_wf_free_params():
     assert wf.parameters == [FreeParameter("length_v") + FreeParameter("length_w")]
     _assert_wf_qasm(
         wf,
-        "waveform const_wf = "
-        "constant((1000000000.0*length_v + 1000000000.0*length_w)ns, 2.0 - 3.0im);",
+        "waveform const_wf = constant((length_v + length_w) * 1s, 2.0 - 3.0im);",
     )
 
     wf_2 = wf.bind_values(length_v=2e-6, length_w=4e-6)
     assert len(wf_2.parameters) == 1
     assert math.isclose(wf_2.parameters[0], 6e-6)
-    _assert_wf_qasm(wf_2, "waveform const_wf = constant(6000.0ns, 2.0 - 3.0im);")
+    _assert_wf_qasm(wf_2, "waveform const_wf = constant(6.0us, 2.0 - 3.0im);")
 
 
 def test_drag_gaussian_waveform():
@@ -126,9 +148,22 @@ def test_drag_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    _assert_wf_qasm(
-        wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300000000.0ns, 0.6, 0.4, false);"
+    _assert_wf_qasm(wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300.0ms, 0.6, 0.4, false);")
+
+
+def test_drag_gaussian_waveform_repr():
+    length = 4e-9
+    sigma = 0.3
+    beta = 0.6
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "drag_gauss_wf"
+    wf = DragGaussianWaveform(length, sigma, beta, amplitude, zero_at_edges, id)
+    expected = (
+        f"DragGaussianWaveform('id': {wf.id}, 'length': {wf.length}, 'sigma': {wf.sigma}, "
+        f"'beta': {wf.beta}, 'amplitude': {wf.amplitude}, 'zero_at_edges': {wf.zero_at_edges})"
     )
+    assert repr(wf) == expected
 
 
 def test_drag_gaussian_waveform_default_params():
@@ -154,22 +189,6 @@ def test_drag_gaussian_wf_eq():
         assert wf != wfc
 
 
-def test_gaussian_waveform():
-    length = 4e-9
-    sigma = 0.3
-    amplitude = 0.4
-    zero_at_edges = False
-    id = "gauss_wf"
-    wf = GaussianWaveform(length, sigma, amplitude, zero_at_edges, id)
-    assert wf.id == id
-    assert wf.zero_at_edges == zero_at_edges
-    assert wf.amplitude == amplitude
-    assert wf.sigma == sigma
-    assert wf.length == length
-
-    _assert_wf_qasm(wf, "waveform gauss_wf = gaussian(4.0ns, 300000000.0ns, 0.4, false);")
-
-
 def test_drag_gaussian_wf_free_params():
     wf = DragGaussianWaveform(
         FreeParameter("length_v"),
@@ -187,8 +206,7 @@ def test_drag_gaussian_wf_free_params():
     _assert_wf_qasm(
         wf,
         "waveform d_gauss_wf = "
-        "drag_gaussian((1000000000.0*length_v)ns, (1000000000.0*sigma_a + "
-        "1000000000.0*sigma_b)ns, beta_y, amp_z, false);",
+        "drag_gaussian(length_v * 1s, (sigma_a + sigma_b) * 1s, beta_y, amp_z, false);",
     )
 
     wf_2 = wf.bind_values(length_v=0.6, sigma_a=0.4)
@@ -200,15 +218,42 @@ def test_drag_gaussian_wf_free_params():
     ]
     _assert_wf_qasm(
         wf_2,
-        "waveform d_gauss_wf = drag_gaussian(600000000.0ns, (1000000000.0*sigma_b "
-        "+ 400000000.0)ns, beta_y, amp_z, false);",
+        "waveform d_gauss_wf = drag_gaussian(600.0ms, (0.4 + sigma_b) * 1s, beta_y, amp_z, false);",
     )
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_a=0.3, sigma_b=0.1, beta_y=0.2, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.4, 0.2, 0.1]
-    _assert_wf_qasm(
-        wf_3, "waveform d_gauss_wf = drag_gaussian(600000000.0ns, 400000000.0ns, 0.2, 0.1, false);"
+    _assert_wf_qasm(wf_3, "waveform d_gauss_wf = drag_gaussian(600.0ms, 400.0ms, 0.2, 0.1, false);")
+
+
+def test_gaussian_waveform():
+    length = 4e-9
+    sigma = 0.3
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "gauss_wf"
+    wf = GaussianWaveform(length, sigma, amplitude, zero_at_edges, id)
+    assert wf.id == id
+    assert wf.zero_at_edges == zero_at_edges
+    assert wf.amplitude == amplitude
+    assert wf.sigma == sigma
+    assert wf.length == length
+
+    _assert_wf_qasm(wf, "waveform gauss_wf = gaussian(4.0ns, 300.0ms, 0.4, false);")
+
+
+def test_gaussian_waveform_repr():
+    length = 4e-9
+    sigma = 0.3
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "gauss_wf"
+    wf = GaussianWaveform(length, sigma, amplitude, zero_at_edges, id)
+    expected = (
+        f"GaussianWaveform('id': {wf.id}, 'length': {wf.length}, 'sigma': {wf.sigma}, "
+        f"'amplitude': {wf.amplitude}, 'zero_at_edges': {wf.zero_at_edges})"
     )
+    assert repr(wf) == expected
 
 
 def test_gaussian_waveform_default_params():
@@ -243,19 +288,112 @@ def test_gaussian_wf_free_params():
     ]
     _assert_wf_qasm(
         wf,
-        "waveform gauss_wf = gaussian((1000000000.0*length_v)ns, (1000000000.0*sigma_x)ns, "
-        "amp_z, false);",
+        "waveform gauss_wf = gaussian(length_v * 1s, sigma_x * 1s, amp_z, false);",
     )
 
     wf_2 = wf.bind_values(length_v=0.6, sigma_x=0.4)
     assert wf_2.parameters == [0.6, 0.4, FreeParameter("amp_z")]
-    _assert_wf_qasm(
-        wf_2, "waveform gauss_wf = gaussian(600000000.0ns, 400000000.0ns, amp_z, false);"
-    )
+    _assert_wf_qasm(wf_2, "waveform gauss_wf = gaussian(600.0ms, 400.0ms, amp_z, false);")
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_x=0.3, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.3, 0.1]
-    _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600000000.0ns, 300000000.0ns, 0.1, false);")
+    _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600.0ms, 300.0ms, 0.1, false);")
+
+
+def test_erf_square_waveform():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "erf_square_wf"
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
+    assert wf.id == id
+    assert wf.zero_at_edges == zero_at_edges
+    assert wf.amplitude == amplitude
+    assert wf.width == width
+    assert wf.sigma == sigma
+    assert wf.length == length
+    assert wf.off_center == off_center
+
+
+def test_erf_square_waveform_repr():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "erf_square_wf"
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
+    repr(wf)
+
+
+def test_erf_square_waveform_default_params():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    wf = ErfSquareWaveform(length, width, sigma, off_center)
+    assert re.match(r"[A-Za-z]{10}", wf.id)
+    assert wf.zero_at_edges is False
+    assert wf.amplitude == 1
+    assert wf.width == width
+    assert wf.sigma == sigma
+    assert wf.length == length
+    assert wf.off_center == off_center
+
+
+def test_erf_square_wf_eq():
+    wf = ErfSquareWaveform(4e-9, 0.3, 0.2, 1e-9, 0.7, True, "wf_es")
+    wf_2 = ErfSquareWaveform(
+        wf.length, wf.width, wf.sigma, wf.off_center, wf.amplitude, wf.zero_at_edges, wf.id
+    )
+    assert wf_2 == wf
+    for att in ["length", "width", "sigma", "off_center", "amplitude", "zero_at_edges", "id"]:
+        wfc = deepcopy(wf_2)
+        setattr(wfc, att, "wrong_value")
+        assert wf != wfc
+
+
+def test_erf_square_wf_free_params():
+    wf = ErfSquareWaveform(
+        FreeParameter("length_v"),
+        FreeParameter("width_x"),
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+        id="erf_square_wf",
+    )
+    assert wf.parameters == [
+        FreeParameter("length_v"),
+        FreeParameter("width_x"),
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+    ]
+
+    wf_2 = wf.bind_values(length_v=0.6, width_x=0.4)
+    assert wf_2.parameters == [
+        0.6,
+        0.4,
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+    ]
+    _assert_wf_qasm(
+        wf_2,
+        "waveform erf_square_wf = erf_square(600.0ms, 400.0ms, sigma_y * 1s, off_center_x * 1s,"
+        " amp_z, false);",
+    )
+
+    wf_3 = wf.bind_values(length_v=0.6, width_x=0.3, sigma_y=0.1, off_center_x=0.05)
+    assert wf_3.parameters == [0.6, 0.3, 0.1, 0.05, FreeParameter("amp_z")]
+    _assert_wf_qasm(
+        wf_3,
+        "waveform erf_square_wf = erf_square(600.0ms, 300.0ms, 100.0ms, 50.0ms, amp_z, false);",
+    )
 
 
 def _assert_wf_qasm(waveform, expected_qasm):
@@ -320,6 +458,27 @@ def _assert_wf_qasm(waveform, expected_qasm):
                 ],
             },
             ConstantWaveform(id="wf_constant", length=2.1, iq=0.23),
+        ),
+        (
+            {
+                "waveformId": "wf_erf_square_0",
+                "name": "erf_square",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "width", "value": 3.000000000000000e-8, "type": "float"},
+                    {"name": "sigma", "value": 5.000000000060144e-9, "type": "float"},
+                    {"name": "off_center", "value": 4.000000000000000e-9, "type": "float"},
+                    {"name": "amplitude", "value": 0.4549282253548838, "type": "float"},
+                ],
+            },
+            ErfSquareWaveform(
+                id="wf_erf_square_0",
+                length=6.000000000000001e-8,
+                width=3.000000000000000e-8,
+                sigma=5.000000000060144e-9,
+                off_center=4.000000000000000e-9,
+                amplitude=0.4549282253548838,
+            ),
         ),
     ],
 )

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from itertools import groupby
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.quantum_operator import QuantumOperator
@@ -28,14 +28,14 @@ from braket.registers.qubit_set import QubitSet
 
 
 class Gate(QuantumOperator):
-    """
-    Class `Gate` represents a quantum gate that operates on N qubits. Gates are considered the
+    """Class `Gate` represents a quantum gate that operates on N qubits. Gates are considered the
     building blocks of quantum circuits. This class is considered the gate definition containing
     the metadata that defines what a gate is and what it does.
     """
 
-    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """
+    def __init__(self, qubit_count: int | None, ascii_symbols: Sequence[str]):
+        """Initializes a `Gate`.
+
         Args:
             qubit_count (Optional[int]): Number of qubits this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
@@ -49,12 +49,12 @@ class Gate(QuantumOperator):
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
-        # todo: implement ascii symbols for control modifier
+        # TODO: implement ascii symbols for control modifier
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     @property
     def _qasm_name(self) -> NotImplementedError:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def adjoint(self) -> list[Gate]:
         """Returns a list of gates that implement the adjoint of this gate.
@@ -70,13 +70,13 @@ class Gate(QuantumOperator):
         self,
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: Optional[SerializationProperties] = None,
+        serialization_properties: SerializationProperties | None = None,
         *,
-        control: Optional[QubitSet] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSet | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Any:
-        """Returns IR object of quantum operator and target
+        r"""Returns IR object of quantum operator and target
 
         Args:
             target (QubitSet): target qubit(s).
@@ -97,6 +97,7 @@ class Gate(QuantumOperator):
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
+
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -109,7 +110,7 @@ class Gate(QuantumOperator):
             if control or power != 1:
                 raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -124,12 +125,10 @@ class Gate(QuantumOperator):
                 control_state=control_state,
                 power=power,
             )
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
-        """
-        Returns the JAQCD representation of the gate.
+        """Returns the JAQCD representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -144,12 +143,11 @@ class Gate(QuantumOperator):
         target: QubitSet,
         serialization_properties: OpenQASMSerializationProperties,
         *,
-        control: Optional[QubitSet] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSet | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> str:
-        """
-        Returns the openqasm string representation of the gate.
+        """Returns the OpenQASM string representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -180,9 +178,11 @@ class Gate(QuantumOperator):
             for state, group in groupby(control_basis_state.as_tuple):
                 modifier_name = "neg" * (not state) + "ctrl"
                 control_modifiers += [
-                    f"{modifier_name}"
-                    if (num_control := len(list(group))) == 1
-                    else f"{modifier_name}({num_control})"
+                    (
+                        f"{modifier_name}"
+                        if (num_control := len(list(group))) == 1
+                        else f"{modifier_name}({num_control})"
+                    )
                 ]
             control_modifiers.append("")
             qubits = control_qubits + target_qubits
@@ -206,7 +206,7 @@ class Gate(QuantumOperator):
         """tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
 
-    def __eq__(self, other):
+    def __eq__(self, other: Gate):
         return isinstance(other, Gate) and self.name == other.name
 
     def __repr__(self):

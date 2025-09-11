@@ -28,7 +28,8 @@ class CompilerDirective(Operator):
     """
 
     def __init__(self, ascii_symbols: Sequence[str]):
-        """
+        """Inits a `CompilerDirective`.
+
         Args:
             ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directiver.
                 These are used when printing a diagram of circuits.
@@ -71,10 +72,9 @@ class CompilerDirective(Operator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             return self._to_openqasm()
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the compiler directive."""
@@ -97,7 +97,7 @@ class CompilerDirective(Operator):
             f"Compiler directive {self.name} does not have counterpart implemented"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: CompilerDirective):
         return isinstance(other, CompilerDirective) and self.name == other.name
 
     def __repr__(self):

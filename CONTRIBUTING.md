@@ -95,10 +95,18 @@ You can also pass in various pytest arguments `tox -e integ-tests -- your-argume
 1. Run `tox`, to run all the unit tests, linters, and documentation creation, and verify that all checks and tests pass.
 1. If your changes include documentation changes, please see the [Documentation Guidelines](#documentation-guidelines).
 
+### Send a Pull Request
 
-### Commit Your Change
+GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
 
-We use commit messages to update the project version number and generate changelog entries, so it's important for them to follow the right format. Valid commit messages include a prefix, separated from the rest of the message by a colon and a space. Here are a few examples:
+Please remember to:
+* Use PR titles that follow the guidelines under [PR Title Format](#pr-title-format).
+* Send us a pull request, answering any default questions in the pull request interface.
+* Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+
+#### PR Title Format
+
+We use commit messages to update the project version number and generate changelog entries. The PR title is used as the commit message when merging a PR, so it's important for PR titles to follow the right format. Valid PR titles include a prefix, separated from the rest of the message by a colon and a space. Here are a few examples:
 
 ```
 feature: support new parameter for `xyz`
@@ -120,16 +128,6 @@ Valid prefixes are listed in the table below.
 Some of the prefixes allow abbreviation ; `break`, `feat`, `depr`, and `doc` are all valid. If you omit a prefix, the commit will be treated as a `change`.
 
 For the rest of the message, use imperative style and keep things concise but informative. See [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/) for guidance.
-
-
-### Send a Pull Request
-
-GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
-
-Please remember to:
-* Use commit messages (and PR titles) that follow the guidelines under [Commit Your Change](#commit-your-change).
-* Send us a pull request, answering any default questions in the pull request interface.
-* Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 
 ```mermaid
@@ -218,9 +216,9 @@ You can then find the generated HTML files in `build/documentation/html`.
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/amazon-braket/amazon-braket-sdk-python/labels/help%20wanted) issues is a great place to start.
 
 ## Building Integrations
-The Amazon Braket SDK supports integrations with popular quantum computing frameworks such as [PennyLane](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python), [Strawberryfields](https://github.com/amazon-braket/amazon-braket-strawberryfields-plugin-python) and [DWave's Ocean library](https://github.com/amazon-braket/amazon-braket-ocean-plugin-python). These serve as a good reference for a new integration you wish to develop. 
+The Amazon Braket SDK supports integrations with popular quantum computing frameworks such as [PennyLane](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python), [Strawberryfields](https://github.com/amazon-braket/amazon-braket-strawberryfields-plugin-python) and [DWave's Ocean library](https://github.com/amazon-braket/amazon-braket-ocean-plugin-python). These serve as a good reference for a new integration you wish to develop.
 
-When developing a new integration with the Amazon Braket SDK, please remember to update the [user agent header](https://datatracker.ietf.org/doc/html/rfc7231#section-5.5.3) to include version information for your integration. An example can be found [here](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python/commit/ccee35604afc2b04d83ee9103eccb2821a4256cb). 
+When developing a new integration with the Amazon Braket SDK, please remember to update the [user agent header](https://datatracker.ietf.org/doc/html/rfc7231#section-5.5.3) to include version information for your integration. An example can be found [here](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python/commit/ccee35604afc2b04d83ee9103eccb2821a4256cb).
 
 ## Code of Conduct
 

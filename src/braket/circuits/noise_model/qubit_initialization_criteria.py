@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
@@ -23,9 +23,8 @@ from braket.registers.qubit_set import QubitSet, QubitSetInput
 class QubitInitializationCriteria(InitializationCriteria):
     """This class models initialization noise Criteria based on qubits."""
 
-    def __init__(self, qubits: Optional[QubitSetInput] = None):
-        """
-        Creates initialization noise Qubit-based Criteria.
+    def __init__(self, qubits: QubitSetInput | None = None):
+        """Creates initialization noise Qubit-based Criteria.
 
         Args:
             qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
@@ -40,13 +39,14 @@ class QubitInitializationCriteria(InitializationCriteria):
         return f"{self.__class__.__name__}(qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
+        """Gets the QUBIT criteria key.
+
         Returns:
             Iterable[CriteriaKey]: This Criteria operates on Qubits, but is valid for all Gates.
         """
         return [CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
@@ -54,19 +54,17 @@ class QubitInitializationCriteria(InitializationCriteria):
 
         Returns:
             Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
-            QUBIT will return a set of qubit targets that are relevant to this Critera, or
+            QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
-            if self._qubits is None:
-                return CriteriaKeyResult.ALL
-            return set(self._qubits)
+            return CriteriaKeyResult.ALL if self._qubits is None else set(self._qubits)
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
@@ -78,8 +76,7 @@ class QubitInitializationCriteria(InitializationCriteria):
         }
 
     def qubit_intersection(self, qubits: QubitSetInput) -> QubitSetInput:
-        """
-        Returns subset of passed qubits that match the criteria.
+        """Returns subset of passed qubits that match the criteria.
 
         Args:
             qubits (QubitSetInput): A qubit or set of qubits that may match the criteria.
@@ -94,8 +91,7 @@ class QubitInitializationCriteria(InitializationCriteria):
 
     @classmethod
     def from_dict(cls, criteria: dict) -> Criteria:
-        """
-        Deserializes a dictionary into a Criteria object.
+        """Deserializes a dictionary into a Criteria object.
 
         Args:
             criteria (dict): A dictionary representation of a QubitCriteria.

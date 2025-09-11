@@ -18,8 +18,7 @@ import numpy as np
 
 
 def verify_quantum_operator_matrix_dimensions(matrix: np.ndarray) -> None:
-    """
-    Verifies matrix is square and matrix dimensions are positive powers of 2,
+    """Verifies matrix is square and matrix dimensions are positive powers of 2,
     raising `ValueError` otherwise.
 
     Args:
@@ -40,8 +39,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.ndarray) -> None:
 
 
 def is_hermitian(matrix: np.ndarray) -> bool:
-    r"""
-    Whether matrix is Hermitian
+    r"""Whether matrix is Hermitian
 
     A square matrix :math:`U` is Hermitian if
 
@@ -59,11 +57,10 @@ def is_hermitian(matrix: np.ndarray) -> bool:
 
 
 def is_square_matrix(matrix: np.ndarray) -> bool:
-    """
-    Whether matrix is square, meaning it has exactly two dimensions and the dimensions are equal
+    """Whether matrix is square, meaning it has exactly two dimensions and the dimensions are equal
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Returns:
         bool: If matrix is square
@@ -72,8 +69,7 @@ def is_square_matrix(matrix: np.ndarray) -> bool:
 
 
 def is_unitary(matrix: np.ndarray) -> bool:
-    r"""
-    Whether matrix is unitary
+    r"""Whether matrix is unitary
 
     A square matrix :math:`U` is unitary if
 
@@ -83,7 +79,7 @@ def is_unitary(matrix: np.ndarray) -> bool:
     and :math:`I` is the identity matrix.
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Returns:
         bool: If matrix is unitary
@@ -92,8 +88,7 @@ def is_unitary(matrix: np.ndarray) -> bool:
 
 
 def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
-    """
-    Whether a transformation defined by these matrics as Kraus operators is a
+    """Whether a transformation defined by these matrices as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
     a transformation to be a quantum channel.
     Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
@@ -104,28 +99,28 @@ def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     Returns:
         bool: If the matrices define a CPTP map.
     """
-    E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
+    E = sum(np.dot(matrix.T.conjugate(), matrix) for matrix in matrices)
     return np.allclose(E, np.eye(*E.shape))
 
 
-@lru_cache()
+@lru_cache
 def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
-    """
-    Get the eigenvalues of Pauli operators and their tensor products as
+    """Get the eigenvalues of Pauli operators and their tensor products as
     an immutable Numpy ndarray.
 
     Args:
         num_qubits (int): the number of qubits the operator acts on
 
     Returns:
-        ndarray: the eigenvalues of a Pauli product operator of the given size
+        np.ndarray: the eigenvalues of a Pauli product operator of the given size
     """
     if num_qubits == 1:
         eigs = np.array([1, -1])
         eigs.setflags(write=False)
         return eigs
-    eigs = np.concatenate(
-        [get_pauli_eigenvalues(num_qubits - 1), -get_pauli_eigenvalues(num_qubits - 1)]
-    )
+    eigs = np.concatenate([
+        get_pauli_eigenvalues(num_qubits - 1),
+        -get_pauli_eigenvalues(num_qubits - 1),
+    ])
     eigs.setflags(write=False)
     return eigs

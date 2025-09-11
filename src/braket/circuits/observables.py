@@ -18,33 +18,40 @@ import itertools
 import math
 import numbers
 from copy import deepcopy
-from typing import Union
+from typing import ClassVar
 
 import numpy as np
 
 from braket.circuits.gate import Gate
-from braket.circuits.observable import Observable, StandardObservable
+from braket.circuits.observable import Observable, StandardObservable, euler_angle_parameter_names
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
     is_hermitian,
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-from braket.registers.qubit_set import QubitSet
+from braket.registers import QubitInput, QubitSet, QubitSetInput
 
 
 class H(StandardObservable):
     """Hadamard operation as an observable."""
 
-    def __init__(self):
-        """
+    def __init__(self, target: QubitInput | None = None):
+        """Initializes Hadamard observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
+
         Examples:
-            >>> Observable.H()
+            >>> observables.H(0)
+            >>> observables.H()
         """
-        super().__init__(ascii_symbols=["H"])
+        super().__init__(ascii_symbols=["H"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return H()
+        return H(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -55,11 +62,11 @@ class H(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}h({qubit_target})"
-        else:
-            return f"{coef_prefix}h all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}h({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}h all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * (
@@ -68,24 +75,31 @@ class H(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Ry(-math.pi / 4)])
+        return (Gate.Ry(-math.pi / 4),)
 
 
 Observable.register_observable(H)
 
 
-class I(Observable):  # noqa: E742, E261
+class I(Observable):  # noqa: E742
     """Identity operation as an observable."""
 
-    def __init__(self):
-        """
+    def __init__(self, target: QubitInput | None = None):
+        """Initializes Identity observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
+
         Examples:
-            >>> Observable.I()
+            >>> observables.I(0)
+            >>> observables.I()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["I"])
+        super().__init__(qubit_count=1, ascii_symbols=["I"], targets=target)
 
     def _unscaled(self) -> Observable:
-        return I()
+        return I(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -96,11 +110,12 @@ class I(Observable):  # noqa: E742, E261
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}i({qubit_target})"
-        else:
-            return f"{coef_prefix}i all"
+
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}i({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}i all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.eye(2, dtype=complex)
@@ -110,8 +125,14 @@ class I(Observable):  # noqa: E742, E261
         return ()
 
     @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: 0, params[2]: 0}
+
+    @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -127,15 +148,22 @@ Observable.register_observable(I)
 class X(StandardObservable):
     """Pauli-X operation as an observable."""
 
-    def __init__(self):
-        """
+    def __init__(self, target: QubitInput | None = None):
+        """Initializes Pauli-X observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
+
         Examples:
-            >>> Observable.X()
+            >>> observables.X(0)
+            >>> observables.X()
         """
-        super().__init__(ascii_symbols=["X"])
+        super().__init__(ascii_symbols=["X"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return X()
+        return X(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -146,18 +174,24 @@ class X(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}x({qubit_target})"
-        else:
-            return f"{coef_prefix}x all"
+
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}x({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}x all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.H()])
+        return (Gate.H(),)
+
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: np.pi / 2, params[1]: np.pi / 2, params[2]: np.pi / 2}
 
 
 Observable.register_observable(X)
@@ -166,15 +200,22 @@ Observable.register_observable(X)
 class Y(StandardObservable):
     """Pauli-Y operation as an observable."""
 
-    def __init__(self):
-        """
+    def __init__(self, target: QubitInput | None = None):
+        """Initializes Pauli-Y observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
+
         Examples:
-            >>> Observable.Y()
+            >>> observables.Y(0)
+            >>> observables.Y()
         """
-        super().__init__(ascii_symbols=["Y"])
+        super().__init__(ascii_symbols=["Y"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return Y()
+        return Y(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -185,18 +226,23 @@ class Y(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}y({qubit_target})"
-        else:
-            return f"{coef_prefix}y all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}y({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}y all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Z(), Gate.S(), Gate.H()])
+        return Gate.Z(), Gate.S(), Gate.H()
+
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: np.pi / 2, params[2]: np.pi / 2}
 
 
 Observable.register_observable(Y)
@@ -205,15 +251,22 @@ Observable.register_observable(Y)
 class Z(StandardObservable):
     """Pauli-Z operation as an observable."""
 
-    def __init__(self):
-        """
+    def __init__(self, target: QubitInput | None = None):
+        """Initializes Pauli-Z observable.
+
+        Args:
+            target (QubitInput | None): The target qubit to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
+
         Examples:
-            >>> Observable.Z()
+            >>> observables.Z(0)
+            >>> observables.Z()
         """
-        super().__init__(ascii_symbols=["Z"])
+        super().__init__(ascii_symbols=["Z"], target=target)
 
     def _unscaled(self) -> StandardObservable:
-        return Z()
+        return Z(self._targets)
 
     def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
@@ -224,11 +277,11 @@ class Z(StandardObservable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        if target:
-            qubit_target = serialization_properties.format_target(int(target[0]))
-            return f"{coef_prefix}z({qubit_target})"
-        else:
-            return f"{coef_prefix}z all"
+        targets = target or self._targets
+        qubit_target = int(targets[0]) if targets else None
+        if qubit_target is not None:
+            return f"{coef_prefix}z({serialization_properties.format_target(qubit_target)})"
+        return f"{coef_prefix}z all"
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -236,6 +289,11 @@ class Z(StandardObservable):
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return ()
+
+    @property
+    def euler_angles(self) -> dict[str, float]:
+        params = euler_angle_parameter_names(self._targets[0])
+        return {params[0]: 0, params[1]: 0, params[2]: 0}
 
 
 Observable.register_observable(Z)
@@ -245,18 +303,19 @@ class TensorProduct(Observable):
     """Tensor product of observables"""
 
     def __init__(self, observables: list[Observable]):
-        """
+        """Initializes a `TensorProduct`.
+
         Args:
             observables (list[Observable]): List of observables for tensor product
 
         Examples:
-            >>> t1 = Observable.Y() @ Observable.X()
+            >>> t1 = Observable.Y(0) @ Observable.X(1)
             >>> t1.to_matrix()
             array([[0.+0.j, 0.+0.j, 0.-0.j, 0.-1.j],
             [0.+0.j, 0.+0.j, 0.-1.j, 0.-0.j],
             [0.+0.j, 0.+1.j, 0.+0.j, 0.+0.j],
             [0.+1.j, 0.+0.j, 0.+0.j, 0.+0.j]])
-            >>> t2 = Observable.Z() @ t1
+            >>> t2 = Observable.Z(3) @ t1
             >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
@@ -269,15 +328,14 @@ class TensorProduct(Observable):
         flattened_observables = []
         for obs in observables:
             if isinstance(obs, TensorProduct):
-                for nested_obs in obs.factors:
-                    flattened_observables.append(nested_obs)
+                flattened_observables.extend(iter(obs.factors))
                 # make sure you don't lose coefficient of tensor product
                 flattened_observables[-1] *= obs.coefficient
             elif isinstance(obs, Sum):
                 raise TypeError("Sum observables not allowed in TensorProduct")
             else:
                 flattened_observables.append(obs)
-        qubit_count = sum([obs.qubit_count for obs in flattened_observables])
+        qubit_count = sum(obs.qubit_count for obs in flattened_observables)
         # aggregate all coefficients for the product, since aX @ bY == ab * X @ Y
         coefficient = np.prod([obs.coefficient for obs in flattened_observables])
         unscaled_factors = tuple(obs._unscaled() for obs in flattened_observables)
@@ -285,7 +343,22 @@ class TensorProduct(Observable):
             f"{coefficient if coefficient != 1 else ''}"
             f"{'@'.join([obs.ascii_symbols[0] for obs in unscaled_factors])}"
         )
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        all_targets = [factor.targets for factor in unscaled_factors]
+        if not any(all_targets):
+            merged_targets = QubitSet()
+        elif all(all_targets):
+            flat_targets = [qubit for target in all_targets for qubit in target]
+            merged_targets = QubitSet(flat_targets)
+            if len(merged_targets) != len(flat_targets):
+                raise ValueError("Cannot have repeated target qubits")
+        else:
+            raise ValueError("Cannot mix factors with and without targets")
+
+        super().__init__(
+            qubit_count=qubit_count,
+            ascii_symbols=[display_name] * qubit_count,
+            targets=merged_targets,
+        )
         self._coef = coefficient
         self._factors = unscaled_factors
         self._factor_dimensions = tuple(
@@ -320,7 +393,7 @@ class TensorProduct(Observable):
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
         factors = []
-        use_qubits = iter(target)
+        use_qubits = iter(target or self._targets)
         for obs in self._factors:
             obs_target = QubitSet()
             num_qubits = int(np.log2(obs.to_matrix().shape[0]))
@@ -348,6 +421,7 @@ class TensorProduct(Observable):
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
+
         Returns:
             tuple[Gate, ...]: The basis rotation gates for this observable.
         """
@@ -357,8 +431,16 @@ class TensorProduct(Observable):
         return tuple(gates)
 
     @property
+    def euler_angles(self) -> dict[str, float]:
+        angles = {}
+        for obs in self.factors:
+            angles.update(obs.euler_angles)
+        return angles
+
+    @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -394,14 +476,17 @@ class TensorProduct(Observable):
         for i in range(len(self._factors)):
             quotient, remainder = divmod(quotient, self._factor_dimensions[i])
             product *= self._factors[-i - 1].eigenvalue(remainder)
-        self._eigenvalue_indices[index] = product
-        return self.coefficient * self._eigenvalue_indices[index]
+        self._eigenvalue_indices[index] = self.coefficient * product
+        return self._eigenvalue_indices[index]
 
     def __repr__(self):
         return "TensorProduct(" + ", ".join([repr(o) for o in self.factors]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: TensorProduct):
         return self.matrix_equivalence(other)
+
+    def __len__(self):
+        return len(self._factors)
 
     @staticmethod
     def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
@@ -432,14 +517,15 @@ class Sum(Observable):
     """Sum of observables"""
 
     def __init__(self, observables: list[Observable], display_name: str = "Hamiltonian"):
-        """
+        """Inits a `Sum`.
+
         Args:
             observables (list[Observable]): List of observables for Sum
             display_name (str): Name to use for an instance of this Sum
                 observable for circuit diagrams. Defaults to `Hamiltonian`.
 
         Examples:
-            >>> t1 = -3 * Observable.Y() + 2 * Observable.X()
+            >>> t1 = -3 * Observable.Y(0) + 2 * Observable.X(0)
             Sum(X('qubit_count': 1), Y('qubit_count': 1))
             >>> t1.summands
             (X('qubit_count': 1), Y('qubit_count': 1))
@@ -447,20 +533,27 @@ class Sum(Observable):
         flattened_observables = []
         for obs in observables:
             if isinstance(obs, Sum):
-                for nested_obs in obs.summands:
-                    flattened_observables.append(nested_obs)
+                flattened_observables.extend(iter(obs.summands))
             else:
                 flattened_observables.append(obs)
 
         self._summands = tuple(flattened_observables)
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
+        all_targets = [observable.targets for observable in flattened_observables]
+        if not any(all_targets):
+            targets = QubitSet()
+        elif all(all_targets):
+            targets = all_targets
+        else:
+            raise ValueError("Cannot mix terms with and without targets")
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        self._targets = targets
 
-    def __mul__(self, other) -> Observable:
+    def __mul__(self, other: numbers.Number) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             sum_copy = deepcopy(self)
-            for i, obs in enumerate(sum_copy.summands):
+            for i, _obs in enumerate(sum_copy.summands):
                 sum_copy._summands[i]._coef *= other
             return sum_copy
         raise TypeError("Observable coefficients must be numbers.")
@@ -471,13 +564,14 @@ class Sum(Observable):
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        target: list[QubitSet] = None,
+        target: list[QubitSetInput] | None = None,
     ) -> str:
+        target = target or self._targets
         if len(self.summands) != len(target):
             raise ValueError(
                 f"Invalid target of length {len(target)} for Sum with {len(self.summands)} terms"
             )
-        for i, (term, term_target) in enumerate(zip(self.summands, target)):
+        for i, (term, term_target) in enumerate(zip(self.summands, target, strict=True)):
             if term.qubit_count != len(term_target):
                 raise ValueError(
                     f"Invalid target for term {i} of Sum. "
@@ -489,7 +583,7 @@ class Sum(Observable):
                 ir_type=IRType.OPENQASM,
                 serialization_properties=serialization_properties,
             )
-            for obs, term_target in zip(self.summands, target)
+            for obs, term_target in zip(self.summands, target, strict=True)
         ).replace("+ -", "- ")
 
     @property
@@ -514,8 +608,11 @@ class Sum(Observable):
     def __repr__(self):
         return "Sum(" + ", ".join([repr(o) for o in self.summands]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Sum):
         return repr(self) == repr(other)
+
+    def __len__(self):
+        return len(self._summands)
 
     @staticmethod
     def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
@@ -529,22 +626,32 @@ class Hermitian(Observable):
     """Hermitian matrix as an observable."""
 
     # Cache of eigenpairs
-    _eigenpairs = {}
+    _eigenpairs: ClassVar = {}
 
-    def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
-        """
+    def __init__(
+        self,
+        matrix: np.ndarray,
+        display_name: str = "Hermitian",
+        targets: QubitSetInput | None = None,
+    ):
+        """Inits a `Hermitian`.
+
         Args:
-            matrix (numpy.ndarray): Hermitian matrix that defines the observable.
+            matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
+            targets (QubitSetInput | None): The target qubits to measure the observable on.
+                If not provided, this needs to be provided from the enclosing result type.
+                Default: `None`.
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length that is not a positive power of 2,
-                or is not Hermitian.
+                is not Hermitian, or has a dimension length that is either not a positive power of 2
+                or, if targets is supplied, doesn't match the size of targets.
 
         Examples:
-            >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
+            >>> observables.Hermitian(matrix=np.array([[0, 1], [1, 0]]), targets=[0])
+            >>> observables.Hermitian(matrix=np.array([[0, 1], [1, 0]]))
         """
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
@@ -558,10 +665,14 @@ class Hermitian(Observable):
             Gate.Unitary(matrix=eigendecomposition["eigenvectors"].conj().T),
         )
 
-        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        super().__init__(
+            qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count, targets=targets
+        )
 
     def _unscaled(self) -> Observable:
-        return Hermitian(matrix=self._matrix, display_name=self.ascii_symbols[0])
+        return Hermitian(
+            matrix=self._matrix, display_name=self.ascii_symbols[0], targets=self._targets
+        )
 
     def _to_jaqcd(self) -> list[list[list[list[float]]]]:
         if self.coefficient != 1:
@@ -574,16 +685,16 @@ class Hermitian(Observable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
+        target = target or self._targets
         if target:
-            qubit_target = ", ".join(
-                [serialization_properties.format_target(int(t)) for t in target]
-            )
+            qubit_target = ", ".join([
+                serialization_properties.format_target(int(t)) for t in target
+            ])
             return (
                 f"{coef_prefix}"
                 f"hermitian({self._serialized_matrix_openqasm_matrix()}) {qubit_target}"
             )
-        else:
-            return f"{coef_prefix}hermitian({self._serialized_matrix_openqasm_matrix()}) all"
+        return f"{coef_prefix}hermitian({self._serialized_matrix_openqasm_matrix()}) all"
 
     def _serialized_matrix_openqasm_matrix(self) -> str:
         serialized = str([[f"{complex(elem)}" for elem in row] for row in self._matrix.tolist()])
@@ -594,7 +705,7 @@ class Hermitian(Observable):
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * self._matrix
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Hermitian) -> bool:
         return self.matrix_equivalence(other)
 
     @property
@@ -604,6 +715,7 @@ class Hermitian(Observable):
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -614,8 +726,7 @@ class Hermitian(Observable):
 
     @staticmethod
     def _get_eigendecomposition(matrix: np.ndarray) -> dict[str, np.ndarray]:
-        """
-        Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
+        """Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
         is created with the same matrix, the eigendecomposition doesn't have to
         be recalculated.
@@ -648,9 +759,8 @@ class Hermitian(Observable):
 Observable.register_observable(Hermitian)
 
 
-def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]]) -> Observable:
-    """
-    Create an observable from the IR observable list. This can be a tensor product of
+def observable_from_ir(ir_observable: list[str | list[list[list[float]]]]) -> Observable:
+    """Create an observable from the IR observable list. This can be a tensor product of
     observables or a single observable.
 
     Args:
@@ -661,27 +771,24 @@ def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]])
     """
     if len(ir_observable) == 1:
         return _observable_from_ir_list_item(ir_observable[0])
-    else:
-        observable = TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
-        return observable
+    return TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
 
 
-def _observable_from_ir_list_item(observable: Union[str, list[list[list[float]]]]) -> Observable:
+def _observable_from_ir_list_item(observable: str | list[list[list[float]]]) -> Observable:
     if observable == "i":
         return I()
-    elif observable == "h":
+    if observable == "h":
         return H()
-    elif observable == "x":
+    if observable == "x":
         return X()
-    elif observable == "y":
+    if observable == "y":
         return Y()
-    elif observable == "z":
+    if observable == "z":
         return Z()
-    else:
-        try:
-            matrix = np.array(
-                [[complex(element[0], element[1]) for element in row] for row in observable]
-            )
-            return Hermitian(matrix)
-        except Exception as e:
-            raise ValueError(f"Invalid observable specified: {observable} error: {e}")
+    try:
+        matrix = np.array([
+            [complex(element[0], element[1]) for element in row] for row in observable
+        ])
+        return Hermitian(matrix)
+    except Exception as e:
+        raise ValueError(f"Invalid observable specified: {observable} error: {e}") from e

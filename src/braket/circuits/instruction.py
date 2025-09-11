@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.compiler_directive import CompilerDirective
@@ -29,22 +29,20 @@ InstructionOperator = Operator
 
 
 class Instruction:
-    """
-    An instruction is a quantum directive that describes the quantum task to perform on a quantum
+    """An instruction is a quantum directive that describes the quantum task to perform on a quantum
     device.
     """
 
     def __init__(
         self,
         operator: InstructionOperator,
-        target: Optional[QubitSetInput] = None,
+        target: QubitSetInput | None = None,
         *,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
-        """
-        InstructionOperator includes objects of type `Gate` and `Noise` only.
+        """InstructionOperator includes objects of type `Gate` and `Noise` only.
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
@@ -110,30 +108,22 @@ class Instruction:
 
     @property
     def target(self) -> QubitSet:
-        """
-        QubitSet: Target qubits that the operator is applied to.
-        """
+        """QubitSet: Target qubits that the operator is applied to."""
         return self._target
 
     @property
     def control(self) -> QubitSet:
-        """
-        QubitSet: Target qubits that the operator is controlled on.
-        """
+        """QubitSet: Target qubits that the operator is controlled on."""
         return self._control
 
     @property
     def control_state(self) -> BasisState:
-        """
-        BasisState: Quantum state that the operator is controlled to.
-        """
+        """BasisState: Quantum state that the operator is controlled to."""
         return self._control_state
 
     @property
     def power(self) -> float:
-        """
-        float: Power that the operator is raised to.
-        """
+        """float: Power that the operator is raised to."""
         return self._power
 
     def adjoint(self) -> list[Instruction]:
@@ -159,7 +149,7 @@ class Instruction:
                 )
                 for gate in operator.adjoint()
             ]
-        elif isinstance(operator, CompilerDirective):
+        if isinstance(operator, CompilerDirective):
             return [Instruction(operator.counterpart(), self._target)]
         raise NotImplementedError(f"Adjoint not supported for {operator}")
 
@@ -168,8 +158,7 @@ class Instruction:
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties | None = None,
     ) -> Any:
-        """
-        Converts the operator into the canonical intermediate representation.
+        """Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
 
         Args:
@@ -202,15 +191,14 @@ class Instruction:
 
     def copy(
         self,
-        target_mapping: Optional[dict[QubitInput, QubitInput]] = None,
-        target: Optional[QubitSetInput] = None,
-        control_mapping: Optional[dict[QubitInput, QubitInput]] = None,
-        control: Optional[QubitSetInput] = None,
-        control_state: Optional[BasisStateInput] = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+        target: QubitSetInput | None = None,
+        control_mapping: dict[QubitInput, QubitInput] | None = None,
+        control: QubitSetInput | None = None,
+        control_state: BasisStateInput | None = None,
         power: float = 1,
     ) -> Instruction:
-        """
-        Return a shallow copy of the instruction.
+        """Return a shallow copy of the instruction.
 
         Note:
             If `target_mapping` is specified, then `self.target` is mapped to the specified
@@ -282,7 +270,7 @@ class Instruction:
             f"'power': {self.power})"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Instruction):
         if isinstance(other, Instruction):
             return (
                 self._operator,
@@ -299,7 +287,7 @@ class Instruction:
             )
         return NotImplemented
 
-    def __pow__(self, power, modulo=None):
+    def __pow__(self, power: float, modulo: float | None = None):
         new_power = self.power * power
         if modulo is not None:
             new_power %= modulo

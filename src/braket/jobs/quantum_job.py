@@ -10,10 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
@@ -26,6 +27,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def arn(self) -> str:
         """The ARN (Amazon Resource Name) of the hybrid job.
+
         Returns:
             str: The ARN (Amazon Resource Name) of the hybrid job.
         """
@@ -34,6 +36,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def name(self) -> str:
         """The name of the hybrid job.
+
         Returns:
             str: The name of the hybrid job.
         """
@@ -47,6 +50,7 @@ class QuantumJob(ABC):
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
@@ -95,7 +99,7 @@ class QuantumJob(ABC):
         #   Cloudwatch after the job was marked complete.
 
     @abstractmethod
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """Gets the job metadata defined in Amazon Braket.
 
         Args:
@@ -103,8 +107,9 @@ class QuantumJob(ABC):
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
-            Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
+            dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
 
     @abstractmethod
@@ -112,7 +117,7 @@ class QuantumJob(ABC):
         self,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row.
 
@@ -123,7 +128,7 @@ class QuantumJob(ABC):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Any]] : The metrics data.
+            dict[str, list[Any]]: The metrics data.
 
         Example:
             timestamp energy
@@ -150,7 +155,7 @@ class QuantumJob(ABC):
         self,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
@@ -162,7 +167,7 @@ class QuantumJob(ABC):
 
 
         Returns:
-            Dict[str, Any]: Dict specifying the hybrid job results.
+            dict[str, Any]: Dict specifying the hybrid job results.
 
         Raises:
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.

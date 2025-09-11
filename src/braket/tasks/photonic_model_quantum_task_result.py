@@ -16,7 +16,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-
 from braket.task_result import AdditionalMetadata, PhotonicModelTaskResult, TaskMetadata
 
 
@@ -26,15 +25,14 @@ class PhotonicModelQuantumTaskResult:
     additional_metadata: AdditionalMetadata
     measurements: np.ndarray = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: PhotonicModelQuantumTaskResult) -> bool:
         if isinstance(other, PhotonicModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
 
     @staticmethod
     def from_object(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
-        """
-        Create PhotonicModelQuantumTaskResult from PhotonicModelTaskResult object.
+        """Create PhotonicModelQuantumTaskResult from PhotonicModelTaskResult object.
 
         Args:
             result (PhotonicModelTaskResult): PhotonicModelTaskResult object

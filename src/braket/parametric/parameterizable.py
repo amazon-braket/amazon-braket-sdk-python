@@ -14,21 +14,20 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class Parameterizable(ABC):
-    """
-    A parameterized object is the abstract definition of an object
+    """A parameterized object is the abstract definition of an object
     that can take in FreeParameterExpressions.
     """
 
     @property
     @abstractmethod
-    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
         """Get the parameters.
 
         Returns:
@@ -38,10 +37,12 @@ class Parameterizable(ABC):
         """
 
     @abstractmethod
-    def bind_values(self, **kwargs) -> Any:
-        """
-        Takes in parameters and returns an object with specified parameters
+    def bind_values(self, **kwargs: FreeParameter | str) -> Any:
+        """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Any: The result object will depend on the implementation of the object being bound.

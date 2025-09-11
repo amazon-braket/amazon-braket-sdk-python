@@ -80,7 +80,6 @@ def test_commutativity():
 def test_add():
     add_expr = FreeParameter("theta") + FreeParameter("theta")
     expected = FreeParameterExpression(2 * FreeParameter("theta"))
-
     assert add_expr == expected
 
 
@@ -89,14 +88,12 @@ def test_sub():
     expected = FreeParameterExpression(FreeParameter("theta")) - FreeParameterExpression(
         FreeParameter("alpha")
     )
-
     assert sub_expr == expected
 
 
 def test_r_sub():
     r_sub_expr = 1 - FreeParameter("theta")
     expected = FreeParameterExpression(1 - FreeParameter("theta"))
-
     assert r_sub_expr == expected
 
 
@@ -104,6 +101,20 @@ def test_mul():
     mul_expr = FreeParameter("theta") * FreeParameter("alpha") * 2 * FreeParameter("theta")
     expected = FreeParameterExpression(FreeParameter("theta") ** 2 * FreeParameter("alpha") * 2)
     assert mul_expr == expected
+
+
+def test_truediv():
+    truediv_expr = FreeParameter("theta") / FreeParameter("alpha")
+    expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(
+        FreeParameter("alpha")
+    )
+    assert truediv_expr == expected
+
+
+def test_r_truediv():
+    r_truediv_expr = 1 / FreeParameter("theta")
+    expected = FreeParameterExpression(1 / FreeParameter("theta"))
+    assert r_truediv_expr == expected
 
 
 def test_pow():
@@ -154,9 +165,10 @@ def test_sub_return_expression():
 @pytest.mark.parametrize(
     "param, kwargs, expected_value, expected_type",
     [
-        (FreeParameter("a") + 2 * FreeParameter("b"), {"a": 0.1, "b": 0.3}, 0.7, float),
+        (FreeParameter("a") + 2 * FreeParameter("d"), {"a": 0.1, "d": 0.3}, 0.7, float),
         (FreeParameter("x"), {"y": 1}, FreeParameter("x"), FreeParameter),
         (FreeParameter("y"), {"y": -0.1}, -0.1, float),
+        (2 * FreeParameter("i"), {"i": 1}, 2.0, float),
         (
             FreeParameter("a") + 2 * FreeParameter("x"),
             {"a": 0.4, "b": 0.4},

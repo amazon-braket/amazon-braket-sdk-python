@@ -70,7 +70,7 @@ def generate_get_job_response():
             },
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 51),
             "deviceConfig": {
-                "device": "arn:aws:braket:::device/qpu/rigetti/Aspen-10",
+                "device": "arn:aws:braket:::device/qpu/rigetti/Ankaa-2",
             },
             "hyperParameters": {
                 "foo": "bar",
@@ -93,6 +93,7 @@ def generate_get_job_response():
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
             "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/data"},
+            "queueInfo": {"position": "1", "queue": "JOBS_QUEUE"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},
@@ -285,16 +286,14 @@ def result_setup(quantum_job_name):
 
         with open(file_path, "w") as write_file:
             write_file.write(
-                json.dumps(
-                    {
-                        "braketSchemaHeader": {
-                            "name": "braket.jobs_data.persisted_job_data",
-                            "version": "1",
-                        },
-                        "dataDictionary": {"converged": True, "energy": -0.2},
-                        "dataFormat": "plaintext",
-                    }
-                )
+                json.dumps({
+                    "braketSchemaHeader": {
+                        "name": "braket.jobs_data.persisted_job_data",
+                        "version": "1",
+                    },
+                    "dataDictionary": {"converged": True, "energy": -0.2},
+                    "dataFormat": "plaintext",
+                })
             )
 
         with tarfile.open("model.tar.gz", "w:gz") as tar:
@@ -363,7 +362,7 @@ def test_download_result_when_extract_path_not_provided(
     job_name = job_metadata["jobName"]
     quantum_job.download_result()
 
-    with open(f"{job_name}/results.json", "r") as file:
+    with open(f"{job_name}/results.json") as file:
         actual_data = json.loads(file.read())["dataDictionary"]
         assert expected_saved_data == actual_data
 
@@ -381,7 +380,7 @@ def test_download_result_when_extract_path_provided(
     with tempfile.TemporaryDirectory() as temp_dir:
         quantum_job.download_result(temp_dir)
 
-        with open(f"{temp_dir}/{job_name}/results.json", "r") as file:
+        with open(f"{temp_dir}/{job_name}/results.json") as file:
             actual_data = json.loads(file.read())["dataDictionary"]
             assert expected_saved_data == actual_data
 
@@ -720,6 +719,14 @@ def test_logs(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
@@ -728,16 +735,54 @@ def test_logs(
     quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
-    assert captured.out == "\n".join(
-        (
-            "..",
-            "hi there #1",
-            "hi there #2",
-            "hi there #2a",
-            "hi there #3",
-            "",
-        )
+    assert captured.out == "\n".join((
+        "..",
+        "hi there #1",
+        "hi there #2",
+        "hi there #2a",
+        "hi there #3",
+        "",
+    ))
+
+
+def test_logs_queue_progress(
+    quantum_job,
+    generate_get_job_response,
+    log_events_responses,
+    log_stream_responses,
+    capsys,
+):
+    queue_info = {"queue": "JOBS_QUEUE", "position": "1"}
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="QUEUED", queue_info=queue_info),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
     )
+    quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
+    quantum_job._aws_session.get_log_events.side_effect = log_events_responses
+
+    quantum_job.logs(wait=True, poll_interval_seconds=0)
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n".join((
+        f"Job queue position: {queue_info['position']}",
+        "Running:",
+        "",
+        "hi there #1",
+        "hi there #2",
+        "hi there #2a",
+        "hi there #3",
+        "",
+    ))
 
 
 @patch.dict("os.environ", {"JPY_PARENT_PID": "True"})
@@ -753,6 +798,15 @@ def test_logs_multiple_instances(
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
+        generate_get_job_response(status="COMPLETED"),
         generate_get_job_response(status="COMPLETED"),
     )
     log_stream_responses[-1]["logStreams"].append({"logStreamName": "stream-2"})
@@ -799,25 +853,24 @@ def test_logs_multiple_instances(
     quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
-    assert captured.out == "\n".join(
-        (
-            "..",
-            "\x1b[34mhi there #1\x1b[0m",
-            "\x1b[35mhi there #1\x1b[0m",
-            "\x1b[34mhi there #2\x1b[0m",
-            "\x1b[35mhi there #2\x1b[0m",
-            "\x1b[34mhi there #2a\x1b[0m",
-            "\x1b[35mhi there #2a\x1b[0m",
-            "\x1b[34mhi there #3\x1b[0m",
-            "\x1b[35mhi there #3\x1b[0m",
-            "\x1b[35mhi there #4\x1b[0m",
-            "",
-        )
-    )
+    assert captured.out == "\n".join((
+        "..",
+        "\x1b[34mhi there #1\x1b[0m",
+        "\x1b[35mhi there #1\x1b[0m",
+        "\x1b[34mhi there #2\x1b[0m",
+        "\x1b[35mhi there #2\x1b[0m",
+        "\x1b[34mhi there #2a\x1b[0m",
+        "\x1b[35mhi there #2a\x1b[0m",
+        "\x1b[34mhi there #3\x1b[0m",
+        "\x1b[35mhi there #3\x1b[0m",
+        "\x1b[35mhi there #4\x1b[0m",
+        "",
+    ))
 
 
 def test_logs_error(quantum_job, generate_get_job_response, capsys):
     quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="RUNNING"),
         generate_get_job_response(status="COMPLETED"),
@@ -1043,3 +1096,26 @@ def test_bad_device_arn_format(aws_session):
 
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
+
+
+def test_logs_prefix(job_region, quantum_job_name, aws_session, generate_get_job_response):
+    aws_session.get_job.return_value = generate_get_job_response(jobName=quantum_job_name)
+
+    # old jobs with the `arn:.../job-name` style ARN use `job-name/` as the logs prefix
+    name_arn = f"arn:aws:braket:{job_region}:875981177017:job/{quantum_job_name}"
+    quantum_job = AwsQuantumJob(name_arn, aws_session)
+    assert quantum_job._logs_prefix == f"{quantum_job_name}"
+
+    # jobs with the `arn:.../uuid` style ARN use `job-name/uuid/` as the logs prefix
+    uuid_1 = "UUID-123456789"
+    uuid_2 = "UUID-987654321"
+    uuid_arn_1 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_1}"
+    uuid_job_1 = AwsQuantumJob(uuid_arn_1, aws_session)
+    uuid_arn_2 = f"arn:aws:braket:{job_region}:875981177017:job/{uuid_2}"
+    uuid_job_2 = AwsQuantumJob(uuid_arn_2, aws_session)
+    assert (
+        uuid_job_1._logs_prefix
+        == f"{quantum_job_name}/{uuid_1}"
+        != uuid_job_2._logs_prefix
+        == f"{quantum_job_name}/{uuid_2}"
+    )

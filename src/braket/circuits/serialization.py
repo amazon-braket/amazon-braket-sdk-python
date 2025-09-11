@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
@@ -23,8 +24,7 @@ class IRType(str, Enum):
 
 
 class QubitReferenceType(str, Enum):
-    """
-    Defines how qubits should be referenced in the generated OpenQASM string.
+    """Defines how qubits should be referenced in the generated OpenQASM string.
     See https://qiskit.github.io/openqasm/language/types.html#quantum-types
     for details.
     """
@@ -33,10 +33,29 @@ class QubitReferenceType(str, Enum):
     PHYSICAL = "PHYSICAL"
 
 
+class SerializableProgram(ABC):
+    @abstractmethod
+    def to_ir(
+        self,
+        ir_type: IRType = IRType.OPENQASM,
+    ) -> str:
+        """Serializes the program into an intermediate representation.
+
+        Args:
+            ir_type (IRType): The IRType to use for converting the program to its
+                IR representation. Defaults to IRType.OPENQASM.
+
+        Raises:
+            ValueError: Raised if the supplied `ir_type` is not supported.
+
+        Returns:
+            str: A representation of the program in the `ir_type` format.
+        """
+
+
 @dataclass
 class OpenQASMSerializationProperties:
-    """
-    Properties for serializing a circuit to OpenQASM.
+    """Properties for serializing a circuit to OpenQASM.
 
     qubit_reference_type (QubitReferenceType): determines whether to use
         logical qubits or physical qubits (q[i] vs $i).
@@ -46,6 +65,7 @@ class OpenQASMSerializationProperties:
 
     def format_target(self, target: int) -> str:
         """Format a target qubit to the appropriate OpenQASM representation.
+
         Args:
             target (int): The target qubit.
 

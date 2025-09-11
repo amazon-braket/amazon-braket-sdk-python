@@ -22,16 +22,21 @@ class Operator(ABC):
     @abstractmethod
     def name(self) -> str:
         """The name of the operator.
+
         Returns:
             str: The name of the operator.
         """
 
     @abstractmethod
     def to_ir(self, *args, **kwargs) -> Any:
-        """
-        Converts the operator into the canonical intermediate representation.
+        """Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
 
         Returns:
-            Any: The the canonical intermediate representation of the operator.
+            Any: The canonical intermediate representation of the operator.
         """
+
+    @property
+    def requires_physical_qubits(self) -> bool:
+        """bool: Whether a circuit using this operator requires qubits to be physical."""
+        return False

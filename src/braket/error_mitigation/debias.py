@@ -12,13 +12,12 @@
 # language governing permissions and limitations under the License.
 
 from braket.device_schema import error_mitigation
+
 from braket.error_mitigation.error_mitigation import ErrorMitigation
 
 
 class Debias(ErrorMitigation):
-    """
-    The debias error mitigation scheme. This scheme takes no parameters.
-    """
+    """The debias error mitigation scheme. This scheme takes no parameters."""
 
     def serialize(self) -> list[error_mitigation.Debias]:
         return [error_mitigation.Debias()]

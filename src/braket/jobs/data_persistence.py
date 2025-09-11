@@ -16,9 +16,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
+
 from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
-from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
 
 
 def save_job_checkpoint(
@@ -26,9 +27,8 @@ def save_job_checkpoint(
     checkpoint_file_suffix: str = "",
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
-    """
-    Saves the specified `checkpoint_data` to the local output directory, specified by the container
-    environment variable `CHECKPOINT_DIR`, with the filename
+    """Saves the specified `checkpoint_data` to the local output directory, specified by
+    the container environment variable `CHECKPOINT_DIR`, with the filename
     `f"{job_name}(_{checkpoint_file_suffix}).json"`. The `job_name` refers to the name of the
     current job and is retrieved from the container environment variable `JOB_NAME`. The
     `checkpoint_data` values are serialized to the specified `data_format`.
@@ -59,7 +59,7 @@ def save_job_checkpoint(
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
-    with open(checkpoint_file_path, "w") as f:
+    with open(checkpoint_file_path, "w", encoding="utf-8") as f:
         serialized_data = serialize_values(checkpoint_data or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())
@@ -68,8 +68,7 @@ def save_job_checkpoint(
 def load_job_checkpoint(
     job_name: str | None = None, checkpoint_file_suffix: str = ""
 ) -> dict[str, Any]:
-    """
-    Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
+    """Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
     checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
     container environment variable. If not provided, this function will use the currently running
@@ -104,18 +103,15 @@ def load_job_checkpoint(
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
-    with open(checkpoint_file_path, "r") as f:
+    with open(checkpoint_file_path, encoding="utf-8") as f:
         persisted_data = PersistedJobData.parse_raw(f.read())
-        deserialized_data = deserialize_values(
-            persisted_data.dataDictionary, persisted_data.dataFormat
-        )
-        return deserialized_data
+        return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
 
 
 def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData:
     filename = filename or Path(get_results_dir()) / "results.json"
     try:
-        with open(filename, mode="r") as f:
+        with open(filename, encoding="utf-8") as f:
             return PersistedJobData.parse_raw(f.read())
     except FileNotFoundError:
         return PersistedJobData(
@@ -125,8 +121,7 @@ def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData
 
 
 def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
-    """
-    Loads job result of currently running job.
+    """Loads job result of currently running job.
 
     Args:
         filename (str | Path | None): Location of job results. Default `results.json` in job
@@ -137,16 +132,14 @@ def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
         dict[str, Any]: Job result data of current job
     """
     persisted_data = _load_persisted_data(filename)
-    deserialized_data = deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
-    return deserialized_data
+    return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
 
 
 def save_job_result(
     result_data: dict[str, Any] | Any,
     data_format: PersistedJobDataFormat | None = None,
 ) -> None:
-    """
-    Saves the `result_data` to the local output directory that is specified by the container
+    """Saves the `result_data` to the local output directory that is specified by the container
     environment variable `AMZN_BRAKET_JOB_RESULTS_DIR`, with the filename 'results.json'.
     The `result_data` values are serialized to the specified `data_format`.
 
@@ -160,6 +153,9 @@ def save_job_result(
         data_format (PersistedJobDataFormat | None): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT.
+
+    Raises:
+        TypeError: Unsupported data format.
     """
     if not isinstance(result_data, dict):
         result_data = {"result": result_data}
@@ -187,7 +183,7 @@ def save_job_result(
     )
     updated_results = current_results | result_data
 
-    with open(Path(get_results_dir()) / "results.json", "w") as f:
+    with open(Path(get_results_dir()) / "results.json", "w", encoding="utf-8") as f:
         serialized_data = serialize_values(updated_results or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())

@@ -23,7 +23,7 @@ from braket.ahs.analog_hamiltonian_simulation import (
     AtomArrangement,
     DiscretizationError,
     DrivingField,
-    ShiftingField,
+    LocalDetuning,
     SiteType,
 )
 from braket.ahs.atom_arrangement import AtomArrangementItem
@@ -61,12 +61,146 @@ def driving_field():
 
 
 @pytest.fixture
-def shifting_field():
-    return ShiftingField(
+def local_detuning():
+    return LocalDetuning(
         Field(
             TimeSeries().put(0.0, -1.25664e8).put(3.0e-6, 1.25664e8),
             Pattern([0.5, 1.0, 0.5, 0.5, 0.5, 0.5]),
         )
+    )
+
+
+@pytest.fixture
+def ir():
+    return Program.parse_raw_schema(
+        """
+{
+  "braketSchemaHeader": {
+    "name": "braket.ir.ahs.program",
+    "version": "1"
+  },
+  "setup": {
+    "ahs_register": {
+      "sites": [
+        [
+          "0.0",
+          "0.0"
+        ],
+        [
+          "0.0",
+          "0.000003"
+        ],
+        [
+          "0.0",
+          "0.000006"
+        ],
+        [
+          "0.000003",
+          "0.0"
+        ],
+        [
+          "0.000003",
+          "0.000003"
+        ],
+        [
+          "0.000003",
+          "0.000003"
+        ],
+        [
+          "0.000003",
+          "0.000006"
+        ]
+      ],
+      "filling": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  },
+  "hamiltonian": {
+    "drivingFields": [
+      {
+        "amplitude": {
+          "time_series": {
+            "values": [
+              "0.0",
+              "25132700.0",
+              "25132700.0",
+              "0.0"
+            ],
+            "times": [
+              "0.0",
+              "3E-7",
+              "0.0000027",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        },
+        "phase": {
+          "time_series": {
+            "values": [
+              "0",
+              "0"
+            ],
+            "times": [
+              "0.0",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        },
+        "detuning": {
+          "time_series": {
+            "values": [
+              "-125664000.0",
+              "-125664000.0",
+              "125664000.0",
+              "125664000.0"
+            ],
+            "times": [
+              "0.0",
+              "3E-7",
+              "0.0000027",
+              "0.000003"
+            ]
+          },
+          "pattern": "uniform"
+        }
+      }
+    ],
+    "localDetuning": [
+      {
+        "magnitude": {
+          "time_series": {
+            "values": [
+              "-125664000.0",
+              "125664000.0"
+            ],
+            "times": [
+              "0.0",
+              "0.000003"
+            ]
+          },
+          "pattern": [
+            "0.5",
+            "1.0",
+            "0.5",
+            "0.5",
+            "0.5",
+            "0.5"
+          ]
+        }
+      }
+    ]
+  }
+}
+"""
     )
 
 
@@ -78,8 +212,8 @@ def test_create():
     assert mock1 == ahs.hamiltonian
 
 
-def test_to_ir(register, driving_field, shifting_field):
-    hamiltonian = driving_field + shifting_field
+def test_to_ir(register, driving_field, local_detuning):
+    hamiltonian = driving_field + local_detuning
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     problem = ahs.to_ir()
     assert Program.parse_raw(problem.json()) == problem
@@ -92,6 +226,38 @@ def test_to_ir_empty():
     ahs = AnalogHamiltonianSimulation(register=AtomArrangement(), hamiltonian=hamiltonian)
     problem = ahs.to_ir()
     assert Program.parse_raw(problem.json()) == problem
+    assert problem == Program.parse_raw_schema(problem.json())
+
+
+def test_from_ir(ir):
+    problem = AnalogHamiltonianSimulation.from_ir(ir).to_ir()
+    assert problem == ir
+    assert problem == Program.parse_raw_schema(problem.json())
+
+
+def test_from_ir_empty():
+    empty_ir = Program.parse_raw_schema(
+        """
+{
+  "braketSchemaHeader": {
+    "name": "braket.ir.ahs.program",
+    "version": "1"
+  },
+  "setup": {
+    "ahs_register": {
+      "sites": [],
+      "filling": []
+    }
+  },
+  "hamiltonian": {
+    "drivingFields": [],
+    "localDetuning": []
+  }
+}
+"""
+    )
+    problem = AnalogHamiltonianSimulation.from_ir(empty_ir).to_ir()
+    assert problem == empty_ir
     assert problem == Program.parse_raw_schema(problem.json())
 
 
@@ -123,8 +289,8 @@ def test_invalid_action_name():
     AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
 
 
-def test_discretize(register, driving_field, shifting_field):
-    hamiltonian = driving_field + shifting_field
+def test_discretize(register, driving_field, local_detuning):
+    hamiltonian = driving_field + local_detuning
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
 
     action = Mock()
@@ -141,8 +307,6 @@ def test_discretize(register, driving_field, shifting_field):
     device.properties.paradigm.rydberg.rydbergGlobal.phaseResolution = Decimal("5E-7")
 
     device.properties.paradigm.rydberg.rydbergLocal.timeResolution = Decimal("1E-9")
-    device.properties.paradigm.rydberg.rydbergLocal.commonDetuningResolution = Decimal("2000.0")
-    device.properties.paradigm.rydberg.rydbergLocal.localDetuningResolution = Decimal("0.01")
 
     discretized_ahs = ahs.discretize(device)
     discretized_ir = discretized_ahs.to_ir()
@@ -177,11 +341,12 @@ def test_discretize(register, driving_field, shifting_field):
             "values": ["-125664000.0", "-125664000.0", "125664000.0", "125664000.0"],
         },
     }
-    assert discretized_json["hamiltonian"]["shiftingFields"][0]["magnitude"] == {
-        "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
+    local_detuning = discretized_json["hamiltonian"]["localDetuning"][0]["magnitude"]
+    assert local_detuning == {
+        "pattern": ["0.5", "1", "0.5", "0.5", "0.5", "0.5"],
         "time_series": {
             "times": ["0E-9", "0.000003000"],
-            "values": ["-125664000.0", "125664000.0"],
+            "values": ["-125664000", "125664000"],
         },
     }
 
@@ -189,13 +354,11 @@ def test_discretize(register, driving_field, shifting_field):
 def test_converting_numpy_array_sites_to_ir(driving_field):
     hamiltonian = driving_field
 
-    sites = np.array(
-        [
-            [0.0, 0.0],
-            [0.0, 1.0e-6],
-            [1e-6, 2.0e-6],
-        ]
-    )
+    sites = np.array([
+        [0.0, 0.0],
+        [0.0, 1.0e-6],
+        [1e-6, 2.0e-6],
+    ])
     register = AtomArrangement()
     for site in sites:
         register.add(site)
@@ -220,14 +383,12 @@ def test_site_validation_wrong_length():
 @pytest.mark.xfail(raises=TypeError)
 def test_site_validation_non_number():
     register = AtomArrangement()
-    register.add(
+    register.add([
+        "not-a-number",
         [
-            "not-a-number",
-            [
-                "also-not-a-number",
-            ],
-        ]
-    )
+            "also-not-a-number",
+        ],
+    ])
 
 
 @pytest.mark.xfail(raises=TypeError)

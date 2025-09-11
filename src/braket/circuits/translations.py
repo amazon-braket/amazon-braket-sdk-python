@@ -11,14 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from functools import reduce, singledispatch
-from typing import Union
+from __future__ import annotations
 
-import braket.circuits.gates as braket_gates
-import braket.circuits.noises as noises
-import braket.circuits.result_types as ResultTypes
-import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Observable, observables
+import operator
+from functools import reduce
+
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -29,6 +27,11 @@ from braket.ir.jaqcd import (
     Variance,
 )
 from braket.ir.jaqcd.program_v1 import Results
+
+import braket.circuits.gates as braket_gates
+from braket.circuits import Observable, ResultType, noises, observables, result_types
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
+from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
 BRAKET_GATES = {
     "gphase": braket_gates.GPhase,
@@ -68,8 +71,16 @@ BRAKET_GATES = {
     "cswap": braket_gates.CSwap,
     "gpi": braket_gates.GPi,
     "gpi2": braket_gates.GPi2,
+    "prx": braket_gates.PRx,
     "ms": braket_gates.MS,
     "unitary": braket_gates.Unitary,
+    "cc_prx": CCPRx,
+    "measure_ff": MeasureFF,
+}
+
+COMPILER_DIRECTIVES = {
+    VerbatimBoxDelimiter.START_VERBATIM: StartVerbatimBox,
+    VerbatimBoxDelimiter.END_VERBATIM: EndVerbatimBox,
 }
 
 one_prob_noise_map = {
@@ -84,82 +95,61 @@ one_prob_noise_map = {
     "phase_damping": noises.PhaseDamping,
 }
 
+SUPPORTED_NOISE_PRAGMA_TO_NOISE = {
+    "braket_noise_bit_flip": noises.BitFlip,
+    "braket_noise_phase_flip": noises.PhaseFlip,
+    "braket_noise_pauli_channel": noises.PauliChannel,
+    "braket_noise_depolarizing": noises.Depolarizing,
+    "braket_noise_two_qubit_depolarizing": noises.TwoQubitDepolarizing,
+    "braket_noise_two_qubit_dephasing": noises.TwoQubitDephasing,
+    "braket_noise_amplitude_damping": noises.AmplitudeDamping,
+    "braket_noise_generalized_amplitude_damping": noises.GeneralizedAmplitudeDamping,
+    "braket_noise_phase_damping": noises.PhaseDamping,
+    "braket_noise_kraus": noises.Kraus,
+}
 
-def get_observable(obs: Union[models.Observable, list]) -> Observable:
-    return _get_observable(obs)
 
-
-@singledispatch
-def _get_observable(obs: Union[models.Observable, list]) -> Observable:
+def _get_observable(obs: str) -> Observable:
+    if isinstance(obs, str):
+        return getattr(observables, obs.upper())()
     raise NotImplementedError
 
 
-@_get_observable.register(list)
-def _(obs):
-    raise NotImplementedError
-
-
-@_get_observable.register(str)
-def _(name: str):
-    return getattr(observables, name.upper())()
-
-
-def get_tensor_product(observable: Union[models.Observable, list]) -> Observable:
+def get_tensor_product(observable: list[str]) -> Observable:
     """Generate an braket circuit observable
 
     Args:
-        observable (Union[Observable, list]): ir observable or a matrix
+        observable (list[str]): ir observable or a matrix
 
     Returns:
         Observable: braket circuit observable
     """
-    circuit_observable = [get_observable(obs) for obs in observable]
-    return reduce(lambda obs1, obs2: obs1 @ obs2, circuit_observable)
+    circuit_observable = [_get_observable(obs) for obs in observable]
+    return reduce(operator.matmul, circuit_observable)
 
 
-@singledispatch
-def _braket_result_to_result_type(result: Results) -> None:
-    raise TypeError(f"Result type {type(result).__name__} is not supported")
-
-
-def braket_result_to_result_type(result: Results) -> None:
+def braket_result_to_result_type(result: Results) -> ResultType:
     return _braket_result_to_result_type(result)
 
 
-@_braket_result_to_result_type.register(Amplitude)
-def _(result):
-    return ResultTypes.Amplitude(state=result.states)
-
-
-@_braket_result_to_result_type.register(Expectation)
-def _(result):
-    tensor_product = get_tensor_product(result.observable)
-
-    return ResultTypes.Expectation(observable=tensor_product, target=result.targets)
-
-
-@_braket_result_to_result_type.register(Probability)
-def _(result):
-    return ResultTypes.Probability(result.targets)
-
-
-@_braket_result_to_result_type.register(Sample)
-def _(result):
-    tensor_product = get_tensor_product(result.observable)
-    return ResultTypes.Sample(observable=tensor_product, target=result.targets)
-
-
-@_braket_result_to_result_type.register(StateVector)
-def _(result):
-    return ResultTypes.StateVector()
-
-
-@_braket_result_to_result_type.register(DensityMatrix)
-def _(result):
-    return ResultTypes.DensityMatrix(target=result.targets)
-
-
-@_braket_result_to_result_type.register(Variance)
-def _(result):
-    tensor_product = get_tensor_product(result.observable)
-    return ResultTypes.Variance(observable=tensor_product, target=result.targets)
+def _braket_result_to_result_type(result: Results) -> ResultType:
+    match result:
+        case Expectation(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Expectation(observable=tensor_product, target=targets)
+        case Variance(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Variance(observable=tensor_product, target=targets)
+        case Sample(observable=observable, targets=targets):
+            tensor_product = get_tensor_product(observable)
+            return result_types.Sample(observable=tensor_product, target=targets)
+        case Probability(targets=targets):
+            return result_types.Probability(targets)
+        case Amplitude(states=states):
+            return result_types.Amplitude(state=states)
+        case StateVector():
+            return result_types.StateVector()
+        case DensityMatrix(targets=targets):
+            return result_types.DensityMatrix(target=targets)
+        case _:
+            raise TypeError(f"Result type {type(result).__name__} is not supported")

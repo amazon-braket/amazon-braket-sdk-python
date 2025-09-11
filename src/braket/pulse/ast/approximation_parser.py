@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 from collections.abc import KeysView
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, ClassVar
 
 import numpy as np
 from openpulse import ast
@@ -26,6 +26,7 @@ from braket.pulse.frame import Frame
 from braket.pulse.waveforms import (
     ConstantWaveform,
     DragGaussianWaveform,
+    ErfSquareWaveform,
     GaussianWaveform,
     Waveform,
 )
@@ -50,33 +51,34 @@ class _ParseState:
 
 class _ApproximationParser(QASMVisitor[_ParseState]):
     """Walk the AST and build the output signal amplitude, frequency and phases
-    for each channel."""
+    for each channel.
+    """
 
-    TIME_UNIT_TO_EXP = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
+    TIME_UNIT_TO_EXP: ClassVar = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
 
     def __init__(self, program: Program, frames: dict[str, Frame]):
         self.amplitudes = defaultdict(TimeSeries)
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
-        context = _ParseState(variables=dict(), frame_data=_init_frame_data(frames))
+        context = _ParseState(variables={}, frame_data=_init_frame_data(frames))
         self._qubit_frames_mapping: dict[str, list[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
-    def visit(
-        self, node: Union[ast.QASMNode, ast.Expression], context: Optional[_ParseState] = None
-    ) -> Any:
+    def visit(self, node: ast.QASMNode | ast.Expression, context: _ParseState | None = None) -> Any:
         """Visit a node.
+
         Args:
             node (Union[ast.QASMNode, ast.Expression]): The node to visit.
             context (Optional[_ParseState]): The parse state context.
+
         Returns:
-            Any: The parse return value.
+            Any: The parsed return value.
         """
         return super().visit(node, context)
 
     def _get_frame_parameters(
         self, parameters: list[ast.Expression], context: _ParseState
-    ) -> Union[KeysView, list[str]]:
+    ) -> KeysView | list[str]:
         frame_ids = set()
         for expression in parameters:
             identifier_name = self.visit(expression, context)
@@ -103,6 +105,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def visit_Program(self, node: ast.Program, context: _ParseState = None) -> None:
         """Visit a Program.
+
         Args:
             node (ast.Program): The program.
             context (_ParseState): The parse state context.
@@ -112,38 +115,49 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def visit_ExpressionStatement(self, node: ast.ExpressionStatement, context: _ParseState) -> Any:
         """Visit an Expression.
+
         Args:
             node (ast.ExpressionStatement): The expression.
             context (_ParseState): The parse state context.
+
+        Returns:
+            Any: The parsed return value.
         """
         return self.visit(node.expression, context)  # need to check
 
     def visit_ClassicalDeclaration(
         self, node: ast.ClassicalDeclaration, context: _ParseState
-    ) -> None:
+    ) -> dict | None:
         """Visit a Classical Declaration.
             node.type, node.identifier, node.init_expression
             angle[20] a = 1+2;
             waveform wf = [];
             port a;
+
         Args:
             node (ast.ClassicalDeclaration): The classical declaration.
             context (_ParseState): The parse state context.
-        """
+
+        Raises:
+            NotImplementedError: Raised if the node is not a PortType, FrameType, or
+                WaveformType.
+
+        Returns:
+            Union[dict, None]: Returns a dict if WaveformType, None otherwise.
+        """  # noqa: DOC202
         identifier = self.visit(node.identifier, context)
-        if type(node.type) == ast.WaveformType:
+        if type(node.type) is ast.WaveformType:
             context.variables[identifier] = self.visit(node.init_expression, context)
-        elif type(node.type) == ast.FrameType:
+        elif type(node.type) is ast.FrameType:
             pass
-        elif type(node.type) == ast.PortType:
-            pass
-        else:
+        elif type(node.type) is not ast.PortType:
             raise NotImplementedError
 
     def visit_DelayInstruction(self, node: ast.DelayInstruction, context: _ParseState) -> None:
         """Visit a Delay Instruction.
             node.duration, node.qubits
             delay[100ns] $0;
+
         Args:
             node (ast.DelayInstruction): The classical declaration.
             context (_ParseState): The parse state context.
@@ -154,7 +168,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -168,6 +182,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             barrier $0;
             barrier;
             barrier frame, frame1;
+
         Args:
             node (ast.QuantumBarrier): The quantum barrier.
             context (_ParseState): The parse state context.
@@ -177,7 +192,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             # barrier without arguments is applied to all the frames of the context
             frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
-        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        max_time = max(context.frame_data[frame_id].current_time for frame_id in frames)
         # All frames are delayed till the first multiple of the LCM([port.dts])
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
@@ -190,9 +205,13 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit a Quantum Barrier.
             node.name, node.arguments
             f(args,arg2)
+
         Args:
             node (ast.FunctionCall): The function call.
             context (_ParseState): The parse state context.
+
+        Returns:
+            Any: The parsed return value.
         """
         func_name = node.name.name
         return getattr(self, func_name)(node, context)
@@ -204,39 +223,54 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.Identifier): The identifier.
             context (_ParseState): The parse state context.
+
+        Returns:
+            Any: The parsed return value.
         """
         if node.name in context.variables:
             return context.variables[node.name]
-        else:
-            return node.name
+        return node.name
 
     def visit_UnaryExpression(self, node: ast.UnaryExpression, context: _ParseState) -> bool:
         """Visit Unary Expression.
             node.op, node.expression
             ~ ! -
+
         Args:
             node (ast.UnaryExpression): The unary expression.
             context (_ParseState): The parse state context.
+
+        Returns:
+            bool: The parsed boolean operator.
+
+        Raises:
+            NotImplementedError: Raised for unsupported boolean operators.
         """
         if node.op == ast.UnaryOperator["-"]:
             return -1 * self.visit(node.expression, context)
-        elif node.op == ast.UnaryOperator["!"]:
+        if node.op == ast.UnaryOperator["!"]:
             return not self.visit(node.expression, context)
-        elif node.op == ast.UnaryOperator["~"]:
+        if node.op == ast.UnaryOperator["~"]:
             return ~self.visit(node.expression, context)
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
-    # flake8: noqa: C901
-    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:
+    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # noqa: C901, PLR0912
         """Visit Binary Expression.
             node.lhs, node.rhs, node.op
             1+2
             a.b
             > < >= <= == != && || | ^ & << >> + - * / % ** .
+
         Args:
             node (ast.BinaryExpression): The binary expression.
             context (_ParseState): The parse state context.
+
+        Raises:
+            NotImplementedError: Raised if the binary operator is not in
+                [> < >= <= == != && || | ^ & << >> + - * / % ** ]
+
+        Returns:
+            Any: The parsed binary operator.
         """
         lhs = self.visit(node.lhs, context)
         rhs = self.visit(node.rhs, context)
@@ -245,102 +279,123 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
         if node.op == op["+"]:
             return lhs + rhs
-        elif node.op == op["-"]:
+        if node.op == op["-"]:
             return lhs - rhs
-        elif node.op == op["*"]:
+        if node.op == op["*"]:
             return lhs * rhs
-        elif node.op == op["/"]:
+        if node.op == op["/"]:
             return lhs / rhs
-        elif node.op == op["%"]:
+        if node.op == op["%"]:
             return lhs % rhs
-        elif node.op == op["**"]:
+        if node.op == op["**"]:
             return lhs**rhs
-        elif node.op == op[">"]:
+        if node.op == op[">"]:
             return lhs > rhs
-        elif node.op == op["<"]:
+        if node.op == op["<"]:
             return lhs < rhs
-        elif node.op == op[">="]:
+        if node.op == op[">="]:
             return lhs >= rhs
-        elif node.op == op["<="]:
+        if node.op == op["<="]:
             return lhs <= rhs
-        elif node.op == op["=="]:
+        if node.op == op["=="]:
             return lhs == rhs
-        elif node.op == op["!="]:
+        if node.op == op["!="]:
             return lhs != rhs
-        elif node.op == op["&&"]:
+        if node.op == op["&&"]:
             return lhs and rhs
-        elif node.op == op["||"]:
+        if node.op == op["||"]:
             return lhs or rhs
-        elif node.op == op["|"]:
+        if node.op == op["|"]:
             return lhs | rhs
-        elif node.op == op["^"]:
+        if node.op == op["^"]:
             return lhs ^ rhs
-        elif node.op == op["&"]:
+        if node.op == op["&"]:
             return lhs & rhs
-        elif node.op == op["<<"]:
+        if node.op == op["<<"]:
             return lhs << rhs
-        elif node.op == op[">>"]:
+        if node.op == op[">>"]:
             return lhs >> rhs
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
-    def visit_ArrayLiteral(self, node: ast.ArrayLiteral, context: _ParseState) -> Any:
+    def visit_ArrayLiteral(self, node: ast.ArrayLiteral, context: _ParseState) -> list[Any]:
         """Visit Array Literal.
             node.values
             {1,2,4}
+
         Args:
             node (ast.ArrayLiteral): The array literal.
             context (_ParseState): The parse state context.
+
+        Returns:
+            list[Any]: The parsed ArrayLiteral.
         """
         return [self.visit(e, context) for e in node.values]
 
-    def visit_IntegerLiteral(self, node: ast.IntegerLiteral, context: _ParseState) -> Any:
+    def visit_IntegerLiteral(self, node: ast.IntegerLiteral, context: _ParseState) -> int:
         """Visit Integer Literal.
             node.value
             1
         Args:
             node (ast.IntegerLiteral): The integer literal.
             context (_ParseState): The parse state context.
+
+        Returns:
+            int: The parsed int value.
         """
         return int(node.value)
 
-    def visit_ImaginaryLiteral(self, node: ast.ImaginaryLiteral, context: _ParseState) -> Any:
+    def visit_ImaginaryLiteral(self, node: ast.ImaginaryLiteral, context: _ParseState) -> complex:
         """Visit Imaginary Number Literal.
             node.value
             1.3im
         Args:
-            node (ast.visit_ImaginaryLiteral): The imaginary number literal.
+            node (ast.ImaginaryLiteral): The imaginary number literal.
             context (_ParseState): The parse state context.
+
+        Returns:
+            complex: The parsed complex value.
         """
         return complex(node.value * 1j)
 
-    def visit_FloatLiteral(self, node: ast.FloatLiteral, context: _ParseState) -> Any:
+    def visit_FloatLiteral(self, node: ast.FloatLiteral, context: _ParseState) -> float:
         """Visit Float Literal.
             node.value
             1.1
         Args:
             node (ast.FloatLiteral): The float literal.
             context (_ParseState): The parse state context.
+
+        Returns:
+            float: The parsed float value.
         """
         return float(node.value)
 
-    def visit_BooleanLiteral(self, node: ast.BooleanLiteral, context: _ParseState) -> Any:
+    def visit_BooleanLiteral(self, node: ast.BooleanLiteral, context: _ParseState) -> bool:
         """Visit Boolean Literal.
             node.value
             true
         Args:
             node (ast.BooleanLiteral): The boolean literal.
             context (_ParseState): The parse state context.
-        """
-        return True if node.value else False
 
-    def visit_DurationLiteral(self, node: ast.DurationLiteral, context: _ParseState) -> Any:
+        Returns:
+            bool: The parsed boolean value.
+        """
+        return bool(node.value)
+
+    def visit_DurationLiteral(self, node: ast.DurationLiteral, context: _ParseState) -> float:
         """Visit Duration Literal.
             node.value, node.unit (node.unit.name, node.unit.value)
             1
         Args:
             node (ast.DurationLiteral): The duration literal.
             context (_ParseState): The parse state context.
+
+        Raises:
+            ValueError: Raised based on time unit not being in `self.TIME_UNIT_TO_EXP`.
+
+        Returns:
+            float: The duration represented as a float
         """
         if node.unit.name not in self.TIME_UNIT_TO_EXP:
             raise ValueError(f"Unexpected duration specified: {node.unit.name}:{node.unit.value}")
@@ -351,6 +406,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_frequency(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_frequency' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -361,6 +417,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def shift_frequency(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'shift_frequency' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -371,6 +428,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_phase(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_phase' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -381,6 +439,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def shift_phase(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'shift_phase' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -392,6 +451,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_scale(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_scale' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -400,29 +460,48 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         value = self.visit(node.arguments[1], context)
         context.frame_data[frame].scale = value
 
-    def capture_v0(self, node: ast.FunctionCall, context: _ParseState) -> None:
-        """A 'capture_v0' Function call.
+    def swap_phases(self, node: ast.FunctionCall, context: _ParseState) -> None:
+        """A 'swap_phases' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
         """
-        pass
+        frame1 = self.visit(node.arguments[0], context)
+        frame2 = self.visit(node.arguments[1], context)
+        phase1 = context.frame_data[frame1].phase
+        phase2 = context.frame_data[frame2].phase
+        context.frame_data[frame1].phase = phase2
+        context.frame_data[frame2].phase = phase1
 
-    def play(self, node: ast.FunctionCall, context: _ParseState) -> None:
-        """A 'play' Function call.
+    def capture_v0(self, node: ast.FunctionCall, context: _ParseState) -> None:
+        """A 'capture_v0' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+        """
+
+    def play(self, node: ast.FunctionCall, context: _ParseState) -> None:
+        """A 'play' Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+
+        Raises:
+            NotImplementedError: Raises if not of type
+                [ast.Identifier, ast.FunctionCall, ast.ArrayLiteral]
         """
         frame_id = self.visit(node.arguments[0], context)
         if isinstance(node.arguments[1], ast.ArrayLiteral):
             amps = self.visit(node.arguments[1], context)
-        elif isinstance(node.arguments[1], (ast.Identifier, ast.FunctionCall)):
+        elif isinstance(node.arguments[1], ast.Identifier | ast.FunctionCall):
             amps = self.visit(node.arguments[1], context)
             if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)
             elif isinstance(amps, str):
-                raise NameError(f"waveform '{amps}' is not defined.")
+                raise NameError(f"waveform '{amps}' is not defined.")  # noqa: TRY004
         else:
             raise NotImplementedError
         frame_data = context.frame_data[frame_id]
@@ -436,9 +515,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def constant(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'constant' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
@@ -447,9 +528,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def gaussian(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'gaussian' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
@@ -458,28 +541,41 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def drag_gaussian(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'drag_gaussian' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
         args = [self.visit(arg, context) for arg in node.arguments]
         return DragGaussianWaveform(*args)
 
+    def erf_square(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
+        """A 'erf_square' Waveform Function call.
+
+        Args:
+            node (ast.FunctionCall): The function call node.
+            context (_ParseState): The parse state.
+
+        Returns:
+            Waveform: The waveform object representing the function call.
+        """
+        args = [self.visit(arg, context) for arg in node.arguments]
+        return ErfSquareWaveform(*args)
+
 
 def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:
-    frame_states = dict()
-    for frameId, frame in frames.items():
-        frame_states[frameId] = _FrameState(
-            frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)
-        )
-    return frame_states
+    return {
+        frameId: _FrameState(frame.port.dt, frame.frequency, frame.phase % (2 * np.pi))
+        for frameId, frame in frames.items()
+    }
 
 
 def _init_qubit_frame_mapping(frames: dict[str, Frame]) -> dict[str, list[str]]:
     mapping = {}
-    for frameId in frames.keys():
+    for frameId in frames:
         if m := (
             re.search(r"q(\d+)_q(\d+)_[a-z_]+", frameId) or re.search(r"[rq](\d+)_[a-z_]+", frameId)
         ):
@@ -500,8 +596,10 @@ def _lcm_floats(*dts: list[float]) -> float:
 
     Args:
         *dts (list[float]): list of time resolutions
-    """
 
+    Returns:
+        float: The LCM of time increments for a list of frames.
+    """
     sample_rates = [round(1 / dt) for dt in dts]
     res_gcd = sample_rates[0]
     for sr in sample_rates[1:]:

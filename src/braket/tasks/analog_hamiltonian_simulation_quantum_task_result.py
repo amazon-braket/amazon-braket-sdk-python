@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 import numpy as np
-
 from braket.task_result import (
     AdditionalMetadata,
     AnalogHamiltonianSimulationTaskResult,
@@ -38,7 +37,7 @@ class ShotResult:
     pre_sequence: np.ndarray = None
     post_sequence: np.ndarray = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: ShotResult) -> bool:
         if isinstance(other, ShotResult):
             return (
                 self.status == other.status
@@ -54,7 +53,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
     additional_metadata: AdditionalMetadata
     measurements: list[ShotResult] = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AnalogHamiltonianSimulationQuantumTaskResult) -> bool:
         if isinstance(other, AnalogHamiltonianSimulationQuantumTaskResult):
             return (
                 self.task_metadata.id == other.task_metadata.id
@@ -116,9 +115,8 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         Returns:
             dict[str, int]: number of times each state configuration is measured.
             Returns None if none of shot measurements are successful.
-            Only succesful shots contribute to the state count.
+            Only successful shots contribute to the state count.
         """
-
         state_counts = Counter()
         states = ["e", "r", "g"]
         for shot in self.measurements:
@@ -127,10 +125,11 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 post = shot.post_sequence
                 # converting presequence and postsequence measurements to state_idx
                 state_idx = [
-                    0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
+                    0 if pre_i == 0 else 1 if post_i == 0 else 2
+                    for pre_i, post_i in zip(pre, post, strict=True)
                 ]
-                state = "".join(map(lambda s_idx: states[s_idx], state_idx))
-                state_counts.update((state,))
+                state = "".join(states[s_idx] for s_idx in state_idx)
+                state_counts.update([state])
 
         return dict(state_counts)
 
@@ -138,9 +137,8 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """Get the average Rydberg state densities from the result
 
         Returns:
-            ndarray: The average densities from the result
+            np.ndarray: The average densities from the result
         """
-
         counts = self.get_counts()
 
         N_ryd, N_ground = [], []
@@ -151,9 +149,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         N_ryd_cnt = np.sum(N_ryd, axis=0)
         N_ground_cnt = np.sum(N_ground, axis=0)
 
-        avg_density = N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
-
-        return avg_density
+        return N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
 
 
 def _equal_sequences(sequence0: np.ndarray, sequence1: np.ndarray) -> bool:

@@ -16,25 +16,26 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.noise import Noise
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
 class MomentType(str, Enum):
-    """
-    The type of moments.
+    """The type of moments.
     GATE: a gate
     NOISE: a noise channel added directly to the circuit
     GATE_NOISE: a gate-based noise channel
     INITIALIZATION_NOISE: a initialization noise channel
     READOUT_NOISE: a readout noise channel
     COMPILER_DIRECTIVE: an instruction to the compiler, external to the quantum program itself
+    MEASURE: a measurement
     """
 
     GATE = "gate"
@@ -44,10 +45,12 @@ class MomentType(str, Enum):
     READOUT_NOISE = "readout_noise"
     COMPILER_DIRECTIVE = "compiler_directive"
     GLOBAL_PHASE = "global_phase"
+    MEASURE = "measure"
 
 
 class MomentsKey(NamedTuple):
     """Key of the Moments mapping.
+
     Args:
         time: moment
         qubits: qubit set
@@ -65,8 +68,7 @@ class MomentsKey(NamedTuple):
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
-    """
-    An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    r"""An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
     core data structure that contains instructions, ordering they are inserted in, and
     time slices when they occur. `Moments` implements `Mapping` and functions the same as
     a read-only dictionary. It is mutable only through the `add()` method.
@@ -77,7 +79,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     method.
 
     Args:
-        instructions (Iterable[Instruction], optional): Instructions to initialize self.
+        instructions (Iterable[Instruction] | None): Instructions to initialize self.
             Default = None.
 
     Examples:
@@ -88,7 +90,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
         ...     print(f"Item {i}")
         ...     print(f"\\tKey: {item[0]}")
         ...     print(f"\\tValue: {item[1]}")
-        ...
         Item 0
             Key: MomentsKey(time=0, qubits=QubitSet([Qubit(0)]))
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(0)]))
@@ -125,9 +126,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     @property
     def qubits(self) -> QubitSet:
-        """
-        QubitSet: Get the qubits used across all of the instructions. The order of qubits is based
-        on the order in which the instructions were added.
+        """QubitSet: Get the qubits used across all of the instructions. The order of qubits is
+        based on the order in which the instructions were added.
 
         Note:
             Don't mutate this object, any changes may impact the behavior of this class and / or
@@ -136,8 +136,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._qubits
 
     def time_slices(self) -> dict[int, list[Instruction]]:
-        """
-        Get instructions keyed by time.
+        """Get instructions keyed by time.
 
         Returns:
             dict[int, list[Instruction]]: Key is the time and value is a list of instructions that
@@ -148,7 +147,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
             every call, with a computational runtime O(N) where N is the number
             of instructions in self.
         """
-
         time_slices = {}
         self.sort_moments()
         for key, instruction in self._moments.items():
@@ -158,11 +156,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(
-        self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
-    ) -> None:
-        """
-        Add one or more instructions to self.
+    def add(self, instructions: Iterable[Instruction] | Instruction, noise_index: int = 0) -> None:
+        """Add one or more instructions to self.
 
         Args:
             instructions (Union[Iterable[Instruction], Instruction]): Instructions to add to self.
@@ -177,31 +172,48 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._add(instruction, noise_index)
 
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
-        operator = instruction.operator
-        if isinstance(operator, CompilerDirective):
-            time = self._update_qubit_times(self._qubits)
-            self._moments[MomentsKey(time, None, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
-            self._depth = time + 1
-            self._time_all_qubits = time
-        elif isinstance(operator, Noise):
-            self.add_noise(instruction)
-        elif isinstance(operator, Gate) and operator.name == "GPhase":
-            time = self._get_qubit_times(self._max_times.keys()) + 1
-            self._number_gphase_in_current_moment += 1
-            key = MomentsKey(
-                time,
-                QubitSet([]),
-                MomentType.GLOBAL_PHASE,
-                0,
-                self._number_gphase_in_current_moment,
-            )
-            self._moments[key] = instruction
-        else:
-            qubit_range = instruction.target.union(instruction.control)
-            time = self._update_qubit_times(qubit_range)
-            self._moments[MomentsKey(time, qubit_range, MomentType.GATE, noise_index)] = instruction
-            self._qubits.update(qubit_range)
-            self._depth = max(self._depth, time + 1)
+        match operator := instruction.operator:
+            case CompilerDirective():
+                qubit_range = instruction.target.union(instruction.control or QubitSet())
+                time = self._handle_compiler_directive(operator, qubit_range)
+                # For barriers without qubits, use empty qubit set for the key
+                key_qubits = (
+                    QubitSet() if operator.name == "Barrier" and not qubit_range else qubit_range
+                )
+                self._moments[MomentsKey(time, key_qubits, MomentType.COMPILER_DIRECTIVE, 0)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = time + 1
+            case Noise():
+                self.add_noise(instruction)
+            case Gate() if operator.name == "GPhase":
+                time = self._get_qubit_times(self._max_times.keys()) + 1
+                self._number_gphase_in_current_moment += 1
+                key = MomentsKey(
+                    time,
+                    QubitSet([]),
+                    MomentType.GLOBAL_PHASE,
+                    0,
+                    self._number_gphase_in_current_moment,
+                )
+                self._moments[key] = instruction
+            case Measure():
+                qubit_range = instruction.target.union(instruction.control)
+                time = self._get_qubit_times(self._max_times.keys()) + 1
+                self._moments[MomentsKey(time, qubit_range, MomentType.MEASURE, noise_index)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = max(self._depth, time + 1)
+            case _:
+                qubit_range = instruction.target.union(instruction.control)
+                time = self._update_qubit_times(qubit_range)
+                self._moments[MomentsKey(time, qubit_range, MomentType.GATE, noise_index)] = (
+                    instruction
+                )
+                self._qubits.update(qubit_range)
+                self._depth = max(self._depth, time + 1)
 
     def _get_qubit_times(self, qubits: QubitSet) -> int:
         return max([self._max_time_for_qubit(qubit) for qubit in qubits] + [self._time_all_qubits])
@@ -218,6 +230,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
     ) -> None:
         """Adds noise to a moment.
+
         Args:
             instruction (Instruction): Instruction to add.
             input_type (str): One of MomentType.
@@ -231,14 +244,13 @@ class Moments(Mapping[MomentsKey, Instruction]):
             time = 0
 
         while MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
-            noise_index = noise_index + 1
+            noise_index += 1
 
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
 
     def sort_moments(self) -> None:
-        """
-        Make the disordered moments in order.
+        """Make the disordered moments in order.
 
         1. Make the readout noise in the end
         2. Make the initialization noise at the beginning
@@ -251,22 +263,27 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_readout_noise = []
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
+        last_measure = self._depth
 
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
-            if key.moment_type == MomentType.READOUT_NOISE:
-                key_readout_noise.append(key)
-            elif key.moment_type == MomentType.INITIALIZATION_NOISE:
-                key_initialization_noise.append(key)
-            else:
-                key_noise.append(key)
+            match key.moment_type:
+                case MomentType.READOUT_NOISE:
+                    key_readout_noise.append(key)
+                case MomentType.INITIALIZATION_NOISE:
+                    key_initialization_noise.append(key)
+                case MomentType.MEASURE:
+                    last_measure = key.time
+                    key_noise.append(key)
+                case _:
+                    key_noise.append(key)
 
         for key in key_initialization_noise:
             sorted_moment[key] = moment_copy[key]
         for key in key_noise:
             sorted_moment[key] = moment_copy[key]
         # find the max time in the circuit and make it the time for readout noise
-        max_time = max(self._depth - 1, 0)
+        max_time = max(last_measure - 1, 0)
 
         for key in key_readout_noise:
             sorted_moment[
@@ -275,12 +292,23 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         self._moments = sorted_moment
 
+    def _handle_compiler_directive(self, operator: CompilerDirective, qubit_range: QubitSet) -> int:
+        """Handle compiler directive and return the time slot."""
+        if operator.name == "Barrier" and not qubit_range:
+            time = self._get_qubit_times(self._qubits) + 1
+            self._time_all_qubits = time
+        else:
+            time = self._update_qubit_times(qubit_range or self._qubits)
+            if operator.name != "Barrier":
+                self._time_all_qubits = time
+        return time
+
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         # -1 if qubit is unoccupied because the first instruction will have an index of 0
         return self._max_times.get(qubit, -1)
 
     #
-    # Implement abstract methods, default to calling selfs underlying dictionary
+    # Implement abstract methods, default to calling `self`'s underlying dictionary
     #
 
     def keys(self) -> KeysView[MomentsKey]:
@@ -293,15 +321,15 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def values(self) -> ValuesView[Instruction]:
         """Return a view of self's instructions.
+
         Returns:
             ValuesView[Instruction]: The (in-order) instructions.
         """
         self.sort_moments()
         return self._moments.values()
 
-    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction:
-        """
-        Get the instruction in self by key.
+    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction | Any | None:
+        """Get the instruction in self by key.
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
@@ -312,7 +340,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._moments.get(key, default)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: MomentsKey):
         return self._moments.__getitem__(key)
 
     def __iter__(self):
@@ -321,19 +349,17 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def __len__(self):
         return self._moments.__len__()
 
-    def __contains__(self, item):
+    def __contains__(self, item: MomentsKey):
         return self._moments.__contains__(item)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Moments):
         if isinstance(other, Moments):
             return self._moments == other._moments
         return NotImplemented
 
-    def __ne__(self, other):
+    def __ne__(self, other: Moments):
         result = self.__eq__(other)
-        if result is not NotImplemented:
-            return not result
-        return NotImplemented
+        return not result if result is not NotImplemented else NotImplemented
 
     def __repr__(self):
         return self._moments.__repr__()

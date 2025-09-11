@@ -10,9 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import io
 import json
 import os
+import textwrap
 from datetime import datetime
 from unittest.mock import Mock, PropertyMock, patch
 from urllib.error import URLError
@@ -20,7 +22,10 @@ from urllib.error import URLError
 import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
+
+from braket.program_sets import ProgramSet
 from common_test_utils import (
+    DM1_ARN,
     DWAVE_ARN,
     IONQ_ARN,
     OQC_ARN,
@@ -35,8 +40,9 @@ from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.aws.queue_information import QueueDepthInfo, QueueType
-from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
+from braket.circuits import Circuit, FreeParameter, Gate, Noise, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.noise_model import GateCriteria, NoiseModel
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -213,7 +219,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Aspen-10",
+    "deviceName": "Ankaa-2",
     "deviceType": "QPU",
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
@@ -359,7 +365,59 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
             "actionType": "braket.ir.jaqcd.program",
             "version": ["1"],
             "supportedOperations": ["H"],
-        }
+        },
+    },
+    "paradigm": {"qubitCount": 30},
+    "deviceParameters": {},
+}
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.simulators.gate_model_simulator_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "version": ["1"],
+            "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
+            "supportedResultTypes": [
+                {
+                    "name": "StateVector",
+                    "observables": ["x", "y", "z"],
+                    "minShots": 0,
+                    "maxShots": 0,
+                },
+            ],
+            "supportedPragmas": [
+                "braket_noise_bit_flip",
+                "braket_noise_depolarizing",
+                "braket_noise_kraus",
+                "braket_noise_pauli_channel",
+                "braket_noise_generalized_amplitude_damping",
+                "braket_noise_amplitude_damping",
+                "braket_noise_phase_flip",
+                "braket_noise_phase_damping",
+                "braket_noise_two_qubit_dephasing",
+                "braket_noise_two_qubit_depolarizing",
+                "braket_unitary_matrix",
+                "braket_result_type_sample",
+                "braket_result_type_expectation",
+                "braket_result_type_variance",
+                "braket_result_type_probability",
+                "braket_result_type_density_matrix",
+            ],
+        },
     },
     "paradigm": {"qubitCount": 30},
     "deviceParameters": {},
@@ -376,6 +434,18 @@ def test_gate_model_sim_schema():
     )
 
 
+MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON
+)
+
+
+def test_gate_model_sim_schema():
+    validate(
+        MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES_JSON,
+        GateModelSimulatorDeviceCapabilities.schema(),
+    )
+
+
 MOCK_GATE_MODEL_SIMULATOR = {
     "deviceName": "SV1",
     "deviceType": "SIMULATOR",
@@ -384,10 +454,28 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
 
+
+MOCK_GATE_MODEL_NOISE_SIMULATOR = {
+    "deviceName": "DM1",
+    "deviceType": "SIMULATOR",
+    "providerName": "provider1",
+    "deviceStatus": "ONLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_NOISE_SIMULATOR_CAPABILITIES.json(),
+}
+
+
 MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
     "amazon-braket-us-test-1-00000000",
     "tasks",
 )
+
+MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU = {
+    "deviceName": "Aspen-10",
+    "deviceType": "QPU",
+    "providerName": "Rigetti",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": {},
+}
 
 
 @pytest.fixture(
@@ -600,6 +688,15 @@ def test_device_refresh_metadata(arn):
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_2, MOCK_GATE_MODEL_QPU_2)
 
 
+def test_get_device_invalid_capabilities(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_INVALID_CAPABILITIES_QPU
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert device is not None
+    assert device.properties is None
+
+
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
         "name": "braket.device_schema.pulse.pulse_device_action_properties",
@@ -756,7 +853,7 @@ def test_gate_calibration_refresh_no_url(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
 
-    assert device.refresh_gate_calibrations() == None
+    assert device.refresh_gate_calibrations() is None
 
 
 @patch("urllib.request.urlopen")
@@ -868,7 +965,7 @@ def test_repr(arn):
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
-    expected = "Device('name': {}, 'arn': {})".format(device.name, device.arn)
+    expected = f"Device('name': {device.name}, 'arn': {device.arn})"
     assert repr(device) == expected
 
 
@@ -979,20 +1076,24 @@ def test_device_non_qpu_region_error(mock_copy_session):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_no_extra(aws_quantum_task_mock, device, circuit):
+def test_run_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
         circuit,
+        s3_destination_folder,
+        AwsDevice.DEFAULT_SHOTS_QPU,
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit):
+def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
         circuit,
+        s3_destination_folder,
+        AwsDevice.DEFAULT_SHOTS_QPU,
         reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
 
@@ -1061,7 +1162,7 @@ def test_run_param_circuit_with_reservation_arn_batch_task(
         43200,
         0.25,
         inputs,
-        None,
+        {},
         reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
 
@@ -1093,6 +1194,7 @@ def test_run_param_circuit_with_inputs_batch_task(
         43200,
         0.25,
         inputs,
+        {},
     )
 
 
@@ -1226,7 +1328,9 @@ def test_batch_circuit_with_task_and_input_mismatch(
     inputs = [{"beta": 0.2}, {"gamma": 0.1}, {"theta": 0.2}]
     circ_1 = Circuit().ry(angle=3, target=0)
     task_specifications = [[circ_1, single_circuit_input], openqasm_program]
-    wrong_number_of_inputs = "Multiple inputs and task specifications must " "be equal in number."
+    wrong_number_of_inputs = (
+        "Multiple inputs, task specifications and gate definitions must be equal in length."
+    )
 
     with pytest.raises(ValueError, match=wrong_number_of_inputs):
         _run_batch_and_assert(
@@ -1241,6 +1345,7 @@ def test_batch_circuit_with_task_and_input_mismatch(
             43200,
             0.25,
             inputs,
+            {},
         )
 
 
@@ -1317,6 +1422,7 @@ def test_run_with_kwargs(aws_quantum_task_mock, device, circuit, s3_destination_
         device,
         circuit,
         s3_destination_folder,
+        shots=AwsDevice.DEFAULT_SHOTS_QPU,
         extra_kwargs={"bar": 1, "baz": 2},
     )
 
@@ -1370,7 +1476,7 @@ def test_run_device_poll_interval_kwargs(
     capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
     capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
     properties = {
-        "deviceName": "Aspen-10",
+        "deviceName": "Ankaa-2",
         "deviceType": "QPU",
         "providerName": "provider1",
         "deviceStatus": "OFFLINE",
@@ -1417,7 +1523,7 @@ def test_run_with_positional_args_and_kwargs(
         86400,
         0.25,
         {},
-        ["foo"],
+        {},
         "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
         None,
         {"bar": 1, "baz": 2},
@@ -1457,6 +1563,7 @@ def test_run_batch_no_extra(
         43200,
         0.25,
         {},
+        {},
     )
 
 
@@ -1482,6 +1589,7 @@ def test_run_batch_with_shots(
         50,
         43200,
         0.25,
+        {},
         {},
     )
 
@@ -1509,6 +1617,7 @@ def test_run_batch_with_max_parallel_and_kwargs(
         43200,
         0.25,
         inputs={"theta": 0.2},
+        gate_definitions={},
         extra_kwargs={"bar": 1, "baz": 2},
     )
 
@@ -1669,6 +1778,16 @@ def test_get_devices(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1679,7 +1798,7 @@ def test_get_devices(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN, OQC_ARN],
         provider_names=["Amazon Braket", "D-Wave", "IonQ", "OQC"],
@@ -1774,6 +1893,16 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
                 "providerName": "OQC",
             }
         ],
+        # eu-north-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
@@ -1783,7 +1912,7 @@ def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2, eu-north-1
     results = AwsDevice.get_devices(
         statuses=["ONLINE"],
         aws_session=aws_session,
@@ -1798,7 +1927,7 @@ def test_get_devices_invalid_order_by():
 
 @patch("braket.aws.aws_device.datetime")
 def test_get_device_availability(mock_utc_now):
-    class Expando(object):
+    class Expando:
         pass
 
     class MockDevice(AwsDevice):
@@ -1806,19 +1935,16 @@ def test_get_device_availability(mock_utc_now):
             self._status = status
             self._properties = Expando()
             self._properties.service = Expando()
-            execution_windows = []
-            for execution_day, window_start_hour, window_end_hour in execution_window_args:
-                execution_windows.append(
-                    DeviceExecutionWindow.parse_raw(
-                        json.dumps(
-                            {
-                                "executionDay": execution_day,
-                                "windowStartHour": window_start_hour,
-                                "windowEndHour": window_end_hour,
-                            }
-                        )
-                    )
+            execution_windows = [
+                DeviceExecutionWindow.parse_raw(
+                    json.dumps({
+                        "executionDay": execution_day,
+                        "windowStartHour": window_start_hour,
+                        "windowEndHour": window_end_hour,
+                    })
                 )
+                for execution_day, window_start_hour, window_end_hour in execution_window_args
+            ]
             self._properties.service.executionWindows = execution_windows
 
     test_sets = (
@@ -1917,7 +2043,7 @@ def test_get_device_availability(mock_utc_now):
     for test_set in test_sets:
         for test_item in test_set["test_items"]:
             test_date = test_item[0]
-            mock_utc_now.utcnow.return_value = test_date
+            mock_utc_now.now.return_value = test_date
 
             # flake8: noqa: C501
             for i in range(len(test_item[1])):
@@ -1930,9 +2056,9 @@ def test_get_device_availability(mock_utc_now):
                 )
                 expected = bool(test_item[1][i])
                 actual = device.is_available
-                assert (
-                    expected == actual
-                ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                assert expected == actual, (
+                    f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+                )
 
 
 @pytest.mark.parametrize(
@@ -1957,7 +2083,7 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
 def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    device = AwsDevice(DWAVE_ARN, mock_session)
+    AwsDevice(DWAVE_ARN, mock_session)
 
 
 def test_parse_calibration_data():
@@ -1998,57 +2124,53 @@ def test_parse_calibration_data():
 @pytest.mark.parametrize(
     "bad_input",
     [
-        (
-            {
-                "gates": {
-                    "0": {
-                        "rx": [
-                            {
-                                "name": "rx",
-                                "qubits": ["0"],
-                                "arguments": ["-1.5707963267948966"],
-                                "calibrations": [
-                                    {
-                                        "name": "incorrect_instr",
-                                        "arguments": [
-                                            {"name": "qubit", "value": "0", "type": "string"}
-                                        ],
-                                    }
-                                ],
-                            }
-                        ]
-                    }
-                },
-                "waveforms": {},
-            }
-        ),
-        (
-            {
-                "gates": {
-                    "0": {
-                        "rx": [
-                            {
-                                "name": "cphaseshift",
-                                "qubits": ["0"],
-                                "arguments": ["-1.5707963267948966"],
-                                "calibrations": [
-                                    {
-                                        "name": "delay",
-                                        "arguments": [
-                                            {"name": "bad_value", "value": "1", "type": "float"},
-                                            {"name": "qubit", "value": None, "type": "string"},
-                                        ],
-                                    }
-                                ],
-                            }
-                        ]
-                    }
-                },
-                "waveforms": {
-                    "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
-                },
-            }
-        ),
+        ({
+            "gates": {
+                "0": {
+                    "rx": [
+                        {
+                            "name": "rx",
+                            "qubits": ["0"],
+                            "arguments": ["-1.5707963267948966"],
+                            "calibrations": [
+                                {
+                                    "name": "incorrect_instr",
+                                    "arguments": [
+                                        {"name": "qubit", "value": "0", "type": "string"}
+                                    ],
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "waveforms": {},
+        }),
+        ({
+            "gates": {
+                "0": {
+                    "rx": [
+                        {
+                            "name": "cphaseshift",
+                            "qubits": ["0"],
+                            "arguments": ["-1.5707963267948966"],
+                            "calibrations": [
+                                {
+                                    "name": "delay",
+                                    "arguments": [
+                                        {"name": "bad_value", "value": "1", "type": "float"},
+                                        {"name": "qubit", "value": None, "type": "string"},
+                                    ],
+                                }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "waveforms": {
+                "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
+            },
+        }),
     ],
 )
 @pytest.mark.xfail(raises=ValueError)
@@ -2070,3 +2192,304 @@ def test_queue_depth(arn):
         quantum_tasks={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
         jobs="0 (3 prioritized job(s) running)",
     )
+
+
+@pytest.fixture
+def noise_model():
+    return (
+        NoiseModel()
+        .add_noise(Noise.BitFlip(0.05), GateCriteria(Gate.H))
+        .add_noise(Noise.TwoQubitDepolarizing(0.10), GateCriteria(Gate.CNot))
+    )
+
+
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_noise_model(aws_quantum_task_mock, aws_session_init, aws_session, noise_model):
+    arn = DM1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
+    device = AwsDevice(arn, noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run(circuit)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_noise_model(
+    aws_quantum_task_mock, aws_session_init, aws_session, noise_model
+):
+    arn = DM1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_NOISE_SIMULATOR
+    device = AwsDevice(arn, noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+    _ = device.run_batch([circuit] * 2)
+
+    expected_circuit = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        bit[2] b;
+        qubit[2] q;
+        h q[0];
+        #pragma braket noise bit_flip(0.05) q[0]
+        cnot q[0], q[1];
+        #pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]
+        b[0] = measure q[0];
+        b[1] = measure q[1];
+        """
+    ).strip()
+
+    expected_circuit = Circuit().h(0).bit_flip(0, 0.05).cnot(0, 1).two_qubit_depolarizing(0, 1, 0.1)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == expected_circuit
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_program_set_default_shots(aws_quantum_task_mock, aws_session_init, aws_session):
+    arn = RIGETTI_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(arn)
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)])
+    _ = device.run(program_set)
+    assert aws_quantum_task_mock.call_args_list[0][0][2] == program_set
+    assert aws_quantum_task_mock.call_args_list[0][0][4] == -1
+
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_attempt_get_emulator_with_simulators(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    error_message = "Creating an emulator from a Braket managed simulator is not supported."
+    with pytest.raises(ValueError, match=error_message):
+        emulator = device.emulator()
+
+
+MOCK_STANDARDIZED_CALIBRATION_JSON_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+        "version": "1",
+    },
+    "oneQubitProperties": {
+        "0": {
+            "T1": {"value": 0.5, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.2, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.99,
+                    "standardError": 1e-2,
+                },
+                {
+                    "fidelityType": {
+                        "name": "SIMULTANEOUS_RANDOMIZED_BENCHMARKING",
+                        "description": None,
+                    },
+                    "fidelity": 0.9934,
+                    "standardError": 0.0065,
+                },
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.958,
+                    "standardError": None,
+                },
+            ],
+        },
+        "1": {
+            "T1": {"value": 0.97, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.234, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.9983,
+                    "standardError": 4e-5,
+                },
+                {
+                    "fidelityType": {
+                        "name": "SIMULTANEOUS_RANDOMIZED_BENCHMARKING",
+                        "description": None,
+                    },
+                    "fidelity": 0.879,
+                    "standardError": 0.00058,
+                },
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.989,
+                    "standardError": None,
+                },
+            ],
+        },
+        "2": {
+            "T1": {"value": 0.8, "standardError": None, "unit": "S"},
+            "T2": {"value": 0.4, "standardError": None, "unit": "S"},
+            "oneQubitFidelity": [
+                {
+                    "fidelityType": {"name": "READOUT", "description": None},
+                    "fidelity": 0.958,
+                    "standardError": None,
+                },
+                {
+                    "fidelityType": {"name": "RANDOMIZED_BENCHMARKING", "description": None},
+                    "fidelity": 0.9983,
+                    "standardError": 4e-5,
+                },
+            ],
+        },
+    },
+    "twoQubitProperties": {
+        "0-1": {
+            "twoQubitGateFidelity": [
+                {
+                    "direction": None,
+                    "gateName": "CZ",
+                    "fidelity": 0.9358,
+                    "standardError": 0.01437,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+                {
+                    "direction": None,
+                    "gateName": "Two_Qubit_Clifford",
+                    "fidelity": 0.9,
+                    "standardError": 0.0237,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+                {
+                    "direction": None,
+                    "gateName": "CPhaseShift",
+                    "fidelity": 0.9,
+                    "standardError": 0.01437,
+                    "fidelityType": {"name": "INTERLEAVED_RANDOMIZED_BENCHMARKING"},
+                },
+            ]
+        }
+    },
+}
+
+
+MOCK_RIGETTI_QPU_CAPABILITIES_1 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
+            }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "version": ["1"],
+            "supportedOperations": ["H", "X", "CNot", "CZ", "Rx", "Ry", "YY"],
+            "supportedResultTypes": [
+                {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
+            ],
+        }
+    },
+    "paradigm": {
+        "qubitCount": 3,
+        "nativeGateSet": ["cz", "prx", "cphaseshift"],
+        "connectivity": {
+            "fullyConnected": False,
+            "connectivityGraph": {"0": ["1", "2"], "1": ["0"], "2": ["0"]},
+        },
+    },
+    "standardized": MOCK_STANDARDIZED_CALIBRATION_JSON_2,
+    "deviceParameters": {},
+}
+
+
+@pytest.fixture
+def rigetti_device_capabilities():
+    return RigettiDeviceCapabilities.parse_obj(MOCK_RIGETTI_QPU_CAPABILITIES_1)
+
+
+MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
+    "amazon-braket-us-test-1-00000000",
+    "tasks",
+)
+
+
+@pytest.fixture
+def mock_rigetti_qpu_device(rigetti_device_capabilities):
+    return {
+        "deviceName": "Ankaa-2",
+        "deviceType": "QPU",
+        "providerName": "Rigetti",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": rigetti_device_capabilities.json(),
+        "deviceQueueInfo": [
+            {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+            {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+            {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+        ],
+    }
+
+
+@pytest.fixture
+def aws_session():
+    _boto_session = Mock()
+    _boto_session.region_name = RIGETTI_REGION
+    _boto_session.profile_name = "test-profile"
+
+    creds = Mock()
+    creds.method = "other"
+    _boto_session.get_credentials.return_value = creds
+
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session._custom_default_bucket = False
+    _aws_session.account_id = "00000000"
+    _aws_session.region = RIGETTI_REGION
+    return _aws_session
+
+
+@pytest.fixture
+def rigetti_device(aws_session, mock_rigetti_qpu_device):
+    def _device():
+        aws_session.get_device.return_value = mock_rigetti_qpu_device
+        aws_session.search_devices.return_value = [mock_rigetti_qpu_device]
+        return AwsDevice(RIGETTI_ARN, aws_session)
+
+    return _device()
+
+
+def test_local_emulator(rigetti_device):
+    emulator = rigetti_device.emulator()
+    emulator_v2 = rigetti_device.emulator()
+    assert emulator == emulator_v2

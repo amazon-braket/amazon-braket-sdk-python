@@ -11,15 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import asyncio
-from typing import Union
+from __future__ import annotations
 
-from braket.tasks import (
-    AnnealingQuantumTaskResult,
-    GateModelQuantumTaskResult,
-    PhotonicModelQuantumTaskResult,
-    QuantumTask,
-)
+import asyncio
+
+from braket.tasks import QuantumTask
+from braket.tasks.quantum_task import TaskResult
 
 
 class LocalQuantumTask(QuantumTask):
@@ -28,17 +25,17 @@ class LocalQuantumTask(QuantumTask):
     Since this class is instantiated with the results, run_async() is unsupported.
     """
 
-    def __init__(
-        self,
-        result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ],
-    ):
+    def __init__(self, result: TaskResult):
         self._id = result.task_metadata.id
         self._result = result
 
     @property
     def id(self) -> str:
+        """Gets the task ID.
+
+        Returns:
+            str: The ID of the task.
+        """
         return str(self._id)
 
     def cancel(self) -> None:
@@ -50,19 +47,24 @@ class LocalQuantumTask(QuantumTask):
         pass
 
     def state(self) -> str:
+        """Gets the state of the task.
+
+        Returns:
+            str: Returns COMPLETED
+        """
         return "COMPLETED"
 
-    def result(
-        self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    def result(self) -> TaskResult:
         return self._result
 
     def async_result(self) -> asyncio.Task:
         """Get the quantum task result asynchronously.
+
+        Raises:
+            NotImplementedError: Asynchronous local simulation unsupported
+
         Returns:
-            Task: Get the quantum task result asynchronously.
+            asyncio.Task: Get the quantum task result asynchronously.
         """
         # TODO: Allow for asynchronous simulation
         raise NotImplementedError("Asynchronous local simulation unsupported")

@@ -18,21 +18,18 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from braket.aws import AwsDevice, AwsSession
+from braket.aws import AwsDevice, AwsDeviceType, AwsSession
 from braket.circuits import Circuit
-from braket.devices import Devices
 from braket.tracking import Tracker
 from braket.tracking.tracker import MIN_SIMULATOR_DURATION
-
-_RESERVATION_ONLY_DEVICES = {Devices.IonQ.Forte1}
 
 
 @pytest.mark.parametrize(
     "qpu",
     [
         "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony",
-        "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-        "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3",
+        "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet",
+        "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2",
     ],
 )
 def test_qpu_tracking(qpu):
@@ -94,24 +91,28 @@ def test_all_devices_price_search():
     tasks = {}
     for region in AwsDevice.REGIONS:
         s = AwsSession(boto3.Session(region_name=region))
-        for device in [device for device in devices if device.arn not in _RESERVATION_ONLY_DEVICES]:
-            try:
-                s.get_device(device.arn)
-
-                # If we are here, device can create tasks in region
-                details = {
-                    "shots": 100,
-                    "device": device.arn,
-                    "billed_duration": MIN_SIMULATOR_DURATION,
-                    "job_task": False,
-                    "status": "COMPLETED",
-                }
-                tasks[f"task:for:{device.name}:{region}"] = details.copy()
-                details["job_task"] = True
-                tasks[f"jobtask:for:{device.name}:{region}"] = details
-            except s.braket_client.exceptions.ResourceNotFoundException:
-                # device does not exist in region, so nothing to test
+        # Skip devices with empty execution windows
+        for device in [device for device in devices if device.properties.service.executionWindows]:
+            if region == "eu-north-1" and device.type == AwsDeviceType.SIMULATOR:
                 pass
+            else:
+                try:
+                    s.get_device(device.arn)
+
+                    # If we are here, device can create tasks in region
+                    details = {
+                        "shots": 100,
+                        "device": device.arn,
+                        "billed_duration": MIN_SIMULATOR_DURATION,
+                        "job_task": False,
+                        "status": "COMPLETED",
+                    }
+                    tasks[f"task:for:{device.name}:{region}"] = details.copy()
+                    details["job_task"] = True
+                    tasks[f"jobtask:for:{device.name}:{region}"] = details
+                except s.braket_client.exceptions.ResourceNotFoundException:
+                    # device does not exist in region, so nothing to test
+                    pass
 
     t = Tracker()
     t._resources = tasks

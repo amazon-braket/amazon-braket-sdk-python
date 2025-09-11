@@ -13,11 +13,11 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, Union
-
-import numpy as np
+from typing import Any, ClassVar
 
 import braket.ir.jaqcd as ir
+import numpy as np
+
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -52,7 +52,7 @@ To add a new Noise implementation:
 
 
 class BitFlip(SingleProbabilisticNoise):
-    """Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
 
@@ -78,7 +78,7 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -96,6 +96,7 @@ class BitFlip(SingleProbabilisticNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -127,9 +128,11 @@ class BitFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
+        """Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -139,8 +142,7 @@ class BitFlip(SingleProbabilisticNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -155,7 +157,7 @@ Noise.register_noise(BitFlip)
 
 
 class PhaseFlip(SingleProbabilisticNoise):
-    """Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
 
@@ -181,7 +183,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -199,6 +201,7 @@ class PhaseFlip(SingleProbabilisticNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -230,9 +233,11 @@ class PhaseFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+    def bind_values(self, **kwargs: FreeParameter | str) -> Noise:
+        """Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -242,8 +247,7 @@ class PhaseFlip(SingleProbabilisticNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -258,7 +262,7 @@ Noise.register_noise(PhaseFlip)
 
 
 class PauliChannel(PauliNoise):
-    """Pauli noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Pauli noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-probX-probY-probZ) \\rho
@@ -302,11 +306,12 @@ class PauliChannel(PauliNoise):
 
     def __init__(
         self,
-        probX: Union[FreeParameterExpression, float],
-        probY: Union[FreeParameterExpression, float],
-        probZ: Union[FreeParameterExpression, float],
+        probX: FreeParameterExpression | float,
+        probY: FreeParameterExpression | float,
+        probZ: FreeParameterExpression | float,
     ):
         """Creates PauliChannel noise.
+
         Args:
             probX (Union[FreeParameterExpression, float]): X rotation probability.
             probY (Union[FreeParameterExpression, float]): Y rotation probability.
@@ -336,6 +341,7 @@ class PauliChannel(PauliNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -376,8 +382,7 @@ class PauliChannel(PauliNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -391,8 +396,7 @@ class PauliChannel(PauliNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -411,7 +415,7 @@ Noise.register_noise(PauliChannel)
 
 
 class Depolarizing(SingleProbabilisticNoise_34):
-    """Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-p) \\rho
@@ -455,7 +459,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -473,6 +477,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -507,8 +512,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -518,8 +522,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -534,7 +537,7 @@ Noise.register_noise(Depolarizing)
 
 
 class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
-    """Two-Qubit Depolarizing noise channel which transforms a
+    r"""Two-Qubit Depolarizing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -581,7 +584,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -605,10 +608,10 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
-
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SX = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         SY = np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -652,8 +655,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -663,8 +665,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -679,7 +680,7 @@ Noise.register_noise(TwoQubitDepolarizing)
 
 
 class TwoQubitDephasing(SingleProbabilisticNoise_34):
-    """Two-Qubit Dephasing noise channel which transforms a
+    r"""Two-Qubit Dephasing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -708,7 +709,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameterExpression, float]):
+    def __init__(self, probability: FreeParameterExpression | float):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -732,6 +733,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -771,8 +773,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -782,8 +783,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -798,7 +798,7 @@ Noise.register_noise(TwoQubitDephasing)
 
 
 class TwoQubitPauliChannel(MultiQubitPauliNoise):
-    """Two-Qubit Pauli noise channel which transforms a
+    r"""Two-Qubit Pauli noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -855,14 +855,14 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
     This noise channel is shown as `PC_2({"pauli_string": probability})` in circuit diagrams.
     """
 
-    _paulis = {
+    _paulis: ClassVar = {
         "I": np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex),
         "X": np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex),
         "Y": np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex),
         "Z": np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex),
     }
     _tensor_products_strings = itertools.product(_paulis.keys(), repeat=2)
-    _names_list = ["".join(x) for x in _tensor_products_strings]
+    _names_list: ClassVar = ["".join(x) for x in _tensor_products_strings]
 
     def __init__(self, probabilities: dict[str, float]):
         super().__init__(
@@ -877,6 +877,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -930,8 +931,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -945,8 +945,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -954,9 +953,10 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        probabilities = dict()
-        for pauli_string, prob in noise["probabilities"].items():
-            probabilities[pauli_string] = _parameter_from_dict(prob)
+        probabilities = {
+            pauli_string: _parameter_from_dict(prob)
+            for pauli_string, prob in noise["probabilities"].items()
+        }
         return TwoQubitPauliChannel(probabilities=probabilities)
 
 
@@ -964,7 +964,7 @@ Noise.register_noise(TwoQubitPauliChannel)
 
 
 class AmplitudeDamping(DampingNoise):
-    """AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
 
@@ -988,7 +988,7 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1006,6 +1006,7 @@ class AmplitudeDamping(DampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1038,8 +1039,7 @@ class AmplitudeDamping(DampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1049,8 +1049,7 @@ class AmplitudeDamping(DampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1065,7 +1064,7 @@ Noise.register_noise(AmplitudeDamping)
 
 
 class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
-    """Generalized AmplitudeDamping noise channel which transforms a
+    r"""Generalized AmplitudeDamping noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
@@ -1105,8 +1104,8 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def __init__(
         self,
-        gamma: Union[FreeParameterExpression, float],
-        probability: Union[FreeParameterExpression, float],
+        gamma: FreeParameterExpression | float,
+        probability: FreeParameterExpression | float,
     ):
         super().__init__(
             gamma=gamma,
@@ -1131,6 +1130,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1164,7 +1164,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             Iterable[Instruction]: `Iterable` of GeneralizedAmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability = 0.9)
+            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability=0.9)
         """
         return [
             Instruction(
@@ -1175,8 +1175,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1188,8 +1187,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1207,7 +1205,7 @@ Noise.register_noise(GeneralizedAmplitudeDamping)
 
 
 class PhaseDamping(DampingNoise):
-    """Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
 
@@ -1233,7 +1231,7 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameterExpression, float]):
+    def __init__(self, gamma: FreeParameterExpression | float):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1251,6 +1249,7 @@ class PhaseDamping(DampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1282,8 +1281,7 @@ class PhaseDamping(DampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1293,8 +1291,7 @@ class PhaseDamping(DampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1311,24 +1308,27 @@ Noise.register_noise(PhaseDamping)
 class Kraus(Noise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
     This noise channel is shown as `NK` in circuit diagrams.
-
-    Args:
-        matrices (Iterable[np.array]): A list of matrices that define a noise
-            channel. These matrices need to satisfy the requirement of CPTP map.
-        display_name (str): Name to be used for an instance of this general noise
-            channel for circuit diagrams. Defaults to `KR`.
-
-    Raises:
-        ValueError: If any matrix in `matrices` is not a two-dimensional square
-            matrix,
-            or has a dimension length which is not a positive exponent of 2,
-            or the `matrices` do not satisfy CPTP condition.
     """
 
     def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):
+        """Inits `Kraus`.
+
+        Args:
+            matrices (Iterable[ndarray]): A list of matrices that define a noise
+                channel. These matrices need to satisfy the requirement of CPTP map.
+            display_name (str): Name to be used for an instance of this general noise
+                channel for circuit diagrams. Defaults to `KR`.
+
+        Raises:
+            ValueError: If any matrix in `matrices` is not a two-dimensional square
+                matrix,
+                or has a dimension length which is not a positive exponent of 2,
+                or the `matrices` do not satisfy CPTP condition.
+
+        """
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
-            if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
+            if int(np.log2(matrix.shape[0])) != int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         self._display_name = display_name
@@ -1347,6 +1347,7 @@ class Kraus(Noise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1354,7 +1355,7 @@ class Kraus(Noise):
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Kraus.construct(
-            targets=[qubit for qubit in target],
+            targets=list(target),
             matrices=Kraus._transform_matrix_to_ir(self._matrices),
         )
 
@@ -1365,7 +1366,7 @@ class Kraus(Noise):
             np.array2string(
                 matrix,
                 separator=", ",
-                formatter={"all": lambda x: format_complex(x)},
+                formatter={"all": format_complex},
             ).replace("\n", "")
             for matrix in self._matrices
         )
@@ -1401,7 +1402,7 @@ class Kraus(Noise):
 
         Examples:
             >>> K0 = np.eye(4) * np.sqrt(0.9)
-            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * np.sqrt(0.1)
+            >>> K1 = np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1)
             >>> circ = Circuit().kraus([1, 0], matrices=[K0, K1])
         """
         if 2 ** len(targets) != matrices[0].shape[0]:
@@ -1414,8 +1415,7 @@ class Kraus(Noise):
         )
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation. Not implemented at this time.
+        """Converts this object into a dictionary representation. Not implemented at this time.
 
         Returns:
             dict: Not implemented at this time..
@@ -1424,8 +1424,7 @@ class Kraus(Noise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1439,11 +1438,8 @@ class Kraus(Noise):
 Noise.register_noise(Kraus)
 
 
-def _ascii_representation(
-    noise: str, parameters: list[Union[FreeParameterExpression, float]]
-) -> str:
-    """
-    Generates a formatted ascii representation of a noise.
+def _ascii_representation(noise: str, parameters: list[FreeParameterExpression | float]) -> str:
+    """Generates a formatted ascii representation of a noise.
 
     Args:
         noise (str): The name of the noise.
@@ -1452,20 +1448,19 @@ def _ascii_representation(
     Returns:
         str: The ascii representation of the noise.
     """
-    param_list = []
-    for param in parameters:
-        param_list.append(
-            str(param) if isinstance(param, FreeParameterExpression) else "{:.2g}".format(param)
-        )
+    param_list = [
+        (str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}")
+        for param in parameters
+    ]
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"
 
 
-def _substitute_value(expr: float, **kwargs) -> Union[FreeParameterExpression, float]:
+def _substitute_value(expr: float, **kwargs) -> FreeParameterExpression | float:
     return expr.subs(kwargs) if isinstance(expr, FreeParameterExpression) else expr
 
 
-def _parameter_from_dict(parameter: Union[dict, float]) -> Union[FreeParameter, float]:
+def _parameter_from_dict(parameter: dict | float) -> FreeParameter | float:
     """Converts a parameter from a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:

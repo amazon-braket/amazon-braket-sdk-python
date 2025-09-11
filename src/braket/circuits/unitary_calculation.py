@@ -14,20 +14,19 @@
 from collections.abc import Iterable
 
 import numpy as np
+from braket.default_simulator.linalg_utils import multiply_matrix
 from scipy.linalg import fractional_matrix_power
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
-from braket.default_simulator.linalg_utils import multiply_matrix
 from braket.registers.qubit_set import QubitSet
 
 
 def calculate_unitary_big_endian(
     instructions: Iterable[Instruction], qubits: QubitSet
 ) -> np.ndarray:
-    """
-    Returns the unitary matrix representation for all the `instructions` on qubits `qubits`.
+    """Returns the unitary matrix representation for all the `instruction`s on qubits `qubits`.
 
     Note:
         The performance of this method degrades with qubit count. It might be slow for

@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
@@ -24,9 +22,9 @@ from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 class DrivingField(Hamiltonian):
     def __init__(
         self,
-        amplitude: Union[Field, TimeSeries],
-        phase: Union[Field, TimeSeries],
-        detuning: Union[Field, TimeSeries],
+        amplitude: Field | TimeSeries,
+        phase: Field | TimeSeries,
+        detuning: Field | TimeSeries,
     ) -> None:
         r"""Creates a Hamiltonian term :math:`H_{drive}` for the driving field
         that coherently transfers atoms from the ground state to the Rydberg state
@@ -104,7 +102,6 @@ class DrivingField(Hamiltonian):
         Returns:
             DrivingField: The stitched DrivingField object.
         """
-
         amplitude = self.amplitude.time_series.stitch(other.amplitude.time_series, boundary)
         detuning = self.detuning.time_series.stitch(other.detuning.time_series, boundary)
         phase = self.phase.time_series.stitch(other.phase.time_series, boundary)
@@ -123,17 +120,23 @@ class DrivingField(Hamiltonian):
         """
         driving_parameters = properties.rydberg.rydbergGlobal
         time_resolution = driving_parameters.timeResolution
+
+        amplitude_value_resolution = driving_parameters.rabiFrequencyResolution
         discretized_amplitude = self.amplitude.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.rabiFrequencyResolution,
+            value_resolution=amplitude_value_resolution,
         )
+
+        phase_value_resolution = driving_parameters.phaseResolution
         discretized_phase = self.phase.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.phaseResolution,
+            value_resolution=phase_value_resolution,
         )
+
+        detuning_value_resolution = driving_parameters.detuningResolution
         discretized_detuning = self.detuning.discretize(
             time_resolution=time_resolution,
-            value_resolution=driving_parameters.detuningResolution,
+            value_resolution=detuning_value_resolution,
         )
         return DrivingField(
             amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
@@ -143,8 +146,7 @@ class DrivingField(Hamiltonian):
     def from_lists(
         times: list[float], amplitudes: list[float], detunings: list[float], phases: list[float]
     ) -> DrivingField:
-        """
-        Builds DrivingField Hamiltonian from lists defining time evolution
+        """Builds DrivingField Hamiltonian from lists defining time evolution
         of Hamiltonian parameters (Rabi frequency, detuning, phase).
         The values of the parameters at each time points are global for all atoms.
 
@@ -153,6 +155,9 @@ class DrivingField(Hamiltonian):
             amplitudes (list[float]): The values of the amplitude
             detunings (list[float]): The values of the detuning
             phases (list[float]): The values of the phase
+
+        Raises:
+            ValueError: If any of the input args length is different from the rest.
 
         Returns:
             DrivingField: DrivingField Hamiltonian.
@@ -168,12 +173,10 @@ class DrivingField(Hamiltonian):
         phase = TimeSeries()
 
         for t, amplitude_value, detuning_value, phase_value in zip(
-            times, amplitudes, detunings, phases
+            times, amplitudes, detunings, phases, strict=True
         ):
             amplitude.put(t, amplitude_value)
             detuning.put(t, detuning_value)
             phase.put(t, phase_value)
 
-        drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
-
-        return drive
+        return DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
