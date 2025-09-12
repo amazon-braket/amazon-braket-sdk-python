@@ -47,7 +47,8 @@ def test_result():
 
 
 def test_cancel():
-    TASK.cancel()
+    with pytest.warns(UserWarning):
+        TASK.cancel()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
