@@ -137,10 +137,7 @@ class MeasuredEntry:
         """
         # TODO: Use program set payload to calculate expectation
         if self._expectation is None:
-            warnings.warn(
-                "No observable was measured",
-                stacklevel=1,
-            )
+            warnings.warn("No observable was measured", stacklevel=1)
         return self._expectation
 
 
