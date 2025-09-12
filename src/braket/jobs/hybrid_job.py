@@ -404,7 +404,7 @@ def _validate_python_version(image_uri: str | None, aws_session: AwsSession | No
 
 
 def _process_dependencies(dependencies: str | Path | list[str], temp_dir: Path) -> None:
-    if isinstance(dependencies, (str, Path)):
+    if isinstance(dependencies, str | Path):
         # requirements file
         shutil.copy(Path(dependencies).resolve(), temp_dir / "requirements.txt")
     else:
@@ -416,7 +416,7 @@ def _process_dependencies(dependencies: str | Path | list[str], temp_dir: Path) 
 class _IncludeModules:
     def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] | None = None):
         modules = modules or []
-        if isinstance(modules, (str, ModuleType)):
+        if isinstance(modules, str | ModuleType):
             modules = [modules]
         self._modules = [
             (importlib.import_module(module) if isinstance(module, str) else module)

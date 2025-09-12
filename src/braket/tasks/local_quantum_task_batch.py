@@ -11,14 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Union
-
-from braket.tasks import (
-    AnnealingQuantumTaskResult,
-    GateModelQuantumTaskResult,
-    PhotonicModelQuantumTaskResult,
-    QuantumTaskBatch,
-)
+from braket.tasks import QuantumTaskBatch
+from braket.tasks.quantum_task import TaskResult
 
 
 class LocalQuantumTaskBatch(QuantumTaskBatch):
@@ -27,23 +21,8 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """
 
-    def __init__(
-        self,
-        results: list[
-            Union[
-                GateModelQuantumTaskResult,
-                AnnealingQuantumTaskResult,
-                PhotonicModelQuantumTaskResult,
-            ]
-        ],
-    ):
+    def __init__(self, results: list[TaskResult]):
         self._results = results
 
-    def results(
-        self,
-    ) -> list[
-        Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ]
-    ]:
+    def results(self) -> list[TaskResult]:
         return self._results

@@ -21,6 +21,7 @@ from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResu
 from braket.tasks.photonic_model_quantum_task_result import (
     PhotonicModelQuantumTaskResult,  # noqa: F401
 )
+from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult  # noqa: F401
 from braket.tasks.quantum_task import QuantumTask  # noqa: F401
 from braket.tasks.quantum_task_batch import QuantumTaskBatch  # noqa: F401
 

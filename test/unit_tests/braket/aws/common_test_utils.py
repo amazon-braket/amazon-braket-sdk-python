@@ -79,9 +79,123 @@ class MockS3:
             "action": {
                 "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
                 "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
-            },
+            }
         },
     })
+
+    MOCK_S3_RESULT_PROGRAM_SET = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.program_set_task_result",
+            "version": "1",
+        },
+        "programResults": [
+            {
+                "braketSchemaHeader": {
+                    "name": "braket.task_result.program_result",
+                    "version": "1",
+                },
+                "executableResults": [
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.task_result.program_set_executable_result",
+                            "version": "1",
+                        },
+                        "measurements": [
+                            [0, 0],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                            [1, 1],
+                            [1, 1],
+                            [1, 1],
+                            [0, 0],
+                            [1, 1],
+                            [0, 0],
+                        ],
+                        "measuredQubits": [0, 1],
+                        "inputsIndex": 0,
+                    },
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.task_result.program_set_executable_failure",
+                            "version": "1",
+                        },
+                        "inputsIndex": 0,
+                        "failureMetadata": {
+                            "failureReason": "QPU was sick, should be good again after getting some sleep",
+                            "retryable": True,
+                            "category": "DEVICE",
+                        },
+                    },
+                ],
+                "source": {
+                    "braketSchemaHeader": {
+                        "name": "braket.ir.openqasm.program",
+                        "version": "1",
+                    },
+                    "source": "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\nh q[0];\ncnot q[0], q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];",  # noqa
+                    "inputs": {"theta": [0.12, 2.1]},
+                },
+                "additionalMetadata": {
+                    "simulatorMetadata": {
+                        "braketSchemaHeader": {
+                            "name": "braket.task_result.simulator_metadata",
+                            "version": "1",
+                        },
+                        "executionDuration": 50,
+                    }
+                },
+            }
+        ],
+        "taskMetadata": {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.program_set_task_metadata",
+                "version": "1",
+            },
+            "id": "arn:aws:braket:us-west-2:667256736152:quantum-task/bfebc86f-e4ed-4d6f-8131-addd1a49d6dc",  # noqa
+            "deviceId": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            "requestedShots": 120,
+            "successfulShots": 100,
+            "programMetadata": [{"executables": [{}]}],
+            "deviceParameters": {
+                "braketSchemaHeader": {
+                    "name": "braket.device_schema.simulators.gate_model_simulator_device_parameters",
+                    "version": "1",
+                },
+                "paradigmParameters": {
+                    "braketSchemaHeader": {
+                        "name": "braket.device_schema.gate_model_parameters",
+                        "version": "1",
+                    },
+                    "qubitCount": 5,
+                    "disableQubitRewiring": False,
+                },
+            },
+            "createdAt": "2024-10-15T19:06:58.986Z",
+            "endedAt": "2024-10-15T19:07:00.382Z",
+            "status": "COMPLETED",
+            "totalFailedExecutables": 1,
+        },
+    })
+
+    MOCK_S3_RESULT_ANNEALING = json.dumps(
+        {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.annealing_task_result",
+                "version": "1",
+            },
+        },
+    )
 
     MOCK_S3_RESULT_ANNEALING = json.dumps({
         "braketSchemaHeader": {

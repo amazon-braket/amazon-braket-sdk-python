@@ -633,13 +633,12 @@ def test_measure_verbatim_box():
         source="\n".join([
             "OPENQASM 3.0;",
             "bit[1] b;",
-            "qubit[2] q;",
             "#pragma braket verbatim",
             "box{",
-            "x q[0];",
-            "x q[1];",
+            "x $0;",
+            "x $1;",
             "}",
-            "b[0] = measure q[0];",
+            "b[0] = measure $0;",
         ]),
         inputs={},
     )
@@ -779,21 +778,53 @@ def test_measure_with_readout_noise():
 
 
 def test_measure_gate_after_with_target_mapping():
-    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    circuit = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .measure([0, 1])
+        .add_instruction(instr, target_mapping={0: 10, 1: 11})
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+    )
+    assert circuit == expected
+
+
+def test_measure_gate_after_with_target_mapping_invalid():
     message = "cannot apply instruction to measured qubits."
     instr = Instruction(Gate.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(
+        Circuit().h(10).cnot(10, 11).measure([10, 11]).add_instruction(
             instr, target_mapping={0: 10, 1: 11}
         )
 
 
 def test_measure_gate_after_with_target():
-    # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
+    instr = Instruction(Gate.CNot(), [0, 1])
+    circuit = Circuit().h(0).cnot(0, 1).measure([0, 1]).add_instruction(instr, target=[10, 11])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+    )
+    assert circuit == expected
+
+
+def test_measure_gate_after_with_target_invalid():
     message = "cannot apply instruction to measured qubits."
     instr = Instruction(Gate.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1]).add_instruction(instr, target=[10, 11])
+        Circuit().h(10).cnot(10, 11).measure([10, 11]).add_instruction(instr, target=[10, 11])
 
 
 def test_measure_gate_after_measurement():
@@ -807,6 +838,19 @@ def test_measure_gate_after_measurement():
         .add_instruction(Instruction(Gate.H(), 2))
     )
     assert circ == expected
+
+
+def test_measure_add_circuit_target_mapping():
+    circuit = Circuit().h(0).cnot(0, 1).measure(0).measure(1)
+    circuit = Circuit().add_circuit(circuit, target_mapping={0: 1, 1: 0})
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [1, 0]))
+        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(Measure(), 0))
+    )
+    assert circuit == expected
 
 
 def test_to_ir_with_measure():
@@ -877,6 +921,55 @@ def test_from_ir_round_trip_transformation():
 
     assert Circuit.from_ir(ir) == Circuit.from_ir(circuit.to_ir("OPENQASM"))
     assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
+
+
+def test_from_ir_with_verbatim_box():
+    ir = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "#pragma braket verbatim",
+            "box {",
+            "  h $0;",
+            "  cnot $0, $1;",
+            "}",
+        ]),
+        inputs={},
+    )
+
+    verbatim_subcirc = Circuit().h(0).cnot(0, 1)
+    expected_circ = Circuit().add_verbatim_box(verbatim_subcirc)
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circ
+
+
+def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
+    ir = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "qubit[2] q;",
+            "bit[2] c;",
+            # Non-verbatim instructions
+            "h q[0];",
+            "cnot q[0], q[1];",
+            # Verbatim block
+            "#pragma braket verbatim",
+            "box {",
+            "  h $0;",
+            "  cnot $0, $1;",
+            "}",
+            "c[0] = measure $0;",
+            "c[1] = measure $1;",
+        ]),
+        inputs={},
+    )
+
+    verbatim_subcirc = Circuit().h(0).cnot(0, 1)
+    expected_circ = Circuit().h(0).cnot(0, 1)
+    expected_circ.add_verbatim_box(verbatim_subcirc)
+    expected_circ.measure(0)
+    expected_circ.measure(1)
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circ
 
 
 def test_add_with_instruction_with_default(cnot_instr):
@@ -1190,7 +1283,6 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
             OpenQasmProgram(
                 source="\n".join([
                     "OPENQASM 3.0;",
-                    "qubit[5] q;",
                     "cal {",
                     "    waveform drag_gauss_wf = drag_gaussian"
                     + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -1203,10 +1295,10 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                     "    set_frequency(predefined_frame_1, 6000000.0);",
                     "    play(predefined_frame_1, drag_gauss_wf);",
                     "}",
-                    "rx(0.15) q[0];",
-                    "rx(0.3) q[4];",
-                    "#pragma braket noise bit_flip(0.2) q[3]",
-                    "#pragma braket result expectation i(q[0])",
+                    "rx(0.15) $0;",
+                    "rx(0.3) $4;",
+                    "#pragma braket noise bit_flip(0.2) $3",
+                    "#pragma braket result expectation i($0)",
                 ]),
                 inputs={},
             ),
@@ -3497,3 +3589,50 @@ def test_from_ir_round_trip_transformation_with_targeted_measurements():
 
     assert Circuit.from_ir(ir) == Circuit.from_ir(circuit.to_ir("OPENQASM"))
     assert circuit.to_ir("OPENQASM") == Circuit.from_ir(ir).to_ir("OPENQASM")
+
+
+def test_barrier_specific_qubits():
+    circ = Circuit().barrier([0, 1, 2])
+    assert len(circ.instructions) == 1
+    instr = circ.instructions[0]
+    assert isinstance(instr.operator, compiler_directives.Barrier)
+    assert instr.target == QubitSet([0, 1, 2])
+    assert instr.operator.qubit_indices == [0, 1, 2]
+    assert circ.qubits_frozen is True
+
+
+def test_barrier_all_qubits():
+    circ = Circuit().h(0).h(1).barrier()
+    assert len(circ.instructions) == 3
+    barrier_instr = circ.instructions[2]
+    assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
+    assert barrier_instr.target == QubitSet([0, 1])
+
+
+def test_barrier_empty_circuit():
+    circ = Circuit().barrier()
+    assert len(circ.instructions) == 0  # No barrier added to empty circuit
+
+
+def test_barrier_none_target():
+    circ = Circuit().h(0).h(2).barrier(None)
+    barrier_instr = circ.instructions[2]
+    assert barrier_instr.target == QubitSet([0, 2])
+
+
+def test_barrier_openqasm_export_specific_qubits():
+    circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
+    qasm = circ.to_ir(IRType.OPENQASM).source
+    assert "barrier q[0], q[1];" in qasm
+
+
+def test_barrier_openqasm_export_all_qubits():
+    circ = Circuit().h(0).h(1).barrier().cnot(0, 1)
+    qasm = circ.to_ir(IRType.OPENQASM).source
+    assert "barrier q[0], q[1];" in qasm
+
+
+def test_barrier_jaqcd_export_fails():
+    circ = Circuit().h(0).barrier([0, 1])
+    with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):
+        circ.to_ir(IRType.JAQCD)

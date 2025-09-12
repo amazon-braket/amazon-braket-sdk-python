@@ -23,6 +23,7 @@ class Framework(str, Enum):
     BASE = "BASE"
     PL_TENSORFLOW = "PL_TENSORFLOW"
     PL_PYTORCH = "PL_PYTORCH"
+    CUDAQ = "CUDAQ"
 
 
 def built_in_images(region: str) -> set[str]:

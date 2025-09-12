@@ -574,3 +574,13 @@ def test_apply_readout_noise_result_type_only():
     # Also test that result types on other qubits are not affected
     for instr in noisy_circuit.instructions:
         assert not (isinstance(instr.operator, BitFlip) and instr.target == [1])
+
+
+def test_measurecriteria_for_circuit_with_observable_resulttype():
+    noise_model = NoiseModel()
+    noise_model.add_noise(BitFlip(0.1), MeasureCriteria(qubits=[0]))
+
+    circ = Circuit().h(0).sample(observable=Observable.Z())
+    noisy_circuit = noise_model.apply(circ)
+
+    assert noisy_circuit == circ  # no effect

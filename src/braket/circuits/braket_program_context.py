@@ -12,9 +12,9 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional, Union
 
 import numpy as np
+from braket.default_simulator.openqasm.interpreter import VerbatimBoxDelimiter
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
@@ -25,6 +25,7 @@ from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
+    COMPILER_DIRECTIVES,
     braket_result_to_result_type,
     one_prob_noise_map,
 )
@@ -32,7 +33,7 @@ from braket.parametric import FreeParameterExpression
 
 
 class BraketProgramContext(AbstractProgramContext):
-    def __init__(self, circuit: Optional[Circuit] = None):
+    def __init__(self, circuit: Circuit | None = None):
         """Inits a `BraketProgramContext`.
 
         Args:
@@ -66,8 +67,7 @@ class BraketProgramContext(AbstractProgramContext):
             target (tuple[int]): Unused
             phase_value (float): The phase value to be applied
         """
-        instruction = Instruction(BRAKET_GATES["gphase"](phase_value))
-        self._circuit.add_instruction(instruction)
+        self._circuit.gphase(phase_value)
 
     def add_gate_instruction(
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
@@ -143,9 +143,7 @@ class BraketProgramContext(AbstractProgramContext):
         """
         self._circuit.add_result_type(braket_result_to_result_type(result))
 
-    def handle_parameter_value(
-        self, value: Union[float, Expr]
-    ) -> Union[float, FreeParameterExpression]:
+    def handle_parameter_value(self, value: float | Expr) -> float | FreeParameterExpression:
         """Convert parameter value to required format.
 
         Args:
@@ -163,7 +161,7 @@ class BraketProgramContext(AbstractProgramContext):
         return value
 
     def add_measure(
-        self, target: tuple[int], classical_targets: Optional[Iterable[int]] = None
+        self, target: tuple[int], classical_targets: Iterable[int] | None = None
     ) -> None:
         """Add a measure instruction to the circuit
 
@@ -176,3 +174,6 @@ class BraketProgramContext(AbstractProgramContext):
             index = classical_targets[iter] if classical_targets else iter
             instruction = Instruction(Measure(index=index), qubit)
             self._circuit.add_instruction(instruction)
+
+    def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
+        self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))

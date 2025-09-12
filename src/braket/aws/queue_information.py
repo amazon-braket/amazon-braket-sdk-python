@@ -13,7 +13,6 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class QueueType(str, Enum):
@@ -59,8 +58,8 @@ class QuantumTaskQueueInfo:
     """
 
     queue_type: QueueType
-    queue_position: Optional[str] = None
-    message: Optional[str] = None
+    queue_position: str | None = None
+    message: str | None = None
 
 
 @dataclass
@@ -77,5 +76,5 @@ class HybridJobQueueInfo:
             if 'queue_position' is None. Default: None.
     """
 
-    queue_position: Optional[str] = None
-    message: Optional[str] = None
+    queue_position: str | None = None
+    message: str | None = None

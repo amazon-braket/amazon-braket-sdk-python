@@ -29,6 +29,7 @@ class Devices:
 
     class _IQM(str, Enum):
         Garnet = "arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
+        Emerald = "arn:aws:braket:eu-north-1::device/qpu/iqm/Emerald"
 
     class _IonQ(str, Enum):
         _Harmony = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"

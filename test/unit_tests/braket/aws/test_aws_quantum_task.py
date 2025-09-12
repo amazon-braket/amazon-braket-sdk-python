@@ -19,6 +19,8 @@ import warnings
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from botocore.exceptions import ClientError
+
 from common_test_utils import MockS3
 from jsonschema import validate
 
@@ -49,17 +51,22 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation.debias import Debias
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.parametric import FreeParameter
+from braket.program_sets import CircuitBinding, ProgramSet
 from braket.pulse import Frame, Port, PulseSequence
+from braket.schema_common import BraketSchemaBase
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
 )
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
 IONQ_ARN = "device/qpu/ionq"
+IQM_ARN = "device/qpu/iqm"
 RIGETTI_ARN = "device/qpu/rigetti"
 OQC_ARN = "device/qpu/oqc"
 SIMULATOR_ARN = "device/quantum-simulator"
@@ -355,6 +362,25 @@ def test_result_circuit(circuit_task):
 
     expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
     assert circuit_task.result() == expected
+
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_program_set(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+
+    expected = ProgramSetQuantumTaskResult.from_object(
+        BraketSchemaBase.parse_raw_schema(MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+    )
+    actual = circuit_task.result()
+    assert expected.task_metadata == actual.task_metadata
+    assert expected.programs == actual.programs
+    assert expected.num_executables == actual.num_executables
 
     s3_bucket = circuit_task.metadata()["outputS3Bucket"]
     s3_object_key = circuit_task.metadata()["outputS3Directory"]
@@ -921,6 +947,115 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, 0)
+
+
+def test_create_program_set(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1]) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    aws_session.create_quantum_task.return_value = arn
+    shots = 300
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.to_ir().json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_program_set_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1], 100) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    aws_session.create_quantum_task.return_value = arn
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.to_ir().json(),
+        S3_TARGET,
+        program_set.total_shots,
+    )
+
+
+def test_create_program_set_invalid_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1]) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    with pytest.raises(ValueError):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+
+def test_create_program_set_client_error(aws_session, arn):
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)], 100)
+    aws_session.create_quantum_task.side_effect = ClientError(
+        {
+            "Error": {"Code": "ValidationException", "Message": "bar"},
+            "message": "baz",
+            "programSetValidationFailures": [{"programIndex": 0, "errors": ["qux"]}],
+        },
+        "foo",
+    )
+    with pytest.raises(
+        ClientError, match="Rerun the task and catch the exception for more details"
+    ):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+
+def test_create_program_set_client_error_no_program_set_validation_failures(aws_session, arn):
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)], 100)
+    aws_session.create_quantum_task.side_effect = ClientError(
+        {
+            "Error": {"Code": "ValidationException", "Message": "bar"},
+            "message": "baz",
+        },
+        "foo",
+    )
+    try:
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+    except ClientError as e:
+        assert "Rerun the task" not in e.response["message"]
+
+
+def test_create_ir_program_set(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = (
+        ProgramSet([circ1], 100)
+        + ProgramSet(CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}]))
+    ).to_ir()
+    aws_session.create_quantum_task.return_value = arn
+    shots = 30
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_ir_program_set_invalid_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = (
+        ProgramSet([circ1], 100)
+        + ProgramSet(CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}]))
+    ).to_ir()
+    with pytest.raises(ValueError):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
 
 
 @pytest.mark.parametrize(

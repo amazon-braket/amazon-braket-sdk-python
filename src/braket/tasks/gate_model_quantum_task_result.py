@@ -30,8 +30,17 @@ from braket.task_result import (
     TaskMetadata,
 )
 
-from braket.circuits import Observable, ResultType, StandardObservable
-from braket.circuits.observables import TensorProduct, observable_from_ir
+from braket.circuits import Observable, ResultType
+from braket.circuits.observables import observable_from_ir
+from braket.tasks.measurement_utils import (
+    expectation_from_measurements,
+    measurement_counts_from_measurements,
+    measurement_probabilities_from_measurement_counts,
+    measurements_base_10,
+    measurements_from_measurement_probabilities,
+    samples_from_measurements,
+    selected_measurements,
+)
 
 T = TypeVar("T")
 
@@ -162,10 +171,7 @@ class GateModelQuantumTaskResult:
             Counter: A Counter of measurements. Key is the measurements in a big endian binary
             string. Value is the number of times that measurement occurred.
         """
-        bitstrings = [
-            "".join([str(element) for element in measurements[j]]) for j in range(len(measurements))
-        ]
-        return Counter(bitstrings)
+        return measurement_counts_from_measurements(measurements)
 
     @staticmethod
     def measurement_probabilities_from_measurement_counts(
@@ -182,9 +188,7 @@ class GateModelQuantumTaskResult:
             dict[str, float]: A dictionary of probabilistic results. Key is the measurements
             in a big endian binary string. Value is the probability the measurement occurred.
         """
-        shots = sum(measurement_counts.values())
-
-        return {key: count / shots for key, count in measurement_counts.items()}
+        return measurement_probabilities_from_measurement_counts(measurement_counts)
 
     @staticmethod
     def measurements_from_measurement_probabilities(
@@ -203,12 +207,7 @@ class GateModelQuantumTaskResult:
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
         """
-        measurements_list = []
-        for bitstring, prob in measurement_probabilities.items():
-            measurement = list(bitstring)
-            individual_measurement_list = [measurement] * round(prob * shots)
-            measurements_list.extend(individual_measurement_list)
-        return np.asarray(measurements_list, dtype=int)
+        return measurements_from_measurement_probabilities(measurement_probabilities, shots)
 
     @staticmethod
     def from_object(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
@@ -342,15 +341,14 @@ class GateModelQuantumTaskResult:
         """
         if gate_model_task_result.resultTypes:
             for result_type in gate_model_task_result.resultTypes:
-                type = result_type.type.type
-                if type == "amplitude":
-                    for state in result_type.value:
-                        result_type.value[state] = complex(*result_type.value[state])
-
-                elif type == "probability":
-                    result_type.value = np.array(result_type.value)
-                elif type == "statevector":
-                    result_type.value = np.array(list(starmap(complex, result_type.value)))
+                match result_type.type.type:
+                    case "amplitude":
+                        for state in result_type.value:
+                            result_type.value[state] = complex(*result_type.value[state])
+                    case "probability":
+                        result_type.value = np.array(result_type.value)
+                    case "statevector":
+                        result_type.value = np.array(list(starmap(complex, result_type.value)))
 
     @staticmethod
     def _calculate_result_types(
@@ -364,53 +362,43 @@ class GateModelQuantumTaskResult:
             ir_observable = result_type.get("observable")
             observable = observable_from_ir(ir_observable) if ir_observable else None
             targets = result_type.get("targets")
-            rt_type = result_type["type"]
-            if rt_type == "probability":
-                value = GateModelQuantumTaskResult._probability_from_measurements(
-                    measurements, measured_qubits, targets
-                )
-                casted_result_type = Probability(targets=targets)
-            elif rt_type == "sample":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    GateModelQuantumTaskResult._samples_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Sample(targets=targets, observable=ir_observable)
-            elif rt_type == "variance":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    GateModelQuantumTaskResult._variance_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Variance(targets=targets, observable=ir_observable)
-            elif rt_type == "expectation":
-                value = GateModelQuantumTaskResult._calculate_for_targets(
-                    GateModelQuantumTaskResult._expectation_from_measurements,
-                    measurements,
-                    measured_qubits,
-                    observable,
-                    targets,
-                )
-                casted_result_type = Expectation(targets=targets, observable=ir_observable)
-            else:
-                raise ValueError(f"Unknown result type {rt_type}")
+            match rt_type := result_type["type"]:
+                case "probability":
+                    value = GateModelQuantumTaskResult._probability_from_measurements(
+                        measurements, measured_qubits, targets
+                    )
+                    casted_result_type = Probability(targets=targets)
+                case "sample":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        samples_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Sample(targets=targets, observable=ir_observable)
+                case "variance":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        GateModelQuantumTaskResult._variance_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Variance(targets=targets, observable=ir_observable)
+                case "expectation":
+                    value = GateModelQuantumTaskResult._calculate_for_targets(
+                        expectation_from_measurements,
+                        measurements,
+                        measured_qubits,
+                        observable,
+                        targets,
+                    )
+                    casted_result_type = Expectation(targets=targets, observable=ir_observable)
+                case _:
+                    raise ValueError(f"Unknown result type {rt_type}")
             result_types.append(ResultTypeValue.construct(type=casted_result_type, value=value))
         return result_types
-
-    @staticmethod
-    def _selected_measurements(
-        measurements: np.ndarray, measured_qubits: list[int], targets: list[int] | None
-    ) -> np.ndarray:
-        if targets is not None and targets != measured_qubits:
-            # Only some qubits targeted
-            columns = [measured_qubits.index(t) for t in targets]
-            measurements = measurements[:, columns]
-        return measurements
 
     @staticmethod
     def _calculate_for_targets(
@@ -428,21 +416,13 @@ class GateModelQuantumTaskResult:
         ]
 
     @staticmethod
-    def _measurements_base_10(measurements: np.ndarray) -> np.ndarray:
-        # convert samples from a list of 0, 1 integers, to base 10 representation
-        two_powers = 2 ** np.arange(measurements.shape[-1])[::-1]  # 2^(n-1), ..., 2, 1
-        return measurements @ two_powers
-
-    @staticmethod
     def _probability_from_measurements(
         measurements: np.ndarray, measured_qubits: list[int], targets: list[int] | None
     ) -> np.ndarray:
-        measurements = GateModelQuantumTaskResult._selected_measurements(
-            measurements, measured_qubits, targets
-        )
+        measurements = selected_measurements(measurements, measured_qubits, targets)
         shots, num_measured_qubits = measurements.shape
         # convert measurements from a list of 0, 1 integers, to base 10 representation
-        indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
+        indices = measurements_base_10(measurements)
 
         # count the basis state occurrences, and construct the probability vector
         basis_states, counts = np.unique(indices, return_counts=True)
@@ -457,42 +437,8 @@ class GateModelQuantumTaskResult:
         observable: Observable,
         targets: list[int],
     ) -> float:
-        samples = GateModelQuantumTaskResult._samples_from_measurements(
-            measurements, measured_qubits, observable, targets
-        )
+        samples = samples_from_measurements(measurements, measured_qubits, observable, targets)
         return np.var(samples)
-
-    @staticmethod
-    def _expectation_from_measurements(
-        measurements: np.ndarray,
-        measured_qubits: list[int],
-        observable: Observable,
-        targets: list[int],
-    ) -> float:
-        samples = GateModelQuantumTaskResult._samples_from_measurements(
-            measurements, measured_qubits, observable, targets
-        )
-        return np.mean(samples)
-
-    @staticmethod
-    def _samples_from_measurements(
-        measurements: np.ndarray,
-        measured_qubits: list[int],
-        observable: Observable,
-        targets: list[int],
-    ) -> np.ndarray:
-        measurements = GateModelQuantumTaskResult._selected_measurements(
-            measurements, measured_qubits, targets
-        )
-        if isinstance(observable, StandardObservable):
-            # Process samples for observables with eigenvalues {1, -1}
-            return 1 - 2 * measurements.flatten()
-        # Replace the basis state in the computational basis with the correct eigenvalue.
-        # Extract only the columns of the basis samples required based on ``targets``.
-        indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
-        if isinstance(observable, TensorProduct):
-            return np.array([observable.eigenvalue(index).real for index in indices])
-        return observable.eigenvalues[indices].real
 
     @staticmethod
     def _result_type_hash(rt_type: dict) -> str:
