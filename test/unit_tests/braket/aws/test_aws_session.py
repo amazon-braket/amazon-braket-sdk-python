@@ -999,7 +999,7 @@ def test_account_id_idempotency(aws_session, account_id):
 
 
 def test_upload_local_data(aws_session):
-    with tempfile.TemporaryDirectory(dir=os.getcwd()) as temp_dir:
+    with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
 
         Path("input-dir", "pref-dir", "sub-pref-dir").mkdir(parents=True)
@@ -1031,7 +1031,7 @@ def test_upload_local_data(aws_session):
 
 
 def test_upload_local_data_absolute(aws_session):
-    with tempfile.TemporaryDirectory(dir=os.getcwd()) as temp_dir:
+    with tempfile.TemporaryDirectory() as temp_dir:
         Path(temp_dir, "input-dir", "pref-dir", "sub-pref-dir").mkdir(parents=True)
         Path(temp_dir, "input-dir", "not-pref-dir").mkdir()
 
