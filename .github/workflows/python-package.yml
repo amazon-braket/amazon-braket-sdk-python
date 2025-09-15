@@ -34,7 +34,11 @@ jobs:
       run: |
         pip install tox
     - name: Run unit tests
+      shell: bash
       run: |
+        export TMPDIR=${{ runner.temp }}
+        export TEMP=${{ runner.temp }}
+        export TMP=${{ runner.temp }}
         tox -e unit-tests
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
