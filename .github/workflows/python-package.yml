@@ -25,14 +25,13 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-    # Ensure that the runner can read/write from the temp folder
-    - name: Set TEMP to D:\Temp for Windows runners
+    - name: Set custom temp directory
+      shell: pwsh
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          mkdir "D:\\Temp"
-          echo "TEMP=D:\\Temp" >> $env:GITHUB_ENV
-        fi
-      shell: bash
+        $env:TMP = $env:RUNNER_TEMP
+        $env:TEMP = $env:RUNNER_TEMP
+        Write-Host "TMP is set to: $env:TMP"
+        Write-Host "TEMP is set to: $env:TEMP"
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
