@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.3 (2025-09-15)
+
+### Bug Fixes and Other Changes
+
+ * Remove throw from local task cancellation
+
 ## v1.102.2 (2025-09-11)
 
 ### Bug Fixes and Other Changes
