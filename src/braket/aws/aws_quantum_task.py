@@ -189,6 +189,34 @@ class AwsQuantumTask(QuantumTask):
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
 
+        context_device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        context_reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
+    
+        final_reservation_arn = None
+
+        if reservation_arn:
+            if context_reservation_arn:
+                warnings.warn(
+                    "A reservation ARN was passed to 'create', but it is being overridden "
+                    "by a 'DirectReservation' context. If this was not intended, please review your "
+                    "reservation ARN settings or the context in which 'create' is called.",
+                    stacklevel=2,
+                )
+            final_reservation_arn = reservation_arn
+        
+        if context_device_arn == device_arn and context_reservation_arn:
+            final_reservation_arn = context_reservation_arn
+    
+        if final_reservation_arn:
+            create_task_kwargs.update({
+                "associations": [
+                    {
+                        "arn": final_reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
+            })
+
         if reservation_arn:
             create_task_kwargs.update({
                 "associations": [
