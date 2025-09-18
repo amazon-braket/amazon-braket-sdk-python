@@ -316,6 +316,20 @@ def test_state(quantum_task):
     _mock_metadata(quantum_task._aws_session, state_4)
     assert quantum_task.state() == state_4
 
+    state_5 = "FAILED"
+    quantum_task._aws_session.get_quantum_task.return_value = {
+        "status": state_5,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "2",
+            "queuePriority": "Normal",
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
+    assert quantum_task.state() == state_5
+
 
 def test_cancel(quantum_task):
     future = quantum_task.async_result()
@@ -1411,6 +1425,7 @@ def _mock_metadata(aws_session, state):
                 "queuePriority": "Normal",
                 "message": message,
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
     else:
         aws_session.get_quantum_task.return_value = {
@@ -1422,6 +1437,7 @@ def _mock_metadata(aws_session, state):
                 "position": "2",
                 "queuePriority": "Normal",
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
 
 
