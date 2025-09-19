@@ -12,7 +12,7 @@ jobs:
     name: Build and publish distribution to PyPi
     runs-on: ubuntu-latest
     environment:
-      name: release
+      name: pypi
       url: https://pypi.org/p/amazon-braket-sdk
     permissions:
       id-token: write
