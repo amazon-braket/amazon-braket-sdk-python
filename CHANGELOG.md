@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.4 (2025-09-19)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets
+
 ## v1.102.3 (2025-09-15)
 
 ### Bug Fixes and Other Changes
