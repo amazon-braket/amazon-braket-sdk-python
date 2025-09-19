@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build-and-publish:
-    name: Build and publish distribution to PyPi
+    name: Build and publish distribution to PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
