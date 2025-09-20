@@ -29,3 +29,6 @@ __pycache__/
 /venv
 /dist
 /model.tar.gz
+
+.venv/
+
