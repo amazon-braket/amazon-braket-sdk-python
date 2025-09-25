@@ -1,0 +1,28 @@
+<div class="languages">
+  {{site.t[page.lang].name}}
+  <div class="others">
+    <a href="{{site.baseurl}}/">
+      <p class="language-link">
+        English
+      </p>
+    </a>
+    {% for lang in site.t %}
+    {% if lang[0] != "en" %}
+    <a href="{{site.baseurl}}/{{lang[0]}}">
+      <p class="language-link">
+        {{ lang[1]["name"] }}
+      </p>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div id="top">
+  <div id="title">
+    <h1>{{ site.t[page.lang]["fast-track"] }}</h1>
+  </div>
+  <!-- <img src="{{site.baseurl}}/braket.svg" alt="Amazon Braket" height="100"> -->
+</div>
+
+<link rel="shortcut icon" type="image/x-icon" href="favicon.svg">
