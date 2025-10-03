@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.5 (2025-10-03)
+
+### Bug Fixes and Other Changes
+
+ * ensure gate_matrix dtype is complex for unitary matrices
+
 ## v1.102.4 (2025-09-19)
 
 ### Bug Fixes and Other Changes
