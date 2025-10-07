@@ -31,7 +31,7 @@ from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import PulseDeviceActionProperties
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 from braket.schema_common import BraketSchemaBase
-from networkx import DiGraph, complete_graph, from_edgelist
+from networkx import DiGraph, complete_graph, from_dict_of_lists, from_edgelist, relabel_nodes
 
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
@@ -520,12 +520,10 @@ class AwsDevice(Device):
                 return complete_graph(
                     int(self.properties.paradigm.qubitCount), create_using=DiGraph()
                 )
-            adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
-            edges = []
-            for item in adjacency_lists.items():
-                i = item[0]
-                edges.extend([(int(i), int(j)) for j in item[1]])
-            return from_edgelist(edges, create_using=DiGraph())
+            g = from_dict_of_lists(
+                self.properties.paradigm.connectivity.connectivityGraph, create_using=DiGraph()
+            )
+            return relabel_nodes(g, {n: int(n) for n in g.nodes})
         if hasattr(self.properties, "provider") and isinstance(
             self.properties.provider, DwaveProviderProperties
         ):
