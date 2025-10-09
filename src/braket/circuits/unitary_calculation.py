@@ -67,6 +67,8 @@ def calculate_unitary_big_endian(
         else:
             gate_matrix = fractional_matrix_power(base_gate_matrix, instruction.power)
 
+        gate_matrix = np.asarray(gate_matrix, dtype=complex)
+
         unitary = multiply_matrix(
             unitary,
             gate_matrix,
