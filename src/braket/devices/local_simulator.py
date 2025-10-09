@@ -56,7 +56,7 @@ else:
 _simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
 
 
-class LocalSimulator(Device):
+class LocalSimulator(Device[LocalQuantumTask]):
     """A simulator meant to run directly on the user's machine.
 
     This class wraps a BraketSimulator object so that it can be run and returns

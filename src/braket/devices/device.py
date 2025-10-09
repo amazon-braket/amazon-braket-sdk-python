@@ -15,18 +15,18 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Generic
 
 from braket.device_schema import DeviceActionType
 
 from braket.circuits import Circuit, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
-from braket.tasks.quantum_task import QuantumTask, TaskSpecification
+from braket.tasks.quantum_task import QuantumTask, QuantumTaskType, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class Device(ABC):
+class Device(ABC, Generic[QuantumTaskType]):
     """An abstraction over quantum devices that includes quantum computers and simulators."""
 
     def __init__(self, name: str, status: str):
@@ -47,7 +47,7 @@ class Device(ABC):
         inputs: dict[str, float] | None,
         *args,
         **kwargs,
-    ) -> QuantumTask:
+    ) -> QuantumTaskType:
         """Run a quantum task specification on this quantum device. A quantum task can be a circuit
         or an annealing problem.
 
@@ -75,7 +75,7 @@ class Device(ABC):
         inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
-    ) -> QuantumTaskBatch:
+    ) -> QuantumTaskBatch[QuantumTask]:
         """Executes a batch of quantum tasks in parallel
 
         Args:
@@ -92,7 +92,7 @@ class Device(ABC):
             **kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
-            QuantumTaskBatch: A batch containing all of the qauntum tasks run
+            QuantumTaskBatch: A batch containing all of the quantum tasks run
         """
 
     @property
