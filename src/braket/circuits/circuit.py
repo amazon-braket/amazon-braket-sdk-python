@@ -1336,10 +1336,10 @@ class Circuit:
             Circuit: Braket Circuit implementing the OpenQASM program.
         """
         if isinstance(source, OpenQasmProgram):
+            inputs_copy = source.inputs.copy() if source.inputs is not None else {}
             if inputs:
-                inputs_copy = source.inputs.copy() if source.inputs is not None else {}
                 inputs_copy.update(inputs)
-                inputs = inputs_copy
+            inputs = inputs_copy
             source = source.source
         from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
 
