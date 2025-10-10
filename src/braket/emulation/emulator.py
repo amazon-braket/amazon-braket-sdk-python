@@ -23,12 +23,11 @@ from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
-from braket.tasks import QuantumTask
-from braket.tasks.quantum_task import TaskSpecification
+from braket.tasks.quantum_task import QuantumTaskType, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class Emulator(Device):
+class Emulator(Device[QuantumTaskType]):
     """
     An emulator is a simulation device that more closely resembles the capabilities and constraints
     of a real device or of a specific device model.
@@ -43,7 +42,7 @@ class Emulator(Device):
 
     def __init__(
         self,
-        backend: Device,
+        backend: Device[QuantumTaskType],
         noise_model: NoiseModel | None = None,
         passes: Iterable[ValidationPass] | None = None,
         **kwargs,
@@ -60,7 +59,7 @@ class Emulator(Device):
         inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
-    ) -> QuantumTask:
+    ) -> QuantumTaskType:
         """Emulate a quantum task specification on this quantum device emulator.
         A quantum task can be a circuit or an annealing problem. Emulation
         involves running all emulator passes on the input program before running
@@ -94,7 +93,7 @@ class Emulator(Device):
         inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
-    ) -> QuantumTaskBatch:
+    ) -> QuantumTaskBatch[QuantumTaskType]:
         raise NotImplementedError("Emulator does not support run_batch.")
 
     @property

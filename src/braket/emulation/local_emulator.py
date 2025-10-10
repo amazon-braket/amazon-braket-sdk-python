@@ -36,9 +36,10 @@ from braket.emulation.passes.circuit_passes import (
     ResultTypeValidator,
     _NotImplementedValidator,
 )
+from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
-class LocalEmulator(Emulator):
+class LocalEmulator(Emulator[LocalQuantumTask]):
     """
     A local emulator that mimics the restrictions and noises of a QPU based on the provided device
     properties.

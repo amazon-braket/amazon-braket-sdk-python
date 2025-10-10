@@ -22,7 +22,7 @@ from braket.device_schema import DeviceActionType
 from braket.circuits import Circuit, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
-from braket.tasks.quantum_task import QuantumTask, QuantumTaskType, TaskSpecification
+from braket.tasks.quantum_task import QuantumTaskType, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
@@ -75,7 +75,7 @@ class Device(ABC, Generic[QuantumTaskType]):
         inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
         **kwargs: Any,
-    ) -> QuantumTaskBatch[QuantumTask]:
+    ) -> QuantumTaskBatch[QuantumTaskType]:
         """Executes a batch of quantum tasks in parallel
 
         Args:
