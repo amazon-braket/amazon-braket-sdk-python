@@ -20,6 +20,7 @@ from scipy.linalg import fractional_matrix_power
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.registers.qubit_set import QubitSet
 
 
@@ -56,7 +57,7 @@ def calculate_unitary_big_endian(
     unitary = np.eye(rank, dtype=complex).reshape([2] * 2 * qubit_count)
 
     for instruction in instructions:
-        if isinstance(instruction.operator, CompilerDirective):
+        if isinstance(instruction.operator, (CompilerDirective, Measure)):
             continue
         if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
