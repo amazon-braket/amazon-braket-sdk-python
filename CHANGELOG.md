@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.102.8 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Allow `Measure` instructions in `to_unitary`
+ * handle executable result with no input in its program
+
 ## v1.102.7 (2025-10-13)
 
 ### Bug Fixes and Other Changes
