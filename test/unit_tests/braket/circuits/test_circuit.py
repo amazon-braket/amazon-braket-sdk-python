@@ -2208,6 +2208,24 @@ def test_from_ir_inputs_updated():
     assert Circuit.from_ir(source=openqasm, inputs={"phi": 0.1}) == circuit
 
 
+def test_from_ir_program_inputs_only():
+    circuit = Circuit().rx(0, FreeParameter("theta")).ry(0, 0.3).measure(0)
+    openqasm = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "input float theta;",
+            "input float phi;",
+            "bit[1] b;",
+            "qubit[1] q;",
+            "rx(theta) q[0];",
+            "ry(phi) q[0];",
+            "b[0] = measure q[0];",
+        ]),
+        inputs={"phi": 0.3},
+    )
+    assert Circuit.from_ir(source=openqasm) == circuit
+
+
 @pytest.mark.parametrize(
     "expected_circuit, ir",
     [
