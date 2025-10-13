@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.102.7 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Always include program inputs in from_ir
+
 ## v1.102.6 (2025-10-09)
 
 ### Bug Fixes and Other Changes
