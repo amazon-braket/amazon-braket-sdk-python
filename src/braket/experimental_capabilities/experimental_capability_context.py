@@ -86,8 +86,9 @@ class EnableExperimentalCapability:
 
         warnings.warn(
             (
-                "You are enabling experimental capabilities. To view descriptions and restrictions of "
-                "experimental capabilities, please review Amazon Braket Developer Guide ("
+                "You are enabling experimental capabilities. To view descriptions and "
+                "restrictions of experimental capabilities, please review Amazon Braket "
+                "Developer Guide ("
                 "https://docs.aws.amazon.com/braket/latest/developerguide/braket-experimental-capabilities.html"
                 ")."
             ),
