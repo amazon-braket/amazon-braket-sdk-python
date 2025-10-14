@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.102.9 (2025-10-14)
+
+### Bug Fixes and Other Changes
+
+ * local job decorator integ test
+ * entry point module name for py312 and up
+
 ## v1.102.8 (2025-10-13)
 
 ### Bug Fixes and Other Changes
