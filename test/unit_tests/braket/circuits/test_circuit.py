@@ -2694,7 +2694,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().cnot(1, 3, control=[6]),
+            Circuit().cnot([1, 6], 3),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
