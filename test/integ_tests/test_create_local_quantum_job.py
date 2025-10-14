@@ -161,7 +161,7 @@ def test_decorator_local_job_invalid_image():
     def empty_decorator_job():
         pass
 
-    with pytest.raises((ValueError, subprocess.CalledProcessError)):
+    with pytest.raises(ValueError, match="specify a valid ECR URL"):
         # Should successfully get all the way to LocalQuantumJob.create,
         # but image pull or docker call will fail due to invalid image URI.
         empty_decorator_job()
