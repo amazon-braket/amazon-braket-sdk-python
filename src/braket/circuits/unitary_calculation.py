@@ -74,7 +74,7 @@ def calculate_unitary_big_endian(
             unitary,
             gate_matrix,
             tuple(index_substitutions[qubit] for qubit in instruction.target),
-            controls=instruction.control,
+            controls=tuple(index_substitutions[qubit] for qubit in instruction.control),
             control_state=instruction.control_state,
         )
 
