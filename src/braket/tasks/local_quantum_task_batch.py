@@ -12,10 +12,11 @@
 # language governing permissions and limitations under the License.
 
 from braket.tasks import QuantumTaskBatch
+from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.quantum_task import TaskResult
 
 
-class LocalQuantumTaskBatch(QuantumTaskBatch):
+class LocalQuantumTaskBatch(QuantumTaskBatch[LocalQuantumTask]):
     """Executes a batch of quantum tasks in parallel.
 
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
