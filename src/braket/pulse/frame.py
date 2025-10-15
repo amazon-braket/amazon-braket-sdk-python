@@ -46,7 +46,7 @@ class Frame:
             phase (float): phase to which this frame should be initialized. Defaults to 0.
             is_predefined (bool): bool indicating whether this is a predefined frame on
                 the device. Defaults to False.
-            properties (Optional[dict[str, Any]]): Dict containing properties of this frame.
+            properties (dict[str, Any] | None): Dict containing properties of this frame.
                 Defaults to None.
         """
         self._frame_id = frame_id

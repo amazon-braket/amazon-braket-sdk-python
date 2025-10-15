@@ -92,8 +92,8 @@ class AwsDevice(Device):
 
         Args:
             arn (str): The ARN of the device
-            aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
-            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
+            aws_session (AwsSession | None): An AWS session object. Default is `None`.
+            noise_model (NoiseModel | None): The Braket noise model to apply to the circuit
                 before execution. Noise model can only be added to the devices that support
                 noise simulation.
 
@@ -142,20 +142,20 @@ class AwsDevice(Device):
             task_specification (TaskSpecification):
                 Specification of quantum task (circuit, OpenQASM program, program set,
                 pulse sequence or AHS program) to run on the device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (S3DestinationFolder | None): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
-            shots (Optional[int]): The number of times to run the circuit or annealing problem.
+            shots (int | None): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
-            poll_interval_seconds (Optional[float]): The polling interval for `AwsQuantumTask.result()`,
+            poll_interval_seconds (float | None): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+            inputs (dict[str, float] | None): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A
                 `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
@@ -244,12 +244,12 @@ class AwsDevice(Device):
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of task specifications (circuits, OpenQASM programs,
                 pulse sequences or AHS programs) to run on the device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (S3DestinationFolder | None): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
-            shots (Optional[int]): The number of times to run the circuit or annealing problem.
+            shots (int | None): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            max_parallel (Optional[int]): The maximum number of quantum tasks to run on AWS in parallel.
+            max_parallel (int | None): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
@@ -259,14 +259,14 @@ class AwsDevice(Device):
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be
+            inputs (dict[str, float] | list[dict[str, float]] | None): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A
                 `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`. Default: None.
-            reservation_arn (Optional[str]): The reservation ARN provided by Braket Direct
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
                 Note: If you are creating tasks in a job that itself was created reservation ARN,
                 those tasks do not need to be created with the reservation ARN.
@@ -409,7 +409,7 @@ class AwsDevice(Device):
         If a QPU does not expose these calibrations, None is returned.
 
         Returns:
-            Optional[GateCalibrations]: The calibration object. Returns `None` if the data
+            GateCalibrations | None: The calibration object. Returns `None` if the data
             is not present.
         """
         if not self._gate_calibrations:
@@ -610,18 +610,18 @@ class AwsDevice(Device):
             >>> AwsDevice.get_devices(types=["SIMULATOR"])
 
         Args:
-            arns (Optional[list[str]]): device ARN filter, default is `None`
-            names (Optional[list[str]]): device name filter, default is `None`
-            types (Optional[list[AwsDeviceType]]): device type filter, default is `None`
+            arns (list[str] | None): device ARN filter, default is `None`
+            names (list[str] | None): device name filter, default is `None`
+            types (list[AwsDeviceType] | None): device type filter, default is `None`
                 QPUs will be searched for all regions and simulators will only be
                 searched for the region of the current session.
-            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
+            statuses (list[str] | None): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
                 the results, use a filter that includes "RETIRED" for this parameter.
-            provider_names (Optional[list[str]]): provider name filter, default is `None`
+            provider_names (list[str] | None): provider name filter, default is `None`
             order_by (str): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
-            aws_session (Optional[AwsSession]): An AWS session object.
+            aws_session (AwsSession | None): An AWS session object.
                 Default is `None`.
 
         Raises:
@@ -782,7 +782,7 @@ class AwsDevice(Device):
             URLError: If the URL provided returns a non 2xx response.
 
         Returns:
-            Optional[GateCalibrations]: the calibration data for the device. None
+            GateCalibrations | None: the calibration data for the device. None
             is returned if the device does not have a gate calibrations URL associated.
         """
         if (

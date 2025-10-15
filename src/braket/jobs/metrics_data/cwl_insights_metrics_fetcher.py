@@ -60,7 +60,7 @@ class CwlInsightsMetricsFetcher:
             log_line (list[dict[str, Any]]): An iterator for RegEx matches on a log line.
 
         Returns:
-            Optional[str]: The value of the element with the element name, or None if no such
+            str | None: The value of the element with the element name, or None if no such
             element is found.
         """
         return next(
@@ -119,7 +119,7 @@ class CwlInsightsMetricsFetcher:
                 when there is a conflict.
 
         Returns:
-            dict[str, list[Union[str, float, int]]]: The metrics data.
+            dict[str, list[str | float | int]]: The metrics data.
         """
         parser = LogMetricsParser()
         for result in results:
@@ -151,7 +151,7 @@ class CwlInsightsMetricsFetcher:
                 of the job name.
 
         Returns:
-            dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
+            dict[str, list[str | float | int]]: The metrics data, where the keys
             are the column names and the values are a list containing the values in each row.
 
         Example:
