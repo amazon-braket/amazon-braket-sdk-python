@@ -14,12 +14,13 @@
 from collections.abc import Iterable
 
 import numpy as np
-from braket.default_simulator.linalg_utils import multiply_matrix
+from braket.default_simulator.linalg_utils import controlled_matrix, multiply_matrix
 from scipy.linalg import fractional_matrix_power
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.registers.qubit_set import QubitSet
 
 
@@ -56,25 +57,25 @@ def calculate_unitary_big_endian(
     unitary = np.eye(rank, dtype=complex).reshape([2] * 2 * qubit_count)
 
     for instruction in instructions:
-        if isinstance(instruction.operator, CompilerDirective):
+        if isinstance(instruction.operator, (CompilerDirective, Measure)):
             continue
         if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
 
         base_gate_matrix = instruction.operator.to_matrix()
-        if int(instruction.power) == instruction.power:
-            gate_matrix = np.linalg.matrix_power(base_gate_matrix, int(instruction.power))
-        else:
-            gate_matrix = fractional_matrix_power(base_gate_matrix, instruction.power)
 
-        gate_matrix = np.asarray(gate_matrix, dtype=complex)
+        gate_matrix = (
+            np.linalg.matrix_power(base_gate_matrix, int(instruction.power))
+            if int(instruction.power) == instruction.power
+            else fractional_matrix_power(base_gate_matrix, instruction.power)
+        )
+        target = tuple(index_substitutions[qubit] for qubit in instruction.target)
+        control = tuple(index_substitutions[qubit] for qubit in instruction.control)
 
         unitary = multiply_matrix(
             unitary,
-            gate_matrix,
-            tuple(index_substitutions[qubit] for qubit in instruction.target),
-            controls=instruction.control,
-            control_state=instruction.control_state,
+            controlled_matrix(np.asarray(gate_matrix, dtype=complex), instruction.control_state),
+            control + target,
         )
 
     return unitary.reshape(rank, rank)

@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.102.9 (2025-10-14)
+
+### Bug Fixes and Other Changes
+
+ * local job decorator integ test
+ * entry point module name for py312 and up
+
+## v1.102.8 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Allow `Measure` instructions in `to_unitary`
+ * handle executable result with no input in its program
+
+## v1.102.7 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Always include program inputs in from_ir
+
 ## v1.102.6 (2025-10-09)
 
 ### Bug Fixes and Other Changes
