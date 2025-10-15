@@ -42,7 +42,7 @@ class Noise(QuantumOperator):
         """Initializes a `Noise` object.
 
         Args:
-            qubit_count (Optional[int]): Number of qubits this noise channel interacts with.
+            qubit_count (int | None): Number of qubits this noise channel interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These
                 are used when printing a diagram of circuits. Length must be the same as
                 `qubit_count`, and index ordering is expected to correlate with target ordering
@@ -175,7 +175,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probability: FreeParameterExpression | float,
+        probability: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
         max_probability: float = 0.5,
@@ -183,9 +183,9 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         """Initializes a `SingleProbabilisticNoise`.
 
         Args:
-            probability (Union[FreeParameterExpression, float]): The probability that the
+            probability (float | FreeParameterExpression): The probability that the
                 noise occurs.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -218,12 +218,12 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         return f"{self.name}({self.probability})"
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[float | FreeParameterExpression]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self._probability]
@@ -267,16 +267,16 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):  # noqa: N801
 
     def __init__(
         self,
-        probability: FreeParameterExpression | float,
+        probability: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `SingleProbabilisticNoise_34`.
 
         Args:
-            probability (Union[FreeParameterExpression, float]): The probability that the
+            probability (float | FreeParameterExpression): The probability that the
                 noise occurs.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -301,16 +301,16 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):  # noqa: N801
 
     def __init__(
         self,
-        probability: FreeParameterExpression | float,
+        probability: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `SingleProbabilisticNoise_1516`.
 
         Args:
-            probability (Union[FreeParameterExpression, float]): The probability that the
+            probability (float | FreeParameterExpression): The probability that the
                 noise occurs.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -337,16 +337,16 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probabilities: dict[str, FreeParameterExpression | float],
+        probabilities: dict[str, float | FreeParameterExpression],
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """[summary]
 
         Args:
-            probabilities (dict[str, Union[FreeParameterExpression, float]]): A dictionary with
+            probabilities (dict[str, float | FreeParameterExpression]): A dictionary with
                 Pauli strings as keys and the probabilities as values, i.e. {"XX": 0.1. "IZ": 0.2}.
-            qubit_count (Optional[int]): The number of qubits the Pauli noise acts on.
+            qubit_count (int | None): The number of qubits the Pauli noise acts on.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -432,14 +432,14 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         return self._probabilities
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[float | FreeParameterExpression]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [
@@ -484,22 +484,22 @@ class PauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probX: FreeParameterExpression | float,
-        probY: FreeParameterExpression | float,
-        probZ: FreeParameterExpression | float,
+        probX: float | FreeParameterExpression,
+        probY: float | FreeParameterExpression,
+        probZ: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `PauliNoise`.
 
         Args:
-            probX (Union[FreeParameterExpression, float]): The X coefficient of the Kraus operators
+            probX (float | FreeParameterExpression): The X coefficient of the Kraus operators
                 in the channel.
-            probY (Union[FreeParameterExpression, float]): The Y coefficient of the Kraus operators
+            probY (float | FreeParameterExpression): The Y coefficient of the Kraus operators
                 in the channel.
-            probZ (Union[FreeParameterExpression, float]): The Z coefficient of the Kraus operators
+            probZ (float | FreeParameterExpression): The Z coefficient of the Kraus operators
                 in the channel.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -521,13 +521,13 @@ class PauliNoise(Noise, Parameterizable):
         self._parameters = [probX, probY, probZ]
 
     @staticmethod
-    def _get_param_float(param: FreeParameterExpression | float, param_name: str) -> float:
+    def _get_param_float(param: float | FreeParameterExpression, param_name: str) -> float:
         """Validates the value of a probability and returns its value.
 
         If param is a free parameter expression, this method returns 0.
 
         Args:
-            param (Union[FreeParameterExpression, float]): The probability to validate
+            param (float | FreeParameterExpression): The probability to validate
             param_name (str): The name of the probability parameter
 
         Returns:
@@ -539,29 +539,29 @@ class PauliNoise(Noise, Parameterizable):
         return float(param)
 
     @property
-    def probX(self) -> FreeParameterExpression | float:
+    def probX(self) -> float | FreeParameterExpression:
         """The probability of a Pauli X error.
 
         Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli X error.
+            float | FreeParameterExpression: The probability of a Pauli X error.
         """
         return self._parameters[0]
 
     @property
-    def probY(self) -> FreeParameterExpression | float:
+    def probY(self) -> float | FreeParameterExpression:
         """The probability of a Pauli Y error.
 
         Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
+            float | FreeParameterExpression: The probability of a Pauli Y error.
         """
         return self._parameters[1]
 
     @property
-    def probZ(self) -> FreeParameterExpression | float:
+    def probZ(self) -> float | FreeParameterExpression:
         """The probability of a Pauli Z error.
 
         Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
+            float | FreeParameterExpression: The probability of a Pauli Z error.
         """
         return self._parameters[2]
 
@@ -584,14 +584,14 @@ class PauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Parameters are in the order [probX, probY, probZ]
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[float | FreeParameterExpression]: The free parameter expressions
             or fixed values associated with the object.
         """
         return self._parameters
@@ -632,15 +632,15 @@ class DampingNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        gamma: FreeParameterExpression | float,
+        gamma: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Initializes a `DampingNoise`.
 
         Args:
-            gamma (Union[FreeParameterExpression, float]): Probability of damping.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            gamma (float | FreeParameterExpression): Probability of damping.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -675,12 +675,12 @@ class DampingNoise(Noise, Parameterizable):
         return f"{self.name}({self.gamma})"
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[float | FreeParameterExpression]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self._gamma]
@@ -724,18 +724,18 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def __init__(
         self,
-        gamma: FreeParameterExpression | float,
-        probability: FreeParameterExpression | float,
+        gamma: float | FreeParameterExpression,
+        probability: float | FreeParameterExpression,
         qubit_count: int | None,
         ascii_symbols: Sequence[str],
     ):
         """Inits a `GeneralizedAmplitudeDampingNoise`.
 
         Args:
-            gamma (Union[FreeParameterExpression, float]): Probability of damping.
-            probability (Union[FreeParameterExpression, float]): Probability of the system being
+            gamma (float | FreeParameterExpression): Probability of damping.
+            probability (float | FreeParameterExpression): Probability of the system being
                 excited by the environment.
-            qubit_count (Optional[int]): The number of qubits to apply noise.
+            qubit_count (int | None): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -775,14 +775,14 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return f"{self.name}({self.gamma}, {self.probability})"
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Parameters are in the order [gamma, probability]
 
         Returns:
-            list[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[float | FreeParameterExpression]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self.gamma, self.probability]
@@ -813,12 +813,12 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
 
 def _validate_param_value(
-    parameter: FreeParameterExpression | float, param_name: str, maximum: float = 1.0
+    parameter: float | FreeParameterExpression, param_name: str, maximum: float = 1.0
 ) -> None:
     """Validates the value of a given parameter.
 
     Args:
-        parameter (Union[FreeParameterExpression, float]): The parameter to validate
+        parameter (float | FreeParameterExpression): The parameter to validate
         param_name (str): The name of the parameter
         maximum (float): The maximum value of the parameter. Default: 1.0
     """
@@ -832,10 +832,10 @@ def _parameter_to_dict(parameter: FreeParameter | float) -> dict | float:
     """Converts a parameter to a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:
-        parameter(Union[FreeParameter, float]): The parameter to convert.
+        parameter(FreeParameter | float): The parameter to convert.
 
     Returns:
-        Union[dict, float]: A dictionary representation of a FreeParameter if the parameter
+        dict | float: A dictionary representation of a FreeParameter if the parameter
         is a FreeParameter, otherwise returns the float.
     """
     if isinstance(parameter, FreeParameter):

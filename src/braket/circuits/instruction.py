@@ -46,11 +46,11 @@ class Instruction:
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
-            target (Optional[QubitSetInput]): Target qubits that the operator is applied to.
+            target (QubitSetInput | None): Target qubits that the operator is applied to.
                 Default is None.
-            control (Optional[QubitSetInput]): Target qubits that the operator is controlled on.
+            control (QubitSetInput | None): Target qubits that the operator is controlled on.
                 Default is None.
-            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+            control_state (BasisStateInput | None): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
@@ -206,17 +206,17 @@ class Instruction:
             Same relationship holds for `control_mapping`.
 
         Args:
-            target_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (Optional[QubitSetInput]): Target qubits for the new instruction.
+            target (QubitSetInput | None): Target qubits for the new instruction.
                 Default is None.
-            control_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
+            control_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the control. Key is the qubit in this `control` and the
                 value is what the key is changed to. Default = `None`.
-            control (Optional[QubitSetInput]): Control qubits for the new instruction.
+            control (QubitSetInput | None): Control qubits for the new instruction.
                 Default is None.
-            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+            control_state (BasisStateInput | None): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent

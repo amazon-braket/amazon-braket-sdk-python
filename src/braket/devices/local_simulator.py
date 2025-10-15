@@ -74,7 +74,7 @@ class LocalSimulator(Device):
             backend (str | BraketSimulator): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
-            noise_model (Optional[NoiseModel]): The Braket noise model to apply to the circuit
+            noise_model (NoiseModel | None): The Braket noise model to apply to the circuit
                 before execution. Noise model can only be added to the devices that support
                 noise simulation.
         """
@@ -100,11 +100,11 @@ class LocalSimulator(Device):
 
         Args:
             task_specification (TaskSpecification): The quantum task specification.
-            shots (int): The number of times to run the circuit or annealing problem.
+            shots (int | None): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the quantum task specification.
                 Sampling is not supported for shots=0.
-            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+            inputs (dict[str, float] | None): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
                 value. Default: {}.
             *args (Any): Arbitrary arguments.
@@ -146,20 +146,20 @@ class LocalSimulator(Device):
         Args:
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of quantum task specification.
-            shots (Optional[int]): The number of times to run the quantum task.
+            shots (int | None): The number of times to run the quantum task.
                 Default: 0.
-            max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel. Default
-                is the number of logical CPUs.
-            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be passed
-                along with the IR. If the IR supports inputs, the inputs will be updated with
-                this value. Default: {}.
+            max_parallel (int | None): The maximum number of quantum tasks to run  in parallel.
+                Default is the number of logical CPUs.
+            inputs (dict[str, float] | list[dict[str, float]] | None): Inputs to be passed along
+                with the IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
 
         Returns:
             LocalQuantumTaskBatch: A batch containing all of the quantum tasks run
 
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
-        """  # noqa: E501
+        """
         inputs = inputs or {}
 
         if self._noise_model:
