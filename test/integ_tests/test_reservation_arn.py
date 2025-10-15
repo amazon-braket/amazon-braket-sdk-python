@@ -61,8 +61,8 @@ def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
     reason="Python version mismatch",
 )
 def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
-    with pytest.raises(ClientError, match="Reservation arn is invalid"):
-        if AwsDevice(Devices.IQM.Garnet).status == "ONLINE":
+    if AwsDevice(Devices.IQM.Garnet).status == "ONLINE":
+        with pytest.raises(ClientError, match="Reservation arn is invalid"):
             @hybrid_job(
                 device=Devices.IQM.Garnet,
                 reservation_arn=reservation_arn,
