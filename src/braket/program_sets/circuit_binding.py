@@ -49,8 +49,8 @@ class CircuitBinding:
 
         Args:
             circuit (Circuit): The parametrized circuit
-            input_sets (Optional[ParameterSetsLike]): The inputs to the circuit, if specified.
-            observables (Optional[Sequence[Observable] | Sum]): The observables or Hamiltonian
+            input_sets (ParameterSetsLike | None): The inputs to the circuit, if specified.
+            observables (Sequence[Observable] | Sum | None): The observables or Hamiltonian
                 to measure, if specified.
 
         Examples:
@@ -81,14 +81,14 @@ class CircuitBinding:
     @property
     def input_sets(self) -> ParameterSets | None:
         """
-        Optional[ParameterSets]: The inputs to the circuit, if specified.
+        ParameterSets | None: The inputs to the circuit, if specified.
         """
         return self._input_sets
 
     @property
     def observables(self) -> Sequence[Observable] | Sum | None:
         """
-        Optional[Sequence[Observable] | Sum]: The observables or qubit Hamiltonian to measure,
+        Sequence[Observable] | Sum | None: The observables or qubit Hamiltonian to measure,
         if specified.
         """
         return self._observables

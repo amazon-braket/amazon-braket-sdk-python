@@ -37,7 +37,7 @@ class _FreeParameterTransformer(QASMTransformer):
             identifier (Identifier): The identifier.
 
         Returns:
-            Union[Identifier, FloatLiteral]: The transformed identifier.
+            Identifier | FloatLiteral: The transformed identifier.
         """
         if identifier.name in self.param_values:
             return ast.FloatLiteral(float(self.param_values[identifier.name]))
@@ -54,7 +54,7 @@ class _FreeParameterTransformer(QASMTransformer):
             node (BinaryExpression): The node.
 
         Returns:
-            Union[BinaryExpression, FloatLiteral]: The transformed identifier.
+            BinaryExpression | FloatLiteral: The transformed identifier.
         """
         lhs = self.visit(node.lhs)
         rhs = self.visit(node.rhs)
@@ -81,7 +81,7 @@ class _FreeParameterTransformer(QASMTransformer):
             node (UnaryExpression): The node.
 
         Returns:
-            Union[UnaryExpression, FloatLiteral]: The transformed identifier.
+            UnaryExpression | FloatLiteral: The transformed identifier.
         """
         expression = self.visit(node.expression)
         if (

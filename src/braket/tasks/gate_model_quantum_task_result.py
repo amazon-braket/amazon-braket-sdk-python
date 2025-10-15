@@ -63,28 +63,28 @@ class GateModelQuantumTaskResult:
             This can be an empty list if no result types are specified in the IR.
             This is calculated from `measurements` and
             the IR of the circuit program when `shots>0`.
-        measurements (numpy.ndarray, optional): 2d array - row is shot and column is qubit.
+        measurements (numpy.ndarray | None): 2d array - row is shot and column is qubit.
             Default is None. Only available when shots > 0. The qubits in `measurements`
             are the ones in `GateModelQuantumTaskResult.measured_qubits`.
-        measured_qubits (list[int], optional): The indices of the measured qubits. Default
+        measured_qubits (list[int] | None): The indices of the measured qubits. Default
             is None. Only available when shots > 0. Indicates which qubits are in
             `measurements`.
-        measurement_counts (Counter, optional): A `Counter` of measurements. Key is the measurements
+        measurement_counts (Counter | None): A `Counter` of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
             Default is None. Only available when shots > 0. Note that the keys in `Counter` are
             unordered.
-        measurement_probabilities (dict[str, float], optional):
+        measurement_probabilities (dict[str, float] | None):
             A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
             Default is None. Only available when shots > 0.
-        measurements_copied_from_device (bool, optional): flag whether `measurements`
+        measurements_copied_from_device (bool | None): flag whether `measurements`
             were copied from device. If false, `measurements` are calculated from device data.
             Default is None. Only available when shots > 0.
-        measurement_counts_copied_from_device (bool, optional): flag whether `measurement_counts`
+        measurement_counts_copied_from_device (bool | None): flag whether `measurement_counts`
             were copied from device. If False, `measurement_counts` are calculated from device data.
             Default is None. Only available when shots > 0.
-        measurement_probabilities_copied_from_device (bool, optional): flag whether
+        measurement_probabilities_copied_from_device (bool | None): flag whether
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data. Default is None.
             Only available when shots > 0.
@@ -147,7 +147,7 @@ class GateModelQuantumTaskResult:
         """Get the compiled circuit, if one is available.
 
         Returns:
-            Optional[str]: The compiled circuit or None.
+            str | None: The compiled circuit or None.
         """
         metadata = self.additional_metadata
         if not metadata:
