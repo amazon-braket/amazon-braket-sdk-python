@@ -62,16 +62,16 @@ def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
 )
 def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
+        if AwsDevice(Devices.IQM.Garnet).status == "ONLINE":
+            @hybrid_job(
+                device=Devices.IQM.Garnet,
+                reservation_arn=reservation_arn,
+            )
+            def hello_job():
+                device = AwsDevice(get_job_device_arn())
+                bell = Circuit().h(0).cnot(0, 1)
+                task = device.run(bell, shots=10)
+                measurements = task.result().measurements
+                return measurements
 
-        @hybrid_job(
-            device=Devices.IQM.Garnet,
-            reservation_arn=reservation_arn,
-        )
-        def hello_job():
-            device = AwsDevice(get_job_device_arn())
-            bell = Circuit().h(0).cnot(0, 1)
-            task = device.run(bell, shots=10)
-            measurements = task.result().measurements
-            return measurements
-
-        hello_job()
+            hello_job()
