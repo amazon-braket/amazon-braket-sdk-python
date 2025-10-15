@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.102.10 (2025-10-15)
+
+### Bug Fixes and Other Changes
+
+ * Expand controlled operators in `to_unitary`
+
+### Documentation Changes
+
+ * Use idiomatic Python types in docstrings
+ * points to braket doc when using experimental caps
+
 ## v1.102.9 (2025-10-14)
 
 ### Bug Fixes and Other Changes
