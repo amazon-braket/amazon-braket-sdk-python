@@ -14,8 +14,8 @@
 from collections.abc import Iterable
 
 import numpy as np
-from braket.default_simulator.linalg_utils import multiply_matrix
-from scipy.linalg import block_diag, fractional_matrix_power
+from braket.default_simulator.linalg_utils import controlled_matrix, multiply_matrix
+from scipy.linalg import fractional_matrix_power
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -74,18 +74,8 @@ def calculate_unitary_big_endian(
 
         unitary = multiply_matrix(
             unitary,
-            _get_controlled_matrix(
-                np.asarray(gate_matrix, dtype=complex), instruction.control_state
-            ),
+            controlled_matrix(np.asarray(gate_matrix, dtype=complex), instruction.control_state),
             control + target,
         )
 
     return unitary.reshape(rank, rank)
-
-
-def _get_controlled_matrix(matrix: np.ndarray, ctrl_state: tuple[int, ...]) -> np.ndarray:
-    new_matrix = matrix
-    for state in ctrl_state:
-        identity = np.eye(len(new_matrix))
-        new_matrix = block_diag(identity, new_matrix) if state else block_diag(new_matrix, identity)
-    return new_matrix
