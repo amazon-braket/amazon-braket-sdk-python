@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 from braket.device_schema.result_type import ResultType
 
@@ -24,16 +24,16 @@ class ResultTypeValidator(ValidationPass):
     def __init__(
         self,
         supported_result_types: Iterable[ResultType] | None = None,
-        connectivity_graph: dict[str, list[str]] | None = None,
+        connectivity_graph: Mapping[str, list[str]] | None = None,
     ):
         """
         A ResultTypeValidator instance validates that the result types of a circuit are supported on
             the device.
 
         Args:
-            supported_result_types (Optional[Iterable[str]]): A list of result types supported
+            supported_result_types (Iterable[ResultType] | None): A list of result types supported
                 by the emulator. A result type is a Braket result type name.
-            connectivity_graph (Dict[str, List[str]]): Graph representing qubit
+            connectivity_graph (Mapping[str, list[str]] | None): Graph representing qubit
                 connectivity. The keys are qubit indices as strings, and the values are lists
                 of neighboring qubit indices as strings.
 

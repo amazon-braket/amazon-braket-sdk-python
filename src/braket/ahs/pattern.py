@@ -40,7 +40,7 @@ class Pattern:
         of the resolution.
 
         Args:
-            resolution (Optional[Decimal]): Resolution of the discretization
+            resolution (Decimal | None): Resolution of the discretization
 
         Returns:
             Pattern: The new discretized pattern

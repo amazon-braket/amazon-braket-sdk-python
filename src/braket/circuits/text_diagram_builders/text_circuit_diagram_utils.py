@@ -159,7 +159,7 @@ def _group_items(
 
     Args:
         circuit_qubits (QubitSet): set of qubits in circuit
-        items (list[Union[Instruction, ResultType]]): list of instructions or result types
+        items (list[Instruction | ResultType]): list of instructions or result types
 
     Returns:
         list[tuple[QubitSet, list[Instruction]]]: list of grouped instructions or result types.
