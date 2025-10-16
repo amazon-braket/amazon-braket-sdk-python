@@ -111,7 +111,7 @@ def check_noise_target_qubits(
 
     Args:
         circuit (Circuit): A circuit where `noise` is to be checked.
-        target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+        target_qubits (QubitSetInput | None): Index or indices of qubit(s).
 
     Returns:
         QubitSet: The target qubits.
@@ -252,7 +252,7 @@ def apply_noise_to_gates(
         circuit (Circuit): A circuit where `noise` is applied to.
         noise (Iterable[type[Noise]]): Noise channel(s) to be applied
             to the circuit.
-        target_gates (Union[Iterable[type[Gate]], ndarray]): List of gates, or a unitary matrix
+        target_gates (Iterable[type[Gate]] | np.ndarray): List of gates, or a unitary matrix
             which `noise` is applied to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
 

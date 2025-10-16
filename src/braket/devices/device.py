@@ -54,9 +54,9 @@ class Device(ABC):
         Args:
             task_specification (TaskSpecification): Specification of a quantum task
                 to run on device.
-            shots (Optional[int]): The number of times to run the quantum task on the device.
+            shots (int | None): The number of times to run the quantum task on the device.
                 Default is `None`.
-            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
+            inputs (dict[str, float] | None): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
                 Not all devices and IR formats support inputs. Default: {}.
             *args (Any):  Arbitrary arguments.
@@ -81,13 +81,12 @@ class Device(ABC):
         Args:
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of circuits or problems to run on device.
-            shots (Optional[int]): The number of times to run the circuit or annealing problem.
-            max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel.
+            shots (int | None): The number of times to run the circuit or annealing problem.
+            max_parallel (int | None): The maximum number of quantum tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device.
-            inputs (Optional[dict[str, float] | list[dict[str, float]]]): Inputs to be
-                passed along with the IR. If the IR supports inputs, the inputs will be updated
-                with this value.
+            inputs (dict[str, float] | list[dict[str, float]] | None): Inputs to be passed along
+                with the IR. If the IR supports inputs, the inputs will be updated with this value.
             *args (Any):  Arbitrary arguments.
             **kwargs (Any): Arbitrary keyword arguments.
 

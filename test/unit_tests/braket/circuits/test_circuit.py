@@ -2208,6 +2208,24 @@ def test_from_ir_inputs_updated():
     assert Circuit.from_ir(source=openqasm, inputs={"phi": 0.1}) == circuit
 
 
+def test_from_ir_program_inputs_only():
+    circuit = Circuit().rx(0, FreeParameter("theta")).ry(0, 0.3).measure(0)
+    openqasm = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "input float theta;",
+            "input float phi;",
+            "bit[1] b;",
+            "qubit[1] q;",
+            "rx(theta) q[0];",
+            "ry(phi) q[0];",
+            "b[0] = measure q[0];",
+        ]),
+        inputs={"phi": 0.3},
+    )
+    assert Circuit.from_ir(source=openqasm) == circuit
+
+
 @pytest.mark.parametrize(
     "expected_circuit, ir",
     [
@@ -2464,6 +2482,7 @@ def test_to_unitary_with_global_phase():
         (Circuit().h(0).add_result_type(ResultType.Probability(target=[0])), gates.H().to_matrix()),
         (Circuit().h(1), gates.H().to_matrix()),
         (Circuit().h(2), gates.H().to_matrix()),
+        (Circuit().h(2).measure(2), gates.H().to_matrix()),
         (Circuit().x(0), gates.X().to_matrix()),
         (Circuit().y(0), gates.Y().to_matrix()),
         (Circuit().z(0), gates.Z().to_matrix()),
@@ -2482,6 +2501,7 @@ def test_to_unitary_with_global_phase():
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
         (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
         (Circuit().cnot(2, 4), gates.CNot().to_matrix()),
+        (Circuit().cnot(2, 4).measure([2, 4]), gates.CNot().to_matrix()),
         (Circuit().swap(0, 1), gates.Swap().to_matrix()),
         (Circuit().swap(1, 0), gates.Swap().to_matrix()),
         (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
@@ -2574,7 +2594,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().x(0, control=1),
+            Circuit().x(3, control=7),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0],
@@ -2610,7 +2630,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(1, 2, 0),
+            Circuit().ccnot(3, 6, 1),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2626,7 +2646,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(2, 1, 0),
+            Circuit().ccnot(6, 3, 1),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2642,7 +2662,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(0, 2, 1),
+            Circuit().ccnot(1, 6, 3),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2658,7 +2678,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(2, 0, 1),
+            Circuit().ccnot(6, 1, 3),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2669,6 +2689,102 @@ def test_to_unitary_with_global_phase():
                     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
                     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
                     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().cnot([1, 6], 3),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().cnot([6, 1], 3),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(3, control=[6, 1]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(3, control=[1, 6]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().i(3).cnot(6, 1),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().i(3).x(1, control=[6]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
                 ],
                 dtype=complex,
             ),

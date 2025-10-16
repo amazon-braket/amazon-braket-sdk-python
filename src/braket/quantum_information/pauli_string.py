@@ -40,7 +40,7 @@ class PauliString:
         """Initializes a `PauliString`.
 
         Args:
-            pauli_string (Union[str, PauliString]): The representation of the pauli word, either a
+            pauli_string (str | PauliString): The representation of the pauli word, either a
                 string or another PauliString object. A valid string consists of an optional phase,
                 specified by an optional sign +/- followed by an uppercase string in {I, X, Y, Z}.
                 Example valid strings are: XYZ, +YIZY, -YX
@@ -137,7 +137,7 @@ class PauliString:
         phase of the Pauli string is ignored).
 
         Args:
-            signs (Optional[Union[str, list[int], tuple[int, ...]]]): The sign of each factor of the
+            signs (str | list[int] | tuple[int, ...] | None): The sign of each factor of the
                 eigenstate, specified either as a string of "+" and "_", or as a list or tuple of
                 +/-1. The length of signs must be equal to the length of the Pauli string. If not
                 specified, it is assumed to be all +. Default: None.

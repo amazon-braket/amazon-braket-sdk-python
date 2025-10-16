@@ -648,13 +648,13 @@ class AwsSession:
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (Optional[list[str]]): device ARN filter, default is `None`.
-            names (Optional[list[str]]): device name filter, default is `None`.
-            types (Optional[list[str]]): device type filter, default is `None`.
-            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
+            arns (list[str] | None): device ARN filter, default is `None`.
+            names (list[str] | None): device name filter, default is `None`.
+            types (list[str] | None): device type filter, default is `None`.
+            statuses (list[str] | None): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
                 the results, use a filter that includes "RETIRED" for this parameter.
-            provider_names (Optional[list[str]]): provider name list, default is `None`.
+            provider_names (list[str] | None): provider name list, default is `None`.
 
         Returns:
             list[dict[str, Any]]: The response from the Amazon Braket `SearchDevices` operation.
@@ -755,9 +755,9 @@ class AwsSession:
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (Optional[int]): Limit for number of log streams returned.
+            limit (int | None): Limit for number of log streams returned.
                 default is 50.
-            next_token (Optional[str]): The token for the next set of items to return.
+            next_token (str | None): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
@@ -793,7 +793,7 @@ class AwsSession:
             start_time (int): Timestamp that indicates a start time to include log events.
             start_from_head (bool): Bool indicating to return oldest events first. default
                 is True.
-            next_token (Optional[str]): The token for the next set of items to return.
+            next_token (str | None): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
@@ -819,8 +819,8 @@ class AwsSession:
         """Creates a new AwsSession based on the region.
 
         Args:
-            region (Optional[str]): Name of the region. Default = `None`.
-            max_connections (Optional[int]): The maximum number of connections in the
+            region (str | None): Name of the region. Default = `None`.
+            max_connections (int | None): The maximum number of connections in the
                 Boto3 connection pool. Default = `None`.
 
         Returns:

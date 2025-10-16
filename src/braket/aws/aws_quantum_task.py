@@ -245,7 +245,7 @@ class AwsQuantumTask(QuantumTask):
                 `getLogger(__name__)`
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
                 position. Default is `False`.
-            task_specification (Optional[TaskSpecification]): The specification the task
+            task_specification (TaskSpecification | None): The specification the task
                 was run with
 
         Examples:

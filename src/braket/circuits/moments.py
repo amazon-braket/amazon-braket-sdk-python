@@ -160,7 +160,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """Add one or more instructions to self.
 
         Args:
-            instructions (Union[Iterable[Instruction], Instruction]): Instructions to add to self.
+            instructions (Iterable[Instruction] | Instruction): Instructions to add to self.
                 The instruction is added to the max time slice in which the instruction fits.
             noise_index (int): the number of noise channels at the same moment. For gates, this
                 is the number of gate_noise channels associated with that gate. For all other noise

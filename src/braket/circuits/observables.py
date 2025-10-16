@@ -764,7 +764,7 @@ def observable_from_ir(ir_observable: list[str | list[list[list[float]]]]) -> Ob
     observables or a single observable.
 
     Args:
-        ir_observable (list[Union[str, list[list[list[float]]]]]): observable as defined in IR
+        ir_observable (list[str | list[list[list[float]]]]): observable as defined in IR
 
     Returns:
         Observable: observable object
