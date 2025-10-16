@@ -37,7 +37,7 @@ class Gate(QuantumOperator):
         """Initializes a `Gate`.
 
         Args:
-            qubit_count (Optional[int]): Number of qubits this gate interacts with.
+            qubit_count (int | None): Number of qubits this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of circuits. Length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with target ordering on the instruction.
@@ -82,13 +82,13 @@ class Gate(QuantumOperator):
             target (QubitSet): target qubit(s).
             ir_type(IRType) : The IRType to use for converting the gate object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (Optional[SerializationProperties]): The serialization
+            serialization_properties (SerializationProperties | None): The serialization
                 properties to use while serializing the object to the IR representation. The
                 serialization properties supplied must correspond to the supplied `ir_type`.
                 Defaults to None.
-            control (Optional[QubitSet]): Control qubit(s). Only supported for OpenQASM.
+            control (QubitSet | None): Control qubit(s). Only supported for OpenQASM.
                 Default None.
-            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+            control_state (BasisStateInput | None): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
@@ -153,8 +153,8 @@ class Gate(QuantumOperator):
             target (QubitSet): target qubit(s).
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            control (Optional[QubitSet]): Control qubit(s). Default None.
-            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+            control (QubitSet | None): Control qubit(s). Default None.
+            control_state (BasisStateInput | None): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent

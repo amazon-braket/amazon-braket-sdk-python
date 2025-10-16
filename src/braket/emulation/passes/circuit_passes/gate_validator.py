@@ -31,9 +31,9 @@ class GateValidator(ValidationPass):
             native gates within a verbatim box if any.
 
         Args:
-            supported_gates (Iterable[str], optional): A list of gates supported outside of
+            supported_gates (Iterable[str] | None): A list of gates supported outside of
                 verbatim modeby the emulator. A gate is a Braket gate name.
-            native_gates (Iterable[str], optional): A list of gates supported inside of
+            native_gates (Iterable[str] | None): A list of gates supported inside of
                 verbatim mode by the emulator.
 
         Raises:

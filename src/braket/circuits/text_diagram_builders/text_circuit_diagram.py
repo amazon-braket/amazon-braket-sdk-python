@@ -198,7 +198,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         Args:
             col_title (str): title of column set
             circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Instruction | ResultType]): list of instructions or result types
             global_phase (float | None): the integrated global phase up to this set
 
         Returns:
