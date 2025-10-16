@@ -53,8 +53,6 @@ class ExperimentalQuantumOperator(QuantumOperator):
         when the appropriate capability is enabled.
 
         Args:
-            expcap_flag: The experimental capability flag that must be
-                enabled to use this operator.
             qubit_count: The number of qubits this operator acts on.
             ascii_symbols: ASCII string symbols for the operator.
         """
