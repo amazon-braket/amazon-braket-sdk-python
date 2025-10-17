@@ -41,9 +41,6 @@ class ObservableCriteria(ResultTypeCriteria):
                 observables are not specified, this criteria will match on any observable.
             qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
-
-        Throws:
-            ValueError: If the operators operate on more than one qubit.
         """
         self._observables = parse_operator_input(observables)
         self._qubits = parse_qubit_input(qubits, 1)

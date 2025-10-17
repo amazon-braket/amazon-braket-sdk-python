@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.103.0 (2025-10-16)
+
+### Deprecations and Removals
+
+ * Update minimum default simulator
+
 ## v1.102.10 (2025-10-15)
 
 ### Bug Fixes and Other Changes
