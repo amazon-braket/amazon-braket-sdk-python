@@ -57,9 +57,6 @@ def _validate_hybrid_job_name(name: str) -> None:
             "Use 1–50 characters (letters, digits, hyphens); no underscores or leading/trailing hyphens."
         )
 
-
-
-
 DEFAULT_INPUT_CHANNEL = "input"
 INNER_FUNCTION_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
 INNER_FUNCTION_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
