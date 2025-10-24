@@ -46,7 +46,6 @@ from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
-
 _HYBRID_JOB_NAME_PATTERN = re.compile(r'^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$')
 
 def _validate_hybrid_job_name(name: str) -> None:
