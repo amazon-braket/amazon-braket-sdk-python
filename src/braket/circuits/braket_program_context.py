@@ -37,7 +37,7 @@ class BraketProgramContext(AbstractProgramContext):
         """Inits a `BraketProgramContext`.
 
         Args:
-            circuit (Optional[Circuit]): A partially-built circuit to continue building with this
+            circuit (Circuit | None): A partially-built circuit to continue building with this
                 context. Default: None.
         """
         super().__init__()
@@ -147,10 +147,10 @@ class BraketProgramContext(AbstractProgramContext):
         """Convert parameter value to required format.
 
         Args:
-            value (Union[float, Expr]): Value of the parameter
+            value (float | Expr): Value of the parameter
 
         Returns:
-            Union[float, FreeParameterExpression]: Return the value directly if numeric,
+            float | FreeParameterExpression]: Returns the value directly if numeric,
             otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
@@ -167,7 +167,7 @@ class BraketProgramContext(AbstractProgramContext):
 
         Args:
             target (tuple[int]): the target qubits to be measured.
-            classical_targets (Optional[Iterable[int]]): the classical registers
+            classical_targets (Iterable[int] | None): the classical registers
                 to use in the qubit measurement.
         """
         for iter, qubit in enumerate(target):

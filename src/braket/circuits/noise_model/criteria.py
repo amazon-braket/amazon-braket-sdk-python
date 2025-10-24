@@ -61,10 +61,10 @@ class Criteria(ABC):
             key_type (CriteriaKey): The criteria key type.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: Returns a set of keys for a key type. The
-            actual returned keys will depend on the CriteriaKey. If the provided key type
-            is not relevant the returned list will be empty. If the provided key type is
-            relevant for all possible inputs, the string CriteriaKeyResult.ALL will be returned.
+            CriteriaKeyResult | set[Any]: Returns a set of keys for a key type. The actual
+            returned keys will depend on the CriteriaKey. If the provided key type is not relevant,
+            the returned list will be empty. If the provided key type is relevant for all
+            possible inputs, the string CriteriaKeyResult.ALL will be returned.
         """
         raise NotImplementedError
 

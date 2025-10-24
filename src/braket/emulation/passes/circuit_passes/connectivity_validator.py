@@ -37,17 +37,17 @@ class ConnectivityValidator(ValidationPass):
         and two-qubit gate operations.
 
         Args:
-            connectivity_graph (dict[int, Iterable[int]], DiGraph, optional):
+            connectivity_graph (dict[int, Iterable[int]], DiGraph | None):
                 Either a sparse matrix or DiGraph representation of the device connectivity.
                 Can be None if fully_connected is true.
 
             fully_connected (bool): If true, the all qubits in the device are connected.
 
-            num_qubits (int, optional): The number of qubits in the device; if fully_connected is
+            num_qubits (int | None): The number of qubits in the device; if fully_connected is
                 True, create a complete graph with num_qubits nodes; ignored if
                 connectivity_graph is provided and fully_connected if False.
 
-            qubit_labels (Iterable[int], QubitSet, optional): A set of qubit labels; if
+            qubit_labels (Iterable[int], QubitSet | None): A set of qubit labels; if
                 fully_connected is True, the qubits_labels are used as nodes of a fully connected
                 topology; ignored if connectivity_graph is provided and fully_connected if False.
 

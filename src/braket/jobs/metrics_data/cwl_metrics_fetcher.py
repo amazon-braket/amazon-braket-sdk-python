@@ -132,8 +132,8 @@ class CwlMetricsFetcher:
                 when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
-            are the column names and the values are a list containing the values in each row.
+            dict[str, list[str | float | int]]: The metrics data, where the keys are
+            the column names and the values are a list containing the values in each row.
 
         Example:
             timestamp energy
