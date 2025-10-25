@@ -36,7 +36,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
-from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point
+from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point, _validate_hybrid_job_name
 from braket.jobs.local import LocalQuantumJob
 
 
@@ -736,3 +736,14 @@ def test_python_validation(aws_session):
 )
 def test_sanitize_hyperparameters(hyperparameter, expected):
     assert _sanitize(hyperparameter) == expected
+
+
+@pytest.mark.parametrize("name", ["A", "job-123", "X"*50])
+def test_valid_names(name):
+    _validate_hybrid_job_name(name)
+
+
+@pytest.mark.parametrize("name", ["", "job_case", "-leading", "trailing-", "X"*51])
+def test_invalid_names(name):
+    with pytest.raises(ValueError):
+        _validate_hybrid_job_name(name)
