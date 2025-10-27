@@ -45,19 +45,6 @@ from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
-_HYBRID_JOB_NAME_PATTERN = re.compile(r"^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$")
-
-
-def _validate_hybrid_job_name(name: str) -> None:
-    """Raise ValueError if the hybrid-job name is invalid."""
-    if not _HYBRID_JOB_NAME_PATTERN.fullmatch(name):
-        raise ValueError(
-            f"Invalid hybrid job name: '{name}'. "
-            "Use between 1 and 50 characters (letters, digits, hyphens); "
-            "no underscores or leading/trailing hyphens."
-        )
-
-
 DEFAULT_INPUT_CHANNEL = "input"
 INNER_FUNCTION_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
 INNER_FUNCTION_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
@@ -238,8 +225,6 @@ def hybrid_job(
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
-                # Validate the job_name before sending to AWS
-                _validate_hybrid_job_name(job_args["job_name"])
 
                 optional_args = {
                     "image_uri": image_uri,
