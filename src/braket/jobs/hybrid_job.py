@@ -225,6 +225,7 @@ def hybrid_job(
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
+
                 optional_args = {
                     "image_uri": image_uri,
                     "input_data": job_input_data,
