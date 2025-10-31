@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.104.1 (2025-10-31)
+
+### Bug Fixes and Other Changes
+
+ * handle no program inputs
+
 ## v1.104.0 (2025-10-28)
 
 ### Deprecations and Removals
