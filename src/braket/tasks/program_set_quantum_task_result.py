@@ -247,14 +247,12 @@ class CompositeEntry:
 
     @staticmethod
     def _get_inputs(program: Program, observables: Sum | list[Observable] | None) -> ParameterSets:
-        if program.inputs is None:
-            return ParameterSets({})
         if not observables:
-            return ParameterSets(program.inputs)
+            return ParameterSets(program.inputs or {})
         num_observables = len(observables)
         return ParameterSets({
             k: v[::num_observables]
-            for k, v in program.inputs.items()
+            for k, v in (program.inputs or {}).items()
             if not k.startswith(EULER_OBSERVABLE_PREFIX)
         })
 
