@@ -247,6 +247,8 @@ class CompositeEntry:
 
     @staticmethod
     def _get_inputs(program: Program, observables: Sum | list[Observable] | None) -> ParameterSets:
+        if program.inputs is None:
+            return ParameterSets({})
         if not observables:
             return ParameterSets(program.inputs)
         num_observables = len(observables)
