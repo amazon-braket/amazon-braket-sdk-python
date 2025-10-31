@@ -301,11 +301,7 @@ class CompositeEntry:
                 result,
                 program=program.source,
                 shots=shots_per_executable,
-                inputs=(
-                    {k: v[result.inputsIndex] for k, v in program.inputs.items()}
-                    if program.inputs is not None
-                    else None
-                ),
+                inputs={k: v[result.inputsIndex] for k, v in (program.inputs or {}).items()} or None,
                 observable=(
                     observables[result.inputsIndex % len(observables)] if observables else None
                 ),
