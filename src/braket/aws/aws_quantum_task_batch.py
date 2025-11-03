@@ -33,7 +33,7 @@ from braket.tasks.quantum_task import TaskResult, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class AwsQuantumTaskBatch(QuantumTaskBatch):
+class AwsQuantumTaskBatch(QuantumTaskBatch[AwsQuantumTask]):
     """Executes a batch of quantum tasks in parallel.
 
     Using this class can yield vast speedups over executing quantum tasks sequentially,

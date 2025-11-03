@@ -13,7 +13,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
@@ -70,9 +70,7 @@ class QuantumTask(ABC):
         """
 
     @abstractmethod
-    def result(
-        self,
-    ) -> TaskResult:
+    def result(self) -> TaskResult:
         """Get the quantum task result.
 
         Returns:
@@ -99,3 +97,6 @@ class QuantumTask(ABC):
             dict[str, Any]: The metadata regarding the quantum task. If `use_cached_value` is True,
             then the value retrieved from the most recent request is used.
         """
+
+
+QuantumTaskType = TypeVar("QuantumTaskType", bound=QuantumTask, covariant=True)  # noqa: PLC0105
