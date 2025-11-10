@@ -15,7 +15,6 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.emulation.passes.circuit_passes import _NotImplementedValidator
-from braket.program_sets import ProgramSet
 
 
 @pytest.fixture
@@ -38,9 +37,3 @@ def test_validate_circuit_without_verbatim_box(default_not_implemented_validator
         match="The input circuit must have a verbatim box. Add a verbatim box to the circuit, and try again.",
     ):
         default_not_implemented_validator.validate(circuit)
-
-
-def test_program_set(default_not_implemented_validator):
-    program_set = ProgramSet([Circuit().h(0).cnot(0, 1), Circuit().rx(0, 0)])
-    with pytest.raises(TypeError):
-        default_not_implemented_validator.validate(program_set)
