@@ -131,27 +131,11 @@ class Emulator(Device):
         """
         match task_specification:
             case ProgramSet():
-                return ProgramSet([
-                    self.transform(task, apply_noise_model=apply_noise_model)
-                    for task in task_specification])
-
-        program = self._pass_manager.transform(task_specification)
-        # Apply measurement manually if the circuit has no measurement and no result type.
-        # This ensures that the noise model can apply readout error to the circuit, since
-        # the readout error is applied if and only if there is measurement or result type
-        # in the circuit. The measurement operations should be added even if apply_noise_model
-        # is False.
-        has_measurement = any(
-            isinstance(instr.operator, Measure) for instr in task_specification.instructions
-        )
-        if (not has_measurement) and len(task_specification.result_types) == 0:
-            task_specification.measure(target_qubits=task_specification.qubits)
-
-        return (
-            self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
-        )
-
-
+                return self._transform_program_set(
+                    task_specification, apply_noise_model=apply_noise_model)
+            case _:
+                return self._transform_circuit(
+                    task_specification, apply_noise_model=apply_noise_model)
 
     def _transform_program_set(self, task_specification: ProgramSet,
                                apply_noise_model: bool = True):
@@ -168,6 +152,23 @@ class Emulator(Device):
             )
         return task_list
 
+    def _transform_circuit(self, task_specification: Circuit,
+                           apply_noise_model: bool = True):
+        program = self._pass_manager.transform(task_specification)
+        # Apply measurement manually if the circuit has no measurement and no result type.
+        # This ensures that the noise model can apply readout error to the circuit, since
+        # the readout error is applied if and only if there is measurement or result type
+        # in the circuit. The measurement operations should be added even if apply_noise_model
+        # is False.
+        has_measurement = any(
+            isinstance(instr.operator, Measure) for instr in task_specification.instructions
+        )
+        if (not has_measurement) and len(task_specification.result_types) == 0:
+            task_specification.measure(target_qubits=task_specification.qubits)
+
+        return (
+            self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
+        )
 
     def _remove_verbatim_box(self,
                              noisy_verbatim_circ: TaskSpecification
