@@ -151,6 +151,24 @@ class Emulator(Device):
             self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
         )
 
+
+
+    def _transform_program_set(self, task_specification: ProgramSet,
+                               apply_noise_model: bool = True):
+        task_list = []
+        for task in task_specification:
+            program = self._pass_manager.transform(task)
+            has_measurement = any(
+                isinstance(instr.operator, Measure) for instr in task.instructions
+            )
+            if (not has_measurement) and len(task.result_types) == 0:
+                task.measure(target_qubits=task.qubits)
+            task_list.append(
+                self._noise_model.apply(program) if apply_noise_model and self.noise_model else task
+            )
+        return task_list
+
+
     def _remove_verbatim_box(self,
                              noisy_verbatim_circ: TaskSpecification
                              ) -> Circuit | ProgramSet:
