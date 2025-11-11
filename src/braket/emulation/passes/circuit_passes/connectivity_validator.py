@@ -118,6 +118,7 @@ class ConnectivityValidator(ValidationPass):
         if isinstance(circuit, ProgramSet):
             for item in circuit:
                 self.validate(item)
+            return
         if not any(
             isinstance(instruction.operator, StartVerbatimBox)
             for instruction in circuit.instructions

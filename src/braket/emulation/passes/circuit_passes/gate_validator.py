@@ -76,6 +76,7 @@ class GateValidator(ValidationPass):
         if isinstance(circuit, ProgramSet):
             for item in circuit:
                 self.validate(item)
+            return
         in_verbatim = False
         for instruction in circuit.instructions:
             operator = instruction.operator

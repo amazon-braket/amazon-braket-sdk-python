@@ -17,7 +17,6 @@ from collections.abc import Iterable
 from typing import Any
 
 from braket.circuits import Circuit
-from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
@@ -136,15 +135,8 @@ class Emulator(Device):
         # the readout error is applied if and only if there is measurement or result type
         # in the circuit. The measurement operations should be added even if apply_noise_model
         # is False.
-        has_measurement = any(
-            isinstance(instr.operator, Measure) for instr in task_specification.instructions
-        )
-        if (not has_measurement) and len(task_specification.result_types) == 0:
-            task_specification.measure(target_qubits=task_specification.qubits)
+        return task_specification
 
-        return (
-            self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
-        )
 
     def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
         """
@@ -157,17 +149,7 @@ class Emulator(Device):
         Returns:
             Circuit: A verbatim noisy program without the verbatim boxes
         """
-        noisy_verbatim_circ_2 = [
-            instruction
-            for instruction in noisy_verbatim_circ.instructions
-            if not isinstance(instruction.operator, StartVerbatimBox)
-            and not isinstance(instruction.operator, EndVerbatimBox)
-        ]
-        noisy_verbatim_circ_3 = Circuit(noisy_verbatim_circ_2)
-        for result_type in noisy_verbatim_circ.result_types:
-            noisy_verbatim_circ_3.add(result_type)
-
-        return noisy_verbatim_circ_3
+        return noisy_verbatim_circ
 
     def validate(self, task_specification: TaskSpecification) -> None:
         """

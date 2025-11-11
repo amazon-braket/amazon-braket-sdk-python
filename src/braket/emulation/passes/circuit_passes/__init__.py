@@ -27,3 +27,6 @@ from braket.emulation.passes.circuit_passes.qubit_count_validator import (  # no
 from braket.emulation.passes.circuit_passes.result_type_validator import (  # noqa: F401
     ResultTypeValidator,
 )
+from braket.emulation.passes.circuit_passes.verbatim_modifier import (  # noqa: F401
+    VerbatimModifier,
+)
