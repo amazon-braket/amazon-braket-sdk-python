@@ -103,6 +103,7 @@ provided as edge attributes."
         if isinstance(circuit, ProgramSet):
             for item in circuit:
                 self.validate(item)
+            return
         in_verbatim = False
         for instruction in circuit.instructions:
             operator = instruction.operator
