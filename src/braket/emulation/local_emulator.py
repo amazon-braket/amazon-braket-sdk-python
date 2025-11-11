@@ -95,7 +95,7 @@ class LocalEmulator(Emulator):
                 device_em_properties.supported_result_types,
                 device_em_properties.connectivity_graph,
             ),
-            ProgramSetValidator(),
+            ProgramSetValidator(device_em_properties.supported_actions),
         ]
 
         local_backend = LocalSimulator(backend=backend, noise_model=noise_model)

@@ -33,10 +33,10 @@ from braket.pulse import PulseSequence
 from braket.tasks.quantum_task import TaskSpecification
 
 ACTION_TO_SPECIFICATION = {
-    "OPENQASM": [OpenQASMProgram, Circuit],
-    "OPENQASM_PROGRAM_SET": [OpenQASMProgramSet, ProgramSet],
-    "AHS": [AnalogHamiltonianSimulation],
-    "JACQD": [],
+    "braket.ir.openqasm.program": [OpenQASMProgram, Circuit],
+    "braket.ir.openqasm.program_set": [OpenQASMProgramSet, ProgramSet],
+    "braket.ir.ahs.program": [AnalogHamiltonianSimulation],
+    "braket.ir.jaqcd.program": [],
 }
 
 
@@ -67,7 +67,7 @@ class DeviceEmulatorProperties:
         oneQubitProperties: dict[str, OneQubitProperties],
         twoQubitProperties: dict[str, TwoQubitProperties],
         supportedResultTypes: list[ResultType],
-        supportedActions: dict[str, str],
+        supportedActions: dict[str, str] | None = None,
         supportedSpecifications: tuple[TaskSpecification] | TaskSpecification | None = None,
     ):
         """Initialize a DeviceEmulatorProperties instance."""
@@ -92,6 +92,8 @@ class DeviceEmulatorProperties:
         if not supportedSpecifications:
             supportedSpecifications = Circuit
         self._supported_specifications = supportedSpecifications
+        if not supportedActions:
+            supportedActions = {}
         self._supported_actions = supportedActions
 
     @staticmethod

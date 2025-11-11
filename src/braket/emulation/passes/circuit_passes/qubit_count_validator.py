@@ -48,6 +48,7 @@ class QubitCountValidator(ValidationPass):
         if isinstance(circuit, ProgramSet):
             for item in circuit:
                 self.validate(item)
+            return
         if circuit.qubit_count > self._qubit_count:
             raise ValueError(
                 f"Circuit must use at most {self._qubit_count} qubits, \
