@@ -53,7 +53,7 @@ class ValidationPass(ABC):
 
     @property
     def supported_specifications(self) -> TaskSpecification:
-        """ List of supported specifications for a ValidationPass
+        """List of supported specifications for a ValidationPass
 
         Returns:
             TaskSpecification:

@@ -19,8 +19,9 @@ from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
-from braket.registers.qubit_set import QubitSet
 from braket.program_sets import ProgramSet
+from braket.registers.qubit_set import QubitSet
+
 
 class ConnectivityValidator(ValidationPass):
     def __init__(

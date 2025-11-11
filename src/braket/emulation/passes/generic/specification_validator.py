@@ -8,7 +8,7 @@ class SpecificationValidator(ValidationPass):
         A validator that checks whether or not the device supports the Specification.
 
         Args:
-            device_supported_specifications (TaskSpecification): 
+            device_supported_specifications (TaskSpecification):
                 The device.properties.action dictionary.
 
         Raises:
@@ -32,5 +32,6 @@ class SpecificationValidator(ValidationPass):
         if not isinstance(circuit, self.device_supported_specifications):
             raise ValueError(  # noqa: TRY004
                 f"{type(circuit)} not in supported specifications: {
-                    self.device_supported_specifications}"
-                )
+                    self.device_supported_specifications
+                }"
+            )

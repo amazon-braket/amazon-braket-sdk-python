@@ -20,6 +20,7 @@ from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.passes import ValidationPass
 from braket.program_sets import ProgramSet
 
+
 class GateValidator(ValidationPass):
     def __init__(
         self,

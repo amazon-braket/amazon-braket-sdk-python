@@ -36,7 +36,7 @@ from braket.emulation.passes.circuit_passes import (
     ResultTypeValidator,
     _NotImplementedValidator,
 )
-from braket.emulation.passes.generic import SpecificationValidator
+from braket.emulation.passes.generic import ProgramSetValidator, SpecificationValidator
 
 
 class LocalEmulator(Emulator):
@@ -95,6 +95,7 @@ class LocalEmulator(Emulator):
                 device_em_properties.supported_result_types,
                 device_em_properties.connectivity_graph,
             ),
+            ProgramSetValidator(),
         ]
 
         local_backend = LocalSimulator(backend=backend, noise_model=noise_model)

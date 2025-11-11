@@ -1,34 +1,46 @@
+from braket.device_schema.device_action_properties import DeviceActionProperties, DeviceActionType
+
 from braket.emulation.passes import ValidationPass
-from braket.tasks.quantum_task import TaskSpecification
+from braket.program_sets import ProgramSet
 
 
-class SpecificationValidator(ValidationPass):
-    def __init__(self, device_specifications: tuple[TaskSpecification] | TaskSpecification):
+class ProgramSetValidator(ValidationPass):
+    def __init__(self, device_action: dict[DeviceActionType, DeviceActionProperties]):
         """
         A validator that checks whether or not the device supports the Specification.
 
         Args:
-            device_supported (dict): The device.properties.action dictionary.
+            device_action (dict): The device.properties.action dictionary.
 
         Raises:
             ValueError: The task specification is not supported.
         """
-        self.device_specifications = device_specifications
-        self._supported_specifications = tuple(TaskSpecification.__args__)
+        self.device_actions = device_action
+        self._supported_specifications = ProgramSet
 
-    def validate(self, circuit: TaskSpecification) -> None:
+    def validate(self, task_specification: ProgramSet) -> None:
         """
         Checks that the number of qubits used in this circuit does not exceed this
         validator's qubit_count max.
 
         Args:
-            circuit (Circuit): The Braket circuit whose qubit count to validate.
+            task_specification (ProgramSet): The Braket circuit whose qubit count to validate.
 
         Raises:
             ValueError: If the number of qubits used in the circuit exceeds the qubit_count.
 
         """
-        if not isinstance(circuit, self.device_specifications):
-            raise ValueError(  # noqa: TRY004
-                f"{type(circuit)} not in supported specifications: {self.device_specifications}"
-                )
+        pset_action = self.device_actions["braket.ir.openqasm.program_set"]
+        max_shots = pset_action["maximumTotalShots"]
+        max_exc = pset_action["maximumExecutables"]
+        if len(task_specification) > max_exc:
+            raise ValueError(
+                f"{len(task_specification)} is greater than "
+                f"the supported number of executables {max_exc}."
+            )
+
+        if len(task_specification) * task_specification.shots_per_executable > max_shots:
+            raise ValueError(
+                f"{len(task_specification) * task_specification.shots_per_executable} > "
+                f"is greater than the total shot limit {max_shots}."
+            )

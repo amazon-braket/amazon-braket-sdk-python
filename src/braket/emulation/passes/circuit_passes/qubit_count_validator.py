@@ -52,4 +52,4 @@ class QubitCountValidator(ValidationPass):
             raise ValueError(
                 f"Circuit must use at most {self._qubit_count} qubits, \
 but uses {circuit.qubit_count} qubits."
-        )
+            )

@@ -20,8 +20,8 @@ from braket.circuits.circuit import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
-from braket.registers.qubit_set import QubitSet
 from braket.program_sets import ProgramSet
+from braket.registers.qubit_set import QubitSet
 
 
 class GateConnectivityValidator(ValidationPass):

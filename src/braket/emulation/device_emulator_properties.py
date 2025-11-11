@@ -20,24 +20,25 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     OneQubitProperties,
     TwoQubitProperties,
 )
-from braket.schema_common.schema_base import BraketSchemaBase
-from braket.ahs import AnalogHamiltonianSimulation
-from braket.circuits import Circuit
-from braket.program_sets import ProgramSet
-from braket.pulse import PulseSequence
-
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+from braket.schema_common.schema_base import BraketSchemaBase
 
+from braket.ahs import AnalogHamiltonianSimulation
+from braket.circuits import Circuit
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation._standardization import _standardize_ionq_device_properties
+from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
 from braket.tasks.quantum_task import TaskSpecification
 
 ACTION_TO_SPECIFICATION = {
     "OPENQASM": [OpenQASMProgram, Circuit],
     "OPENQASM_PROGRAM_SET": [OpenQASMProgramSet, ProgramSet],
     "AHS": [AnalogHamiltonianSimulation],
+    "JACQD": [],
 }
+
 
 class DeviceEmulatorProperties:
     """Properties for device emulation.
@@ -55,6 +56,7 @@ class DeviceEmulatorProperties:
         twoQubitProperties (dict[str, TwoQubitProperties]): Properties of two-qubit calibration
             details
         supportedResultTypes (list[ResultType]): List of supported result types.
+        supportedActions (list[])
     """
 
     def __init__(
@@ -65,6 +67,7 @@ class DeviceEmulatorProperties:
         oneQubitProperties: dict[str, OneQubitProperties],
         twoQubitProperties: dict[str, TwoQubitProperties],
         supportedResultTypes: list[ResultType],
+        supportedActions: dict[str, str],
         supportedSpecifications: tuple[TaskSpecification] | TaskSpecification | None = None,
     ):
         """Initialize a DeviceEmulatorProperties instance."""
@@ -89,6 +92,7 @@ class DeviceEmulatorProperties:
         if not supportedSpecifications:
             supportedSpecifications = Circuit
         self._supported_specifications = supportedSpecifications
+        self._supported_actions = supportedActions
 
     @staticmethod
     def _validate_native_gate_set(nativeGateSet: list[str]) -> None:
@@ -203,6 +207,10 @@ class DeviceEmulatorProperties:
     def supported_specification(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
         return self._supported_specifications
 
+    @property
+    def supported_actions(self) -> dict[str, str]:
+        return self._supported_actions
+
     @classmethod
     def from_device_properties(
         cls, device_properties: DeviceCapabilities
@@ -229,11 +237,13 @@ class DeviceEmulatorProperties:
             )
 
         supportedSpecifications = []
-        for actions in device_properties.action:
-            supportedSpecifications += ACTION_TO_SPECIFICATION[actions.name]
+        for action in properties_dict["action"]:
+            supportedSpecifications += ACTION_TO_SPECIFICATION[action]
         if "pulse" in device_properties:
             supportedSpecifications.append(PulseSequence)
         supportedSpecifications = tuple(supportedSpecifications)
+
+        supportedActions = properties_dict["action"]
 
         # Convert dictionary representations to OneQubitProperties and TwoQubitProperties objects
         one_qubit_props = {}
@@ -259,6 +269,7 @@ class DeviceEmulatorProperties:
             oneQubitProperties=one_qubit_props,
             twoQubitProperties=two_qubit_props,
             supportedResultTypes=result_types,
+            supportedActions=supportedActions,
             supportedSpecifications=supportedSpecifications,
         )
 

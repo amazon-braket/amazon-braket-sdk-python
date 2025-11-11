@@ -11,15 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.emulation.passes import ValidationPass
-from braket.tasks.quantum_task import TaskSpecification
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+
 from braket.ahs import AnalogHamiltonianSimulation
-from braket.program_sets import ProgramSet
+from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.serialization import SerializableProgram
+from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 from braket.pulse import PulseSequence
+from braket.tasks.quantum_task import TaskSpecification
 
 
 class _NotImplementedValidator(ValidationPass):
@@ -46,11 +47,11 @@ class _NotImplementedValidator(ValidationPass):
         """
 
         unsupported_specifications = (
-            OpenQASMProgram |
-            SerializableProgram |
-            AnalogHamiltonianSimulation |
-            OpenQASMProgramSet |
-            PulseSequence
+            OpenQASMProgram
+            | SerializableProgram
+            | AnalogHamiltonianSimulation
+            | OpenQASMProgramSet
+            | PulseSequence
         )
 
         # Validate out unsupported specifications

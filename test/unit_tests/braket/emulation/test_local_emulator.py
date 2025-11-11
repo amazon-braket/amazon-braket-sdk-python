@@ -102,8 +102,7 @@ def test_program_set(reduced_standardized_json):
     with pytest.raises(ValueError):  # verbatim error  # noqa: PT011
         emulator.run(ps)
     ps = ProgramSet(
-        [Circuit().add_verbatim_box(Circuit().prx(0, 0.1, 0.1))],
-        shots_per_executable=50)
+        [Circuit().add_verbatim_box(Circuit().prx(0, 0.1, 0.1))], shots_per_executable=50
+    )
     with pytest.raises(ValueError):  # unsupported program set error  # noqa: PT011
         emulator.run(ps)
-
