@@ -19,6 +19,8 @@ from braket.tasks.quantum_task import TaskSpecification
 
 
 class ValidationPass(ABC):
+    _supported_specifications: TaskSpecification
+
     @abstractmethod
     def validate(self, task_specification: TaskSpecification) -> None:
         """
@@ -42,8 +44,19 @@ class ValidationPass(ABC):
         Returns:
             TaskSpecification: The unmodified program passed in as input.
         """
-        self.validate(task_specification)
+        if isinstance(task_specification, self.supported_specifications):
+            self.validate(task_specification)
         return task_specification
 
     def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
         return self.run(task_specification)
+
+    @property
+    def supported_specifications(self) -> TaskSpecification:
+        """ List of supported specifications for a ValidationPass
+
+        Returns:
+            TaskSpecification:
+                tuple, single, or union of supported specifications
+        """
+        return self._supported_specifications

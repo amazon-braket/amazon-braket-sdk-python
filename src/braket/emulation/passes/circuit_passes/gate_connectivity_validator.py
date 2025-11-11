@@ -21,6 +21,7 @@ from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
 from braket.registers.qubit_set import QubitSet
+from braket.program_sets import ProgramSet
 
 
 class GateConnectivityValidator(ValidationPass):
@@ -81,24 +82,27 @@ provided as edge attributes."
                                 but edges ({u}, {v}) and ({v}, {u}) have different supported\
                                 gate sets."
                     )
+        self._supported_specifications = Circuit | ProgramSet
 
     def _graph_node_type(self) -> type:
         return type(next(iter(self._gate_connectivity_graph.nodes)))
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Verifies that any multiqubit gates used within a verbatim box are supported
         by the devices gate connectivity defined by this criteria.
 
         Args:
-            circuit (Circuit): The circuit whose gate instructions need to be validated
+            circuit (Circuit | ProgramSet): The circuit whose gate instructions need to be validated
                 against this validator's gate connectivity graph.
 
         Raises:
             ValueError if any of the gate operations use qubits or qubit edges that don't exist
             in the qubit connectivity graph or the gate operation is not supported by the edge.
         """
-
+        if isinstance(circuit, ProgramSet):
+            for item in circuit:
+                self.validate(item)
         in_verbatim = False
         for instruction in circuit.instructions:
             operator = instruction.operator

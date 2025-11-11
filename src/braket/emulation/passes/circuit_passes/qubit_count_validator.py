@@ -13,6 +13,7 @@
 
 from braket.circuits import Circuit
 from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 
 
 class QubitCountValidator(ValidationPass):
@@ -30,21 +31,25 @@ class QubitCountValidator(ValidationPass):
         if qubit_count <= 0:
             raise ValueError(f"qubit_count ({qubit_count}) must be a positive integer.")
         self._qubit_count = qubit_count
+        self._supported_specifications = Circuit | ProgramSet
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Checks that the number of qubits used in this circuit does not exceed this
         validator's qubit_count max.
 
         Args:
-            circuit (Circuit): The Braket circuit whose qubit count to validate.
+            circuit (Circuit | ProgramSet): The Braket circuit whose qubit count to validate.
 
         Raises:
             ValueError: If the number of qubits used in the circuit exceeds the qubit_count.
 
         """
+        if isinstance(circuit, ProgramSet):
+            for item in circuit:
+                self.validate(item)
         if circuit.qubit_count > self._qubit_count:
             raise ValueError(
                 f"Circuit must use at most {self._qubit_count} qubits, \
 but uses {circuit.qubit_count} qubits."
-            )
+        )

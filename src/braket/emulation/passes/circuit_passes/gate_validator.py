@@ -18,7 +18,7 @@ from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.passes import ValidationPass
-
+from braket.program_sets import ProgramSet
 
 class GateValidator(ValidationPass):
     def __init__(
@@ -57,8 +57,9 @@ class GateValidator(ValidationPass):
             self._native_gates = frozenset(BRAKET_GATES[gate.lower()] for gate in native_gates)
         except KeyError as e:
             raise ValueError(f"Input {e!s} in native_gates is not a valid Braket gate name.") from e
+        self._supported_specifications = Circuit | ProgramSet
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Checks that all non-verbatim gates used in the circuit are in this validator's
         supported gate set and that all verbatim gates used in the circuit are in this
@@ -71,6 +72,9 @@ class GateValidator(ValidationPass):
             ValueError: If a gate operation or verbatim gate operation is not in this validator's
             supported or native gate set, respectively.
         """
+        if isinstance(circuit, ProgramSet):
+            for item in circuit:
+                self.validate(item)
         in_verbatim = False
         for instruction in circuit.instructions:
             operator = instruction.operator
