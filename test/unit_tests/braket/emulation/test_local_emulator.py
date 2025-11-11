@@ -13,7 +13,7 @@
 
 import pytest
 import json
-import math 
+
 from braket.device_schema.iqm.iqm_device_capabilities_v1 import IqmDeviceCapabilities
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.device_schema.rigetti.rigetti_device_capabilities_v1 import RigettiDeviceCapabilities
@@ -96,20 +96,8 @@ def test_validate_valid_verbatim_circ_aria_1_v2(
     emulator.validate(valid_verbatim_circ_aria1)
 
 
-def test_program_set_single_circuit(reduced_standardized_json):
+def test_program_set(reduced_standardized_json):
     emulator = LocalEmulator.from_json(reduced_standardized_json)
-    ps = ProgramSet([Circuit().add_verbatim_box(Circuit().prx(0, math.pi/2, 0.1))], shots_per_executable=50)
-    result = emulator.run(ps, shots=50)
-    assert result is not None
-
-
-def test_program_set_multiple_circuits(reduced_standardized_json):
-    emulator = LocalEmulator.from_json(reduced_standardized_json)
-    circuits = [
-        Circuit().add_verbatim_box(Circuit().prx(0, math.pi/2, 0.1)),
-        Circuit().add_verbatim_box(Circuit().prx(1, math.pi/4, 0.2))
-    ]
-    ps = ProgramSet(circuits, shots_per_executable=25)
-    result = emulator.run(ps, shots=50)
-    assert result is not None
-
+    ps = ProgramSet([Circuit()], shots_per_executable=50)
+    with pytest.raises(TypeError):
+        emulator.run(ps)

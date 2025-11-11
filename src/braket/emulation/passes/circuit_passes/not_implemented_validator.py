@@ -13,6 +13,7 @@
 
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 from braket.tasks.quantum_task import TaskSpecification
 
 
@@ -21,6 +22,7 @@ class _NotImplementedValidator(ValidationPass):
     A validator that checks for features that are not implemented in the emulator.
     Currently checks for:
     1. Verbatim boxes - raises an error if the circuit does not have a verbatim box
+    2. ProgramSet - raises an error if the program is a ProgramSet
     """
 
     def validate(self, program: TaskSpecification) -> None:
@@ -32,7 +34,12 @@ class _NotImplementedValidator(ValidationPass):
 
         Raises:
             ValueError: If the program does not have a verbatim box when required.
+            TypeError: If the program is a ProgramSet
         """
+
+        # Validate out ProgramSet
+        if isinstance(program, ProgramSet):
+            raise TypeError("ProgramSet is not supported yet.")
 
         # Check if the program has a verbatim box when required
         has_verbatim_box = any(

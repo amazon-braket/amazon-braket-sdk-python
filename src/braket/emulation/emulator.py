@@ -23,7 +23,6 @@ from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
-from braket.program_sets import ProgramSet
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
@@ -129,32 +128,9 @@ class Emulator(Device):
             TaskSpecification: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
-        match task_specification:
-            case ProgramSet():
-                return self._transform_program_set(
-                    task_specification, apply_noise_model=apply_noise_model)
-            case _:
-                return self._transform_circuit(
-                    task_specification, apply_noise_model=apply_noise_model)
 
-    def _transform_program_set(self, task_specification: ProgramSet,
-                               apply_noise_model: bool = True):
-        task_list = []
-        for task in task_specification:
-            program = self._pass_manager.transform(task)
-            has_measurement = any(
-                isinstance(instr.operator, Measure) for instr in task.instructions
-            )
-            if (not has_measurement) and len(task.result_types) == 0:
-                task.measure(target_qubits=task.qubits)
-            task_list.append(
-                self._noise_model.apply(program) if apply_noise_model and self.noise_model else task
-            )
-        return task_list
-
-    def _transform_circuit(self, task_specification: Circuit,
-                           apply_noise_model: bool = True):
         program = self._pass_manager.transform(task_specification)
+
         # Apply measurement manually if the circuit has no measurement and no result type.
         # This ensures that the noise model can apply readout error to the circuit, since
         # the readout error is applied if and only if there is measurement or result type
@@ -170,24 +146,17 @@ class Emulator(Device):
             self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
         )
 
-    def _remove_verbatim_box(self,
-                             noisy_verbatim_circ: TaskSpecification
-                             ) -> Circuit | ProgramSet:
+    def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
         """
         Remove the verbatim box in the noisy circuit before simulating on
         local braket density matrix simulator.
 
         Args:
-            noisy_verbatim_circ: The input verbatim noisy program (Circuit or list of Circuits)
+            noisy_verbatim_circ (Circuit): The input verbatim noisy program
 
         Returns:
-            Circuit or list of Circuits: A verbatim noisy program without the verbatim boxes
+            Circuit: A verbatim noisy program without the verbatim boxes
         """
-        match noisy_verbatim_circ:
-            case ProgramSet() | list():
-                return ProgramSet(
-                    [self._remove_verbatim_box(circuit) for circuit in noisy_verbatim_circ])
-
         noisy_verbatim_circ_2 = [
             instruction
             for instruction in noisy_verbatim_circ.instructions
