@@ -70,6 +70,4 @@ class PassManager:
         raise EmulatorValidationError(str(exception)) from exception
 
     def append(self, single_pass: ModifierPass | ValidationPass) -> None:
-        if isinstance(single_pass, ModifierPass, ValidationPass):
-            raise TypeError(f"{type(single_pass)} is unsupported for PassManager.")
         self._passes.append(single_pass)

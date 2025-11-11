@@ -48,7 +48,7 @@ class ModifierPass(ABC):
             TaskSpecification: The unmodified program passed in as input.
         """
         if isinstance(task_specification, self.supported_specifications):
-            self.modify(task_specification)
+            task_specification = self.modify(task_specification)
         return task_specification
 
     def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:

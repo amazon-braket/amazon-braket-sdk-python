@@ -31,7 +31,7 @@ class _NotImplementedValidator(ValidationPass):
     A validator that checks for features that are not implemented in the emulator.
     Currently checks for:
     1. Verbatim boxes - raises an error if the circuit does not have a verbatim box
-    2. ProgramSet - raises an error if the program is a ProgramSet
+    2. Specifications besides Circuit and ProgramSet
     """
 
     def validate(self, program: TaskSpecification) -> None:

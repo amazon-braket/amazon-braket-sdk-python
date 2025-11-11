@@ -5,11 +5,14 @@ from braket.program_sets import ProgramSet
 
 
 class NoiseModelModifier(ModifierPass):
-    def __init__(self, noise_model : NoiseModel):
+    def __init__(self, noise_model: NoiseModel):
+        """ """
         self._noise_model = noise_model
         self._supported_specifications = Circuit | ProgramSet
 
     def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+        if self._noise_model is None:
+            return circuits
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],

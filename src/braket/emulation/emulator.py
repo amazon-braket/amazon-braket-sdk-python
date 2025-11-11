@@ -25,7 +25,8 @@ from braket.emulation.passes import ValidationPass
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
-
+from braket.emulation.passes.circuit_passes import VerbatimModifier
+from braket.emulation.passes.circuit_passes import MeasurementModifier, NoiseModelModifier
 
 class Emulator(Device):
     """
@@ -82,7 +83,7 @@ class Emulator(Device):
         # Don't apply noise model as the local simulator will automatically apply it.
 
         # Remove the verbatim box before submitting to the braket density matrix simulator
-        task_specification_v2 = self._remove_verbatim_box(task_specification)
+        task_specification_v2 = VerbatimModifier().run(task_specification)
         return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
 
     def run_batch(
@@ -109,8 +110,9 @@ class Emulator(Device):
         """
         return self._noise_model
 
-    def transform(
-        self, task_specification: TaskSpecification, apply_noise_model: bool = True
+    def transform(self,
+        task_specification: TaskSpecification,
+        apply_noise_model: bool = True
     ) -> TaskSpecification:
         """
         Passes the input program through all Pass objects contained in this
@@ -127,16 +129,12 @@ class Emulator(Device):
             TaskSpecification: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
-
         program = self._pass_manager.transform(task_specification)
 
-        # Apply measurement manually if the circuit has no measurement and no result type.
-        # This ensures that the noise model can apply readout error to the circuit, since
-        # the readout error is applied if and only if there is measurement or result type
-        # in the circuit. The measurement operations should be added even if apply_noise_model
-        # is False.
-        return task_specification
-
+        modifier = PassManager([MeasurementModifier()])
+        if apply_noise_model:
+            modifier.append(NoiseModelModifier(noise_model=self.noise_model))
+        return modifier.transform(program)
 
     def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
         """
@@ -149,7 +147,7 @@ class Emulator(Device):
         Returns:
             Circuit: A verbatim noisy program without the verbatim boxes
         """
-        return noisy_verbatim_circ
+        return VerbatimModifier().modify(noisy_verbatim_circ)
 
     def validate(self, task_specification: TaskSpecification) -> None:
         """
