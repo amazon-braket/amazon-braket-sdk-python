@@ -15,6 +15,13 @@ from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.emulation.passes import ValidationPass
 from braket.program_sets import ProgramSet
 from braket.tasks.quantum_task import TaskSpecification
+from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+from braket.ahs import AnalogHamiltonianSimulation
+from braket.circuits import Circuit
+from braket.circuits.serialization import SerializableProgram
+from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
 
 
 class _NotImplementedValidator(ValidationPass):
@@ -37,9 +44,18 @@ class _NotImplementedValidator(ValidationPass):
             TypeError: If the program is a ProgramSet
         """
 
+        not_supported_specifications = (
+            OpenQASMProgram,
+            SerializableProgram,
+            AnalogHamiltonianSimulation,
+            OpenQASMProgramSet,
+            PulseSequence,
+            ProgramSet
+        )
+
         # Validate out ProgramSet
-        if isinstance(program, ProgramSet):
-            raise TypeError("ProgramSet is not supported yet.")
+        if isinstance(program, not_supported_specifications):
+            raise TypeError(f"Specification {type(program)} is not supported yet.")
 
         # Check if the program has a verbatim box when required
         has_verbatim_box = any(
