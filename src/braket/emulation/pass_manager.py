@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from braket.emulation.passes import ValidationPass, ModifierPass
+from braket.emulation.passes import ModifierPass, ValidationPass
 from braket.tasks.quantum_task import TaskSpecification
 
 

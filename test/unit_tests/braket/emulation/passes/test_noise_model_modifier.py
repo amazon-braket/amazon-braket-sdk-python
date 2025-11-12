@@ -67,7 +67,7 @@ def test_program_set_noise_application(noise_modifier):
     circuit2 = Circuit().x(1)
     program_set = ProgramSet([circuit1, circuit2], shots_per_executable=50)
 
-    result = noise_modifier.modify(program_set)
+    result = noise_modifier.run(program_set)
 
     # Both circuits should have noise applied
     assert len(result[0].instructions) > 1  # h + noise
@@ -78,6 +78,6 @@ def test_program_set_noise_application(noise_modifier):
 def test_empty_circuit_with_noise_model(noise_modifier):
     """Test that empty circuit remains empty even with noise model."""
     circuit = Circuit()
-    result = noise_modifier.modify(circuit)
+    result = noise_modifier.run(circuit)
 
     assert len(result.instructions) == 0

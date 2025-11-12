@@ -29,7 +29,6 @@ from braket.circuits import Circuit
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation._standardization import _standardize_ionq_device_properties
 from braket.program_sets import ProgramSet
-from braket.pulse import PulseSequence
 from braket.tasks.quantum_task import TaskSpecification
 
 ACTION_TO_SPECIFICATION = {
@@ -241,8 +240,6 @@ class DeviceEmulatorProperties:
         supportedSpecifications = []
         for action in properties_dict["action"]:
             supportedSpecifications += ACTION_TO_SPECIFICATION[action]
-        if "pulse" in device_properties:
-            supportedSpecifications.append(PulseSequence)
         supportedSpecifications = tuple(supportedSpecifications)
 
         supportedActions = properties_dict["action"]

@@ -17,16 +17,18 @@ from collections.abc import Iterable
 from typing import Any
 
 from braket.circuits import Circuit
-from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
+from braket.emulation.passes.circuit_passes import (
+    MeasurementModifier,
+    NoiseModelModifier,
+    VerbatimModifier,
+)
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
-from braket.emulation.passes.circuit_passes import VerbatimModifier
-from braket.emulation.passes.circuit_passes import MeasurementModifier, NoiseModelModifier
 
 
 class Emulator(Device):
