@@ -38,17 +38,17 @@ class VerbatimModifier(ModifierPass):
         >>> clean_circuit = modifier.modify(circuit)
         >>> # Now only contains the H gate
     """
-    
+
     def __init__(self):
         """Initialize the verbatim modifier."""
         self._supported_specifications = Circuit | ProgramSet
 
     def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Remove verbatim boxes from circuits.
-        
+
         Args:
             circuits: Circuit or ProgramSet to remove verbatim boxes from
-            
+
         Returns:
             Circuit(s) with verbatim box directives removed, preserving all
             quantum operations and result types
@@ -56,7 +56,8 @@ class VerbatimModifier(ModifierPass):
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],
-                shots_per_executable=circuits.shots_per_executable)
+                shots_per_executable=circuits.shots_per_executable,
+            )
 
         # Filter out verbatim box instructions
         filtered_instructions = [
@@ -64,10 +65,10 @@ class VerbatimModifier(ModifierPass):
             for instruction in circuits.instructions
             if not isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox))
         ]
-        
+
         # Create new circuit with filtered instructions
         modified_circuit = Circuit(filtered_instructions)
-        
+
         # Preserve all result types
         for result_type in circuits.result_types:
             modified_circuit.add(result_type)

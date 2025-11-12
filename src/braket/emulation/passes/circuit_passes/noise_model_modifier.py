@@ -61,5 +61,6 @@ class NoiseModelModifier(ModifierPass):
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],
-                shots_per_executable=circuits.shots_per_executable)
+                shots_per_executable=circuits.shots_per_executable,
+            )
         return self._noise_model.apply(circuits)

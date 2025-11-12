@@ -50,7 +50,8 @@ class MeasurementModifier(ModifierPass):
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],
-                shots_per_executable=circuits.shots_per_executable)
+                shots_per_executable=circuits.shots_per_executable,
+            )
 
         has_measurement = any(
             isinstance(instr.operator, Measure) for instr in circuits.instructions
@@ -58,4 +59,3 @@ class MeasurementModifier(ModifierPass):
         if (not has_measurement) and len(circuits.result_types) == 0:
             circuits.measure(target_qubits=circuits.qubits)
         return circuits
-    

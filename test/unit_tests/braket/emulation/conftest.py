@@ -213,8 +213,7 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
             "maximumExecutables": 5,
             "maximumTotalShots": 200000,
             "version": ["1"],
-            }
-
+        },
     },
     "braketSchemaHeader": {
         "name": "braket.device_schema.iqm.iqm_device_capabilities",

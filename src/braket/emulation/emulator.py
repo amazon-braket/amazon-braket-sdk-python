@@ -28,6 +28,7 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 from braket.emulation.passes.circuit_passes import VerbatimModifier
 from braket.emulation.passes.circuit_passes import MeasurementModifier, NoiseModelModifier
 
+
 class Emulator(Device):
     """
     An emulator is a simulation device that more closely resembles the capabilities and constraints
@@ -110,9 +111,8 @@ class Emulator(Device):
         """
         return self._noise_model
 
-    def transform(self,
-        task_specification: TaskSpecification,
-        apply_noise_model: bool = True
+    def transform(
+        self, task_specification: TaskSpecification, apply_noise_model: bool = True
     ) -> TaskSpecification:
         """
         Passes the input program through all Pass objects contained in this

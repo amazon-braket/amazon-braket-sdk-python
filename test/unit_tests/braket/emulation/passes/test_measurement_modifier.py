@@ -29,7 +29,7 @@ def test_circuit_without_measurements_adds_measurements(measurement_modifier):
     assert len(circuit.instructions) == 2  # h, cnot, measure(0), measure(1)
     circuit = measurement_modifier.modify(circuit)
     assert len(circuit.instructions) == 4  # h, cnot, measure(0), measure(1)
-    
+
     # Should add measurements for all qubits
     assert circuit.instructions[-2].operator.ascii_symbols == ("M",)
     assert circuit.instructions[-1].operator.ascii_symbols == ("M",)
@@ -49,6 +49,7 @@ def test_circuit_with_result_types_unchanged(measurement_modifier):
     result = measurement_modifier.modify(circuit)
     # Should remain unchanged since it has result types
     assert result == circuit
+
 
 def test_program_set_modification(measurement_modifier):
     """Test that ProgramSet circuits are individually modified."""

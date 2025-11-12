@@ -28,7 +28,7 @@ def test_removes_verbatim_boxes(verbatim_modifier):
     """Test that verbatim boxes are removed from circuit."""
     circuit = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1)).x(0)
     result = verbatim_modifier.modify(circuit)
-    
+
     # Should have h, cnot, x but no verbatim boxes
     assert len(result.instructions) == 3
     for instruction in result.instructions:
@@ -51,19 +51,19 @@ def test_circuit_without_verbatim_unchanged(verbatim_modifier):
     """Test that circuits without verbatim boxes are unchanged."""
     circuit = Circuit().h(0).cnot(0, 1).probability()
     result = verbatim_modifier.modify(circuit)
-    
+
     assert result == circuit
 
 
 def test_program_set_verbatim_removal(verbatim_modifier):
     """Test that verbatim boxes are removed from all circuits in ProgramSet."""
     circuit1 = Circuit().add_verbatim_box(Circuit().h(0))
-    
+
     circuit2 = Circuit().x(1)  # no verbatim
-    
+
     program_set = ProgramSet([circuit1, circuit2], shots_per_executable=75)
     result = verbatim_modifier.modify(program_set)
-    
+
     # First circuit should have verbatim removed, second unchanged
     assert len(result[0].instructions) == 1  # only h
     assert result[1] == circuit2
@@ -76,7 +76,7 @@ def test_multiple_verbatim_boxes(verbatim_modifier):
     circuit += Circuit().add_verbatim_box(Circuit().cnot(0, 1))
 
     result = verbatim_modifier.modify(circuit)
-    
+
     # Should have h, x, cnot but no verbatim boxes
     assert len(result.instructions) == 3
     for instruction in result.instructions:

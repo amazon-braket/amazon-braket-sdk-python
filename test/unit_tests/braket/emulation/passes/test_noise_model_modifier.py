@@ -37,7 +37,7 @@ def test_noise_model_applied_to_circuit(noise_modifier):
     """Test that noise model is correctly applied to circuit."""
     circuit = Circuit().h(0).x(1)
     result = noise_modifier.modify(circuit)
-    
+
     # Should have original gates plus noise
     assert len(result.instructions) > 2
     # Check that noise was added after H gate
@@ -46,7 +46,7 @@ def test_noise_model_applied_to_circuit(noise_modifier):
     for instruction in result.instructions:
         if instruction.operator == Gate.H():
             h_instruction_found = True
-        elif h_instruction_found and hasattr(instruction.operator, 'probability'):
+        elif h_instruction_found and hasattr(instruction.operator, "probability"):
             noise_after_h_found = True
             break
     assert h_instruction_found and noise_after_h_found
@@ -57,7 +57,7 @@ def test_none_noise_model_returns_unchanged():
     modifier = NoiseModelModifier(None)
     circuit = Circuit().h(0).x(1)
     result = modifier.modify(circuit)
-    
+
     assert result == circuit
 
 
@@ -66,9 +66,9 @@ def test_program_set_noise_application(noise_modifier):
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().x(1)
     program_set = ProgramSet([circuit1, circuit2], shots_per_executable=50)
-    
+
     result = noise_modifier.modify(program_set)
-    
+
     # Both circuits should have noise applied
     assert len(result[0].instructions) > 1  # h + noise
     assert len(result[1].instructions) > 1  # x + noise
@@ -79,5 +79,5 @@ def test_empty_circuit_with_noise_model(noise_modifier):
     """Test that empty circuit remains empty even with noise model."""
     circuit = Circuit()
     result = noise_modifier.modify(circuit)
-    
+
     assert len(result.instructions) == 0
