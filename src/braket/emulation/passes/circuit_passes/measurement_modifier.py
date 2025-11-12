@@ -18,10 +18,35 @@ from braket.program_sets import ProgramSet
 
 
 class MeasurementModifier(ModifierPass):
+    """A modifier pass that automatically adds measurements to circuits that lack them.
+
+    This pass ensures that circuits have measurements for execution by adding measurements
+    to all qubits in circuits that have neither explicit measurements nor result types.
+
+    Supported specifications:
+        - Circuit: Adds measurements if needed
+        - ProgramSet: Recursively applies to all contained circuits
+
+    Examples:
+        >>> modifier = MeasurementModifier()
+        >>> circuit = Circuit().h(0).cnot(0, 1)  # No measurements
+        >>> modified = modifier(circuit)
+        >>> # Now has measurements on qubits 0 and 1
+    """
+
     def __init__(self):
+        """Initialize the measurement modifier."""
         self._supported_specifications = Circuit | ProgramSet
 
     def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+        """Add measurements to circuits that lack them.
+
+        Args:
+            circuits: Circuit or ProgramSet to modify
+
+        Returns:
+            Modified circuit(s) with measurements added where needed
+        """
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],
@@ -33,3 +58,4 @@ class MeasurementModifier(ModifierPass):
         if (not has_measurement) and len(circuits.result_types) == 0:
             circuits.measure(target_qubits=circuits.qubits)
         return circuits
+    

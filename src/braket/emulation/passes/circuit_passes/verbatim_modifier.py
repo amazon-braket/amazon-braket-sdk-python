@@ -18,32 +18,58 @@ from braket.program_sets import ProgramSet
 
 
 class VerbatimModifier(ModifierPass):
+    """A modifier pass that removes verbatim boxes from circuits.
+
+    Verbatim boxes are hardware-specific directives that indicate sections of a circuit
+    should be executed exactly as specified without any compiler optimizations. This
+    modifier removes these directives while preserving the quantum operations within,
+    making circuits suitable for emulation on different backends.
+
+    Supported specifications:
+        - Circuit: Removes StartVerbatimBox and EndVerbatimBox instructions
+        - ProgramSet: Recursively applies to all contained circuits
+
+    Examples:
+        >>> modifier = VerbatimModifier()
+        >>> circuit = Circuit()
+        >>> circuit.add_instruction(StartVerbatimBox())
+        >>> circuit.h(0)
+        >>> circuit.add_instruction(EndVerbatimBox())
+        >>> clean_circuit = modifier.modify(circuit)
+        >>> # Now only contains the H gate
+    """
+    
     def __init__(self):
-        """ Modifer that removes VerbatimBox from Circuits """
+        """Initialize the verbatim modifier."""
         self._supported_specifications = Circuit | ProgramSet
 
     def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
-        """ remove VerbatimBox from the system
-
+        """Remove verbatim boxes from circuits.
+        
         Args:
-            circuits (Circuit | ProgramSet): specification to remove verbatim from
-
+            circuits: Circuit or ProgramSet to remove verbatim boxes from
+            
         Returns:
-            (Circuit | ProgramSet): output circuits or ProgramSets
-            """
+            Circuit(s) with verbatim box directives removed, preserving all
+            quantum operations and result types
+        """
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
                 [self.modify(item) for item in circuits],
-                shots_per_executable= circuits.shots_per_executable)
+                shots_per_executable=circuits.shots_per_executable)
 
-        noisy_verbatim_circ = [
+        # Filter out verbatim box instructions
+        filtered_instructions = [
             instruction
             for instruction in circuits.instructions
-            if not isinstance(instruction.operator, StartVerbatimBox)
-            and not isinstance(instruction.operator, EndVerbatimBox)
+            if not isinstance(instruction.operator, (StartVerbatimBox, EndVerbatimBox))
         ]
-        noisy_verbatim_circ_2 = Circuit(noisy_verbatim_circ)
+        
+        # Create new circuit with filtered instructions
+        modified_circuit = Circuit(filtered_instructions)
+        
+        # Preserve all result types
         for result_type in circuits.result_types:
-            noisy_verbatim_circ_2.add(result_type)
+            modified_circuit.add(result_type)
 
-        return noisy_verbatim_circ_2
+        return modified_circuit
