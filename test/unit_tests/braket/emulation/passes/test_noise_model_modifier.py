@@ -18,6 +18,7 @@ from braket.circuits.noise_model import GateCriteria, NoiseModel
 from braket.circuits.noises import BitFlip, Depolarizing
 from braket.emulation.passes.circuit_passes import NoiseModelModifier
 from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
 
 
 @pytest.fixture
@@ -81,3 +82,11 @@ def test_empty_circuit_with_noise_model(noise_modifier):
     result = noise_modifier.run(circuit)
 
     assert len(result.instructions) == 0
+
+
+def test_qasm_not_applied(noise_modifier):
+    """test that qasm is not modified but circuit is"""
+    circuit = Circuit().h(0)
+    qasm = circuit.to_ir()
+    assert circuit != noise_modifier.run(circuit)
+    assert qasm == noise_modifier.run(qasm)
