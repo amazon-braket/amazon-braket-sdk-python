@@ -56,7 +56,7 @@ def noiseless_emulator(local_dm_simulator):
 def noisy_emulator(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
+    local_backend = LocalSimulator("braket_dm")
     qubit_count_validator = QubitCountValidator(4)
     return Emulator(local_backend, noise_model=noise_model, passes=[qubit_count_validator])
 

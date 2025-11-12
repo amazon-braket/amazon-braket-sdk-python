@@ -82,9 +82,7 @@ class Emulator(Device):
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
 
-        task_specification = self.transform(task_specification, apply_noise_model=False)
-        # Don't apply noise model as the local simulator will automatically apply it.
-
+        task_specification = self.transform(task_specification, apply_noise_model=True)
         # Remove the verbatim box before submitting to the braket density matrix simulator
         task_specification_v2 = VerbatimModifier().run(task_specification)
         return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)

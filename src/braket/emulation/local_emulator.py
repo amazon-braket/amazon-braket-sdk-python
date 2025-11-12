@@ -98,7 +98,7 @@ class LocalEmulator(Emulator):
             ProgramSetValidator(device_em_properties.supported_actions),
         ]
 
-        local_backend = LocalSimulator(backend=backend, noise_model=noise_model)
+        local_backend = LocalSimulator(backend=backend)
         return cls(backend=local_backend, noise_model=noise_model, passes=passes, **kwargs)
 
     @classmethod
