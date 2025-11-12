@@ -44,7 +44,5 @@ class SpecificationValidator(ValidationPass):
         """
         if not isinstance(circuit, self.device_supported_specifications):
             raise ValueError(  # noqa: TRY004
-                f"{type(circuit)} not in supported specifications: {
-                    self.device_supported_specifications
-                }"
+                f"{type(circuit)} not in supported specifications: {self.device_supported_specifications}"  # noqa: E501
             )
