@@ -20,6 +20,9 @@ class Devices:
         TN1 = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
         DM1 = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 
+    class _AQT(str, Enum):
+        IbexQ1 = "arn:aws:braket:eu-north-1::device/qpu/aqt/Ibex-Q1"
+
     class _DWave(str, Enum):
         _Advantage1 = "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
         _Advantage3 = "arn:aws:braket:::device/qpu/d-wave/Advantage_system3"
@@ -59,6 +62,7 @@ class Devices:
         _Borealis = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
 
     Amazon = _Amazon
+    AQT = _AQT
     # DWave = _DWave
     IonQ = _IonQ
     IQM = _IQM
