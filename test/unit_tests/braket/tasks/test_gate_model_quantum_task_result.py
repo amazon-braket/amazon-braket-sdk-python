@@ -89,8 +89,8 @@ MEASURE 7 ro[1]
 
 
 @pytest.fixture
-def additional_metadata_aqt():
-    source = """
+def qasm3_program():
+    return """
     OPENQASM 3.0;
     bit[2] b;
     h $0;
@@ -98,40 +98,27 @@ def additional_metadata_aqt():
     b[0] = measure $0;
     b[1] = measure $7;
     """
-    program = openqasm.Program(source=source)
-    aqt_metadata = AqtMetadata(compiledProgram=source)
+
+
+@pytest.fixture
+def additional_metadata_aqt(qasm3_program):
+    program = openqasm.Program(source=qasm3_program)
+    aqt_metadata = AqtMetadata(compiledProgram=qasm3_program)
 
     return AdditionalMetadata(action=program, aqtMetadata=aqt_metadata)
 
 
 @pytest.fixture
-def additional_metadata_iqm():
-    source = """
-    OPENQASM 3.0;
-    bit[2] b;
-    h $0;
-    cnot $0, $7;
-    b[0] = measure $0;
-    b[1] = measure $7;
-    """
-    program = openqasm.Program(source=source)
-    iqm_metadata = IqmMetadata(compiledProgram=source)
+def additional_metadata_iqm(qasm3_program):
+    program = openqasm.Program(source=qasm3_program)
+    iqm_metadata = IqmMetadata(compiledProgram=qasm3_program)
 
     return AdditionalMetadata(action=program, iqmMetadata=iqm_metadata)
 
 
 @pytest.fixture
-def additional_metadata_rigetti(quil_program):
-    program = openqasm.Program(
-        source="""
-        OPENQASM 3.0;
-        bit[2] b;
-        h $0;
-        cnot $0, $7;
-        b[0] = measure $0;
-        b[1] = measure $7;
-        """
-    )
+def additional_metadata_rigetti(qasm3_program, quil_program):
+    program = openqasm.Program(source=qasm3_program)
     rigetti_metadata = RigettiMetadata(compiledProgram=quil_program)
 
     return AdditionalMetadata(action=program, rigettiMetadata=rigetti_metadata)
