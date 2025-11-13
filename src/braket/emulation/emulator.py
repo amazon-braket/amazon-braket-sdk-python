@@ -22,9 +22,9 @@ from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
 from braket.emulation.passes.circuit_passes import (
-    MeasurementModifier,
-    NoiseModelModifier,
-    VerbatimModifier,
+    MeasurementTransformation,
+    NoiseModelTransformation,
+    VerbatimTransformation,
 )
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
@@ -84,7 +84,7 @@ class Emulator(Device):
 
         task_specification = self.transform(task_specification, apply_noise_model=True)
         # Remove the verbatim box before submitting to the braket density matrix simulator
-        task_specification_v2 = VerbatimModifier().run(task_specification)
+        task_specification_v2 = VerbatimTransformation().run(task_specification)
         return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
 
     def run_batch(
@@ -131,9 +131,9 @@ class Emulator(Device):
         """
         program = self._pass_manager.transform(task_specification)
 
-        modifier = PassManager([MeasurementModifier()])
+        modifier = PassManager([MeasurementTransformation()])
         if apply_noise_model:
-            modifier.append(NoiseModelModifier(noise_model=self.noise_model))
+            modifier.append(NoiseModelTransformation(noise_model=self.noise_model))
         return modifier.transform(program)
 
     def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
@@ -147,7 +147,7 @@ class Emulator(Device):
         Returns:
             Circuit: A verbatim noisy program without the verbatim boxes
         """
-        return VerbatimModifier().modify(noisy_verbatim_circ)
+        return VerbatimTransformation().run(noisy_verbatim_circ)
 
     def validate(self, task_specification: TaskSpecification) -> None:
         """

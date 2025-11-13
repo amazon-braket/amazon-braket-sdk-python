@@ -13,12 +13,12 @@
 
 from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
-from braket.emulation.passes import ModifierPass
+from braket.emulation.passes import TransformationPass
 from braket.program_sets import ProgramSet
 
 
-class NoiseModelModifier(ModifierPass):
-    """A modifier pass that applies noise models to circuits.
+class NoiseModelTransformation(TransformationPass):
+    """A transformation pass that applies noise models to circuits.
 
     This pass applies a specified noise model to circuits, adding noise operations
     according to the noise model's criteria. This is essential for realistic device
@@ -47,7 +47,7 @@ class NoiseModelModifier(ModifierPass):
         self._noise_model = noise_model
         self._supported_specifications = Circuit | ProgramSet
 
-    def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+    def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Apply noise model to circuits.
 
         Args:
@@ -60,7 +60,7 @@ class NoiseModelModifier(ModifierPass):
             return circuits
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
-                [self.modify(item) for item in circuits],
+                [self.transform(item) for item in circuits],
                 shots_per_executable=circuits.shots_per_executable,
             )
         return self._noise_model.apply(circuits)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from braket.emulation.passes import ModifierPass, ValidationPass
+from braket.emulation.passes import TransformationPass, ValidationPass
 from braket.tasks.quantum_task import TaskSpecification
 
 
@@ -24,7 +24,7 @@ class EmulatorValidationError(Exception):
 
 
 class PassManager:
-    def __init__(self, passes: Iterable[ValidationPass | ModifierPass] | None = None):
+    def __init__(self, passes: Iterable[ValidationPass | TransformationPass] | None = None):
         self._passes = passes if passes is not None else []
 
     def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
@@ -69,5 +69,5 @@ class PassManager:
         """
         raise EmulatorValidationError(str(exception)) from exception
 
-    def append(self, single_pass: ModifierPass | ValidationPass) -> None:
+    def append(self, single_pass: TransformationPass | ValidationPass) -> None:
         self._passes.append(single_pass)

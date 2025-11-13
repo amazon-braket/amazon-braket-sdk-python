@@ -18,11 +18,11 @@ from braket.emulation.passes.circuit_passes.gate_connectivity_validator import (
     GateConnectivityValidator,
 )
 from braket.emulation.passes.circuit_passes.gate_validator import GateValidator  # noqa: F401
-from braket.emulation.passes.circuit_passes.measurement_modifier import (
-    MeasurementModifier,  # noqa: F401
+from braket.emulation.passes.circuit_passes.measurement_transformation import (
+    MeasurementTransformation,  # noqa: F401
 )
-from braket.emulation.passes.circuit_passes.noise_model_modifier import (
-    NoiseModelModifier,  # noqa: F401
+from braket.emulation.passes.circuit_passes.noise_model_transformation import (
+    NoiseModelTransformation,  # noqa: F401
 )
 from braket.emulation.passes.circuit_passes.not_implemented_validator import (  # noqa: F401
     _NotImplementedValidator,
@@ -33,6 +33,6 @@ from braket.emulation.passes.circuit_passes.qubit_count_validator import (  # no
 from braket.emulation.passes.circuit_passes.result_type_validator import (  # noqa: F401
     ResultTypeValidator,
 )
-from braket.emulation.passes.circuit_passes.verbatim_modifier import (  # noqa: F401
-    VerbatimModifier,
+from braket.emulation.passes.circuit_passes.verbatim_transformation import (  # noqa: F401
+    VerbatimTransformation,
 )

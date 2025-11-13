@@ -16,7 +16,7 @@ import pytest
 from braket.circuits import Circuit, Gate
 from braket.circuits.noise_model import GateCriteria, NoiseModel
 from braket.circuits.noises import BitFlip, Depolarizing
-from braket.emulation.passes.circuit_passes import NoiseModelModifier
+from braket.emulation.passes.circuit_passes import NoiseModelTransformation
 from braket.program_sets import ProgramSet
 from braket.pulse import PulseSequence
 
@@ -30,14 +30,14 @@ def noise_model():
 
 
 @pytest.fixture
-def noise_modifier(noise_model):
-    return NoiseModelModifier(noise_model)
+def noise_transformation(noise_model):
+    return NoiseModelTransformation(noise_model)
 
 
-def test_noise_model_applied_to_circuit(noise_modifier):
+def test_noise_model_applied_to_circuit(noise_transformation):
     """Test that noise model is correctly applied to circuit."""
     circuit = Circuit().h(0).x(1)
-    result = noise_modifier.modify(circuit)
+    result = noise_transformation.transform(circuit)
 
     # Should have original gates plus noise
     assert len(result.instructions) > 2
@@ -55,20 +55,20 @@ def test_noise_model_applied_to_circuit(noise_modifier):
 
 def test_none_noise_model_returns_unchanged():
     """Test that None noise model returns circuit unchanged."""
-    modifier = NoiseModelModifier(None)
+    modifier = NoiseModelTransformation(None)
     circuit = Circuit().h(0).x(1)
-    result = modifier.modify(circuit)
+    result = modifier.transform(circuit)
 
     assert result == circuit
 
 
-def test_program_set_noise_application(noise_modifier):
+def test_program_set_noise_application(noise_transformation):
     """Test that noise is applied to all circuits in ProgramSet."""
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().x(1)
     program_set = ProgramSet([circuit1, circuit2], shots_per_executable=50)
 
-    result = noise_modifier.run(program_set)
+    result = noise_transformation.run(program_set)
 
     # Both circuits should have noise applied
     assert len(result[0].instructions) > 1  # h + noise
@@ -76,17 +76,17 @@ def test_program_set_noise_application(noise_modifier):
     assert result.shots_per_executable == 50
 
 
-def test_empty_circuit_with_noise_model(noise_modifier):
+def test_empty_circuit_with_noise_model(noise_transformation):
     """Test that empty circuit remains empty even with noise model."""
     circuit = Circuit()
-    result = noise_modifier.run(circuit)
+    result = noise_transformation.run(circuit)
 
     assert len(result.instructions) == 0
 
 
-def test_qasm_not_applied(noise_modifier):
+def test_qasm_not_applied(noise_transformation):
     """test that qasm is not modified but circuit is"""
     circuit = Circuit().h(0)
     qasm = circuit.to_ir()
-    assert circuit != noise_modifier.run(circuit)
-    assert qasm == noise_modifier.run(qasm)
+    assert circuit != noise_transformation.run(circuit)
+    assert qasm == noise_transformation.run(qasm)

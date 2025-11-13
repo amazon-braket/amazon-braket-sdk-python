@@ -14,20 +14,20 @@
 import pytest
 
 from braket.circuits import Circuit
-from braket.emulation.passes.circuit_passes import MeasurementModifier
+from braket.emulation.passes.circuit_passes import MeasurementTransformation
 from braket.program_sets import ProgramSet
 
 
 @pytest.fixture
-def measurement_modifier():
-    return MeasurementModifier()
+def measurement_transformation():
+    return MeasurementTransformation()
 
 
-def test_circuit_without_measurements_adds_measurements(measurement_modifier):
+def test_circuit_without_measurements_adds_measurements(measurement_transformation):
     """Test that circuits without measurements get measurements added."""
     circuit = Circuit().h(0).cnot(0, 1)
     assert len(circuit.instructions) == 2  # h, cnot, measure(0), measure(1)
-    circuit = measurement_modifier.modify(circuit)
+    circuit = measurement_transformation.transform(circuit)
     assert len(circuit.instructions) == 4  # h, cnot, measure(0), measure(1)
 
     # Should add measurements for all qubits
@@ -35,29 +35,29 @@ def test_circuit_without_measurements_adds_measurements(measurement_modifier):
     assert circuit.instructions[-1].operator.ascii_symbols == ("M",)
 
 
-def test_circuit_with_measurements_unchanged(measurement_modifier):
+def test_circuit_with_measurements_unchanged(measurement_transformation):
     """Test that circuits with measurements are not modified."""
     circuit = Circuit().h(0).measure(0)
-    result = measurement_modifier.modify(circuit)
+    result = measurement_transformation.transform(circuit)
     # Should remain unchanged
     assert result == circuit
 
 
-def test_circuit_with_result_types_unchanged(measurement_modifier):
+def test_circuit_with_result_types_unchanged(measurement_transformation):
     """Test that circuits with result types are not modified."""
     circuit = Circuit().h(0).probability()
-    result = measurement_modifier.modify(circuit)
+    result = measurement_transformation.transform(circuit)
     # Should remain unchanged since it has result types
     assert result == circuit
 
 
-def test_program_set_modification(measurement_modifier):
+def test_program_set_modification(measurement_transformation):
     """Test that ProgramSet circuits are individually modified."""
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().x(1).measure(1)
     program_set = ProgramSet([circuit1, circuit2], shots_per_executable=100)
 
-    result = measurement_modifier.modify(program_set)
+    result = measurement_transformation.transform(program_set)
 
     # First circuit should get measurement added, second unchanged
     assert len(result[0].instructions) == 2  # h + measure
@@ -65,10 +65,10 @@ def test_program_set_modification(measurement_modifier):
     assert result.shots_per_executable == 100
 
 
-def test_empty_circuit(measurement_modifier):
+def test_empty_circuit(measurement_transformation):
     """Test that empty circuits get measurements for all qubits (none)."""
     circuit = Circuit()
-    result = measurement_modifier.modify(circuit)
+    result = measurement_transformation.transform(circuit)
 
     # Empty circuit has no qubits, so no measurements added
     assert len(result.instructions) == 0

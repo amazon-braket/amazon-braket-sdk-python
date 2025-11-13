@@ -18,11 +18,11 @@ from abc import ABC, abstractmethod
 from braket.tasks.quantum_task import TaskSpecification
 
 
-class ModifierPass(ABC):
+class TransformationPass(ABC):
     _supported_specifications: TaskSpecification
 
     @abstractmethod
-    def modify(self, task_specification: TaskSpecification) -> TaskSpecification:
+    def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
         An emulator modifier is used to perform some potentially modifying validation
         pass on an input program. Implementations of modify should return the same
@@ -48,7 +48,7 @@ class ModifierPass(ABC):
             TaskSpecification: The unmodified program passed in as input.
         """
         if isinstance(task_specification, self.supported_specifications):
-            task_specification = self.modify(task_specification)
+            task_specification = self.transform(task_specification)
         return task_specification
 
     def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:

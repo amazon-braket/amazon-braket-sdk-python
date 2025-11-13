@@ -13,12 +13,12 @@
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.emulation.passes import ModifierPass
+from braket.emulation.passes import TransformationPass
 from braket.program_sets import ProgramSet
 
 
-class VerbatimModifier(ModifierPass):
-    """A modifier pass that removes verbatim boxes from circuits.
+class VerbatimTransformation(TransformationPass):
+    """A transformation pass that removes verbatim boxes from circuits.
 
     Verbatim boxes are hardware-specific directives that indicate sections of a circuit
     should be executed exactly as specified without any compiler optimizations. This
@@ -35,7 +35,7 @@ class VerbatimModifier(ModifierPass):
         >>> circuit.add_instruction(StartVerbatimBox())
         >>> circuit.h(0)
         >>> circuit.add_instruction(EndVerbatimBox())
-        >>> clean_circuit = modifier.modify(circuit)
+        >>> clean_circuit = modifier.transform(circuit)
         >>> # Now only contains the H gate
     """
 
@@ -43,7 +43,7 @@ class VerbatimModifier(ModifierPass):
         """Initialize the verbatim modifier."""
         self._supported_specifications = Circuit | ProgramSet
 
-    def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+    def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Remove verbatim boxes from circuits.
 
         Args:
@@ -55,7 +55,7 @@ class VerbatimModifier(ModifierPass):
         """
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
-                [self.modify(item) for item in circuits],
+                [self.transform(item) for item in circuits],
                 shots_per_executable=circuits.shots_per_executable,
             )
 

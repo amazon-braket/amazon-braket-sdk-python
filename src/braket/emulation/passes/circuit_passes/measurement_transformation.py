@@ -13,12 +13,12 @@
 
 from braket.circuits import Circuit
 from braket.circuits.measure import Measure
-from braket.emulation.passes import ModifierPass
+from braket.emulation.passes import TransformationPass
 from braket.program_sets import ProgramSet
 
 
-class MeasurementModifier(ModifierPass):
-    """A modifier pass that automatically adds measurements to circuits that lack them.
+class MeasurementTransformation(TransformationPass):
+    """A transformation pass that automatically adds measurements to circuits that lack them.
 
     This pass ensures that circuits have measurements for execution by adding measurements
     to all qubits in circuits that have neither explicit measurements nor result types.
@@ -38,7 +38,7 @@ class MeasurementModifier(ModifierPass):
         """Initialize the measurement modifier."""
         self._supported_specifications = Circuit | ProgramSet
 
-    def modify(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+    def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Add measurements to circuits that lack them.
 
         Args:
@@ -49,7 +49,7 @@ class MeasurementModifier(ModifierPass):
         """
         if isinstance(circuits, ProgramSet):
             return ProgramSet(
-                [self.modify(item) for item in circuits],
+                [self.transform(item) for item in circuits],
                 shots_per_executable=circuits.shots_per_executable,
             )
 
