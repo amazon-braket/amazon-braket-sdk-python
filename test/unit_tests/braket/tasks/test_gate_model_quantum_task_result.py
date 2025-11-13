@@ -140,18 +140,8 @@ def qasm2_program():
 
 
 @pytest.fixture
-def additional_metadata_oqc(qasm2_program):
-    program = openqasm.Program(
-        source="""
-        OPENQASM 3.0;
-        bit[2] b;
-        qubit[8] q;
-        h q[0];
-        cnot q[0], q[7];
-        b[0] = measure q[0];
-        b[1] = measure q[7];
-        """
-    )
+def additional_metadata_oqc(qasm3_program, qasm2_program):
+    program = openqasm.Program(source=qasm3_program)
     oqc_metadata = OqcMetadata(compiledProgram=qasm2_program)
 
     return AdditionalMetadata(action=program, oqcMetadata=oqc_metadata)
