@@ -33,7 +33,7 @@ class ProgramSetValidator(ValidationPass):
 
     def validate(self, task_specification: ProgramSet) -> None:
         """
-        Validates the number of executables and total program shots are valid. 
+        Validates the number of executables and total program shots are valid.
 
         Args:
             task_specification (ProgramSet): The Braket circuit whose qubit count to validate.
