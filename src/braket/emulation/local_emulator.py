@@ -86,7 +86,7 @@ class LocalEmulator(Emulator):
 
         passes = [
             _NotImplementedValidator(),
-            SpecificationValidator(device_em_properties.supported_specification),
+            SpecificationValidator(device_em_properties.supported_specifications),
             QubitCountValidator(device_em_properties.qubit_count),
             GateValidator(native_gates=device_em_properties.native_gate_set),
             _set_up_connectivity_validator(device_em_properties),

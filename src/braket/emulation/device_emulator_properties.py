@@ -205,7 +205,7 @@ class DeviceEmulatorProperties:
         return self._supported_result_types
 
     @property
-    def supported_specification(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
+    def supported_specifications(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
         return self._supported_specifications
 
     @property
