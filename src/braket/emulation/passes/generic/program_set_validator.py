@@ -33,14 +33,13 @@ class ProgramSetValidator(ValidationPass):
 
     def validate(self, task_specification: ProgramSet) -> None:
         """
-        Checks that the number of qubits used in this circuit does not exceed this
-        validator's qubit_count max.
+        Validates the number of executables and total program shots are valid. 
 
         Args:
             task_specification (ProgramSet): The Braket circuit whose qubit count to validate.
 
         Raises:
-            ValueError: If the number of qubits used in the circuit exceeds the qubit_count.
+            ValueError: Too many executables or too many shots.
 
         """
         pset_action = self.device_actions["braket.ir.openqasm.program_set"]
