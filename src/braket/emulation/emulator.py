@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable
 from typing import Any
 
@@ -85,6 +86,10 @@ class Emulator(Device):
         task_specification = self.transform(task_specification, apply_noise_model=True)
         # Remove the verbatim box before submitting to the braket density matrix simulator
         task_specification_v2 = VerbatimTransformation().run(task_specification)
+
+        if hasattr(self._backend, "_noise_model") and self._backend._noise_model is not None:
+            warnings.warn("Backend device already has a noise model defined.", stacklevel=2)
+
         return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
 
     def run_batch(

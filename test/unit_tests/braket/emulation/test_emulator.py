@@ -124,3 +124,10 @@ b[0] = measure q[0];""".strip()
     result = noisy_emulator.run(circuit, shots=1).result()
     emulation_source = result.additional_metadata.action.source.strip()
     assert emulation_source == open_qasm_source
+
+
+def test_backend_noise_model_warning(local_dm_simulator):
+    with pytest.warns(UserWarning, match="Backend device already has a noise model defined."):
+        emulator = Emulator(local_dm_simulator)
+        circuit = Circuit().h(0)
+        emulator.run(circuit, shots=1)
