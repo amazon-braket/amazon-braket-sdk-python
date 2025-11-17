@@ -117,7 +117,9 @@ class Emulator(Device):
         return self._noise_model
 
     def transform(
-        self, task_specification: TaskSpecification, apply_noise_model: bool = True
+        self,
+        task_specification: TaskSpecification,
+        apply_noise_model: bool = True,
     ) -> TaskSpecification:
         """
         Passes the input program through all Pass objects contained in this
@@ -140,19 +142,6 @@ class Emulator(Device):
         if apply_noise_model:
             modifier.append(NoiseModelTransformation(noise_model=self.noise_model))
         return modifier.transform(program)
-
-    def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
-        """
-        Remove the verbatim box in the noisy circuit before simulating on
-        local braket density matrix simulator.
-
-        Args:
-            noisy_verbatim_circ (Circuit): The input verbatim noisy program
-
-        Returns:
-            Circuit: A verbatim noisy program without the verbatim boxes
-        """
-        return VerbatimTransformation().run(noisy_verbatim_circ)
 
     def validate(self, task_specification: TaskSpecification) -> None:
         """

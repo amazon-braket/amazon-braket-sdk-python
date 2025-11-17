@@ -102,15 +102,6 @@ def test_apply_noise_model(noisy_emulator):
     assert circuit == target_circ
 
 
-def test_remove_verbatim_box(noiseless_emulator):
-    circuit = Circuit().h(0)
-    circuit = Circuit().add_verbatim_box(circuit).probability()
-    circuit = noiseless_emulator._remove_verbatim_box(circuit)
-
-    target_circuit = Circuit().h(0).probability()
-
-    assert circuit == target_circuit
-
 
 def test_noisy_run(noisy_emulator):
     circuit = Circuit().h(0)
