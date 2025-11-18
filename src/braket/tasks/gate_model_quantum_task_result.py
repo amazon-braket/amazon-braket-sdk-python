@@ -152,12 +152,14 @@ class GateModelQuantumTaskResult:
         metadata = self.additional_metadata
         if not metadata:
             return None
+        if metadata.aqtMetadata:
+            return metadata.aqtMetadata.compiledProgram
+        if metadata.iqmMetadata:
+            return metadata.iqmMetadata.compiledProgram
         if metadata.rigettiMetadata:
             return metadata.rigettiMetadata.compiledProgram
         if metadata.oqcMetadata:
             return metadata.oqcMetadata.compiledProgram
-        if metadata.iqmMetadata:
-            return metadata.iqmMetadata.compiledProgram
         return None
 
     @staticmethod
