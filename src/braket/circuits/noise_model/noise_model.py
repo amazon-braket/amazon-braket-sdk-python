@@ -207,13 +207,13 @@ class NoiseModel:
         specified, the returned NoiseModel will be the same as this one.
 
         Args:
-            qubit (Optional[QubitSetInput]): The qubit to filter. Default is None.
+            qubit (QubitSetInput | None): The qubit to filter. Default is None.
                 If not None, the returned NoiseModel will only have Noise that might be applicable
                 to the passed qubit (or qubit list, if the criteria acts on a multi-qubit Gate).
-            gate (Optional[Gate]): The gate to filter. Default is None. If not None,
+            gate (Gate | None): The gate to filter. Default is None. If not None,
                 the returned NoiseModel will only have Noise that might be applicable
                 to the passed Gate.
-            noise (Optional[type[Noise]]): The noise class to filter. Default is None.
+            noise (type[Noise] | None): The noise class to filter. Default is None.
                 If not None, the returned NoiseModel will only have noise that is of the same
                 class as the given noise class.
 

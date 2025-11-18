@@ -29,7 +29,7 @@ class MeasureCriteria(CircuitInstructionCriteria):
         """Creates Measure-based Criteria.
 
         Args:
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
         """
         self._qubits = parse_qubit_input(qubits, 1)
@@ -55,7 +55,7 @@ class MeasureCriteria(CircuitInstructionCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.

@@ -30,7 +30,7 @@ class Port:
         Args:
             port_id (str): str identifying a unique port on the device.
             dt (float): The smallest time step that may be used on the control hardware.
-            properties (Optional[dict[str, Any]]): Dict containing properties of
+            properties (dict[str, Any] | None): Dict containing properties of
                 this port. Defaults to None.
         """
         self._port_id = port_id
