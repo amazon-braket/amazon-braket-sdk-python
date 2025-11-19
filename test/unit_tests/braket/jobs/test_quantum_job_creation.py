@@ -680,12 +680,12 @@ def test_process_input_data(aws_session, input_data, input_data_configs):
     assert _process_input_data(input_data, job_name, aws_session, "ts") == input_data_configs
 
 
-@pytest.mark.parametrize("name", ["A", "job-123", "X"*50])
+@pytest.mark.parametrize("name", ["A", "job-123", "X" * 50])
 def test_valid_job_names(name):
     _validate_quantum_job_name(name)
 
 
-@pytest.mark.parametrize("name", ["", "job_case", "-leading", "trailing-", "X"*51])
+@pytest.mark.parametrize("name", ["", "job_case", "-leading", "trailing-", "X" * 51])
 def test_invalid_job_names(name):
     with pytest.raises(ValueError):
         _validate_quantum_job_name(name)
