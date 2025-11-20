@@ -64,6 +64,7 @@ setup(
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
+            "sphinx-autodoc-typehints",
         ],
     },
     include_package_data=True,
