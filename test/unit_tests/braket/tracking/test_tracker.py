@@ -74,6 +74,9 @@ CREATE_EVENTS = [
         arn="task_cancel:::region", shots=0, is_job_task=False, device="simulator/baz"
     ),
     _TaskCreationEvent(
+        arn="ibex_task:::region", shots=100, is_job_task=False, device="qpu/Ibex-Q1"
+    ),
+    _TaskCreationEvent(
         arn="2000qtask:::region", shots=100, is_job_task=False, device="qpu/2000Qxyz"
     ),
     _TaskCreationEvent(
@@ -164,7 +167,7 @@ def mock_qpu_price(**kwargs):
 def test_qpu_task_cost(price_mock, completed_tracker):
     price_mock.side_effect = mock_qpu_price
     cost = completed_tracker.qpu_tasks_cost()
-    assert cost == Decimal("3.3")
+    assert cost == Decimal("4.4")
 
     price_mock.side_effect = [[]]
     with pytest.raises(ValueError, match="Found 0 products"):
@@ -217,6 +220,7 @@ def test_quantum_task_statistics(completed_tracker):
             "billed_execution_duration": timedelta(seconds=12, microseconds=345000),
         },
         "simulator/baz": {"shots": 0, "tasks": {"CANCELLED": 1}},
+        "qpu/Ibex-Q1": {"shots": 100, "tasks": {"CREATED": 1}},
         "qpu/2000Qxyz": {"shots": 100, "tasks": {"CREATED": 1}},
         "qpu/Advantage_system123": {"shots": 100, "tasks": {"CREATED": 1}},
         "something_else": {"shots": 1000, "tasks": {"CREATED": 1}},

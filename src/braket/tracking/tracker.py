@@ -66,7 +66,7 @@ class Tracker:
         Args:
             event (_TaskCreationEvent): The event to process.
         """
-        self._recieve_internal(event)
+        self._receive_internal(event)
 
     def tracked_resources(self) -> list[str]:
         """Resources tracked by this tracker.
@@ -173,7 +173,7 @@ class Tracker:
 
         return stats
 
-    def _recieve_internal(self, event: _TrackingEvent) -> None:
+    def _receive_internal(self, event: _TrackingEvent) -> None:
         resources = self._resources
         match event:
             case _TaskCreationEvent(arn, shots, is_job_task, device):
@@ -214,7 +214,9 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
 
     device_name = details["device"].split("/")[-1]
     device_name = device_name[0].upper() + device_name[1:]
-    if "2000Q" in device_name:
+    if "Ibex" in device_name:
+        device_name = device_name.replace("Ibex", "IBEX")
+    elif "2000Q" in device_name:
         device_name = "2000Q"
     elif "Advantage_system" in device_name:
         device_name = "Advantage_system"

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.105.0 (2025-11-18)
+
+### Features
+
+ * AQT
+
 ## v1.104.1 (2025-10-31)
 
 ### Bug Fixes and Other Changes
