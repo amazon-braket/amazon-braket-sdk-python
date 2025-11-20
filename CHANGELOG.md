@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.106.0 (2025-11-20)
+
+### Features
+
+ * emulator support for AQT devices
+
 ## v1.105.0 (2025-11-18)
 
 ### Features
