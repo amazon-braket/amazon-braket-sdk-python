@@ -389,13 +389,14 @@ class AwsQuantumTask(QuantumTask):
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)
         status = metadata.get("status")
-        if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
-            if status == "FAILED" and self.action_type == DeviceActionType.OPENQASM_PROGRAM_SET:
+        if status == "FAILED" and self.action_type == DeviceActionType.OPENQASM_PROGRAM_SET:
+            if not use_cached_value:
                 self._logger.warning(
                     f"Task is in terminal state {status}; see result for more details"
                 )
-                self._result_available = True
-                return status
+            self._result_available = True
+            return status
+        if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
             self._logger.warning(f"Task is in terminal state {status} and no result is available.")
             if status == "FAILED":
                 failure_reason = metadata.get("failureReason", "unknown")
@@ -425,12 +426,13 @@ class AwsQuantumTask(QuantumTask):
             returns `None` if the quantum task did not complete successfully
             or the future timed out.
         """
-        if self._result or (
-            self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
-        ):
+        if self._result:
             return self._result
-        if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
+        status = self._update_status_if_nonterminal()
+        if self._result_available:
             return self._download_result()
+        if status in self.NO_RESULT_TERMINAL_STATES:
+            return self._result
         try:
             async_result = self.async_result()
             return async_result.get_loop().run_until_complete(async_result)
