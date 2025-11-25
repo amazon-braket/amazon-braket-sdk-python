@@ -231,7 +231,7 @@ class LocalEmulator(Emulator):
 
                 # Notes for the scaling factor 3/2:
                 # For a given input density matrix rho, and error rate p,
-                # TwoQubitDepolarizing(p, rho) = (1-16p/15)rho + (16p/15)(I/4) where (I/2) is
+                # TwoQubitDepolarizing(p, rho) = (1-16p/15)rho + (16p/15)(I/4) where (I/4) is
                 # the two qubit maximally mixed state. Then for a pure state rho = |00><00|,
                 # or generally |ψ><ψ|, the input-output state fidelity reads 1-4p/5.
                 # Hence, for a "target two qubit gate average gate fidelity" q,
