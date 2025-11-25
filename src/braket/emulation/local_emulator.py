@@ -229,7 +229,7 @@ class LocalEmulator(Emulator):
             for gate_name, gate_ind in valid_gate_names.items():
                 gate_fidelity = twoQubitGateFidelity[gate_ind]
 
-                # Notes for the scaling factor 3/2:
+                # Notes for the scaling factor 5/4:
                 # For a given input density matrix rho, and error rate p,
                 # TwoQubitDepolarizing(p, rho) = (1-16p/15)rho + (16p/15)(I/4) where (I/4) is
                 # the two qubit maximally mixed state. Then for a pure state rho = |00><00|,
