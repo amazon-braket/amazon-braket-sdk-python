@@ -187,7 +187,7 @@ class LocalEmulator(Emulator):
             # Hence, for a "target one qubit gate average gate fidelity" q,
             # which is the spec in the device property, the corresponing
             # "target one qubit gate average error rate" is (1-q) * 3/2, not (1-q).
-            one_qubit_depolarizing_rate = (1 - one_qubit_fidelity) #* 3 / 2
+            one_qubit_depolarizing_rate = (1 - one_qubit_fidelity) * 3 / 2
 
             noise_model.add_noise(
                 Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit)
@@ -237,7 +237,7 @@ class LocalEmulator(Emulator):
                 # Hence, for a "target two qubit gate average gate fidelity" q,
                 # which is the spec in the device property, the corresponing
                 # "target two qubit gate average error rate" is (1-q) * 5/4, not (1-q).
-                two_qubit_depolarizing_rate = (1 - gate_fidelity.fidelity) #* 5 / 4
+                two_qubit_depolarizing_rate = (1 - gate_fidelity.fidelity) * 5 / 4
 
                 gate = BRAKET_GATES[gate_name]
                 noise_model.add_noise(
