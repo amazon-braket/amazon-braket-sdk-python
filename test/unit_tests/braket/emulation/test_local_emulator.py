@@ -191,4 +191,4 @@ def test_two_qubit_depolarizing_rate(customized_emulator):
     num_samples = 1_000_000
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
     prob_00 = result["00"]
-    assert abs(TARGET_F1Q - prob_00) < 1 / np.sqrt(num_samples)
+    assert abs(TARGET_F2Q - prob_00) < 1 / np.sqrt(num_samples)
