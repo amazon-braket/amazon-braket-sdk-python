@@ -36,6 +36,7 @@ from braket.device_schema.result_type import ResultType
 
 import numpy as np
 
+
 def test_from_json_3(reduced_standardized_json):
     emulator = LocalEmulator.from_json(reduced_standardized_json)
     assert isinstance(emulator, LocalEmulator)
@@ -112,10 +113,12 @@ def test_program_set(reduced_standardized_json):
     with pytest.raises(TypeError):
         emulator.run(ps)
 
+
 # Below we test the one qubit and two qubit depolarizing rates are set correctly.
 
 TARGET_F1Q = 0.99
 TARGET_F2Q = 0.99
+
 
 @pytest.fixture
 def customized_emulator():
@@ -123,52 +126,69 @@ def customized_emulator():
     Fixture emulator with target one qubit and two qubit average gate fidelity
     """
 
-
-    f1q = {'T1': {'standardError': None, 'unit': 'S', 'value': 2e-05},
-     'T2': {'standardError': None, 'unit': 'S', 'value': 8e-06},
-     'oneQubitFidelity': [{'fidelity': TARGET_F1Q,
-                         'fidelityType': {'description': None,
-                                          'name': 'RANDOMIZED_BENCHMARKING'},
-                         'standardError': None},
-                        {'fidelity': 1.0,
-                        'fidelityType': {'description': None, 'name': 'READOUT'},
-                        'standardError': None}]}
-    f2q = {'twoQubitGateFidelity': [{'direction': None,
-                           'fidelity': TARGET_F2Q,
-                           'fidelityType': {'description': None,
-                                            'name': 'RANDOMIZED_BENCHMARKING'},
-                           'gateName': 'CZ',
-                           'standardError': 0.0009},
-                          ]}
+    f1q = {
+        "T1": {"standardError": None, "unit": "S", "value": 2e-05},
+        "T2": {"standardError": None, "unit": "S", "value": 8e-06},
+        "oneQubitFidelity": [
+            {
+                "fidelity": TARGET_F1Q,
+                "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                "standardError": None,
+            },
+            {
+                "fidelity": 1.0,
+                "fidelityType": {"description": None, "name": "READOUT"},
+                "standardError": None,
+            },
+        ],
+    }
+    f2q = {
+        "twoQubitGateFidelity": [
+            {
+                "direction": None,
+                "fidelity": TARGET_F2Q,
+                "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                "gateName": "CZ",
+                "standardError": 0.0009,
+            },
+        ]
+    }
 
     device_emu_propertis = DeviceEmulatorProperties(
-        qubitCount = 2, 
-        nativeGateSet = ["prx", "cz"],
-        connectivityGraph = {},
-        oneQubitProperties = {"0": OneQubitProperties.parse_obj(f1q),"1": OneQubitProperties.parse_obj(f1q)},
-        twoQubitProperties = {"0-1": TwoQubitProperties.parse_obj(f2q)},
-        supportedResultTypes = [
-            ResultType.parse_obj(
-                {"maxShots": 20000, "minShots": 1, "name": "Probability", "observables": None}
-            )
-        ]
+        qubitCount=2,
+        nativeGateSet=["prx", "cz"],
+        connectivityGraph={},
+        oneQubitProperties={
+            "0": OneQubitProperties.parse_obj(f1q),
+            "1": OneQubitProperties.parse_obj(f1q),
+        },
+        twoQubitProperties={"0-1": TwoQubitProperties.parse_obj(f2q)},
+        supportedResultTypes=[
+            ResultType.parse_obj({
+                "maxShots": 20000,
+                "minShots": 1,
+                "name": "Probability",
+                "observables": None,
+            })
+        ],
     )
 
     return LocalEmulator.from_device_properties(device_emu_propertis)
 
+
 def test_one_qubit_depolarizing_rate(customized_emulator):
-    circ = Circuit().prx(0,0,0)
+    circ = Circuit().prx(0, 0, 0)
     circ = Circuit().add_verbatim_box(circ)
     num_samples = 1_000_000
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
-    prob_0 = result['0']
-    assert abs(TARGET_F1Q - prob_0) < 1/np.sqrt(num_samples)
+    prob_0 = result["0"]
+    assert abs(TARGET_F1Q - prob_0) < 1 / np.sqrt(num_samples)
+
 
 def test_two_qubit_depolarizing_rate(customized_emulator):
-    circ = Circuit().cz(0,1)
+    circ = Circuit().cz(0, 1)
     circ = Circuit().add_verbatim_box(circ)
     num_samples = 1_000_000
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
-    prob_00 = result['00']
-    assert abs(TARGET_F1Q - prob_00) < 1/np.sqrt(num_samples)
-
+    prob_00 = result["00"]
+    assert abs(TARGET_F1Q - prob_00) < 1 / np.sqrt(num_samples)
