@@ -113,22 +113,6 @@ def test_program_set(reduced_standardized_json):
         emulator.run(ps)
 
 # Below we test the one qubit and two qubit depolarizing rates are set correctly.
-#
-# Notes 1: For a given input density matrix ρ, and error rate p, 
-#          Depolarizing(p, ρ) = (1-4p/3)ρ + (4p/3)(I/2) where (I/2) is the one
-#          qubit maximally mixed state. Then for a pure state ρ = |0><0|, or 
-#          generally |ψ><ψ|, the input-output state fidelity reads 1-2p/3. 
-#          Hence, for a "target one qubit gate average gate fidelity" q, 
-#          which is the spec in the device property, the corresponing 
-#          "target one qubit gate average error rate" is (1-q) * 3/2, not (1-q).
-#
-# Notes 2: For a given input density matrix ρ, and error rate p, 
-#          TwoQubitDepolarizing(p, ρ) = (1-16p/15)ρ + (16p/15)(I/4) where (I/2) is 
-#          the two qubit maximally mixed state. Then for a pure state ρ = |00><00|, 
-#          or generally |ψ><ψ|, the input-output state fidelity reads 1-4p/5. 
-#          Hence, for a "target two qubit gate average gate fidelity" q, 
-#          which is the spec in the device property, the corresponing 
-#          "target two qubit gate average error rate" is (1-q) * 5/4, not (1-q).
 
 TARGET_F1Q = 0.99
 TARGET_F2Q = 0.99
