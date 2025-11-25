@@ -117,8 +117,9 @@ def test_program_set(reduced_standardized_json):
 # Below we test the one qubit and two qubit depolarizing rates are set correctly.
 
 NUM_SHOTS = 1_000_000
-TARGET_F1Q = 1 - 2 * 3 * 3 / np.sqrt(NUM_SHOTS)
-TARGET_F2Q = 1 - 2 * 3 * 5 / np.sqrt(NUM_SHOTS)
+NUM_SIGMA = 3
+TARGET_F1Q = 1 - 2 * NUM_SIGMA * 3 / np.sqrt(NUM_SHOTS)
+TARGET_F2Q = 1 - 2 * NUM_SIGMA * 5 / np.sqrt(NUM_SHOTS)
 
 # Notes for the chosen TARGET_F1Q:
 # For a "target one qubit gate average gate fidelity" q, suppose, suppose
@@ -201,7 +202,9 @@ def test_one_qubit_depolarizing_rate(customized_emulator):
     num_samples = NUM_SHOTS
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
     prob_0 = result["0"]
-    assert abs(TARGET_F1Q - prob_0) < 3 / np.sqrt(num_samples)
+    assert abs(TARGET_F1Q - prob_0) < NUM_SIGMA / np.sqrt(num_samples)
+    # If this unit test failed, it could be statistical fluctuation [with 1/370 probability], 
+    # please retry again. 
 
 
 def test_two_qubit_depolarizing_rate(customized_emulator):
@@ -210,4 +213,6 @@ def test_two_qubit_depolarizing_rate(customized_emulator):
     num_samples = NUM_SHOTS
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
     prob_00 = result["00"]
-    assert abs(TARGET_F2Q - prob_00) < 3 / np.sqrt(num_samples)
+    assert abs(TARGET_F2Q - prob_00) < NUM_SIGMA / np.sqrt(num_samples)
+    # If this unit test failed, it could be statistical fluctuation [with 1/370 probability], 
+    # please retry again.
