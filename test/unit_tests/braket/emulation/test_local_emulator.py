@@ -116,8 +116,27 @@ def test_program_set(reduced_standardized_json):
 
 # Below we test the one qubit and two qubit depolarizing rates are set correctly.
 
-TARGET_F1Q = 0.99
-TARGET_F2Q = 0.99
+NUM_SHOTS = 1_000_000
+TARGET_F1Q = 1 - 2 * 3 * 3 / np.sqrt(NUM_SHOTS)
+TARGET_F2Q = 1 - 2 * 3 * 5 / np.sqrt(NUM_SHOTS)
+
+# Notes for the chosen TARGET_F1Q:
+# For a "target one qubit gate average gate fidelity" q, suppose, suppose
+# we mistakenly set the "target one qubit gate average gate error" as (1-q), 
+# then we obtain the input-output state fidelity as 1-2/3 * (1-q) = 2q/3+1/3,
+# which is different from the target fidelity q. In order to distinguish these
+# two values, while making sure that the estimated fidelity is close to the 
+# target fidelity 99.73% of the time [3 sigma], we want |q - (2q+3+1/3)| = |1-q|/3
+# to be large enough, or |1-q|/3 = 2 * (3 * 1/np.sqrt(NUM_SHOTS)). In other words,
+# we set the difference between the errant and correct estimate to be at least 6 sigma,
+# 3 sigma centered around each estimated value.
+#
+# Notes for the chosen TARGET_F2Q:
+# For a "target two qubit gate average gate fidelity" q, suppose, suppose
+# we mistakenly set the "target two qubit gate average gate error" as (1-q), 
+# then we obtain the input-output state fidelity as 1-4/5 * (1-q) = 4q/5+1/5,
+# which is different from the target fidelity q. Using the same argument as above, we
+# set |q - (4q/5+1/5)| = |1-q|/5 = 2 * (3 * 1/np.sqrt(NUM_SHOTS)).
 
 
 @pytest.fixture
@@ -179,16 +198,16 @@ def customized_emulator():
 def test_one_qubit_depolarizing_rate(customized_emulator):
     circ = Circuit().prx(0, 0, 0)
     circ = Circuit().add_verbatim_box(circ)
-    num_samples = 1_000_000
+    num_samples = NUM_SHOTS
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
     prob_0 = result["0"]
-    assert abs(TARGET_F1Q - prob_0) < 1 / np.sqrt(num_samples)
+    assert abs(TARGET_F1Q - prob_0) < 3 / np.sqrt(num_samples)
 
 
 def test_two_qubit_depolarizing_rate(customized_emulator):
     circ = Circuit().cz(0, 1)
     circ = Circuit().add_verbatim_box(circ)
-    num_samples = 1_000_000
+    num_samples = NUM_SHOTS
     result = customized_emulator.run(circ, shots=num_samples).result().measurement_probabilities
     prob_00 = result["00"]
-    assert abs(TARGET_F2Q - prob_00) < 1 / np.sqrt(num_samples)
+    assert abs(TARGET_F2Q - prob_00) < 3 / np.sqrt(num_samples)
