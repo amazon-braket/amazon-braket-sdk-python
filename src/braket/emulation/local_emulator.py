@@ -179,7 +179,9 @@ class LocalEmulator(Emulator):
                     f"No valid one-qubit RB data found for qubit {qubit} in oneQubitProperties."
                 )
 
-            one_qubit_depolarizing_rate = 1 - one_qubit_fidelity
+            # For the reason of the scaling factor 3/2, see the unit test 
+            # "test_one_qubit_depolarizing_rate" in braket/emuation/test_local_emulator.py
+            one_qubit_depolarizing_rate = (1 - one_qubit_fidelity) * 3/2
             noise_model.add_noise(
                 Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit)
             )
@@ -219,7 +221,9 @@ class LocalEmulator(Emulator):
             # Apply two qubit RB Depolarizing Noise
             for gate_name, gate_ind in valid_gate_names.items():
                 gate_fidelity = twoQubitGateFidelity[gate_ind]
-                two_qubit_depolarizing_rate = 1 - gate_fidelity.fidelity
+                # For the reason of the scaling factor 5/4, see the unit test 
+                # "test_two_qubit_depolarizing_rate" in braket/emuation/test_local_emulator.py
+                two_qubit_depolarizing_rate = (1 - gate_fidelity.fidelity) * 5/4
                 gate = BRAKET_GATES[gate_name]
                 noise_model.add_noise(
                     TwoQubitDepolarizing(two_qubit_depolarizing_rate),
