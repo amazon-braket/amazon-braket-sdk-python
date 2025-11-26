@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.106.1 (2025-11-26)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets when calling result() synchronously
+
 ## v1.106.0 (2025-11-20)
 
 ### Features
