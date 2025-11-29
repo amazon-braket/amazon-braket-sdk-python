@@ -1,5 +1,45 @@
 # Changelog
 
+## v1.106.1 (2025-11-26)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets when calling result() synchronously
+
+## v1.106.0 (2025-11-20)
+
+### Features
+
+ * emulator support for AQT devices
+
+## v1.105.0 (2025-11-18)
+
+### Features
+
+ * AQT
+
+## v1.104.1 (2025-10-31)
+
+### Bug Fixes and Other Changes
+
+ * handle no program inputs
+
+## v1.104.0 (2025-10-28)
+
+### Deprecations and Removals
+
+ * retire Aria-2 in devices enum
+
+### Bug Fixes and Other Changes
+
+ * Validate hybrid jobs name
+
+## v1.103.0 (2025-10-16)
+
+### Deprecations and Removals
+
+ * Update minimum default simulator
+
 ## v1.102.10 (2025-10-15)
 
 ### Bug Fixes and Other Changes
