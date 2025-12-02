@@ -12,11 +12,13 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
+from typing import Generic
 
 from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks.quantum_task import QuantumTaskType
 
 
-class QuantumTaskBatch(ABC):
+class QuantumTaskBatch(ABC, Generic[QuantumTaskType]):
     """An abstraction over a quantum task batch on a quantum device."""
 
     @abstractmethod
