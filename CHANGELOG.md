@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.106.2 (2025-12-02)
+
+### Bug Fixes and Other Changes
+
+ * Correct noise scaling in the emulator
+
 ## v1.106.1 (2025-11-26)
 
 ### Bug Fixes and Other Changes
