@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.106.3 (2025-12-03)
+
+### Bug Fixes and Other Changes
+
+ * Increment classical bits when adding circuits
+
 ## v1.106.2 (2025-12-02)
 
 ### Bug Fixes and Other Changes
