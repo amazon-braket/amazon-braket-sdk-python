@@ -130,6 +130,32 @@ class CircuitBinding:
             inputs=self._input_sets.as_dict() if self._input_sets else None,
         )
 
+    def bind_observables_to_inputs(
+            self,
+            inplace: bool = True
+            ) -> CircuitBinding:
+        """
+        Bind observables to parameinput sets of parameters.
+
+        Args:
+            inplace (Sequence[Observable] | Sum): The observables or Hamiltonian to measure.
+
+        Returns:
+            CircuitBinding: A new circuit binding with the observables bound.
+        """
+        if observables := self._observables:
+            terms = observables.summands if isinstance(observables, Sum) else observables
+            euler_angles = {}
+            for target in {target for obs in terms for target in obs.targets}:
+                for param in euler_angle_parameter_names(target):
+                    euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in terms]
+
+        if inplace:
+            self._circuit = self._circuit.with_euler_angles(observables) if observables else self._circuit
+            self._input_sets = [self._input_sets * euler_angles if self._input_sets else None]
+            return self
+        return CircuitBinding(self._circuit, self._input_sets, observables)
+
     def __len__(self):
         input_sets = self._input_sets
         observables = self._observables
