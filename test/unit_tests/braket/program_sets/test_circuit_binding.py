@@ -45,3 +45,17 @@ def test_result_type(circuit_rx_parametrized):
 def test_sum_in_observable_list():
     with pytest.raises(TypeError):
         CircuitBinding(Circuit().h(0), observables=[X(0) + Y(0)])
+
+
+def test_binding_to_input(circuit_rx_parametrized):
+    input_sets = {"theta": [1.35, 1.58]}
+    observable = [X(0) @ Z(1), Y(0), Z(0)]
+    cb1 = CircuitBinding(circuit_rx_parametrized, input_sets, observable)
+
+    cb2 = cb1.bind_observables_to_inputs(inplace=False)
+    assert cb1 != cb2 
+    assert cb1.to_ir() == cb2.to_ir()
+
+    cb1.bind_observables_to_inputs(inplace=True)
+    assert cb1 == cb2 
+
