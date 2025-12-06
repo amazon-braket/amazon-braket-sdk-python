@@ -13,24 +13,25 @@
 
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 
 from braket.circuits import Circuit, Gate, Noise, Observable
 from braket.circuits.gates import Unitary
+from braket.circuits.measure import Measure
 from braket.circuits.noise_model import (
     CircuitInstructionCriteria,
     Criteria,
+    CriteriaKey,
     GateCriteria,
+    MeasureCriteria,
     NoiseModel,
     ObservableCriteria,
     QubitInitializationCriteria,
     UnitaryGateCriteria,
-    CriteriaKey,
-    MeasureCriteria,
 )
-from braket.circuits.noises import BitFlip, Depolarizing, PauliChannel, TwoQubitDepolarizing
-from braket.circuits.measure import Measure
-from braket.circuits.result_types import Sample, Expectation
+from braket.circuits.noises import BitFlip, Depolarizing, Kraus, PauliChannel, TwoQubitDepolarizing
+from braket.circuits.result_types import Expectation, Sample
 
 
 def h_unitary():
@@ -584,3 +585,19 @@ def test_measurecriteria_for_circuit_with_observable_resulttype():
     noisy_circuit = noise_model.apply(circ)
 
     assert noisy_circuit == circ  # no effect
+
+
+def test_one_qubit_kraus_noise():
+    noise_model = NoiseModel()
+    kraus = Kraus([np.diag(np.sqrt([0.9, 0.1])), np.diag(np.sqrt([0.1, 0.9]))])
+    noise_model.add_noise(kraus, GateCriteria(Gate.X))
+    qc = Circuit().x(0)
+    assert noise_model.apply(qc) == Circuit().x(0).kraus([0], kraus._matrices)
+
+
+def test_two_qubit_kraus_noise():
+    noise_model = NoiseModel()
+    kraus = Kraus([np.diag(np.sqrt([0.9, 0.1, 0, 0])), np.diag(np.sqrt([0.1, 0.9, 1.0, 1.0]))])
+    noise_model.add_noise(kraus, GateCriteria(Gate.CNot))
+    qc = Circuit().cnot(0, 1)
+    assert noise_model.apply(qc) == Circuit().cnot(0, 1).kraus([0, 1], kraus._matrices)
