@@ -650,7 +650,14 @@ class Circuit:
             target_mapping = dict(zip(keys, values, strict=True))
 
         for instruction in circuit.instructions:
-            self.add_instruction(instruction, target_mapping=target_mapping)
+            if isinstance(instruction.operator, Measure):
+                self.measure(
+                    [target_mapping[q] for q in instruction.target]
+                    if target_mapping
+                    else instruction.target
+                )
+            else:
+                self.add_instruction(instruction, target_mapping=target_mapping)
 
         for result_type in circuit.result_types:
             self.add_result_type(result_type, target_mapping=target_mapping)
@@ -752,25 +759,6 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
-    def _add_measure(self, target_qubits: QubitSetInput) -> None:
-        """Adds a measure instruction to the the circuit
-
-        Args:
-            target_qubits (QubitSetInput): target qubits to measure.
-        """
-        for idx, target in enumerate(target_qubits):
-            num_qubits_measured = (
-                len(self._measure_targets)
-                if self._measure_targets and len(target_qubits) == 1
-                else 0
-            )
-            self.add_instruction(
-                Instruction(
-                    operator=Measure(index=idx + num_qubits_measured),
-                    target=target,
-                )
-            )
-
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
@@ -809,8 +797,19 @@ class Circuit:
                 f"cannot repeat qubit(s) {', '.join(map(str, intersection))} "
                 "in the same measurement."
             )
-        self._add_measure(target_qubits=target_qubits)
 
+        for idx, target in enumerate(target_qubits):
+            num_qubits_measured = (
+                len(self._measure_targets)
+                if self._measure_targets and len(target_qubits) == 1
+                else 0
+            )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(index=idx + num_qubits_measured),
+                    target=target,
+                )
+            )
         return self
 
     def apply_gate_noise(
