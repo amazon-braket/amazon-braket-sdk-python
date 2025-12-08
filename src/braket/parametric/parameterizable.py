@@ -31,9 +31,9 @@ class Parameterizable(ABC):
         """Get the parameters.
 
         Returns:
-            list[Union[FreeParameterExpression, FreeParameter, float]]: The parameters associated
-            with the object, either unbound free parameter expressions or bound values. The order
-            of the parameters is determined by the subclass.
+            list[FreeParameterExpression | FreeParameter | float]: The parameters associated with
+            the object, either unbound free parameter expressions or bound values. The order of
+            the parameters is determined by the subclass.
         """
 
     @abstractmethod
@@ -42,7 +42,7 @@ class Parameterizable(ABC):
         replaced with their values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             Any: The result object will depend on the implementation of the object being bound.

@@ -1,5 +1,118 @@
 # Changelog
 
+## v1.106.4 (2025-12-08)
+
+### Bug Fixes and Other Changes
+
+ * qubit error for Kraus in noise model
+
+## v1.106.3 (2025-12-03)
+
+### Bug Fixes and Other Changes
+
+ * Increment classical bits when adding circuits
+
+## v1.106.2 (2025-12-02)
+
+### Bug Fixes and Other Changes
+
+ * Correct noise scaling in the emulator
+
+## v1.106.1 (2025-11-26)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets when calling result() synchronously
+
+## v1.106.0 (2025-11-20)
+
+### Features
+
+ * emulator support for AQT devices
+
+## v1.105.0 (2025-11-18)
+
+### Features
+
+ * AQT
+
+## v1.104.1 (2025-10-31)
+
+### Bug Fixes and Other Changes
+
+ * handle no program inputs
+
+## v1.104.0 (2025-10-28)
+
+### Deprecations and Removals
+
+ * retire Aria-2 in devices enum
+
+### Bug Fixes and Other Changes
+
+ * Validate hybrid jobs name
+
+## v1.103.0 (2025-10-16)
+
+### Deprecations and Removals
+
+ * Update minimum default simulator
+
+## v1.102.10 (2025-10-15)
+
+### Bug Fixes and Other Changes
+
+ * Expand controlled operators in `to_unitary`
+
+### Documentation Changes
+
+ * Use idiomatic Python types in docstrings
+ * points to braket doc when using experimental caps
+
+## v1.102.9 (2025-10-14)
+
+### Bug Fixes and Other Changes
+
+ * local job decorator integ test
+ * entry point module name for py312 and up
+
+## v1.102.8 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Allow `Measure` instructions in `to_unitary`
+ * handle executable result with no input in its program
+
+## v1.102.7 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Always include program inputs in from_ir
+
+## v1.102.6 (2025-10-09)
+
+### Bug Fixes and Other Changes
+
+ * Use nx functions to construct topology graph
+
+## v1.102.5 (2025-10-03)
+
+### Bug Fixes and Other Changes
+
+ * ensure gate_matrix dtype is complex for unitary matrices
+
+## v1.102.4 (2025-09-19)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets
+
+## v1.102.3 (2025-09-15)
+
+### Bug Fixes and Other Changes
+
+ * Remove throw from local task cancellation
+
 ## v1.102.2 (2025-09-11)
 
 ### Bug Fixes and Other Changes

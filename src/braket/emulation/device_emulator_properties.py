@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 
+from braket.device_schema.aqt.aqt_device_capabilities_v1 import AqtDeviceCapabilities
 from braket.device_schema.device_capabilities import DeviceCapabilities
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
 from braket.device_schema.result_type import ResultType
@@ -23,7 +23,10 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
 from braket.schema_common.schema_base import BraketSchemaBase
 
 from braket.circuits.translations import BRAKET_GATES
-from braket.emulation._standardization import _standardize_ionq_device_properties
+from braket.emulation._standardization import (
+    _standardize_aqt_device_properties,
+    _standardize_ionq_device_properties,
+)
 
 
 class DeviceEmulatorProperties:
@@ -194,17 +197,19 @@ class DeviceEmulatorProperties:
         if isinstance(device_properties, IonqDeviceCapabilities):
             device_properties = _standardize_ionq_device_properties(device_properties)
 
-        device_properties_json = device_properties.json()
-        properties_dict = json.loads(device_properties_json)
+        if isinstance(device_properties, AqtDeviceCapabilities):
+            device_properties = _standardize_aqt_device_properties(device_properties)
+
+        properties_dict = device_properties.dict()
 
         required_keys = ["paradigm", "standardized"]
         for key in required_keys:
             if (key not in properties_dict) or (properties_dict[key] is None):
-                raise ValueError(f"device_properties_json must have non-empty value for key {key}")
+                raise ValueError(f"device_properties must have non-empty value for key {key}")
 
         if "braket.ir.openqasm.program" not in properties_dict["action"]:
             raise ValueError(
-                "The action in device_properties_json must have key `braket.ir.openqasm.program`."
+                "The action in device_properties must have key `braket.ir.openqasm.program`."
             )
 
         # Convert dictionary representations to OneQubitProperties and TwoQubitProperties objects

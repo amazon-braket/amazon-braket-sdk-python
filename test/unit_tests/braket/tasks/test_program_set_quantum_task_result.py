@@ -423,3 +423,17 @@ def test_results_missing(metadata, execution_results_missing, program):
         ProgramSetQuantumTaskResult.from_object(
             BraketSchemaBase.parse_raw_schema(json.dumps(result))
         )
+
+
+def test_dispatch_executable_result_with_none_inputs(execution_measurement_probabilities):
+    mock_program = Mock()
+    mock_program.source = "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\nh q[0];\ncnot q[0], q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];"
+    mock_program.inputs = None
+    result = BraketSchemaBase.parse_raw_schema(json.dumps(execution_measurement_probabilities))
+
+    measured_entry = CompositeEntry._dispatch_executable_result(
+        result=result, program=mock_program, observables=None, shots_per_executable=40
+    )
+    assert isinstance(measured_entry, MeasuredEntry)
+    assert measured_entry.inputs is None
+    assert measured_entry.probabilities == {"00": 0.7, "11": 0.3}

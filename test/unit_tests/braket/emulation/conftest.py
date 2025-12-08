@@ -14,6 +14,7 @@
 import json
 import numpy as np
 import pytest
+import datetime
 
 from braket.circuits import Circuit
 from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 import (
@@ -25,6 +26,7 @@ from braket.device_schema.standardized_gate_model_qpu_device_properties_v1 impor
     GateFidelity2Q,
 )
 from braket.device_schema.ionq.ionq_device_capabilities_v1 import IonqDeviceCapabilities
+from braket.device_schema.aqt.aqt_device_capabilities_v1 import AqtDeviceCapabilities
 
 #################################################
 # Common test data for device property fixtures
@@ -413,7 +415,7 @@ reduced_ionq_device_capabilities_dict = {
         "errorMitigation": {
             "braket.device_schema.error_mitigation.debias.Debias": {"minimumShots": 2500}
         },
-        "fidelity": {"1Q": {"mean": 0.9998}, "2Q": {"mean": 0.12345}, "spam": {"mean": 0.9937}},
+        "fidelity": {"1Q": {"mean": 0.9998}, "2Q": {"mean": 0.99}, "spam": {"mean": 0.9937}},
         "timing": {
             "1Q": 0.000135,
             "2Q": 0.0006,
@@ -448,6 +450,143 @@ def reduced_ionq_device_capabilities(reduced_ionq_device_capabilities_json):
     Fixture providing an IonqDeviceCapabilities object.
     """
     return IonqDeviceCapabilities.parse_raw(reduced_ionq_device_capabilities_json)
+
+
+#################################################
+# AQT device property fixtures
+#################################################
+
+# AQT device properties with fully connected topology
+reduced_aqt_device_capabilities_dict = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.aqt.aqt_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {"connectivityGraph": {}, "fullyConnected": True},
+        "nativeGateSet": ["prx", "cz", "xx"],
+        "qubitCount": 3,
+    },
+    "provider": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.aqt.aqt_provider_properties",
+            "version": "1",
+        },
+        "properties": {
+            "mean_two_qubit_gate_fidelity": {"uncertainty": 0.0048, "value": 97.6907},
+            "readout_time_micros": 1500.0,
+            "single_qubit_gate_duration_micros": 30.0,
+            "single_qubit_gate_fidelity": {
+                "0": {"uncertainty": 4e-05, "value": 99.99973},
+                "1": {"uncertainty": 3e-05, "value": 99.99966},
+                "2": {"uncertainty": 6e-05, "value": 99.99971},
+            },
+            "spam_fidelity_lower_bound": 99.74,
+            "t1_s": {"uncertainty": 0.007, "value": 1.168},
+            "t2_coherence_time_s": {"uncertainty": 0.0442, "value": 0.1632},
+            "two_qubit_gate_duration_micros": 290.0,
+            "updated_at": "2000-09-19 12:00:00",
+        },
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 2000],
+    },
+    "standardized": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+            "version": "3",
+        },
+        "T1": {"standardError": 0.007, "unit": "s", "value": 1.168},
+        "T2": {"standardError": 0.0442, "unit": "s", "value": 0.1632},
+        "oneQubitProperties": {
+            "0": {
+                "oneQubitFidelity": [
+                    {
+                        "fidelity": 0.9999973,
+                        "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                        "median": None,
+                        "standardError": 4e-05,
+                        "unit": "fraction",
+                    }
+                ]
+            },
+            "1": {
+                "oneQubitFidelity": [
+                    {
+                        "fidelity": 0.9899973,
+                        "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                        "median": None,
+                        "standardError": 3e-05,
+                        "unit": "fraction",
+                    }
+                ]
+            },
+            "2": {
+                "oneQubitFidelity": [
+                    {
+                        "fidelity": 0.9989973,
+                        "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                        "median": None,
+                        "standardError": 2e-05,
+                        "unit": "fraction",
+                    }
+                ]
+            },
+        },
+        "readoutFidelity": [
+            {
+                "fidelity": 0.9974,
+                "fidelityType": None,
+                "median": None,
+                "standardError": None,
+                "unit": "fraction",
+            }
+        ],
+        "twoQubitGateFidelity": [
+            {
+                "fidelity": 0.9769070000000001,
+                "fidelityType": {"description": None, "name": "RANDOMIZED_BENCHMARKING"},
+                "median": None,
+                "standardError": 0.0048,
+                "unit": "fraction",
+            }
+        ],
+    },
+}
+
+
+@pytest.fixture
+def reduced_aqt_device_capabilities_json():
+    """
+    Fixture providing a JSON string of AQT device properties.
+    """
+    return json.dumps(reduced_aqt_device_capabilities_dict)
+
+
+@pytest.fixture
+def reduced_aqt_device_capabilities(reduced_aqt_device_capabilities_json):
+    """
+    Fixture providing an AqtDeviceCapabilities object.
+    """
+    return AqtDeviceCapabilities.parse_raw(reduced_aqt_device_capabilities_json)
 
 
 #################################################

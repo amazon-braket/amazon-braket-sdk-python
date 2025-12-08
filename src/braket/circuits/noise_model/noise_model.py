@@ -207,13 +207,13 @@ class NoiseModel:
         specified, the returned NoiseModel will be the same as this one.
 
         Args:
-            qubit (Optional[QubitSetInput]): The qubit to filter. Default is None.
+            qubit (QubitSetInput | None): The qubit to filter. Default is None.
                 If not None, the returned NoiseModel will only have Noise that might be applicable
                 to the passed qubit (or qubit list, if the criteria acts on a multi-qubit Gate).
-            gate (Optional[Gate]): The gate to filter. Default is None. If not None,
+            gate (Gate | None): The gate to filter. Default is None. If not None,
                 the returned NoiseModel will only have Noise that might be applicable
                 to the passed Gate.
-            noise (Optional[type[Noise]]): The noise class to filter. Default is None.
+            noise (type[Noise] | None): The noise class to filter. Default is None.
                 If not None, the returned NoiseModel will only have noise that is of the same
                 class as the given noise class.
 
@@ -279,7 +279,7 @@ class NoiseModel:
             new_circuit.add_instruction(circuit_instruction)
 
             if not isinstance(circuit_instruction.operator, Measure):
-                new_circuit = _apply_noise_on_instruction(
+                _apply_noise_on_instruction(
                     new_circuit,
                     circuit_instruction,
                     gate_noise_instructions,
@@ -395,7 +395,7 @@ def _apply_noise_on_instruction(
         if not item.criteria.instruction_matches(instruction):
             continue
 
-        if item.noise.fixed_qubit_count() == len(target_qubits):
+        if item.noise.fixed_qubit_count() in {len(target_qubits), NotImplemented}:
             circuit.add_instruction(Instruction(item.noise, target_qubits))
         else:
             for qubit in target_qubits:

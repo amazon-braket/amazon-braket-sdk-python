@@ -79,7 +79,7 @@ class ArbitraryWaveform(Waveform):
             amplitudes (list[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
                 of the frame to which waveform is applied to.
-            id (Optional[str]): The identifier used for declaring this waveform. A random string of
+            id (str | None): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.amplitudes = list(amplitudes)
@@ -132,10 +132,10 @@ class ConstantWaveform(Waveform, Parameterizable):
         """Initializes a `ConstantWaveform`.
 
         Args:
-            length (Union[float, FreeParameterExpression]): Value (in seconds)
+            length (float | FreeParameterExpression): Value (in seconds)
                 specifying the duration of the waveform.
             iq (complex): complex value specifying the amplitude of the waveform.
-            id (Optional[str]): The identifier used for declaring this waveform. A random string of
+            id (str | None): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
@@ -146,12 +146,12 @@ class ConstantWaveform(Waveform, Parameterizable):
         return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
 
     @property
-    def parameters(self) -> list[FreeParameterExpression | FreeParameter | float]:
+    def parameters(self) -> list[float | FreeParameterExpression]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values.
 
         Returns:
-            list[Union[FreeParameterExpression, FreeParameter, float]]: a list of parameters.
+            list[float | FreeParameterExpression]: a list of parameters.
         """
         return [self.length]
 
@@ -160,7 +160,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         replaced with their values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             ConstantWaveform: A copy of this waveform with the requested parameters bound.
@@ -241,16 +241,16 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         """Initializes a `DragGaussianWaveform`.
 
         Args:
-            length (Union[float, FreeParameterExpression]): Value (in seconds)
+            length (float | FreeParameterExpression): Value (in seconds)
                 specifying the duration of the waveform.
-            sigma (Union[float, FreeParameterExpression]): A measure (in seconds) of
+            sigma (float | FreeParameterExpression): A measure (in seconds) of
                 how wide or narrow the Gaussian peak is.
-            beta (Union[float, FreeParameterExpression]): The correction amplitude.
-            amplitude (Union[float, FreeParameterExpression]): The amplitude of the
+            beta (float | FreeParameterExpression): The correction amplitude.
+            amplitude (float | FreeParameterExpression): The amplitude of the
                 waveform envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
                 zero at the edges. Defaults to False.
-            id (Optional[str]): The identifier used for declaring this waveform. A random string of
+            id (str | None): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
@@ -279,7 +279,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         replaced with their values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             DragGaussianWaveform: A copy of this waveform with the requested parameters bound.
@@ -381,15 +381,15 @@ class GaussianWaveform(Waveform, Parameterizable):
         """Initializes a `GaussianWaveform`.
 
         Args:
-            length (Union[float, FreeParameterExpression]): Value (in seconds) specifying the
+            length (float | FreeParameterExpression): Value (in seconds) specifying the
                 duration of the waveform.
-            sigma (Union[float, FreeParameterExpression]): A measure (in seconds) of how wide
+            sigma (float | FreeParameterExpression): A measure (in seconds) of how wide
                 or narrow the Gaussian peak is.
-            amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
+            amplitude (float | FreeParameterExpression): The amplitude of the waveform
                 envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
                 zero at the edges. Defaults to False.
-            id (Optional[str]): The identifier used for declaring this waveform. A random string of
+            id (str | None): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
@@ -416,7 +416,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         replaced with their values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             GaussianWaveform: A copy of this waveform with the requested parameters bound.
