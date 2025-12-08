@@ -12,23 +12,22 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Optional, Union
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(
-    operators: Union[QuantumOperator, Iterable[QuantumOperator]],
-) -> Optional[set[QuantumOperator]]:
+    operators: QuantumOperator | Iterable[QuantumOperator],
+) -> set[QuantumOperator] | None:
     """Processes the quantum operator input to __init__ to validate and return a set of
     QuantumOperators.
 
     Args:
-        operators (Union[QuantumOperator, Iterable[QuantumOperator]]): QuantumOperator input.
+        operators (QuantumOperator | Iterable[QuantumOperator]): QuantumOperator input.
 
     Returns:
-        Optional[set[QuantumOperator]]: The set of relevant QuantumOperators or None if none
+        set[QuantumOperator] | None: The set of relevant QuantumOperators or None if none
         is specified.
 
     Throws:
@@ -46,18 +45,18 @@ def parse_operator_input(
 
 
 def parse_qubit_input(
-    qubits: Optional[QubitSetInput], expected_qubit_count: Optional[int] = 0
-) -> Optional[set[Union[int, tuple[int]]]]:
+    qubits: QubitSetInput | None, expected_qubit_count: int | None = 0
+) -> set[int | tuple[int]] | None:
     """Processes the qubit input to __init__ to validate and return a set of qubit targets.
 
     Args:
-        qubits (Optional[QubitSetInput]): Qubit input.
-        expected_qubit_count (Optional[int]): The expected number of qubits that the input
+        qubits (QubitSetInput | None): Qubit input.
+        expected_qubit_count (int | None): The expected number of qubits that the input
             gates operates on. If the value is non-zero, this method will validate that the
             expected qubit count matches the actual qubit count. Default is 0.
 
     Returns:
-        Optional[set[Union[int, tuple[int]]]]: The set of qubit targets, or None if no qubits
+        set[int | tuple[int]] | None: The set of qubit targets, or None if no qubits
         are specified.
     """
     if qubits is None:
@@ -84,6 +83,4 @@ def parse_qubit_input(
         if qubit_count == 1:
             return {item[0] for item in qubits}
         return {tuple(item) for item in qubits}
-    if qubit_count > 1:
-        return {tuple(qubits)}
-    return set(qubits)
+    return {tuple(qubits)} if qubit_count > 1 else set(qubits)

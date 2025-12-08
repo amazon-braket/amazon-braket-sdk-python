@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Optional
+from typing import Any
 
 from oqpy import FrameVar as OQFrame
 from oqpy.base import OQPyExpression
@@ -35,7 +35,7 @@ class Frame:
         frequency: float,
         phase: float = 0,
         is_predefined: bool = False,
-        properties: Optional[dict[str, Any]] = None,
+        properties: dict[str, Any] | None = None,
     ):
         """Initializes a Frame.
 
@@ -46,7 +46,7 @@ class Frame:
             phase (float): phase to which this frame should be initialized. Defaults to 0.
             is_predefined (bool): bool indicating whether this is a predefined frame on
                 the device. Defaults to False.
-            properties (Optional[dict[str, Any]]): Dict containing properties of this frame.
+            properties (dict[str, Any] | None): Dict containing properties of this frame.
                 Defaults to None.
         """
         self._frame_id = frame_id

@@ -13,11 +13,36 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
-from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
-from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
-from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
+from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
+
+from braket.ahs import AnalogHamiltonianSimulation
+from braket.circuits import Circuit
+from braket.circuits.serialization import SerializableProgram
+from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
+from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
+)
+
+TaskSpecification = (
+    Circuit
+    | SerializableProgram
+    | ProgramSet
+    | OpenQASMProgram
+    | OpenQASMProgramSet
+    | AnalogHamiltonianSimulation
+    | PulseSequence
+)
+TaskResult = (
+    GateModelQuantumTaskResult
+    | ProgramSetQuantumTaskResult
+    | AnalogHamiltonianSimulationQuantumTaskResult
+)
 
 
 class QuantumTask(ABC):
@@ -47,16 +72,13 @@ class QuantumTask(ABC):
     @abstractmethod
     def result(
         self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    ) -> TaskResult:
         """Get the quantum task result.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: Get
-            the quantum task result. Call async_result if you want the result in an
-            asynchronous way.
-        """  # noqa E501
+            TaskResult: Get the quantum task result.
+            Call async_result if you want the result in an asynchronous way.
+        """
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:
@@ -66,7 +88,7 @@ class QuantumTask(ABC):
             asyncio.Task: Get the quantum task result asynchronously.
         """
 
-    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # noqa B027
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # noqa: B027
         """Get task metadata.
 
         Args:

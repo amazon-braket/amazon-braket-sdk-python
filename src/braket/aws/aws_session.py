@@ -17,17 +17,18 @@ import itertools
 import os
 import os.path
 import re
+import warnings
 from functools import cache
 from pathlib import Path
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 import backoff
 import boto3
+import braket._schemas as braket_schemas
 from botocore import awsrequest, client
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
 from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
@@ -71,13 +72,22 @@ class AwsSession:
                 f"Braket Client region is '{braket_client.meta.region_name}'."
             )
 
-        self._config = config
+        self._update_user_agent()
+        self._config = Config(user_agent_extra=self._braket_user_agents)
+        if config:
+            self._config = self._config.merge(config)
 
         if braket_client:
+            braket_client._client_config = (
+                self._config.merge(braket_client._client_config)
+                if braket_client._client_config
+                else self._config
+            )
             self.boto_session = boto_session or boto3.Session(
                 region_name=braket_client.meta.region_name
             )
             self.braket_client = braket_client
+            self._config = braket_client._client_config
         else:
             self.boto_session = boto_session or boto3.Session(
                 region_name=os.environ.get("AWS_REGION")
@@ -85,14 +95,11 @@ class AwsSession:
             self.braket_client = self.boto_session.client(
                 "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
             )
-        self._update_user_agent()
+        self._braket_user_agents = self._config._user_provided_options["user_agent_extra"]
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
         self.braket_client.meta.events.register(
             "before-sign.braket.CreateQuantumTask", self._add_cost_tracker_count_handler
-        )
-        self.braket_client.meta.events.register(
-            "before-sign.braket", self._add_braket_user_agents_handler
         )
 
         self._iam = None
@@ -200,17 +207,14 @@ class AwsSession:
         if user_agent not in self._braket_user_agents:
             self._braket_user_agents = f"{self._braket_user_agents} {user_agent}"
 
-    def _add_braket_user_agents_handler(self, request: awsrequest.AWSRequest, **kwargs) -> None:
-        try:
-            initial_user_agent = request.headers["User-Agent"]
-            request.headers.replace_header(
-                "User-Agent", f"{initial_user_agent} {self._braket_user_agents}"
-            )
-        except KeyError:
-            request.headers.add_header("User-Agent", self._braket_user_agents)
+        new_user_agent_config = Config(user_agent_extra=self._braket_user_agents)
+        updated_config = self.braket_client._client_config.merge(new_user_agent_config)
+        self.braket_client = self.boto_session.client(
+            "braket", config=updated_config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
+        )
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -235,10 +239,37 @@ class AwsSession:
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add reservation arn if available and device is correct.
+        context_device_arn = os.getenv("AMZN_BRAKET_RESERVATION_DEVICE_ARN")
+        context_reservation_arn = os.getenv("AMZN_BRAKET_RESERVATION_TIME_WINDOW_ARN")
+
+        # if the task has a reservation_arn and also context does, raise a warning
+        # Raise warning if reservation ARN is found in both context and task parameters
+        task_has_reservation = any(
+            item.get("type") == "RESERVATION_TIME_WINDOW_ARN"
+            for item in boto3_kwargs.get("associations", [])
+        )
+        if task_has_reservation and context_reservation_arn:
+            warnings.warn(
+                "A reservation ARN was passed to 'CreateQuantumTask', but it is being overridden "
+                "by a 'DirectReservation' context. If this was not intended, please review your "
+                "reservation ARN settings or the context in which 'CreateQuantumTask' is called.",
+                stacklevel=2,
+            )
+
+        # Ensure reservation only applies to specific device
+        if context_device_arn == boto3_kwargs["deviceArn"] and context_reservation_arn:
+            boto3_kwargs["associations"] = [
+                {
+                    "arn": context_reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
+
         # Add job token to request, if available.
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
-            boto3_kwargs.update({"jobToken": job_token})
+            boto3_kwargs["jobToken"] = job_token
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(
@@ -267,10 +298,10 @@ class AwsSession:
         return not (
             isinstance(err, ClientError)
             and err.response["Error"]["Code"]
-            in [
+            in {
                 "ResourceNotFoundException",
                 "ThrottlingException",
-            ]
+            }
         )
 
     @backoff.on_exception(
@@ -402,7 +433,7 @@ class AwsSession:
             relative_prefix = str(Path(local_prefix).relative_to(base_dir))
         else:
             base_dir = Path()
-            relative_prefix = str(local_prefix)
+            relative_prefix = local_prefix
         for file in itertools.chain(
             # files that match the prefix
             base_dir.glob(f"{relative_prefix}*"),
@@ -579,7 +610,11 @@ class AwsSession:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
 
-            if error_code == "BucketAlreadyOwnedByYou":
+            if error_code == "BucketAlreadyOwnedByYou" or (
+                error_code != "BucketAlreadyExists"
+                and error_code == "OperationAborted"
+                and "conflicting conditional operation" in message
+            ):
                 pass
             elif error_code == "BucketAlreadyExists":
                 raise ValueError(
@@ -587,12 +622,6 @@ class AwsSession:
                     f"for another account. Please supply alternative "
                     f"bucket name via AwsSession constructor `AwsSession()`."
                 ) from None
-            elif (
-                error_code == "OperationAborted" and "conflicting conditional operation" in message
-            ):
-                # If this bucket is already being concurrently created, we don't need to create
-                # it again.
-                pass
             else:
                 raise
 
@@ -609,23 +638,23 @@ class AwsSession:
 
     def search_devices(
         self,
-        arns: Optional[list[str]] = None,
-        names: Optional[list[str]] = None,
-        types: Optional[list[str]] = None,
-        statuses: Optional[list[str]] = None,
-        provider_names: Optional[list[str]] = None,
+        arns: list[str] | None = None,
+        names: list[str] | None = None,
+        types: list[str] | None = None,
+        statuses: list[str] | None = None,
+        provider_names: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (Optional[list[str]]): device ARN filter, default is `None`.
-            names (Optional[list[str]]): device name filter, default is `None`.
-            types (Optional[list[str]]): device type filter, default is `None`.
-            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
+            arns (list[str] | None): device ARN filter, default is `None`.
+            names (list[str] | None): device name filter, default is `None`.
+            types (list[str] | None): device type filter, default is `None`.
+            statuses (list[str] | None): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
                 the results, use a filter that includes "RETIRED" for this parameter.
-            provider_names (Optional[list[str]]): provider name list, default is `None`.
+            provider_names (list[str] | None): provider name list, default is `None`.
 
         Returns:
             list[dict[str, Any]]: The response from the Amazon Braket `SearchDevices` operation.
@@ -688,11 +717,12 @@ class AwsSession:
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
-                raise AssertionError
+                raise AssertionError  # noqa: TRY301
             bucket, key = s3_uri_match.groups()
+        except (AssertionError, ValueError) as e:
+            raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
+        else:
             return bucket, key
-        except (AssertionError, ValueError):
-            raise ValueError(f"Not a valid S3 uri: {s3_uri}")
 
     @staticmethod
     def construct_s3_uri(bucket: str, *dirs: str) -> str:
@@ -717,21 +747,21 @@ class AwsSession:
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: Optional[int] = None,
-        next_token: Optional[str] = None,
+        limit: int | None = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Describes CloudWatch log streams in a log group with a given prefix.
 
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (Optional[int]): Limit for number of log streams returned.
+            limit (int | None): Limit for number of log streams returned.
                 default is 50.
-            next_token (Optional[str]): The token for the next set of items to return.
+            next_token (str | None): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing logStreams and nextToken
+            dict[str, Any]: Dictionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -740,10 +770,10 @@ class AwsSession:
         }
 
         if limit:
-            log_stream_args.update({"limit": limit})
+            log_stream_args["limit"] = limit
 
         if next_token:
-            log_stream_args.update({"nextToken": next_token})
+            log_stream_args["nextToken"] = next_token
 
         return self.logs_client.describe_log_streams(**log_stream_args)
 
@@ -753,7 +783,7 @@ class AwsSession:
         log_stream: str,
         start_time: int,
         start_from_head: bool = True,
-        next_token: Optional[str] = None,
+        next_token: str | None = None,
     ) -> dict[str, Any]:
         """Gets CloudWatch log events from a given log stream.
 
@@ -763,11 +793,11 @@ class AwsSession:
             start_time (int): Timestamp that indicates a start time to include log events.
             start_from_head (bool): Bool indicating to return oldest events first. default
                 is True.
-            next_token (Optional[str]): The token for the next set of items to return.
+            next_token (str | None): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
-            dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            dict[str, Any]: Dictionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,
@@ -777,26 +807,29 @@ class AwsSession:
         }
 
         if next_token:
-            log_events_args.update({"nextToken": next_token})
+            log_events_args["nextToken"] = next_token
 
         return self.logs_client.get_log_events(**log_events_args)
 
     def copy_session(
         self,
-        region: Optional[str] = None,
-        max_connections: Optional[int] = None,
+        region: str | None = None,
+        max_connections: int | None = None,
     ) -> AwsSession:
         """Creates a new AwsSession based on the region.
 
         Args:
-            region (Optional[str]): Name of the region. Default = `None`.
-            max_connections (Optional[int]): The maximum number of connections in the
+            region (str | None): Name of the region. Default = `None`.
+            max_connections (int | None): The maximum number of connections in the
                 Boto3 connection pool. Default = `None`.
 
         Returns:
             AwsSession: based on the region and boto config parameters.
         """
-        config = Config(max_pool_connections=max_connections) if max_connections else None
+        config = Config(user_agent_extra=self._braket_user_agents)
+        if max_connections:
+            config = config.merge(Config(max_pool_connections=max_connections))
+
         session_region = self.boto_session.region_name
         new_region = region or session_region
 
@@ -823,14 +856,9 @@ class AwsSession:
                 region_name=new_region,
                 profile_name=profile_name,
             )
-        copied_session = AwsSession(
-            boto_session=boto_session, config=config, default_bucket=default_bucket
-        )
-        # Preserve user_agent information
-        copied_session._braket_user_agents = self._braket_user_agents
-        return copied_session
+        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
 
-    @cache
+    @cache  # noqa: B019
     def get_full_image_tag(self, image_uri: str) -> str:
         """Get verbose image tag from image uri.
 
@@ -840,8 +868,8 @@ class AwsSession:
         Returns:
             str: Verbose image tag for given image.
         """
-        registry = image_uri.split(".")[0]
-        repository, tag = image_uri.split("/")[-1].split(":")
+        registry = image_uri.split(".", maxsplit=1)[0]
+        repository, tag = image_uri.rsplit("/", maxsplit=1)[-1].split(":")
 
         # get image digest of latest image
         digest = self.ecr_client.batch_get_image(

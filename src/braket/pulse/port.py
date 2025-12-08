@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from oqpy import PortVar
 from oqpy.base import OQPyExpression
@@ -24,13 +24,13 @@ class Port:
     a device. See https://openqasm.com/language/openpulse.html#ports for more details.
     """
 
-    def __init__(self, port_id: str, dt: float, properties: Optional[dict[str, Any]] = None):
+    def __init__(self, port_id: str, dt: float, properties: dict[str, Any] | None = None):
         """Initializes a Port.
 
         Args:
             port_id (str): str identifying a unique port on the device.
             dt (float): The smallest time step that may be used on the control hardware.
-            properties (Optional[dict[str, Any]]): Dict containing properties of
+            properties (dict[str, Any] | None): Dict containing properties of
                 this port. Defaults to None.
         """
         self._port_id = port_id

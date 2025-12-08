@@ -14,11 +14,13 @@
 import json
 import os
 import re
+import subprocess
 import tempfile
 from pathlib import Path
 
 import pytest
 
+from braket.jobs import hybrid_job
 from braket.jobs.local import LocalQuantumJob
 
 
@@ -81,7 +83,7 @@ def test_completed_local_job(aws_session, capsys):
                     },
                 ),
             ]:
-                with open(file_name, "r") as f:
+                with open(file_name) as f:
                     assert json.loads(f.read()) == expected_data
 
             # Capture logs
@@ -152,3 +154,14 @@ def test_failed_local_job(aws_session, capsys):
                 assert data in log_data
         finally:
             os.chdir(current_dir)
+
+
+def test_decorator_local_job_invalid_image():
+    @hybrid_job(device=None, image_uri="fake", local=True)
+    def empty_decorator_job():
+        pass
+
+    with pytest.raises(ValueError, match="specify a valid ECR URL"):
+        # Should successfully get all the way to LocalQuantumJob.create,
+        # but image pull or docker call will fail due to invalid image URI.
+        empty_decorator_job()

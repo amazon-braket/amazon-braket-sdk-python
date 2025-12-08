@@ -46,9 +46,9 @@ def test_result():
     assert TASK.result() == RESULT
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_cancel():
-    TASK.cancel()
+    with pytest.warns(UserWarning):
+        TASK.cancel()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -57,5 +57,5 @@ def test_async():
 
 
 def test_str():
-    expected = "LocalQuantumTask('id':{})".format(TASK.id)
+    expected = f"LocalQuantumTask('id':{TASK.id})"
     assert str(TASK) == expected

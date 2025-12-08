@@ -115,7 +115,7 @@ class TimeSeries:
             )
 
         ts = TimeSeries()
-        for t, v in zip(times, values):
+        for t, v in zip(times, values, strict=True):
             ts.put(t, v)
         return ts
 
@@ -151,7 +151,7 @@ class TimeSeries:
                 Notes:
                 Keeps the time points in both time series unchanged.
                 Assumes that the time points in the first TimeSeries
-                are at earler times then the time points in the second TimeSeries.
+                are at earlier times then the time points in the second TimeSeries.
 
         Returns:
             TimeSeries: The concatenated time series.
@@ -181,7 +181,7 @@ class TimeSeries:
         new_time_series = TimeSeries()
         new_times = self.times() + other.times()
         new_values = self.values() + other.values()
-        for t, v in zip(new_times, new_values):
+        for t, v in zip(new_times, new_values, strict=True):
             new_time_series.put(t, v)
 
         return new_time_series
@@ -259,32 +259,40 @@ class TimeSeries:
                 f"Boundary handler value {boundary} is not allowed. \
                 Possible options are: 'mean', 'left', 'right'."
             )
+        new_values = [*self.values()[:-1], bndry_val, *other.values()[1:]]
 
-        new_values = self.values()[:-1] + [bndry_val] + other.values()[1:]
-
-        for t, v in zip(new_times, new_values):
+        for t, v in zip(new_times, new_values, strict=True):
             new_time_series.put(t, v)
 
         return new_time_series
 
-    def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
+    def discretize(
+        self, time_resolution: Decimal | None, value_resolution: Decimal | None
+    ) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the
         corresponding resolution.
 
         Args:
-            time_resolution (Decimal): Time resolution
-            value_resolution (Decimal): Value resolution
+            time_resolution (Decimal | None): Time resolution
+            value_resolution (Decimal | None): Value resolution
 
         Returns:
             TimeSeries: A new discretized time series.
         """
         discretized_ts = TimeSeries()
         for item in self:
-            discretized_ts.put(
-                time=round(Decimal(item.time) / time_resolution) * time_resolution,
-                value=round(Decimal(item.value) / value_resolution) * value_resolution,
-            )
+            if time_resolution is None:
+                discretized_time = Decimal(item.time)
+            else:
+                discretized_time = round(Decimal(item.time) / time_resolution) * time_resolution
+
+            if value_resolution is None:
+                discretized_value = Decimal(item.value)
+            else:
+                discretized_value = round(Decimal(item.value) / value_resolution) * value_resolution
+
+            discretized_ts.put(time=discretized_time, value=discretized_value)
         return discretized_ts
 
     @staticmethod
@@ -302,7 +310,7 @@ class TimeSeries:
         Returns:
             TimeSeries: A new periodic time series.
         """
-        if not (values[0] == values[-1]):
+        if values[0] != values[-1]:
             raise ValueError("The first and last values must coincide to guarantee periodicity")
         new_time_series = TimeSeries()
 

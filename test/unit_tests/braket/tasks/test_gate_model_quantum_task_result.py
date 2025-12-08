@@ -26,6 +26,8 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+from braket.task_result.aqt_metadata_v1 import AqtMetadata
+from braket.task_result.iqm_metadata_v1 import IqmMetadata
 from braket.task_result.oqc_metadata_v1 import OqcMetadata
 from braket.task_result.rigetti_metadata_v1 import RigettiMetadata
 from braket.tasks import GateModelQuantumTaskResult
@@ -87,17 +89,36 @@ MEASURE 7 ro[1]
 
 
 @pytest.fixture
-def additional_metadata_rigetti(quil_program):
-    program = openqasm.Program(
-        source="""
-        OPENQASM 3.0;
-        bit[2] b;
-        h $0;
-        cnot $0, $7;
-        b[0] = measure $0;
-        b[1] = measure $7;
-        """
-    )
+def qasm3_program():
+    return """
+    OPENQASM 3.0;
+    bit[2] b;
+    h $0;
+    cnot $0, $7;
+    b[0] = measure $0;
+    b[1] = measure $7;
+    """
+
+
+@pytest.fixture
+def additional_metadata_aqt(qasm3_program):
+    program = openqasm.Program(source=qasm3_program)
+    aqt_metadata = AqtMetadata(compiledProgram=qasm3_program)
+
+    return AdditionalMetadata(action=program, aqtMetadata=aqt_metadata)
+
+
+@pytest.fixture
+def additional_metadata_iqm(qasm3_program):
+    program = openqasm.Program(source=qasm3_program)
+    iqm_metadata = IqmMetadata(compiledProgram=qasm3_program)
+
+    return AdditionalMetadata(action=program, iqmMetadata=iqm_metadata)
+
+
+@pytest.fixture
+def additional_metadata_rigetti(qasm3_program, quil_program):
+    program = openqasm.Program(source=qasm3_program)
     rigetti_metadata = RigettiMetadata(compiledProgram=quil_program)
 
     return AdditionalMetadata(action=program, rigettiMetadata=rigetti_metadata)
@@ -119,18 +140,8 @@ def qasm2_program():
 
 
 @pytest.fixture
-def additional_metadata_oqc(qasm2_program):
-    program = openqasm.Program(
-        source="""
-        OPENQASM 3.0;
-        bit[2] b;
-        qubit[8] q;
-        h q[0];
-        cnot q[0], q[7];
-        b[0] = measure q[0];
-        b[1] = measure q[7];
-        """
-    )
+def additional_metadata_oqc(qasm3_program, qasm2_program):
+    program = openqasm.Program(source=qasm3_program)
     oqc_metadata = OqcMetadata(compiledProgram=qasm2_program)
 
     return AdditionalMetadata(action=program, oqcMetadata=oqc_metadata)
@@ -144,6 +155,20 @@ def result_obj_1(task_metadata_shots, additional_metadata):
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata,
     )
+
+
+@pytest.fixture
+def result_aqt(result_obj_1, additional_metadata_aqt):
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = additional_metadata_aqt
+    return result
+
+
+@pytest.fixture
+def result_iqm(result_obj_1, additional_metadata_iqm):
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = additional_metadata_iqm
+    return result
 
 
 @pytest.fixture
@@ -263,16 +288,6 @@ def malformatted_results_1(task_metadata_shots, additional_metadata):
 
 
 @pytest.fixture
-def malformatted_results_2(task_metadata_shots, additional_metadata):
-    return GateModelTaskResult(
-        measurementProbabilities={"011000": 0.9999999999999982},
-        measuredQubits=[0],
-        taskMetadata=task_metadata_shots,
-        additionalMetadata=additional_metadata,
-    ).json()
-
-
-@pytest.fixture
 def openqasm_result_obj_shots(task_metadata_shots, additional_metadata_openqasm):
     return GateModelTaskResult.construct(
         measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
@@ -323,6 +338,16 @@ test_ir_results = [
 ]
 
 
+def test_get_compiled_circuit_aqt(result_aqt):
+    """Test get_compiled_circuit method."""
+    assert result_aqt.get_compiled_circuit() == result_aqt.additional_metadata.action.source
+
+
+def test_get_compiled_circuit_iqm(result_iqm):
+    """Test get_compiled_circuit method."""
+    assert result_iqm.get_compiled_circuit() == result_iqm.additional_metadata.action.source
+
+
 def test_get_compiled_circuit_rigetti(result_rigetti, quil_program):
     """Test get_compiled_circuit method."""
     assert result_rigetti.get_compiled_circuit() == quil_program
@@ -347,9 +372,14 @@ def test_get_compiled_circuit_no_metadata(result_obj_1):
 
 
 def test_measurement_counts_from_measurements():
-    measurements: np.ndarray = np.array(
-        [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
-    )
+    measurements: np.ndarray = np.array([
+        [1, 0, 1, 0],
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 1, 0],
+    ])
     measurement_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(
         measurements
     )
@@ -415,7 +445,7 @@ def test_from_string_measurement_probabilities(result_str_3):
     measurement_list = [list("011000") for _ in range(shots)]
     expected_measurements = np.asarray(measurement_list, dtype=int)
     assert np.allclose(task_result.measurements, expected_measurements)
-    assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
+    assert task_result.measurement_counts == Counter(["011000" for _ in range(shots)])
     assert not task_result.measurement_counts_copied_from_device
     assert task_result.measurement_probabilities_copied_from_device
     assert not task_result.measurements_copied_from_device
@@ -484,31 +514,24 @@ def test_shots_no_measurements_no_measurement_probs(malformatted_results_1):
     GateModelQuantumTaskResult.from_string(malformatted_results_1)
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_measurements_measured_qubits_mismatch(malformatted_results_2):
-    GateModelQuantumTaskResult.from_string(malformatted_results_2)
-
-
 @pytest.mark.parametrize("ir_result,expected_result", test_ir_results)
 def test_calculate_ir_results(ir_result, expected_result):
     ir_string = jaqcd.Program(
         instructions=[jaqcd.H(target=i) for i in range(4)], results=[ir_result]
     ).json()
     measured_qubits = [0, 1, 2, 3]
-    measurements = np.array(
-        [
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [1, 0, 0, 1],
-            [0, 0, 1, 0],
-            [1, 1, 1, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 1],
-            [0, 1, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
-        ]
-    )
+    measurements = np.array([
+        [0, 0, 1, 0],
+        [1, 1, 1, 1],
+        [1, 0, 0, 1],
+        [0, 0, 1, 0],
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [0, 0, 0, 1],
+        [0, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
     result_types = GateModelQuantumTaskResult._calculate_result_types(
         ir_string, measurements, measured_qubits
     )
@@ -574,56 +597,54 @@ def test_hash_result_types(observable_1, observable_2):
     "braket.tasks.gate_model_quantum_task_result.GateModelQuantumTaskResult._calculate_result_types"
 )
 def test_result_type_skips_computation_already_populated(calculate_result_types_mocked):
-    result_str = json.dumps(
-        {
-            "braketSchemaHeader": {
-                "name": "braket.task_result.gate_model_task_result",
-                "version": "1",
-            },
-            "measurements": [[0]],
-            "resultTypes": [
-                {"type": {"observable": ["z"], "targets": [0], "type": "variance"}, "value": 12.0}
-            ],
-            "measuredQubits": [0],
-            "taskMetadata": {
-                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
-                "id": "arn:aws:braket:us-east-1:1234567890:quantum-task/22a238b2-ae96",
-                "shots": 1,
-                "deviceId": "arn:aws:braket:::device/quantum-simulator/amazon/dm1",
-                "deviceParameters": {
+    result_str = json.dumps({
+        "braketSchemaHeader": {
+            "name": "braket.task_result.gate_model_task_result",
+            "version": "1",
+        },
+        "measurements": [[0]],
+        "resultTypes": [
+            {"type": {"observable": ["z"], "targets": [0], "type": "variance"}, "value": 12.0}
+        ],
+        "measuredQubits": [0],
+        "taskMetadata": {
+            "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+            "id": "arn:aws:braket:us-east-1:1234567890:quantum-task/22a238b2-ae96",
+            "shots": 1,
+            "deviceId": "arn:aws:braket:::device/quantum-simulator/amazon/dm1",
+            "deviceParameters": {
+                "braketSchemaHeader": {
+                    "name": "braket.device_schema.simulators."
+                    "gate_model_simulator_device_parameters",
+                    "version": "1",
+                },
+                "paradigmParameters": {
                     "braketSchemaHeader": {
-                        "name": "braket.device_schema.simulators."
-                        "gate_model_simulator_device_parameters",
+                        "name": "braket.device_schema.gate_model_parameters",
                         "version": "1",
                     },
-                    "paradigmParameters": {
-                        "braketSchemaHeader": {
-                            "name": "braket.device_schema.gate_model_parameters",
-                            "version": "1",
-                        },
-                        "qubitCount": 1,
-                        "disableQubitRewiring": False,
-                    },
-                },
-                "createdAt": "2022-01-12T06:05:22.633Z",
-                "endedAt": "2022-01-12T06:05:24.136Z",
-                "status": "COMPLETED",
-            },
-            "additionalMetadata": {
-                "action": {
-                    "braketSchemaHeader": {"name": "braket.ir.openqasm.program", "version": "1"},
-                    "source": "\nqubit[1] q;\nh q[0];\n#pragma braket result variance z(q[0])\n",
-                },
-                "simulatorMetadata": {
-                    "braketSchemaHeader": {
-                        "name": "braket.task_result.simulator_metadata",
-                        "version": "1",
-                    },
-                    "executionDuration": 16,
+                    "qubitCount": 1,
+                    "disableQubitRewiring": False,
                 },
             },
-        }
-    )
+            "createdAt": "2022-01-12T06:05:22.633Z",
+            "endedAt": "2022-01-12T06:05:24.136Z",
+            "status": "COMPLETED",
+        },
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.openqasm.program", "version": "1"},
+                "source": "\nqubit[1] q;\nh q[0];\n#pragma braket result variance z(q[0])\n",
+            },
+            "simulatorMetadata": {
+                "braketSchemaHeader": {
+                    "name": "braket.task_result.simulator_metadata",
+                    "version": "1",
+                },
+                "executionDuration": 16,
+            },
+        },
+    })
     res = GateModelQuantumTaskResult.from_string(result_str)
     assert (
         res.get_value_by_result_type(ResultType.Variance(observable=Observable.Z(), target=[0]))

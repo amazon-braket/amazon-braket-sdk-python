@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 import importlib.util
@@ -82,9 +83,8 @@ def prepare_quantum_job(
             job.`image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
             for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-        job_name (str | None): A str that specifies the name with which the hybrid job is created.
-            The hybrid job name must be between 0 and 50 characters long and cannot contain
-            underscores.
+        job_name (str | None): A str that specifies the name with which the hybrid job is
+            created. Allowed pattern for hybrid job name: `^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$`
             Default: f'{image_uri_type}-{timestamp}'.
 
         code_location (str | None): The S3 prefix URI where custom code will be uploaded.
@@ -163,6 +163,7 @@ def prepare_quantum_job(
     device_config = DeviceConfig(device)
     timestamp = str(int(time.time() * 1000))
     job_name = job_name or _generate_default_job_name(image_uri=image_uri, timestamp=timestamp)
+    _validate_quantum_job_name(job_name)  # Validate the job_name before continuing
     role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
@@ -224,7 +225,7 @@ def prepare_quantum_job(
             "sagemaker_distributed_dataparallel_enabled": "true",
             "sagemaker_instance_type": instance_config.instanceType,
         }
-        hyperparameters.update(distributed_hyperparams)
+        hyperparameters |= distributed_hyperparams
 
     create_job_kwargs = {
         "jobName": job_name,
@@ -241,16 +242,12 @@ def prepare_quantum_job(
     }
 
     if reservation_arn:
-        create_job_kwargs.update(
+        create_job_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
 
     return create_job_kwargs
 
@@ -268,11 +265,11 @@ def _generate_default_job_name(
     Returns:
         str: Hybrid job name.
     """
-    max_length = 50
     timestamp = timestamp if timestamp is not None else str(int(time.time() * 1000))
 
     if func:
         name = func.__name__.replace("_", "-")
+        max_length = 50
         if len(name) + len(timestamp) > max_length:
             name = name[: max_length - len(timestamp) - 1]
             warnings.warn(
@@ -283,8 +280,8 @@ def _generate_default_job_name(
     elif not image_uri:
         name = "braket-job-default"
     else:
-        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
-            "/amazon-braket-([^:/]*)", image_uri
+        job_type_match = re.search(r"/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+            r"/amazon-braket-([^:/]*)", image_uri
         )
         container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
         name = f"braket-job{container}"
@@ -339,8 +336,8 @@ def _process_local_source_module(
     try:
         # raises FileNotFoundError if not found
         abs_path_source_module = Path(source_module).resolve(strict=True)
-    except FileNotFoundError:
-        raise ValueError(f"Source module not found: {source_module}")
+    except FileNotFoundError as e:
+        raise ValueError(f"Source module not found: {source_module}") from e
 
     entry_point = entry_point or abs_path_source_module.stem
     _validate_entry_point(abs_path_source_module, entry_point)
@@ -365,10 +362,9 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
         importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
         if module is None:
-            raise AssertionError
-    # if entry point is nested (ie contains '.'), parent modules are imported
-    except (ModuleNotFoundError, AssertionError):
-        raise ValueError(f"Entry point module was not found: {importable}")
+            raise AssertionError  # noqa: TRY301
+    except (ModuleNotFoundError, AssertionError) as e:
+        raise ValueError(f"Entry point module was not found: {importable}") from e
     finally:
         sys.path.pop()
 
@@ -460,21 +456,20 @@ def _process_channel(
     """
     if AwsSession.is_s3_uri(location):
         return S3DataSourceConfig(location)
-    else:
-        # local prefix "path/to/prefix" will be mapped to
-        # s3://bucket/jobs/job-name/subdirectory/data/input/prefix
-        location_name = Path(location).name
-        s3_prefix = AwsSession.construct_s3_uri(
-            aws_session.default_bucket(),
-            "jobs",
-            job_name,
-            subdirectory,
-            "data",
-            channel_name,
-            location_name,
-        )
-        aws_session.upload_local_data(location, s3_prefix)
-        return S3DataSourceConfig(s3_prefix)
+    # local prefix "path/to/prefix" will be mapped to
+    # s3://bucket/jobs/job-name/subdirectory/data/input/prefix
+    location_name = Path(location).name
+    s3_prefix = AwsSession.construct_s3_uri(
+        aws_session.default_bucket(),
+        "jobs",
+        job_name,
+        subdirectory,
+        "data",
+        channel_name,
+        location_name,
+    )
+    aws_session.upload_local_data(location, s3_prefix)
+    return S3DataSourceConfig(s3_prefix)
 
 
 def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[dict[str, Any]]:
@@ -499,3 +494,16 @@ def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[
 
 def _exclude_nones_factory(items: list[tuple]) -> dict:
     return {k: v for k, v in items if v is not None}
+
+
+_QUANTUM_JOB_NAME_PATTERN = re.compile(r"^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$")
+
+
+def _validate_quantum_job_name(name: str) -> None:
+    """Raise ValueError if the quantum-job name is invalid."""
+    if not _QUANTUM_JOB_NAME_PATTERN.fullmatch(name):
+        raise ValueError(
+            f"Invalid quantum job name: '{name}'. "
+            "Use between 1 and 50 characters (letters, digits, hyphens); "
+            "no underscores or leading/trailing hyphens."
+        )

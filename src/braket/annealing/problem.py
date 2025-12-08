@@ -39,7 +39,7 @@ class Problem:
         linear: dict[int, float] | None = None,
         quadratic: dict[tuple[int, int], float] | None = None,
     ):
-        """Initialzes a `Problem`.
+        """Initializes a `Problem`.
 
         Args:
             problem_type (ProblemType): The type of annealing problem
@@ -148,7 +148,6 @@ class Problem:
             type=ir.ProblemType[self._problem_type.value],
             linear=self._linear,
             quadratic={
-                ",".join((str(q1), str(q2))): self._quadratic[(q1, q2)]
-                for q1, q2 in self._quadratic
+                ",".join((str(q1), str(q2))): self._quadratic[q1, q2] for q1, q2 in self._quadratic
             },
         )

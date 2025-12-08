@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
@@ -87,7 +87,7 @@ class ResultType:
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
                 serialization_properties, OpenQASMSerializationProperties
             ):
@@ -96,8 +96,7 @@ class ResultType:
                     "for IRType.OPENQASM."
                 )
             return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
-        else:
-            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the result type."""
@@ -161,10 +160,10 @@ class ResultType:
             >>> new_result_type.target
             QubitSet(Qubit(5))
         """
-        copy = self.__copy__()
+        copy = self.__copy__()  # noqa: PLC2801
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
-        elif target is not None:
+        if target is not None:
             if hasattr(copy, "target"):
                 copy.target = target
         elif hasattr(copy, "target"):
@@ -218,32 +217,32 @@ class ObservableResultType(ResultType):
         super().__init__(ascii_symbols)
         self._observable = observable
         self._target = QubitSet(target)
-        if not self._target:
-            if self._observable.qubit_count != 1:
-                raise ValueError(
-                    f"Observable {self._observable} must only operate on 1 qubit for target=None"
-                )
-        elif isinstance(observable, Sum):  # nested target
-            if len(target) != len(observable.summands):
-                raise ValueError(
-                    "Sum observable's target shape must be a nested list where each term's "
-                    "target length is equal to the observable term's qubits count."
-                )
-            self._target = [QubitSet(term_target) for term_target in target]
-            for term_target, obs in zip(target, observable.summands):
-                if obs.qubit_count != len(term_target):
+        if self._target:
+            if isinstance(observable, Sum):  # nested target
+                if len(target) != len(observable.summands):
                     raise ValueError(
                         "Sum observable's target shape must be a nested list where each term's "
                         "target length is equal to the observable term's qubits count."
                     )
-        elif self._observable.qubit_count != len(self._target):
+                self._target = [QubitSet(term_target) for term_target in target]
+                for term_target, obs in zip(self._target, observable.summands, strict=True):
+                    if obs.qubit_count != len(term_target):
+                        raise ValueError(
+                            "Sum observable's target shape must be a nested list where each term's "
+                            "target length is equal to the observable term's qubits count."
+                        )
+            elif self._observable.qubit_count != len(self._target):
+                raise ValueError(
+                    f"Observable's qubit count {self._observable.qubit_count} and "
+                    f"the size of the target qubit set {self._target} must be equal"
+                )
+            elif self._observable.qubit_count != len(self.ascii_symbols):
+                raise ValueError(
+                    "Observable's qubit count and the number of ASCII symbols must be equal"
+                )
+        elif (not self._observable.targets) and self._observable.qubit_count != 1:
             raise ValueError(
-                f"Observable's qubit count {self._observable.qubit_count} and "
-                f"the size of the target qubit set {self._target} must be equal"
-            )
-        elif self._observable.qubit_count != len(self.ascii_symbols):
-            raise ValueError(
-                "Observable's qubit count and the number of ASCII symbols must be equal"
+                f"Observable {self._observable} must only operate on 1 qubit for target=None"
             )
 
     @property
@@ -252,7 +251,7 @@ class ObservableResultType(ResultType):
 
     @property
     def target(self) -> QubitSet:
-        return self._target
+        return self._target or self._observable.targets
 
     @target.setter
     def target(self, target: QubitSetInput) -> None:
@@ -297,7 +296,7 @@ class ObservableParameterResultType(ObservableResultType):
         ascii_symbols: list[str],
         observable: Observable,
         target: QubitSetInput | None = None,
-        parameters: list[Union[str, FreeParameter]] | None = None,
+        parameters: list[str | FreeParameter] | None = None,
     ):
         super().__init__(ascii_symbols, observable, target)
 

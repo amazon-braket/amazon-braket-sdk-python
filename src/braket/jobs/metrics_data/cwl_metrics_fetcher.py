@@ -13,7 +13,6 @@
 
 import time
 from logging import Logger, getLogger
-from typing import Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
@@ -53,9 +52,7 @@ class CwlMetricsFetcher:
         Returns:
             bool: True if the given message is designated as containing Metrics; False otherwise.
         """
-        if message:
-            return "Metrics -" in message
-        return False
+        return "Metrics -" in message if message else False
 
     def _parse_metrics_from_log_stream(
         self,
@@ -105,21 +102,17 @@ class CwlMetricsFetcher:
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
-            "logStreamNamePrefix": job_name + "/algo-",
+            "logStreamNamePrefix": f"{job_name}/algo-",
         }
         log_streams = []
         while time.time() < timeout_time:
             response = self._logs_client.describe_log_streams(**kwargs)
-            streams = response.get("logStreams")
-            if streams:
-                for stream in streams:
-                    name = stream.get("logStreamName")
-                    if name:
-                        log_streams.append(name)
-            next_token = response.get("nextToken")
-            if not next_token:
+            if streams := response.get("logStreams"):
+                log_streams = [name for stream in streams if (name := stream.get("logStreamName"))]
+            if next_token := response.get("nextToken"):
+                kwargs["nextToken"] = next_token
+            else:
                 return log_streams
-            kwargs["nextToken"] = next_token
         self._logger.warning("Timed out waiting for all metrics. Data may be incomplete.")
         return log_streams
 
@@ -128,7 +121,7 @@ class CwlMetricsFetcher:
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> dict[str, list[Union[str, float, int]]]:
+    ) -> dict[str, list[str | float | int]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
@@ -139,8 +132,8 @@ class CwlMetricsFetcher:
                 when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
-            are the column names and the values are a list containing the values in each row.
+            dict[str, list[str | float | int]]: The metrics data, where the keys are
+            the column names and the values are a list containing the values in each row.
 
         Example:
             timestamp energy

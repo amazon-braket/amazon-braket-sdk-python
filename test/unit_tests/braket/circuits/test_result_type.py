@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import re
 
 import pytest
@@ -18,6 +19,7 @@ from braket.circuits import Observable, ObservableResultType, ResultType
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.result_type import ObservableParameterResultType
 from braket.circuits.serialization import IRType
+from braket.registers import QubitSet
 
 
 @pytest.fixture
@@ -166,6 +168,15 @@ def test_obs_rt_repr():
         str(a1)
         == "ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
     )
+
+
+def test_obs_rt_target():
+    assert ObservableResultType(
+        ascii_symbols=["Obs"], observable=Observable.X(), target=1
+    ).target == QubitSet(1)
+    assert ObservableResultType(
+        ascii_symbols=["Obs"], observable=Observable.X(1)
+    ).target == QubitSet(1)
 
 
 @pytest.mark.parametrize(

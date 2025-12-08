@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
@@ -23,11 +23,11 @@ from braket.registers.qubit_set import QubitSet, QubitSetInput
 class QubitInitializationCriteria(InitializationCriteria):
     """This class models initialization noise Criteria based on qubits."""
 
-    def __init__(self, qubits: Optional[QubitSetInput] = None):
+    def __init__(self, qubits: QubitSetInput | None = None):
         """Creates initialization noise Qubit-based Criteria.
 
         Args:
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
         """
         self._qubits = parse_qubit_input(qubits)
@@ -46,22 +46,20 @@ class QubitInitializationCriteria(InitializationCriteria):
         """
         return [CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
-            QUBIT will return a set of qubit targets that are relevant to this Critera, or
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
+            QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
-            if self._qubits is None:
-                return CriteriaKeyResult.ALL
-            return set(self._qubits)
+            return CriteriaKeyResult.ALL if self._qubits is None else set(self._qubits)
         return set()
 
     def to_dict(self) -> dict:

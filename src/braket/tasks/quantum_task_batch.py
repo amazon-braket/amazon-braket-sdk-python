@@ -12,11 +12,8 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Union
 
-from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
-from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
-from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
+from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, GateModelQuantumTaskResult
 
 
 class QuantumTaskBatch(ABC):
@@ -25,14 +22,10 @@ class QuantumTaskBatch(ABC):
     @abstractmethod
     def results(
         self,
-    ) -> list[
-        Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ]
-    ]:
+    ) -> list[GateModelQuantumTaskResult | AnalogHamiltonianSimulationQuantumTaskResult]:
         """Get the quantum task results.
 
         Returns:
-            list[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]: Get
+            list[GateModelQuantumTaskResult | AnalogHamiltonianSimulationQuantumTaskResult]: Get
             the quantum task results.
-        """  # noqa: E501
+        """

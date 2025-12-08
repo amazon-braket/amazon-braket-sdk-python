@@ -16,15 +16,17 @@ from __future__ import annotations
 import functools
 import importlib.util
 import inspect
+import os
 import re
 import shutil
 import sys
 import tempfile
 import warnings
 from collections.abc import Callable, Iterable
+from contextlib import contextmanager
 from logging import Logger, getLogger
 from pathlib import Path
-from types import ModuleType
+from types import CodeType, ModuleType
 from typing import Any
 
 import cloudpickle
@@ -39,8 +41,13 @@ from braket.jobs.config import (
     StoppingCondition,
 )
 from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
+from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
+
+DEFAULT_INPUT_CHANNEL = "input"
+INNER_FUNCTION_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
+INNER_FUNCTION_SOURCE_INPUT_FOLDER = "_inner_function_source_folder"
 
 
 def hybrid_job(
@@ -73,6 +80,12 @@ def hybrid_job(
     `AwsQuantumJob`. The following parameters will be ignored when running a job with
     `local` set to `True`: `wait_until_complete`, `instance_config`, `distribution`,
     `copy_checkpoints_from_job`, `stopping_condition`, `tags`, `logger`, and `quiet`.
+
+    Remarks:
+        Hybrid jobs created using this decorator have limited access to the source code of
+        functions defined outside of the decorated function. Functionality that depends on
+        source code analysis may not work properly when referencing functions defined outside
+        of the decorated function.
 
     Args:
         device (str | None): Device ARN of the QPU device that receives priority quantum
@@ -178,18 +191,24 @@ def hybrid_job(
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """
-            with _IncludeModules(include_modules), tempfile.TemporaryDirectory(
-                dir="", prefix="decorator_job_"
-            ) as temp_dir:
+            with (
+                _IncludeModules(include_modules),
+                tempfile.TemporaryDirectory(dir="", prefix="decorator_job_") as temp_dir,
+                persist_inner_function_source(entry_point) as inner_source_input,
+            ):
+                job_input_data = _add_inner_function_source_to_input_data(
+                    input_data, inner_source_input
+                )
+
                 temp_dir_path = Path(temp_dir)
                 entry_point_file_path = Path("entry_point.py")
-                with open(temp_dir_path / entry_point_file_path, "w") as entry_point_file:
-                    template = "\n".join(
-                        [
-                            _process_input_data(input_data),
-                            _serialize_entry_point(entry_point, args, kwargs),
-                        ]
-                    )
+                with open(
+                    temp_dir_path / entry_point_file_path, "w", encoding="utf-8"
+                ) as entry_point_file:
+                    template = "\n".join([
+                        _process_input_data(input_data),
+                        _serialize_entry_point(entry_point, args, kwargs),
+                    ])
                     entry_point_file.write(template)
 
                 if dependencies:
@@ -199,16 +218,17 @@ def hybrid_job(
                     "device": device or "local:none/none",
                     "source_module": temp_dir,
                     "entry_point": (
-                        f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
+                        f"{temp_dir_path.name}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
+
                 optional_args = {
                     "image_uri": image_uri,
-                    "input_data": input_data,
+                    "input_data": job_input_data,
                     "instance_config": instance_config,
                     "distribution": distribution,
                     "checkpoint_config": checkpoint_config,
@@ -221,16 +241,124 @@ def hybrid_job(
                     "quiet": quiet,
                     "reservation_arn": reservation_arn,
                 }
-                for key, value in optional_args.items():
-                    if value is not None:
-                        job_args[key] = value
-
-                job = _create_job(job_args, local)
-            return job
+                job_args.update({key: val for key, val in optional_args.items() if val is not None})
+                return _create_job(job_args, local)
 
         return job_wrapper
 
     return _hybrid_job
+
+
+@contextmanager
+def persist_inner_function_source(entry_point: callable) -> None:
+    """Persist the source code of the cloudpickled function by saving its source code as input data
+    and replace the source file path with the saved one.
+    Args:
+        entry_point (callable): The job decorated function.
+
+    Yields:
+        dict: if the inner function exists, a mapping of the input channel to the copy directory.
+            Otherwise an empty dict
+    """
+    inner_source_mapping = _get_inner_function_source(entry_point.__code__)
+
+    if len(inner_source_mapping) == 0:
+        yield {}
+    else:
+        with tempfile.TemporaryDirectory(dir="", prefix="decorator_job_inner_source_") as temp_dir:
+            copy_dir = f"{temp_dir}/{INNER_FUNCTION_SOURCE_INPUT_FOLDER}"
+            os.mkdir(copy_dir)
+            path_mapping = _save_inner_source_to_file(inner_source_mapping, copy_dir)
+            entry_point.__code__ = _replace_inner_function_source_path(
+                entry_point.__code__, path_mapping
+            )
+            yield {INNER_FUNCTION_SOURCE_INPUT_CHANNEL: copy_dir}
+
+
+def _replace_inner_function_source_path(
+    code_object: CodeType, path_mapping: dict[str, str]
+) -> CodeType:
+    """Recursively replace source code file path of the code object and of its child node's code
+    objects.
+    Args:
+        code_object (CodeType): Code object which source code file path to be replaced.
+        path_mapping (dict[str, str]): Mapping between local file path to path in a job
+            environment.
+    Returns:
+        CodeType: Code object with the source code file path replaced
+    """
+    new_co_consts = []
+    for const in code_object.co_consts:
+        new_const = const
+        if inspect.iscode(const):
+            new_path = path_mapping[const.co_filename]
+            new_const = const.replace(co_filename=new_path)
+            new_const = _replace_inner_function_source_path(new_const, path_mapping)
+        new_co_consts.append(new_const)
+
+    return code_object.replace(co_consts=tuple(new_co_consts))
+
+
+def _save_inner_source_to_file(inner_source: dict[str, str], input_data_dir: str) -> dict[str, str]:
+    """Saves the source code as input data for a job and returns a dictionary that maps the local
+    source file path of a function to the one to be used in the job environment.
+    Args:
+        inner_source (dict[str, str]): Mapping between source file name and source code.
+        input_data_dir (str): The path of the folder to be uploaded to job as input data.
+    Returns:
+        dict[str, str]: Mapping between local file path to path in a job environment.
+    """
+    path_mapping = {}
+    for i, (local_path, source_code) in enumerate(inner_source.items()):
+        copy_file_name = f"source_{i}.py"
+        with open(f"{input_data_dir}/{copy_file_name}", "w", encoding="utf-8") as f:
+            f.write(source_code)
+
+        path_mapping[local_path] = os.path.join(
+            _get_env_input_data()["AMZN_BRAKET_INPUT_DIR"],
+            INNER_FUNCTION_SOURCE_INPUT_CHANNEL,
+            copy_file_name,
+        )
+    return path_mapping
+
+
+def _get_inner_function_source(code_object: CodeType) -> dict[str, str]:
+    """Returns a dictionary that maps the source file name to source code for all source files
+    used by the inner functions inside the job decorated function.
+    Args:
+        code_object (CodeType): Code object of a inner function.
+    Returns:
+        dict[str, str]: Mapping between source file name and source code.
+    """
+    inner_source = {}
+    for const in code_object.co_consts:
+        if inspect.iscode(const):
+            source_file_path = inspect.getfile(code_object)
+            lines, _ = inspect.findsource(code_object)
+            inner_source.update({source_file_path: "".join(lines)})
+            inner_source.update(_get_inner_function_source(const))
+    return inner_source
+
+
+def _add_inner_function_source_to_input_data(input_data: dict, inner_source_input: dict) -> dict:
+    """Add the path of inner function source file as the input data of the job.
+
+    Args:
+        input_data (dict): Provided input data of the job.
+        inner_source_input (dict): A dict that points to the path of inner function source file.
+
+    Returns:
+        dict: input_data with inner function source file added.
+    """
+    if input_data is None:
+        job_input_data = inner_source_input
+    elif isinstance(input_data, dict):
+        if INNER_FUNCTION_SOURCE_INPUT_CHANNEL in input_data:
+            raise ValueError(f"input channel cannot be {INNER_FUNCTION_SOURCE_INPUT_CHANNEL}")
+        job_input_data = {**input_data, **inner_source_input}
+    else:
+        job_input_data = {DEFAULT_INPUT_CHANNEL: input_data, **inner_source_input}
+    return job_input_data
 
 
 def _validate_python_version(image_uri: str | None, aws_session: AwsSession | None = None) -> None:
@@ -247,7 +375,7 @@ def _validate_python_version(image_uri: str | None, aws_session: AwsSession | No
         image_uri = image_uri or retrieve_image(Framework.BASE, aws_session.region)
         tag = aws_session.get_full_image_tag(image_uri)
         major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-        if not (sys.version_info.major, sys.version_info.minor) == (
+        if (sys.version_info.major, sys.version_info.minor) != (
             int(major_version),
             int(minor_version),
         ):
@@ -259,19 +387,19 @@ def _validate_python_version(image_uri: str | None, aws_session: AwsSession | No
 
 
 def _process_dependencies(dependencies: str | Path | list[str], temp_dir: Path) -> None:
-    if isinstance(dependencies, (str, Path)):
+    if isinstance(dependencies, str | Path):
         # requirements file
         shutil.copy(Path(dependencies).resolve(), temp_dir / "requirements.txt")
     else:
         # list of packages
-        with open(temp_dir / "requirements.txt", "w") as f:
+        with open(temp_dir / "requirements.txt", "w", encoding="utf-8") as f:
             f.write("\n".join(dependencies))
 
 
 class _IncludeModules:
-    def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] = None):
+    def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] | None = None):
         modules = modules or []
-        if isinstance(modules, (str, ModuleType)):
+        if isinstance(modules, str | ModuleType):
             modules = [modules]
         self._modules = [
             (importlib.import_module(module) if isinstance(module, str) else module)
@@ -283,7 +411,7 @@ class _IncludeModules:
         for module in self._modules:
             cloudpickle.register_pickle_by_value(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         """Unregister included modules with cloudpickle to be pickled by value"""
         for module in self._modules:
             cloudpickle.unregister_pickle_by_value(module)
@@ -317,10 +445,10 @@ def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict) -> di
     hyperparameters = {}
     for param, value in bound_args.arguments.items():
         param_kind = signature.parameters[param].kind
-        if param_kind in [
+        if param_kind in {
             inspect.Parameter.POSITIONAL_OR_KEYWORD,
             inspect.Parameter.KEYWORD_ONLY,
-        ]:
+        }:
             hyperparameters[param] = value
         elif param_kind == inspect.Parameter.VAR_KEYWORD:
             hyperparameters.update(**value)
@@ -351,7 +479,7 @@ def _sanitize(hyperparameter: Any) -> str:
     # max allowed length for a hyperparameter is 2500
     if len(sanitized) > 2500:
         # show as much as possible, including the final 20 characters
-        return f"{sanitized[:2500 - 23]}...{sanitized[-20:]}"
+        return f"{sanitized[: 2500 - 23]}...{sanitized[-20:]}"
     return sanitized
 
 
@@ -369,9 +497,7 @@ def _process_input_data(input_data: dict) -> list[str]:
         input_data = {"input": input_data}
 
     def matches(prefix: str) -> list[str]:
-        return [
-            str(path) for path in Path(prefix).parent.iterdir() if str(path).startswith(str(prefix))
-        ]
+        return [str(path) for path in Path(prefix).parent.iterdir() if str(path).startswith(prefix)]
 
     def is_prefix(path: str) -> bool:
         return len(matches(path)) > 1 or not Path(path).exists()
@@ -388,7 +514,7 @@ def _process_input_data(input_data: dict) -> list[str]:
                 f"the working directory. Use `get_input_data_dir({channel_arg})` to read "
                 f"input data from S3 source inside the job container."
             )
-        elif is_prefix(data):
+        elif is_prefix(str(data)):
             prefix_channels.add(channel)
         elif Path(data).is_dir():
             directory_channels.add(channel)
@@ -410,7 +536,7 @@ def _process_input_data(input_data: dict) -> list[str]:
 def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
     """Create an AWS or Local hybrid job"""
     if local:
-        from braket.jobs.local import LocalQuantumJob
+        from braket.jobs.local import LocalQuantumJob  # noqa: PLC0415
 
         for aws_only_arg in [
             "wait_until_complete",
@@ -421,10 +547,8 @@ def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
             "tags",
             "logger",
         ]:
-            if aws_only_arg in job_args:
-                del job_args[aws_only_arg]
+            job_args.pop(aws_only_arg, None)
         return LocalQuantumJob.create(**job_args)
-    else:
-        from braket.aws import AwsQuantumJob
+    from braket.aws import AwsQuantumJob  # noqa: PLC0415
 
-        return AwsQuantumJob.create(**job_args)
+    return AwsQuantumJob.create(**job_args)

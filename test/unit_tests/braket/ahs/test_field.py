@@ -16,7 +16,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
 from braket.timings.time_series import TimeSeries
@@ -80,6 +79,12 @@ def test_discretize(
     [
         (Decimal("0.1"), Decimal("10"), Decimal("0.5")),
         (Decimal("10"), Decimal("20"), None),
+        (Decimal("0.1"), None, Decimal("0.5")),
+        (None, Decimal("10"), Decimal("0.5")),
+        (None, None, Decimal("0.5")),
+        (None, Decimal("10"), None),
+        (Decimal("0.1"), None, None),
+        (None, None, None),
         (Decimal("100"), Decimal("0.1"), Decimal("1")),
     ],
 )
@@ -95,12 +100,21 @@ def test_uniform_field(
     assert expected.time_series.values() == actual.time_series.values()
 
 
-@pytest.mark.parametrize(
-    "time_res, value_res, pattern_res",
-    [
-        (Decimal("10"), Decimal("20"), None),
-    ],
-)
-@pytest.mark.xfail(raises=DiscretizationError)
-def test_invalid_pattern_res(default_field, time_res, value_res, pattern_res):
-    default_field.discretize(time_res, value_res, pattern_res)
+def test_from_lists():
+    times = [0, 0.1, 0.2, 0.3]
+    values = [0.5, 0.8, 0.9, 1.0]
+    pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    sh_field = Field.from_lists(times, values, pattern)
+    assert sh_field.time_series.times() == times
+    assert sh_field.time_series.values() == values
+    assert sh_field.pattern.series == pattern
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_from_lists_not_eq_length():
+    times = [0, 0.1, 0.2]
+    values = [0.5, 0.8, 0.9, 1.0]
+    pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    Field.from_lists(times, values, pattern)

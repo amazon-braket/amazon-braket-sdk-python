@@ -15,9 +15,12 @@ import asyncio
 import json
 import threading
 import time
+import warnings
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from botocore.exceptions import ClientError
+
 from common_test_utils import MockS3
 from jsonschema import validate
 
@@ -33,6 +36,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters, error_mitigation
 from braket.device_schema.dwave import (
@@ -47,17 +51,22 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation.debias import Debias
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.parametric import FreeParameter
+from braket.program_sets import CircuitBinding, ProgramSet
 from braket.pulse import Frame, Port, PulseSequence
+from braket.schema_common import BraketSchemaBase
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
 )
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
 IONQ_ARN = "device/qpu/ionq"
+IQM_ARN = "device/qpu/iqm"
 RIGETTI_ARN = "device/qpu/rigetti"
 OQC_ARN = "device/qpu/oqc"
 SIMULATOR_ARN = "device/quantum-simulator"
@@ -90,7 +99,7 @@ def quantum_task_quiet(aws_session):
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=4)
 
 
 @pytest.fixture
@@ -121,6 +130,19 @@ def problem():
 @pytest.fixture
 def openqasm_program():
     return OpenQASMProgram(source="OPENQASM 3.0; h $0;")
+
+
+class DummySerializableProgram(SerializableProgram):
+    def __init__(self, source: str):
+        self.source = source
+
+    def to_ir(self, ir_type: IRType = IRType.OPENQASM) -> str:
+        return self.source
+
+
+@pytest.fixture
+def serializable_program():
+    return DummySerializableProgram(source="OPENQASM 3.0; h $0;")
 
 
 @pytest.fixture
@@ -172,7 +194,7 @@ def test_equality(arn, aws_session):
 
 
 def test_str(quantum_task):
-    expected = "AwsQuantumTask('id/taskArn':'{}')".format(quantum_task.id)
+    expected = f"AwsQuantumTask('id/taskArn':'{quantum_task.id}')"
     assert str(quantum_task) == expected
 
 
@@ -188,6 +210,17 @@ def test_id_getter(arn, aws_session):
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_id_setter(quantum_task):
     quantum_task.id = 123
+
+
+def test_no_unknown_kwargs_no_warnings(arn, aws_session):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        AwsQuantumTask(arn, aws_session)
+
+
+def test_unknown_kwarg_warning(arn, aws_session):
+    with pytest.warns(UserWarning):
+        AwsQuantumTask(arn, aws_session, unknown_kwarg=123)
 
 
 def test_metadata(quantum_task):
@@ -283,6 +316,20 @@ def test_state(quantum_task):
     _mock_metadata(quantum_task._aws_session, state_4)
     assert quantum_task.state() == state_4
 
+    state_5 = "FAILED"
+    quantum_task._aws_session.get_quantum_task.return_value = {
+        "status": state_5,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "2",
+            "queuePriority": "Normal",
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
+    assert quantum_task.state() == state_5
+
 
 def test_cancel(quantum_task):
     future = quantum_task.async_result()
@@ -329,6 +376,43 @@ def test_result_circuit(circuit_task):
 
     expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
     assert circuit_task.result() == expected
+
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_program_set(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+
+    expected = ProgramSetQuantumTaskResult.from_object(
+        BraketSchemaBase.parse_raw_schema(MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+    )
+    actual = circuit_task.result()
+    assert expected.task_metadata == actual.task_metadata
+    assert expected.programs == actual.programs
+    assert expected.num_executables == actual.num_executables
+
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_failed_program_set(circuit_task):
+    _mock_metadata_program_set(circuit_task._aws_session, "FAILED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+
+    expected = ProgramSetQuantumTaskResult.from_object(
+        BraketSchemaBase.parse_raw_schema(MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+    )
+    actual = circuit_task.result()
+    assert actual is not None
+    assert expected.task_metadata == actual.task_metadata
 
     s3_bucket = circuit_task.metadata()["outputS3Bucket"]
     s3_object_key = circuit_task.metadata()["outputS3Directory"]
@@ -614,6 +698,20 @@ def test_create_openqasm_program_em_serialized(aws_session, arn, openqasm_progra
     )
 
 
+def test_create_serializable_program(aws_session, arn, serializable_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, serializable_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        OpenQASMProgram(source=serializable_program.to_ir()).json(),
+        S3_TARGET,
+        shots,
+    )
+
+
 def test_create_blackbird_program(aws_session, arn, blackbird_program):
     aws_session.create_quantum_task.return_value = arn
     shots = 21
@@ -668,14 +766,12 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
 
 
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
-    expected_openqasm = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-        ]
-    )
+    expected_openqasm = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+    ])
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
@@ -695,17 +791,15 @@ def test_create_pulse_gate_circuit(
     aws_session, arn, pulse_sequence, device_arn, device_parameters_class
 ):
     pulse_gate_circuit = Circuit().pulse_gate([0, 1], pulse_sequence, "my_PG")
-    expected_openqasm = "\n".join(
-        (
-            "OPENQASM 3.0;",
-            "bit[2] b;",
-            "cal {",
-            "    set_frequency(predefined_frame_1, 6000000.0);",
-            "}",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
-        )
-    )
+    expected_openqasm = "\n".join((
+        "OPENQASM 3.0;",
+        "bit[2] b;",
+        "cal {",
+        "    set_frequency(predefined_frame_1, 6000000.0);",
+        "}",
+        "b[0] = measure $0;",
+        "b[1] = measure $1;",
+    ))
 
     expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
@@ -887,6 +981,115 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
     AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, 0)
 
 
+def test_create_program_set(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1]) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    aws_session.create_quantum_task.return_value = arn
+    shots = 300
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.to_ir().json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_program_set_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1], 100) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    aws_session.create_quantum_task.return_value = arn
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.to_ir().json(),
+        S3_TARGET,
+        program_set.total_shots,
+    )
+
+
+def test_create_program_set_invalid_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = ProgramSet([circ1]) + ProgramSet(
+        CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    )
+    with pytest.raises(ValueError):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+
+def test_create_program_set_client_error(aws_session, arn):
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)], 100)
+    aws_session.create_quantum_task.side_effect = ClientError(
+        {
+            "Error": {"Code": "ValidationException", "Message": "bar"},
+            "message": "baz",
+            "programSetValidationFailures": [{"programIndex": 0, "errors": ["qux"]}],
+        },
+        "foo",
+    )
+    with pytest.raises(
+        ClientError, match="Rerun the task and catch the exception for more details"
+    ):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+
+def test_create_program_set_client_error_no_program_set_validation_failures(aws_session, arn):
+    program_set = ProgramSet([Circuit().h(0).cnot(0, 1)], 100)
+    aws_session.create_quantum_task.side_effect = ClientError(
+        {
+            "Error": {"Code": "ValidationException", "Message": "bar"},
+            "message": "baz",
+        },
+        "foo",
+    )
+    try:
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+    except ClientError as e:
+        assert "Rerun the task" not in e.response["message"]
+
+
+def test_create_ir_program_set(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = (
+        ProgramSet([circ1], 100)
+        + ProgramSet(CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}]))
+    ).to_ir()
+    aws_session.create_quantum_task.return_value = arn
+    shots = 30
+    AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IQM_ARN,
+        program_set.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_ir_program_set_invalid_shots(aws_session, arn):
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().rx(0, FreeParameter("theta"))
+    program_set = (
+        ProgramSet([circ1], 100)
+        + ProgramSet(CircuitBinding(circ2, input_sets=[{"theta": 1.23}, {"theta": 3.21}]))
+    ).to_ir()
+    with pytest.raises(ValueError):
+        AwsQuantumTask.create(aws_session, IQM_ARN, program_set, S3_TARGET, -1)
+
+
 @pytest.mark.parametrize(
     "device_parameters,arn",
     [
@@ -1014,29 +1217,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
-            DwaveDeviceParameters.parse_obj(
-                {
-                    "providerLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            DwaveDeviceParameters.parse_obj({
+                "providerLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
@@ -1091,29 +1292,27 @@ def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
-            Dwave2000QDeviceParameters.parse_obj(
-                {
-                    "deviceLevelParameters": {
-                        "postprocessingType": "OPTIMIZATION",
-                        "annealingOffsets": [3.67, 6.123],
-                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
-                        "annealingDuration": 1,
-                        "autoScale": False,
-                        "beta": 0.2,
-                        "chains": [[0, 1, 5], [6]],
-                        "compensateFluxDrift": False,
-                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
-                        "initialState": [1, 3, 0, 1],
-                        "maxResults": 1,
-                        "programmingThermalizationDuration": 625,
-                        "readoutThermalizationDuration": 256,
-                        "reduceIntersampleCorrelation": False,
-                        "reinitializeState": True,
-                        "resultFormat": "RAW",
-                        "spinReversalTransformCount": 100,
-                    }
+            Dwave2000QDeviceParameters.parse_obj({
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
                 }
-            ),
+            }),
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
@@ -1216,20 +1415,16 @@ def _assert_create_quantum_task_called_with(
     }
 
     if device_parameters is not None:
-        test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
+        test_kwargs["deviceParameters"] = device_parameters.json(exclude_none=True)
     if tags is not None:
-        test_kwargs.update({"tags": tags})
+        test_kwargs["tags"] = tags
     if reservation_arn:
-        test_kwargs.update(
+        test_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 
@@ -1248,6 +1443,7 @@ def _mock_metadata(aws_session, state):
                 "queuePriority": "Normal",
                 "message": message,
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
     else:
         aws_session.get_quantum_task.return_value = {
@@ -1259,7 +1455,26 @@ def _mock_metadata(aws_session, state):
                 "position": "2",
                 "queuePriority": "Normal",
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
+
+
+def _mock_metadata_program_set(aws_session, state):
+    message = (
+        f"'Task is in {state} status. AmazonBraket does not show queue position for this status.'"
+    )
+    aws_session.get_quantum_task.return_value = {
+        "status": state,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "None",
+            "queuePriority": "Normal",
+            "message": message,
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
 
 
 def _mock_s3(aws_session, result):

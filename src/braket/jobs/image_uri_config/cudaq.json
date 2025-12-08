@@ -1,0 +1,11 @@
+{
+  "registry": "292282985366",
+  "repository": "amazon-braket-cudaq-jobs",
+  "supported_regions": [
+    "us-east-1",
+    "us-west-1",
+    "us-west-2",
+    "eu-west-2",
+    "eu-north-1"
+  ]
+}

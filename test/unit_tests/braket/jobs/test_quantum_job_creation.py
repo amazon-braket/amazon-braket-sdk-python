@@ -38,6 +38,7 @@ from braket.jobs.quantum_job_creation import (
     _process_s3_source_module,
     _tar_and_upload_to_code_location,
     _validate_entry_point,
+    _validate_quantum_job_name,
     prepare_quantum_job,
 )
 
@@ -148,9 +149,7 @@ def data_parallel(request):
 
 @pytest.fixture
 def distribution(data_parallel):
-    if data_parallel:
-        return "data_parallel"
-    return None
+    return "data_parallel" if data_parallel else None
 
 
 @pytest.fixture
@@ -200,7 +199,7 @@ def generate_get_job_response():
             },
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 51),
             "deviceConfig": {
-                "device": "arn:aws:braket:::device/qpu/rigetti/Aspen-10",
+                "device": "arn:aws:braket:::device/qpu/rigetti/Ankaa-2",
             },
             "hyperParameters": {
                 "foo": "bar",
@@ -255,8 +254,8 @@ def create_job_args(
     reservation_arn,
 ):
     if request.param == "fixtures":
-        return dict(
-            (key, value)
+        return {
+            key: value
             for key, value in {
                 "device": device,
                 "source_module": source_module,
@@ -277,7 +276,7 @@ def create_job_args(
                 "reservation_arn": reservation_arn,
             }.items()
             if value is not None
-        )
+        }
     elif request.param == "defaults":
         return {
             "device": device,
@@ -339,7 +338,7 @@ def _translate_creation_args(create_job_args):
             "sagemaker_distributed_dataparallel_enabled": "true",
             "sagemaker_instance_type": instance_config.instanceType,
         }
-        hyperparameters.update(distributed_hyperparams)
+        hyperparameters |= distributed_hyperparams
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
         s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, timestamp, "data")
     )
@@ -379,16 +378,12 @@ def _translate_creation_args(create_job_args):
     }
 
     if reservation_arn:
-        test_kwargs.update(
+        test_kwargs["associations"] = [
             {
-                "associations": [
-                    {
-                        "arn": reservation_arn,
-                        "type": "RESERVATION_TIME_WINDOW_ARN",
-                    }
-                ]
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
             }
-        )
+        ]
 
     return test_kwargs
 
@@ -683,3 +678,14 @@ def test_invalid_input_parameters(entry_point, aws_session):
 def test_process_input_data(aws_session, input_data, input_data_configs):
     job_name = "job-name"
     assert _process_input_data(input_data, job_name, aws_session, "ts") == input_data_configs
+
+
+@pytest.mark.parametrize("name", ["A", "job-123", "X" * 50])
+def test_valid_job_names(name):
+    _validate_quantum_job_name(name)
+
+
+@pytest.mark.parametrize("name", ["", "job_case", "-leading", "trailing-", "X" * 51])
+def test_invalid_job_names(name):
+    with pytest.raises(ValueError):
+        _validate_quantum_job_name(name)

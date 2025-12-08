@@ -113,7 +113,7 @@ class AwsQuantumJob(QuantumJob):
                 Default = `<Braket base image_uri>`.
 
             job_name (str | None): A str that specifies the name with which the hybrid job is
-                created. Allowed pattern for hybrid job name: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,50}$`
+                created. Allowed pattern for hybrid job name: `^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$`
                 Default: f'{image_uri_type}-{timestamp}'.
 
             code_location (str | None): The S3 prefix URI where custom code will be uploaded.
@@ -412,7 +412,7 @@ class AwsQuantumJob(QuantumJob):
                 has_streams,
                 color_wrap,
                 [previous_state, current_state],
-                self.queue_position().queue_position if not self._quiet else None,
+                None if self._quiet else self.queue_position().queue_position,
             )
             previous_state = current_state
 
@@ -470,7 +470,7 @@ class AwsQuantumJob(QuantumJob):
         if "startedAt" in metadata:
             job_start = int(metadata["startedAt"].timestamp())
         if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
-            job_end = int(math.ceil(metadata["endedAt"].timestamp()))
+            job_end = math.ceil(metadata["endedAt"].timestamp())
         return fetcher.get_metrics_for_job(
             self.name, metric_type, statistic, job_start, job_end, self._logs_prefix
         )
@@ -515,8 +515,7 @@ class AwsQuantumJob(QuantumJob):
             except ClientError as e:
                 if e.response["Error"]["Code"] == "404":
                     return {}
-                else:
-                    raise e
+                raise
             return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
 
     @staticmethod
@@ -561,8 +560,7 @@ class AwsQuantumJob(QuantumJob):
                 AwsQuantumJob._attempt_results_download(self, output_s3_uri, output_s3_path)
                 AwsQuantumJob._extract_tar_file(f"{extract_to}/{self.name}")
                 return
-            else:
-                time.sleep(poll_interval_seconds)
+            time.sleep(poll_interval_seconds)
 
         raise TimeoutError(
             f"{job_response['jobName']}: Polling for job completion "
@@ -575,30 +573,27 @@ class AwsQuantumJob(QuantumJob):
                 s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "404":
-                exception_response = {
-                    "Error": {
-                        "Code": "404",
-                        "Message": f"Error retrieving results, "
-                        f"could not find results at '{output_s3_path}'",
-                    }
+            if e.response["Error"]["Code"] != "404":
+                raise
+            exception_response = {
+                "Error": {
+                    "Code": "404",
+                    "Message": f"Error retrieving results, "
+                    f"could not find results at '{output_s3_path}'",
                 }
-                raise ClientError(exception_response, "HeadObject") from e
-            else:
-                raise e
+            }
+            raise ClientError(exception_response, "HeadObject") from e
 
     @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
         with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
-            tar.extractall(extract_path)
+            tar.extractall(extract_path)  # noqa: S202
 
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
     def __eq__(self, other: AwsQuantumJob) -> bool:
-        if isinstance(other, AwsQuantumJob):
-            return self.arn == other.arn
-        return False
+        return self.arn == other.arn if isinstance(other, AwsQuantumJob) else False
 
     def __hash__(self) -> int:
         return hash(self.arn)
@@ -626,13 +621,14 @@ class AwsQuantumJob(QuantumJob):
             logger.info(f"Changed session region from '{current_region}' to '{device_region}'")
         try:
             aws_session.get_device(device)
-            return aws_session
         except ClientError as e:
             raise (
                 ValueError(f"'{device}' not found.")
                 if e.response["Error"]["Code"] == "ResourceNotFoundException"
                 else e
-            )
+            ) from e
+        else:
+            return aws_session
 
     @staticmethod
     def _initialize_non_regional_device_session(
@@ -641,14 +637,14 @@ class AwsQuantumJob(QuantumJob):
         original_region = aws_session.region
         try:
             aws_session.get_device(device)
-            return aws_session
         except ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if "qpu" not in device:
-                    raise ValueError(f"Simulator '{device}' not found in '{original_region}'")
-            else:
-                raise e
+            if e.response["Error"]["Code"] != "ResourceNotFoundException":
+                raise
 
+            if "qpu" not in device:
+                raise ValueError(f"Simulator '{device}' not found in '{original_region}'") from e
+        else:
+            return aws_session
         for region in frozenset(AwsDevice.REGIONS) - {original_region}:
             device_session = aws_session.copy_session(region=region)
             try:
@@ -656,8 +652,9 @@ class AwsQuantumJob(QuantumJob):
                 logger.info(
                     f"Changed session region from '{original_region}' to '{device_session.region}'"
                 )
-                return device_session
             except ClientError as e:
                 if e.response["Error"]["Code"] != "ResourceNotFoundException":
-                    raise e
+                    raise
+            else:
+                return device_session
         raise ValueError(f"QPU '{device}' not found.")

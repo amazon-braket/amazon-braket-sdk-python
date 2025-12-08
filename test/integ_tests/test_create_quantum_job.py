@@ -22,19 +22,11 @@ from pathlib import Path
 import job_test_script
 import pytest
 from job_test_module.job_test_submodule.job_test_submodule_file import submodule_helper
+from job_testing_utils import decorator_python_version
 
-from braket.aws import AwsSession
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.devices import Devices
-from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
-
-
-def decorator_python_version():
-    aws_session = AwsSession()
-    image_uri = retrieve_image(Framework.BASE, aws_session.region)
-    tag = aws_session.get_full_image_tag(image_uri)
-    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-    return int(major_version), int(minor_version)
+from braket.jobs import get_input_data_dir, hybrid_job, save_job_result
 
 
 def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
@@ -63,7 +55,7 @@ def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -119,7 +111,7 @@ def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     subdirectory = re.match(
         rf"s3://{s3_bucket}/jobs/{job.name}/(\d+)/script/source.tar.gz",
         job.metadata()["algorithmSpecification"]["scriptModeConfig"]["s3Uri"],
-    ).group(1)
+    )[1]
     keys = aws_session.list_keys(
         bucket=s3_bucket,
         prefix=f"jobs/{job_name}/{subdirectory}/",
@@ -220,9 +212,9 @@ def test_decorator_job():
         input_data=str(Path("test", "integ_tests", "requirements")),
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
-        with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir()) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
         assert a.attribute == "value"
@@ -232,7 +224,7 @@ def test_decorator_job():
         assert extras["extra_arg"] == "extra_value"
 
         hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
-        with open(hp_file, "r") as f:
+        with open(hp_file) as f:
             hyperparameters = json.load(f)
         assert hyperparameters == {
             "a": "MyClass{value}",
@@ -255,7 +247,7 @@ def test_decorator_job():
         os.chdir(temp_dir)
         try:
             job.download_result()
-            with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+            with open(Path(job.name, "test", "output_file.txt")) as f:
                 assert f.read() == "hello"
             assert (
                 Path(job.name, "results.json").exists()
@@ -286,12 +278,12 @@ def test_decorator_job_submodule():
         },
     )
     def decorator_job_submodule():
-        with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
+        with open(Path(get_input_data_dir("my_input")) / "requirements.txt") as f:
             assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+        with open(Path("test", "integ_tests", "requirements.txt")) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
-            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
+            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt"
         ) as f:
             assert f.readlines() == ["pytest\n"]
         with open(
@@ -302,7 +294,6 @@ def test_decorator_job_submodule():
                 "job_test_submodule",
                 "requirements.txt",
             ),
-            "r",
         ) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)

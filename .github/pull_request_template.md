@@ -11,7 +11,7 @@ _Put an `x` in the boxes that apply. You can also fill these out after creating 
 #### General
 
 - [ ] I have read the [CONTRIBUTING](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/CONTRIBUTING.md) doc
-- [ ] I used the commit message format described in [CONTRIBUTING](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/CONTRIBUTING.md#commit-your-change)
+- [ ] I used the PR title format described in [CONTRIBUTING](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/CONTRIBUTING.md#PR-title-format)
 - [ ] I have updated any necessary documentation, including [READMEs](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/README.md) and [API docs](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/CONTRIBUTING.md#documentation-guidelines) (if appropriate)
 
 #### Tests
