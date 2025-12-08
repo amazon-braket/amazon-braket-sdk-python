@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
@@ -23,8 +24,6 @@ from braket.circuits.serialization import IRType
 from braket.program_sets.circuit_binding import CircuitBinding
 from braket.pulse import PulseSequence
 from braket.registers import QubitSet
-
-import warnings
 
 
 class ProgramSet:
