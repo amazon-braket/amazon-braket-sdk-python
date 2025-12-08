@@ -147,6 +147,7 @@ class CircuitBinding:
             CircuitBinding: A new circuit binding with the observables bound.
         """
         measure = Circuit()
+        parameters = self._input_sets.as_dict() if self._input_sets else None
         if observables := self._observables:
             if isinstance(observables, Sum):
                 observables = observables.summands
@@ -161,7 +162,7 @@ class CircuitBinding:
                 if add_measure:
                     measure.measure(target)
             measure = Circuit().with_euler_angles(observables) + measure
-            parameters = self._input_sets * euler_angles if self._input_sets else euler_angles
+            parameters = self._input_sets * euler_angles if parameters else euler_angles
         if inplace:
             self._circuit.add_circuit(measure)
             self._observables = None

@@ -22,8 +22,14 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.noise import Noise
-from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInstructionCriteria
-from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
+from braket.circuits.noise_model.circuit_instruction_criteria import (
+    CircuitInstructionCriteria,
+)
+from braket.circuits.noise_model.criteria import (
+    Criteria,
+    CriteriaKey,
+    CriteriaKeyResult,
+)
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.measure_criteria import MeasureCriteria
 from braket.circuits.noise_model.observable_criteria import ObservableCriteria
@@ -248,6 +254,7 @@ class NoiseModel:
 
         Args:
             task_specification (TaskSpecification): a (supported) task to apply noise to
+                see NoiseModel.supported_specifications for supported tasks.
 
         Returns:
             task_specification: A new task with noise inserted.

@@ -30,7 +30,13 @@ from braket.circuits.noise_model import (
     QubitInitializationCriteria,
     UnitaryGateCriteria,
 )
-from braket.circuits.noises import BitFlip, Depolarizing, Kraus, PauliChannel, TwoQubitDepolarizing
+from braket.circuits.noises import (
+    BitFlip,
+    Depolarizing,
+    Kraus,
+    PauliChannel,
+    TwoQubitDepolarizing,
+)
 from braket.circuits.result_types import Expectation, Sample
 from braket.devices import LocalSimulator
 from braket.parametric import FreeParameter
@@ -503,7 +509,11 @@ def test_noise_model_from_dict():
         "instructions": [
             {
                 "noise": {"__class__": "BitFlip", "probability": 0.1},
-                "criteria": {"__class__": "GateCriteria", "qubits": [0, 1], "gates": ["H"]},
+                "criteria": {
+                    "__class__": "GateCriteria",
+                    "qubits": [0, 1],
+                    "gates": ["H"],
+                },
             }
         ]
     }
