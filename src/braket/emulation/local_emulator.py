@@ -182,7 +182,16 @@ class LocalEmulator(Emulator):
                     f"No valid one-qubit RB data found for qubit {qubit} in oneQubitProperties."
                 )
 
-            one_qubit_depolarizing_rate = 1 - one_qubit_fidelity
+            # Notes for the scaling factor 3/2:
+            # For a given input density matrix rho, and error rate p,
+            # Depolarizing(p, rho) = (1-4p/3)rho + (4p/3)(I/2) where (I/2) is the one
+            # qubit maximally mixed state. Then for a pure state rho = |0><0|, or
+            # generally |ψ><ψ|, the input-output state fidelity reads 1-2p/3.
+            # Hence, for a "target one qubit gate average gate fidelity" q,
+            # which is the spec in the device property, the corresponing
+            # "target one qubit gate average error rate" is (1-q) * 3/2, not (1-q).
+            one_qubit_depolarizing_rate = (1 - one_qubit_fidelity) * 3 / 2
+
             noise_model.add_noise(
                 Depolarizing(one_qubit_depolarizing_rate), GateCriteria(qubits=qubit)
             )
@@ -222,7 +231,17 @@ class LocalEmulator(Emulator):
             # Apply two qubit RB Depolarizing Noise
             for gate_name, gate_ind in valid_gate_names.items():
                 gate_fidelity = twoQubitGateFidelity[gate_ind]
-                two_qubit_depolarizing_rate = 1 - gate_fidelity.fidelity
+
+                # Notes for the scaling factor 5/4:
+                # For a given input density matrix rho, and error rate p,
+                # TwoQubitDepolarizing(p, rho) = (1-16p/15)rho + (16p/15)(I/4) where (I/4) is
+                # the two qubit maximally mixed state. Then for a pure state rho = |00><00|,
+                # or generally |ψ><ψ|, the input-output state fidelity reads 1-4p/5.
+                # Hence, for a "target two qubit gate average gate fidelity" q,
+                # which is the spec in the device property, the corresponing
+                # "target two qubit gate average error rate" is (1-q) * 5/4, not (1-q).
+                two_qubit_depolarizing_rate = (1 - gate_fidelity.fidelity) * 5 / 4
+
                 gate = BRAKET_GATES[gate_name]
                 noise_model.add_noise(
                     TwoQubitDepolarizing(two_qubit_depolarizing_rate),

@@ -421,7 +421,7 @@ reduced_ionq_device_capabilities_dict = {
         "errorMitigation": {
             "braket.device_schema.error_mitigation.debias.Debias": {"minimumShots": 2500}
         },
-        "fidelity": {"1Q": {"mean": 0.9998}, "2Q": {"mean": 0.12345}, "spam": {"mean": 0.9937}},
+        "fidelity": {"1Q": {"mean": 0.9998}, "2Q": {"mean": 0.99}, "spam": {"mean": 0.9937}},
         "timing": {
             "1Q": 0.000135,
             "2Q": 0.0006,
