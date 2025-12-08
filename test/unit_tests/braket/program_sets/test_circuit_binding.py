@@ -53,9 +53,20 @@ def test_binding_to_input(circuit_rx_parametrized):
     cb1 = CircuitBinding(circuit_rx_parametrized, input_sets, observable)
 
     cb2 = cb1.bind_observables_to_inputs(inplace=False)
-    assert cb1 != cb2 
+    assert cb1 != cb2
     assert cb1.to_ir() == cb2.to_ir()
 
     cb1.bind_observables_to_inputs(inplace=True)
-    assert cb1 == cb2 
+    assert cb1 == cb2
 
+
+def test_binding_to_input_no_inputs(circuit_rx_parametrized):
+    observable = [X(0) @ Z(1), Y(0), Z(0)]
+    cb1 = CircuitBinding(circuit_rx_parametrized, observables=observable)
+
+    cb2 = cb1.bind_observables_to_inputs(inplace=False)
+    assert cb1 != cb2
+    assert cb1.to_ir() == cb2.to_ir()
+
+    cb1.bind_observables_to_inputs(inplace=True)
+    assert cb1 == cb2

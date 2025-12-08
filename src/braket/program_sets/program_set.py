@@ -24,7 +24,8 @@ from braket.program_sets.circuit_binding import CircuitBinding
 from braket.pulse import PulseSequence
 from braket.registers import QubitSet
 
-import warnings 
+import warnings
+
 
 class ProgramSet:
     def __init__(
@@ -207,7 +208,7 @@ class ProgramSet:
         )
 
 
-def _zip_circuit_bindings(
+def _zip_circuit_bindings(  # noqa: C901
     circuit_binding: CircuitBinding,
     input_sets: Sequence[Mapping[str, float]] | None,
     observables: Sequence[Observable | None] | None,
@@ -218,13 +219,15 @@ def _zip_circuit_bindings(
         if isinstance(circuit_binding.observables, Sum):
             raise TypeError("Cannot zip with Sum observable")
         if observables:
-            warnings.warn("You are overwriting observables via ProgramSet().zip(), be careful!",
-                          stacklevel=2)
+            warnings.warn(
+                "You are overwriting observables via ProgramSet().zip(), be careful!", stacklevel=2
+            )
         if not input_sets:
             raise ValueError("Must specify input sets")
         if circuit_binding.input_sets:
-            warnings.warn("You are overwriting input_sets via ProgramSet.zip(), be careful!",
-                          stacklevel=2)
+            warnings.warn(
+                "You are overwriting input_sets via ProgramSet.zip(), be careful!", stacklevel=2
+            )
         if len(circuit_binding.observables) != len(input_sets):
             raise ValueError("Number of observables must match number of input sets")
         return ProgramSet(

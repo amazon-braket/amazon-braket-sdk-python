@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 
 from braket.ir.openqasm import Program
@@ -25,7 +26,6 @@ from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike
 from braket.pulse import PulseSequence
 from braket.registers import QubitSet
 
-import warnings
 
 class CircuitBinding:
     def __init__(
@@ -132,36 +132,41 @@ class CircuitBinding:
         )
 
     def bind_observables_to_inputs(
-            self,
-            inplace: bool = True,
-            ) -> CircuitBinding:
+        self,
+        inplace: bool = True,
+        add_measure: bool = False,
+    ) -> CircuitBinding:
         """
         Bind observables to input sets of parameters.
 
         Kwargs:
             inplace (bool): whether or not to return a new circuit binding or use the same one
+            apply_measurements (bool): whether or not to apply measurements to the circuit
 
         Returns:
             CircuitBinding: A new circuit binding with the observables bound.
         """
+        measure = Circuit()
         if observables := self._observables:
             if isinstance(observables, Sum):
                 observables = observables.summands
                 warnings.warn(
                     "Binding a Sum to input_sets discards information on observable weights.",
-                    stacklevel=2)
+                    stacklevel=2,
+                )
             euler_angles = {}
             for target in {target for obs in observables for target in obs.targets}:
                 for param in euler_angle_parameter_names(target):
                     euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in observables]
-            measure = Circuit().with_euler_angles(observables)
-            parameters = self._input_sets * euler_angles
-        else:
-            measure = Circuit()
+                if add_measure:
+                    measure.measure(target)
+            measure = Circuit().with_euler_angles(observables) + measure
+            parameters = self._input_sets * euler_angles if self._input_sets else euler_angles
         if inplace:
             self._circuit.add_circuit(measure)
             self._observables = None
             self._input_sets = parameters
+            return self
         return CircuitBinding(self._circuit + measure, input_sets=parameters)
 
     def __len__(self):

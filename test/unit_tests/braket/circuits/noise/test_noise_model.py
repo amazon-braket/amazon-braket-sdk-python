@@ -32,6 +32,9 @@ from braket.circuits.noise_model import (
 )
 from braket.circuits.noises import BitFlip, Depolarizing, Kraus, PauliChannel, TwoQubitDepolarizing
 from braket.circuits.result_types import Expectation, Sample
+from braket.devices import LocalSimulator
+from braket.parametric import FreeParameter
+from braket.program_sets import CircuitBinding, ProgramSet
 
 
 def h_unitary():
@@ -601,3 +604,68 @@ def test_two_qubit_kraus_noise():
     noise_model.add_noise(kraus, GateCriteria(Gate.CNot))
     qc = Circuit().cnot(0, 1)
     assert noise_model.apply(qc) == Circuit().cnot(0, 1).kraus([0, 1], kraus._matrices)
+
+
+def test_apply_to_program_set_with_observables():
+    """Test that _apply_to_program_set correctly handles CircuitBinding with observables."""
+    alp, bet = FreeParameter("alp"), FreeParameter("bet")
+    circuit = Circuit().h(0).cnot(0, 1).rx(0, alp).ry(1, bet)
+    # Create a CircuitBinding with observables
+    input_sets = {"alp": [0.2, 0.3], "bet": [0.0, 0.1]}
+
+    binding = CircuitBinding(
+        circuit,
+        input_sets=input_sets,
+        observables=[Observable.Z(0) @ Observable.Y(1), Observable.Z(0)],
+    )
+    assert len(binding) == 4
+    program_set = ProgramSet([binding], shots_per_executable=100)
+    noise_model = NoiseModel().add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+    noise_model.add_noise(BitFlip(0.01), MeasureCriteria())
+    assert len(program_set.entries[0].circuit.instructions) == 4
+    result = noise_model.apply(program_set)
+
+    assert len(result) == 1
+    assert len(result.entries[0]) == 4
+    assert len(result.entries[0].circuit.instructions) == 4 + 8 + 2 + 1
+
+
+def test_apply_to_program_set_only_circuits():
+    program_set = ProgramSet(
+        [Circuit().h(0), Circuit().x(0), Circuit().h(0)], shots_per_executable=100
+    )
+    noise_model = NoiseModel().add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+    result = noise_model.apply(program_set)
+    assert len(result) == 3
+
+
+def test_program_set_warning():
+    noise_model = NoiseModel().add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+    circuits = [noise_model.apply(circ) for circ in [Circuit().h(0), Circuit().h(0).h(0)]]
+    program_set = ProgramSet(circuits, shots_per_executable=100)
+    with pytest.warns(UserWarning):
+        result = noise_model.apply(program_set)
+        assert len(result) == 2
+
+
+def test_binding_no_bind():
+    """Test that _apply_to_program_set correctly handles CircuitBinding with observables."""
+    alp, bet = FreeParameter("alp"), FreeParameter("bet")
+    circuit = Circuit().h(0).cnot(0, 1).rx(0, alp).ry(1, bet)
+    # Create a CircuitBinding with observables
+    input_sets = {"alp": [0.2, 0.3], "bet": [0.0, 0.1]}
+
+    binding = CircuitBinding(
+        circuit,
+        input_sets=input_sets,
+    )
+    assert len(binding) == 2
+    program_set = ProgramSet([binding], shots_per_executable=100)
+    noise_model = NoiseModel().add_noise(Depolarizing(0.01), GateCriteria(Gate.H))
+    noise_model.add_noise(BitFlip(0.01), MeasureCriteria())
+    assert len(program_set.entries[0].circuit.instructions) == 4
+    result = noise_model.apply(program_set)
+
+    assert len(result) == 1
+    assert len(result.entries[0]) == 2
+    assert len(result.entries[0].circuit.instructions) == 4 + 1

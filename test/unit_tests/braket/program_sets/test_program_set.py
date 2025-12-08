@@ -202,6 +202,29 @@ def test_zip_binding_observables_input_sets_mismatch(circuit_rx_parametrized):
         )
 
 
+def test_overwrite_input_sets_warning(circuit_rx_parametrized):
+    with pytest.warns(UserWarning):
+        ProgramSet.zip(
+            CircuitBinding(
+                circuit_rx_parametrized,
+                observables=[Y(1), Z(0) @ X(1)],
+                input_sets=[{"theta": 1.23}, {"theta": 3.21}],
+            ),
+            input_sets=[{"theta": 1.23}, {"theta": 3.21}],
+            shots_per_executable=100,
+        )
+
+
+def test_overwrite_observables_warning(circuit_rx_parametrized):
+    with pytest.warns(UserWarning):
+        ProgramSet.zip(
+            CircuitBinding(circuit_rx_parametrized, observables=[Y(1), Z(0) @ X(1)]),
+            observables=[Y(1), Z(0) @ X(1)],
+            input_sets=[{"theta": 1.23}, {"theta": 3.21}],
+            shots_per_executable=100,
+        )
+
+
 def test_zip_binding_input_sets(circuit_rx_parametrized):
     obs1 = Y(1)
     obs2 = Z(0) @ X(1)
