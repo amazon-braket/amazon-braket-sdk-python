@@ -249,6 +249,11 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
 
+        # Update qubit times for direct noise channels so subsequent gates are placed after
+        if input_type == MomentType.NOISE:
+            for qubit in qubit_range:
+                self._max_times[qubit] = max(self._max_times.get(qubit, -1), time)
+
     def sort_moments(self) -> None:
         """Make the disordered moments in order.
 
