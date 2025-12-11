@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -21,14 +22,22 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.noise import Noise
-from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInstructionCriteria
-from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
+from braket.circuits.noise_model.circuit_instruction_criteria import (
+    CircuitInstructionCriteria,
+)
+from braket.circuits.noise_model.criteria import (
+    Criteria,
+    CriteriaKey,
+    CriteriaKeyResult,
+)
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.measure_criteria import MeasureCriteria
 from braket.circuits.noise_model.observable_criteria import ObservableCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.result_types import ObservableResultType
+from braket.program_sets import CircuitBinding, ProgramSet
 from braket.registers.qubit_set import QubitSetInput
+from braket.tasks.quantum_task import TaskSpecification
 
 
 @dataclass
@@ -90,6 +99,8 @@ class NoiseModel:
     every X gate that acts on qubit 0 has a 20% probability of a bit flip, and 5% probability of
     a phase flip.
     """
+
+    supported_specifications = Circuit | ProgramSet
 
     def __init__(self, instructions: list[NoiseModelInstruction] | None = None):
         self._instructions = instructions or []
@@ -236,17 +247,68 @@ class NoiseModel:
             new_model.add_noise(item.noise, item.criteria)
         return new_model
 
-    def apply(self, circuit: Circuit) -> Circuit:
+    def apply(self, task_specification: TaskSpecification) -> TaskSpecification:
         """Applies this noise model to a circuit, and returns a new circuit that's the `noisy`
         version of the given circuit. If multiple noise will act on the same instruction,
         they will be applied in the order they are added to the noise model.
 
         Args:
-            circuit (Circuit): a circuit to apply `noise` to.
+            task_specification (TaskSpecification): a (supported) task to apply noise to
+                see NoiseModel.supported_specifications for supported tasks.
 
         Returns:
-            Circuit: A new circuit that's a `noisy` version of the passed in circuit.
+            task_specification: A new task with noise inserted.
         """
+
+        match task_specification:
+            case Circuit():
+                return self._apply_to_circuit(task_specification)
+            case ProgramSet():
+                return self._apply_to_program_set(task_specification)
+        warnings.warn(
+            f"The type of the task specification is {task_specification.__class__.__name__}, "
+            "which is not supported by the noise model.",
+            stacklevel=2,
+        )
+        return task_specification
+
+    def _apply_to_program_set(self, program_set: ProgramSet):
+        """
+        Apply noise model to program set by casting observables to paramterized circuits
+
+        Only init, gate and measurenment noises are supported -result types, as with ProgramSets,
+        are not supported.
+
+        Also, observables **will** apply measurement noise - no observables will not!
+        """
+        new_programs = []
+        for n, program in enumerate(program_set):
+            if isinstance(program, CircuitBinding):
+                current_binding = program
+                if current_binding.observables:
+                    current_binding = current_binding.bind_observables_to_inputs(
+                        inplace=False, add_measure=True
+                    )
+                new_programs.append(
+                    CircuitBinding(
+                        self._apply_to_circuit(current_binding.circuit, allow_warning=(not n)),
+                        current_binding.input_sets,
+                    )
+                )
+            else:
+                new_programs.append(self._apply_to_circuit(program, allow_warning=(not n)))
+        return ProgramSet(new_programs, shots_per_executable=program_set.shots_per_executable)
+
+    def _apply_to_circuit(self, circuit: Circuit, allow_warning: bool = True) -> Circuit:
+        if allow_warning:
+            for instruction in circuit.instructions:
+                if isinstance(instruction.operator, Noise):
+                    warnings.warn(
+                        "A noise model is being applied to a circuit that already has"
+                        " noise instructions.",
+                        stacklevel=2,
+                    )
+                    break
         instructions = self.get_instructions_by_type()
         new_circuit = NoiseModel._apply_gate_noise(circuit, instructions.gate_noise)
         new_circuit = NoiseModel._apply_init_noise(new_circuit, instructions.initialization_noise)
