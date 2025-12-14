@@ -62,6 +62,9 @@ from braket.tasks import (
     PhotonicModelQuantumTaskResult,
     ProgramSetQuantumTaskResult,
 )
+from braket.experimental_capabilities.experimental_capability_context import (
+    EnableExperimentalCapability,
+)
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
@@ -765,6 +768,64 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
     )
 
 
+def test_create_task_with_experimental_capabilities(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        enabled_experimental_capabilities=["ALL"],
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        enabled_experimental_capabilities=["ALL"],
+    )
+
+
+def test_create_task_in_experimental_capabilities_context(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    with EnableExperimentalCapability():
+        AwsQuantumTask.create(
+            aws_session,
+            SIMULATOR_ARN,
+            ahs_problem,
+            S3_TARGET,
+            shots,
+        )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        enabled_experimental_capabilities=["ALL"],
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_invalid_experimental_capabilities(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        enabled_experimental_capabilities=["NotARealCapability"],
+    )
+
+
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
     expected_openqasm = "\n".join([
         "OPENQASM 3.0;",
@@ -1405,6 +1466,7 @@ def _assert_create_quantum_task_called_with(
     device_parameters=None,
     tags=None,
     reservation_arn=None,
+    enabled_experimental_capabilities=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1425,6 +1487,8 @@ def _assert_create_quantum_task_called_with(
                 "type": "RESERVATION_TIME_WINDOW_ARN",
             }
         ]
+    if enabled_experimental_capabilities:
+        test_kwargs["experimentalCapabilities"] = {"enabled": "ALL"}
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

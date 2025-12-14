@@ -1098,6 +1098,20 @@ def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit, s3_des
     )
 
 
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_experimental_capabilities_enabled(
+    aws_quantum_task_mock, device, circuit, s3_destination_folder
+):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        device,
+        circuit,
+        s3_destination_folder,
+        AwsDevice.DEFAULT_SHOTS_QPU,
+        enabled_experimental_capabilities=["ALL"],
+    )
+
+
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask")
 def test_run_param_circuit_with_no_inputs(
     aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
@@ -1462,6 +1476,7 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         inputs=None,
         gate_definitions=None,
         reservation_arn=None,
+        enabled_experimental_capabilities=None,
         extra_args=None,
         extra_kwargs=None,
     )
@@ -1525,6 +1540,7 @@ def test_run_with_positional_args_and_kwargs(
         {},
         {},
         "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
+        None,
         None,
         {"bar": 1, "baz": 2},
     )
@@ -1644,6 +1660,7 @@ def _run_and_assert(
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
     reservation_arn=None,  # Treated as positional arg
+    enabled_experimental_capabilities=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1662,6 +1679,7 @@ def _run_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
+        enabled_experimental_capabilities,
         extra_args,
         extra_kwargs,
     )
@@ -1681,6 +1699,7 @@ def _run_batch_and_assert(
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
     reservation_arn=None,  # Treated as positional arg
+    enabled_experimental_capabilities=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1702,6 +1721,7 @@ def _run_batch_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
+        enabled_experimental_capabilities,
         extra_args,
         extra_kwargs,
     )

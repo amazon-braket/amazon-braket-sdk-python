@@ -64,6 +64,10 @@ from braket.circuits.serialization import (
     SerializableProgram,
 )
 from braket.error_mitigation import ErrorMitigation
+from braket.experimental_capabilities.experimental_capability_context import (
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
+    ExperimentalCapability,
+)
 from braket.program_sets import ProgramSet
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.tasks import (
@@ -107,6 +111,7 @@ class AwsQuantumTask(QuantumTask):
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         quiet: bool = False,
         reservation_arn: str | None = None,
+        enabled_experimental_capabilities: list[str] | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -160,6 +165,11 @@ class AwsQuantumTask(QuantumTask):
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
+            enabled_experimental_capabilities (list[str] | None): List of experimental capabilities
+                to enable for the quantum task. Supported values are ["ALL"] to enable all
+                experimental capabilities. If `None`, the setting from the experimental
+                capability context will be used if active. Default: None.
+
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.
 
@@ -198,6 +208,14 @@ class AwsQuantumTask(QuantumTask):
                     }
                 ]
             })
+
+        if (
+            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+            or enabled_experimental_capabilities == [ExperimentalCapability.ALL]
+        ):
+            create_task_kwargs.update({"experimentalCapabilities": {"enabled": "ALL"}})
+        elif enabled_experimental_capabilities:
+            raise ValueError("Invalid allowed experimental capabilities options provided.")
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
