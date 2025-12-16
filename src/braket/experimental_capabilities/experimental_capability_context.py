@@ -40,8 +40,7 @@ class GlobalExperimentalCapabilityContext:
     def is_enabled(
         self,
         experimental_capabilities: ExperimentalCapability
-        | Iterable[ExperimentalCapability]
-        | None = None,
+        | Iterable[ExperimentalCapability] = ExperimentalCapability.ALL,
     ) -> bool:
         """Check if experimental capabilities are enabled, either for all or a specific
         set of experimental capabilities.
@@ -60,10 +59,6 @@ class GlobalExperimentalCapabilityContext:
             "If provided, Experimental capabilities must be a single \
                 or list of ExperimentalCapability strings"
         )
-
-    @_is_enabled.register
-    def _(self, experimental_capabilities: None):
-        return self._all_enabled
 
     @_is_enabled.register
     def _(self, experimental_capabilities: ExperimentalCapability):
@@ -109,17 +104,6 @@ class GlobalExperimentalCapabilityContext:
             if ExperimentalCapability.ALL in experimental_capabilities:
                 self._all_enabled = False
             self._currently_enabled_capabilities.difference_update(experimental_capabilities)
-
-    def set_state(
-        self, enabled_capabilities: Iterable[ExperimentalCapability] | None = None
-    ) -> None:
-        """Set the state of all experimental capabilities.
-
-        Args:
-            enabled_capabilities: the state of the experimental capability context in terms of the
-            experimental capabilities to enable. If None, default to ["ALL"]
-        """
-        self.enable(enabled_capabilities)
 
     def get_enabled_capabilities(self) -> list[ExperimentalCapability]:
         """Get the set of currently enabled experimental capabilities.
@@ -196,4 +180,4 @@ class EnableExperimentalCapability:
             exc_tb: The exception traceback if an exception was raised in the context, else None.
         """
         GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable(self._current_enabled_capabilities)
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.set_state(self._previous_enabled_capabilities)
+        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.enable(self._previous_enabled_capabilities)

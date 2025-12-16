@@ -153,6 +153,8 @@ def test_nested_contexts_all_outer_explicit_inner():
             # Inner context: picks up the "ALL" from the outer context
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapX", "CapY"])
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapZ"])
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["ALL"])
             enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
             assert set(enabled_inner) == {ExperimentalCapability.ALL}
 
@@ -191,10 +193,11 @@ def test_nested_contexts_explicit_both_levels():
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
-def test_is_enabled_invalid_input():
+@pytest.mark.parametrize("invalid_input", [None, 12345])
+def test_is_enabled_invalid_input(invalid_input):
     with pytest.raises(TypeError) as exception:
         with EnableExperimentalCapability():
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(12345)
+            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(invalid_input)
     assert (
         str(exception.value)
         == "If provided, Experimental capabilities must be a single \
