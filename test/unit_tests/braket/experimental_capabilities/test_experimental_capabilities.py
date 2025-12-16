@@ -192,6 +192,11 @@ def test_nested_contexts_explicit_both_levels():
 
 
 def test_is_enabled_invalid_input():
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exception:
         with EnableExperimentalCapability():
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled("CapA", "CapB")
+            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(12345)
+    assert (
+        str(exception.value)
+        == "If provided, Experimental capabilities must be a single \
+                or list of ExperimentalCapability strings"
+    )
