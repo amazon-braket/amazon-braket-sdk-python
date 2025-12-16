@@ -43,7 +43,7 @@ def test_creation(mock_create):
         reservaion_arn=(
             "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
         ),
-        enabled_experimental_capabilities=["ALL"],
+        experimental_capabilities=["ALL"],
     )
     assert batch.size == batch_size
     assert batch.tasks == [task_mock for _ in range(batch_size)]

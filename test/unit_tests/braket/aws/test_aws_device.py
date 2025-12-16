@@ -1108,7 +1108,7 @@ def test_run_with_experimental_capabilities_enabled(
         circuit,
         s3_destination_folder,
         AwsDevice.DEFAULT_SHOTS_QPU,
-        enabled_experimental_capabilities=["ALL"],
+        experimental_capabilities=["ALL"],
     )
 
 
@@ -1476,7 +1476,7 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         inputs=None,
         gate_definitions=None,
         reservation_arn=None,
-        enabled_experimental_capabilities=None,
+        experimental_capabilities=None,
         extra_args=None,
         extra_kwargs=None,
     )
@@ -1660,7 +1660,7 @@ def _run_and_assert(
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
     reservation_arn=None,  # Treated as positional arg
-    enabled_experimental_capabilities=None,  # Treated as positional arg
+    experimental_capabilities=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1679,7 +1679,7 @@ def _run_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
-        enabled_experimental_capabilities,
+        experimental_capabilities,
         extra_args,
         extra_kwargs,
     )
@@ -1699,7 +1699,7 @@ def _run_batch_and_assert(
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
     reservation_arn=None,  # Treated as positional arg
-    enabled_experimental_capabilities=None,  # Treated as positional arg
+    experimental_capabilities=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1721,7 +1721,7 @@ def _run_batch_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
-        enabled_experimental_capabilities,
+        experimental_capabilities,
         extra_args,
         extra_kwargs,
     )

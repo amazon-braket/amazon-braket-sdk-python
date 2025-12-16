@@ -777,7 +777,7 @@ def test_create_task_with_experimental_capabilities(aws_session, arn, ahs_proble
         ahs_problem,
         S3_TARGET,
         shots,
-        enabled_experimental_capabilities=["ALL"],
+        experimental_capabilities=["ALL"],
     )
 
     _assert_create_quantum_task_called_with(
@@ -786,7 +786,7 @@ def test_create_task_with_experimental_capabilities(aws_session, arn, ahs_proble
         ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
-        enabled_experimental_capabilities=["ALL"],
+        experimental_capabilities=["ALL"],
     )
 
 
@@ -808,7 +808,7 @@ def test_create_task_in_experimental_capabilities_context(aws_session, arn, ahs_
         ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
-        enabled_experimental_capabilities=["ALL"],
+        experimental_capabilities=["ALL"],
     )
 
 
@@ -822,7 +822,7 @@ def test_invalid_experimental_capabilities(aws_session, arn, ahs_problem):
         ahs_problem,
         S3_TARGET,
         shots,
-        enabled_experimental_capabilities=["NotARealCapability"],
+        experimental_capabilities=["NotARealCapability"],
     )
 
 
@@ -1466,7 +1466,7 @@ def _assert_create_quantum_task_called_with(
     device_parameters=None,
     tags=None,
     reservation_arn=None,
-    enabled_experimental_capabilities=None,
+    experimental_capabilities=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1487,7 +1487,7 @@ def _assert_create_quantum_task_called_with(
                 "type": "RESERVATION_TIME_WINDOW_ARN",
             }
         ]
-    if enabled_experimental_capabilities:
+    if experimental_capabilities:
         test_kwargs["experimentalCapabilities"] = {"enabled": "ALL"}
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 

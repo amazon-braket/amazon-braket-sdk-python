@@ -307,7 +307,7 @@ def run_and_assert(
     inputs,  # Treated as positional arg
     gate_definitions,  # Treated as positional arg
     reservation_arn,  # Treated as positional arg
-    enabled_experimental_capabilities,  # Treated as positional arg
+    experimental_capabilities,  # Treated as positional arg
     extra_args,
     extra_kwargs,
 ):
@@ -331,8 +331,8 @@ def run_and_assert(
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
         run_kwargs.update({"reservation_arn": reservation_arn})
-    if enabled_experimental_capabilities:
-        run_kwargs.update({"enabled_experimental_capabilities": enabled_experimental_capabilities})
+    if experimental_capabilities:
+        run_kwargs.update({"experimental_capabilities": experimental_capabilities})
 
     task = device.run(circuit, *run_args, **run_kwargs)
     assert task == task_mock
@@ -349,7 +349,7 @@ def run_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
-        enabled_experimental_capabilities,
+        experimental_capabilities,
         extra_args,
         extra_kwargs,
     )
@@ -377,7 +377,7 @@ def run_batch_and_assert(
     inputs,
     gate_definitions,
     reservation_arn,
-    enabled_experimental_capabilities,
+    experimental_capabilities,
     extra_args,
     extra_kwargs,
 ):
@@ -408,8 +408,8 @@ def run_batch_and_assert(
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
         run_kwargs.update({"reservation_arn": reservation_arn})
-    if enabled_experimental_capabilities:
-        run_kwargs.update({"enabled_experimental_capabilities": enabled_experimental_capabilities})
+    if experimental_capabilities:
+        run_kwargs.update({"experimental_capabilities": experimental_capabilities})
 
     batch = device.run_batch(circuits, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
@@ -426,7 +426,7 @@ def run_batch_and_assert(
         inputs,
         gate_definitions,
         reservation_arn,
-        enabled_experimental_capabilities,
+        experimental_capabilities,
         extra_args,
         extra_kwargs,
     )
@@ -455,7 +455,7 @@ def _create_task_args_and_kwargs(
     inputs,
     gate_definitions,
     reservation_arn,
-    enabled_experimental_capabilities,
+    experimental_capabilities,
     extra_args,
     extra_kwargs,
 ):
@@ -475,6 +475,6 @@ def _create_task_args_and_kwargs(
         "inputs": inputs,
         "gate_definitions": gate_definitions,
         "reservation_arn": reservation_arn,
-        "enabled_experimental_capabilities": enabled_experimental_capabilities,
+        "experimental_capabilities": experimental_capabilities,
     })
     return create_args, create_kwargs
