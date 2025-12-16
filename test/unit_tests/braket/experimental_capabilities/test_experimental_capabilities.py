@@ -189,3 +189,9 @@ def test_nested_contexts_explicit_both_levels():
 
     # After outer context exits, no capabilities should be enabled
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+def test_is_enabled_invalid_input():
+    with pytest.raises(TypeError):
+        with EnableExperimentalCapability():
+            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled("CapA", "CapB")
