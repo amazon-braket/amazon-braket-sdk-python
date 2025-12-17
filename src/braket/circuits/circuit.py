@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 import oqpy
@@ -64,9 +64,6 @@ from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
-
-if TYPE_CHECKING:  # pragma: no cover
-    pass
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
