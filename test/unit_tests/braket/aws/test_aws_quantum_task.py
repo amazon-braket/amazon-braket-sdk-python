@@ -403,6 +403,24 @@ def test_result_program_set(circuit_task):
     )
 
 
+def test_result_failed_program_set(circuit_task):
+    _mock_metadata_program_set(circuit_task._aws_session, "FAILED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+
+    expected = ProgramSetQuantumTaskResult.from_object(
+        BraketSchemaBase.parse_raw_schema(MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+    )
+    actual = circuit_task.result()
+    assert actual is not None
+    assert expected.task_metadata == actual.task_metadata
+
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
 def test_result_annealing(annealing_task):
     _mock_metadata(annealing_task._aws_session, "COMPLETED")
     _mock_s3(annealing_task._aws_session, MockS3.MOCK_S3_RESULT_ANNEALING)
@@ -1439,6 +1457,24 @@ def _mock_metadata(aws_session, state):
             },
             "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
+
+
+def _mock_metadata_program_set(aws_session, state):
+    message = (
+        f"'Task is in {state} status. AmazonBraket does not show queue position for this status.'"
+    )
+    aws_session.get_quantum_task.return_value = {
+        "status": state,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "None",
+            "queuePriority": "Normal",
+            "message": message,
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
 
 
 def _mock_s3(aws_session, result):

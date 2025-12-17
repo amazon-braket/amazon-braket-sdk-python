@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.106.5 (2025-12-11)
+
+### Bug Fixes and Other Changes
+
+ * update required schemas version
+
+## v1.106.4 (2025-12-08)
+
+### Bug Fixes and Other Changes
+
+ * qubit error for Kraus in noise model
+
+## v1.106.3 (2025-12-03)
+
+### Bug Fixes and Other Changes
+
+ * Increment classical bits when adding circuits
+
+## v1.106.2 (2025-12-02)
+
+### Bug Fixes and Other Changes
+
+ * Correct noise scaling in the emulator
+
+## v1.106.1 (2025-11-26)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets when calling result() synchronously
+
+## v1.106.0 (2025-11-20)
+
+### Features
+
+ * emulator support for AQT devices
+
 ## v1.105.0 (2025-11-18)
 
 ### Features

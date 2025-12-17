@@ -279,7 +279,7 @@ class NoiseModel:
             new_circuit.add_instruction(circuit_instruction)
 
             if not isinstance(circuit_instruction.operator, Measure):
-                new_circuit = _apply_noise_on_instruction(
+                _apply_noise_on_instruction(
                     new_circuit,
                     circuit_instruction,
                     gate_noise_instructions,
@@ -395,7 +395,7 @@ def _apply_noise_on_instruction(
         if not item.criteria.instruction_matches(instruction):
             continue
 
-        if item.noise.fixed_qubit_count() == len(target_qubits):
+        if item.noise.fixed_qubit_count() in {len(target_qubits), NotImplemented}:
             circuit.add_instruction(Instruction(item.noise, target_qubits))
         else:
             for qubit in target_qubits:
