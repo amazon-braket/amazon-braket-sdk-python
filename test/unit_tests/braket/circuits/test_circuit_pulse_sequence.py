@@ -567,6 +567,7 @@ def test_missing_calibration(rigetti_device):
         rigetti_device.get_circuit_pulse_sequence(Circuit().rz(1, 0.1))
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_expectation_value_result_type_on_one_qubit(rigetti_device):
     circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X(), target=[1])
     expected = "\n".join([
@@ -581,10 +582,10 @@ def test_expectation_value_result_type_on_one_qubit(rigetti_device):
         "    psb[1] = capture_v0(q1_ro_rx_frame);",
         "}",
     ])
-    with pytest.raises(NotImplementedError, match="_to_pulse_sequence is not implemented."):
-        assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
+    assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_expectation_value_result_type_on_all_qubits(rigetti_device):
     circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X())
     expected = "\n".join([
@@ -600,8 +601,7 @@ def test_expectation_value_result_type_on_all_qubits(rigetti_device):
         "    psb[1] = capture_v0(q1_ro_rx_frame);",
         "}",
     ])
-    with pytest.raises(NotImplementedError, match="_to_pulse_sequence is not implemented."):
-        assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
+    assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_no_target_result_type(rigetti_device):
