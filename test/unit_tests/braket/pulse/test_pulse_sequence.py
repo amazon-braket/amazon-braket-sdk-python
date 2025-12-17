@@ -460,19 +460,17 @@ def test_add_pulse_sequences_with_different_free_parameters(predefined_frame_1):
     pulse_sequence2 = PulseSequence().shift_phase(predefined_frame_1, theta2)
     pulse_sequence = pulse_sequence1 + pulse_sequence2
 
-    expected_str = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            *[
-                f"    input float {parameter};"
-                for parameter in reversed(list(pulse_sequence.parameters))
-            ],
-            "    shift_phase(predefined_frame_1, theta1);",
-            "    shift_phase(predefined_frame_1, theta2);",
-            "}",
-        ]
-    )
+    expected_str = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        *[
+            f"    input float {parameter};"
+            for parameter in reversed(list(pulse_sequence.parameters))
+        ],
+        "    shift_phase(predefined_frame_1, theta1);",
+        "    shift_phase(predefined_frame_1, theta2);",
+        "}",
+    ])
 
     assert pulse_sequence.to_ir() == expected_str
     assert pulse_sequence.parameters == {theta1, theta2}

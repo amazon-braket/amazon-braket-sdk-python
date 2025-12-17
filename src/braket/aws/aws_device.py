@@ -37,7 +37,7 @@ from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import QueueDepthInfo, QueueType
-from braket.circuits import Gate, QubitSet
+from braket.circuits import Circuit, CircuitPulseSequenceBuilder, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.noise_model import NoiseModel
 from braket.devices.device import Device
@@ -772,6 +772,23 @@ class AwsDevice(Device):
                 queue_info["jobs"] = queue_size
 
         return QueueDepthInfo(**queue_info)
+
+    def get_circuit_pulse_sequence(
+        self,
+        circuit: Circuit,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+    ) -> PulseSequence:
+        """Get the associated pulse sequence for a circuit.
+
+        Args:
+            circuit (Circuit): The circuit to translate.
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): Additional
+                gate definitions. Default: None.
+
+        Returns:
+            PulseSequence: A PulseSequence corresponding to the circuit.
+        """
+        return CircuitPulseSequenceBuilder(self, gate_definitions).build_pulse_sequence(circuit)
 
     def refresh_gate_calibrations(self) -> GateCalibrations | None:
         """Refreshes the gate calibration data upon request.

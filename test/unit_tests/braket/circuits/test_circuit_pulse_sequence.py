@@ -194,41 +194,6 @@ def get_rigetti_pulse_model(capabilities_json):
     }
 
 
-def get_oqc_pulse_model(capabilities_json):
-    device_json = {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.oqc.oqc_device_capabilities",
-            "version": "1",
-        },
-        "service": {
-            "executionWindows": [],
-            "shotsRange": [1, 10],
-        },
-        "action": {
-            "braket.ir.jaqcd.program": {
-                "actionType": "braket.ir.jaqcd.program",
-                "version": ["1"],
-                "supportedOperations": [],
-            }
-        },
-        "paradigm": {
-            "qubitCount": 30,
-            "nativeGateSet": [],
-            "connectivity": {"fullyConnected": False, "connectivityGraph": {}},
-        },
-        "deviceParameters": {},
-        "pulse": capabilities_json,
-    }
-    device_obj = OqcDeviceCapabilities.parse_obj(device_json)
-    return {
-        "deviceName": "Lucy",
-        "deviceType": "QPU",
-        "providerName": "Oxford",
-        "deviceStatus": "OFFLINE",
-        "deviceCapabilities": device_obj.json(),
-    }
-
-
 def get_ionq_model():
     device_json = {
         "braketSchemaHeader": {
@@ -455,17 +420,6 @@ def rigetti_device():
 
 
 @pytest.fixture
-def oqc_device():
-    response_data_content = {"gates": {}, "waveforms": {}}
-    response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
-    with patch("urllib.request.urlopen") as mock_url_request:
-        mock_url_request.return_value.__enter__.return_value = response_data_stream
-        mock_session = Mock()
-        mock_session.get_device.return_value = get_oqc_pulse_model(MOCK_OQC_PULSE_CAPABILITIES_JSON)
-        yield AwsDevice(OQC_ARN, mock_session)
-
-
-@pytest.fixture
 def not_supported_device():
     response_data_content = {"gates": {}, "waveforms": {}}
     response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
@@ -504,11 +458,9 @@ def pulse_sequence(frame):
 @pytest.fixture()
 def user_defined_gate_calibrations(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([1]))
-    return GateCalibrations(
-        {
-            calibration_key: pulse_sequence,
-        }
-    )
+    return GateCalibrations({
+        calibration_key: pulse_sequence,
+    })
 
 
 def test_empty_circuit(rigetti_device):
@@ -529,187 +481,151 @@ def test_not_supported_device(not_supported_device):
 
 
 def test_unbound_circuit(rigetti_device):
-    circuit = Circuit().rz(0, FreeParameter("theta"))
     with pytest.raises(
         ValueError, match="All parameters must be assigned to draw the pulse sequence."
     ):
-        circuit.pulse_sequence(rigetti_device)
+        rigetti_device.get_circuit_pulse_sequence(Circuit().rz(0, FreeParameter("theta")))
 
 
 def test_non_parametric_defcal(rigetti_device):
     circ = Circuit().rx(0, np.pi / 2)
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[1] psb;",
-            "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
-            "7.494904522022295e-10, -0.4549282253548838, false);",
-            "    barrier $0;",
-            "    shift_frequency(q0_rf_frame, -321047.14178613486);",
-            "    play(q0_rf_frame, wf_drag_gaussian_1);",
-            "    shift_frequency(q0_rf_frame, 321047.14178613486);",
-            "    barrier $0;",
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "}",
-        ]
-    )
-    assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[1] psb;",
+        "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
+        "7.494904522022295e-10, -0.4549282253548838, false);",
+        "    barrier $0;",
+        "    shift_frequency(q0_rf_frame, -321047.14178613486);",
+        "    play(q0_rf_frame, wf_drag_gaussian_1);",
+        "    shift_frequency(q0_rf_frame, 321047.14178613486);",
+        "    barrier $0;",
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "}",
+    ])
+    assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_user_defined_gate_calibrations_extension(rigetti_device, user_defined_gate_calibrations):
     circ = Circuit().z(1)
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[1] psb;",
-            "    frame frame = newframe(device_port_x0, 2000000000.0, 0);",
-            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    set_frequency(frame, 6000000.0);",
-            "    play(frame, drag_gauss_wf);",
-            "    psb[0] = capture_v0(q1_ro_rx_frame);",
-            "}",
-        ]
-    )
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[1] psb;",
+        "    frame frame = newframe(device_port_x0, 2000000000.0, 0);",
+        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+        "    set_frequency(frame, 6000000.0);",
+        "    play(frame, drag_gauss_wf);",
+        "    psb[0] = capture_v0(q1_ro_rx_frame);",
+        "}",
+    ])
     assert (
-        circ.pulse_sequence(rigetti_device, user_defined_gate_calibrations.pulse_sequences).to_ir()
-        == expected
-    )
-
-
-def test_with_oxford_device(oqc_device, user_defined_gate_calibrations):
-    circ = Circuit().z(1)
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[1] psb;",
-            "    frame frame = newframe(device_port_x0, 2000000000.0, 0);",
-            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    set_frequency(frame, 6000000.0);",
-            "    play(frame, drag_gauss_wf);",
-            "    psb[0] = capture_v0(r1_measure);",
-            "}",
-        ]
-    )
-    assert (
-        circ.pulse_sequence(oqc_device, user_defined_gate_calibrations.pulse_sequences).to_ir()
+        rigetti_device.get_circuit_pulse_sequence(
+            circ, user_defined_gate_calibrations.pulse_sequences
+        ).to_ir()
         == expected
     )
 
 
 def test_parametric_defcal(rigetti_device):
     circ = Circuit().cphaseshift(0, 1, 0.1)
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[2] psb;",
-            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
-            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
-            "    shift_phase(q0_rf_frame, -0.1);",
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "    psb[1] = capture_v0(q1_ro_rx_frame);",
-            "}",
-        ]
-    )
-
-    assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[2] psb;",
+        "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+        "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+        "    shift_phase(q0_rf_frame, -0.1);",
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "    psb[1] = capture_v0(q1_ro_rx_frame);",
+        "}",
+    ])
+    assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_pulse_gate(rigetti_device):
     pulse_sequence = PulseSequence().set_frequency(rigetti_device.frames["q0_rf_frame"], 1e6)
     circ = Circuit().pulse_gate(0, pulse_sequence)
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[1] psb;",
-            "    set_frequency(q0_rf_frame, 1000000.0);",
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "}",
-        ]
-    )
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[1] psb;",
+        "    set_frequency(q0_rf_frame, 1000000.0);",
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "}",
+    ])
 
-    assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+    assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_missing_calibration(rigetti_device):
-    circuit = Circuit().rz(1, 0.1)
     with pytest.raises(
         ValueError,
         match=r"No pulse sequence for Rz\(0.1\) on qubit 1 was provided"
         " in the gate calibration set.",
     ):
-        circuit.pulse_sequence(rigetti_device)
+        rigetti_device.get_circuit_pulse_sequence(Circuit().rz(1, 0.1))
 
 
 def test_expectation_value_result_type_on_one_qubit(rigetti_device):
     circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X(), target=[1])
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[2] psb;",
-            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
-            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
-            "    shift_phase(q0_rf_frame, -0.1);",
-            "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "    psb[1] = capture_v0(q1_ro_rx_frame);",
-            "}",
-        ]
-    )
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[2] psb;",
+        "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+        "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+        "    shift_phase(q0_rf_frame, -0.1);",
+        "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "    psb[1] = capture_v0(q1_ro_rx_frame);",
+        "}",
+    ])
     with pytest.raises(
         NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
     ):
-        assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+        assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_expectation_value_result_type_on_all_qubits(rigetti_device):
     circ = Circuit().cphaseshift(0, 1, 0.1).expectation(observable=Observable.X())
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[2] psb;",
-            "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
-            "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
-            "    shift_phase(q0_rf_frame, -0.1);",
-            "    rx(pi/2) $0;",  # FIXME: this needs the right basis rotation
-            "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "    psb[1] = capture_v0(q1_ro_rx_frame);",
-            "}",
-        ]
-    )
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[2] psb;",
+        "    waveform q0_q1_cphase_sqrtCPHASE = {0.0, 0.0, 0.0, 0.0};",
+        "    play(q0_q1_cphase_frame, q0_q1_cphase_sqrtCPHASE);",
+        "    shift_phase(q0_rf_frame, -0.1);",
+        "    rx(pi/2) $0;",  # FIXME: this needs the right basis rotation
+        "    rx(pi/2) $1;",  # FIXME: this needs the right basis rotation
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "    psb[1] = capture_v0(q1_ro_rx_frame);",
+        "}",
+    ])
     with pytest.raises(
         NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
     ):
-        assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+        assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
 def test_no_target_result_type(rigetti_device):
     circ = Circuit().rx(0, np.pi / 2).state_vector()
-    expected = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    bit[1] psb;",
-            "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
-            "7.494904522022295e-10, -0.4549282253548838, false);",
-            "    barrier $0;",
-            "    shift_frequency(q0_rf_frame, -321047.14178613486);",
-            "    play(q0_rf_frame, wf_drag_gaussian_1);",
-            "    shift_frequency(q0_rf_frame, 321047.14178613486);",
-            "    barrier $0;",
-            "    psb[0] = capture_v0(q0_ro_rx_frame);",
-            "}",
-        ]
-    )
+    expected = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    bit[1] psb;",
+        "    waveform wf_drag_gaussian_1 = drag_gaussian(60.0ns, 6.36991350216ns, "
+        "7.494904522022295e-10, -0.4549282253548838, false);",
+        "    barrier $0;",
+        "    shift_frequency(q0_rf_frame, -321047.14178613486);",
+        "    play(q0_rf_frame, wf_drag_gaussian_1);",
+        "    shift_frequency(q0_rf_frame, 321047.14178613486);",
+        "    barrier $0;",
+        "    psb[0] = capture_v0(q0_ro_rx_frame);",
+        "}",
+    ])
     with pytest.warns(
         UserWarning,
         match=r"StateVector\(\) does not have have a pulse representation and it is ignored.",
     ):
-        assert circ.pulse_sequence(rigetti_device).to_ir() == expected
+        assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected

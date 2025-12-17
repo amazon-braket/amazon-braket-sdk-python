@@ -460,7 +460,6 @@ class PulseSequence:
 
     def __add__(self, other: PulseSequence) -> PulseSequence:
         """Return concatenation of two programs."""
-        assert isinstance(other, PulseSequence)
         self_copy = deepcopy(self)
         self_copy += other
         return self_copy

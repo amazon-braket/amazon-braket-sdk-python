@@ -27,7 +27,6 @@ from braket.ir.openqasm.program_v1 import io_type
 from sympy import Expr
 
 from braket.circuits import compiler_directives
-from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -67,7 +66,7 @@ from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 if TYPE_CHECKING:  # pragma: no cover
-    from braket.aws import AwsDevice
+    pass
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1269,26 +1268,6 @@ class Circuit:
             str: An ASCII string circuit diagram.
         """
         return circuit_diagram_class.build_diagram(self)
-
-    def pulse_sequence(
-        self,
-        device: AwsDevice,
-        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
-        pulse_sequence_builder_class: type = CircuitPulseSequenceBuilder,
-    ) -> PulseSequence:
-        """Get the associated pulse sequence for the current circuit.
-
-        Args:
-            device (AwsDevice): an AWS device.
-            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): Additional
-                gate definitions.
-            pulse_sequence_builder_class (type): A `CircuitPulseSequenceBuilder` class that builds
-                the pulse sequence for this circuit. Default = `CircuitPulseSequenceBuilder`.
-
-        Returns:
-            PulseSequence: A PulseSequence corresponding to the full circuit.
-        """
-        return pulse_sequence_builder_class(device, gate_definitions).build_pulse_sequence(self)
 
     def to_ir(
         self,
