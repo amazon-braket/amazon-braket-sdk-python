@@ -17,14 +17,14 @@ import random
 import string
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
     from braket.pulse.pulse_sequence import PulseSequence
 
 import numpy as np
 import scipy as sp
-import openpulse.ast as ast
+from openpulse import ast
 from oqpy import (
     WaveformVar,
     bool_,
@@ -44,7 +44,7 @@ from braket.parametric.free_parameter_expression import (
 from braket.parametric.parameterizable import Parameterizable
 
 
-class WaveformDict(dict):
+class WaveformDict(dict):  # noqa: FURB189
     """
     A dict of waveforms.
 
@@ -234,11 +234,11 @@ class ConstantWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("iq", value)
 
     @property
-    def length(self) -> Union[float, FreeParameterExpression]:
+    def length(self) -> float | FreeParameterExpression:
         return self._length
 
     @length.setter
-    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+    def length(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the length.
 
@@ -369,11 +369,11 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         super().__init__()
 
     @property
-    def length(self) -> Union[float, FreeParameterExpression]:
+    def length(self) -> float | FreeParameterExpression:
         return self._length
 
     @length.setter
-    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+    def length(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the length.
 
@@ -385,11 +385,11 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
-    def sigma(self) -> Union[float, FreeParameterExpression]:
+    def sigma(self) -> float | FreeParameterExpression:
         return self._sigma
 
     @sigma.setter
-    def sigma(self, value: Union[float, FreeParameterExpression]) -> None:
+    def sigma(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the DRAG gaussian width.
 
@@ -401,11 +401,11 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
-    def beta(self) -> Union[float, FreeParameterExpression]:
+    def beta(self) -> float | FreeParameterExpression:
         return self._beta
 
     @beta.setter
-    def beta(self, value: Union[float, FreeParameterExpression]) -> None:
+    def beta(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the beta value.
 
@@ -416,11 +416,11 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("beta", value)
 
     @property
-    def amplitude(self) -> Union[float, FreeParameterExpression]:
+    def amplitude(self) -> float | FreeParameterExpression:
         return self._amplitude
 
     @amplitude.setter
-    def amplitude(self, value: Union[float, FreeParameterExpression]) -> None:
+    def amplitude(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the amplitude.
 
@@ -587,11 +587,11 @@ class GaussianWaveform(Waveform, Parameterizable):
         super().__init__()
 
     @property
-    def length(self) -> Union[float, FreeParameterExpression]:
+    def length(self) -> float | FreeParameterExpression:
         return self._length
 
     @length.setter
-    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+    def length(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the length.
 
@@ -603,11 +603,11 @@ class GaussianWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
-    def sigma(self) -> Union[float, FreeParameterExpression]:
+    def sigma(self) -> float | FreeParameterExpression:
         return self._sigma
 
     @sigma.setter
-    def sigma(self, value: Union[float, FreeParameterExpression]) -> None:
+    def sigma(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the gaussian waveform width.
 
@@ -619,11 +619,11 @@ class GaussianWaveform(Waveform, Parameterizable):
         self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
-    def amplitude(self) -> Union[float, FreeParameterExpression]:
+    def amplitude(self) -> float | FreeParameterExpression:
         return self._amplitude
 
     @amplitude.setter
-    def amplitude(self, value: Union[float, FreeParameterExpression]) -> None:
+    def amplitude(self, value: float | FreeParameterExpression) -> None:
         """
         Sets the amplitude.
 

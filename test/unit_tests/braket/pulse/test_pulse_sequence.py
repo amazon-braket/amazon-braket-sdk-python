@@ -106,36 +106,32 @@ def test_pulse_sequence_with_modified_wf(predefined_frame_1):
             ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="arb_wf"),
         )
     )
-    expected_str = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
-            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
-            "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
-            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
-            "    play(predefined_frame_1, gauss_wf);",
-            "    play(predefined_frame_1, drag_gauss_wf);",
-            "    play(predefined_frame_1, constant_wf);",
-            "    play(predefined_frame_1, arb_wf);",
-            "}",
-        ]
-    )
-    expected_str_after_mod = "\n".join(
-        [
-            "OPENQASM 3.0;",
-            "cal {",
-            "    waveform gauss_wf = gaussian(17.0ns, 100.0ms, 0.2, true);",
-            "    waveform drag_gauss_wf = drag_gaussian(1.0us, 100.0ms, 0.25, 0.3, true);",
-            "    waveform constant_wf = constant(200.0ns, 0.5);",
-            "    waveform arb_wf = {-1.0 - 0.4im, 0, -0.3, -0.1 - 0.2im};",
-            "    play(predefined_frame_1, gauss_wf);",
-            "    play(predefined_frame_1, drag_gauss_wf);",
-            "    play(predefined_frame_1, constant_wf);",
-            "    play(predefined_frame_1, arb_wf);",
-            "}",
-        ]
-    )
+    expected_str = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
+        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+        "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
+        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+        "    play(predefined_frame_1, gauss_wf);",
+        "    play(predefined_frame_1, drag_gauss_wf);",
+        "    play(predefined_frame_1, constant_wf);",
+        "    play(predefined_frame_1, arb_wf);",
+        "}",
+    ])
+    expected_str_after_mod = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    waveform gauss_wf = gaussian(17.0ns, 100.0ms, 0.2, true);",
+        "    waveform drag_gauss_wf = drag_gaussian(1.0us, 100.0ms, 0.25, 0.3, true);",
+        "    waveform constant_wf = constant(200.0ns, 0.5);",
+        "    waveform arb_wf = {-1.0 - 0.4im, 0, -0.3, -0.1 - 0.2im};",
+        "    play(predefined_frame_1, gauss_wf);",
+        "    play(predefined_frame_1, drag_gauss_wf);",
+        "    play(predefined_frame_1, constant_wf);",
+        "    play(predefined_frame_1, arb_wf);",
+        "}",
+    ])
     assert pulse_sequence.to_ir() == expected_str
     pulse_sequence.waveforms["constant_wf"].iq = 0.5
     pulse_sequence.waveforms["constant_wf"].length = 2e-7
