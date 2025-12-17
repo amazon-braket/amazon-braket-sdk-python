@@ -650,7 +650,14 @@ class Circuit:
             target_mapping = dict(zip(keys, values, strict=True))
 
         for instruction in circuit.instructions:
-            self.add_instruction(instruction, target_mapping=target_mapping)
+            if isinstance(instruction.operator, Measure):
+                self.measure(
+                    [target_mapping[q] for q in instruction.target]
+                    if target_mapping
+                    else instruction.target
+                )
+            else:
+                self.add_instruction(instruction, target_mapping=target_mapping)
 
         for result_type in circuit.result_types:
             self.add_result_type(result_type, target_mapping=target_mapping)
@@ -752,25 +759,6 @@ class Circuit:
             self._has_compiler_directives = True
         return self
 
-    def _add_measure(self, target_qubits: QubitSetInput) -> None:
-        """Adds a measure instruction to the the circuit
-
-        Args:
-            target_qubits (QubitSetInput): target qubits to measure.
-        """
-        for idx, target in enumerate(target_qubits):
-            num_qubits_measured = (
-                len(self._measure_targets)
-                if self._measure_targets and len(target_qubits) == 1
-                else 0
-            )
-            self.add_instruction(
-                Instruction(
-                    operator=Measure(index=idx + num_qubits_measured),
-                    target=target,
-                )
-            )
-
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
         """
         Add a `measure` operator to `self` ensuring only the target qubits are measured.
@@ -809,8 +797,19 @@ class Circuit:
                 f"cannot repeat qubit(s) {', '.join(map(str, intersection))} "
                 "in the same measurement."
             )
-        self._add_measure(target_qubits=target_qubits)
 
+        for idx, target in enumerate(target_qubits):
+            num_qubits_measured = (
+                len(self._measure_targets)
+                if self._measure_targets and len(target_qubits) == 1
+                else 0
+            )
+            self.add_instruction(
+                Instruction(
+                    operator=Measure(index=idx + num_qubits_measured),
+                    target=target,
+                )
+            )
         return self
 
     def apply_gate_noise(
@@ -842,12 +841,12 @@ class Circuit:
         only applied to gates with the same qubit_count in target_qubits.
 
         Args:
-            noise (Union[type[Noise], Iterable[type[Noise]]]): Noise channel(s) to be applied
+            noise (type[Noise] | Iterable[type[Noise]]): Noise channel(s) to be applied
                 to the circuit.
-            target_gates (Optional[Union[type[Gate], Iterable[type[Gate]]]]): Gate class or
+            target_gates (type[Gate] | Iterable[type[Gate]] | None): Gate class or
                 List of Gate classes which `noise` is applied to. Default=None.
-            target_unitary (Optional[ndarray]): matrix of the target unitary gates. Default=None.
-            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+            target_unitary (np.ndarray | None): matrix of the target unitary gates. Default=None.
+            target_qubits (QubitSetInput | None): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -974,9 +973,9 @@ class Circuit:
         to `noise.qubit_count`.
 
         Args:
-            noise (Union[type[Noise], Iterable[type[Noise]]]): Noise channel(s) to be applied
+            noise (type[Noise] | Iterable[type[Noise]]): Noise channel(s) to be applied
                 to the circuit.
-            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+            target_qubits (QubitSetInput | None): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -1118,9 +1117,9 @@ class Circuit:
         to `noise.qubit_count`.
 
         Args:
-            noise (Union[type[Noise], Iterable[type[Noise]]]): Noise channel(s) to be applied
+            noise (type[Noise] | Iterable[type[Noise]]): Noise channel(s) to be applied
                 to the circuit.
-            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+            target_qubits (QubitSetInput | None): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -1287,8 +1286,7 @@ class Circuit:
                 calibration data for the device. default: None.
 
         Returns:
-            Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
-            `ir_type` format.
+            OpenQasmProgram | JaqcdProgram: A representation of the circuit in the `ir_type` format.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
@@ -1329,17 +1327,17 @@ class Circuit:
         """Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
-            source (Union[str, OpenQasmProgram]): OpenQASM string.
-            inputs (Optional[dict[str, io_type]]): Inputs to the circuit.
+            source (str | OpenQasmProgram): OpenQASM string.
+            inputs (dict[str, io_type] | None): Inputs to the circuit.
 
         Returns:
             Circuit: Braket Circuit implementing the OpenQASM program.
         """
         if isinstance(source, OpenQasmProgram):
+            inputs_copy = source.inputs.copy() if source.inputs is not None else {}
             if inputs:
-                inputs_copy = source.inputs.copy() if source.inputs is not None else {}
                 inputs_copy.update(inputs)
-                inputs = inputs_copy
+            inputs = inputs_copy
             source = source.source
         from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
 

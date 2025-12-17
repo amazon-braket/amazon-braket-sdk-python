@@ -35,9 +35,9 @@ class Emulator(Device):
 
     Args:
         backend (Device): The backend device to use for emulation.
-        noise_model (NoiseModel, optional): A noise model to apply to the emulated circuits.
+        noise_model (NoiseModel | None): A noise model to apply to the emulated circuits.
             Defaults to None.
-        passes (Iterable[ValidationPass], optional): A list of validation passes to apply to the
+        passes (Iterable[ValidationPass] | None): A list of validation passes to apply to the
             emulated circuits. Defaults to None.
     """
 
@@ -69,9 +69,9 @@ class Emulator(Device):
         Args:
             task_specification (TaskSpecification): Specification of a quantum task
                 to run on device.
-            shots (int, optional): The number of times to run the quantum task on the device.
+            shots (int | None): The number of times to run the quantum task on the device.
                 Default is `None`.
-            inputs (dict[str, float], optional): Inputs to be passed along with the
+            inputs (dict[str, float] | None): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
                 Not all devices and IR formats support inputs. Default: {}.
 

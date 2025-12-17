@@ -36,10 +36,10 @@ class GateCriteria(CircuitInstructionCriteria):
         """Creates Gate-based Criteria. See instruction_matches() for more details.
 
         Args:
-            gates (Optional[Union[Gate, Iterable[Gate]]]): A set of relevant Gates. All the Gates
+            gates (Gate | Iterable[Gate] | None): A set of relevant Gates. All the Gates
                 must have the same fixed_qubit_count(). Optional. If gates are not provided
                 this matcher will match on all gates.
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
 
         Raises:
@@ -73,7 +73,7 @@ class GateCriteria(CircuitInstructionCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             GATE will return a set of Gate classes that are relevant to this Criteria.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.

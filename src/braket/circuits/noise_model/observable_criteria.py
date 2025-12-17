@@ -36,14 +36,11 @@ class ObservableCriteria(ResultTypeCriteria):
         """Creates Observable-based Criteria. See instruction_matches() for more details.
 
         Args:
-            observables (Optional[Union[Observable, Iterable[Observable]]]): A set of relevant
+            observables (Observable | Iterable[Observable] | None): A set of relevant
                 Observables. Observables must only operate on a single qubit. Optional. If
                 observables are not specified, this criteria will match on any observable.
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
-
-        Throws:
-            ValueError: If the operators operate on more than one qubit.
         """
         self._observables = parse_operator_input(observables)
         self._qubits = parse_qubit_input(qubits, 1)
@@ -79,7 +76,7 @@ class ObservableCriteria(ResultTypeCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             OBSERVABLE will return a set of Observable classes that are relevant to this Criteria,
             or CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) observables.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or

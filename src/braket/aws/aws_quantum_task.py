@@ -23,7 +23,7 @@ from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
-from braket.device_schema import GateModelParameters
+from braket.device_schema import DeviceActionType, GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
     DwaveAdvantageDeviceParameters,
@@ -245,7 +245,7 @@ class AwsQuantumTask(QuantumTask):
                 `getLogger(__name__)`
             quiet (bool): Sets the verbosity of the logger to low and does not report queue
                 position. Default is `False`.
-            task_specification (Optional[TaskSpecification]): The specification the task
+            task_specification (TaskSpecification | None): The specification the task
                 was run with
 
         Examples:
@@ -277,6 +277,7 @@ class AwsQuantumTask(QuantumTask):
 
         self._metadata: dict[str, Any] = {}
         self._task_specification = task_specification
+        self._result_available = False
         self._result: TaskResult = None
 
     @staticmethod
@@ -327,6 +328,11 @@ class AwsQuantumTask(QuantumTask):
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_quantum_task(self._arn)
         return self._metadata
+
+    @property
+    def action_type(self) -> DeviceActionType:
+        """DeviceActionType: The type of action the task was created with."""
+        return DeviceActionType(self.metadata(True)["actionMetadata"]["actionType"])
 
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum task.
@@ -383,11 +389,20 @@ class AwsQuantumTask(QuantumTask):
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)
         status = metadata.get("status")
+        if status == "FAILED" and self.action_type == DeviceActionType.OPENQASM_PROGRAM_SET:
+            if not use_cached_value:
+                self._logger.warning(
+                    f"Task is in terminal state {status}; see result for more details"
+                )
+            self._result_available = True
+            return status
         if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
             self._logger.warning(f"Task is in terminal state {status} and no result is available.")
             if status == "FAILED":
                 failure_reason = metadata.get("failureReason", "unknown")
                 self._logger.warning(f"Task failure reason is: {failure_reason}.")
+        if status in self.RESULTS_READY_STATES:
+            self._result_available = True
         return status
 
     def _update_status_if_nonterminal(self) -> str:
@@ -411,12 +426,13 @@ class AwsQuantumTask(QuantumTask):
             returns `None` if the quantum task did not complete successfully
             or the future timed out.
         """
-        if self._result or (
-            self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
-        ):
+        if self._result:
             return self._result
-        if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
+        status = self._update_status_if_nonterminal()
+        if self._result_available:
             return self._download_result()
+        if status in self.NO_RESULT_TERMINAL_STATES:
+            return self._result
         try:
             async_result = self.async_result()
             return async_result.get_loop().run_until_complete(async_result)
@@ -485,7 +501,7 @@ class AwsQuantumTask(QuantumTask):
                     f"Task is in {queue.queue_type} queue position: {queue.queue_position}"
                 )
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
-            if task_status in AwsQuantumTask.RESULTS_READY_STATES:
+            if self._result_available:
                 return self._download_result()
             if task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._result = None
