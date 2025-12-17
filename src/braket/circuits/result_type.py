@@ -23,7 +23,6 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
-from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
@@ -100,7 +99,7 @@ class ResultType:
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the result type."""
-        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+        raise NotImplementedError("to_jaqcd is not implemented.")
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         """Returns the openqasm string representation of the result type.
@@ -115,15 +114,7 @@ class ResultType:
         Returns:
             str: Representing the openqasm representation of the result type.
         """
-        raise NotImplementedError("to_openqasm has not been implemented yet.")
-
-    def _to_pulse_sequence(self) -> PulseSequence:
-        """Returns the pulse sequence of the result type.
-
-        Returns:
-            PulseSequence: A PulseSequence corresponding to the result type.
-        """
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
+        raise NotImplementedError("to_openqasm is not implemented.")
 
     def copy(
         self,

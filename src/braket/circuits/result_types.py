@@ -26,7 +26,6 @@ from braket.circuits.result_type import (
     ResultType,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
@@ -480,9 +479,6 @@ class Expectation(ObservableResultType):
             serialization_properties=serialization_properties,
         )
         return f"#pragma braket result expectation {observable_ir}"
-
-    def _to_pulse_sequence(self) -> PulseSequence:
-        return self.observable._to_pulse_sequence(target=self.target)
 
     @staticmethod
     @circuit.subroutine(register=True)

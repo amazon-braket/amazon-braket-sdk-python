@@ -77,13 +77,12 @@ class CircuitPulseSequenceBuilder:
             # Right now they are global
             pulse_sequence += gate_pulse_sequence
 
-        # Result type columns
-        target_result_types = CircuitPulseSequenceBuilder._categorize_result_types(
+        if target_result_types := CircuitPulseSequenceBuilder._categorize_result_types(
             circuit.result_types
-        )
-
-        for result_type in target_result_types:
-            pulse_sequence += result_type._to_pulse_sequence()
+        ):
+            raise NotImplementedError(
+                f"Result types {target_result_types} cannot be converted to pulses."
+            )
 
         for qubit in circuit.qubits:
             pulse_sequence.capture_v0(self._readout_frame(qubit))
