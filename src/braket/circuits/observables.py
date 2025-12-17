@@ -30,7 +30,6 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-from braket.pulse import PulseSequence
 from braket.registers import QubitInput, QubitSet, QubitSetInput
 
 
@@ -73,9 +72,6 @@ class H(StandardObservable):
         return self.coefficient * (
             1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
         )
-
-    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
@@ -123,9 +119,6 @@ class I(Observable):  # noqa: E742
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.eye(2, dtype=complex)
-
-    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
@@ -188,9 +181,6 @@ class X(StandardObservable):
             return f"{coef_prefix}x({serialization_properties.format_target(qubit_target)})"
         return f"{coef_prefix}x all"
 
-    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
-
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
@@ -245,9 +235,6 @@ class Y(StandardObservable):
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
-    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
-
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return Gate.Z(), Gate.S(), Gate.H()
@@ -298,9 +285,6 @@ class Z(StandardObservable):
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
-
-    def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:

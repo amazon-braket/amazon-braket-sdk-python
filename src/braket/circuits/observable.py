@@ -100,7 +100,7 @@ class Observable(QuantumOperator):
 
     def _to_jaqcd(self) -> list[str | list[list[list[float]]]]:
         """Returns the JAQCD representation of the observable."""
-        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+        raise NotImplementedError("to_jaqcd is not implemented.")
 
     def _to_openqasm(
         self,
@@ -117,7 +117,7 @@ class Observable(QuantumOperator):
         Returns:
             str: Representing the openqasm representation of the result type.
         """
-        raise NotImplementedError("to_openqasm has not been implemented yet.")
+        raise NotImplementedError("to_openqasm is not implemented.")
 
     def _to_pulse_sequence(self, target: QubitSet | None = None) -> PulseSequence:
         """Returns the pulse sequence of the result type.
@@ -128,7 +128,7 @@ class Observable(QuantumOperator):
         Returns:
             PulseSequence: A PulseSequence of the basis rotation for the corresponding observable.
         """
-        raise NotImplementedError("_to_pulse_sequence has not been implemented yet.")
+        raise NotImplementedError("_to_pulse_sequence is not implemented.")
 
     @property
     def targets(self) -> QubitSet | None:

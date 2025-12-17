@@ -581,9 +581,7 @@ def test_expectation_value_result_type_on_one_qubit(rigetti_device):
         "    psb[1] = capture_v0(q1_ro_rx_frame);",
         "}",
     ])
-    with pytest.raises(
-        NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
-    ):
+    with pytest.raises(NotImplementedError, match="_to_pulse_sequence is not implemented."):
         assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
@@ -602,9 +600,7 @@ def test_expectation_value_result_type_on_all_qubits(rigetti_device):
         "    psb[1] = capture_v0(q1_ro_rx_frame);",
         "}",
     ])
-    with pytest.raises(
-        NotImplementedError, match="_to_pulse_sequence has not been implemented yet."
-    ):
+    with pytest.raises(NotImplementedError, match="_to_pulse_sequence is not implemented."):
         assert rigetti_device.get_circuit_pulse_sequence(circ).to_ir() == expected
 
 
