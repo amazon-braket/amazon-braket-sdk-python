@@ -13,7 +13,6 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class QueueType(str, Enum):
@@ -52,15 +51,15 @@ class QuantumTaskQueueInfo:
     Attributes:
         queue_type (QueueType): type of the quantum_task queue either 'Normal'
             or 'Priority'.
-        queue_position (Optional[str]): current position of your quantum task within a respective
+        queue_position (str | None): current position of your quantum task within a respective
             device queue. This value can be None based on the state of the task. Default: None.
-        message (Optional[str]): Additional message information. This key is present only
+        message (str | None): Additional message information. This key is present only
             if 'queue_position' is None. Default: None.
     """
 
     queue_type: QueueType
-    queue_position: Optional[str] = None
-    message: Optional[str] = None
+    queue_position: str | None = None
+    message: str | None = None
 
 
 @dataclass
@@ -68,14 +67,14 @@ class HybridJobQueueInfo:
     """Represents hybrid job queue information.
 
     Attributes:
-        queue_position (Optional[str]): current position of your hybrid job within a respective
+        queue_position (str | None): current position of your hybrid job within a respective
             device queue. If the queue position of the hybrid job is greater than 15, we
             return '>15' as the queue_position return value. The queue_position is only
             returned when hybrid job is not in RUNNING/CANCELLING/TERMINAL states, else
             queue_position is returned as None.
-        message (Optional[str]): Additional message information. This key is present only
+        message (str | None): Additional message information. This key is present only
             if 'queue_position' is None. Default: None.
     """
 
-    queue_position: Optional[str] = None
-    message: Optional[str] = None
+    queue_position: str | None = None
+    message: str | None = None

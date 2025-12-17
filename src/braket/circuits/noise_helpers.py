@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -105,13 +105,13 @@ def check_noise_target_unitary(noise: Noise, target_unitary: np.ndarray) -> None
 
 
 def check_noise_target_qubits(
-    circuit: Circuit, target_qubits: Optional[QubitSetInput] = None
+    circuit: Circuit, target_qubits: QubitSetInput | None = None
 ) -> QubitSet:
     """Helper function to check whether all the target_qubits are positive integers.
 
     Args:
         circuit (Circuit): A circuit where `noise` is to be checked.
-        target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+        target_qubits (QubitSetInput | None): Index or indices of qubit(s).
 
     Returns:
         QubitSet: The target qubits.
@@ -155,15 +155,15 @@ def apply_noise_to_moments(
     for noise_channel in noise:
         if noise_channel.qubit_count == 1:
             new = [Instruction(noise_channel, qubit) for qubit in target_qubits]
-            noise_instructions = noise_instructions + new
+            noise_instructions += new
         else:
             noise_instructions.append(Instruction(noise_channel, target_qubits))
 
     new_moments = Moments()
 
     if position == "initialization":
-        for noise in noise_instructions:
-            new_moments.add_noise(noise, "initialization_noise")
+        for noise_instr in noise_instructions:
+            new_moments.add_noise(noise_instr, "initialization_noise")
 
     # add existing instructions
     for moment_key in circuit.moments:
@@ -176,8 +176,8 @@ def apply_noise_to_moments(
             new_moments.add([instruction], moment_key.noise_index)
 
     if position == "readout":
-        for noise in noise_instructions:
-            new_moments.add_noise(noise, "readout_noise")
+        for noise_instr in noise_instructions:
+            new_moments.add_noise(noise_instr, "readout_noise")
 
     circuit._moments = new_moments
 
@@ -226,9 +226,10 @@ def _apply_noise_to_gates_helper(
             and instruction.target.issubset(target_qubits)
         ):
             noise_index += 1
-            new_noise_instruction.append(
-                (Instruction(noise_channel, instruction.target), noise_index)
-            )
+            new_noise_instruction.append((
+                Instruction(noise_channel, instruction.target),
+                noise_index,
+            ))
             noise_applied = True
 
     return new_noise_instruction, noise_index, noise_applied
@@ -237,7 +238,7 @@ def _apply_noise_to_gates_helper(
 def apply_noise_to_gates(
     circuit: Circuit,
     noise: Iterable[type[Noise]],
-    target_gates: Union[Iterable[type[Gate]], np.ndarray],
+    target_gates: Iterable[type[Gate]] | np.ndarray,
     target_qubits: QubitSet,
 ) -> Circuit:
     """Apply noise after target gates in target qubits.
@@ -251,7 +252,7 @@ def apply_noise_to_gates(
         circuit (Circuit): A circuit where `noise` is applied to.
         noise (Iterable[type[Noise]]): Noise channel(s) to be applied
             to the circuit.
-        target_gates (Union[Iterable[type[Gate]], ndarray]): List of gates, or a unitary matrix
+        target_gates (Iterable[type[Gate]] | np.ndarray): List of gates, or a unitary matrix
             which `noise` is applied to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
 

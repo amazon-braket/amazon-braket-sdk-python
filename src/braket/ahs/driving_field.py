@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from typing import Union
-
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
@@ -24,9 +22,9 @@ from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 class DrivingField(Hamiltonian):
     def __init__(
         self,
-        amplitude: Union[Field, TimeSeries],
-        phase: Union[Field, TimeSeries],
-        detuning: Union[Field, TimeSeries],
+        amplitude: Field | TimeSeries,
+        phase: Field | TimeSeries,
+        detuning: Field | TimeSeries,
     ) -> None:
         r"""Creates a Hamiltonian term :math:`H_{drive}` for the driving field
         that coherently transfers atoms from the ground state to the Rydberg state
@@ -52,11 +50,11 @@ class DrivingField(Hamiltonian):
         with the sum :math:`\sum_k` taken over all target atoms.
 
         Args:
-            amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`).
+            amplitude (Field | TimeSeries): global amplitude (:math:`\Omega(t)`).
                 Time is in s, and value is in rad/s.
-            phase (Union[Field, TimeSeries]): global phase (:math:`\phi(t)`).
+            phase (Field | TimeSeries): global phase (:math:`\phi(t)`).
                 Time is in s, and value is in rad/s.
-            detuning (Union[Field, TimeSeries]): global detuning (:math:`\Delta(t)`).
+            detuning (Field | TimeSeries): global detuning (:math:`\Delta(t)`).
                 Time is in s, and value is in rad/s.
         """
         super().__init__()
@@ -175,12 +173,10 @@ class DrivingField(Hamiltonian):
         phase = TimeSeries()
 
         for t, amplitude_value, detuning_value, phase_value in zip(
-            times, amplitudes, detunings, phases
+            times, amplitudes, detunings, phases, strict=True
         ):
             amplitude.put(t, amplitude_value)
             detuning.put(t, detuning_value)
             phase.put(t, phase_value)
 
-        drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
-
-        return drive
+        return DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)

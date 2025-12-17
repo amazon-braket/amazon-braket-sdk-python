@@ -17,7 +17,7 @@ import ast
 import operator
 from functools import reduce
 from numbers import Number
-from typing import Any, Union
+from typing import Any
 
 import sympy
 from oqpy.base import OQPyExpression
@@ -33,14 +33,14 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(self, expression: Union[FreeParameterExpression, Number, sympy.Expr, str]):
+    def __init__(self, expression: FreeParameterExpression | Number | sympy.Expr | str):
         """Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
 
         Below are examples of how FreeParameterExpressions should be made.
 
         Args:
-            expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
+            expression (FreeParameterExpression | Number | Expr | str): The expression to use.
 
         Raises:
             NotImplementedError: Raised if the expression is not of type
@@ -59,7 +59,7 @@ class FreeParameterExpression:
         }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
-        elif isinstance(expression, (Number, sympy.Expr)):
+        elif isinstance(expression, Number | sympy.Expr):
             self._expression = expression
         elif isinstance(expression, str):
             self._expression = self._parse_string_expression(expression).expression
@@ -67,17 +67,17 @@ class FreeParameterExpression:
             raise NotImplementedError
 
     @property
-    def expression(self) -> Union[Number, sympy.Expr]:
+    def expression(self) -> Number | sympy.Expr:
         """Gets the expression.
 
         Returns:
-            Union[Number, Expr]: The expression for the FreeParameterExpression.
+            Number | Expr: The expression for the FreeParameterExpression.
         """
         return self._expression
 
     def subs(
         self, parameter_values: dict[str, Number]
-    ) -> Union[FreeParameterExpression, Number, sympy.Expr]:
+    ) -> FreeParameterExpression | Number | sympy.Expr:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
@@ -87,7 +87,7 @@ class FreeParameterExpression:
                 values to be assigned.
 
         Returns:
-            Union[FreeParameterExpression, Number, Expr]: A numerical value if there are no
+            FreeParameterExpression | Number | Expr: A numerical value if there are no
             symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
         new_parameter_values = {}
@@ -100,35 +100,32 @@ class FreeParameterExpression:
         subbed_expr = self._expression.subs(new_parameter_values)
         if isinstance(subbed_expr, Number):
             return subbed_expr
-        else:
-            return FreeParameterExpression(subbed_expr)
+        return FreeParameterExpression(subbed_expr)
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Constant):
-            return FreeParameterExpression(node.n)
-        elif isinstance(node, ast.Name):
+            return FreeParameterExpression(node.value)
+        if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
-        elif isinstance(node, ast.BinOp):
-            if type(node.op) not in self._operations.keys():
+        if isinstance(node, ast.BinOp):
+            if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
             return self._eval_operation(node.left)._operations[type(node.op)](
                 self._eval_operation(node.right)
             )
-        elif isinstance(node, ast.UnaryOp):
-            if type(node.op) not in self._operations.keys():
+        if isinstance(node, ast.UnaryOp):
+            if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
             return self._eval_operation(node.operand)._operations[type(node.op)]()
-        else:
-            raise ValueError(f"Unsupported string detected: {node}")
+        raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
-        else:
-            return FreeParameterExpression(self.expression + other)
+        return FreeParameterExpression(self.expression + other)
 
     def __radd__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other + self.expression)
@@ -136,8 +133,7 @@ class FreeParameterExpression:
     def __sub__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
-        else:
-            return FreeParameterExpression(self.expression - other)
+        return FreeParameterExpression(self.expression - other)
 
     def __rsub__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other - self.expression)
@@ -145,26 +141,23 @@ class FreeParameterExpression:
     def __mul__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
-        else:
-            return FreeParameterExpression(self.expression * other)
+        return FreeParameterExpression(self.expression * other)
 
     def __rmul__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other * self.expression)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression / other.expression)
-        else:
-            return FreeParameterExpression(self.expression / other)
+        return FreeParameterExpression(self.expression / other)
 
     def __rtruediv__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other / self.expression)
 
-    def __pow__(self, other: FreeParameterExpression, modulo: float = None):
+    def __pow__(self, other: FreeParameterExpression, modulo: float | None = None):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
-        else:
-            return FreeParameterExpression(self.expression**other)
+        return FreeParameterExpression(self.expression**other)
 
     def __rpow__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other**self.expression)
@@ -195,27 +188,22 @@ class FreeParameterExpression:
         if isinstance(self.expression, tuple(ops)):
             return reduce(
                 ops[type(self.expression)],
-                map(
-                    lambda x: FreeParameterExpression(x)._to_oqpy_expression(), self.expression.args
-                ),
+                (FreeParameterExpression(x)._to_oqpy_expression() for x in self.expression.args),
             )
-        elif isinstance(self.expression, sympy.Number):
+        if isinstance(self.expression, sympy.Number):
             return float(self.expression)
-        else:
-            fvar = FloatVar(
-                name=self.expression.name, init_expression="input", needs_declaration=False
-            )
-            fvar.size = None
-            fvar.type.size = None
-            return fvar
+        fvar = FloatVar(name=self.expression.name, init_expression="input", needs_declaration=False)
+        fvar.size = None
+        fvar.type.size = None
+        return fvar
 
 
-def subs_if_free_parameter(parameter: Any, **kwargs: Union[FreeParameterExpression, str]) -> Any:
+def subs_if_free_parameter(parameter: Any, **kwargs: FreeParameterExpression | str) -> Any:
     """Substitute a free parameter with the given kwargs, if any.
 
     Args:
         parameter (Any): The parameter.
-        **kwargs (Union[FreeParameterExpression, str]): The kwargs to use to substitute.
+        **kwargs (FreeParameterExpression | str): The kwargs to use to substitute.
 
     Returns:
         Any: The substituted parameters.
@@ -240,6 +228,7 @@ def _is_float(argument: str) -> bool:
     """
     try:
         float(argument)
-        return True
     except ValueError:
         return False
+    else:
+        return True

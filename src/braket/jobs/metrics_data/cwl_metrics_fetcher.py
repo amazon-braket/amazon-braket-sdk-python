@@ -13,7 +13,6 @@
 
 import time
 from logging import Logger, getLogger
-from typing import Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
@@ -109,9 +108,7 @@ class CwlMetricsFetcher:
         while time.time() < timeout_time:
             response = self._logs_client.describe_log_streams(**kwargs)
             if streams := response.get("logStreams"):
-                for stream in streams:
-                    if name := stream.get("logStreamName"):
-                        log_streams.append(name)
+                log_streams = [name for stream in streams if (name := stream.get("logStreamName"))]
             if next_token := response.get("nextToken"):
                 kwargs["nextToken"] = next_token
             else:
@@ -124,7 +121,7 @@ class CwlMetricsFetcher:
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> dict[str, list[Union[str, float, int]]]:
+    ) -> dict[str, list[str | float | int]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
@@ -135,8 +132,8 @@ class CwlMetricsFetcher:
                 when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
-            are the column names and the values are a list containing the values in each row.
+            dict[str, list[str | float | int]]: The metrics data, where the keys are
+            the column names and the values are a list containing the values in each row.
 
         Example:
             timestamp energy

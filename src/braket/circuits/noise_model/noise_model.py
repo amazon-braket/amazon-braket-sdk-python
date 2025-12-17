@@ -15,15 +15,17 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.measure import Measure
 from braket.circuits.noise import Noise
 from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInstructionCriteria
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
+from braket.circuits.noise_model.measure_criteria import MeasureCriteria
+from braket.circuits.noise_model.observable_criteria import ObservableCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.result_types import ObservableResultType
 from braket.registers.qubit_set import QubitSetInput
@@ -38,9 +40,9 @@ class NoiseModelInstruction:
 
     def __init__(self, noise: Noise, criteria: Criteria):
         if not isinstance(noise, Noise):
-            raise ValueError(f"{noise} must be a Noise type.")
+            raise TypeError(f"{noise} must be a Noise type.")
         if not isinstance(criteria, Criteria):
-            raise ValueError(f"{criteria} must be a Criteria type.")
+            raise TypeError(f"{criteria} must be a Criteria type.")
         self.noise = noise
         self.criteria = criteria
 
@@ -89,7 +91,7 @@ class NoiseModel:
     a phase flip.
     """
 
-    def __init__(self, instructions: list[NoiseModelInstruction] = None):
+    def __init__(self, instructions: list[NoiseModelInstruction] | None = None):
         self._instructions = instructions or []
 
     def __repr__(self):
@@ -180,12 +182,15 @@ class NoiseModel:
         gate_noise = []
         readout_noise = []
         for item in self._instructions:
-            if isinstance(item.criteria, InitializationCriteria):
-                init_noise.append(item)
-            elif isinstance(item.criteria, CircuitInstructionCriteria):
-                gate_noise.append(item)
-            elif isinstance(item.criteria, ResultTypeCriteria):
-                readout_noise.append(item)
+            match item.criteria:
+                case InitializationCriteria():
+                    init_noise.append(item)
+                case MeasureCriteria():
+                    readout_noise.append(item)
+                case CircuitInstructionCriteria():
+                    gate_noise.append(item)
+                case ResultTypeCriteria():
+                    readout_noise.append(item)
         return NoiseModelInstructions(
             initialization_noise=init_noise,
             gate_noise=gate_noise,
@@ -194,21 +199,21 @@ class NoiseModel:
 
     def from_filter(
         self,
-        qubit: Optional[QubitSetInput] = None,
-        gate: Optional[Gate] = None,
-        noise: Optional[type[Noise]] = None,
+        qubit: QubitSetInput | None = None,
+        gate: Gate | None = None,
+        noise: type[Noise] | None = None,
     ) -> NoiseModel:
         """Returns a new NoiseModel from this NoiseModel using a given filter. If no filters are
         specified, the returned NoiseModel will be the same as this one.
 
         Args:
-            qubit (Optional[QubitSetInput]): The qubit to filter. Default is None.
+            qubit (QubitSetInput | None): The qubit to filter. Default is None.
                 If not None, the returned NoiseModel will only have Noise that might be applicable
                 to the passed qubit (or qubit list, if the criteria acts on a multi-qubit Gate).
-            gate (Optional[Gate]): The gate to filter. Default is None. If not None,
+            gate (Gate | None): The gate to filter. Default is None. If not None,
                 the returned NoiseModel will only have Noise that might be applicable
                 to the passed Gate.
-            noise (Optional[type[Noise]]): The noise class to filter. Default is None.
+            noise (type[Noise] | None): The noise class to filter. Default is None.
                 If not None, the returned NoiseModel will only have noise that is of the same
                 class as the given noise class.
 
@@ -272,14 +277,14 @@ class NoiseModel:
         new_circuit = Circuit()
         for circuit_instruction in circuit.instructions:
             new_circuit.add_instruction(circuit_instruction)
-            target_qubits = list(circuit_instruction.target)
-            for item in gate_noise_instructions:
-                if item.criteria.instruction_matches(circuit_instruction):
-                    if item.noise.fixed_qubit_count() == len(target_qubits):
-                        new_circuit.add_instruction(Instruction(item.noise, target_qubits))
-                    else:
-                        for qubit in target_qubits:
-                            new_circuit.add_instruction(Instruction(item.noise, qubit))
+
+            if not isinstance(circuit_instruction.operator, Measure):
+                _apply_noise_on_instruction(
+                    new_circuit,
+                    circuit_instruction,
+                    gate_noise_instructions,
+                )
+
         for result_type in circuit.result_types:
             new_circuit.add_result_type(result_type)
         return new_circuit
@@ -316,6 +321,7 @@ class NoiseModel:
         readout_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
         """Applies the readout noise of this noise model to a circuit and returns the circuit.
+        This includes both observable result types and measurement instructions.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
@@ -325,9 +331,11 @@ class NoiseModel:
         Returns:
             Circuit: The passed in circuit, with the readout noise applied.
         """
-        if not readout_noise_instructions or not circuit.result_types:
+        if not readout_noise_instructions:
             return circuit
-        return _apply_noise_on_observable_result_types(circuit, readout_noise_instructions)
+
+        new_circuit = _apply_noise_on_measurements(circuit, readout_noise_instructions)
+        return _apply_noise_on_observable_result_types(new_circuit, readout_noise_instructions)
 
     @classmethod
     def _items_to_string(
@@ -367,6 +375,34 @@ class NoiseModel:
         return model
 
 
+def _apply_noise_on_instruction(
+    circuit: Circuit,
+    instruction: Instruction,
+    noise_instructions: list[NoiseModelInstruction],
+) -> Circuit:
+    """Applies noise to a single instruction based on the noise instructions.
+
+    Args:
+        circuit (Circuit): The circuit to add noise instructions to.
+        instruction (Instruction): The instruction to apply noise to.
+        noise_instructions (list[NoiseModelInstruction]): List of noise instructions to apply.
+
+    Returns:
+        Circuit: The passed in circuit, with the instruction noise applied.
+    """
+    target_qubits = list(instruction.target)
+    for item in noise_instructions:
+        if not item.criteria.instruction_matches(instruction):
+            continue
+
+        if item.noise.fixed_qubit_count() in {len(target_qubits), NotImplemented}:
+            circuit.add_instruction(Instruction(item.noise, target_qubits))
+        else:
+            for qubit in target_qubits:
+                circuit.add_instruction(Instruction(item.noise, qubit))
+    return circuit
+
+
 def _apply_noise_on_observable_result_types(
     circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
 ) -> Circuit:
@@ -387,7 +423,10 @@ def _apply_noise_on_observable_result_types(
         if isinstance(result_type, ObservableResultType):
             target_qubits = list(result_type.target)
             for item_index, item in enumerate(readout_noise_instructions):
-                if item.criteria.result_type_matches(result_type):
+                item_criteria = item.criteria
+                if isinstance(
+                    item_criteria, ObservableCriteria
+                ) and item_criteria.result_type_matches(result_type):
                     for target_qubit in target_qubits:
                         noise_to_apply[target_qubit].add(item_index)
     for qubit in noise_to_apply:
@@ -395,3 +434,34 @@ def _apply_noise_on_observable_result_types(
             item = readout_noise_instructions[noise_item_index]
             circuit.apply_readout_noise(item.noise, qubit)
     return circuit
+
+
+def _apply_noise_on_measurements(
+    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
+) -> Circuit:
+    """Applies readout noise to measurement instructions.
+
+    Args:
+        circuit (Circuit): The circuit to apply the readout noise to.
+        readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
+            to apply.
+
+    Returns:
+        Circuit: The passed in circuit, with the readout noise on measurements applied.
+    """
+    new_circuit = Circuit()
+    for instruction in circuit.instructions:
+        if not isinstance(instruction.operator, Measure):
+            new_circuit.add_instruction(instruction)
+            continue
+        for noise_instruction in readout_noise_instructions:
+            if isinstance(
+                noise_instruction.criteria, MeasureCriteria
+            ) and noise_instruction.criteria.instruction_matches(instruction):
+                new_circuit.add_instruction(
+                    Instruction(noise_instruction.noise, instruction.target)
+                )
+        new_circuit.add_instruction(instruction)
+    for result_type in circuit.result_types:
+        new_circuit.add_result_type(result_type)
+    return new_circuit

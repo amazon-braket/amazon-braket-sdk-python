@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import operator
-from typing import Union
 
 from openpulse import ast
 from openqasm3.visitor import QASMTransformer
@@ -28,9 +27,7 @@ class _FreeParameterTransformer(QASMTransformer):
         self.program = program
         super().__init__()
 
-    def visit_Identifier(
-        self, identifier: ast.Identifier
-    ) -> Union[ast.Identifier, ast.FloatLiteral]:
+    def visit_Identifier(self, identifier: ast.Identifier) -> ast.Identifier | ast.FloatLiteral:
         """Visit an Identifier.
 
         If the Identifier is used to hold a `FreeParameterExpression`, it will be simplified
@@ -40,7 +37,7 @@ class _FreeParameterTransformer(QASMTransformer):
             identifier (Identifier): The identifier.
 
         Returns:
-            Union[Identifier, FloatLiteral]: The transformed identifier.
+            Identifier | FloatLiteral: The transformed identifier.
         """
         if identifier.name in self.param_values:
             return ast.FloatLiteral(float(self.param_values[identifier.name]))
@@ -48,7 +45,7 @@ class _FreeParameterTransformer(QASMTransformer):
 
     def visit_BinaryExpression(
         self, node: ast.BinaryExpression
-    ) -> Union[ast.BinaryExpression, ast.FloatLiteral]:
+    ) -> ast.BinaryExpression | ast.FloatLiteral:
         """Visit a BinaryExpression.
 
         Visit the operands and simplify if they are literals.
@@ -57,7 +54,7 @@ class _FreeParameterTransformer(QASMTransformer):
             node (BinaryExpression): The node.
 
         Returns:
-            Union[BinaryExpression, FloatLiteral]: The transformed identifier.
+            BinaryExpression | FloatLiteral: The transformed identifier.
         """
         lhs = self.visit(node.lhs)
         rhs = self.visit(node.rhs)
@@ -69,13 +66,13 @@ class _FreeParameterTransformer(QASMTransformer):
             }
             if isinstance(rhs, ast.FloatLiteral):
                 return ast.FloatLiteral(ops[node.op](lhs.value, rhs.value))
-            elif isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
+            if isinstance(rhs, ast.DurationLiteral) and node.op == ast.BinaryOperator["*"]:
                 return OQDurationLiteral(lhs.value * rhs.value).to_ast(self.program)
         return ast.BinaryExpression(op=node.op, lhs=lhs, rhs=rhs)
 
     def visit_UnaryExpression(
         self, node: ast.UnaryExpression
-    ) -> Union[ast.UnaryExpression, ast.FloatLiteral]:
+    ) -> ast.UnaryExpression | ast.FloatLiteral:
         """Visit an UnaryExpression.
 
         Visit the operand and simplify if it is a literal.
@@ -84,11 +81,11 @@ class _FreeParameterTransformer(QASMTransformer):
             node (UnaryExpression): The node.
 
         Returns:
-            Union[UnaryExpression, FloatLiteral]: The transformed identifier.
+            UnaryExpression | FloatLiteral: The transformed identifier.
         """
         expression = self.visit(node.expression)
         if (
-            isinstance(expression, (ast.FloatLiteral, ast.DurationLiteral))
+            isinstance(expression, ast.FloatLiteral | ast.DurationLiteral)
             and node.op == ast.UnaryOperator["-"]
         ):
             return type(expression)(-expression.value)

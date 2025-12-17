@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - public-main
       - feature/**
 
 permissions:
@@ -16,14 +17,14 @@ jobs:
   check-code-format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
     - name: Set up Python
-      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
       with:
-        python-version: '3.9'
+        python-version: '3.x'
     - name: Install dependencies
       run: |
         pip install tox
     - name: Run code format checks
       run: |
-        tox -e linters_check
+        tox -e linters_check -p auto

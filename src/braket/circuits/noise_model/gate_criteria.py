@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -30,16 +30,16 @@ class GateCriteria(CircuitInstructionCriteria):
 
     def __init__(
         self,
-        gates: Optional[Union[Gate, Iterable[Gate]]] = None,
-        qubits: Optional[QubitSetInput] = None,
+        gates: Gate | Iterable[Gate] | None = None,
+        qubits: QubitSetInput | None = None,
     ):
         """Creates Gate-based Criteria. See instruction_matches() for more details.
 
         Args:
-            gates (Optional[Union[Gate, Iterable[Gate]]]): A set of relevant Gates. All the Gates
+            gates (Gate | Iterable[Gate] | None): A set of relevant Gates. All the Gates
                 must have the same fixed_qubit_count(). Optional. If gates are not provided
                 this matcher will match on all gates.
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
 
         Raises:
@@ -66,14 +66,14 @@ class GateCriteria(CircuitInstructionCriteria):
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             GATE will return a set of Gate classes that are relevant to this Criteria.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.

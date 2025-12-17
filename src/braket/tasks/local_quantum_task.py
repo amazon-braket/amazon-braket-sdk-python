@@ -11,29 +11,22 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import asyncio
-from typing import Union
+from __future__ import annotations
 
-from braket.tasks import (
-    AnnealingQuantumTaskResult,
-    GateModelQuantumTaskResult,
-    PhotonicModelQuantumTaskResult,
-    QuantumTask,
-)
+import asyncio
+import warnings
+
+from braket.tasks import QuantumTask
+from braket.tasks.quantum_task import TaskResult
 
 
 class LocalQuantumTask(QuantumTask):
     """A quantum task containing the results of a local simulation.
 
-    Since this class is instantiated with the results, cancel() and run_async() are unsupported.
+    Since this class is instantiated with the results, run_async() is unsupported.
     """
 
-    def __init__(
-        self,
-        result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ],
-    ):
+    def __init__(self, result: TaskResult):
         self._id = result.task_metadata.id
         self._result = result
 
@@ -47,8 +40,12 @@ class LocalQuantumTask(QuantumTask):
         return str(self._id)
 
     def cancel(self) -> None:
-        """Cancel the quantum task."""
-        raise NotImplementedError("Cannot cancel completed local task")
+        """No-op
+
+        Since this class is instantiated with the results, there is nothing to cancel. Attempting
+        to cancel an already completed task is not an error.
+        """
+        warnings.warn("Cannot cancel because task is already completed", stacklevel=1)
 
     def state(self) -> str:
         """Gets the state of the task.
@@ -58,11 +55,7 @@ class LocalQuantumTask(QuantumTask):
         """
         return "COMPLETED"
 
-    def result(
-        self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    def result(self) -> TaskResult:
         return self._result
 
     def async_result(self) -> asyncio.Task:

@@ -67,12 +67,11 @@ class Measure(QuantumOperator):
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
-        elif ir_type == IRType.OPENQASM:
+        if ir_type == IRType.OPENQASM:
             return self._to_openqasm(
-                target, serialization_properties or OpenQASMSerializationProperties() ** kwargs
+                target, serialization_properties or OpenQASMSerializationProperties()
             )
-        else:
-            raise ValueError(f"supplied ir_type {ir_type} is not supported.")
+        raise ValueError(f"supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the measure."""
@@ -93,7 +92,7 @@ class Measure(QuantumOperator):
         return "\n".join(instructions)
 
     def __eq__(self, other: Measure):
-        return isinstance(other, Measure)
+        return isinstance(other, Measure) and self._target_index == other._target_index
 
     def __repr__(self):
         return self.name

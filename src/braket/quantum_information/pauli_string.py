@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import itertools
-from typing import Optional, Union
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.observables import I, TensorProduct, X, Y, Z
@@ -37,11 +36,11 @@ _SIGN_MAP = {"+": 1, "-": -1}
 class PauliString:
     """A lightweight representation of a Pauli string with its phase."""
 
-    def __init__(self, pauli_string: Union[str, PauliString]):
+    def __init__(self, pauli_string: str | PauliString):
         """Initializes a `PauliString`.
 
         Args:
-            pauli_string (Union[str, PauliString]): The representation of the pauli word, either a
+            pauli_string (str | PauliString): The representation of the pauli word, either a
                 string or another PauliString object. A valid string consists of an optional phase,
                 specified by an optional sign +/- followed by an uppercase string in {I, X, Y, Z}.
                 Example valid strings are: XYZ, +YIZY, -YX
@@ -90,19 +89,17 @@ class PauliString:
             TensorProduct: The tensor product of the unsigned factors in the Pauli string.
         """
         if include_trivial:
-            return TensorProduct(
-                [
-                    (
-                        _PAULI_OBSERVABLES[self._nontrivial[qubit]]
-                        if qubit in self._nontrivial
-                        else _ID_OBS
-                    )
-                    for qubit in range(self._qubit_count)
-                ]
-            )
-        return TensorProduct(
-            [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
-        )
+            return TensorProduct([
+                (
+                    _PAULI_OBSERVABLES[self._nontrivial[qubit]]
+                    if qubit in self._nontrivial
+                    else _ID_OBS
+                )
+                for qubit in range(self._qubit_count)
+            ])
+        return TensorProduct([
+            _PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)
+        ])
 
     def weight_n_substrings(self, weight: int) -> tuple[PauliString, ...]:
         r"""Returns every substring of this Pauli string with exactly `weight` nontrivial factors.
@@ -131,7 +128,7 @@ class PauliString:
             )
         return tuple(substrings)
 
-    def eigenstate(self, signs: Optional[Union[str, list[int], tuple[int, ...]]] = None) -> Circuit:
+    def eigenstate(self, signs: str | list[int] | tuple[int, ...] | None = None) -> Circuit:
         """Returns the eigenstate of this Pauli string with the given factor signs.
 
         The resulting eigenstate has each qubit in the +1 eigenstate of its corresponding signed
@@ -140,7 +137,7 @@ class PauliString:
         phase of the Pauli string is ignored).
 
         Args:
-            signs (Optional[Union[str, list[int], tuple[int, ...]]]): The sign of each factor of the
+            signs (str | list[int] | tuple[int, ...] | None): The sign of each factor of the
                 eigenstate, specified either as a string of "+" and "_", or as a list or tuple of
                 +/-1. The length of signs must be equal to the length of the Pauli string. If not
                 specified, it is assumed to be all +. Default: None.
@@ -271,7 +268,7 @@ class PauliString:
             ValueError: If `n` isn't a plain Python `int`.
         """
         if not isinstance(n, int):
-            raise ValueError("Must be raised to integer power")
+            raise TypeError("Must be raised to integer power")
 
         # Since pauli ops involutory, result is either identity or unchanged
         pauli_other = PauliString(self)
@@ -363,10 +360,7 @@ class PauliString:
         return self._qubit_count
 
     def __repr__(self):
-        factors = [
-            self._nontrivial[qubit] if qubit in self._nontrivial else "I"
-            for qubit in range(self._qubit_count)
-        ]
+        factors = [self._nontrivial.get(qubit, "I") for qubit in range(self._qubit_count)]
         return f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}"
 
     @staticmethod

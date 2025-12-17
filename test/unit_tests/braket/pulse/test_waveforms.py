@@ -20,7 +20,13 @@ import pytest
 from oqpy import Program
 
 from braket.circuits.free_parameter import FreeParameter
-from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
+from braket.pulse import (
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    ErfSquareWaveform,
+    GaussianWaveform,
+)
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
@@ -294,6 +300,102 @@ def test_gaussian_wf_free_params():
     _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600.0ms, 300.0ms, 0.1, false);")
 
 
+def test_erf_square_waveform():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "erf_square_wf"
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
+    assert wf.id == id
+    assert wf.zero_at_edges == zero_at_edges
+    assert wf.amplitude == amplitude
+    assert wf.width == width
+    assert wf.sigma == sigma
+    assert wf.length == length
+    assert wf.off_center == off_center
+
+
+def test_erf_square_waveform_repr():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    amplitude = 0.4
+    zero_at_edges = False
+    id = "erf_square_wf"
+    wf = ErfSquareWaveform(length, width, sigma, off_center, amplitude, zero_at_edges, id)
+    repr(wf)
+
+
+def test_erf_square_waveform_default_params():
+    length = 4e-9
+    width = 0.3
+    sigma = 0.2
+    off_center = 1e-9
+    wf = ErfSquareWaveform(length, width, sigma, off_center)
+    assert re.match(r"[A-Za-z]{10}", wf.id)
+    assert wf.zero_at_edges is False
+    assert wf.amplitude == 1
+    assert wf.width == width
+    assert wf.sigma == sigma
+    assert wf.length == length
+    assert wf.off_center == off_center
+
+
+def test_erf_square_wf_eq():
+    wf = ErfSquareWaveform(4e-9, 0.3, 0.2, 1e-9, 0.7, True, "wf_es")
+    wf_2 = ErfSquareWaveform(
+        wf.length, wf.width, wf.sigma, wf.off_center, wf.amplitude, wf.zero_at_edges, wf.id
+    )
+    assert wf_2 == wf
+    for att in ["length", "width", "sigma", "off_center", "amplitude", "zero_at_edges", "id"]:
+        wfc = deepcopy(wf_2)
+        setattr(wfc, att, "wrong_value")
+        assert wf != wfc
+
+
+def test_erf_square_wf_free_params():
+    wf = ErfSquareWaveform(
+        FreeParameter("length_v"),
+        FreeParameter("width_x"),
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+        id="erf_square_wf",
+    )
+    assert wf.parameters == [
+        FreeParameter("length_v"),
+        FreeParameter("width_x"),
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+    ]
+
+    wf_2 = wf.bind_values(length_v=0.6, width_x=0.4)
+    assert wf_2.parameters == [
+        0.6,
+        0.4,
+        FreeParameter("sigma_y"),
+        FreeParameter("off_center_x"),
+        FreeParameter("amp_z"),
+    ]
+    _assert_wf_qasm(
+        wf_2,
+        "waveform erf_square_wf = erf_square(600.0ms, 400.0ms, sigma_y * 1s, off_center_x * 1s,"
+        " amp_z, false);",
+    )
+
+    wf_3 = wf.bind_values(length_v=0.6, width_x=0.3, sigma_y=0.1, off_center_x=0.05)
+    assert wf_3.parameters == [0.6, 0.3, 0.1, 0.05, FreeParameter("amp_z")]
+    _assert_wf_qasm(
+        wf_3,
+        "waveform erf_square_wf = erf_square(600.0ms, 300.0ms, 100.0ms, 50.0ms, amp_z, false);",
+    )
+
+
 def _assert_wf_qasm(waveform, expected_qasm):
     p = Program(None)
     p.declare(waveform._to_oqpy_expression())
@@ -356,6 +458,27 @@ def _assert_wf_qasm(waveform, expected_qasm):
                 ],
             },
             ConstantWaveform(id="wf_constant", length=2.1, iq=0.23),
+        ),
+        (
+            {
+                "waveformId": "wf_erf_square_0",
+                "name": "erf_square",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "width", "value": 3.000000000000000e-8, "type": "float"},
+                    {"name": "sigma", "value": 5.000000000060144e-9, "type": "float"},
+                    {"name": "off_center", "value": 4.000000000000000e-9, "type": "float"},
+                    {"name": "amplitude", "value": 0.4549282253548838, "type": "float"},
+                ],
+            },
+            ErfSquareWaveform(
+                id="wf_erf_square_0",
+                length=6.000000000000001e-8,
+                width=3.000000000000000e-8,
+                sigma=5.000000000060144e-9,
+                off_center=4.000000000000000e-9,
+                amplitude=0.4549282253548838,
+            ),
         ),
     ],
 )

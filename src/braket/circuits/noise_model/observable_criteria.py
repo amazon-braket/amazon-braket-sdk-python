@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import (
@@ -30,20 +30,17 @@ class ObservableCriteria(ResultTypeCriteria):
 
     def __init__(
         self,
-        observables: Optional[Union[Observable, Iterable[Observable]]] = None,
-        qubits: Optional[QubitSetInput] = None,
+        observables: Observable | Iterable[Observable] | None = None,
+        qubits: QubitSetInput | None = None,
     ):
         """Creates Observable-based Criteria. See instruction_matches() for more details.
 
         Args:
-            observables (Optional[Union[Observable, Iterable[Observable]]]): A set of relevant
+            observables (Observable | Iterable[Observable] | None): A set of relevant
                 Observables. Observables must only operate on a single qubit. Optional. If
                 observables are not specified, this criteria will match on any observable.
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
-
-        Throws:
-            ValueError: If the operators operate on more than one qubit.
         """
         self._observables = parse_operator_input(observables)
         self._qubits = parse_qubit_input(qubits, 1)
@@ -72,14 +69,14 @@ class ObservableCriteria(ResultTypeCriteria):
         """
         return [CriteriaKey.OBSERVABLE, CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> CriteriaKeyResult | set[Any]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             OBSERVABLE will return a set of Observable classes that are relevant to this Criteria,
             or CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) observables.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or

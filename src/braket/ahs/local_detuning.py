@@ -79,11 +79,9 @@ class LocalDetuning(Hamiltonian):
             raise ValueError("The length of the times and values lists must be equal.")
 
         magnitude = TimeSeries()
-        for t, v in zip(times, values):
+        for t, v in zip(times, values, strict=True):
             magnitude.put(t, v)
-        shift = LocalDetuning(Field(magnitude, Pattern(pattern)))
-
-        return shift
+        return LocalDetuning(Field(magnitude, Pattern(pattern)))
 
     def stitch(
         self, other: LocalDetuning, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
