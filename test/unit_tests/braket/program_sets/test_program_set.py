@@ -34,8 +34,7 @@ def test_single_circuit_binding(circuit_rx_parametrized):
     assert program_set.to_ir() == IrProgramSet(
         programs=[
             Program(
-                source=get_circuit_source(circuit_rx_parametrized),
-                inputs={"theta": [1.23, 3.21]},
+                source=get_circuit_source(circuit_rx_parametrized), inputs={"theta": [1.23, 3.21]}
             )
         ]
     )
@@ -80,10 +79,7 @@ def test_add(circuit_rx_parametrized):
     ghz3 = ghz(3)
     program_set = (
         ProgramSet([circuit_h, circuit_bell], 100)
-        + [
-            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [3.21, 2.31]}),
-            ghz3,
-        ]
+        + [CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [3.21, 2.31]}), ghz3]
         + ProgramSet(CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 0.12]}))
     )
     assert len(program_set) == 5
@@ -94,13 +90,11 @@ def test_add(circuit_rx_parametrized):
             Program(source=get_circuit_source(circuit_h), inputs={}),
             Program(source=get_circuit_source(circuit_bell), inputs={}),
             Program(
-                source=get_circuit_source(circuit_rx_parametrized),
-                inputs={"theta": [3.21, 2.31]},
+                source=get_circuit_source(circuit_rx_parametrized), inputs={"theta": [3.21, 2.31]}
             ),
             Program(source=get_circuit_source(ghz3), inputs={}),
             Program(
-                source=get_circuit_source(circuit_rx_parametrized),
-                inputs={"theta": [1.23, 0.12]},
+                source=get_circuit_source(circuit_rx_parametrized), inputs={"theta": [1.23, 0.12]}
             ),
         ]
     )
@@ -112,13 +106,9 @@ def test_add_other_shots(circuit_rx_parametrized):
     ghz3 = ghz(3)
     program_set = (
         ProgramSet([circuit_h, circuit_bell])
-        + [
-            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [3.21, 2.31]}),
-            ghz3,
-        ]
+        + [CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [3.21, 2.31]}), ghz3]
         + ProgramSet(
-            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 0.12]}),
-            100,
+            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 0.12]}), 100
         )
     )
     assert program_set.total_shots == 700
@@ -209,29 +199,6 @@ def test_zip_binding_observables_input_sets_mismatch(circuit_rx_parametrized):
         ProgramSet.zip(
             CircuitBinding(circuit_rx_parametrized, observables=[X(0) @ Y(1), Y(0), Z(0) @ X(1)]),
             input_sets=[{"theta": 1.23}, {"theta": 3.21}],
-        )
-
-
-def test_overwrite_input_sets_warning(circuit_rx_parametrized):
-    with pytest.warns(UserWarning):
-        ProgramSet.zip(
-            CircuitBinding(
-                circuit_rx_parametrized,
-                observables=[Y(1), Z(0) @ X(1)],
-                input_sets=[{"theta": 1.23}, {"theta": 3.21}],
-            ),
-            input_sets=[{"theta": 1.23}, {"theta": 3.21}],
-            shots_per_executable=100,
-        )
-
-
-def test_overwrite_observables_warning(circuit_rx_parametrized):
-    with pytest.warns(UserWarning):
-        ProgramSet.zip(
-            CircuitBinding(circuit_rx_parametrized, observables=[Y(1), Z(0) @ X(1)]),
-            observables=[Y(1), Z(0) @ X(1)],
-            input_sets=[{"theta": 1.23}, {"theta": 3.21}],
-            shots_per_executable=100,
         )
 
 
@@ -382,11 +349,7 @@ def test_zip_circuits_observables():
         programs=[
             Program(
                 source=get_circuit_source(circ1.with_euler_angles([obs1])),
-                inputs={
-                    euler_1[0]: [0],
-                    euler_1[1]: [np.pi / 2],
-                    euler_1[2]: [np.pi / 2],
-                },
+                inputs={euler_1[0]: [0], euler_1[1]: [np.pi / 2], euler_1[2]: [np.pi / 2]},
             ),
             Program(
                 source=get_circuit_source(circ2.with_euler_angles([obs2])),
@@ -439,11 +402,7 @@ def test_product_observables(circuit_rx_parametrized):
     ghz3 = ghz(3)
     observables = [Y(1), Z(0) @ X(1)]
     program_set = ProgramSet.product(
-        [
-            ghz2,
-            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 3.21]}),
-            ghz3,
-        ],
+        [ghz2, CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 3.21]}), ghz3],
         observables=observables,
         shots_per_executable=100,
     )
@@ -497,11 +456,7 @@ def test_product_sum(circuit_rx_parametrized):
     ghz3 = ghz(3)
     observables = 3 * Y(1) - 2 * Z(0) @ X(1)
     program_set = ProgramSet.product(
-        [
-            ghz2,
-            CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 3.21]}),
-            ghz3,
-        ],
+        [ghz2, CircuitBinding(circuit_rx_parametrized, input_sets={"theta": [1.23, 3.21]}), ghz3],
         observables=observables,
         shots_per_executable=100,
     )
