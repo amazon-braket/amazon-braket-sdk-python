@@ -134,7 +134,7 @@ class CircuitBinding:
     def bind_observables_to_inputs(
         self,
         inplace: bool = True,
-        add_measure: bool = False,
+        add_measure: bool = True,
     ) -> CircuitBinding:
         """
         Bind observables to input sets of parameters.
