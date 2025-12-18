@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Mapping, Sequence
 
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
@@ -207,7 +206,7 @@ class ProgramSet:
         )
 
 
-def _zip_circuit_bindings(  # noqa: C901
+def _zip_circuit_bindings(
     circuit_binding: CircuitBinding,
     input_sets: Sequence[Mapping[str, float]] | None,
     observables: Sequence[Observable | None] | None,
@@ -218,15 +217,9 @@ def _zip_circuit_bindings(  # noqa: C901
         if isinstance(circuit_binding.observables, Sum):
             raise TypeError("Cannot zip with Sum observable")
         if observables:
-            warnings.warn(
-                "You are overwriting observables via ProgramSet().zip(), be careful!", stacklevel=2
-            )
+            raise ValueError("Cannot specify observables in both circuit bindings and zip")
         if not input_sets:
             raise ValueError("Must specify input sets")
-        if circuit_binding.input_sets:
-            warnings.warn(
-                "You are overwriting input_sets via ProgramSet.zip(), be careful!", stacklevel=2
-            )
         if len(circuit_binding.observables) != len(input_sets):
             raise ValueError("Number of observables must match number of input sets")
         return ProgramSet(
@@ -261,7 +254,7 @@ def _zip_circuits(
     input_sets: Sequence[Mapping[str, float]] | None,
     observables: Sequence[Observable | None] | None,
     shots_per_executable: int | None,
-) -> ProgramSet[list[CircuitBinding]]:
+) -> ProgramSet:
     if input_sets and observables:
         if len(circuits) != len(observables):
             raise ValueError("Number of circuits must match number of observables")
