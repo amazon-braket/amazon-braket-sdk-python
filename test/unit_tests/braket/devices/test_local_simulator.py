@@ -875,15 +875,14 @@ def test_run_with_noise_model(mock_run, noise_model):
         shots=4,
     )
 
-
-@patch.object(LocalSimulator, "_noise_model.apply")
-def test_run_batch_with_noise_model(mock_apply, noise_model):
+@patch.object(DummyProgramDensityMatrixSimulator, "run_multiple")
+def test_run_batch_with_noise_model(mock_run_multiple, noise_model):
+    mock_run_multiple.return_value = [GATE_MODEL_RESULT, GATE_MODEL_RESULT]  # Return list
     device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
-
-    mock_apply.return_value = noise_model.apply(circuit)
-    _ = device.run_batch([circuit] * 2, shots=4).results()
-    assert mock_apply.call_count == 2
+    with patch.object(device._noise_model, "apply", wraps=device._noise_model.apply) as mock_apply:
+        _ = device.run_batch([circuit] * 2, shots=4).results()
+        assert mock_apply.call_count == 2
 
 
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
