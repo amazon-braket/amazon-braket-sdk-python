@@ -139,9 +139,15 @@ class CircuitBinding:
         """
         Bind observables to input sets of parameters.
 
+        Translates observables in a CircuitBinding to local measurement bases via a parameterized
+        quantum circuit. The resulting composite input_set will be indexed to the same index in the
+        CompositeEntry. entry.expectation will no longer work, and data will have to be processed
+        as from a distribution. If using a Sum, information on the coefficients will be lost, as
+        well as CompositeEntry.expectation.
+
         Kwargs:
             inplace (bool): whether or not to return a new circuit binding or use the same one
-            apply_measurements (bool): whether or not to apply measurements to the circuit
+            add_measure (bool): whether or not to apply Measure instructions to the circuit
 
         Returns:
             CircuitBinding: A new circuit binding with the observables bound.
@@ -152,7 +158,8 @@ class CircuitBinding:
             if isinstance(observables, Sum):
                 observables = observables.summands
                 warnings.warn(
-                    "Binding a Sum to input_sets discards information on observable weights.",
+                    "Binding a Sum discards information on observable weights; please "
+                    "distribute your observable in advance using observable.summands.",
                     stacklevel=2,
                 )
             euler_angles = {}
