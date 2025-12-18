@@ -122,9 +122,3 @@ class Device(ABC):
                 f"{self.name} does not support noise simulation or the noise model includes noise "
                 f"that is not supported by {self.name}."
             )
-
-    def _apply_noise_model_to_circuit(
-        self, task_specification: TaskSpecification
-    ) -> TaskSpecification:
-        """Deprecated in favor of NoiseModel.apply()"""
-        return self._noise_model.apply(task_specification)

@@ -876,7 +876,7 @@ def test_run_with_noise_model(mock_run, noise_model):
     )
 
 
-@patch.object(LocalSimulator, "_apply_noise_model_to_circuit")
+@patch.object(LocalSimulator, "_noise_model.apply")
 def test_run_batch_with_noise_model(mock_apply, noise_model):
     device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
