@@ -453,7 +453,7 @@ class AwsQuantumJob(QuantumJob):
                 calls `SearchQuantumTasks`, which also updates the cached value. Default: `False`.
 
         Returns:
-            list[AwsQuantumTask]: List of AwsQuantumTask objects associated with the job,
+            list[AwsQuantumTask]: List of `AwsQuantumTask` objects associated with the job,
             sorted by creation time.
         """
         if not use_cached_value or not hasattr(self, "_tasks"):
