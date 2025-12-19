@@ -19,6 +19,7 @@ import tempfile
 import time
 from enum import Enum
 from logging import Logger, getLogger
+from operator import itemgetter
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -26,6 +27,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice
+from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
 from braket.jobs import logs
@@ -249,6 +251,7 @@ class AwsQuantumJob(QuantumJob):
         else:
             self._aws_session = AwsQuantumJob._default_session_for_job_arn(arn)
         self._metadata = {}
+        self._tasks = None
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
@@ -439,6 +442,48 @@ class AwsQuantumJob(QuantumJob):
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_job(self._arn)
         return self._metadata
+
+    def get_tasks(self, use_cached_value: bool = False) -> list[AwsQuantumTask]:
+        """Gets all quantum tasks associated with this hybrid job.
+
+        Args:
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
+                from the Amazon Braket `SearchQuantumTasks` operation, if it exists; if does not
+                exist, `SearchQuantumTasks` is called to retrieve the tasks. If `False`, always
+                calls `SearchQuantumTasks`, which also updates the cached value. Default: `False`.
+
+        Returns:
+            list[AwsQuantumTask]: List of `AwsQuantumTask` objects associated with the job,
+            sorted by creation time.
+        """
+        if not use_cached_value or self._tasks is None:
+            # Use paginator to handle jobs with large number of tasks
+            braket_client = self._aws_session.braket_client
+            paginator = braket_client.get_paginator("search_quantum_tasks")
+
+            page_iterator = paginator.paginate(
+                filters=[
+                    {
+                        "name": "jobArn",
+                        "values": [self._arn],
+                        "operator": "EQUAL"
+                    },
+                ]
+            )
+
+            # Collect all task dictionaries from all pages
+            all_task_dicts = []
+            for page in page_iterator:
+                all_task_dicts.extend(page["quantumTasks"])
+
+            # Sort by creation time and create AwsQuantumTask objects
+            sorted_task_dicts = sorted(all_task_dicts, key=itemgetter("createdAt"))
+            self._tasks = [
+                AwsQuantumTask(task_dict["quantumTaskArn"], aws_session=self._aws_session)
+                for task_dict in sorted_task_dicts
+            ]
+
+        return self._tasks
 
     def metrics(
         self,
