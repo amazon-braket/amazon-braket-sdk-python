@@ -14,7 +14,7 @@
 from braket.circuits import Circuit
 from braket.circuits.measure import Measure
 from braket.emulation.passes import TransformationPass
-from braket.program_sets import ProgramSet, CircuitBinding
+from braket.program_sets import CircuitBinding, ProgramSet
 
 
 class MeasurementTransformation(TransformationPass):
@@ -41,7 +41,7 @@ class MeasurementTransformation(TransformationPass):
     def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Add measurements to circuits that lack them.
 
-        For ProgramSets, we only apply if there are no observables. 
+        For ProgramSets, we only apply if there are no observables.
 
         Args:
             circuits: Circuit or ProgramSet to modify

@@ -14,9 +14,10 @@
 import pytest
 
 from braket.circuits import Circuit
-from braket.emulation.passes.circuit_passes import MeasurementTransformation
-from braket.program_sets import ProgramSet, CircuitBinding
 from braket.circuits.observables import X
+from braket.emulation.passes.circuit_passes import MeasurementTransformation
+from braket.program_sets import CircuitBinding, ProgramSet
+
 
 @pytest.fixture
 def measurement_transformation():
