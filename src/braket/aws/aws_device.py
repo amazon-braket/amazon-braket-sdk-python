@@ -206,7 +206,7 @@ class AwsDevice(Device):
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """  # noqa: E501
         if self._noise_model:
-            task_specification = self._apply_noise_model_to_circuit(task_specification)
+            task_specification = self._noise_model.apply(task_specification)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -290,7 +290,7 @@ class AwsDevice(Device):
         """  # noqa: E501
         if self._noise_model:
             task_specifications = [
-                self._apply_noise_model_to_circuit(task_specification)
+                self._noise_model.apply(task_specification)
                 for task_specification in task_specifications
             ]
         return AwsQuantumTaskBatch(

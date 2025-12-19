@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 
 from braket.ir.openqasm import Program
@@ -129,6 +130,52 @@ class CircuitBinding:
             source=self._circuit.to_ir(IRType.OPENQASM, gate_definitions=gate_definitions).source,
             inputs=self._input_sets.as_dict() if self._input_sets else None,
         )
+
+    def bind_observables_to_inputs(
+        self,
+        inplace: bool = True,
+        add_measure: bool = True,
+    ) -> CircuitBinding:
+        """
+        Bind observables to input sets of parameters.
+
+        Translates observables in a CircuitBinding to local measurement bases via a parameterized
+        quantum circuit. The resulting composite input_set will be indexed to the same index in the
+        CompositeEntry. entry.expectation will no longer work, and data will have to be processed
+        as from a distribution. If using a Sum, information on the coefficients will be lost, as
+        well as CompositeEntry.expectation.
+
+        Kwargs:
+            inplace (bool): whether or not to return a new circuit binding or use the same one
+            add_measure (bool): whether or not to apply Measure instructions to the circuit
+
+        Returns:
+            CircuitBinding: A new circuit binding with the observables bound.
+        """
+        measure = Circuit()
+        parameters = self._input_sets.as_dict() if self._input_sets else None
+        if observables := self._observables:
+            if isinstance(observables, Sum):
+                observables = observables.summands
+                warnings.warn(
+                    "Binding a Sum discards information on observable weights; please "
+                    "distribute your observable in advance using observable.summands.",
+                    stacklevel=2,
+                )
+            euler_angles = {}
+            for target in {target for obs in observables for target in obs.targets}:
+                for param in euler_angle_parameter_names(target):
+                    euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in observables]
+                if add_measure:
+                    measure.measure(target)
+            measure = Circuit().with_euler_angles(observables) + measure
+            parameters = self._input_sets * euler_angles if parameters else euler_angles
+        if inplace:
+            self._circuit.add_circuit(measure)
+            self._observables = None
+            self._input_sets = parameters
+            return self
+        return CircuitBinding(self._circuit + measure, input_sets=parameters)
 
     def __len__(self):
         input_sets = self._input_sets
