@@ -13,10 +13,12 @@
 
 from collections import OrderedDict
 
+import numpy as np
 import pytest
 
 from braket.circuits import Gate, Instruction, Moments, MomentsKey, QubitSet
 from braket.circuits.compiler_directives import Barrier
+from braket.circuits.noises import Kraus
 
 
 def cnot(q1, q2):
@@ -200,3 +202,45 @@ def test_barrier_without_qubits():
     moments = Moments([h(0), h(1)])
     moments.add(Instruction(Barrier([]), []))
     assert moments.depth == 2
+
+
+def test_multi_qubit_noise_blocks_subsequent_gates():
+    """Test that multi-qubit noise channels block subsequent gates on affected qubits.
+
+    Regression test for GitHub issue #1091: gates should not visually commute
+    through multi-qubit Kraus operators in circuit visualization.
+    """
+    moments = Moments()
+    # Add X gate on qubit 0
+    moments.add(Instruction(Gate.X(), 0))
+    # Add 2-qubit Kraus channel on qubits [1, 0]
+    cx_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    moments.add(Instruction(Kraus([cx_matrix]), [1, 0]))
+    # Add H gate on qubit 1 - should be AFTER the Kraus, not at same time
+    moments.add(Instruction(Gate.H(), 1))
+
+    # Get the times for each instruction
+    times = {instr.operator.name: key.time for key, instr in moments.items()}
+
+    # H should be at time 1, after Kraus at time 0
+    assert times["X"] == 0
+    assert times["Kraus"] == 0
+    assert times["H"] == 1, "H gate should be placed after multi-qubit Kraus channel"
+
+
+def test_single_qubit_noise_does_not_block_other_qubits():
+    """Test that single-qubit noise channels don't block gates on other qubits."""
+    moments = Moments()
+    # Add X gate on qubit 0
+    moments.add(Instruction(Gate.X(), 0))
+    # Add single-qubit Kraus on qubit 0 only
+    moments.add(Instruction(Kraus([np.eye(2)]), [0]))
+    # Add H gate on qubit 1 - should be at time 0 (independent of qubit 0)
+    moments.add(Instruction(Gate.H(), 1))
+
+    times = {}
+    for key, instr in moments.items():
+        times[f"{instr.operator.name}_{key.qubits}"] = key.time
+
+    # H on qubit 1 should be at time 0 (not blocked by Kraus on qubit 0)
+    assert times[f"H_{QubitSet(1)}"] == 0
