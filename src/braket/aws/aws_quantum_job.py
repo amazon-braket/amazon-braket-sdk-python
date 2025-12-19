@@ -251,7 +251,7 @@ class AwsQuantumJob(QuantumJob):
         else:
             self._aws_session = AwsQuantumJob._default_session_for_job_arn(arn)
         self._metadata = {}
-        self._tasks = None
+        self._tasks = []
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
