@@ -124,7 +124,7 @@ class LocalSimulator(Device):
             >>> device.run(circuit, shots=1000)
         """
         if self._noise_model:
-            task_specification = self._apply_noise_model_to_circuit(task_specification)
+            task_specification = self._noise_model.apply(task_specification)
         payload = self._construct_payload(task_specification, inputs, shots)
         shots = shots if shots is not None else self._default_shots(task_specification)
         result = self._delegate.run(payload, *args, shots=shots, **kwargs)
@@ -164,7 +164,7 @@ class LocalSimulator(Device):
 
         if self._noise_model:
             task_specifications = [
-                self._apply_noise_model_to_circuit(task_specification)
+                self._noise_model.apply(task_specification)
                 for task_specification in task_specifications
             ]
 

@@ -31,14 +31,20 @@ from braket.circuits import Circuit, FreeParameter, Gate, Noise
 from braket.circuits.noise_model import GateCriteria, NoiseModel, NoiseModelInstruction
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
-from braket.device_schema.openqasm_device_action_properties import OpenQASMDeviceActionProperties
+from braket.device_schema.openqasm_device_action_properties import (
+    OpenQASMDeviceActionProperties,
+)
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
 from braket.ir.openqasm.program_set_v1 import ProgramSet as OpenQASMProgramSet
 from braket.program_sets import ProgramSet
 from braket.program_sets.circuit_binding import CircuitBinding
 from braket.simulator import BraketSimulator
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult, ProgramSetTaskResult
+from braket.task_result import (
+    AnnealingTaskResult,
+    GateModelTaskResult,
+    ProgramSetTaskResult,
+)
 from braket.task_result.analog_hamiltonian_simulation_task_result_v1 import (
     AnalogHamiltonianSimulationTaskResult,
 )
@@ -55,19 +61,28 @@ GATE_MODEL_RESULT = GateModelTaskResult(**{
     "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
     "measuredQubits": [0, 1],
     "taskMetadata": {
-        "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+        "braketSchemaHeader": {
+            "name": "braket.task_result.task_metadata",
+            "version": "1",
+        },
         "id": "task_arn",
         "shots": 100,
         "deviceId": "default",
     },
     "additionalMetadata": {
         "action": {
-            "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+            "braketSchemaHeader": {
+                "name": "braket.ir.jaqcd.program",
+                "version": "1",
+            },
             "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
         },
         "additionalMetadata": {
             "action": {
-                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "braketSchemaHeader": {
+                    "name": "braket.ir.jaqcd.program",
+                    "version": "1",
+                },
                 "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
             },
         },
@@ -81,7 +96,10 @@ PROGRAM_SET_RESULT = ProgramSetTaskResult(**{
     },
     "programResults": [
         {
-            "braketSchemaHeader": {"name": "braket.task_result.program_result", "version": "1"},
+            "braketSchemaHeader": {
+                "name": "braket.task_result.program_result",
+                "version": "1",
+            },
             "executableResults": [
                 {
                     "braketSchemaHeader": {
@@ -127,7 +145,10 @@ PROGRAM_SET_RESULT = ProgramSetTaskResult(**{
                 },
             ],
             "source": {
-                "braketSchemaHeader": {"name": "braket.ir.openqasm.program", "version": "1"},
+                "braketSchemaHeader": {
+                    "name": "braket.ir.openqasm.program",
+                    "version": "1",
+                },
                 "source": "OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\nh q[0];\ncnot q[0], q[1];\nb[0] = measure q[0];\nb[1] = measure q[1];",  # noqa
                 "inputs": {"theta": [0.12, 2.1]},
             },
@@ -340,7 +361,12 @@ class DummyProgramSimulator(BraketSimulator):
                 "version": ["1"],
                 "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
                 "supportedResultTypes": [
-                    {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                    {
+                        "name": "StateVector",
+                        "observables": None,
+                        "minShots": 0,
+                        "maxShots": 0,
+                    },
                 ],
                 "supportedPragmas": [
                     "braket_unitary_matrix",
@@ -412,7 +438,12 @@ class DummyProgramDensityMatrixSimulator(BraketSimulator):
                 "version": ["1"],
                 "supportedOperations": ["rx", "ry", "h", "cy", "cnot", "unitary"],
                 "supportedResultTypes": [
-                    {"name": "StateVector", "observables": None, "minShots": 0, "maxShots": 0},
+                    {
+                        "name": "StateVector",
+                        "observables": None,
+                        "minShots": 0,
+                        "maxShots": 0,
+                    },
                 ],
                 "supportedPragmas": [
                     "braket_noise_bit_flip",
@@ -844,15 +875,14 @@ def test_run_with_noise_model(mock_run, noise_model):
         shots=4,
     )
 
-
-@patch.object(LocalSimulator, "_apply_noise_model_to_circuit")
-def test_run_batch_with_noise_model(mock_apply, noise_model):
+@patch.object(DummyProgramDensityMatrixSimulator, "run_multiple")
+def test_run_batch_with_noise_model(mock_run_multiple, noise_model):
+    mock_run_multiple.return_value = [GATE_MODEL_RESULT, GATE_MODEL_RESULT]  # Return list
     device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
     circuit = Circuit().h(0).cnot(0, 1)
-
-    mock_apply.return_value = noise_model.apply(circuit)
-    _ = device.run_batch([circuit] * 2, shots=4).results()
-    assert mock_apply.call_count == 2
+    with patch.object(device._noise_model, "apply", wraps=device._noise_model.apply) as mock_apply:
+        _ = device.run_batch([circuit] * 2, shots=4).results()
+        assert mock_apply.call_count == 2
 
 
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
@@ -864,7 +894,7 @@ def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
         _ = device.run(circuit, shots=4)
 
     expected_warning = (
-        "The noise model of the device is applied to a circuit that already has noise instructions."
+        "A noise model is being applied to a circuit that already has noise instructions."
     )
     expected_circuit = textwrap.dedent(
         """
@@ -899,8 +929,7 @@ def test_run_openqasm_with_noise_model(mock_run, noise_model):
         """
     ).strip()
     expected_warning = (
-        "Noise model is only applicable to circuits. The type of the task specification "
-        "is Program. The noise model of the device does not apply."
+        "The type of the task specification is Program, which is not supported by the noise model."
     )
     circuit = Program(source=expected_circuit)
     with warnings.catch_warnings(record=True) as w:
