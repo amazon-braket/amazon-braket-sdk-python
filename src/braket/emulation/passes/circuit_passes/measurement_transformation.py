@@ -14,7 +14,7 @@
 from braket.circuits import Circuit
 from braket.circuits.measure import Measure
 from braket.emulation.passes import TransformationPass
-from braket.program_sets import ProgramSet
+from braket.program_sets import ProgramSet, CircuitBinding
 
 
 class MeasurementTransformation(TransformationPass):
@@ -41,6 +41,8 @@ class MeasurementTransformation(TransformationPass):
     def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
         """Add measurements to circuits that lack them.
 
+        For ProgramSets, we only apply if there are no observables. 
+
         Args:
             circuits: Circuit or ProgramSet to modify
 
@@ -48,8 +50,20 @@ class MeasurementTransformation(TransformationPass):
             Modified circuit(s) with measurements added where needed
         """
         if isinstance(circuits, ProgramSet):
-            # these will be added in the noise model, so can be ignored
-            return circuits
+            new_programs = []
+            for program in circuits:
+                match program:
+                    case Circuit():
+                        new_programs.append(self.transform(program))
+                    case CircuitBinding() as entry if entry.observables:
+                        new_programs.append(entry)
+                    case CircuitBinding():
+                        new_programs.append(CircuitBinding(
+                            self.transform(program.circuit),
+                            input_sets=program.input_sets))
+                    case _:
+                        raise NotImplementedError
+            return ProgramSet(new_programs, shots_per_executable=circuits.shots_per_executable)
 
         has_measurement = any(
             isinstance(instr.operator, Measure) for instr in circuits.instructions

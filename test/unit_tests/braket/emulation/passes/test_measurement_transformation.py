@@ -15,8 +15,8 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.emulation.passes.circuit_passes import MeasurementTransformation
-from braket.program_sets import ProgramSet
-
+from braket.program_sets import ProgramSet, CircuitBinding
+from braket.circuits.observables import X
 
 @pytest.fixture
 def measurement_transformation():
@@ -51,7 +51,7 @@ def test_circuit_with_result_types_unchanged(measurement_transformation):
     assert result == circuit
 
 
-def test_program_set_modification(measurement_transformation):
+def test_program_set_modification_circuits(measurement_transformation):
     """Test that ProgramSet circuits are individually modified."""
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().x(1).measure(1)
@@ -60,10 +60,47 @@ def test_program_set_modification(measurement_transformation):
     result = measurement_transformation.transform(program_set)
 
     # First circuit should get measurement added, second unchanged
-    assert len(result[0].instructions) == 1  # h + measure
+    assert len(result[0].instructions) == 2  # h + measure
     assert result[1] == circuit2
     assert result.shots_per_executable == 100
 
+
+def test_program_set_modification_bindings(measurement_transformation):
+    """Test that ProgramSet circuits are individually modified."""
+    circuit1 = Circuit().h(0)
+    circuit2 = Circuit().x(1)
+    program_set = ProgramSet([
+        CircuitBinding(circuit1, observables=[X(0)]),
+        circuit2
+        ],
+        shots_per_executable=100)
+
+    result = measurement_transformation.transform(program_set)
+
+    # second circuit should get measurement added, first none
+    assert result[0].circuit == circuit1
+    assert len(result[1].instructions) == 2  # h + measure
+    assert result.shots_per_executable == 100
+
+def test_program_set_modification_binding_inputs_only(measurement_transformation):
+    """Test that ProgramSet circuits are individually modified."""
+    circuit1 = Circuit().h(0)
+    circuit2 = Circuit().h(0).measure(0)
+    program_set = ProgramSet([
+        CircuitBinding(circuit1, input_sets=[{"a": 0}]),
+        ],
+        shots_per_executable=100)
+
+    result = measurement_transformation.transform(program_set)
+    assert result[0].circuit == circuit2
+    assert result.shots_per_executable == 100
+
+
+def test_incorrect_program_set(measurement_transformation):
+    """ """
+    program_set = ProgramSet([None, None])
+    with pytest.raises(NotImplementedError):
+        measurement_transformation.transform(program_set)
 
 def test_empty_circuit(measurement_transformation):
     """Test that empty circuits get measurements for all qubits (none)."""
