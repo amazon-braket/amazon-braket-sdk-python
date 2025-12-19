@@ -60,7 +60,7 @@ def test_program_set_modification(measurement_transformation):
     result = measurement_transformation.transform(program_set)
 
     # First circuit should get measurement added, second unchanged
-    assert len(result[0].instructions) == 2  # h + measure
+    assert len(result[0].instructions) == 1  # h + measure
     assert result[1] == circuit2
     assert result.shots_per_executable == 100
 

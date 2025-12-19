@@ -58,9 +58,4 @@ class NoiseModelTransformation(TransformationPass):
         """
         if self._noise_model is None:
             return circuits
-        if isinstance(circuits, ProgramSet):
-            return ProgramSet(
-                [self.transform(item) for item in circuits],
-                shots_per_executable=circuits.shots_per_executable,
-            )
         return self._noise_model.apply(circuits)

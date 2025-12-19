@@ -48,10 +48,8 @@ class MeasurementTransformation(TransformationPass):
             Modified circuit(s) with measurements added where needed
         """
         if isinstance(circuits, ProgramSet):
-            return ProgramSet(
-                [self.transform(item) for item in circuits],
-                shots_per_executable=circuits.shots_per_executable,
-            )
+            # these will be added in the noise model, so can be ignored
+            return circuits
 
         has_measurement = any(
             isinstance(instr.operator, Measure) for instr in circuits.instructions

@@ -65,6 +65,7 @@ class Emulator(Device):
         **kwargs: Any,
     ) -> QuantumTask:
         """Emulate a quantum task specification on this quantum device emulator.
+
         A quantum task can be a circuit or an annealing problem. Emulation
         involves running all emulator passes on the input program before running
         the program on the emulator's backend.
