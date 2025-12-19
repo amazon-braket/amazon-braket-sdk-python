@@ -38,10 +38,65 @@ def test_input_sets_observables_missing():
 def test_result_type(circuit_rx_parametrized):
     with pytest.raises(ValueError):
         CircuitBinding(
-            Circuit(circuit_rx_parametrized).expectation(X(0)), input_sets={"theta": [1.23, 3.21]}
+            Circuit(circuit_rx_parametrized).expectation(X(0)),
+            input_sets={"theta": [1.23, 3.21]},
         )
 
 
 def test_sum_in_observable_list():
     with pytest.raises(TypeError):
         CircuitBinding(Circuit().h(0), observables=[X(0) + Y(0)])
+
+
+def test_binding_to_input(circuit_rx_parametrized):
+    input_sets = {"theta": [1.35, 1.58]}
+    observable = [X(0) @ Z(1), Y(0), Z(0)]
+    cb1 = CircuitBinding(circuit_rx_parametrized, input_sets, observable)
+
+    cb2 = cb1.bind_observables_to_inputs(inplace=False)
+    assert cb1 != cb2
+    assert cb1.to_ir() == cb2.to_ir()
+
+    cb1.bind_observables_to_inputs(inplace=True)
+    assert cb1 == cb2
+
+
+def test_binding_to_input_no_inputs(circuit_rx_parametrized):
+    observable = [X(0) @ Z(1), Y(0), Z(0)]
+    cb1 = CircuitBinding(circuit_rx_parametrized, observables=observable)
+
+    cb2 = cb1.bind_observables_to_inputs(inplace=False)
+    assert cb1 != cb2
+    assert cb1.to_ir() == cb2.to_ir()
+
+    cb1.bind_observables_to_inputs(inplace=True)
+    assert cb1 == cb2
+
+
+def test_bind_sum_warning(circuit_rx_parametrized):
+    observable = 0.5 * X(0) @ Z(1) + 2 * Y(0)
+    cb1 = CircuitBinding(circuit_rx_parametrized, observables=observable)
+    with pytest.warns(UserWarning):
+        cb1.bind_observables_to_inputs()
+
+
+def test_no_observables_in_binding(circuit_rx_parametrized):
+    input_sets = {"theta": [1.35, 1.58]}
+    cb1 = CircuitBinding(circuit_rx_parametrized, input_sets=input_sets)
+    cb2 = cb1.bind_observables_to_inputs(inplace=False)
+    assert cb1 == cb2
+
+
+def test_binding_without_measure(circuit_rx_parametrized):
+    input_sets = {"theta": [1.35, 1.58]}
+    cb1 = CircuitBinding(
+        circuit_rx_parametrized,
+        input_sets=input_sets,
+        observables=0.5 * X(0) @ Z(1) + 2 * Y(0),
+    )
+    cb2 = cb1.bind_observables_to_inputs(inplace=False, add_measure=False)
+    cb3 = cb1.bind_observables_to_inputs(inplace=False, add_measure=True)
+    assert cb2.circuit != cb3.circuit
+    circ = cb2.circuit
+    circ.measure(range(2))
+    assert circ == cb3.circuit

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.106.5 (2025-12-11)
+
+### Bug Fixes and Other Changes
+
+ * update required schemas version
+
+## v1.106.4 (2025-12-08)
+
+### Bug Fixes and Other Changes
+
+ * qubit error for Kraus in noise model
+
 ## v1.106.3 (2025-12-03)
 
 ### Bug Fixes and Other Changes

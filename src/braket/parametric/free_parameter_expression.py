@@ -107,7 +107,7 @@ class FreeParameterExpression:
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Constant):
-            return FreeParameterExpression(node.n)
+            return FreeParameterExpression(node.value)
         if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
         if isinstance(node, ast.BinOp):

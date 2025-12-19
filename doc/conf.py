@@ -16,6 +16,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
+    "sphinx_autodoc_typehints",
 ]
 
 source_suffix = ".rst"
@@ -43,3 +44,7 @@ apidoc_excluded_paths = ["../test"]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-f", "--implicit-namespaces", "-H", "API Reference"]
+
+typehints_fully_qualified = False
+always_document_param_types = True
+typehints_document_rtype = True

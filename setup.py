@@ -27,7 +27,7 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.26.1",
+        "amazon-braket-schemas>=1.27.0",
         "amazon-braket-default-simulator>=1.32.0",
         "oqpy~=0.3.7",
         "backoff",
@@ -64,6 +64,7 @@ setup(
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
+            "sphinx-autodoc-typehints",
         ],
     },
     include_package_data=True,
