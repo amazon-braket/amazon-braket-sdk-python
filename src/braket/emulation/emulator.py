@@ -17,7 +17,6 @@ import warnings
 from collections.abc import Iterable
 from typing import Any
 
-from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager

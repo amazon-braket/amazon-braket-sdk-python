@@ -102,7 +102,6 @@ def test_apply_noise_model(noisy_emulator):
     assert circuit == target_circ
 
 
-
 def test_noisy_run(noisy_emulator):
     circuit = Circuit().h(0)
     open_qasm_source = """OPENQASM 3.0;
