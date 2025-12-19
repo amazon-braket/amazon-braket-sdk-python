@@ -85,3 +85,18 @@ def test_no_observables_in_binding(circuit_rx_parametrized):
     cb1 = CircuitBinding(circuit_rx_parametrized, input_sets=input_sets)
     cb2 = cb1.bind_observables_to_inputs(inplace=False)
     assert cb1 == cb2
+
+
+def test_binding_without_measure(circuit_rx_parametrized):
+    input_sets = {"theta": [1.35, 1.58]}
+    cb1 = CircuitBinding(
+        circuit_rx_parametrized,
+        input_sets=input_sets,
+        observables=0.5 * X(0) @ Z(1) + 2 * Y(0),
+    )
+    cb2 = cb1.bind_observables_to_inputs(inplace=False, add_measure=False)
+    cb3 = cb1.bind_observables_to_inputs(inplace=False, add_measure=True)
+    assert cb2.circuit != cb3.circuit
+    circ = cb2.circuit
+    circ.measure(range(2))
+    assert circ == cb3.circuit
