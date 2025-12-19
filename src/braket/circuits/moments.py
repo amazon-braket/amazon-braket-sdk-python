@@ -218,12 +218,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def _get_qubit_times(self, qubits: QubitSet) -> int:
         return max([self._max_time_for_qubit(qubit) for qubit in qubits] + [self._time_all_qubits])
 
-    def _update_qubit_times(self, qubits: QubitSet) -> int:
-        time = self._get_qubit_times(qubits) + 1
+    def _update_qubit_times(self, qubits: QubitSet, advance: bool = True) -> int:
+        time = self._get_qubit_times(qubits)
+        if advance:
+            time += 1
+            self._number_gphase_in_current_moment = 0
         # Update time for all specified qubits
         for qubit in qubits:
             self._max_times[qubit] = time
-        self._number_gphase_in_current_moment = 0
         return time
 
     def add_noise(
@@ -239,7 +241,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 types, noise_index starts from 0; but for gate noise, it starts from 1.
         """
         qubit_range = instruction.target
-        time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
+        time = max(0, self._get_qubit_times(qubit_range))
         if input_type == MomentType.INITIALIZATION_NOISE:
             time = 0
 
@@ -251,8 +253,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         # Update qubit times for direct noise channels so subsequent gates are placed after
         if input_type == MomentType.NOISE:
-            for qubit in qubit_range:
-                self._max_times[qubit] = max(self._max_time_for_qubit(qubit), time)
+            self._update_qubit_times(qubit_range, False)
 
     def sort_moments(self) -> None:
         """Make the disordered moments in order.
