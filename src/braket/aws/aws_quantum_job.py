@@ -251,7 +251,7 @@ class AwsQuantumJob(QuantumJob):
         else:
             self._aws_session = AwsQuantumJob._default_session_for_job_arn(arn)
         self._metadata = {}
-        self._tasks = []
+        self._tasks = None
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
@@ -456,7 +456,7 @@ class AwsQuantumJob(QuantumJob):
             list[AwsQuantumTask]: List of `AwsQuantumTask` objects associated with the job,
             sorted by creation time.
         """
-        if not use_cached_value or not self._tasks:
+        if not use_cached_value or self._tasks is None:
             # Use paginator to handle jobs with large number of tasks
             braket_client = self._aws_session.braket_client
             paginator = braket_client.get_paginator("search_quantum_tasks")
