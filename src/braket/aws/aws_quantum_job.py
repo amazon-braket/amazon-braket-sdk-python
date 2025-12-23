@@ -463,11 +463,7 @@ class AwsQuantumJob(QuantumJob):
 
             page_iterator = paginator.paginate(
                 filters=[
-                    {
-                        "name": "jobArn",
-                        "values": [self._arn],
-                        "operator": "EQUAL"
-                    },
+                    {"name": "jobArn", "values": [self._arn], "operator": "EQUAL"},
                 ]
             )
 

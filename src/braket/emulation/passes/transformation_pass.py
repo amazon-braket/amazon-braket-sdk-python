@@ -18,19 +18,22 @@ from abc import ABC, abstractmethod
 from braket.tasks.quantum_task import TaskSpecification
 
 
-class ValidationPass(ABC):
+class TransformationPass(ABC):
     _supported_specifications: TaskSpecification
 
     @abstractmethod
-    def validate(self, task_specification: TaskSpecification) -> None:
+    def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
-        An emulator validator is used to perform some non-modifying validation
-        pass on an input program. Implementations of validate should return
-        nothing if the input program passes validation and raise an error otherwise.
+        An emulator modifier is used to perform some potentially modifying validation
+        pass on an input program. Implementations of modify should return the same
+        specification if the input program passes validation and raise an error otherwise.
 
         Args:
             task_specification (TaskSpecification): The program to be evaluated against this
                 criteria.
+
+        Returns:
+            task_specificaiton (TaskSpecification): The (potentially) modified program
         """
         raise NotImplementedError
 
@@ -45,7 +48,7 @@ class ValidationPass(ABC):
             TaskSpecification: The unmodified program passed in as input.
         """
         if isinstance(task_specification, self.supported_specifications):
-            self.validate(task_specification)
+            task_specification = self.transform(task_specification)
         return task_specification
 
     def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
