@@ -120,7 +120,7 @@ class ExperimentalQuantumOperator(QuantumOperator):
 
     def _validate_experimental_capabilities_enabled(self) -> None:
         """Check if the experimental capabilities are enabled."""
-        if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled:
+        if not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled():
             raise ExperimentalCapabilityContextError(
                 f"{self.__class__.__name__} is an experimental capability. It can only be "
                 "instantiated under EnableExperimentalCapability. For more information about "
