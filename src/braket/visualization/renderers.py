@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import HTML
 
+from braket.circuits import Circuit
+
 from .config import DEFAULT_CONFIG
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
-
-    from braket.circuits import Circuit
 
 
 @dataclass
@@ -862,6 +862,52 @@ class CompressedRenderer(BaseRenderer):
                         density[qubit_idx, time_bin] += 1
 
         return density
+
+
+    def render_interactive(self):
+        """Render interactive compressed view with zoom controls.
+
+        Returns:
+            ipywidgets.VBox: Interactive widget with zoomable circuit view.
+        """
+        from IPython.display import display
+        
+        zoom_slider = widgets.FloatSlider(
+            value=1.0,
+            min=0.5,
+            max=3.0,
+            step=0.1,
+            description='Zoom:',
+            continuous_update=False
+        )
+        
+        output = widgets.Output()
+        
+        def update_zoom(change):
+            with output:
+                output.clear_output(wait=True)
+                scale = change['new']
+                svg = self.render_svg()
+                
+                svg_with_scale = svg.replace(
+                    'width="100%"',
+                    f'width="{int(100 * scale)}%"'
+                )
+                
+                display(HTML(svg_with_scale))
+        
+        zoom_slider.observe(update_zoom, names='value')
+        
+        with output:
+            display(HTML(self.render_svg()))
+        
+        return widgets.VBox([
+            widgets.HBox([
+                widgets.HTML("<b>Compressed Circuit View</b>"),
+                zoom_slider
+            ]),
+            output
+        ])
 
 
 class HeatmapRenderer(BaseRenderer):

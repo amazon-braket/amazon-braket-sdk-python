@@ -157,9 +157,7 @@ class CircuitDiagram:
         Returns:
             str: HTML representation of the circuit.
         """
-        if self._selected_mode == "heatmap":
-            from IPython.display import display
-            
+        if self._selected_mode in ("heatmap", "compressed"):
             renderer = self._get_renderer()
             widget = renderer.render_interactive()
             display(widget)
