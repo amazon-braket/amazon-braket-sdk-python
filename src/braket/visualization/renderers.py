@@ -5,9 +5,11 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import ipywidgets as widgets
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython.display import HTML
 
 from .config import DEFAULT_CONFIG
 
@@ -329,8 +331,11 @@ class DetailedRenderer(BaseRenderer):
         svg_height = num_qubits * wire_spacing * 50 + 2 * margin
 
         svg_parts = [
-            f'<svg width="{svg_width}" height="{svg_height}" '
-            f'xmlns="http://www.w3.org/2000/svg">'
+            f'<svg width="100%" height="{svg_height}" '
+            f'viewBox="0 0 {svg_width} {svg_height}" '
+            f'xmlns="http://www.w3.org/2000/svg" '
+            f'preserveAspectRatio="xMidYMid meet" '
+            f'style="max-width: 100%; height: auto; display: block;">'
         ]
 
         for i, label in enumerate(qubit_labels):
@@ -579,10 +584,11 @@ class CompressedRenderer(BaseRenderer):
         display_height = svg_height * scale
 
         svg_parts = [
-            f'<svg width="{display_width}" height="{display_height}" '
+            f'<svg width="100%" height="{display_height}" '
             f'viewBox="0 0 {svg_width} {svg_height}" '
             f'xmlns="http://www.w3.org/2000/svg" '
-            f'style="max-width: 100%; height: auto;">'
+            f'preserveAspectRatio="xMidYMid meet" '
+            f'style="max-width: 100%; height: auto; display: block;">'
         ]
 
         for i, label in enumerate(qubit_labels):
@@ -616,25 +622,15 @@ class CompressedRenderer(BaseRenderer):
                 f'fill="{gate_fill}" stroke="{gate_stroke}" stroke-width="2"/>'
             )
 
-            most_common_gate = group.gate_types.most_common(1)[0][0] if group.gate_types else "G"
+            gate_summary = ", ".join(f"{gate}×{count}" for gate, count in group.gate_types.most_common())
+            if len(gate_summary) > 20:
+                gate_summary = f"{len(group.gate_types)} types, {group.gate_count} gates"
+            
             svg_parts.append(
                 f'<text x="{x_center}" y="{y_center + 5}" text-anchor="middle" '
-                f'font-size="{font_size}" font-family="monospace" fill="{gate_stroke}">'
-                f"{most_common_gate}</text>"
+                f'font-size="{min(font_size, 8)}" font-family="monospace" fill="{gate_stroke}">'
+                f"{gate_summary}</text>"
             )
-
-            if group.gate_count > 1:
-                badge_x = box_x + box_width - 8
-                badge_y = box_y + 8
-                svg_parts.append(
-                    f'<circle cx="{badge_x}" cy="{badge_y}" r="8" '
-                    f'fill="#FF6B6B" stroke="white" stroke-width="1"/>'
-                )
-                svg_parts.append(
-                    f'<text x="{badge_x}" y="{badge_y + 3}" text-anchor="middle" '
-                    f'font-size="8" font-family="monospace" fill="white">'
-                    f"{group.gate_count}</text>"
-                )
 
         for gate_pos in gate_positions:
             if len(gate_pos.qubit_indices) > 1:
@@ -743,25 +739,11 @@ class CompressedRenderer(BaseRenderer):
             )
             ax.add_patch(rect)
 
-            most_common_gate = group.gate_types.most_common(1)[0][0] if group.gate_types else "G"
-            ax.text(x, y, most_common_gate, ha="center", va="center", fontsize=font_size, family="monospace", zorder=3)
-
-            if group.gate_count > 1:
-                badge_x = x + group_width / 2 - 0.15
-                badge_y = y + gate_height / 2 - 0.15
-                badge = patches.Circle((badge_x, badge_y), 0.15, color="#FF6B6B", ec="white", linewidth=1, zorder=4)
-                ax.add_patch(badge)
-                ax.text(
-                    badge_x,
-                    badge_y,
-                    str(group.gate_count),
-                    ha="center",
-                    va="center",
-                    fontsize=8,
-                    color="white",
-                    weight="bold",
-                    zorder=5,
-                )
+            gate_summary = ", ".join(f"{gate}×{count}" for gate, count in group.gate_types.most_common())
+            if len(gate_summary) > 20:
+                gate_summary = f"{len(group.gate_types)} types"
+            
+            ax.text(x, y, gate_summary, ha="center", va="center", fontsize=min(font_size, 8), family="monospace", zorder=3)
 
         for gate_pos in gate_positions:
             if len(gate_pos.qubit_indices) > 1:
@@ -936,14 +918,22 @@ class HeatmapRenderer(BaseRenderer):
             f'<svg width="100%" height="{svg_height}" '
             f'viewBox="0 0 {svg_width} {svg_height}" '
             f'xmlns="http://www.w3.org/2000/svg" '
-            f'style="max-width: 100%; height: auto;">'
+            f'preserveAspectRatio="xMidYMid meet" '
+            f'style="max-width: 100%; height: auto; display: block;">'
         ]
 
         svg_parts.append(
             f'<text x="{svg_width / 2}" y="{margin - 20}" '
             f'font-size="{font_size + 4}" font-family="monospace" font-weight="bold" '
             f'text-anchor="middle">'
-            f"Circuit Density Heatmap</text>"
+            f"Circuit Gate Density Map</text>"
+        )
+        
+        svg_parts.append(
+            f'<text x="{svg_width / 2}" y="{margin - 5}" '
+            f'font-size="{font_size}" font-family="monospace" '
+            f'text-anchor="middle" fill="#666">'
+            f"(Color intensity = number of gates in each region)</text>"
         )
 
         if density_matrix.size > 0:
@@ -956,37 +946,56 @@ class HeatmapRenderer(BaseRenderer):
 
                     x = margin + j * cell_size
                     y = margin + i * cell_size
+                    
+                    qubit_start = i * bin_size
+                    qubit_end = min((i + 1) * bin_size - 1, num_qubits - 1)
+                    depth_start = j * bin_size
+                    depth_end = min((j + 1) * bin_size - 1, circuit_depth - 1)
+                    
+                    tooltip = (
+                        f"Qubits {qubit_start}-{qubit_end}, "
+                        f"Depth {depth_start}-{depth_end}: "
+                        f"{int(density)} gates"
+                    )
 
                     svg_parts.append(
                         f'<rect x="{x}" y="{y}" width="{cell_size}" height="{cell_size}" '
-                        f'fill="{color}" stroke="none"/>'
+                        f'fill="{color}" stroke="none">'
+                        f'<title>{tooltip}</title>'
+                        f'</rect>'
                     )
 
         svg_parts.append(
             f'<text x="{margin - 15}" y="{margin + heatmap_height / 2}" '
             f'font-size="{font_size}" font-family="monospace" '
             f'text-anchor="middle" transform="rotate(-90 {margin - 15} {margin + heatmap_height / 2})">'
-            f"Qubits (binned)</text>"
+            f"Qubit Index (grouped by {bin_size})</text>"
         )
 
         svg_parts.append(
             f'<text x="{margin + heatmap_width / 2}" y="{margin + heatmap_height + 35}" '
             f'font-size="{font_size}" font-family="monospace" text-anchor="middle">'
-            f"Circuit Depth (binned)</text>"
+            f"Circuit Depth (grouped by {bin_size})</text>"
         )
 
         legend_x = margin + heatmap_width + 30
         legend_height = min(heatmap_height, 200)
         legend_steps = 10
+        legend_start_y = margin + 20
 
         svg_parts.append(
             f'<text x="{legend_x}" y="{margin - 10}" '
             f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
-            f"Density</text>"
+            f"Gates per</text>"
+        )
+        svg_parts.append(
+            f'<text x="{legend_x}" y="{margin + 5}" '
+            f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
+            f"Region</text>"
         )
 
         for i in range(legend_steps):
-            y = margin + (i * legend_height / legend_steps)
+            y = legend_start_y + (i * legend_height / legend_steps)
             density_value = max_density * (1 - i / legend_steps) if density_matrix.size > 0 else 0
             color = self._density_to_color(density_value, max_density, colormap)
 
@@ -997,12 +1006,12 @@ class HeatmapRenderer(BaseRenderer):
 
         if density_matrix.size > 0:
             svg_parts.append(
-                f'<text x="{legend_x + 35}" y="{margin + 5}" '
+                f'<text x="{legend_x + 35}" y="{legend_start_y + 5}" '
                 f'font-size="{font_size - 1}" font-family="monospace">'
                 f"{int(max_density)}</text>"
             )
             svg_parts.append(
-                f'<text x="{legend_x + 35}" y="{margin + legend_height + 5}" '
+                f'<text x="{legend_x + 35}" y="{legend_start_y + legend_height + 5}" '
                 f'font-size="{font_size - 1}" font-family="monospace">'
                 f"0</text>"
             )
@@ -1212,3 +1221,86 @@ class HeatmapRenderer(BaseRenderer):
         else:
             gray = int(255 * (1 - normalized))
             return f"#{gray:02x}{gray:02x}{gray:02x}"
+
+
+    def render_interactive(self):
+        """Render interactive heatmap with clickable regions using ipywidgets.
+
+        Returns:
+            ipywidgets.VBox: Interactive widget with heatmap and detail panel.
+        """
+        bin_size = self.options.get("bin_size", max(1, min(self.circuit.qubit_count // 50, 20)))
+        density_matrix = self._compute_density_matrix(bin_size=bin_size)
+
+        heatmap_html = widgets.HTML(value=self.render_svg())
+        detail_output = widgets.Output()
+        
+        if density_matrix.size == 0:
+            return widgets.VBox([heatmap_html])
+
+        hot_regions = []
+        threshold = density_matrix.max() * 0.5 if density_matrix.max() > 0 else 0
+        
+        for i in range(density_matrix.shape[0]):
+            for j in range(density_matrix.shape[1]):
+                if density_matrix[i, j] >= threshold:
+                    hot_regions.append((i, j, int(density_matrix[i, j])))
+        
+        hot_regions.sort(key=lambda x: x[2], reverse=True)
+        hot_regions = hot_regions[:12]
+
+        def show_region_detail(i, j, density):
+            qubit_start = i * bin_size
+            qubit_end = min((i + 1) * bin_size, self.circuit.qubit_count)
+            depth_start = j * bin_size
+            depth_end = min((j + 1) * bin_size, self.circuit.depth)
+            
+            with detail_output:
+                detail_output.clear_output()
+                
+                region_circuit = Circuit()
+                for instruction in self.circuit.instructions:
+                    instr_qubits = [int(q) for q in instruction.target]
+                    instr_time = None
+                    
+                    for key, instr in self.circuit.moments.items():
+                        if instr == instruction:
+                            instr_time = key.time
+                            break
+                    
+                    if instr_time is None:
+                        continue
+                        
+                    if (any(qubit_start <= q < qubit_end for q in instr_qubits) and 
+                        depth_start <= instr_time < depth_end):
+                        region_circuit.add_instruction(instruction)
+                
+                print(f"Region: Qubits {qubit_start}-{qubit_end}, Depth {depth_start}-{depth_end}")
+                print(f"Gates in region: {len(region_circuit.instructions)}")
+                print(f"\nCircuit diagram:")
+                print(region_circuit.diagram())
+
+        buttons = []
+        for i, j, density in hot_regions:
+            qubit_start = i * bin_size
+            qubit_end = min((i + 1) * bin_size, self.circuit.qubit_count)
+            depth_start = j * bin_size
+            depth_end = min((j + 1) * bin_size, self.circuit.depth)
+            
+            btn = widgets.Button(
+                description=f"Q{qubit_start}-{qubit_end}, D{depth_start}-{depth_end}: {density}g",
+                layout=widgets.Layout(width='180px', margin='2px')
+            )
+            btn.on_click(lambda b, i=i, j=j, d=density: show_region_detail(i, j, d))
+            buttons.append(btn)
+
+        button_rows = []
+        for idx in range(0, len(buttons), 4):
+            button_rows.append(widgets.HBox(buttons[idx:idx+4]))
+
+        return widgets.VBox([
+            heatmap_html,
+            widgets.HTML("<br><b>High-Density Regions (click to see details):</b>"),
+            *button_rows,
+            detail_output
+        ])

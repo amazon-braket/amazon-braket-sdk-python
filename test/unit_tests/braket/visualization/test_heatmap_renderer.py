@@ -32,7 +32,7 @@ def test_heatmap_renderer_basic_svg():
     assert isinstance(svg, str)
     assert "<svg" in svg
     assert "</svg>" in svg
-    assert "Circuit Density Heatmap" in svg
+    assert "Gate Density Map" in svg
 
 
 def test_heatmap_renderer_basic_figure():

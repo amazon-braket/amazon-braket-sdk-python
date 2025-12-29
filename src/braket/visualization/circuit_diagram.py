@@ -1,16 +1,14 @@
 """CircuitDiagram class for circuit visualization."""
 
 import io
-from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+from IPython.display import display
+from matplotlib.figure import Figure
 
 from braket.circuits.text_diagram_builders.ascii_circuit_diagram import AsciiCircuitDiagram
 
 from .renderers import CompressedRenderer, DetailedRenderer, HeatmapRenderer
-
-if TYPE_CHECKING:
-    from matplotlib.figure import Figure
 
 
 class CircuitDiagram:
@@ -134,7 +132,7 @@ class CircuitDiagram:
         buf.seek(0)
         return buf.read()
 
-    def to_figure(self) -> "Figure":
+    def to_figure(self) -> Figure:
         """Generate matplotlib Figure object of the circuit.
 
         Returns:
@@ -159,12 +157,16 @@ class CircuitDiagram:
         Returns:
             str: HTML representation of the circuit.
         """
-        try:
-            svg = self.to_svg()
-            return svg
-        except ImportError:
-            ascii_diagram = AsciiCircuitDiagram.build_diagram(self.circuit)
-            return f"<pre>{ascii_diagram}</pre>"
+        if self._selected_mode == "heatmap":
+            from IPython.display import display
+            
+            renderer = self._get_renderer()
+            widget = renderer.render_interactive()
+            display(widget)
+            return ""
+        
+        svg = self.to_svg()
+        return svg
 
     def _repr_png_(self) -> bytes:
         """Return PNG representation for Jupyter display.

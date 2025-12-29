@@ -1696,36 +1696,17 @@ class Circuit:
 
         Raises:
             ValueError: If mode or output is not a valid option.
-            ImportError: If matplotlib is not installed and visualization is requested.
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> circuit.draw()  # Auto-display in Jupyter
-            >>> svg_str = circuit.draw(output="svg")  # Get SVG string
-            >>> png_bytes = circuit.draw(output="png")  # Get PNG bytes
-            >>> fig = circuit.draw(output="matplotlib")  # Get matplotlib Figure
-            >>> circuit.draw(mode="heatmap")  # Force heatmap mode
+            >>> circuit.draw()
+            >>> svg_str = circuit.draw(output="svg")
+            >>> png_bytes = circuit.draw(output="png")
+            >>> fig = circuit.draw(output="matplotlib")
+            >>> circuit.draw(mode="heatmap")
         """
-        try:
-            from braket.visualization.circuit_diagram import CircuitDiagram
-        except ImportError as e:
-            if output == "jupyter":
-                # Fall back to ASCII diagram for Jupyter display
-                ascii_diagram = self.diagram()
-                try:
-                    from IPython.display import display, HTML
-
-                    display(HTML(f"<pre>{ascii_diagram}</pre>"))
-                    return None
-                except ImportError:
-                    # Not in Jupyter, just print
-                    print(ascii_diagram)
-                    return None
-            else:
-                raise ImportError(
-                    "matplotlib is required for circuit visualization. "
-                    "Install it with: pip install matplotlib"
-                ) from e
+        from braket.visualization.circuit_diagram import CircuitDiagram
+        from IPython.display import display
 
         valid_outputs = {"jupyter", "svg", "png", "matplotlib"}
         if output not in valid_outputs:
@@ -1736,15 +1717,8 @@ class Circuit:
         diagram = CircuitDiagram(self, mode=mode, **kwargs)
 
         if output == "jupyter":
-            try:
-                from IPython.display import display
-
-                display(diagram)
-                return None
-            except ImportError:
-                # Not in Jupyter, fall back to show()
-                diagram.show()
-                return None
+            display(diagram)
+            return None
         elif output == "svg":
             return diagram.to_svg()
         elif output == "png":
@@ -1765,15 +1739,10 @@ class Circuit:
         Returns:
             str: HTML representation of the circuit.
         """
-        try:
-            from braket.visualization.circuit_diagram import CircuitDiagram
+        from braket.visualization.circuit_diagram import CircuitDiagram
 
-            diagram = CircuitDiagram(self, mode="auto")
-            return diagram._repr_html_()
-        except ImportError:
-            # Fall back to ASCII diagram
-            ascii_diagram = self.diagram()
-            return f"<pre>{ascii_diagram}</pre>"
+        diagram = CircuitDiagram(self, mode="auto")
+        return diagram._repr_html_()
 
     def _repr_png_(self) -> bytes:
         """Return PNG representation for Jupyter display.
@@ -1785,14 +1754,10 @@ class Circuit:
         Returns:
             bytes: PNG representation of the circuit, or None if unavailable.
         """
-        try:
-            from braket.visualization.circuit_diagram import CircuitDiagram
+        from braket.visualization.circuit_diagram import CircuitDiagram
 
-            diagram = CircuitDiagram(self, mode="auto")
-            return diagram._repr_png_()
-        except ImportError:
-            # Return None to indicate PNG representation is not available
-            return None
+        diagram = CircuitDiagram(self, mode="auto")
+        return diagram._repr_png_()
 
     def __repr__(self) -> str:
         if not self.result_types:
