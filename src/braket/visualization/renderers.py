@@ -875,10 +875,11 @@ class CompressedRenderer(BaseRenderer):
         zoom_slider = widgets.FloatSlider(
             value=1.0,
             min=0.5,
-            max=3.0,
-            step=0.1,
+            max=5.0,
+            step=0.5,
             description='Zoom:',
-            continuous_update=False
+            continuous_update=False,
+            layout=widgets.Layout(width='300px')
         )
         
         output = widgets.Output()
@@ -889,21 +890,29 @@ class CompressedRenderer(BaseRenderer):
                 scale = change['new']
                 svg = self.render_svg()
                 
-                svg_with_scale = svg.replace(
-                    'width="100%"',
-                    f'width="{int(100 * scale)}%"'
-                )
+                svg_with_scroll = f'''
+                <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
+                    <div style="transform: scale({scale}); transform-origin: top left; width: {100/scale}%; height: {100/scale}%;">
+                        {svg}
+                    </div>
+                </div>
+                '''
                 
-                display(HTML(svg_with_scale))
+                display(HTML(svg_with_scroll))
         
         zoom_slider.observe(update_zoom, names='value')
         
         with output:
-            display(HTML(self.render_svg()))
+            svg = self.render_svg()
+            display(HTML(f'''
+                <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
+                    {svg}
+                </div>
+            '''))
         
         return widgets.VBox([
             widgets.HBox([
-                widgets.HTML("<b>Compressed Circuit View</b>"),
+                widgets.HTML("<b>Compressed Circuit View</b> (use zoom slider and scroll to navigate)"),
                 zoom_slider
             ]),
             output
@@ -934,31 +943,29 @@ class HeatmapRenderer(BaseRenderer):
         num_qubits = self.circuit.qubit_count
         circuit_depth = self.circuit.depth
 
-        cell_size = 8
-        margin = 60
-        stats_panel_width = 250
-        legend_width = 80
+        cell_size = 12
+        margin = 80
+        stats_panel_width = 280
+        legend_width = 100
 
         heatmap_width = density_matrix.shape[1] * cell_size if density_matrix.size > 0 else 100
         heatmap_height = density_matrix.shape[0] * cell_size if density_matrix.size > 0 else 100
 
-        max_heatmap_width = 800
-        max_heatmap_height = 600
+        max_heatmap_width = 600
+        max_heatmap_height = 500
         
         if heatmap_width > max_heatmap_width:
-            scale = max_heatmap_width / heatmap_width
+            cell_size = max_heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
             heatmap_width = max_heatmap_width
-            heatmap_height = int(heatmap_height * scale)
-            cell_size = heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
+            heatmap_height = density_matrix.shape[0] * cell_size if density_matrix.size > 0 else heatmap_height
         
         if heatmap_height > max_heatmap_height:
-            scale = max_heatmap_height / heatmap_height
+            cell_size = max_heatmap_height / density_matrix.shape[0] if density_matrix.size > 0 else cell_size
             heatmap_height = max_heatmap_height
-            heatmap_width = int(heatmap_width * scale)
-            cell_size = heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
+            heatmap_width = density_matrix.shape[1] * cell_size if density_matrix.size > 0 else heatmap_width
 
         svg_width = margin + heatmap_width + legend_width + stats_panel_width + margin
-        svg_height = margin + heatmap_height + margin + 40
+        svg_height = margin + 40 + heatmap_height + margin + 50
 
         svg_parts = [
             f'<svg width="100%" height="{svg_height}" '
@@ -969,17 +976,17 @@ class HeatmapRenderer(BaseRenderer):
         ]
 
         svg_parts.append(
-            f'<text x="{svg_width / 2}" y="{margin - 20}" '
-            f'font-size="{font_size + 4}" font-family="monospace" font-weight="bold" '
+            f'<text x="{svg_width / 2}" y="30" '
+            f'font-size="{font_size + 6}" font-family="sans-serif" font-weight="bold" '
             f'text-anchor="middle">'
             f"Circuit Gate Density Map</text>"
         )
         
         svg_parts.append(
-            f'<text x="{svg_width / 2}" y="{margin - 5}" '
-            f'font-size="{font_size}" font-family="monospace" '
+            f'<text x="{svg_width / 2}" y="50" '
+            f'font-size="{font_size + 1}" font-family="sans-serif" '
             f'text-anchor="middle" fill="#666">'
-            f"(Color intensity = number of gates in each region)</text>"
+            f"Darker colors = more gates in that region</text>"
         )
 
         if density_matrix.size > 0:
@@ -1012,31 +1019,47 @@ class HeatmapRenderer(BaseRenderer):
                     )
 
         svg_parts.append(
-            f'<text x="{margin - 15}" y="{margin + heatmap_height / 2}" '
-            f'font-size="{font_size}" font-family="monospace" '
-            f'text-anchor="middle" transform="rotate(-90 {margin - 15} {margin + heatmap_height / 2})">'
-            f"Qubit Index (grouped by {bin_size})</text>"
+            f'<text x="30" y="{margin + heatmap_height / 2}" '
+            f'font-size="{font_size + 1}" font-family="sans-serif" font-weight="bold" '
+            f'text-anchor="middle" transform="rotate(-90 30 {margin + heatmap_height / 2})">'
+            f"Qubit Index →</text>"
+        )
+        
+        svg_parts.append(
+            f'<text x="15" y="{margin + heatmap_height / 2}" '
+            f'font-size="{font_size - 1}" font-family="sans-serif" '
+            f'text-anchor="middle" fill="#666" transform="rotate(-90 15 {margin + heatmap_height / 2})">'
+            f"(grouped by {bin_size})</text>"
         )
 
         svg_parts.append(
-            f'<text x="{margin + heatmap_width / 2}" y="{margin + heatmap_height + 35}" '
-            f'font-size="{font_size}" font-family="monospace" text-anchor="middle">'
-            f"Circuit Depth (grouped by {bin_size})</text>"
+            f'<text x="{margin + heatmap_width / 2}" y="{svg_height - 20}" '
+            f'font-size="{font_size + 1}" font-family="sans-serif" font-weight="bold" text-anchor="middle">'
+            f"Circuit Depth →</text>"
+        )
+        
+        svg_parts.append(
+            f'<text x="{margin + heatmap_width / 2}" y="{svg_height - 5}" '
+            f'font-size="{font_size - 1}" font-family="sans-serif" '
+            f'text-anchor="middle" fill="#666">'
+            f"(grouped by {bin_size})</text>"
         )
 
-        legend_x = margin + heatmap_width + 30
-        legend_height = min(heatmap_height, 200)
+        legend_x = margin + heatmap_width + 40
+        legend_height = min(heatmap_height - 40, 180)
         legend_steps = 10
-        legend_start_y = margin + 20
+        legend_start_y = margin + 60
 
         svg_parts.append(
-            f'<text x="{legend_x}" y="{margin - 10}" '
-            f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
+            f'<text x="{legend_x + 15}" y="{margin + 10}" '
+            f'font-size="{font_size + 1}" font-family="sans-serif" font-weight="bold" '
+            f'text-anchor="middle">'
             f"Gates per</text>"
         )
         svg_parts.append(
-            f'<text x="{legend_x}" y="{margin + 5}" '
-            f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
+            f'<text x="{legend_x + 15}" y="{margin + 25}" '
+            f'font-size="{font_size + 1}" font-family="sans-serif" font-weight="bold" '
+            f'text-anchor="middle">'
             f"Region</text>"
         )
 
