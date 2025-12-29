@@ -31,4 +31,5 @@ __pycache__/
 /model.tar.gz
 
 .venv/
-
+.kiro/
+.hypothesis/

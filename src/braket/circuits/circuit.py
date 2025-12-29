@@ -1662,6 +1662,138 @@ class Circuit:
         new.add(addable)
         return new
 
+    def draw(
+        self,
+        mode: str = "auto",
+        output: str = "jupyter",
+        **kwargs,
+    ) -> str | bytes | None:
+        """Draw circuit visualization with automatic mode selection.
+
+        This method provides rich visualization of quantum circuits with three rendering
+        modes: detailed (individual gates), compressed (grouped gates), and heatmap
+        (density plot). The mode is automatically selected based on circuit size unless
+        explicitly overridden.
+
+        Args:
+            mode (str): Rendering mode - "auto", "detailed", "compressed", or "heatmap".
+                If "auto" (default), the mode is selected based on circuit size:
+                - Detailed: ≤20 qubits and ≤50 depth
+                - Compressed: ≤200 qubits and ≤500 depth
+                - Heatmap: >200 qubits or >500 depth
+            output (str): Output format - "jupyter", "svg", "png", or "matplotlib".
+                - "jupyter" (default): Display inline in Jupyter notebooks
+                - "svg": Return SVG string
+                - "png": Return PNG bytes
+                - "matplotlib": Return matplotlib Figure object
+            **kwargs: Additional rendering options passed to the renderer.
+
+        Returns:
+            None if output="jupyter" (displays inline),
+            str if output="svg",
+            bytes if output="png",
+            matplotlib.figure.Figure if output="matplotlib".
+
+        Raises:
+            ValueError: If mode or output is not a valid option.
+            ImportError: If matplotlib is not installed and visualization is requested.
+
+        Examples:
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> circuit.draw()  # Auto-display in Jupyter
+            >>> svg_str = circuit.draw(output="svg")  # Get SVG string
+            >>> png_bytes = circuit.draw(output="png")  # Get PNG bytes
+            >>> fig = circuit.draw(output="matplotlib")  # Get matplotlib Figure
+            >>> circuit.draw(mode="heatmap")  # Force heatmap mode
+        """
+        try:
+            from braket.visualization.circuit_diagram import CircuitDiagram
+        except ImportError as e:
+            if output == "jupyter":
+                # Fall back to ASCII diagram for Jupyter display
+                ascii_diagram = self.diagram()
+                try:
+                    from IPython.display import display, HTML
+
+                    display(HTML(f"<pre>{ascii_diagram}</pre>"))
+                    return None
+                except ImportError:
+                    # Not in Jupyter, just print
+                    print(ascii_diagram)
+                    return None
+            else:
+                raise ImportError(
+                    "matplotlib is required for circuit visualization. "
+                    "Install it with: pip install matplotlib"
+                ) from e
+
+        valid_outputs = {"jupyter", "svg", "png", "matplotlib"}
+        if output not in valid_outputs:
+            raise ValueError(
+                f"Invalid output '{output}'. Must be one of: {', '.join(sorted(valid_outputs))}"
+            )
+
+        diagram = CircuitDiagram(self, mode=mode, **kwargs)
+
+        if output == "jupyter":
+            try:
+                from IPython.display import display
+
+                display(diagram)
+                return None
+            except ImportError:
+                # Not in Jupyter, fall back to show()
+                diagram.show()
+                return None
+        elif output == "svg":
+            return diagram.to_svg()
+        elif output == "png":
+            return diagram.to_png()
+        elif output == "matplotlib":
+            return diagram.to_figure()
+        
+        return None
+
+    def _repr_html_(self) -> str:
+        """Return HTML representation for Jupyter display.
+
+        This method is automatically called by Jupyter when a Circuit object
+        is the last expression in a cell. It returns a rich SVG visualization
+        of the circuit, or falls back to ASCII diagram in a <pre> tag if
+        matplotlib is unavailable.
+
+        Returns:
+            str: HTML representation of the circuit.
+        """
+        try:
+            from braket.visualization.circuit_diagram import CircuitDiagram
+
+            diagram = CircuitDiagram(self, mode="auto")
+            return diagram._repr_html_()
+        except ImportError:
+            # Fall back to ASCII diagram
+            ascii_diagram = self.diagram()
+            return f"<pre>{ascii_diagram}</pre>"
+
+    def _repr_png_(self) -> bytes:
+        """Return PNG representation for Jupyter display.
+
+        This method is automatically called by Jupyter when PNG representation
+        is requested. It returns PNG bytes of the circuit visualization, or
+        None if matplotlib is unavailable.
+
+        Returns:
+            bytes: PNG representation of the circuit, or None if unavailable.
+        """
+        try:
+            from braket.visualization.circuit_diagram import CircuitDiagram
+
+            diagram = CircuitDiagram(self, mode="auto")
+            return diagram._repr_png_()
+        except ImportError:
+            # Return None to indicate PNG representation is not available
+            return None
+
     def __repr__(self) -> str:
         if not self.result_types:
             return f"Circuit('instructions': {self.instructions})"
