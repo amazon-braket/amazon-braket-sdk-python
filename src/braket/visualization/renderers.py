@@ -564,7 +564,6 @@ class CompressedRenderer(BaseRenderer):
         qubit_labels = self._get_qubit_labels()
         gate_positions = self._compute_gate_positions()
         gate_groups = self._group_adjacent_gates()
-        density_regions = self._compute_density_regions()
 
         num_qubits = len(qubit_labels)
         circuit_depth = self.circuit.depth if gate_positions else 0
@@ -574,9 +573,16 @@ class CompressedRenderer(BaseRenderer):
         svg_width = label_width + (circuit_depth + 1) * time_spacing * 50 + 2 * margin
         svg_height = num_qubits * wire_spacing * 50 + 2 * margin
 
+        max_display_width = 1200
+        scale = min(1.0, max_display_width / svg_width) if svg_width > max_display_width else 1.0
+        display_width = svg_width * scale
+        display_height = svg_height * scale
+
         svg_parts = [
-            f'<svg width="{svg_width}" height="{svg_height}" '
-            f'xmlns="http://www.w3.org/2000/svg">'
+            f'<svg width="{display_width}" height="{display_height}" '
+            f'viewBox="0 0 {svg_width} {svg_height}" '
+            f'xmlns="http://www.w3.org/2000/svg" '
+            f'style="max-width: 100%; height: auto;">'
         ]
 
         for i, label in enumerate(qubit_labels):
@@ -595,23 +601,6 @@ class CompressedRenderer(BaseRenderer):
                 f"{label}</text>"
             )
 
-        if density_regions.size > 0:
-            max_density = density_regions.max() if density_regions.max() > 0 else 1
-            for i in range(density_regions.shape[0]):
-                for j in range(density_regions.shape[1]):
-                    density = density_regions[i, j]
-                    if density > 0:
-                        opacity = min(0.3 * (density / max_density), 0.3)
-                        x = label_width + margin + j * time_spacing * 50
-                        y = margin + i * wire_spacing * 50
-                        width_px = time_spacing * 50
-                        height_px = wire_spacing * 50
-                        svg_parts.append(
-                            f'<rect x="{x}" y="{y - height_px/2}" '
-                            f'width="{width_px}" height="{height_px}" '
-                            f'fill="#0000FF" opacity="{opacity}"/>'
-                        )
-
         for group in gate_groups:
             x_center = label_width + margin + (group.start_time + group.end_time) / 2 * time_spacing * 50
             y_center = margin + group.qubit_index * wire_spacing * 50
@@ -629,7 +618,7 @@ class CompressedRenderer(BaseRenderer):
 
             most_common_gate = group.gate_types.most_common(1)[0][0] if group.gate_types else "G"
             svg_parts.append(
-                f'<text x="{x_center}" y="{y_center}" text-anchor="middle" '
+                f'<text x="{x_center}" y="{y_center + 5}" text-anchor="middle" '
                 f'font-size="{font_size}" font-family="monospace" fill="{gate_stroke}">'
                 f"{most_common_gate}</text>"
             )
@@ -911,28 +900,49 @@ class HeatmapRenderer(BaseRenderer):
         font_size = self.options.get("font_size", config.font_size)
         colormap = self.options.get("heatmap_colormap", config.heatmap_colormap)
 
-        bin_size = self.options.get("bin_size", 10)
+        bin_size = self.options.get("bin_size", max(1, min(self.circuit.qubit_count // 50, 20)))
         density_matrix = self._compute_density_matrix(bin_size=bin_size)
 
         num_qubits = self.circuit.qubit_count
         circuit_depth = self.circuit.depth
 
-        cell_size = 10  # pixels per cell
-        margin = 40
-        stats_panel_width = 200
-        legend_width = 60
+        cell_size = 8
+        margin = 60
+        stats_panel_width = 250
+        legend_width = 80
 
         heatmap_width = density_matrix.shape[1] * cell_size if density_matrix.size > 0 else 100
         heatmap_height = density_matrix.shape[0] * cell_size if density_matrix.size > 0 else 100
 
-        svg_width = margin + heatmap_width + legend_width + stats_panel_width + margin
-        svg_height = margin + heatmap_height + margin
+        max_heatmap_width = 800
+        max_heatmap_height = 600
+        
+        if heatmap_width > max_heatmap_width:
+            scale = max_heatmap_width / heatmap_width
+            heatmap_width = max_heatmap_width
+            heatmap_height = int(heatmap_height * scale)
+            cell_size = heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
+        
+        if heatmap_height > max_heatmap_height:
+            scale = max_heatmap_height / heatmap_height
+            heatmap_height = max_heatmap_height
+            heatmap_width = int(heatmap_width * scale)
+            cell_size = heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
 
-        svg_parts = [f'<svg width="{svg_width}" height="{svg_height}" ' f'xmlns="http://www.w3.org/2000/svg">']
+        svg_width = margin + heatmap_width + legend_width + stats_panel_width + margin
+        svg_height = margin + heatmap_height + margin + 40
+
+        svg_parts = [
+            f'<svg width="100%" height="{svg_height}" '
+            f'viewBox="0 0 {svg_width} {svg_height}" '
+            f'xmlns="http://www.w3.org/2000/svg" '
+            f'style="max-width: 100%; height: auto;">'
+        ]
 
         svg_parts.append(
-            f'<text x="{margin}" y="{margin - 10}" '
-            f'font-size="{font_size + 2}" font-family="monospace" font-weight="bold">'
+            f'<text x="{svg_width / 2}" y="{margin - 20}" '
+            f'font-size="{font_size + 4}" font-family="monospace" font-weight="bold" '
+            f'text-anchor="middle">'
             f"Circuit Density Heatmap</text>"
         )
 
@@ -953,26 +963,26 @@ class HeatmapRenderer(BaseRenderer):
                     )
 
         svg_parts.append(
-            f'<text x="{margin - 10}" y="{margin + heatmap_height / 2}" '
+            f'<text x="{margin - 15}" y="{margin + heatmap_height / 2}" '
             f'font-size="{font_size}" font-family="monospace" '
-            f'text-anchor="middle" transform="rotate(-90 {margin - 10} {margin + heatmap_height / 2})">'
-            f"Qubits</text>"
+            f'text-anchor="middle" transform="rotate(-90 {margin - 15} {margin + heatmap_height / 2})">'
+            f"Qubits (binned)</text>"
         )
 
         svg_parts.append(
-            f'<text x="{margin + heatmap_width / 2}" y="{margin + heatmap_height + 30}" '
+            f'<text x="{margin + heatmap_width / 2}" y="{margin + heatmap_height + 35}" '
             f'font-size="{font_size}" font-family="monospace" text-anchor="middle">'
-            f"Circuit Depth</text>"
+            f"Circuit Depth (binned)</text>"
         )
 
-        legend_x = margin + heatmap_width + 20
+        legend_x = margin + heatmap_width + 30
         legend_height = min(heatmap_height, 200)
         legend_steps = 10
 
         svg_parts.append(
-            f'<text x="{legend_x}" y="{margin - 5}" '
-            f'font-size="{font_size - 1}" font-family="monospace">'
-            f"Gate Density</text>"
+            f'<text x="{legend_x}" y="{margin - 10}" '
+            f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
+            f"Density</text>"
         )
 
         for i in range(legend_steps):
@@ -981,19 +991,19 @@ class HeatmapRenderer(BaseRenderer):
             color = self._density_to_color(density_value, max_density, colormap)
 
             svg_parts.append(
-                f'<rect x="{legend_x}" y="{y}" width="20" height="{legend_height / legend_steps}" '
+                f'<rect x="{legend_x}" y="{y}" width="30" height="{legend_height / legend_steps + 1}" '
                 f'fill="{color}" stroke="none"/>'
             )
 
         if density_matrix.size > 0:
             svg_parts.append(
-                f'<text x="{legend_x + 25}" y="{margin + 5}" '
-                f'font-size="{font_size - 2}" font-family="monospace">'
+                f'<text x="{legend_x + 35}" y="{margin + 5}" '
+                f'font-size="{font_size - 1}" font-family="monospace">'
                 f"{int(max_density)}</text>"
             )
             svg_parts.append(
-                f'<text x="{legend_x + 25}" y="{margin + legend_height}" '
-                f'font-size="{font_size - 2}" font-family="monospace">'
+                f'<text x="{legend_x + 35}" y="{margin + legend_height + 5}" '
+                f'font-size="{font_size - 1}" font-family="monospace">'
                 f"0</text>"
             )
 
@@ -1108,42 +1118,55 @@ class HeatmapRenderer(BaseRenderer):
         """
         config = DEFAULT_CONFIG
         font_size = self.options.get("font_size", config.font_size)
+        bin_size = self.options.get("bin_size", max(1, min(self.circuit.qubit_count // 50, 20)))
 
         num_qubits = self.circuit.qubit_count
         circuit_depth = self.circuit.depth
         total_gates = len(self.circuit.instructions)
+        density_matrix = self._compute_density_matrix(bin_size=bin_size)
 
         stats_parts = []
         y_offset = 0
 
         stats_parts.append(
             f'<text x="0" y="{y_offset}" '
-            f'font-size="{font_size + 1}" font-family="monospace" font-weight="bold">'
+            f'font-size="{font_size + 2}" font-family="monospace" font-weight="bold">'
             f"Statistics</text>"
+        )
+        y_offset += 25
+
+        stats_parts.append(
+            f'<line x1="0" y1="{y_offset}" x2="200" y2="{y_offset}" '
+            f'stroke="#000000" stroke-width="1"/>'
         )
         y_offset += 20
 
-        stats_parts.append(f'<line x1="0" y1="{y_offset}" x2="150" y2="{y_offset}" ' f'stroke="#000000" stroke-width="1"/>')
-        y_offset += 15
-
         stats = [
-            ("Total Qubits:", num_qubits),
-            ("Circuit Depth:", circuit_depth),
-            ("Total Gates:", total_gates),
+            ("Qubits:", num_qubits),
+            ("Depth:", circuit_depth),
+            ("Gates:", total_gates),
+            ("", ""),
+            ("Bin Size:", bin_size),
+            ("Qubit Bins:", density_matrix.shape[0] if density_matrix.size > 0 else 0),
+            ("Depth Bins:", density_matrix.shape[1] if density_matrix.size > 0 else 0),
         ]
 
         for label, value in stats:
+            if label == "":
+                y_offset += 10
+                continue
+                
             stats_parts.append(
                 f'<text x="0" y="{y_offset}" '
                 f'font-size="{font_size}" font-family="monospace">'
                 f"{label}</text>"
             )
             stats_parts.append(
-                f'<text x="150" y="{y_offset}" text-anchor="end" '
-                f'font-size="{font_size}" font-family="monospace" font-weight="bold">'
+                f'<text x="200" y="{y_offset}" text-anchor="end" '
+                f'font-size="{font_size + 1}" font-family="monospace" font-weight="bold">'
                 f"{value}</text>"
             )
-            y_offset += 18
+            y_offset += 22
 
         return "".join(stats_parts)
 
