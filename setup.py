@@ -36,6 +36,7 @@ setup(
         # SageMaker pinned cloudpickle==2.2.1
         # see https://github.com/aws/sagemaker-python-sdk/issues/4871
         "cloudpickle==2.2.1",
+        "ipywidgets",
         "matplotlib",
         "nest-asyncio",
         "networkx",
