@@ -890,10 +890,12 @@ class CompressedRenderer(BaseRenderer):
                 scale = change['new']
                 svg = self.render_svg()
                 
+                svg_fixed = svg.replace('width="100%"', 'width="auto"')
+                
                 svg_with_scroll = f'''
                 <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
-                    <div style="transform: scale({scale}); transform-origin: top left; width: {100/scale}%; height: {100/scale}%;">
-                        {svg}
+                    <div style="transform: scale({scale}); transform-origin: top left; display: inline-block;">
+                        {svg_fixed}
                     </div>
                 </div>
                 '''
@@ -904,9 +906,10 @@ class CompressedRenderer(BaseRenderer):
         
         with output:
             svg = self.render_svg()
+            svg_fixed = svg.replace('width="100%"', 'width="auto"')
             display(HTML(f'''
                 <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
-                    {svg}
+                    {svg_fixed}
                 </div>
             '''))
         
