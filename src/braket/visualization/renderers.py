@@ -878,44 +878,38 @@ class CompressedRenderer(BaseRenderer):
             max=5.0,
             step=0.5,
             description='Zoom:',
-            continuous_update=False,
+            continuous_update=True,
             layout=widgets.Layout(width='300px')
         )
         
-        output = widgets.Output()
+        output = widgets.HTML()
+        base_svg = self.render_svg()
         
         def update_zoom(change):
-            with output:
-                output.clear_output(wait=True)
-                scale = change['new']
-                svg = self.render_svg()
-                
-                svg_fixed = svg.replace('width="100%"', 'width="auto"')
-                
-                svg_with_scroll = f'''
-                <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
-                    <div style="transform: scale({scale}); transform-origin: top left; display: inline-block;">
-                        {svg_fixed}
-                    </div>
+            scale = change['new']
+            
+            html_content = f'''
+            <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white; position: relative;">
+                <div style="transform: scale({scale}); transform-origin: top left; display: inline-block; min-width: 100%;">
+                    {base_svg}
                 </div>
-                '''
-                
-                display(HTML(svg_with_scroll))
+            </div>
+            '''
+            
+            output.value = html_content
         
         zoom_slider.observe(update_zoom, names='value')
         
-        with output:
-            svg = self.render_svg()
-            svg_fixed = svg.replace('width="100%"', 'width="auto"')
-            display(HTML(f'''
-                <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
-                    {svg_fixed}
-                </div>
-            '''))
+        initial_html = f'''
+        <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #ccc; background: white;">
+            {base_svg}
+        </div>
+        '''
+        output.value = initial_html
         
         return widgets.VBox([
             widgets.HBox([
-                widgets.HTML("<b>Compressed Circuit View</b> (use zoom slider and scroll to navigate)"),
+                widgets.HTML("<b>Compressed Circuit View</b> (zoom: 0.5x=smaller, 5x=larger, scroll to navigate)"),
                 zoom_slider
             ]),
             output
@@ -954,8 +948,8 @@ class HeatmapRenderer(BaseRenderer):
         heatmap_width = density_matrix.shape[1] * cell_size if density_matrix.size > 0 else 100
         heatmap_height = density_matrix.shape[0] * cell_size if density_matrix.size > 0 else 100
 
-        max_heatmap_width = 400
-        max_heatmap_height = 350
+        max_heatmap_width = int(400 * 0.85)
+        max_heatmap_height = int(350 * 0.85)
         
         if heatmap_width > max_heatmap_width:
             cell_size = max_heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
