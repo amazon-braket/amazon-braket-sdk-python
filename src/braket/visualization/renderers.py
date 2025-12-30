@@ -946,7 +946,7 @@ class HeatmapRenderer(BaseRenderer):
         num_qubits = self.circuit.qubit_count
         circuit_depth = self.circuit.depth
 
-        cell_size = 12
+        cell_size = 8
         margin = 80
         stats_panel_width = 280
         legend_width = 100
@@ -954,8 +954,8 @@ class HeatmapRenderer(BaseRenderer):
         heatmap_width = density_matrix.shape[1] * cell_size if density_matrix.size > 0 else 100
         heatmap_height = density_matrix.shape[0] * cell_size if density_matrix.size > 0 else 100
 
-        max_heatmap_width = 600
-        max_heatmap_height = 500
+        max_heatmap_width = 400
+        max_heatmap_height = 350
         
         if heatmap_width > max_heatmap_width:
             cell_size = max_heatmap_width / density_matrix.shape[1] if density_matrix.size > 0 else cell_size
