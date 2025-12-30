@@ -279,8 +279,8 @@ class AwsDevice(Device):
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
             experimental_capabilities (str | list[str] | None): Experimental capabilities
-                to enable for the quantum task. Supported values are "ALL" to enable all
-                experimental capabilities. If None, the setting from the experimental
+                to enable for the quantum task. Supported values are "ALL" or ["ALL"] to enable all
+                experimental capabilities. If `None`, the setting from the experimental
                 capability context will be used if active. Default: None.
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the quantum tasks run
