@@ -66,7 +66,7 @@ from braket.circuits.serialization import (
 from braket.error_mitigation import ErrorMitigation
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
-    ExperimentalCapability,
+    ExperimentalCapabilities,
 )
 from braket.program_sets import ProgramSet
 from braket.pulse.pulse_sequence import PulseSequence
@@ -111,7 +111,7 @@ class AwsQuantumTask(QuantumTask):
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         quiet: bool = False,
         reservation_arn: str | None = None,
-        experimental_capabilities: list[str] | None = None,
+        experimental_capabilities: str | list[str] | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -165,8 +165,8 @@ class AwsQuantumTask(QuantumTask):
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
-            experimental_capabilities (list[str] | None): List of experimental capabilities
-                to enable for the quantum task. Supported values are ["ALL"] to enable all
+            experimental_capabilities (str | list[str] | None): Experimental capabilities
+                to enable for the quantum task. Supported values are "ALL" or ["ALL"] to enable all
                 experimental capabilities. If `None`, the setting from the experimental
                 capability context will be used if active. Default: None.
 
@@ -209,12 +209,16 @@ class AwsQuantumTask(QuantumTask):
                 ]
             })
 
-        if GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled() or experimental_capabilities == [
-            ExperimentalCapability.ALL
-        ]:
+        if GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled():
             create_task_kwargs.update({"experimentalCapabilities": {"enabled": "ALL"}})
         elif experimental_capabilities:
-            raise ValueError("Invalid allowed experimental capabilities options provided.")
+            if experimental_capabilities == ExperimentalCapabilities.ALL or (
+                isinstance(experimental_capabilities, list)
+                and ExperimentalCapabilities.ALL in experimental_capabilities
+            ):
+                create_task_kwargs.update({"experimentalCapabilities": {"enabled": "ALL"}})
+            else:
+                raise ValueError("Invalid experimental capabilities options provided.")
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}

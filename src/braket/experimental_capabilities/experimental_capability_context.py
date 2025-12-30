@@ -21,7 +21,7 @@ from functools import singledispatchmethod
 from typing import Any
 
 
-class ExperimentalCapability(str, Enum):
+class ExperimentalCapabilities(str, Enum):
     "Valid Experimental Capability Options"
 
     ALL = "ALL"
@@ -39,8 +39,8 @@ class GlobalExperimentalCapabilityContext:
 
     def is_enabled(
         self,
-        experimental_capabilities: ExperimentalCapability
-        | Iterable[ExperimentalCapability] = ExperimentalCapability.ALL,
+        experimental_capabilities: ExperimentalCapabilities
+        | Iterable[ExperimentalCapabilities] = ExperimentalCapabilities.ALL,
     ) -> bool:
         """Check if experimental capabilities are enabled, either for all or a specific
         set of experimental capabilities.
@@ -57,11 +57,11 @@ class GlobalExperimentalCapabilityContext:
     ):
         raise TypeError(
             "If provided, Experimental capabilities must be a single \
-                or list of ExperimentalCapability strings"
+                or list of ExperimentalCapabilities strings"
         )
 
     @_is_enabled.register
-    def _(self, experimental_capabilities: ExperimentalCapability):
+    def _(self, experimental_capabilities: ExperimentalCapabilities):
         return (
             self._all_enabled or experimental_capabilities in self._currently_enabled_capabilities
         )
@@ -72,13 +72,15 @@ class GlobalExperimentalCapabilityContext:
             self._currently_enabled_capabilities
         )
 
-    def enable(self, experimental_capabilities: set[ExperimentalCapability] | None = None) -> None:
+    def enable(
+        self, experimental_capabilities: set[ExperimentalCapabilities] | None = None
+    ) -> None:
         """Enable all experimental capabilities."""
         if experimental_capabilities is None:
             self._all_enabled = True
         else:
             capabilities_set = set(experimental_capabilities)
-            if ExperimentalCapability.ALL in capabilities_set:
+            if ExperimentalCapabilities.ALL in capabilities_set:
                 if len(capabilities_set) > 1:
                     warnings.warn(
                         '"ALL" was passed in along with other explicit capabilities. '
@@ -91,7 +93,9 @@ class GlobalExperimentalCapabilityContext:
             else:
                 self._currently_enabled_capabilities.update(capabilities_set)
 
-    def disable(self, experimental_capabilities: set[ExperimentalCapability] | None = None) -> None:
+    def disable(
+        self, experimental_capabilities: set[ExperimentalCapabilities] | None = None
+    ) -> None:
         """Disable all specified experimental capabilities; defaults to disabling all.
 
         Args:
@@ -101,18 +105,18 @@ class GlobalExperimentalCapabilityContext:
             self._all_enabled = False
             self._currently_enabled_capabilities.clear()
         else:
-            if ExperimentalCapability.ALL in experimental_capabilities:
+            if ExperimentalCapabilities.ALL in experimental_capabilities:
                 self._all_enabled = False
             self._currently_enabled_capabilities.difference_update(experimental_capabilities)
 
-    def get_enabled_capabilities(self) -> list[ExperimentalCapability]:
+    def get_enabled_capabilities(self) -> list[ExperimentalCapabilities]:
         """Get the set of currently enabled experimental capabilities.
 
         Returns:
-            set[ExperimentalCapability]: The set of currently enabled experimental capabilities.
+            set[ExperimentalCapabilities]: The set of currently enabled experimental capabilities.
         """
         if self._all_enabled:
-            return [ExperimentalCapability.ALL]
+            return [ExperimentalCapabilities.ALL]
         return list(self._currently_enabled_capabilities)
 
 
