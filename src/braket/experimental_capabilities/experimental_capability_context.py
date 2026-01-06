@@ -15,16 +15,10 @@ from __future__ import annotations
 
 import types
 import warnings
-from collections.abc import Iterable
-from enum import Enum
 from typing import Literal
 
 ExperimentalCapabilitiesEnabled = Literal["ALL"]
-ALL_EXPERIMENTAL_CAPABILITIES: ExperimentalCapabilitiesEnabled = "ALL"
-
-
-class ExperimentalCapabilities(str, Enum):
-    "Valid Experimental Capability Options"
+EXPERIMENTAL_CAPABILITIES_ALL: ExperimentalCapabilitiesEnabled = "ALL"
 
 
 class ExperimentalCapabilityContextError(Exception):
@@ -35,79 +29,54 @@ class GlobalExperimentalCapabilityContext:
     def __init__(self) -> None:
         """A global singleton that tracks whether experimental capabilities are enabled."""
         self._all_enabled = False
-        self._currently_enabled_capabilities = set()
 
-    def is_enabled(
-        self,
-        experimental_capabilities: ExperimentalCapabilitiesEnabled
-        | ExperimentalCapabilities
-        | Iterable[ExperimentalCapabilities] = ALL_EXPERIMENTAL_CAPABILITIES,
-    ) -> bool:
-        """Check if experimental capabilities are enabled, either for all or a specific
-        set of experimental capabilities. Defaults to checking for all enabled.
+    def is_enabled(self) -> bool:
+        """Check if experimental capabilities are enabled.
 
         Returns:
             bool: True if experimental capabilities are enabled, False otherwise.
         """
-        if experimental_capabilities == ALL_EXPERIMENTAL_CAPABILITIES:
-            return self._all_enabled
-        if isinstance(experimental_capabilities, ExperimentalCapabilities):
-            return (
-                self._all_enabled
-                or experimental_capabilities in self._currently_enabled_capabilities
-            )
-        if isinstance(experimental_capabilities, Iterable):
-            return self._all_enabled or set(experimental_capabilities).issubset(
-                self._currently_enabled_capabilities
-            )
-        raise TypeError("Invalid experimental_capabilities value provided.")
+        return self._all_enabled
 
     def enable(
         self,
-        experimental_capabilities: ExperimentalCapabilitiesEnabled
-        | Iterable[ExperimentalCapabilities] = ALL_EXPERIMENTAL_CAPABILITIES,
+        experimental_capabilities: ExperimentalCapabilitiesEnabled = EXPERIMENTAL_CAPABILITIES_ALL,
     ) -> None:
-        """Enable specified experimental capabilities; defaults to enabling all.
+        """Enable all experimental capabilities. Default behavior is to enable all.
 
         Args:
-            experimental_capabilities: the experimental capabilities to enable.
+            experimental_capabilities | None: The experimental capabilities to enable.
+        Raises:
+            ExperimentalCapabilityContextError: If the experimental capabilities are not valid.
         """
-        if experimental_capabilities == ALL_EXPERIMENTAL_CAPABILITIES:
-            self._all_enabled = True
-        else:
-            capabilities_set = set(experimental_capabilities)
-            self._currently_enabled_capabilities.update(capabilities_set)
+        if experimental_capabilities != EXPERIMENTAL_CAPABILITIES_ALL:
+            raise ExperimentalCapabilityContextError(
+                "Invalid experimental capabilities options provided."
+            )
+        self._all_enabled = True
 
-    def disable(
-        self,
-        experimental_capabilities: ExperimentalCapabilitiesEnabled
-        | Iterable[ExperimentalCapabilities]
-        | None = None,
-    ) -> None:
-        """Disable all specified experimental capabilities; defaults to disabling all.
+    def disable(self) -> None:
+        """Disable all experimental capabilities."""
+        self._all_enabled = False
 
-        Args:
-            experimental_capabilities: the experimental capabilities to disable.
-        """
-        if experimental_capabilities is None:
-            self._all_enabled = False
-            self._currently_enabled_capabilities.clear()
-        elif experimental_capabilities == ALL_EXPERIMENTAL_CAPABILITIES:
-            self._all_enabled = False
-        else:
-            self._currently_enabled_capabilities.difference_update(experimental_capabilities)
-
-    def get_enabled_capabilities(
-        self,
-    ) -> ExperimentalCapabilitiesEnabled | list[ExperimentalCapabilities]:
+    def get_enabled_capabilities(self) -> ExperimentalCapabilitiesEnabled | None:
         """Get the set of currently enabled experimental capabilities.
-
         Returns:
             set[ExperimentalCapabilities]: The set of currently enabled experimental capabilities.
         """
         if self._all_enabled:
-            return ALL_EXPERIMENTAL_CAPABILITIES
-        return list(self._currently_enabled_capabilities)
+            return EXPERIMENTAL_CAPABILITIES_ALL
+        return None
+
+    def set_state(self, experimental_capabilities: ExperimentalCapabilitiesEnabled | None) -> None:
+        """Set the state of experimental capabilities.
+        Args:
+            experimental_capabilities: The state of enabled experimental capabilities.
+        """
+        if experimental_capabilities == EXPERIMENTAL_CAPABILITIES_ALL:
+            self.enable()
+        else:
+            self.disable()
 
 
 # Global singleton instance
@@ -117,8 +86,7 @@ GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT = GlobalExperimentalCapabilityContext()
 class EnableExperimentalCapability:
     def __init__(
         self,
-        enabled_capabilities: ExperimentalCapabilitiesEnabled
-        | Iterable[ExperimentalCapabilities] = ALL_EXPERIMENTAL_CAPABILITIES,
+        experimental_capabilities: ExperimentalCapabilitiesEnabled = EXPERIMENTAL_CAPABILITIES_ALL,
     ) -> None:
         """This context manager temporarily enables experimental capabilities
         for the duration of a code block, after which the capabilities are
@@ -132,9 +100,6 @@ class EnableExperimentalCapability:
         [1] https://docs.aws.amazon.com/braket/latest/developerguide/
         braket-experimental-capabilities.html
 
-        Args:
-            enabled_capabilities: List of experimental capability strings to enable.
-                        If empty, defaults to "ALL".
         Examples:
             >>> with EnableExperimentalCapability():
             ...     circuit = Circuit()
@@ -144,7 +109,7 @@ class EnableExperimentalCapability:
         self._previous_enabled_capabilities = (
             GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
         )
-        self._current_enabled_capabilities = enabled_capabilities
+        self._current_enabled_capabilities = experimental_capabilities
 
     def __enter__(self) -> None:
         """Enter the context, enabling all specified capabilities.
@@ -177,5 +142,4 @@ class EnableExperimentalCapability:
             exc_val: The exception value if an exception was raised in the context, else None.
             exc_tb: The exception traceback if an exception was raised in the context, else None.
         """
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable(self._current_enabled_capabilities)
-        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.enable(self._previous_enabled_capabilities)
+        GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.set_state(self._previous_enabled_capabilities)

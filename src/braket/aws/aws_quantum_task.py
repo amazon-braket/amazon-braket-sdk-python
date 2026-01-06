@@ -65,7 +65,7 @@ from braket.circuits.serialization import (
 )
 from braket.error_mitigation import ErrorMitigation
 from braket.experimental_capabilities.experimental_capability_context import (
-    ALL_EXPERIMENTAL_CAPABILITIES,
+    EXPERIMENTAL_CAPABILITIES_ALL,
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
 )
 from braket.program_sets import ProgramSet
@@ -211,7 +211,7 @@ class AwsQuantumTask(QuantumTask):
 
         if (
             GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-            or experimental_capabilities == ALL_EXPERIMENTAL_CAPABILITIES
+            or experimental_capabilities == EXPERIMENTAL_CAPABILITIES_ALL
         ):
             create_task_kwargs.update({"experimentalCapabilities": {"enabled": "ALL"}})
         elif experimental_capabilities:

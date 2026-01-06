@@ -13,13 +13,10 @@
 
 from __future__ import annotations
 
-import pytest
-import warnings
-
 from braket.experimental_capabilities import EnableExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
-    ALL_EXPERIMENTAL_CAPABILITIES,
+    EXPERIMENTAL_CAPABILITIES_ALL,
 )
 
 
@@ -28,13 +25,14 @@ def test_enable_experimental_capability_context():
 
     with EnableExperimentalCapability():
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled("ALL")
-        assert (
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            == ALL_EXPERIMENTAL_CAPABILITIES
-        )
+
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+def test_enable_experimental_capability_context_all_explicit():
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+    with EnableExperimentalCapability(EXPERIMENTAL_CAPABILITIES_ALL):
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
 def test_nested_capability_contexts():
@@ -53,164 +51,17 @@ def test_nested_capability_contexts():
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
-def test_multiple_capabilities():
-    """Test enabling multiple explicit capabilities."""
-    # Initially no capabilities enabled
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    with EnableExperimentalCapability(["CapA", "CapB", "CapC"]):
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA"])
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB"])
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
-
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapD"])
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapD"])
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-        enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert set(enabled) == {"CapA", "CapB", "CapC"}
-
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA"])
-
-
-def test_all_capability_explicit():
-    """Test explicitly passing 'ALL' capability."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
-        # ALL should enable everything
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
-
-        # get_enabled_capabilities should return "ALL"
-        enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
-
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-
-def test_all_capability_explicit_literal():
-    """Test explicitly passing 'ALL' capability."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
+def test_nested_capability_contexts_all_explicit():
+    # Test that nested contexts work correctly
     with EnableExperimentalCapability("ALL"):
-        # ALL should enable everything
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
 
-        # get_enabled_capabilities should return "ALL"
-        enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
-
-
-def test_all_with_other_capabilities():
-    """Test that 'ALL' takes precedence when passed with other capabilities."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    # When ALL is passed, it should enable everything
-    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.enable(ALL_EXPERIMENTAL_CAPABILITIES)
-    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
-
-    # get_enabled_capabilities should return "ALL"
-    enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-    assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
-
-    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable()
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-
-def test_nested_contexts_explicit_outer_all_inner():
-    """Test nested contexts: explicit capabilities at outer level, ALL at inner level."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    with EnableExperimentalCapability(["CapA", "CapB", "CapC"]):
-        with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
-            # Inner context: ALL should enable everything
+        # Nested context - should preserve state on exit
+        with EnableExperimentalCapability(EXPERIMENTAL_CAPABILITIES_ALL):
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled([
-                "CapA",
-                "CapB",
-                "CapC",
-                "CapD",
-                "CapE",
-            ])
-            enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            assert enabled_inner == ALL_EXPERIMENTAL_CAPABILITIES
 
-        # After inner context exits, should return to outer context state
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapD"])
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        enabled_back_to_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert set(enabled_back_to_outer) == {"CapA", "CapB", "CapC"}
-
-    # After outer context exits, no capabilities should be enabled
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-
-def test_nested_contexts_all_outer_explicit_inner():
-    """Test nested contexts: ALL at outer level, explicit capabilities at inner level."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
-        # Outer context: ALL capabilities enabled
+        # After inner context, the capability should still be enabled
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
-        enabled_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled_outer == ALL_EXPERIMENTAL_CAPABILITIES
 
-        with EnableExperimentalCapability(["CapX", "CapY"]):
-            # Inner context: picks up the "ALL" from the outer context
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapX", "CapY"])
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapZ"])
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
-            enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            assert enabled_inner == ALL_EXPERIMENTAL_CAPABILITIES
-
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
-        enabled_back_to_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled_back_to_outer == ALL_EXPERIMENTAL_CAPABILITIES
-
+    # After nested context, the capability should be disabled
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-
-def test_nested_contexts_explicit_both_levels():
-    """Test nested contexts: different explicit capabilities at both levels."""
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-    with EnableExperimentalCapability(["CapA", "CapB"]):
-        with EnableExperimentalCapability(["CapA", "CapC", "CapD"]):
-            # Inner context: CapA, CapC and CapD enabled and CapB picked up from outer
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled([
-                "CapA",
-                "CapB",
-                "CapC",
-                "CapD",
-            ])
-            enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            assert set(enabled_inner) == {"CapA", "CapB", "CapC", "CapD"}
-
-        # After inner context exits, should return to outer context state
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB"])
-        assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapC"])
-        enabled_back_to_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert set(enabled_back_to_outer) == {"CapA", "CapB"}
-
-    # After outer context exits, no capabilities should be enabled
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-
-
-@pytest.mark.parametrize("invalid_input", [None, 12345])
-def test_is_enabled_invalid_input(invalid_input):
-    with pytest.raises(TypeError) as exception:
-        with EnableExperimentalCapability():
-            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(invalid_input)
-    assert str(exception.value) == "Invalid experimental_capabilities value provided."
