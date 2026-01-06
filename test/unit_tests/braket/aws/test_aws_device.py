@@ -1108,20 +1108,6 @@ def test_run_with_experimental_capabilities_enabled(
         circuit,
         s3_destination_folder,
         AwsDevice.DEFAULT_SHOTS_QPU,
-        experimental_capabilities=["ALL"],
-    )
-
-
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_experimental_capabilities_string(
-    aws_quantum_task_mock, device, circuit, s3_destination_folder
-):
-    _run_and_assert(
-        aws_quantum_task_mock,
-        device,
-        circuit,
-        s3_destination_folder,
-        AwsDevice.DEFAULT_SHOTS_QPU,
         experimental_capabilities="ALL",
     )
 

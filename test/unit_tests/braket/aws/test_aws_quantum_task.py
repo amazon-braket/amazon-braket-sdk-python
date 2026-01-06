@@ -768,29 +768,7 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
     )
 
 
-def test_create_task_with_experimental_capabilities(aws_session, arn, ahs_problem):
-    aws_session.create_quantum_task.return_value = arn
-    shots = 21
-    AwsQuantumTask.create(
-        aws_session,
-        SIMULATOR_ARN,
-        ahs_problem,
-        S3_TARGET,
-        shots,
-        experimental_capabilities=["ALL"],
-    )
-
-    _assert_create_quantum_task_called_with(
-        aws_session,
-        SIMULATOR_ARN,
-        ahs_problem.to_ir().json(),
-        S3_TARGET,
-        shots,
-        experimental_capabilities=["ALL"],
-    )
-
-
-def test_create_task_with_experimental_capabilities_string(aws_session, arn, ahs_problem):
+def test_create_task_with_experimental_capabilities_enabled(aws_session, arn, ahs_problem):
     aws_session.create_quantum_task.return_value = arn
     shots = 21
     AwsQuantumTask.create(
@@ -830,7 +808,7 @@ def test_create_task_in_experimental_capabilities_context(aws_session, arn, ahs_
         ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
-        experimental_capabilities=["ALL"],
+        experimental_capabilities="ALL",
     )
 
 

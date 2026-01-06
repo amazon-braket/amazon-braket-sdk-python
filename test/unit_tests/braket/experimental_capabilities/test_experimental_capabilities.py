@@ -19,7 +19,7 @@ import warnings
 from braket.experimental_capabilities import EnableExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
-    ExperimentalCapabilities,
+    ALL_EXPERIMENTAL_CAPABILITIES,
 )
 
 
@@ -28,11 +28,12 @@ def test_enable_experimental_capability_context():
 
     with EnableExperimentalCapability():
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled([ExperimentalCapabilities.ALL])
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ExperimentalCapabilities.ALL)
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities() == [
-            ExperimentalCapabilities.ALL
-        ]
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled("ALL")
+        assert (
+            GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
+            == ALL_EXPERIMENTAL_CAPABILITIES
+        )
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
@@ -77,34 +78,49 @@ def test_all_capability_explicit():
     """Test explicitly passing 'ALL' capability."""
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
-    with EnableExperimentalCapability(["ALL"]):
+    with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
         # ALL should enable everything
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["ALL"])
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ExperimentalCapabilities.ALL)
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
 
-        # get_enabled_capabilities should return [ALL]
+        # get_enabled_capabilities should return "ALL"
         enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled == [ExperimentalCapabilities.ALL]
+        assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
 
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+def test_all_capability_explicit_literal():
+    """Test explicitly passing 'ALL' capability."""
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+    with EnableExperimentalCapability("ALL"):
+        # ALL should enable everything
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
+
+        # get_enabled_capabilities should return "ALL"
+        enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
+        assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
 
 
 def test_all_with_other_capabilities():
-    """Test passing 'ALL' with other capabilities - should trigger warning and enable ALL."""
+    """Test that 'ALL' takes precedence when passed with other capabilities."""
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
-    with EnableExperimentalCapability(["ALL", "CapA", "CapB"]):
-        # Should enable ALL despite other capabilities being specified
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["ALL"])
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
+    # When ALL is passed, it should enable everything
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.enable(ALL_EXPERIMENTAL_CAPABILITIES)
+    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
+    assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
 
-        # get_enabled_capabilities should return [ALL]
-        enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled == [ExperimentalCapabilities.ALL]
+    # get_enabled_capabilities should return "ALL"
+    enabled = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
+    assert enabled == ALL_EXPERIMENTAL_CAPABILITIES
 
+    GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.disable()
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
@@ -113,10 +129,10 @@ def test_nested_contexts_explicit_outer_all_inner():
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
     with EnableExperimentalCapability(["CapA", "CapB", "CapC"]):
-        with EnableExperimentalCapability(["ALL"]):
+        with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
             # Inner context: ALL should enable everything
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["ALL"])
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled([
                 "CapA",
                 "CapB",
@@ -125,7 +141,7 @@ def test_nested_contexts_explicit_outer_all_inner():
                 "CapE",
             ])
             enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            assert enabled_inner == [ExperimentalCapabilities.ALL]
+            assert enabled_inner == ALL_EXPERIMENTAL_CAPABILITIES
 
         # After inner context exits, should return to outer context state
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC"])
@@ -142,26 +158,26 @@ def test_nested_contexts_all_outer_explicit_inner():
     """Test nested contexts: ALL at outer level, explicit capabilities at inner level."""
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
-    with EnableExperimentalCapability(["ALL"]):
+    with EnableExperimentalCapability(ALL_EXPERIMENTAL_CAPABILITIES):
         # Outer context: ALL capabilities enabled
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
         enabled_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled_outer == [ExperimentalCapabilities.ALL]
+        assert enabled_outer == ALL_EXPERIMENTAL_CAPABILITIES
 
         with EnableExperimentalCapability(["CapX", "CapY"]):
             # Inner context: picks up the "ALL" from the outer context
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapX", "CapY"])
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapZ"])
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["ALL"])
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(ALL_EXPERIMENTAL_CAPABILITIES)
             enabled_inner = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-            assert set(enabled_inner) == {ExperimentalCapabilities.ALL}
+            assert enabled_inner == ALL_EXPERIMENTAL_CAPABILITIES
 
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
         assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(["CapA", "CapB", "CapC", "CapD"])
         enabled_back_to_outer = GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities()
-        assert enabled_back_to_outer == [ExperimentalCapabilities.ALL]
+        assert enabled_back_to_outer == ALL_EXPERIMENTAL_CAPABILITIES
 
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
@@ -173,7 +189,6 @@ def test_nested_contexts_explicit_both_levels():
     with EnableExperimentalCapability(["CapA", "CapB"]):
         with EnableExperimentalCapability(["CapA", "CapC", "CapD"]):
             # Inner context: CapA, CapC and CapD enabled and CapB picked up from outer
-            print(GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.get_enabled_capabilities())
             assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled([
                 "CapA",
                 "CapB",
@@ -198,8 +213,4 @@ def test_is_enabled_invalid_input(invalid_input):
     with pytest.raises(TypeError) as exception:
         with EnableExperimentalCapability():
             GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled(invalid_input)
-    assert (
-        str(exception.value)
-        == "If provided, Experimental capabilities must be a single \
-                or list of ExperimentalCapabilities strings"
-    )
+    assert str(exception.value) == "Invalid experimental_capabilities value provided."

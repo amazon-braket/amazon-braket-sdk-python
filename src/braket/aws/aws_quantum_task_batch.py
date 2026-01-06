@@ -65,7 +65,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             | None
         ) = None,
         reservation_arn: str | None = None,
-        experimental_capabilities: str | list[str] | None = None,
+        experimental_capabilities: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ):
@@ -102,8 +102,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 Note: If you are creating tasks in a job that itself was created reservation ARN,
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
-            experimental_capabilities (str | list[str] | None): Experimental capabilities
-                to enable for the quantum task. Supported values are "ALL" or ["ALL"] to enable all
+            experimental_capabilities (str | None): Experimental capabilities
+                to enable for the quantum task. Supported values are "ALL" to enable all
                 experimental capabilities. If `None`, the setting from the experimental
                 capability context will be used if active. Default: None.
             **aws_quantum_task_kwargs (Any): Arbitrary kwargs for `QuantumTask`.,
@@ -217,7 +217,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             | None
         ) = None,
         reservation_arn: str | None = None,
-        experimental_capabilities: str | list[str] | None = None,
+        experimental_capabilities: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -273,7 +273,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         inputs: dict[str, float] | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
-        experimental_capabilities: str | list[str] | None = None,
+        experimental_capabilities: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
