@@ -68,6 +68,7 @@ def test_nested_capability_contexts_all_explicit():
     # After nested context, the capability should be disabled
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
+
 @pytest.mark.xfail(raises=ExperimentalCapabilityContextError)
 def test_enable_experimental_capability_context_invalid_capability():
     with EnableExperimentalCapability("INVALID_CAPABILITY"):
