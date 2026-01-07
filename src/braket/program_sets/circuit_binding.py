@@ -63,9 +63,16 @@ class CircuitBinding:
         if not input_sets and not observables:
             raise ValueError("At least one of input_sets and observables must be specified")
         if observables:
-            terms = observables.summands if isinstance(observables, Sum) else observables
-            if any(isinstance(obs, Sum) for obs in terms):
-                raise TypeError("Cannot have Sum Hamiltonian in list of observables")
+            if isinstance(observables, Sum):
+                if not observables.targets:
+                    raise ValueError("Cannot include Hamiltonian without targets")
+            else:
+                for obs in observables:
+                    if not obs.targets:
+                        raise ValueError("Cannot include observables without targets")
+                    if isinstance(obs, Sum):
+                        raise TypeError("Cannot have Sum Hamiltonian in list of observables")
+
         if circuit.result_types:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
@@ -117,7 +124,8 @@ class CircuitBinding:
                 for param in euler_angle_parameter_names(target):
                     euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in terms]
             return Program(
-                source=self._circuit.with_euler_angles(observables)
+                source=self._circuit
+                .with_euler_angles(observables)
                 .to_ir(IRType.OPENQASM, gate_definitions=gate_definitions)
                 .source,
                 inputs=(
