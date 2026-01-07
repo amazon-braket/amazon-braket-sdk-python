@@ -62,17 +62,15 @@ class CircuitBinding:
         """
         if not input_sets and not observables:
             raise ValueError("At least one of input_sets and observables must be specified")
-        if observables:
-            if isinstance(observables, Sum):
-                if not observables.targets:
-                    raise ValueError("Cannot include Hamiltonian without targets")
-            else:
-                for obs in observables:
-                    if not obs.targets:
-                        raise ValueError("Cannot include observables without targets")
-                    if isinstance(obs, Sum):
-                        raise TypeError("Cannot have Sum Hamiltonian in list of observables")
-
+        if isinstance(observables, Sum):
+            if not observables.targets:
+                raise ValueError("Cannot include Hamiltonian without targets")
+        elif observables:
+            for obs in observables:
+                if not obs.targets:
+                    raise ValueError("Cannot include observables without targets")
+                if isinstance(obs, Sum):
+                    raise TypeError("Cannot have Sum Hamiltonian in list of observables")
         if circuit.result_types:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
