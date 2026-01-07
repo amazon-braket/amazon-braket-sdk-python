@@ -43,6 +43,16 @@ def test_result_type(circuit_rx_parametrized):
         )
 
 
+def test_sum_missing_targets():
+    with pytest.raises(ValueError):
+        CircuitBinding(Circuit().h(0), observables=X() + Y())
+
+
+def test_missing_targets_in_observables_list():
+    with pytest.raises(ValueError):
+        CircuitBinding(Circuit().h(0), observables=[X(0), Y()])
+
+
 def test_sum_in_observable_list():
     with pytest.raises(TypeError):
         CircuitBinding(Circuit().h(0), observables=[X(0) + Y(0)])

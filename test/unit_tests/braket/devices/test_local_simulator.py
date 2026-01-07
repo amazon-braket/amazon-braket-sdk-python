@@ -875,6 +875,7 @@ def test_run_with_noise_model(mock_run, noise_model):
         shots=4,
     )
 
+
 @patch.object(DummyProgramDensityMatrixSimulator, "run_multiple")
 def test_run_batch_with_noise_model(mock_run_multiple, noise_model):
     mock_run_multiple.return_value = [GATE_MODEL_RESULT, GATE_MODEL_RESULT]  # Return list

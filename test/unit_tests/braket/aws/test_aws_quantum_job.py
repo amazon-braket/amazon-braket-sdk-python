@@ -33,8 +33,8 @@ def aws_session(quantum_job_arn, job_region):
     _aws_session.create_job.return_value = quantum_job_arn
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_default_jobs_role.return_value = "default-role-arn"
-    _aws_session.construct_s3_uri.side_effect = (
-        lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
+    _aws_session.construct_s3_uri.side_effect = lambda bucket, *dirs: (
+        f"s3://{bucket}/{'/'.join(dirs)}"
     )
 
     def fake_copy_session(region):
@@ -1129,32 +1129,32 @@ def mock_task_data():
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-1",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 5, 0),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-2",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 0),  # Earlier time
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-3",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 6, 0),  # Latest time
-            "status": "RUNNING"
-        }
+            "status": "RUNNING",
+        },
     ]
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumTask")
-def test_get_tasks_basic_functionality(mock_aws_quantum_task, quantum_job, aws_session, mock_task_data):
+def test_get_tasks_basic_functionality(
+    mock_aws_quantum_task, quantum_job, aws_session, mock_task_data
+):
     """Test basic get_tasks functionality returns AwsQuantumTask objects"""
     # Setup mock paginator
     mock_paginator = Mock()
     mock_page_iterator = MagicMock()
     aws_session.braket_client.get_paginator.return_value = mock_paginator
     mock_paginator.paginate.return_value = mock_page_iterator
-    mock_page_iterator.__iter__.return_value = [
-        {"quantumTasks": mock_task_data}
-    ]
+    mock_page_iterator.__iter__.return_value = [{"quantumTasks": mock_task_data}]
 
     # Setup mock AwsQuantumTask instances
     mock_task_instances = [Mock(), Mock(), Mock()]
@@ -1166,20 +1166,14 @@ def test_get_tasks_basic_functionality(mock_aws_quantum_task, quantum_job, aws_s
     # Verify paginator setup
     aws_session.braket_client.get_paginator.assert_called_once_with("search_quantum_tasks")
     mock_paginator.paginate.assert_called_once_with(
-        filters=[
-            {
-                "name": "jobArn",
-                "values": [quantum_job.arn],
-                "operator": "EQUAL"
-            }
-        ]
+        filters=[{"name": "jobArn", "values": [quantum_job.arn], "operator": "EQUAL"}]
     )
 
     # Verify AwsQuantumTask creation (sorted by createdAt)
     expected_calls = [
         ((mock_task_data[1]["quantumTaskArn"],), {"aws_session": aws_session}),  # task-2 (earliest)
         ((mock_task_data[0]["quantumTaskArn"],), {"aws_session": aws_session}),  # task-1 (middle)
-        ((mock_task_data[2]["quantumTaskArn"],), {"aws_session": aws_session})   # task-3 (latest)
+        ((mock_task_data[2]["quantumTaskArn"],), {"aws_session": aws_session}),  # task-3 (latest)
     ]
     assert mock_aws_quantum_task.call_args_list == expected_calls
 
@@ -1196,9 +1190,7 @@ def test_get_tasks_caching(mock_aws_quantum_task, quantum_job, aws_session, mock
     mock_page_iterator = MagicMock()
     aws_session.braket_client.get_paginator.return_value = mock_paginator
     mock_paginator.paginate.return_value = mock_page_iterator
-    mock_page_iterator.__iter__.return_value = [
-        {"quantumTasks": mock_task_data}
-    ]
+    mock_page_iterator.__iter__.return_value = [{"quantumTasks": mock_task_data}]
 
     mock_task_instances = [Mock(), Mock(), Mock()]
     mock_aws_quantum_task.side_effect = mock_task_instances
@@ -1228,7 +1220,7 @@ def test_get_tasks_pagination(mock_aws_quantum_task, quantum_job, aws_session):
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-1",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 0),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         }
     ]
 
@@ -1236,13 +1228,13 @@ def test_get_tasks_pagination(mock_aws_quantum_task, quantum_job, aws_session):
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-2",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 5, 0),
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-3",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 3, 0),  # Earliest
-            "status": "RUNNING"
-        }
+            "status": "RUNNING",
+        },
     ]
 
     # Setup mock paginator
@@ -1252,7 +1244,7 @@ def test_get_tasks_pagination(mock_aws_quantum_task, quantum_job, aws_session):
     mock_paginator.paginate.return_value = mock_page_iterator
     mock_page_iterator.__iter__.return_value = [
         {"quantumTasks": page1_tasks},
-        {"quantumTasks": page2_tasks}
+        {"quantumTasks": page2_tasks},
     ]
 
     mock_task_instances = [Mock(), Mock(), Mock()]
@@ -1263,9 +1255,18 @@ def test_get_tasks_pagination(mock_aws_quantum_task, quantum_job, aws_session):
 
     # Verify all tasks from all pages are collected and sorted by creation time
     expected_calls = [
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-3",), {"aws_session": aws_session}),  # Earliest
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-1",), {"aws_session": aws_session}),  # Middle
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-2",), {"aws_session": aws_session})   # Latest
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-3",),
+            {"aws_session": aws_session},
+        ),  # Earliest
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-1",),
+            {"aws_session": aws_session},
+        ),  # Middle
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-2",),
+            {"aws_session": aws_session},
+        ),  # Latest
     ]
     assert mock_aws_quantum_task.call_args_list == expected_calls
     assert len(result) == 3
@@ -1279,9 +1280,7 @@ def test_get_tasks_empty_result(mock_aws_quantum_task, quantum_job, aws_session)
     mock_page_iterator = MagicMock()
     aws_session.braket_client.get_paginator.return_value = mock_paginator
     mock_paginator.paginate.return_value = mock_page_iterator
-    mock_page_iterator.__iter__.return_value = [
-        {"quantumTasks": []}
-    ]
+    mock_page_iterator.__iter__.return_value = [{"quantumTasks": []}]
 
     # Call get_tasks
     result = quantum_job.get_tasks()
@@ -1300,18 +1299,18 @@ def test_get_tasks_sorted_by_creation_time(mock_aws_quantum_task, quantum_job, a
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-latest",
             "createdAt": datetime.datetime(2021, 6, 28, 21, 10, 0),  # Latest
-            "status": "COMPLETED"
+            "status": "COMPLETED",
         },
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-earliest",
-            "createdAt": datetime.datetime(2021, 6, 28, 21, 1, 0),   # Earliest
-            "status": "COMPLETED"
+            "createdAt": datetime.datetime(2021, 6, 28, 21, 1, 0),  # Earliest
+            "status": "COMPLETED",
         },
         {
             "quantumTaskArn": "arn:aws:braket:us-west-2:123456789012:quantum-task/task-middle",
-            "createdAt": datetime.datetime(2021, 6, 28, 21, 5, 0),   # Middle
-            "status": "RUNNING"
-        }
+            "createdAt": datetime.datetime(2021, 6, 28, 21, 5, 0),  # Middle
+            "status": "RUNNING",
+        },
     ]
 
     # Setup mock paginator
@@ -1319,9 +1318,7 @@ def test_get_tasks_sorted_by_creation_time(mock_aws_quantum_task, quantum_job, a
     mock_page_iterator = MagicMock()
     aws_session.braket_client.get_paginator.return_value = mock_paginator
     mock_paginator.paginate.return_value = mock_page_iterator
-    mock_page_iterator.__iter__.return_value = [
-        {"quantumTasks": unsorted_tasks}
-    ]
+    mock_page_iterator.__iter__.return_value = [{"quantumTasks": unsorted_tasks}]
 
     mock_task_instances = [Mock(), Mock(), Mock()]
     mock_aws_quantum_task.side_effect = mock_task_instances
@@ -1331,9 +1328,18 @@ def test_get_tasks_sorted_by_creation_time(mock_aws_quantum_task, quantum_job, a
 
     # Verify tasks are created in chronological order (earliest to latest)
     expected_calls = [
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-earliest",), {"aws_session": aws_session}),
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-middle",), {"aws_session": aws_session}),
-        (("arn:aws:braket:us-west-2:123456789012:quantum-task/task-latest",), {"aws_session": aws_session})
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-earliest",),
+            {"aws_session": aws_session},
+        ),
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-middle",),
+            {"aws_session": aws_session},
+        ),
+        (
+            ("arn:aws:braket:us-west-2:123456789012:quantum-task/task-latest",),
+            {"aws_session": aws_session},
+        ),
     ]
     assert mock_aws_quantum_task.call_args_list == expected_calls
 
@@ -1344,13 +1350,8 @@ def test_get_tasks_error_handling(quantum_job, aws_session):
     mock_paginator = Mock()
     aws_session.braket_client.get_paginator.return_value = mock_paginator
     mock_paginator.paginate.side_effect = ClientError(
-        {
-            "Error": {
-                "Code": "AccessDenied",
-                "Message": "Access denied to search quantum tasks"
-            }
-        },
-        "SearchQuantumTasks"
+        {"Error": {"Code": "AccessDenied", "Message": "Access denied to search quantum tasks"}},
+        "SearchQuantumTasks",
     )
 
     # Verify the exception is propagated
@@ -1359,7 +1360,9 @@ def test_get_tasks_error_handling(quantum_job, aws_session):
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumTask")
-def test_get_tasks_aws_session_passed_correctly(mock_aws_quantum_task, quantum_job, aws_session, mock_task_data):
+def test_get_tasks_aws_session_passed_correctly(
+    mock_aws_quantum_task, quantum_job, aws_session, mock_task_data
+):
     """Test get_tasks passes the correct AWS session to AwsQuantumTask objects"""
     # Setup mock paginator
     mock_paginator = Mock()
@@ -1378,8 +1381,7 @@ def test_get_tasks_aws_session_passed_correctly(mock_aws_quantum_task, quantum_j
 
     # Verify AwsQuantumTask was created with the job's aws_session
     mock_aws_quantum_task.assert_called_once_with(
-        mock_task_data[0]["quantumTaskArn"],
-        aws_session=aws_session
+        mock_task_data[0]["quantumTaskArn"], aws_session=aws_session
     )
 
     # Verify the same session object is passed (not a copy)
