@@ -559,7 +559,8 @@ def test_flattened_tensor_product():
         ),
         (
             np.array([[0, -1j], [1j, 0]]),
-            np.array([
+            np
+            .array([
                 [-0.70710678 + 0.0j, -0.70710678 + 0.0j],
                 [0.0 + 0.70710678j, 0.0 - 0.70710678j],
             ])
