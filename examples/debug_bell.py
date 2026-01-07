@@ -27,8 +27,7 @@ device = AwsDevice(Devices.Amazon.SV1)
 bell = Circuit().h(0).cnot(0, 1)
 # pass in logger to device.run, enabling debugging logs to print to console
 logger.info(
-    device
-    .run(
+    device.run(
         bell,
         shots=100,
         poll_timeout_seconds=120,

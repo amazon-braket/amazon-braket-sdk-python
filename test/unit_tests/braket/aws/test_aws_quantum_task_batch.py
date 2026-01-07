@@ -51,6 +51,29 @@ def test_creation(mock_create):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_creation_with_experimental_capabilities_string(mock_create):
+    task_mock = Mock()
+    type(task_mock).id = PropertyMock(side_effect=uuid.uuid4)
+    task_mock.state.return_value = "RUNNING"
+    mock_create.return_value = task_mock
+
+    batch_size = 10
+    batch = AwsQuantumTaskBatch(
+        Mock(),
+        "foo",
+        _circuits(batch_size),
+        S3_TARGET,
+        1000,
+        max_parallel=10,
+        experimental_capabilities="ALL",
+    )
+    assert batch.size == batch_size
+    assert batch.tasks == [task_mock for _ in range(batch_size)]
+    assert len(batch.unfinished) == batch_size
+    assert not batch.unsuccessful
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_successful(mock_create):
     task_mock = Mock()
     type(task_mock).id = PropertyMock(side_effect=uuid.uuid4)

@@ -122,8 +122,7 @@ class CircuitBinding:
                 for param in euler_angle_parameter_names(target):
                     euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in terms]
             return Program(
-                source=self._circuit
-                .with_euler_angles(observables)
+                source=self._circuit.with_euler_angles(observables)
                 .to_ir(IRType.OPENQASM, gate_definitions=gate_definitions)
                 .source,
                 inputs=(
