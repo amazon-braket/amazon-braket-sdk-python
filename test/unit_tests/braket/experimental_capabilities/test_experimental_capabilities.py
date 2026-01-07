@@ -12,9 +12,11 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
+import pytest
 
 from braket.experimental_capabilities import EnableExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
+    ExperimentalCapabilityContextError,
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
     EXPERIMENTAL_CAPABILITIES_ALL,
 )
@@ -65,3 +67,8 @@ def test_nested_capability_contexts_all_explicit():
 
     # After nested context, the capability should be disabled
     assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+@pytest.mark.xfail(raises=ExperimentalCapabilityContextError)
+def test_enable_experimental_capability_context_invalid_capability():
+    with EnableExperimentalCapability("INVALID_CAPABILITY"):
+        pass
