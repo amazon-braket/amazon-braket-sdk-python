@@ -45,7 +45,8 @@ class GlobalExperimentalCapabilityContext:
         """Enable all experimental capabilities. Default behavior is to enable all.
 
         Args:
-            experimental_capabilities | None: The experimental capabilities to enable.
+            experimental_capabilities (ExperimentalCapabilitiesEnabled | None): The experimental capabilities to enable.
+                Defaults to all capabilities.
         Raises:
             ExperimentalCapabilityContextError: If the experimental capabilities are not valid.
         """
@@ -62,7 +63,7 @@ class GlobalExperimentalCapabilityContext:
     def get_enabled_capabilities(self) -> ExperimentalCapabilitiesEnabled | None:
         """Get the set of currently enabled experimental capabilities.
         Returns:
-            set[ExperimentalCapabilities]: The set of currently enabled experimental capabilities.
+            ExperimentalCapabilitiesEnabled | None: The currently enabled experimental capabilities.
         """
         if self._all_enabled:
             return EXPERIMENTAL_CAPABILITIES_ALL
@@ -71,7 +72,7 @@ class GlobalExperimentalCapabilityContext:
     def set_state(self, experimental_capabilities: ExperimentalCapabilitiesEnabled | None) -> None:
         """Set the state of experimental capabilities.
         Args:
-            experimental_capabilities: The state of enabled experimental capabilities.
+            experimental_capabilities (ExperimentalCapabilitiesEnabled | None): The state of enabled experimental capabilities.
         """
         if experimental_capabilities == EXPERIMENTAL_CAPABILITIES_ALL:
             self.enable()
@@ -99,6 +100,9 @@ class EnableExperimentalCapability:
         experimental capabilities on Amazon Braket.
         [1] https://docs.aws.amazon.com/braket/latest/developerguide/
         braket-experimental-capabilities.html
+
+        Args: experimental_capabilities (ExperimentalCapabilitiesEnabled | None): The experimental capabilities to enable.
+                Defaults to all capabilities.
 
         Examples:
             >>> with EnableExperimentalCapability():
