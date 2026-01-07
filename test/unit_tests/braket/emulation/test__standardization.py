@@ -76,8 +76,7 @@ def test_standardize_aqt_device_properties(reduced_aqt_device_capabilities):
         == device_properties.standardized["oneQubitProperties"]["2"].T1
     )
     assert (
-        device_properties
-        .standardized["oneQubitProperties"]["0"]
+        device_properties.standardized["oneQubitProperties"]["0"]
         .oneQubitFidelity[1]
         .fidelityType.name
         == "READOUT"
@@ -104,8 +103,7 @@ def test_standardize_aqt_device_properties(reduced_aqt_device_capabilities):
         == 0.9769070000000001
     )
     assert (
-        device_properties
-        .standardized["twoQubitProperties"]["0-1"]
+        device_properties.standardized["twoQubitProperties"]["0-1"]
         .twoQubitGateFidelity[0]
         .standardError
         == 0.0048
