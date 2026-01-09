@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.108.0 (2026-01-08)
+
+### Features
+
+ * update device.run to support experimentalCapabilities flag
+
+### Bug Fixes and Other Changes
+
+ * No targetless observables in CircuitBinding
+
+## v1.107.0 (2025-12-22)
+
+### Features
+
+ * circuit binding observables to inputs & program set support for noise model
+ * Add access to hybrid job tasks from the job object
+
+### Bug Fixes and Other Changes
+
+ * Correct diagram gate order of circuits with multi-qubit noise operators
+
+### Documentation Changes
+
+ * Use sphinx autodoc typehints
+
 ## v1.106.5 (2025-12-11)
 
 ### Bug Fixes and Other Changes
