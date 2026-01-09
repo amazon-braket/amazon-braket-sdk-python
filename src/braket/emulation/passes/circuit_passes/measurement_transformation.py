@@ -69,5 +69,5 @@ class MeasurementTransformation(TransformationPass):
             isinstance(instr.operator, Measure) for instr in circuits.instructions
         )
         if (not has_measurement) and len(circuits.result_types) == 0:
-            circuits.measure(target_qubits=circuits.qubits)
+            circuits.measure(target_qubits=sorted(circuits.qubits))
         return circuits
