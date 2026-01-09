@@ -58,9 +58,11 @@ class MeasurementTransformation(TransformationPass):
                     case CircuitBinding() as entry if entry.observables:
                         new_programs.append(entry)
                     case CircuitBinding():
-                        new_programs.append(CircuitBinding(
-                            self.transform(program.circuit),
-                            input_sets=program.input_sets))
+                        new_programs.append(
+                            CircuitBinding(
+                                self.transform(program.circuit), input_sets=program.input_sets
+                            )
+                        )
                     case _:
                         raise NotImplementedError
             return ProgramSet(new_programs, shots_per_executable=circuits.shots_per_executable)

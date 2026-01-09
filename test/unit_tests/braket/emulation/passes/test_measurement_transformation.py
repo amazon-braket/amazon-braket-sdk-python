@@ -70,11 +70,9 @@ def test_program_set_modification_bindings(measurement_transformation):
     """Test that ProgramSet circuits are individually modified."""
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().x(1)
-    program_set = ProgramSet([
-        CircuitBinding(circuit1, observables=[X(0)]),
-        circuit2
-        ],
-        shots_per_executable=100)
+    program_set = ProgramSet(
+        [CircuitBinding(circuit1, observables=[X(0)]), circuit2], shots_per_executable=100
+    )
 
     result = measurement_transformation.transform(program_set)
 
@@ -83,14 +81,17 @@ def test_program_set_modification_bindings(measurement_transformation):
     assert len(result[1].instructions) == 2  # h + measure
     assert result.shots_per_executable == 100
 
+
 def test_program_set_modification_binding_inputs_only(measurement_transformation):
     """Test that ProgramSet circuits are individually modified."""
     circuit1 = Circuit().h(0)
     circuit2 = Circuit().h(0).measure(0)
-    program_set = ProgramSet([
-        CircuitBinding(circuit1, input_sets=[{"a": 0}]),
+    program_set = ProgramSet(
+        [
+            CircuitBinding(circuit1, input_sets=[{"a": 0}]),
         ],
-        shots_per_executable=100)
+        shots_per_executable=100,
+    )
 
     result = measurement_transformation.transform(program_set)
     assert result[0].circuit == circuit2
@@ -102,6 +103,7 @@ def test_incorrect_program_set(measurement_transformation):
     program_set = ProgramSet([None, None])
     with pytest.raises(NotImplementedError):
         measurement_transformation.transform(program_set)
+
 
 def test_empty_circuit(measurement_transformation):
     """Test that empty circuits get measurements for all qubits (none)."""
