@@ -15,12 +15,15 @@ import importlib
 import sys
 from unittest.mock import patch
 
+import braket.tasks
 import braket.tasks._jupyter_setup
 
 
 @patch("braket.ipython_utils.running_in_jupyter")
 def test_nest_asyncio_not_applied(running_in_jupyter):
     running_in_jupyter.return_value = False
+    if "nest_asyncio" in sys.modules:
+        del sys.modules["nest_asyncio"]
     importlib.reload(braket.tasks._jupyter_setup)
     assert "nest_asyncio" not in sys.modules
 
@@ -28,5 +31,27 @@ def test_nest_asyncio_not_applied(running_in_jupyter):
 @patch("braket.ipython_utils.running_in_jupyter")
 def test_nest_asyncio_is_applied(running_in_jupyter):
     running_in_jupyter.return_value = True
+    if "nest_asyncio" in sys.modules:
+        del sys.modules["nest_asyncio"]
     importlib.reload(braket.tasks._jupyter_setup)
     assert "nest_asyncio" in sys.modules
+
+
+@patch("braket.ipython_utils.running_in_jupyter")
+def test_braket_tasks_import_triggers_jupyter_setup(running_in_jupyter):
+    running_in_jupyter.return_value = True
+    if "nest_asyncio" in sys.modules:
+        del sys.modules["nest_asyncio"]
+    importlib.reload(braket.tasks._jupyter_setup)
+    importlib.reload(braket.tasks)
+    assert "nest_asyncio" in sys.modules
+
+@patch("braket.ipython_utils.running_in_jupyter")
+def test_braket_tasks_import_does_not_triggers_jupyter_setup(running_in_jupyter):
+    running_in_jupyter.return_value = False
+    if "nest_asyncio" in sys.modules:
+        del sys.modules["nest_asyncio"]
+    importlib.reload(braket.tasks._jupyter_setup)
+    importlib.reload(braket.tasks)
+    assert "nest_asyncio" not in sys.modules
+
