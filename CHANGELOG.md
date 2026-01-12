@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.108.1 (2026-01-12)
+
+### Bug Fixes and Other Changes
+
+ * ruf067 error
+
 ## v1.108.0 (2026-01-08)
 
 ### Features
