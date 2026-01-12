@@ -29,6 +29,8 @@ from braket.circuits.translations import (
     braket_result_to_result_type,
     one_prob_noise_map,
 )
+from braket.circuits.compiler_directives import Barrier
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 from braket.parametric import FreeParameterExpression
 
 
@@ -177,3 +179,16 @@ class BraketProgramContext(AbstractProgramContext):
 
     def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
         self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))
+
+    def add_barrier(self, target: QubitSetInput | None = None) -> None:
+        """Add a barrier instruction to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier. If None,
+                applies barrier to all qubits in the circuit.
+        """
+        target_qubits = self._circuit.qubits if target is None else QubitSet(target)
+        
+        if target_qubits:
+            instruction = Instruction(Barrier(list(target_qubits)), target=target_qubits)
+            self._circuit.add_instruction(instruction)

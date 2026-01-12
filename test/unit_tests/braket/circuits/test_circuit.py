@@ -984,6 +984,24 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
     assert actual_circ == expected_circ
 
 
+def test_from_ir_with_barriers():
+    ir = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "qubit[3] q;",
+            "h q[0];",
+            "barrier q[0], q[1];",
+            "cnot q[0], q[1];",
+            "barrier;",
+        ]),
+        inputs={},
+    )
+
+    expected_circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1).barrier()
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circ
+
+
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
