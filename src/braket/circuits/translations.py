@@ -30,7 +30,7 @@ from braket.ir.jaqcd.program_v1 import Results
 
 import braket.circuits.gates as braket_gates
 from braket.circuits import Observable, ResultType, noises, observables, result_types
-from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox, Barrier
+from braket.circuits.compiler_directives import Barrier, EndVerbatimBox, StartVerbatimBox
 from braket.experimental_capabilities.iqm.classical_control import CCPRx, MeasureFF
 
 BRAKET_GATES = {

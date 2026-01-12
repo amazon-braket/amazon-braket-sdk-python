@@ -20,6 +20,7 @@ from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
+from braket.circuits.compiler_directives import Barrier
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
@@ -29,9 +30,8 @@ from braket.circuits.translations import (
     braket_result_to_result_type,
     one_prob_noise_map,
 )
-from braket.circuits.compiler_directives import Barrier
-from braket.registers.qubit_set import QubitSet, QubitSetInput
 from braket.parametric import FreeParameterExpression
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class BraketProgramContext(AbstractProgramContext):
@@ -188,7 +188,7 @@ class BraketProgramContext(AbstractProgramContext):
                 applies barrier to all qubits in the circuit.
         """
         target_qubits = self._circuit.qubits if target is None else QubitSet(target)
-        
+
         if target_qubits:
             instruction = Instruction(Barrier(list(target_qubits)), target=target_qubits)
             self._circuit.add_instruction(instruction)
