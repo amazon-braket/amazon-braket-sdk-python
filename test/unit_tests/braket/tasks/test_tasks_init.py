@@ -46,6 +46,7 @@ def test_braket_tasks_import_triggers_jupyter_setup(running_in_jupyter):
     importlib.reload(braket.tasks)
     assert "nest_asyncio" in sys.modules
 
+
 @patch("braket.ipython_utils.running_in_jupyter")
 def test_braket_tasks_import_does_not_triggers_jupyter_setup(running_in_jupyter):
     running_in_jupyter.return_value = False
@@ -54,4 +55,3 @@ def test_braket_tasks_import_does_not_triggers_jupyter_setup(running_in_jupyter)
     importlib.reload(braket.tasks._jupyter_setup)
     importlib.reload(braket.tasks)
     assert "nest_asyncio" not in sys.modules
-
