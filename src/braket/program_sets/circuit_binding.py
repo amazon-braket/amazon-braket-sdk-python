@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import warnings
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 
 from braket.ir.openqasm import Program
@@ -62,20 +63,59 @@ class CircuitBinding:
         """
         if not input_sets and not observables:
             raise ValueError("At least one of input_sets and observables must be specified")
-        if isinstance(observables, Sum):
-            if not observables.targets:
-                raise ValueError("Cannot include Hamiltonian without targets")
-        elif observables:
-            for obs in observables:
-                if not obs.targets:
-                    raise ValueError("Cannot include observables without targets")
-                if isinstance(obs, Sum):
-                    raise TypeError("Cannot have Sum Hamiltonian in list of observables")
+        if (
+            observables
+            and not isinstance(observables, Sum)
+            and any(isinstance(obs, Sum) for obs in observables)
+        ):
+            raise TypeError("Cannot have Sum Hamiltonian in list of observables")
         if circuit.result_types:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
         self._input_sets = ParameterSets(input_sets) if input_sets else None
         self._observables = observables or None
+        # with_euler_angles validates that the observable has valid Euler angle gates
+        self._circuit_with_euler_angles = (
+            self._circuit.with_euler_angles(observables) if observables else None
+        )
+        self._euler_angles = self._get_euler_angles()
+
+    def _get_euler_angles(self) -> dict[str, float] | None:
+        observables = self._observables
+        if not observables:
+            return None
+        return (
+            self._get_euler_angles_sum(observables)
+            if isinstance(observables, Sum)
+            else self._get_euler_angles_list(observables)
+        )
+
+    def _get_euler_angles_sum(self, observables: Sum) -> dict[str, float]:
+        euler_angles = {}
+        summands = observables.summands
+        if not observables.targets:
+            for q in self._circuit.qubits:
+                for param in euler_angle_parameter_names(None):
+                    euler_angles[f"{param}{int(q)}"] = [obs.euler_angles[param] for obs in summands]
+            return euler_angles
+        for q in {q for obs in summands for q in obs.targets}:
+            for param in euler_angle_parameter_names(q):
+                euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in summands]
+        return euler_angles
+
+    def _get_euler_angles_list(self, observables: Sequence[Observable]) -> dict[str, float]:
+        euler_angles = defaultdict(list)
+        targets = {q for obs in observables for q in (obs.targets or self._circuit.qubits)}
+        for obs in observables:
+            if not obs.targets:
+                for q in targets:
+                    for param in euler_angle_parameter_names(None):
+                        euler_angles[f"{param}{int(q)}"].append(obs.euler_angles[param])
+            else:
+                for q in targets:
+                    for param in euler_angle_parameter_names(q):
+                        euler_angles[param].append(obs.euler_angles.get(param, 0))
+        return euler_angles
 
     @property
     def circuit(self) -> Circuit:
@@ -115,26 +155,22 @@ class CircuitBinding:
         Returns:
             Program: An OpenQASM program containing the serialized circuit and input parameters.
         """
-        if observables := self._observables:
-            terms = observables.summands if isinstance(observables, Sum) else observables
-            euler_angles = {}
-            for target in {target for obs in terms for target in obs.targets}:
-                for param in euler_angle_parameter_names(target):
-                    euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in terms]
+        if not self._observables:
             return Program(
-                source=self._circuit
-                .with_euler_angles(observables)
-                .to_ir(IRType.OPENQASM, gate_definitions=gate_definitions)
-                .source,
-                inputs=(
-                    self._input_sets * euler_angles
-                    if self._input_sets
-                    else ParameterSets(euler_angles)
-                ).as_dict(),
+                source=self._circuit.to_ir(
+                    IRType.OPENQASM, gate_definitions=gate_definitions
+                ).source,
+                inputs=self._input_sets.as_dict() if self._input_sets else None,
             )
         return Program(
-            source=self._circuit.to_ir(IRType.OPENQASM, gate_definitions=gate_definitions).source,
-            inputs=self._input_sets.as_dict() if self._input_sets else None,
+            source=self._circuit_with_euler_angles.to_ir(
+                IRType.OPENQASM, gate_definitions=gate_definitions
+            ).source,
+            inputs=(
+                self._input_sets * self._euler_angles
+                if self._input_sets
+                else ParameterSets(self._euler_angles)
+            ).as_dict(),
         )
 
     def bind_observables_to_inputs(

@@ -253,17 +253,39 @@ class Circuit:
             on each qubit targeted by any of the observables.
         """
         new_circuit = Circuit(self)
-        targets = (
-            {target for obs in observables.summands for target in obs.targets}
-            if isinstance(observables, Sum)
-            else {target for obs in observables for target in obs.targets}
-        )
+        targets = self._get_observable_targets(observables)
         for target in targets:
             params = euler_angle_parameter_names(target)
             new_circuit.rz(target, FreeParameter(params[0]))
             new_circuit.rx(target, FreeParameter(params[1]))
             new_circuit.rz(target, FreeParameter(params[2]))
         return new_circuit
+
+    def _get_observable_targets(self, observables: Sequence[Observable] | Sum):
+        if isinstance(observables, Sum):
+            if observables.targets:
+                return {target for obs in observables.summands for target in obs.targets}
+            qubit_count = self.qubit_count
+            for obs in observables.summands:
+                if obs.qubit_count != qubit_count:
+                    raise ValueError(
+                        "Each term of Hamiltonian without targets "
+                        "must have same qubit count as circuit"
+                    )
+            return QubitSet(self.qubits)
+        qubit_count = self.qubit_count
+        qubits = QubitSet(self.qubits)
+        targets = set()
+        for obs in observables:
+            if obs.targets:
+                targets |= obs.targets
+            else:
+                if not obs.targets and obs.qubit_count != qubit_count:
+                    raise ValueError(
+                        "Observable without target must have same qubit count as circuit"
+                    )
+                targets |= qubits
+        return targets
 
     def add_result_type(
         self,
