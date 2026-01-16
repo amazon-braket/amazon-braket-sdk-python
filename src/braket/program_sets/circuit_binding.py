@@ -154,8 +154,6 @@ class CircuitBinding:
 
     def _get_euler_angles(self) -> dict[str, float] | None:
         observables = self._observables
-        if not observables:
-            return None
         return (
             self._get_euler_angles_sum(observables)
             if isinstance(observables, Sum)
