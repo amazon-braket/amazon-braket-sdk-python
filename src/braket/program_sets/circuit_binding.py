@@ -25,6 +25,7 @@ from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
 from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike
 from braket.pulse import PulseSequence
+from braket.quantum_information import PauliString
 from braket.registers import QubitSet
 
 
@@ -33,7 +34,7 @@ class CircuitBinding:
         self,
         circuit: Circuit,
         input_sets: ParameterSetsLike | None = None,
-        observables: Sequence[Observable] | Sum | None = None,
+        observables: Sequence[Observable | PauliString | str] | Sum | None = None,
     ):
         """
         A single parametrized circuit and multiple parameter sets and observables.
@@ -52,8 +53,8 @@ class CircuitBinding:
         Args:
             circuit (Circuit): The parametrized circuit
             input_sets (ParameterSetsLike | None): The inputs to the circuit, if specified.
-            observables (Sequence[Observable] | Sum | None): The observables or Hamiltonian
-                to measure, if specified.
+            observables (Sequence[Observable | PauliString | str] | Sum | None): The observables
+                or Hamiltonian to measure, if specified.
 
         Examples:
             >>> circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
@@ -73,12 +74,31 @@ class CircuitBinding:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
         self._input_sets = ParameterSets(input_sets) if input_sets else None
-        self._observables = observables or None
+        self._observables = CircuitBinding._get_observables(observables)
         # with_euler_angles validates that the observable has valid Euler angle gates
         self._circuit_with_euler_angles = (
-            self._circuit.with_euler_angles(observables) if observables else None
+            self._circuit.with_euler_angles(self._observables) if observables else None
         )
         self._euler_angles = self._get_euler_angles()
+
+    @staticmethod
+    def _get_observables(
+        observables: Sequence[Observable | PauliString | str] | Sum | None,
+    ) -> Sequence[Observable] | Sum | None:
+        if not observables:
+            return None
+        if isinstance(observables, Sum):
+            return observables
+        obs = []
+        for o in observables:
+            if isinstance(o, Observable):
+                obs.append(o)
+            elif isinstance(o, PauliString):
+                obs.append(o.phase * o.to_unsigned_observable(include_trivial=True))
+            else:
+                pauli = PauliString(o)
+                obs.append(pauli.phase * pauli.to_unsigned_observable(include_trivial=True))
+        return obs
 
     def _get_euler_angles(self) -> dict[str, float] | None:
         observables = self._observables

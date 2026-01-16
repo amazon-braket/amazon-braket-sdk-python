@@ -128,7 +128,8 @@ class I(Observable):  # noqa: E742
     def euler_angles(self) -> dict[str, float]:
         return self.get_euler_angles(self.targets)
 
-    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
         angles = {}
         for target in targets:
             euler_params = euler_angle_parameter_names(target)
@@ -198,7 +199,8 @@ class X(StandardObservable):
     def euler_angles(self) -> dict[str, float]:
         return self.get_euler_angles(self.targets)
 
-    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
         angles = {}
         for target in targets:
             euler_params = euler_angle_parameter_names(target)
@@ -259,7 +261,8 @@ class Y(StandardObservable):
     def euler_angles(self) -> dict[str, float]:
         return self.get_euler_angles(self.targets)
 
-    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
         angles = {}
         for target in targets:
             euler_params = euler_angle_parameter_names(target)
@@ -320,7 +323,8 @@ class Z(StandardObservable):
     def euler_angles(self) -> dict[str, float]:
         return self.get_euler_angles(self.targets)
 
-    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
         angles = {}
         for target in targets:
             euler_params = euler_angle_parameter_names(target)

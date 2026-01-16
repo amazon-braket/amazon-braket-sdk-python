@@ -142,7 +142,8 @@ class Observable(QuantumOperator):
         that diagonalizes this observable."""
         raise NotImplementedError
 
-    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
         """Get the ZXZ Euler angle mapping of this observable for the given qubit.
 
         Args:

@@ -17,6 +17,7 @@ from braket.circuits import Circuit
 from braket.circuits.observables import X, Y, Z
 from braket.parametric import FreeParameter
 from braket.program_sets import CircuitBinding
+from braket.quantum_information import PauliString
 
 
 def test_equality(circuit_rx_parametrized):
@@ -63,6 +64,28 @@ def test_targetless_observable_in_list():
     assert (
         CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
         == CircuitBinding(circuit, input_sets=input_sets, observables=obs_targetless).to_ir()
+    )
+
+
+def test_pauli_string_in_list():
+    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
+    obs_ps = [X(0) @ Y(1), PauliString("-ZX")]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_ps).to_ir()
+    )
+
+
+def test_string_in_list():
+    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
+    obs_ps = [X(0) @ Y(1), "-ZX"]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_ps).to_ir()
     )
 
 
