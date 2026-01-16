@@ -97,8 +97,6 @@ class I(Observable):  # noqa: E742
             >>> observables.I()
         """
         super().__init__(qubit_count=1, ascii_symbols=["I"], targets=target)
-        euler_params = euler_angle_parameter_names(self._targets[0] if self._targets else None)
-        self._euler_angles = {euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0}
 
     def _unscaled(self) -> Observable:
         return I(self._targets)
@@ -128,7 +126,14 @@ class I(Observable):  # noqa: E742
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        return self._euler_angles
+        return self.get_euler_angles(self.targets)
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0})
+        return angles
 
     @property
     def eigenvalues(self) -> np.ndarray:
@@ -162,12 +167,6 @@ class X(StandardObservable):
             >>> observables.X()
         """
         super().__init__(ascii_symbols=["X"], target=target)
-        euler_params = euler_angle_parameter_names(self._targets[0] if self._targets else None)
-        self._euler_angles = {
-            euler_params[0]: np.pi / 2,
-            euler_params[1]: np.pi / 2,
-            euler_params[2]: np.pi / 2,
-        }
 
     def _unscaled(self) -> StandardObservable:
         return X(self._targets)
@@ -197,7 +196,18 @@ class X(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        return self._euler_angles
+        return self.get_euler_angles(self.targets)
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({
+                euler_params[0]: np.pi / 2,
+                euler_params[1]: np.pi / 2,
+                euler_params[2]: np.pi / 2,
+            })
+        return angles
 
 
 Observable.register_observable(X)
@@ -219,12 +229,6 @@ class Y(StandardObservable):
             >>> observables.Y()
         """
         super().__init__(ascii_symbols=["Y"], target=target)
-        euler_params = euler_angle_parameter_names(self._targets[0] if self._targets else None)
-        self._euler_angles = {
-            euler_params[0]: 0,
-            euler_params[1]: np.pi / 2,
-            euler_params[2]: np.pi / 2,
-        }
 
     def _unscaled(self) -> StandardObservable:
         return Y(self._targets)
@@ -253,7 +257,18 @@ class Y(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        return self._euler_angles
+        return self.get_euler_angles(self.targets)
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({
+                euler_params[0]: 0,
+                euler_params[1]: np.pi / 2,
+                euler_params[2]: np.pi / 2,
+            })
+        return angles
 
 
 Observable.register_observable(Y)
@@ -275,8 +290,6 @@ class Z(StandardObservable):
             >>> observables.Z()
         """
         super().__init__(ascii_symbols=["Z"], target=target)
-        euler_params = euler_angle_parameter_names(self._targets[0] if self._targets else None)
-        self._euler_angles = {euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0}
 
     def _unscaled(self) -> StandardObservable:
         return Z(self._targets)
@@ -305,7 +318,14 @@ class Z(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        return self._euler_angles
+        return self.get_euler_angles(self.targets)
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0})
+        return angles
 
 
 Observable.register_observable(Z)
@@ -445,6 +465,12 @@ class TensorProduct(Observable):
         angles = {}
         for obs in self.factors:
             angles.update(obs.euler_angles)
+        return angles
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for obs, qubit in zip(self.factors, targets, strict=True):
+            angles.update(obs.get_euler_angles([qubit]))
         return angles
 
     @property

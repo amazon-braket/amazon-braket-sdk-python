@@ -15,6 +15,7 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.circuits.observables import X, Y, Z
+from braket.parametric import FreeParameter
 from braket.program_sets import CircuitBinding
 
 
@@ -41,6 +42,28 @@ def test_result_type(circuit_rx_parametrized):
             Circuit(circuit_rx_parametrized).expectation(X(0)),
             input_sets={"theta": [1.23, 3.21]},
         )
+
+
+def test_targetless_sum():
+    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    input_sets = {"theta": [1.35, 1.58]}
+    h = X(0) @ Y(1) - 3 * Z(0) @ X(1)
+    h_targetless = X() @ Y() - 3 * Z() @ X()
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=h).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=h_targetless).to_ir()
+    )
+
+
+def test_targetless_observable_in_list():
+    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), 3 * Z(0) @ X(1)]
+    obs_targetless = [X(0) @ Y(1), 3 * Z() @ X()]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_targetless).to_ir()
+    )
 
 
 def test_sum_in_observable_list():

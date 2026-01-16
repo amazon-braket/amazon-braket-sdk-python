@@ -91,16 +91,20 @@ class CircuitBinding:
         )
 
     def _get_euler_angles_sum(self, observables: Sum) -> dict[str, float]:
-        euler_angles = {}
+        euler_angles = defaultdict(list)
         summands = observables.summands
         if not observables.targets:
-            for q in self._circuit.qubits:
-                for param in euler_angle_parameter_names(None):
-                    euler_angles[f"{param}{int(q)}"] = [obs.euler_angles[param] for obs in summands]
+            targets = self._circuit.qubits
+            for obs in summands:
+                for param, angle in obs.get_euler_angles(targets).items():
+                    euler_angles[param].append(angle)
             return euler_angles
-        for q in {q for obs in summands for q in obs.targets}:
-            for param in euler_angle_parameter_names(q):
-                euler_angles[param] = [obs.euler_angles.get(param, 0) for obs in summands]
+        targets = {q for obs in summands for q in obs.targets}
+        for obs in summands:
+            obs_euler_angles = obs.euler_angles
+            for q in targets:
+                for param in euler_angle_parameter_names(q):
+                    euler_angles[param].append(obs_euler_angles.get(param, 0))
         return euler_angles
 
     def _get_euler_angles_list(self, observables: Sequence[Observable]) -> dict[str, float]:
@@ -108,13 +112,13 @@ class CircuitBinding:
         targets = {q for obs in observables for q in (obs.targets or self._circuit.qubits)}
         for obs in observables:
             if not obs.targets:
-                for q in targets:
-                    for param in euler_angle_parameter_names(None):
-                        euler_angles[f"{param}{int(q)}"].append(obs.euler_angles[param])
+                for param, angle in obs.get_euler_angles(targets).items():
+                    euler_angles[param].append(angle)
             else:
+                obs_euler_angles = obs.euler_angles
                 for q in targets:
                     for param in euler_angle_parameter_names(q):
-                        euler_angles[param].append(obs.euler_angles.get(param, 0))
+                        euler_angles[param].append(obs_euler_angles.get(param, 0))
         return euler_angles
 
     @property
