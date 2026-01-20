@@ -998,6 +998,41 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
     assert actual_circ == expected_circ
 
 
+@pytest.mark.parametrize(
+    "source_lines, expected_circuit",
+    [
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[3] q;",
+                "h q[0];",
+                "barrier q[0], q[1];",
+                "cnot q[0], q[1];",
+                "barrier;",
+            ],
+            Circuit().h(0).barrier([0, 1]).cnot(0, 1).barrier(),
+        ),
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[2] q;",
+                "h q[0];",
+                "barrier;",
+                "cnot q[0], q[1];",
+            ],
+            Circuit().h(0).barrier().cnot(0, 1),
+        ),
+    ],
+)
+def test_from_ir_with_barriers(source_lines, expected_circuit):
+    ir = OpenQasmProgram(
+        source="\n".join(source_lines),
+        inputs={},
+    )
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circuit
+
+
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
