@@ -74,10 +74,10 @@ class CircuitBinding:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
         self._input_sets = ParameterSets(input_sets) if input_sets else None
-        self._observables = CircuitBinding._get_observables(observables)
+        self._observables = CircuitBinding._to_observables(observables)
 
     @staticmethod
-    def _get_observables(
+    def _to_observables(
         observables: Sequence[Observable | PauliString | str] | Sum | None,
     ) -> Sequence[Observable] | Sum | None:
         if not observables:

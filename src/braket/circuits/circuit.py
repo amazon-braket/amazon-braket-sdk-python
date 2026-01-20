@@ -279,11 +279,9 @@ class Circuit:
         for obs in observables:
             if obs.targets:
                 targets |= obs.targets
+            elif obs.qubit_count != qubit_count:
+                raise ValueError("Observable without target must have same qubit count as circuit")
             else:
-                if not obs.targets and obs.qubit_count != qubit_count:
-                    raise ValueError(
-                        "Observable without target must have same qubit count as circuit"
-                    )
                 targets |= qubits
         return targets
 
