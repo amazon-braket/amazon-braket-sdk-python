@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.109.0 (2026-01-20)
+
+### Features
+
+ * support barrier in `from_ir` method
+
 ## v1.108.1 (2026-01-12)
 
 ### Bug Fixes and Other Changes
