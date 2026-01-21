@@ -68,7 +68,7 @@ def test_targetless_observable_in_list():
 
 
 def test_pauli_string_in_list():
-    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
     input_sets = {"theta": [1.35, 1.58]}
     obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
     obs_ps = [X(0) @ Y(1), PauliString("-ZX")]
@@ -79,7 +79,7 @@ def test_pauli_string_in_list():
 
 
 def test_string_in_list():
-    circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
     input_sets = {"theta": [1.35, 1.58]}
     obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
     obs_ps = [X(0) @ Y(1), "-ZX"]
