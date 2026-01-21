@@ -722,6 +722,12 @@ def test_tensor_product_with_and_without_targets():
         (2 * observables.Z(3)) @ (3 * observables.H())
 
 
+def test_tensor_product_to_openqasm_no_targets():
+    obs = observables.X() @ observables.Y()
+    with pytest.raises(ValueError):
+        obs.to_ir(ir_type=IRType.OPENQASM)
+
+
 def test_observable_from_ir_tensor_product():
     expected_observable = observables.TensorProduct([
         observables.Z(),
