@@ -570,7 +570,7 @@ class Circuit:
         elif target_mapping:
             # Target mapping has been supplied, copy instruction
             instructions_to_add = [instruction.copy(target_mapping=target_mapping)]
-        elif hasattr(instruction.operator, "qubit_count") and instruction.operator.qubit_count == 1:
+        elif hasattr(operator, "qubit_count") and operator.qubit_count == 1:
             # single qubit operator with target, add an instruction for each target
             instructions_to_add = [instruction.copy(target=qubit) for qubit in target]
         else:
