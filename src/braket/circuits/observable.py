@@ -99,7 +99,7 @@ class Observable(QuantumOperator):
 
     def _to_jaqcd(self) -> list[str | list[list[list[float]]]]:
         """Returns the JAQCD representation of the observable."""
-        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+        raise NotImplementedError("to_jaqcd is not implemented.")
 
     def _to_openqasm(
         self,
@@ -116,7 +116,7 @@ class Observable(QuantumOperator):
         Returns:
             str: Representing the openqasm representation of the result type.
         """
-        raise NotImplementedError("to_openqasm has not been implemented yet.")
+        raise NotImplementedError("to_openqasm is not implemented.")
 
     @property
     def targets(self) -> QubitSet | None:

@@ -140,7 +140,7 @@ testdata = [
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,input,ir_input", testdata)
 def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
     if testclass == ResultType.AdjointGradient:
-        jaqcd_not_implemented = "to_jaqcd has not been implemented yet."
+        jaqcd_not_implemented = "to_jaqcd is not implemented."
         with pytest.raises(NotImplementedError, match=jaqcd_not_implemented):
             testclass(**input).to_ir()
     else:
