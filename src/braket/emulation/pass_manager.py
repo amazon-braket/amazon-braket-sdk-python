@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from braket.emulation.passes import TransformationPass, ValidationPass
+from braket.emulation.passes.passes import _EmulatorPass
 from braket.tasks.quantum_task import TaskSpecification
 
 
@@ -24,8 +24,8 @@ class EmulatorValidationError(Exception):
 
 
 class PassManager:
-    def __init__(self, passes: Iterable[ValidationPass | TransformationPass] | None = None):
-        self._passes = passes if passes is not None else []
+    def __init__(self, passes: _EmulatorPass | Iterable[_EmulatorPass] | None = None):
+        self._passes = list(passes) if isinstance(passes, Iterable) else [passes] if passes else []
 
     def transform(self, task_specification: TaskSpecification) -> TaskSpecification:
         """
@@ -69,5 +69,23 @@ class PassManager:
         """
         raise EmulatorValidationError(str(exception)) from exception
 
-    def append(self, single_pass: TransformationPass | ValidationPass) -> None:
-        self._passes.append(single_pass)
+    def __iadd__(self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]):
+        """Incrementally add a pass, passmanager, or iterable pass"""
+        if isinstance(passes, PassManager):
+            self._passes.append(passes._passes)
+        elif isinstance(passes, Iterable):
+            for pass_ in passes:
+                self._passes.append(pass_)
+        else:
+            self._passes.append(passes)
+        return self
+
+    def __add__(self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]):
+        """add EmulatorPass, Passmanager, or iterable pass object to a PassManager"""
+        if isinstance(passes, PassManager):
+            passes_ = self._passes + passes._passes
+        elif isinstance(passes, _EmulatorPass):
+            passes_ = [*self._passes, passes]
+        else:
+            passes_ = [*self._passes, *passes]
+        return _EmulatorPass(passes_)

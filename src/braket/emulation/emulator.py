@@ -140,7 +140,7 @@ class Emulator(Device):
 
         modifier = PassManager([MeasurementTransformation()])
         if apply_noise_model:
-            modifier.append(NoiseModelTransformation(noise_model=self.noise_model))
+            modifier += NoiseModelTransformation(noise_model=self.noise_model)
         return modifier.transform(program)
 
     def validate(self, task_specification: TaskSpecification) -> None:
