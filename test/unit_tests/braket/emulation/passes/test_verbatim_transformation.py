@@ -15,13 +15,13 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.emulation.passes.circuit_passes import VerbatimTransformation
+from braket.emulation.passes.circuit_passes import RemoveVerbatimTransformation
 from braket.program_sets import ProgramSet
 
 
 @pytest.fixture
 def verbatim_transformation():
-    return VerbatimTransformation()
+    return RemoveVerbatimTransformation()
 
 
 def test_removes_verbatim_boxes(verbatim_transformation):

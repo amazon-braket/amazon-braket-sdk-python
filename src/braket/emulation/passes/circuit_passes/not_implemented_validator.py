@@ -11,15 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
-
-from braket.ahs import AnalogHamiltonianSimulation
+from braket.circuits import Circuit
 from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.circuits.serialization import SerializableProgram
 from braket.emulation.passes import ValidationPass
 from braket.program_sets import ProgramSet
-from braket.pulse import PulseSequence
 from braket.tasks.quantum_task import TaskSpecification
 
 
@@ -46,16 +41,10 @@ class _NotImplementedValidator(ValidationPass):
             TypeError: If the program is a ProgramSet
         """
 
-        unsupported_specifications = (
-            OpenQASMProgram
-            | SerializableProgram
-            | AnalogHamiltonianSimulation
-            | OpenQASMProgramSet
-            | PulseSequence
-        )
+        supported_specifications = Circuit | ProgramSet
 
         # Validate out unsupported specifications
-        if isinstance(program, unsupported_specifications):
+        if not isinstance(program, supported_specifications):
             raise ValueError(f"Specification {type(program)} is not supported yet.")  # noqa: TRY004
 
         if isinstance(program, ProgramSet):

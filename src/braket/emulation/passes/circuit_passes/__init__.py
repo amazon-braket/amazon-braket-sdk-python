@@ -34,5 +34,5 @@ from braket.emulation.passes.circuit_passes.result_type_validator import (  # no
     ResultTypeValidator,
 )
 from braket.emulation.passes.circuit_passes.verbatim_transformation import (  # noqa: F401
-    VerbatimTransformation,
+    RemoveVerbatimTransformation,
 )

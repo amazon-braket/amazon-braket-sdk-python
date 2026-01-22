@@ -17,7 +17,7 @@ from braket.emulation.passes import TransformationPass
 from braket.program_sets import ProgramSet
 
 
-class VerbatimTransformation(TransformationPass):
+class RemoveVerbatimTransformation(TransformationPass):
     """A transformation pass that removes verbatim boxes from circuits.
 
     Verbatim boxes are hardware-specific directives that indicate sections of a circuit

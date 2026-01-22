@@ -24,7 +24,7 @@ from braket.emulation.passes import ValidationPass
 from braket.emulation.passes.circuit_passes import (
     MeasurementTransformation,
     NoiseModelTransformation,
-    VerbatimTransformation,
+    RemoveVerbatimTransformation,
 )
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
@@ -85,7 +85,7 @@ class Emulator(Device):
 
         task_specification = self.transform(task_specification, apply_noise_model=True)
         # Remove the verbatim box before submitting to the braket density matrix simulator
-        task_specification_v2 = VerbatimTransformation().run(task_specification)
+        task_specification_v2 = RemoveVerbatimTransformation().run(task_specification)
 
         if hasattr(self._backend, "_noise_model") and self._backend._noise_model is not None:
             warnings.warn("Backend device already has a noise model defined.", stacklevel=2)
