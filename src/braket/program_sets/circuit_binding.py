@@ -164,12 +164,12 @@ class CircuitBinding:
         euler_angles = defaultdict(list)
         summands = observables.summands
         if not observables.targets:
-            targets = sorted(self._circuit.qubits)
+            targets = self._circuit.qubits
             for obs in summands:
                 for param, angle in obs.get_euler_angles(targets).items():
                     euler_angles[param].append(angle)
             return euler_angles
-        targets = {q for obs in summands for q in obs.targets}
+        targets = QubitSet(q for obs in summands for q in obs.targets)
         for obs in summands:
             obs_euler_angles = obs.euler_angles
             for q in targets:
@@ -179,7 +179,8 @@ class CircuitBinding:
 
     def _get_euler_angles_list(self, observables: Sequence[Observable]) -> dict[str, float]:
         euler_angles = defaultdict(list)
-        targets = {q for obs in observables for q in (obs.targets or sorted(self._circuit.qubits))}
+        circuit_qubits = self._circuit.qubits
+        targets = QubitSet(q for obs in observables for q in (obs.targets or circuit_qubits))
         for obs in observables:
             if not obs.targets:
                 for param, angle in obs.get_euler_angles(targets).items():
