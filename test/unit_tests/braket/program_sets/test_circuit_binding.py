@@ -15,7 +15,9 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.circuits.observables import X, Y, Z
+from braket.parametric import FreeParameter
 from braket.program_sets import CircuitBinding
+from braket.quantum_information import PauliString
 
 
 def test_equality(circuit_rx_parametrized):
@@ -43,14 +45,70 @@ def test_result_type(circuit_rx_parametrized):
         )
 
 
-def test_sum_missing_targets():
-    with pytest.raises(ValueError):
-        CircuitBinding(Circuit().h(0), observables=X() + Y())
+def test_targetless_sum():
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
+    input_sets = {"theta": [1.35, 1.58]}
+    h = X(0) @ Y(1) - 3 * X(1) @ Z(0)
+    h_targetless = X() @ Y() - 3 * Z() @ X()
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=h).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=h_targetless).to_ir()
+    )
 
 
-def test_missing_targets_in_observables_list():
-    with pytest.raises(ValueError):
-        CircuitBinding(Circuit().h(0), observables=[X(0), Y()])
+def test_targetless_sum_verbatim_circuit():
+    circuit = Circuit().add_verbatim_box(Circuit().rx(1, FreeParameter("theta")).cnot(1, 0))
+    input_sets = {"theta": [1.35, 1.58]}
+    h = Y(1) @ X(0) - 3 * Z(0) @ X(1)
+    h_targetless = Y() @ X() - 3 * X() @ Z()
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=h).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=h_targetless).to_ir()
+    )
+
+
+def test_targetless_observable_in_list():
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), 3 * Z(0) @ X(1)]
+    obs_targetless = [X(0) @ Y(1), 3 * Z() @ X()]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_targetless).to_ir()
+    )
+
+
+def test_targetless_observable_in_list_verbatim_circuit():
+    circuit = Circuit().add_verbatim_box(Circuit().rx(1, FreeParameter("theta")).cnot(1, 0))
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [Y(1) @ X(0), 3 * Z(0) @ X(1)]
+    obs_targetless = [Y() @ X(), 3 * X(1) @ Z(0)]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_targetless).to_ir()
+    )
+
+
+def test_pauli_string_in_list():
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
+    obs_ps = [X(0) @ Y(1), PauliString("-ZX")]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_ps).to_ir()
+    )
+
+
+def test_string_in_list():
+    circuit = Circuit().rx(1, FreeParameter("theta")).cnot(1, 0)
+    input_sets = {"theta": [1.35, 1.58]}
+    obs = [X(0) @ Y(1), -1 * Z(0) @ X(1)]
+    obs_ps = [X(0) @ Y(1), "-ZX"]
+    assert (
+        CircuitBinding(circuit, input_sets=input_sets, observables=obs).to_ir()
+        == CircuitBinding(circuit, input_sets=input_sets, observables=obs_ps).to_ir()
+    )
 
 
 def test_sum_in_observable_list():

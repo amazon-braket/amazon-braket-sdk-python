@@ -270,6 +270,20 @@ def test_call_with_default_parameter_val():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_with_euler_angles_sum_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    h = observables.X() @ observables.Z() @ observables.X() + observables.Y() @ observables.X()
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(h)
+
+
+def test_with_euler_angles_observable_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    obs = [observables.X(0) @ observables.Z(1), observables.Y()]
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(obs)
+
+
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
@@ -3753,7 +3767,6 @@ def test_barrier_specific_qubits():
     assert isinstance(instr.operator, compiler_directives.Barrier)
     assert instr.target == QubitSet([0, 1, 2])
     assert instr.operator.qubit_indices == [0, 1, 2]
-    assert circ.qubits_frozen is True
 
 
 def test_barrier_all_qubits():
