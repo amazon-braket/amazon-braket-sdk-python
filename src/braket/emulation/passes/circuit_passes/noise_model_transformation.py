@@ -56,6 +56,6 @@ class NoiseModelTransformation(TransformationPass):
         Returns:
             Circuit(s) with noise model applied
         """
-        if self._noise_model is None:
+        if not self._noise_model:
             return circuits
         return self._noise_model.apply(circuits)
