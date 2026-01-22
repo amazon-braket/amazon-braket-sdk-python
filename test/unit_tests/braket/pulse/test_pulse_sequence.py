@@ -24,6 +24,7 @@ from braket.pulse import (
     Port,
     PulseSequence,
 )
+from braket.pulse.waveforms import WaveformDict
 
 
 @pytest.fixture
@@ -77,6 +78,78 @@ def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
         "}",
     ])
     assert pulse_sequence.to_ir() == expected_str
+
+
+def test_create_waveformdict_with_pulse_sequence(user_defined_frame):
+    pulse_sequence = PulseSequence().set_frequency(user_defined_frame, 6e6)
+    wf = ConstantWaveform(1e-3, complex(1, 2), "wf_id")
+
+    waveform_dict = WaveformDict({"wf_id": wf}, pulse_sequence)
+    assert waveform_dict._pulse_sequence == pulse_sequence
+    assert waveform_dict["wf_id"]._pulse_sequence == pulse_sequence
+
+
+def test_pulse_sequence_with_modified_wf(predefined_frame_1):
+    pulse_sequence = (
+        PulseSequence()
+        .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+        .play(
+            predefined_frame_1,
+            ConstantWaveform(length=4e-3, iq=complex(2, 0.3), id="constant_wf"),
+        )
+        .play(
+            predefined_frame_1,
+            ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="arb_wf"),
+        )
+    )
+    expected_str = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
+        "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+        "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
+        "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
+        "    play(predefined_frame_1, gauss_wf);",
+        "    play(predefined_frame_1, drag_gauss_wf);",
+        "    play(predefined_frame_1, constant_wf);",
+        "    play(predefined_frame_1, arb_wf);",
+        "}",
+    ])
+    expected_str_after_mod = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        "    waveform gauss_wf = gaussian(17.0ns, 100.0ms, 0.2, true);",
+        "    waveform drag_gauss_wf = drag_gaussian(1.0us, 100.0ms, 0.25, 0.3, true);",
+        "    waveform constant_wf = constant(200.0ns, 0.5);",
+        "    waveform arb_wf = {-1.0 - 0.4im, 0, -0.3, -0.1 - 0.2im};",
+        "    play(predefined_frame_1, gauss_wf);",
+        "    play(predefined_frame_1, drag_gauss_wf);",
+        "    play(predefined_frame_1, constant_wf);",
+        "    play(predefined_frame_1, arb_wf);",
+        "}",
+    ])
+    assert pulse_sequence.to_ir() == expected_str
+    pulse_sequence.waveforms["constant_wf"].iq = 0.5
+    pulse_sequence.waveforms["constant_wf"].length = 2e-7
+
+    pulse_sequence.waveforms["gauss_wf"].length = 17e-9
+    pulse_sequence.waveforms["gauss_wf"].sigma = 0.1
+    pulse_sequence.waveforms["gauss_wf"].amplitude = 0.2
+    pulse_sequence.waveforms["gauss_wf"].zero_at_edges = True
+
+    pulse_sequence.waveforms["drag_gauss_wf"].length = 1e-6
+    pulse_sequence.waveforms["drag_gauss_wf"].sigma = 0.1
+    pulse_sequence.waveforms["drag_gauss_wf"].beta = 0.25
+    pulse_sequence.waveforms["drag_gauss_wf"].amplitude = 0.3
+    pulse_sequence.waveforms["drag_gauss_wf"].zero_at_edges = True
+
+    pulse_sequence.waveforms["arb_wf"].amplitudes = [-complex(1, 0.4), 0, -0.3, -complex(0.1, 0.2)]
+
+    assert pulse_sequence.to_ir() == expected_str_after_mod
 
 
 def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined_frame_2):
