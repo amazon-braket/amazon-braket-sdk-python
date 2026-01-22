@@ -146,7 +146,7 @@ class Circuit:
         self._qubit_observable_set = set()
         self._parameters = set()
         self._observables_simultaneously_measurable = True
-        self._has_compiler_directives = False
+        self._requires_physical_qubits = False
         self._measure_targets = None
 
         if addable is not None:
@@ -230,7 +230,8 @@ class Circuit:
     @property
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
-        return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
+        qubits = self._moments.qubits.union(self._qubit_observable_set)
+        return QubitSet(qubits if self._requires_physical_qubits else sorted(qubits))
 
     @property
     def parameters(self) -> set[FreeParameter]:
@@ -253,7 +254,7 @@ class Circuit:
             on each qubit targeted by any of the observables.
         """
         new_circuit = Circuit(self)
-        targets = self._get_observable_targets(observables)
+        targets = self._get_euler_rotation_targets(observables)
         for target in targets:
             params = euler_angle_parameter_names(target)
             new_circuit.rz(target, FreeParameter(params[0]))
@@ -261,10 +262,10 @@ class Circuit:
             new_circuit.rz(target, FreeParameter(params[2]))
         return new_circuit
 
-    def _get_observable_targets(self, observables: Sequence[Observable] | Sum):
+    def _get_euler_rotation_targets(self, observables: Sequence[Observable] | Sum) -> QubitSet:
         if isinstance(observables, Sum):
             if observables.targets:
-                return {target for obs in observables.summands for target in obs.targets}
+                return QubitSet(target for obs in observables.summands for target in obs.targets)
             qubit_count = self.qubit_count
             for obs in observables.summands:
                 if obs.qubit_count != qubit_count:
@@ -272,10 +273,10 @@ class Circuit:
                         "Each term of Hamiltonian without targets "
                         "must have same qubit count as circuit"
                     )
-            return QubitSet(self.qubits)
+            return self.qubits
         qubit_count = self.qubit_count
-        qubits = QubitSet(self.qubits)
-        targets = set()
+        qubits = self.qubits
+        targets = QubitSet()
         for obs in observables:
             if obs.targets:
                 targets |= obs.targets
@@ -501,7 +502,7 @@ class Circuit:
         ):
             raise ValueError("cannot apply instruction to measured qubits.")
 
-    def add_instruction(
+    def add_instruction(  # noqa: C901
         self,
         instruction: Instruction,
         target: QubitSetInput | None = None,
@@ -556,8 +557,10 @@ class Circuit:
         # Check if there is a measure instruction on the circuit
         self._check_if_qubit_measured(instruction, target, target_mapping)
 
+        operator = instruction.operator
+
         # Update measure targets if instruction is a measurement
-        if isinstance(instruction.operator, Measure):
+        if isinstance(operator, Measure):
             measure_target = self._map_target_qubits(instruction.target, target, target_mapping)[0]
             self._measure_targets = (self._measure_targets or []) + [measure_target]
 
@@ -567,7 +570,7 @@ class Circuit:
         elif target_mapping:
             # Target mapping has been supplied, copy instruction
             instructions_to_add = [instruction.copy(target_mapping=target_mapping)]
-        elif hasattr(instruction.operator, "qubit_count") and instruction.operator.qubit_count == 1:
+        elif hasattr(operator, "qubit_count") and operator.qubit_count == 1:
             # single qubit operator with target, add an instruction for each target
             instructions_to_add = [instruction.copy(target=qubit) for qubit in target]
         else:
@@ -575,7 +578,7 @@ class Circuit:
             instructions_to_add = [instruction.copy(target=target)]
 
         if self._check_for_params(instruction):
-            for param in instruction.operator.parameters:
+            for param in operator.parameters:
                 if isinstance(param, FreeParameterExpression) and isinstance(
                     param.expression, Expr
                 ):
@@ -583,6 +586,9 @@ class Circuit:
                     for parameter in free_params:
                         self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
+
+        if operator.requires_physical_qubits:
+            self._requires_physical_qubits = True
 
         return self
 
@@ -753,7 +759,7 @@ class Circuit:
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
-            self._has_compiler_directives = True
+            self._requires_physical_qubits = True
         return self
 
     def barrier(self, target: QubitSetInput | None = None) -> Circuit:
@@ -776,7 +782,6 @@ class Circuit:
             self.add_instruction(
                 Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
             )
-            self._has_compiler_directives = True
         return self
 
     def measure(self, target_qubits: QubitSetInput) -> Circuit:
@@ -1326,13 +1331,7 @@ class Circuit:
             if not serialization_properties:
                 qubit_reference_type = (
                     QubitReferenceType.PHYSICAL
-                    if (
-                        gate_definitions
-                        or any(
-                            instruction.operator.requires_physical_qubits
-                            for instruction in self.instructions
-                        )
-                    )
+                    if self._requires_physical_qubits or gate_definitions
                     else QubitReferenceType.VIRTUAL
                 )
                 serialization_properties = OpenQASMSerializationProperties(
@@ -1644,7 +1643,7 @@ class Circuit:
         of a part of the circuit, which consequently means that none of the other qubits can be
         rewired either for the program to still make sense.
         """
-        return self._has_compiler_directives
+        return self._requires_physical_qubits
 
     @property
     def observables_simultaneously_measurable(self) -> bool:

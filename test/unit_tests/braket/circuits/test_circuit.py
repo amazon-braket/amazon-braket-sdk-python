@@ -3767,7 +3767,6 @@ def test_barrier_specific_qubits():
     assert isinstance(instr.operator, compiler_directives.Barrier)
     assert instr.target == QubitSet([0, 1, 2])
     assert instr.operator.qubit_indices == [0, 1, 2]
-    assert circ.qubits_frozen is True
 
 
 def test_barrier_all_qubits():
