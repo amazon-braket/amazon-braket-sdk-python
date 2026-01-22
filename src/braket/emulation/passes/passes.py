@@ -23,6 +23,19 @@ class _EmulatorPass(ABC):
     def run(self, task_specification: TaskSpecification) -> TaskSpecification:
         raise NotImplementedError
 
+    def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
+        return self.run(task_specification)
+
+    @property
+    def supported_specifications(self) -> TaskSpecification:
+        """List of supported specifications for a ValidationPass
+
+        Returns:
+            TaskSpecification:
+                tuple, single, or union of supported specifications
+        """
+        return self._supported_specifications
+
 
 class TransformationPass(_EmulatorPass):
     _supported_specifications: TaskSpecification
@@ -57,19 +70,6 @@ class TransformationPass(_EmulatorPass):
             task_specification = self.transform(task_specification)
         return task_specification
 
-    def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
-        return self.run(task_specification)
-
-    @property
-    def supported_specifications(self) -> TaskSpecification:
-        """List of supported specifications for a ValidationPass
-
-        Returns:
-            TaskSpecification:
-                tuple, single, or union of supported specifications
-        """
-        return self._supported_specifications
-
 
 class ValidationPass(_EmulatorPass):
     _supported_specifications: TaskSpecification
@@ -100,16 +100,3 @@ class ValidationPass(_EmulatorPass):
         if isinstance(task_specification, self.supported_specifications):
             self.validate(task_specification)
         return task_specification
-
-    def __call__(self, task_specification: TaskSpecification) -> TaskSpecification:
-        return self.run(task_specification)
-
-    @property
-    def supported_specifications(self) -> TaskSpecification:
-        """List of supported specifications for a ValidationPass
-
-        Returns:
-            TaskSpecification:
-                tuple, single, or union of supported specifications
-        """
-        return self._supported_specifications

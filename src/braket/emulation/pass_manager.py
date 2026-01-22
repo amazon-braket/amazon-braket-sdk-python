@@ -69,7 +69,9 @@ class PassManager:
         """
         raise EmulatorValidationError(str(exception)) from exception
 
-    def __iadd__(self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]):
+    def __iadd__(
+        self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]
+    ) -> PassManager:
         """Incrementally add a pass, passmanager, or iterable pass"""
         if isinstance(passes, PassManager):
             self._passes.append(passes._passes)
@@ -80,7 +82,7 @@ class PassManager:
             self._passes.append(passes)
         return self
 
-    def __add__(self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]):
+    def __add__(self, passes: _EmulatorPass | PassManager | Iterable[_EmulatorPass]) -> PassManager:
         """add EmulatorPass, Passmanager, or iterable pass object to a PassManager"""
         if isinstance(passes, PassManager):
             passes_ = self._passes + passes._passes
@@ -88,4 +90,7 @@ class PassManager:
             passes_ = [*self._passes, passes]
         else:
             passes_ = [*self._passes, *passes]
-        return _EmulatorPass(passes_)
+        return PassManager(passes_)
+
+    def __len__(self) -> int:
+        return len(self._passes)
