@@ -55,8 +55,8 @@ class MeasurementTransformation(TransformationPass):
                 match program:
                     case Circuit():
                         new_programs.append(self.transform(program))
-                    case CircuitBinding() as entry if entry.observables:
-                        new_programs.append(entry)
+                    case CircuitBinding(observables=observables) if observables:
+                        new_programs.append(program)
                     case CircuitBinding():
                         new_programs.append(
                             CircuitBinding(
