@@ -138,7 +138,7 @@ class Emulator(Device):
         """
         program = self._pass_manager.transform(task_specification)
 
-        modifier = PassManager([MeasurementTransformation()])
+        modifier = PassManager(MeasurementTransformation())
         if apply_noise_model:
             modifier += NoiseModelTransformation(noise_model=self.noise_model)
         return modifier.transform(program)

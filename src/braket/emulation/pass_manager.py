@@ -31,7 +31,7 @@ class PassManager:
         """
         This method passes the input program through the Passes contained
         within this pass manager. A pass may simply validate a program or may
-        modify or entirely transform the program (to an equivalent quantum program).
+        transform the program (to an equivalent quantum program).
 
         Args:
             task_specification (TaskSpecification): The program to run the emulator passes on.
