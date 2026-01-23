@@ -22,7 +22,7 @@ from braket.circuits.qubit_set import QubitSet
     "target, expected_instruction_count",
     [
         ([0, 1], 3),
-        ([], 2),
+        ([], 3),
         (None, 3),
     ],
 )
@@ -37,7 +37,7 @@ def test_add_barrier(target, expected_instruction_count):
     if expected_instruction_count == 3:
         barrier_instr = circ.instructions[2]
         assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
-        if target is None:
-            assert barrier_instr.target == QubitSet([0, 1])
+        if target is None or target == []:
+            assert barrier_instr.target == QubitSet()
         else:
             assert barrier_instr.target == QubitSet(target)

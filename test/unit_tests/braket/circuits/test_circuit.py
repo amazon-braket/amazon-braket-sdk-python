@@ -3774,18 +3774,24 @@ def test_barrier_all_qubits():
     assert len(circ.instructions) == 3
     barrier_instr = circ.instructions[2]
     assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
-    assert barrier_instr.target == QubitSet([0, 1])
+    assert barrier_instr.target == QubitSet()
+
+
+def test_barrier_applies_to_qubits_added_after():
+    circ = Circuit().rx(0, 3.14).barrier().rx(0, 3.14).rx(1, 3.14)
+    barrier_instr = circ.instructions[1]
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_empty_circuit():
-    circ = Circuit().barrier()
-    assert len(circ.instructions) == 0  # No barrier added to empty circuit
+    with pytest.raises(ValueError, match="Cannot add global barrier to empty circuit"):
+        Circuit().barrier()
 
 
 def test_barrier_none_target():
     circ = Circuit().h(0).h(2).barrier(None)
     barrier_instr = circ.instructions[2]
-    assert barrier_instr.target == QubitSet([0, 2])
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_openqasm_export_specific_qubits():
@@ -3797,7 +3803,7 @@ def test_barrier_openqasm_export_specific_qubits():
 def test_barrier_openqasm_export_all_qubits():
     circ = Circuit().h(0).h(1).barrier().cnot(0, 1)
     qasm = circ.to_ir(IRType.OPENQASM).source
-    assert "barrier q[0], q[1];" in qasm
+    assert "barrier;" in qasm
 
 
 def test_barrier_jaqcd_export_fails():
