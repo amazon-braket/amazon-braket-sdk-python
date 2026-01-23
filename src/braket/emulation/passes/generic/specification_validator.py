@@ -32,8 +32,7 @@ class SpecificationValidator(ValidationPass):
 
     def validate(self, circuit: TaskSpecification) -> None:
         """
-        Checks that the number of qubits used in this circuit does not exceed this
-        validator's qubit_count max.
+        Checks that the input matches device specifications.
 
         Args:
             circuit (Circuit): The Braket circuit whose qubit count to validate.

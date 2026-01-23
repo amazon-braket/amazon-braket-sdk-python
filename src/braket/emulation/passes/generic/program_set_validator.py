@@ -43,6 +43,8 @@ class ProgramSetValidator(ValidationPass):
 
         """
         pset_action = self.device_actions["braket.ir.openqasm.program_set"]
+        if not isinstance(pset_action, dict):
+            pset_action = pset_action.dict()
         max_shots = pset_action["maximumTotalShots"]
         max_exc = pset_action["maximumExecutables"]
         if len(task_specification) > max_exc:
