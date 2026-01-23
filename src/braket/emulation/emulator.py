@@ -83,14 +83,13 @@ class Emulator(Device):
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
 
-        task_specification = self.transform(task_specification, apply_noise_model=True)
-        # Remove the verbatim box before submitting to the braket density matrix simulator
-        task_specification_v2 = RemoveVerbatimTransformation().run(task_specification)
-
         if hasattr(self._backend, "_noise_model") and self._backend._noise_model is not None:
             warnings.warn("Backend device already has a noise model defined.", stacklevel=2)
+        task_specification = self.transform(task_specification, apply_noise_model=True)
 
-        return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
+        return self._backend.run(
+            RemoveVerbatimTransformation().run(task_specification), shots, inputs, *args, **kwargs
+        )
 
     def run_batch(
         self,
