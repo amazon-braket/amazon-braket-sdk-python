@@ -58,7 +58,7 @@ class DeviceEmulatorProperties:
         twoQubitProperties (dict[str, TwoQubitProperties]): Properties of two-qubit calibration
             details
         supportedResultTypes (list[ResultType]): List of supported result types.
-        supportedActions (list[]): List of device action schemas, i.e. from properties.dict()['action']
+        supportedActions (list[]): List of device action schemas
     """
 
     def __init__(
@@ -203,10 +203,11 @@ class DeviceEmulatorProperties:
 
     @property
     def supported_specifications(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
-        return (sum(ACTION_TO_SPECIFICATION[action] for action in self._supported_actions)
-                if self._supported_actions else ()
+        return (
+            sum(ACTION_TO_SPECIFICATION[action] for action in self._supported_actions)
+            if self._supported_actions
+            else ()
         )
-
 
     @property
     def supported_actions(self) -> dict[str, str]:
