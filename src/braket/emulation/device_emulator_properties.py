@@ -90,7 +90,7 @@ class DeviceEmulatorProperties:
         self._one_qubit_properties = oneQubitProperties
         self._two_qubit_properties = twoQubitProperties
         self._supported_result_types = supportedResultTypes
-        self._supported_actions = supportedActions or [[]]
+        self._supported_actions = supportedActions
 
     @staticmethod
     def _validate_native_gate_set(nativeGateSet: list[str]) -> None:
@@ -204,9 +204,9 @@ class DeviceEmulatorProperties:
     @property
     def supported_specifications(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
         return (
-            sum(ACTION_TO_SPECIFICATION[action] for action in self._supported_actions)
+            tuple(sum((ACTION_TO_SPECIFICATION[action] for action in self._supported_actions), []))  # noqa: RUF017
             if self._supported_actions
-            else ()
+            else Circuit
         )
 
     @property
@@ -240,10 +240,7 @@ class DeviceEmulatorProperties:
                 "The action in device_properties must have key `braket.ir.openqasm.program`."
             )
 
-        supportedActions = {
-            DeviceActionType(name): DeviceActionProperties.parse_obj(value)
-            for name, value in properties_dict["action"].items()
-        }
+        supportedActions = device_properties.action
         # Convert dictionary representations to OneQubitProperties and TwoQubitProperties objects
         one_qubit_props = {}
         for key, value in properties_dict["standardized"]["oneQubitProperties"].items():
