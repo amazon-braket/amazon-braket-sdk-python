@@ -126,8 +126,15 @@ class I(Observable):  # noqa: E742
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        params = euler_angle_parameter_names(self._targets[0])
-        return {params[0]: 0, params[1]: 0, params[2]: 0}
+        return self.get_euler_angles(self.targets)
+
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0})
+        return angles
 
     @property
     def eigenvalues(self) -> np.ndarray:
@@ -190,8 +197,19 @@ class X(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        params = euler_angle_parameter_names(self._targets[0])
-        return {params[0]: np.pi / 2, params[1]: np.pi / 2, params[2]: np.pi / 2}
+        return self.get_euler_angles(self.targets)
+
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({
+                euler_params[0]: np.pi / 2,
+                euler_params[1]: np.pi / 2,
+                euler_params[2]: np.pi / 2,
+            })
+        return angles
 
 
 Observable.register_observable(X)
@@ -241,8 +259,19 @@ class Y(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        params = euler_angle_parameter_names(self._targets[0])
-        return {params[0]: 0, params[1]: np.pi / 2, params[2]: np.pi / 2}
+        return self.get_euler_angles(self.targets)
+
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({
+                euler_params[0]: 0,
+                euler_params[1]: np.pi / 2,
+                euler_params[2]: np.pi / 2,
+            })
+        return angles
 
 
 Observable.register_observable(Y)
@@ -292,8 +321,15 @@ class Z(StandardObservable):
 
     @property
     def euler_angles(self) -> dict[str, float]:
-        params = euler_angle_parameter_names(self._targets[0])
-        return {params[0]: 0, params[1]: 0, params[2]: 0}
+        return self.get_euler_angles(self.targets)
+
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for target in targets:
+            euler_params = euler_angle_parameter_names(target)
+            angles.update({euler_params[0]: 0, euler_params[1]: 0, euler_params[2]: 0})
+        return angles
 
 
 Observable.register_observable(Z)
@@ -392,20 +428,18 @@ class TensorProduct(Observable):
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         coef_prefix = f"{self.coefficient} * " if self.coefficient != 1 else ""
-        factors = []
-        use_qubits = iter(target or self._targets)
-        for obs in self._factors:
-            obs_target = QubitSet()
-            num_qubits = int(np.log2(obs.to_matrix().shape[0]))
-            for _ in range(num_qubits):
-                obs_target.add(next(use_qubits))
-            factors.append(
-                obs.to_ir(
-                    target=obs_target,
-                    ir_type=IRType.OPENQASM,
-                    serialization_properties=serialization_properties,
-                )
+        targets = target or self._targets
+        if not targets:
+            raise ValueError("No valid target for observable")
+        qubit_iter = iter(targets)
+        factors = [
+            obs.to_ir(
+                target=QubitSet([next(qubit_iter) for _ in range(obs.qubit_count)]),
+                ir_type=IRType.OPENQASM,
+                serialization_properties=serialization_properties,
             )
+            for obs in self._factors
+        ]
         return f"{coef_prefix}{' @ '.join(factors)}"
 
     @property
@@ -435,6 +469,12 @@ class TensorProduct(Observable):
         angles = {}
         for obs in self.factors:
             angles.update(obs.euler_angles)
+        return angles
+
+    def get_euler_angles(self, targets: QubitSetInput) -> dict[str, float]:
+        angles = {}
+        for obs, qubit in zip(self.factors, targets, strict=True):
+            angles.update(obs.get_euler_angles([qubit]))
         return angles
 
     @property

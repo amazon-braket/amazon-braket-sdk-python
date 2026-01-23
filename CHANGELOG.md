@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.110.0 (2026-01-22)
+
+### Features
+
+ * Support targetless observables and Pauli strings in program sets
+
+### Bug Fixes and Other Changes
+
+ * More efficient check for physical qubits
+
 ## v1.109.0 (2026-01-20)
 
 ### Features
