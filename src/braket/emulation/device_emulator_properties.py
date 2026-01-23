@@ -58,7 +58,7 @@ class DeviceEmulatorProperties:
         twoQubitProperties (dict[str, TwoQubitProperties]): Properties of two-qubit calibration
             details
         supportedResultTypes (list[ResultType]): List of supported result types.
-        supportedActions (list[]): List of device action schemas
+        supportedActions (list[DeviceActionType, DeviceActionProperties]): List of device actions
     """
 
     def __init__(
