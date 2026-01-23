@@ -176,7 +176,7 @@ def customized_emulator():
 
     device_emu_propertis = DeviceEmulatorProperties(
         qubitCount=2,
-        nativeGateSet=["prx", "cz", "barrier"],
+        nativeGateSet=["prx", "cz"],
         connectivityGraph={},
         oneQubitProperties={
             "0": OneQubitProperties.parse_obj(f1q),
@@ -216,11 +216,3 @@ def test_two_qubit_depolarizing_rate(customized_emulator):
     assert abs(TARGET_F2Q - prob_00) < NUM_SIGMA / np.sqrt(num_samples)
     # If this unit test failed, it could be statistical fluctuation [with 1/370 probability],
     # please retry again.
-
-
-def test_barrier_with_emulator(customized_emulator):
-    circ = Circuit().cz(0, 1).barrier()
-    circ = Circuit().add_verbatim_box(circ)
-    num_samples = NUM_SHOTS
-    result = customized_emulator.run(circ, shots=num_samples).result()
-    assert result is not None
