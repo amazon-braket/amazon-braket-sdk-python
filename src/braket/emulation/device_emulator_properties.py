@@ -91,12 +91,8 @@ class DeviceEmulatorProperties:
         self._one_qubit_properties = oneQubitProperties
         self._two_qubit_properties = twoQubitProperties
         self._supported_result_types = supportedResultTypes
-        if not supportedSpecifications:
-            supportedSpecifications = Circuit
-        self._supported_specifications = supportedSpecifications
-        if not supportedActions:
-            supportedActions = {}
-        self._supported_actions = supportedActions
+        self._supported_specifications = supportedSpecifications or Circuit
+        self._supported_actions = supportedActions or {}
 
     @staticmethod
     def _validate_native_gate_set(nativeGateSet: list[str]) -> None:
