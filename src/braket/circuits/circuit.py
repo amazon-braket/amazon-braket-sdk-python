@@ -767,21 +767,24 @@ class Circuit:
 
         Args:
             target (QubitSetInput | None): Target qubits for the barrier.
-            If None, applies to all qubits in the circuit.
+            If None, applies to all qubits in the circuit (including qubits added later).
 
         Returns:
             Circuit: self
+
+        Raises:
+            ValueError: If target is None or empty and circuit has no qubits.
 
         Examples:
             >>> circ = Circuit().h(0).barrier([0, 1]).cnot(0, 1)
             >>> circ = Circuit().h(0).h(1).barrier()  # barrier on all qubits
         """
-        target_qubits = self.qubits if target is None else QubitSet(target)
-
-        if target_qubits:
-            self.add_instruction(
-                Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
-            )
+        if not target and not self.qubits:
+            raise ValueError("Cannot add global barrier to empty circuit")
+        target_qubits = QubitSet() if not target else QubitSet(target)
+        self.add_instruction(
+            Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
+        )
         return self
 
     def measure(self, target_qubits: QubitSetInput) -> Circuit:

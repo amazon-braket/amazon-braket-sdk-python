@@ -184,11 +184,8 @@ class BraketProgramContext(AbstractProgramContext):
         """Add a barrier instruction to the circuit.
 
         Args:
-            target (QubitSetInput | None): Target qubits for the barrier. If None,
+            target (QubitSetInput | None): Target qubits for the barrier. If None or empty,
                 applies barrier to all qubits in the circuit.
         """
-        target_qubits = self._circuit.qubits if target is None else QubitSet(target)
-
-        if target_qubits:
-            instruction = Instruction(Barrier(list(target_qubits)), target=target_qubits)
-            self._circuit.add_instruction(instruction)
+        target_qubits = QubitSet() if not target else QubitSet(target)
+        self._circuit.add_instruction(Instruction(Barrier(list(target_qubits)), target_qubits))

@@ -2441,7 +2441,7 @@ MOCK_RIGETTI_QPU_CAPABILITIES_1 = {
     },
     "paradigm": {
         "qubitCount": 3,
-        "nativeGateSet": ["cz", "prx", "cphaseshift"],
+        "nativeGateSet": ["cz", "prx", "cphaseshift", "barrier"],
         "connectivity": {
             "fullyConnected": False,
             "connectivityGraph": {"0": ["1", "2"], "1": ["0"], "2": ["0"]},
