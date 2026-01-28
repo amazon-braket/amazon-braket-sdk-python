@@ -49,7 +49,6 @@ lint.ignore = [
   "DOC501",  # broken with sphinx docs
   "EM",      # error string messages are fine
   "ERA001",  # This is used to capture math
-  "FA100",   # Ignore until Python 3.10 is used
   "FBT",     # Booleans in methods are fine
   "FIX",     # Allow TODO statements for now.
   "FURB101", # Same as PTH
