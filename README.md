@@ -77,8 +77,9 @@ pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
 import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+device = AwsDevice(Devices.Amazon.SV1)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, shots=100)
@@ -135,10 +136,11 @@ The following example executes the same Bell Pair example described to validate 
 
 ```python
 import boto3
-from braket.circuits import Circuit
 from braket.aws import AwsDevice
+from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Ankaa-2")
+device = AwsDevice(Devices.Rigetti.Ankaa3)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)
