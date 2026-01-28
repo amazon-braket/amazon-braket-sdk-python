@@ -18,8 +18,8 @@ import json
 import os
 import urllib.request
 import warnings
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, ClassVar
 
 import pydantic
@@ -51,7 +51,7 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.tasks.quantum_task import TaskSpecification
 
 
-class AwsDeviceType(str, Enum):
+class AwsDeviceType(StrEnum):
     """Possible AWS device types"""
 
     SIMULATOR = "SIMULATOR"
@@ -439,7 +439,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.now(tz=timezone.utc)
+        current_datetime_utc = datetime.now(tz=UTC)
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)

@@ -15,11 +15,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class CriteriaKey(str, Enum):
+class CriteriaKey(StrEnum):
     """Specifies the types of keys that a criteria may use to match an instruction,
     observable, etc.
     """
@@ -30,7 +30,7 @@ class CriteriaKey(str, Enum):
     OBSERVABLE = "OBSERVABLE"
 
 
-class CriteriaKeyResult(str, Enum):
+class CriteriaKeyResult(StrEnum):
     """The get_keys() method may return this enum instead of actual keys for
     a given criteria key type.
     """

@@ -13,17 +13,17 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class IRType(str, Enum):
+class IRType(StrEnum):
     """Defines the available IRTypes for circuit serialization."""
 
     OPENQASM = "OPENQASM"
     JAQCD = "JAQCD"
 
 
-class QubitReferenceType(str, Enum):
+class QubitReferenceType(StrEnum):
     """Defines how qubits should be referenced in the generated OpenQASM string.
     See https://qiskit.github.io/openqasm/language/types.html#quantum-types
     for details.

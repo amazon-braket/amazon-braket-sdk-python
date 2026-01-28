@@ -12,8 +12,8 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Python 3.10 or greater
-Download and install Python 3.10 or greater from [Python.org](https://www.python.org/downloads/).
+### Python 3.11 or greater
+Download and install Python 3.11 or greater from [Python.org](https://www.python.org/downloads/).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -77,8 +77,9 @@ pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
 import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+device = AwsDevice(Devices.Amazon.SV1)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, shots=100)
@@ -135,10 +136,11 @@ The following example executes the same Bell Pair example described to validate 
 
 ```python
 import boto3
-from braket.circuits import Circuit
 from braket.aws import AwsDevice
+from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Ankaa-2")
+device = AwsDevice(Devices.Rigetti.Ankaa3)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)
