@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.111.0 (2026-01-30)
+
+### Deprecations and Removals
+
+ * Drop Python 3.10
+
 ## v1.110.1 (2026-01-26)
 
 ### Bug Fixes and Other Changes
