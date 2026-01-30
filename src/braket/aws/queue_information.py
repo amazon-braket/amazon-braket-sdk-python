@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class QueueType(str, Enum):
+class QueueType(StrEnum):
     """Enumerates the possible priorities for the queue.
 
     Values:

@@ -21,7 +21,7 @@ norecursedirs = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 100
 format.preview = true
 format.docstring-code-line-length = 100
@@ -49,7 +49,6 @@ lint.ignore = [
   "DOC501",  # broken with sphinx docs
   "EM",      # error string messages are fine
   "ERA001",  # This is used to capture math
-  "FA100",   # Ignore until Python 3.10 is used
   "FBT",     # Booleans in methods are fine
   "FIX",     # Allow TODO statements for now.
   "FURB101", # Same as PTH

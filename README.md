@@ -12,8 +12,8 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Python 3.10 or greater
-Download and install Python 3.10 or greater from [Python.org](https://www.python.org/downloads/).
+### Python 3.11 or greater
+Download and install Python 3.11 or greater from [Python.org](https://www.python.org/downloads/).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
