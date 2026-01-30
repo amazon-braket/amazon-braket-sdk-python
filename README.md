@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
-[![Build status](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/build.yml)
+[![Build status](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io)
 [![Stack Overflow](https://img.shields.io/badge/StackExchange-Ask%20questions-blue?logo=stackexchange)](https://quantumcomputing.stackexchange.com/questions/tagged/amazon-braket)
@@ -77,9 +77,8 @@ pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
 import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
-from braket.devices import Devices
 
-device = AwsDevice(Devices.Amazon.SV1)
+device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, shots=100)
@@ -136,11 +135,10 @@ The following example executes the same Bell Pair example described to validate 
 
 ```python
 import boto3
-from braket.aws import AwsDevice
 from braket.circuits import Circuit
-from braket.devices import Devices
+from braket.aws import AwsDevice
 
-device = AwsDevice(Devices.Rigetti.Ankaa3)
+device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Ankaa-2")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)

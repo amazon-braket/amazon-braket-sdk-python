@@ -1,0 +1,49 @@
+name: Dependent tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - feature/**
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+        dependent:
+          - amazon-braket-pennylane-plugin-python
+
+    steps:
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - name: Free up disk space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
+        pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
+        pip install -e .
+        cd ..
+        git clone https://github.com/aws/${{ matrix.dependent }}.git
+        cd ${{ matrix.dependent }}
+        # Update the amazon-braket-sdk dependency to reference the current commit
+        python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
+        pip install -e .[test]
+    - name: Run unit tests
+      run: |
+        cd ../${{ matrix.dependent }}
+        pytest

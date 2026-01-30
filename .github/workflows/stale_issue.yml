@@ -1,4 +1,4 @@
-name: Close stale issues
+name: "Close stale issues"
 
 # Controls when the action will run.
 # This is every day at 10am
@@ -14,8 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write  # comment on issues
+    name: Stale issue job
     steps:
-      - uses: aws-actions/stale-issue-cleanup@v7.1.0
+      - uses: aws-actions/stale-issue-cleanup@7de35968489e4142233d2a6812519a82e68b5c38 # v6
         with:
           # Setting messages to an empty string will cause the automation to skip
           # that category
@@ -25,9 +26,9 @@ jobs:
 
           # These labels are required
           stale-issue-label: closing-soon
-          exempt-issue-labels: auto-label-exempt
+          exempt-issue-label: auto-label-exempt
           stale-pr-label: closing-soon
-          exempt-pr-labels: pr/needs-review
+          exempt-pr-label: pr/needs-review
           response-requested-label: response-requested
 
           # Don't set closed-for-staleness label to skip closing very old issues

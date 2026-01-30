@@ -1,0 +1,30 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Check code format
+
+on:
+  pull_request:
+    branches:
+      - main
+      - public-main
+      - feature/**
+
+permissions:
+  contents: read
+
+jobs:
+  check-code-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+    - name: Set up Python
+      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        pip install tox
+    - name: Run code format checks
+      run: |
+        tox -e linters_check -p auto
