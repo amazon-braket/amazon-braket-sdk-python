@@ -15,7 +15,7 @@ jobs:
     permissions:
       issues: write  # comment on issues
     steps:
-      - uses: aws-actions/stale-issue-cleanup@v7.1.0
+      - uses: aws-actions/stale-issue-cleanup@v7.1.1
         with:
           # Setting messages to an empty string will cause the automation to skip
           # that category
