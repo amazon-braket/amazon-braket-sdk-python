@@ -13,12 +13,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 import braket.ir.annealing as ir
 
 
-class ProblemType(str, Enum):
+class ProblemType(StrEnum):
     """The type of annealing problem.
 
     QUBO: Quadratic Unconstrained Binary Optimization, with values 1 and 0

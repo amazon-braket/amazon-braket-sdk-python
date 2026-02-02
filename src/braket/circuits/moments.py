@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
-from enum import Enum
+from enum import StrEnum
 from typing import Any, NamedTuple
 
 from braket.circuits.compiler_directive import CompilerDirective
@@ -27,7 +27,7 @@ from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class MomentType(str, Enum):
+class MomentType(StrEnum):
     """The type of moments.
     GATE: a gate
     NOISE: a noise channel added directly to the circuit

@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.111.0 (2026-01-30)
+
+### Deprecations and Removals
+
+ * Drop Python 3.10
+
+## v1.110.1 (2026-01-26)
+
+### Bug Fixes and Other Changes
+
+ * add barrier gate to BRAKET_GATES
+ * preserve global barrier semantics
+
+### Documentation Changes
+
+ * Update docs badge to point to default version
+
 ## v1.110.0 (2026-01-22)
 
 ### Features

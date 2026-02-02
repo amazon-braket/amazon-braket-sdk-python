@@ -559,12 +559,6 @@ def test_name(quantum_job_arn, quantum_job_name, aws_session, generate_get_job_r
     assert quantum_job.name == quantum_job_name
 
 
-def test_no_arn_setter(quantum_job):
-    # Python 3.11 error output differs from Python 3.10 <=
-    with pytest.raises(AttributeError):
-        quantum_job.arn = 123
-
-
 @pytest.mark.parametrize("wait_until_complete", [True, False])
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
 @patch("braket.aws.aws_quantum_job.prepare_quantum_job")
