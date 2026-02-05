@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.111.1 (2026-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Accept qubit 0 as valid Barrier target
+
 ## v1.111.0 (2026-01-30)
 
 ### Deprecations and Removals
