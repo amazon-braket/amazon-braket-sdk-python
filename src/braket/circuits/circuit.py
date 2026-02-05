@@ -781,7 +781,7 @@ class Circuit:
         """
         if not target and not self.qubits:
             raise ValueError("Cannot add global barrier to empty circuit")
-        target_qubits = QubitSet() if not target else QubitSet(target)
+        target_qubits = QubitSet(target)
         self.add_instruction(
             Instruction(compiler_directives.Barrier(list(target_qubits)), target=target_qubits)
         )
