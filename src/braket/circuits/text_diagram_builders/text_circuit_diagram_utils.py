@@ -135,7 +135,7 @@ def _get_compiler_directive_qubit_range(item: Instruction, circuit_qubits: Qubit
     if item.operator.name == "Barrier":
         if not item.target or len(item.target) == 0:
             return circuit_qubits
-        return item.target
+        return QubitSet(item.target)
     return circuit_qubits
 
 
