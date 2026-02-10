@@ -53,7 +53,7 @@ class ProgramSetValidator(ValidationPass):
                 f"the supported number of executables {max_exc}."
             )
 
-        if len(task_specification) * task_specification.shots_per_executable > max_shots:
+        if task_specification.total_shots > max_shots:
             raise ValueError(
                 f"{len(task_specification) * task_specification.shots_per_executable} > "
                 f"is greater than the total shot limit {max_shots}."
