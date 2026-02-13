@@ -161,6 +161,22 @@ To select a quantum hardware device, specify its ARN as the value of the `device
 ## Sample Notebooks
 Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/amazon-braket/amazon-braket-examples/) repo.
 
+<!-- BEGIN_RECENT_PUBLICATIONS -->
+
+## Recent Publications Using Amazon Braket
+
+| Year | Month | Title | Authors | Link |
+|------|-------|-------|---------|------|
+| 2026 | 1 | Evaluating state-of-the-art cloud quantum computers for quantum neural networks in gravitational waves data analysis | Maria-Catalina Isfan, Laurentiu-Ioan Caramete, Ana Caramete | [arXiv:2601.14036](https://arxiv.org/abs/2601.14036) |
+| 2026 | 1 | Investigation of Hardware Architecture Effects on Quantum Algorithm Performance: A Comparative Hardware Study | Askar Oralkhan, Temirlan Zhaxalykov | [arXiv:2601.05286](https://arxiv.org/abs/2601.05286) |
+| 2025 | 10 | What is Quantum Computer Security? | Sanjay Deshpande, Jakub Szefer | [arXiv:2510.07334](https://arxiv.org/abs/2510.07334) |
+| 2025 | 10 | Quantum Computing as a Service -- a Software Engineering Perspective | Aakash Ahmad, Muhammad Waseem, Bakheet Aljedaani, et al. | [arXiv:2510.04982](https://arxiv.org/abs/2510.04982) |
+| 2025 | 3 | qReduMIS: A Quantum-Informed Reduction Algorithm for the Maximum Independent Set Problem | Martin J. A. Schuetz, Romina Yalovetzky, Ruben S. Andrist, et al. | [arXiv:2503.12551](https://arxiv.org/abs/2503.12551) |
+
+*To update this table, run `python bin/update_braket_publications.py` from the repository root.*
+
+<!-- END_RECENT_PUBLICATIONS -->
+
 ## Braket Python SDK API Reference Documentation
 
 The API reference, can be found on [Read the Docs](https://amazon-braket-sdk-python.readthedocs.io/en/latest/).
