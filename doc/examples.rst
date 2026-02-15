@@ -10,7 +10,12 @@ https://github.com/amazon-braket/amazon-braket-examples.
 
    examples-getting-started.rst
    examples-braket-features.rst
-   examples-adv-circuits-algorithms.rst
-   examples-hybrid-quantum.rst
-   examples-ml-pennylane.rst
+   examples-advanced-circuits-algorithms.rst
+   examples-hybrid-quantum-algorithms.rst
+   examples-analog-hamiltonian-simulation.rst
    examples-hybrid-jobs.rst
+   examples-pulse-control.rst
+   examples-pennylane.rst
+   examples-qiskit.rst
+   examples-experimental-capabilities.rst
+   examples-nvidia-cuda-q.rst
