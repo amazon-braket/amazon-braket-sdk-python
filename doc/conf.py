@@ -3,7 +3,26 @@
 import datetime
 from importlib.metadata import version
 
+
+
 # Sphinx configuration below.
+import os
+import sys
+
+# Configure sys.path so we can import our generator script
+conf_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, conf_dir)
+
+try:
+    import generate_examples
+    # Generate example RST files from ENTRIES.json
+    print("Generating example RST files from ENTRIES.json...")
+    entries = generate_examples.fetch_entries()
+    generate_examples.generate_rst(entries, conf_dir)
+    print("Successfully generated example RST files.")
+except Exception as e:
+    print(f"Error generating examples: {e}")
+
 project = "amazon-braket-sdk"
 version = version(project)
 release = version
