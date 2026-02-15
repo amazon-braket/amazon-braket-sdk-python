@@ -32,6 +32,12 @@ from braket.circuits.angled_gate import (
     get_angle,
 )
 from braket.circuits.basis_state import BasisState, BasisStateInput
+from braket.circuits.duration_gate import (
+    DurationGate,
+    _duration_str,
+    bind_duration,
+    duration_ascii_characters,
+)
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -3839,6 +3845,47 @@ class PulseGate(Gate, Parameterizable):
 
 
 Gate.register_gate(PulseGate)
+
+
+class Delay(DurationGate):
+    r"""Delay gate. Applies delay in seconds."""
+
+    def __init__(self, qubit_count: int, duration: FreeParameterExpression | float):
+        super().__init__(
+            qubit_count=qubit_count,
+            duration=duration,
+            ascii_symbols=[duration_ascii_characters("delay", duration)] * qubit_count,
+        )
+
+    def bind_values(self, **kwargs) -> DurationGate:
+        return bind_duration(self, **kwargs)
+
+    @property
+    def _qasm_name(self) -> str:
+        return f"delay[{_duration_str(self.duration)}]"
+
+    def __hash__(self):
+        return hash((self.name, self.qubit_count, self.duration))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def delay(
+        target: QubitSetInput, duration: FreeParameterExpression | float
+    ) -> Instruction:
+        r"""Delay gate. Applies delay in seconds.
+
+        Args:
+            target (QubitSetInput): Target qubit(s)
+            duration (FreeParameterExpression | float): Delay in
+                seconds or in expression representation.
+
+        Examples:
+            >>> circ = Circuit().delay(target = [0, 1, 2], duration = 30e-9)
+        """
+        return Instruction(Delay(len(QubitSet(target)), duration), target=QubitSet(target))
+
+
+Gate.register_gate(Delay)
 
 
 def format_complex(number: complex) -> str:
