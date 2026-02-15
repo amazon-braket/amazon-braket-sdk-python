@@ -264,6 +264,12 @@ to engage in the conversation, and +1 issues to help drive priority.
 
 *Last updated: 2026-02-15*
 
+For the latest publications, run:
+
+```
+cd bin && python recent-publications.py
+```
+
 ### Code contributors
 
 [![Contributors](https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python)](https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors)
