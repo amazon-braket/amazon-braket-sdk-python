@@ -48,8 +48,8 @@ def get_entries_json(entries_url: str) -> RawEntries:
         return json.loads(response.read().decode("utf-8"))
 
 
-def update_toctree_file(file_path: Path, new_content: list[str]) -> None:
-    """Find the toctree directive in a file, truncate the file there, and append new content.
+def update_example_file(file_path: Path, new_content: list[str]) -> None:
+    """Find the toctree directive in a example rst file, truncate the file there, and append new content.
 
     Args:
         file_path (Path): The pathlib.Path object pointing to the target .rst file.
@@ -122,7 +122,7 @@ def process_entries(entries_json: RawEntries) -> tuple[list[str], SubTopicMap]:
 
 
 def main() -> None:
-    """Execute the main script logic to fetch entries and update Sphinx documentation files.
+    """Execute the main script logic to fetch entries and update Sphinx documentation files to add examples from amazon-braket-examples.
 
     Returns:
         None
@@ -137,10 +137,10 @@ def main() -> None:
 
     # Update the main examples list
     main_examples_file = SCRIPT_DIR / "examples.rst"
-    main_toctree_lines = [
+    main_examples_list_lines = [
         f"   examples-{topic.replace('_', '-')}.rst\n" for topic in topics
     ]
-    update_toctree_file(main_examples_file, main_toctree_lines)
+    update_example_file(main_examples_file, main_examples_list_lines)
 
     # Generate or update individual topic files
     for topic, entries in sub_topics.items():
@@ -169,7 +169,7 @@ def main() -> None:
                 ]
             )
 
-        update_toctree_file(example_file, topic_lines)
+        update_example_file(example_file, topic_lines)
 
 
 if __name__ == "__main__":
