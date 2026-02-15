@@ -15,7 +15,7 @@ import pytest
 
 from braket.circuits import Circuit
 from braket.emulation.passes.circuit_passes import _NotImplementedValidator
-from braket.program_sets import ProgramSet
+from braket.pulse import PulseSequence
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_validate_circuit_without_verbatim_box(default_not_implemented_validator
         default_not_implemented_validator.validate(circuit)
 
 
-def test_program_set(default_not_implemented_validator):
-    program_set = ProgramSet([Circuit().h(0).cnot(0, 1), Circuit().rx(0, 0)])
-    with pytest.raises(TypeError):
-        default_not_implemented_validator.validate(program_set)
+def test_not_implemented_sequence(default_not_implemented_validator):
+    pulse = PulseSequence()
+    with pytest.raises(ValueError):
+        default_not_implemented_validator.validate(pulse)
