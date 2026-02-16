@@ -119,7 +119,7 @@ def fetch_arxiv_papers() -> list[dict]:
             papers.append(
                 {
                     "year": str(dt.year),
-                    "month": str(dt.month),
+                    "month": dt.strftime("%B"),
                     "title": title,
                     "authors": ", ".join(authors) if authors else "",
                     "link": f"https://arxiv.org/abs/{arxiv_id}",
