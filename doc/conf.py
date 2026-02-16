@@ -40,10 +40,19 @@ napoleon_numpy_docstring = False
 
 apidoc_module_dir = "../src/braket"
 apidoc_output_dir = "_apidoc"
-apidoc_excluded_paths = ["../test"]
+# Exclude modules with only private members (would generate empty pages)
+apidoc_excluded_paths = [
+    "../test",
+    "pulse/ast",
+    "emulation/passes/circuit_passes/not_implemented_validator.py",
+    "tracking/tracking_events.py",
+    "circuits/text_diagram_builders/text_circuit_diagram_utils.py",
+    "jobs/local/local_job_container.py",
+]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-f", "--implicit-namespaces", "-H", "API Reference"]
+apidoc_template_dir = "_templates"
 
 typehints_fully_qualified = False
 always_document_param_types = True

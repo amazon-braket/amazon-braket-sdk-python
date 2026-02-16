@@ -11,6 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""In Amazon Braket, the atomic request to a device is a quantum task. For gate-based
+devices, this request includes the quantum circuit, measurement instructions, and
+shot count. This module provides result types for gate-based circuits, analog
+Hamiltonian simulations, quantum annealing, photonic models, and program sets,
+along with QuantumTask and QuantumTaskBatch for tracking execution and launching
+multiple tasks in parallel, and LocalQuantumTask and LocalQuantumTaskBatch for
+local simulation results.
+"""
+
 from braket.tasks import _jupyter_setup  # noqa: F401
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # noqa: F401
     AnalogHamiltonianSimulationQuantumTaskResult,

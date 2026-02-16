@@ -1,0 +1,32 @@
+{%- set maxdepth = 1 -%}
+
+{%- set package_titles = {
+    'braket': 'Braket SDK',
+    'braket.ahs': 'Analog Hamiltonian Simulation',
+    'braket.emulation.passes.generic': 'Generic Passes',
+    'braket.jobs.local': 'Local Jobs'
+} -%}
+
+{%- set display_title = package_titles.get(pkgname, pkgname.split('.')[-1] | replace('_', ' ') | title) -%}
+{{ display_title | e | heading }}
+
+{%- if is_namespace %}
+.. py:module:: {{ pkgname }}
+{%- else %}
+.. automodule:: {{ pkgname }}
+{%- for option in automodule_options %}
+   :{{ option }}:
+{%- endfor %}
+{%- endif %}
+
+{%- if subpackages or submodules %}
+
+.. toctree::
+   :maxdepth: {{ maxdepth }}
+{% for docname in subpackages %}
+   {{ docname }}
+{%- endfor %}
+{% for docname in submodules %}
+   {{ docname }}
+{%- endfor %}
+{%- endif %}
