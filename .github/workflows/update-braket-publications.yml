@@ -1,0 +1,39 @@
+name: Update Braket Publications
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-publications:
+    runs-on: ubuntu-latest
+    if: github.repository == 'amazon-braket/amazon-braket-sdk-python'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run update-braket-publications script
+        run: python3 bin/update-braket-publications.py
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-braket-publications
+          delete-branch: true
+          title: "documentation: update recent publications using Amazon Braket"
+          body: |
+            Automated update of the Recent Publications Using Amazon Braket table in README.md.
+
+            This PR was created by the monthly scheduled workflow that runs `bin/update-braket-publications.py` to fetch arXiv preprints mentioning Amazon Braket from the past 12 months.
+          commit-message: "documentation: update recent publications table"
