@@ -139,7 +139,7 @@ invalid_device_properties_dict_1 = {
             "supportedOperations": [],
             "supportedResultTypes": valid_supportedResultTypes,
             "version": ["1.0"],
-        }
+        },
     },
     "paradigm": {
         "connectivity": {"connectivityGraph": {}, "fullyConnected": False},
@@ -209,7 +209,13 @@ reduced_standardized_gate_model_qpu_device_properties_dict = {
             "supportedOperations": [],
             "supportedResultTypes": valid_supportedResultTypes,
             "version": ["1"],
-        }
+        },
+        "braket.ir.openqasm.program_set": {
+            "actionType": "braket.ir.openqasm.program_set",
+            "maximumExecutables": 5,
+            "maximumTotalShots": 200000,
+            "version": ["1"],
+        },
     },
     "braketSchemaHeader": {
         "name": "braket.device_schema.iqm.iqm_device_capabilities",
