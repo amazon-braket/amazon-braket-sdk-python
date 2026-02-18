@@ -1,16 +1,3 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"). You
-# may not use this file except in compliance with the License. A copy of
-# the License is located at
-#
-#     http://aws.amazon.com/apache2.0/
-#
-# or in the "license" file accompanying this file. This file is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
-# ANY KIND, either express or implied. See the License for the specific
-# language governing permissions and limitations under the License.
-
 import json
 import urllib.request
 from collections import defaultdict
@@ -27,8 +14,24 @@ ProcessedEntry: TypeAlias = dict[str, str]
 # Maps a main topic string to a list of its processed entries
 SubTopicMap: TypeAlias = dict[str, list[ProcessedEntry]]
 
+# --- Constants ---
+# Default titles for known topics, used when generating topic-specific .rst files
+TOPIC_TITLES: dict[str, str] = {
+    "getting_started": "Getting Started",
+    "braaket_features": "Braket Features",
+    "advanced_circuits_algorithms": "Advanced Circuits And Algorithms",
+    "hybrid_quantum_algorithms": "Hybrid Quantum Algorithms",
+    "analog_hamiltonian_simulation": "Analog Hamiltonian Simulation",
+    "hybrid_jobs": "Hybrid Jobs",
+    "pulse_control": "Pulse Control",
+    "pennylane": "PennyLane",
+    "qiskit": "Qiskit",
+    "experimental_capabilities": "Experimental Capabilities",
+    "nvidia_cuda_q": "NVIDIA CUDA Quantum",
+}
+
 SCRIPT_DIR = Path(__file__).parent
-REPO_BASE_URL = "https://github.com/amazon-braket/amazon-braket-examples/tree/main/"
+REPO_BASE_URL = "https://github.com/amazon-braket/amazon-braket-examples/blob/main/"
 
 
 def get_entries_json(entries_url: str) -> RawEntries:
@@ -148,7 +151,7 @@ def main() -> None:
 
         # Create base file layout if it doesn't exist
         if not example_file.exists():
-            title = f"{topic.capitalize()} Examples"
+            title = TOPIC_TITLES.get(topic, topic.replace("_", " ").title())
             border = "#" * len(title)
             with example_file.open("w", encoding="utf-8") as f:
                 f.write(f"{border}\n{title}\n{border}\n\n")
