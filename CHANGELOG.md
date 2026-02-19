@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.112.1 (2026-02-18)
+
+### Bug Fixes and Other Changes
+
+ * change qubit number division to floor division
+
+## v1.112.0 (2026-02-16)
+
+### Features
+
+ * Emulator support for ProgramSets, transformation passes
+
 ## v1.111.2 (2026-02-09)
 
 ### Bug Fixes and Other Changes
