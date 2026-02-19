@@ -21,6 +21,7 @@ extensions = [
 
 source_suffix = ".rst"
 root_doc = "index"
+exclude_patterns = ["_apidoc/modules.rst"]
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
@@ -29,6 +30,7 @@ default_role = "py:obj"
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "prev_next_buttons_location": "both",
+    "collapse_navigation": True,
 }
 htmlhelp_basename = f"{project}doc"
 
