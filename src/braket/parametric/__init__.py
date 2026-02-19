@@ -11,6 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""You can define a circuit with gates that depend on free parameters and specify
+the values of these parameters when submitting the circuit as a quantum task.
+This module provides FreeParameter for defining symbolic parameters,
+FreeParameterExpression for mathematical expressions, and Parameterizable
+interface for parameter binding.
+"""
 
 from braket.parametric.free_parameter import FreeParameter  # noqa: F401
 from braket.parametric.free_parameter_expression import FreeParameterExpression  # noqa: F401

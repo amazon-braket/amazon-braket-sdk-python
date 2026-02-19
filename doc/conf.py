@@ -21,6 +21,7 @@ extensions = [
 
 source_suffix = ".rst"
 root_doc = "index"
+exclude_patterns = ["_apidoc/modules.rst"]
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
@@ -29,6 +30,7 @@ default_role = "py:obj"
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "prev_next_buttons_location": "both",
+    "collapse_navigation": True,
 }
 htmlhelp_basename = f"{project}doc"
 
@@ -40,10 +42,19 @@ napoleon_numpy_docstring = False
 
 apidoc_module_dir = "../src/braket"
 apidoc_output_dir = "_apidoc"
-apidoc_excluded_paths = ["../test"]
+# Exclude modules with only private members (would generate empty pages)
+apidoc_excluded_paths = [
+    "../test",
+    "pulse/ast",
+    "emulation/passes/circuit_passes/not_implemented_validator.py",
+    "tracking/tracking_events.py",
+    "circuits/text_diagram_builders/text_circuit_diagram_utils.py",
+    "jobs/local/local_job_container.py",
+]
 apidoc_separate_modules = True
 apidoc_module_first = True
 apidoc_extra_args = ["-f", "--implicit-namespaces", "-H", "API Reference"]
+apidoc_template_dir = "_templates"
 
 typehints_fully_qualified = False
 always_document_param_types = True

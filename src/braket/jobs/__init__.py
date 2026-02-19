@@ -11,6 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Amazon Braket Hybrid Jobs offers a way to run hybrid quantum-classical algorithms
+requiring both classical AWS resources and quantum processing units (QPUs). This
+module provides the hybrid_job decorator, configuration classes, utilities for
+checkpointing and result persistence, environment variable helpers, and container
+image management.
+"""
+
 from braket.jobs.config import (  # noqa: F401
     CheckpointConfig,
     InstanceConfig,

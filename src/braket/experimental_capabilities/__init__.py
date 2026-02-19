@@ -11,6 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Experimental capabilities provide access to hardware with limited availability
+and emergent new software features. This module provides EnableExperimentalCapability
+context manager for enabling experimental features, and IQM-specific operators
+for dynamic circuits with mid-circuit measurement and feed-forward control.
+"""
+
 from braket.experimental_capabilities.experimental_capability_context import (
     EnableExperimentalCapability,  # noqa: F401
 )

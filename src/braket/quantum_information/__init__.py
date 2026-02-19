@@ -11,4 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Provides utilities for working with quantum information concepts. It
+includes the PauliString class for representing and manipulating tensor products
+of Pauli operators.
+"""
+
 from braket.quantum_information.pauli_string import PauliString  # noqa: F401

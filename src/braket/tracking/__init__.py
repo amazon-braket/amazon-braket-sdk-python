@@ -11,4 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""The Braket SDK offers near real-time cost tracking for quantum workloads. This
+module provides Tracker for monitoring quantum task costs and usage as a context
+manager, Pricing for retrieving AWS pricing data, and TrackingContext for managing
+tracker registration and event broadcasting.
+"""
+
 from braket.tracking.tracker import Tracker  # noqa: F401

@@ -11,6 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Provides a helper function for detecting Jupyter notebook environments.
+It is used internally by the SDK to enable notebook-specific features and display
+formatting.
+"""
+
 import sys
 
 

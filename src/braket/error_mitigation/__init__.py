@@ -11,5 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Quantum error mitigation is a set of techniques aimed at reducing the effects
+of errors in quantum computers. This module provides ErrorMitigation base class
+and Debias for debiasing, which maps a circuit into multiple variants to reduce
+the effect of systematic errors.
+"""
+
 from braket.error_mitigation.debias import Debias  # noqa: F401
 from braket.error_mitigation.error_mitigation import ErrorMitigation  # noqa: F401
