@@ -165,7 +165,7 @@ class DeviceEmulatorProperties:
             edges_node = [(min(edge), max(edge)) for edge in edges_node]
             edges.update(edges_node)
 
-        return len(edges) == self.qubit_count * (self.qubit_count - 1) / 2
+        return len(edges) == self.qubit_count * (self.qubit_count - 1) // 2
 
     @property
     def directed(self) -> bool:
