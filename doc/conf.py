@@ -1,7 +1,29 @@
 """Sphinx configuration."""
 
 import datetime
+import subprocess
+import sys
 from importlib.metadata import version
+from pathlib import Path
+
+DOC_DIR = Path(__file__).parent
+SCRIPT_PATH = DOC_DIR / "update_examples.py"
+
+# Run update_examples.py to ensure example .rst files are up to date before Sphinx processes them
+if SCRIPT_PATH.exists():
+    print(f"--> Running example update script: {SCRIPT_PATH}")
+    try:
+        subprocess.run(
+            [sys.executable, str(SCRIPT_PATH)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Pre-build Step Failed: {e}")
+        sys.exit(1)
+else:
+    print(f"--> Warning: Could not find {SCRIPT_PATH}")
 
 # Sphinx configuration below.
 project = "amazon-braket-sdk"
