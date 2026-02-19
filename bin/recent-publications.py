@@ -9,7 +9,7 @@ from pathlib import Path
 
 """
 Run from the root of the git repository, will fetch recent publications related to "Amazon Braket"
-from arXiv and update the README.md file.
+from arXiv and update the PUBLICATION.md file.
 
 Usage: python bin/apply-header.py
 """
@@ -20,7 +20,8 @@ TIME_DELTA = timedelta(days=365)
 # Path resolution relative to script location ensures reliability when called from any directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
-README_PATH = os.path.join(REPO_ROOT, "README.md")
+FILE_NAME = "PUBLICATION.md"
+README_PATH = os.path.join(REPO_ROOT, FILE_NAME)
 
 # ArXiv API endpoint and query parameters
 ARXIV_API_URL = "http://export.arxiv.org/api/query"
@@ -34,8 +35,8 @@ TABLE_STRUCTURE = [
 
 XML_NAMESPACE = {"atom": "http://www.w3.org/2005/Atom"}
 
-# The header in README.md under which the recent publications table will be inserted
-TARGET_HEADER = "### Recent Publications"
+# The header in PUBLICATION.md under which the recent publications table will be inserted
+TARGET_HEADER = "## Recent Publications"
 
 
 def get_recent_papers():
@@ -101,8 +102,8 @@ def get_recent_papers():
     return papers
 
 
-def update_readme(papers):
-    """Update the `README.md` file by inserting a markdown table of recent
+def update_publications(papers):
+    """Update the `PUBLICATION.md` file by inserting a markdown table of recent
     publications under the specified header.
 
     Args:
@@ -110,7 +111,7 @@ def update_readme(papers):
         details (year, month, title, authors, url).
 
     Raises:
-        ValueError: If the target header is not found in the README.md file.
+        ValueError: If the target header is not found in the PUBLICATION.md file.
     """
     rows = [
         f"| {p['year']} | {p['month']} | {p['title']} | {p['authors']} | [arXiv]({p['url']}) |"
@@ -127,7 +128,7 @@ def update_readme(papers):
     full_content = Path(README_PATH).read_text(encoding="utf-8")
 
     if TARGET_HEADER not in full_content:
-        raise ValueError(f"Target '{TARGET_HEADER}' not found in `README.md.`")
+        raise ValueError(f"Target '{TARGET_HEADER}' not found in `{FILE_NAME}`")
 
     pre_header, post_header = full_content.split(TARGET_HEADER, 1)
 
@@ -137,13 +138,13 @@ def update_readme(papers):
     if next_section_match:
         remaining_sections = post_header[next_section_match.start():]
 
-    updated_readme = f"{pre_header}{TARGET_HEADER}\n{table_content}{remaining_sections}"
+    updated_publications = f"{pre_header}{TARGET_HEADER}\n{table_content}{remaining_sections}"
 
-    Path(README_PATH).write_text(updated_readme, encoding="utf-8")
+    Path(README_PATH).write_text(updated_publications, encoding="utf-8")
 
-    print(f"Successfully updated README.md under '{TARGET_HEADER}'")
+    print(f"Successfully updated {FILE_NAME} under '{TARGET_HEADER}'")
 
 
 if __name__ == "__main__":
     if recent_papers := get_recent_papers():
-        update_readme(recent_papers)
+        update_publications(recent_papers)
