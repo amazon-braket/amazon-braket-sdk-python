@@ -39,7 +39,7 @@ jobs:
           commit-message: "chore: update PUBLICATIONS.md with recent arXiv papers"
           branch: auto/weekly-publication-update
           delete-branch: true
-          title: "📝 Weekly Publication Update"
+          title: "Weekly Publication Update"
           body: |
             ## Automated Publication Update
 
