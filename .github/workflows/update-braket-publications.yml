@@ -2,7 +2,7 @@ name: Update Braket Publications
 
 on:
   schedule:
-    - cron: "0 0 1 * *"
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -33,7 +33,7 @@ jobs:
           delete-branch: true
           title: "documentation: update recent publications using Amazon Braket"
           body: |
-            Automated update of the Recent Publications Using Amazon Braket table in README.md.
+            Automated update of PUBLICATIONS.md with recent arXiv preprints that use Amazon Braket.
 
-            This PR was created by the monthly scheduled workflow that runs `bin/update-braket-publications.py` to fetch arXiv preprints mentioning Amazon Braket from the past 12 months.
-          commit-message: "documentation: update recent publications table"
+            This PR was created by the weekly scheduled workflow that runs `bin/update-braket-publications.py` to fetch arXiv preprints mentioning Amazon Braket from the past 12 months.
+          commit-message: "documentation: update PUBLICATIONS.md"
