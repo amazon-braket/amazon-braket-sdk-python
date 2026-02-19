@@ -15,19 +15,19 @@ ProcessedEntry: TypeAlias = dict[str, str]
 SubTopicMap: TypeAlias = dict[str, list[ProcessedEntry]]
 
 # --- Constants ---
-# Default titles for known topics, used when generating topic-specific .rst files
+# Titles for known topics, used when generating topic-specific .rst files (Defaults to a title-cased version of the topic string if not found)
 TOPIC_TITLES: dict[str, str] = {
-    "getting_started": "Getting Started",
-    "braaket_features": "Braket Features",
-    "advanced_circuits_algorithms": "Advanced Circuits And Algorithms",
-    "hybrid_quantum_algorithms": "Hybrid Quantum Algorithms",
-    "analog_hamiltonian_simulation": "Analog Hamiltonian Simulation",
-    "hybrid_jobs": "Hybrid Jobs",
-    "pulse_control": "Pulse Control",
-    "pennylane": "PennyLane",
-    "qiskit": "Qiskit",
-    "experimental_capabilities": "Experimental Capabilities",
-    "nvidia_cuda_q": "NVIDIA CUDA Quantum",
+    "getting_started": "Getting started",
+    "braket_features": "Amazon Braket features",
+    "advanced_circuits_algorithms": "Advanced circuits and algorithms",
+    "hybrid_quantum_algorithms": "Hybrid quantum algorithms",
+    "analog_hamiltonian_simulation": "Analog Hamiltonian simulation",
+    "hybrid_jobs": "Amazon Braket Hybrid Jobs",
+    "pulse_control": "Pulse control",
+    "pennylane": "Quantum machine learning and optimization with PennyLane",
+    "qiskit": "Using Qiskit with Amazon Braket",
+    "experimental_capabilities": "Experimental capabilities",
+    "nvidia_cuda_q": "Using NVIDIA CUDA-Q with Amazon Braket",
 }
 
 SCRIPT_DIR = Path(__file__).parent
@@ -140,6 +140,16 @@ def main() -> None:
 
     # Update the main examples list
     main_examples_file = SCRIPT_DIR / "examples.rst"
+
+    if not main_examples_file.exists():
+        initial_content = (
+            "########\nExamples\n########\n\n"
+            "There are several examples available in the Amazon Braket repo:\n"
+            "https://github.com/amazon-braket/amazon-braket-examples.\n\n"
+            ".. toctree::\n    :maxdepth: 2\n\n"
+        )
+        main_examples_file.write_text(initial_content, encoding="utf-8")
+
     main_examples_list_lines = [
         f"   examples-{topic.replace('_', '-')}.rst\n" for topic in topics
     ]
