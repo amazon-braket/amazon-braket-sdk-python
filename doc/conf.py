@@ -3,7 +3,10 @@
 import datetime
 from importlib.metadata import version
 
-# Sphinx configuration below.
+
+
+
+
 project = "amazon-braket-sdk"
 version = version(project)
 release = version
