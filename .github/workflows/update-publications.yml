@@ -1,0 +1,35 @@
+name: Update Publications
+
+on:
+  schedule:
+    # Run every Monday at 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-publications:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Run publications script
+        run: python bin/update_braket_publications.py
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "docs: update PUBLICATIONS.md with latest arXiv papers"
+          title: "docs: update PUBLICATIONS.md with latest arXiv papers"
+          body: |
+            Automated weekly update of PUBLICATIONS.md with the latest arXiv
+            preprints that use Amazon Braket.
+          branch: auto-update-publications
+          delete-branch: true
