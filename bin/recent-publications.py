@@ -9,7 +9,7 @@ from pathlib import Path
 
 """
 Run from the root of the git repository, will fetch recent publications related to "Amazon Braket"
-from arXiv and update the PUBLICATION.md file.
+from arXiv and update the PUBLICATIONS.md file.
 
 Usage: python bin/recent-publications.py
 """
@@ -20,7 +20,7 @@ TIME_DELTA = timedelta(days=365)
 # Path resolution relative to script location ensures reliability when called from any directory
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
-FILE_NAME = "PUBLICATION.md"
+FILE_NAME = "PUBLICATIONS.md"
 README_PATH = os.path.join(REPO_ROOT, FILE_NAME)
 
 # ArXiv API endpoint and query parameters
@@ -35,7 +35,7 @@ TABLE_STRUCTURE = [
 
 XML_NAMESPACE = {"atom": "http://www.w3.org/2005/Atom"}
 
-# The header in PUBLICATION.md under which the recent publications table will be inserted
+# The header in PUBLICATIONS.md under which the recent publications table will be inserted
 TARGET_HEADER = "## Recent Publications"
 
 # Patterns that indicate a paper actually ran experiments on Amazon Braket
@@ -144,7 +144,7 @@ def get_recent_papers():
 
 
 def update_publications(papers):
-    """Update the `PUBLICATION.md` file by inserting a markdown table of recent
+    """Update the `PUBLICATIONS.md` file by inserting a markdown table of recent
     publications under the specified header.
 
     Args:
@@ -152,7 +152,7 @@ def update_publications(papers):
         details (year, month, title, authors, url).
 
     Raises:
-        ValueError: If the target header is not found in the PUBLICATION.md file.
+        ValueError: If the target header is not found in the PUBLICATIONS.md file.
     """
     rows = [
         f"| {p['year']} | {p['month']} | {p['title']} | {p['authors']} | [arXiv]({p['url']}) |"
