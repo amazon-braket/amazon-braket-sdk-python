@@ -11,7 +11,7 @@ from pathlib import Path
 Run from the root of the git repository, will fetch recent publications related to "Amazon Braket"
 from arXiv and update the PUBLICATION.md file.
 
-Usage: python bin/apply-header.py
+Usage: python bin/recent-publications.py
 """
 
 # Time delta for fetching papers (1 year)
@@ -38,9 +38,45 @@ XML_NAMESPACE = {"atom": "http://www.w3.org/2005/Atom"}
 # The header in PUBLICATION.md under which the recent publications table will be inserted
 TARGET_HEADER = "## Recent Publications"
 
+# Patterns that indicate a paper actually ran experiments on Amazon Braket
+USAGE_PATTERNS = [
+    r"(?:executed|ran|run|deployed|implemented|tested|performed|conducted)\s+(?:\w+\s+){0,4}(?:on|with|via|through)\s+(?:Amazon\s+)?Braket",
+    r"using\s+(?:the\s+)?Amazon\s+Braket",
+    r"Amazon\s+Braket\s+SDK",
+    r"Braket\s+(?:simulator|backend|device|hardware|service|cloud)",
+    r"(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy).*(?:Amazon\s+Braket|Braket)",
+    r"(?:Amazon\s+Braket|Braket).*(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy)",
+    r"(?:submitted|sent|dispatched)\s+(?:\w+\s+){0,4}(?:to|via)\s+(?:Amazon\s+)?Braket",
+    r"Braket\s+(?:API|tasks|quantum\s+tasks|jobs)",
+    r"(?:results|data|measurements)\s+(?:\w+\s+){0,3}from\s+(?:Amazon\s+)?Braket",
+    r"(?:circuits?|programs?)\s+(?:\w+\s+){0,3}(?:on|to)\s+(?:Amazon\s+)?Braket",
+]
+
+
+def _paper_uses_braket(abstract: str) -> bool:
+    """Determine whether a paper actually uses Amazon Braket based on its abstract.
+
+    Runs regex patterns against the abstract text looking for action verbs and
+    specific backend/SDK references that indicate hands-on usage rather than
+    a passing mention.
+
+    Args:
+        abstract: The full abstract text from the arXiv entry.
+
+    Returns:
+        True if the abstract indicates the paper used Amazon Braket, False otherwise.
+    """
+    return any(
+        re.search(pattern, abstract, re.IGNORECASE)
+        for pattern in USAGE_PATTERNS
+    )
+
 
 def get_recent_papers():
     """Fetch papers from arXiv since last year related to 'Amazon Braket'.
+
+    Only papers whose abstracts indicate actual usage of Amazon Braket are
+    included. Papers that merely mention it in passing are filtered out.
 
     Returns:
         list[dict[str, str]]: A list of dictionaries containing paper details
@@ -86,6 +122,11 @@ def get_recent_papers():
                 continue
 
             date_obj = datetime.strptime(pub_date[:10], "%Y-%m-%d").replace(tzinfo=UTC)
+
+            abstract = entry.find("atom:summary", XML_NAMESPACE).text
+
+            if not abstract or not _paper_uses_braket(abstract):
+                continue
 
             papers.append({
                 "year": date_obj.strftime("%Y"),
