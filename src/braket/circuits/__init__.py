@@ -12,8 +12,8 @@
 # language governing permissions and limitations under the License.
 
 """Provides classes for building and manipulating quantum circuits,
-including Circuit, Gate, Instruction, Noise, Observable, ResultType, FreeParameter
-for parameterized circuits, and tools for circuit visualization and compilation.
+including, gates, observables, noise operations, result types,
+and tools for circuit visualization and compilation and serialization.
 """
 
 from braket.circuits import (
