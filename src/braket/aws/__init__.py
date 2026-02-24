@@ -14,7 +14,7 @@
 """A device represents a QPU or simulator that you can call to run quantum tasks.
 A quantum task is the atomic request to a device, including the quantum circuit,
 measurement instructions, and shot count. This module provides classes for
-interacting with Amazon Braket cloud services, including AwsDevice for accessing
+interacting with the Amazon Braket service, including AwsDevice for accessing
 devices, AwsQuantumTask and AwsQuantumTaskBatch for task submission and parallel
 execution, AwsQuantumJob for hybrid job management, AwsSession for managing AWS
 connections, and DirectReservation for exclusive device access.
