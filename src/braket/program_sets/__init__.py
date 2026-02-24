@@ -12,9 +12,9 @@
 # language governing permissions and limitations under the License.
 
 """Program sets efficiently run multiple quantum circuits in a single quantum task,
-reducing overhead and enabling up to 24x faster execution. This module provides
-ProgramSet for bundling circuits or parameter sets, CircuitBinding for circuit
-configuration, and ParameterSets for managing parameter values.
+reducing overhead in time and cost. This module provides ProgramSet for managing
+the payload sent to the device, CircuitBinding for sweeping a circuit over parameters
+and observables, and ParameterSets for bundling parameter values.
 """
 
 from braket.program_sets.circuit_binding import CircuitBinding  # noqa: F401
