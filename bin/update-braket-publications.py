@@ -24,6 +24,7 @@ Usage:
 Run from the repository root. The script takes no input arguments.
 """
 
+import enum
 import re
 import sys
 import time
@@ -74,6 +75,12 @@ NEGATIVE_STRONG_PATTERNS = [
 ]
 
 
+class Classification(enum.Enum):
+    LIKELY_REAL_USAGE = "likely_real_usage"
+    AMBIGUOUS_MANUAL_REVIEW = "ambiguous_manual_review"
+    MENTION_ONLY = "mention_only"
+
+
 def score_text(text: str) -> int:
     """Score text based on positive and negative patterns indicating real usage."""
     score = 0
@@ -89,13 +96,13 @@ def score_text(text: str) -> int:
     return score
 
 
-def classify(score: int) -> str:
+def classify(score: int) -> Classification:
     """Classify paper based on score."""
     if score >= 3:
-        return "likely_real_usage"
+        return Classification.LIKELY_REAL_USAGE
     if score > 0:
-        return "ambiguous_manual_review"
-    return "mention_only"
+        return Classification.AMBIGUOUS_MANUAL_REVIEW
+    return Classification.MENTION_ONLY
 
 
 def _ns(tag: str, namespace: str = ATOM_NS) -> str:
@@ -344,13 +351,13 @@ def main() -> None:
     new_using = [
         p
         for p in new_papers
-        if p["classification"] == "likely_real_usage"
+        if p["classification"] is Classification.LIKELY_REAL_USAGE
         and p["arxiv_id"] not in existing_ids
     ]
     new_mentioning = [
         p
         for p in new_papers
-        if p["classification"] != "likely_real_usage"
+        if p["classification"] is not Classification.LIKELY_REAL_USAGE
         and p["arxiv_id"] not in existing_ids
     ]
 

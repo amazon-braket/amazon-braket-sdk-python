@@ -1,7 +1,5 @@
 # Recent Publications Using Amazon Braket
 
-This file is automatically updated by `bin/update-braket-publications.py`.
-
 ## Publications Using Amazon Braket
 
 | Year | Month | Title | Authors | Link |
