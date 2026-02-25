@@ -26,8 +26,8 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "docs: update PUBLICATIONS.md with latest arXiv papers"
-          title: "docs: update PUBLICATIONS.md with latest arXiv papers"
+          commit-message: "doc: update PUBLICATIONS.md with latest arXiv papers"
+          title: "doc: update PUBLICATIONS.md with latest arXiv papers"
           body: |
             Automated weekly update of PUBLICATIONS.md with the latest arXiv
             preprints that use Amazon Braket.

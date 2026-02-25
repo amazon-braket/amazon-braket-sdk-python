@@ -63,10 +63,10 @@ MENTION_ONLY_PATTERNS = [
     r"(?:such\s+as|like|including|e\.g\.?\s*,?|for\s+(?:example|instance))"
     r"\s+.*?Braket",
     # Braket listed alongside other platforms in a comma/and list
-    r"(?:IBM|Google|Microsoft|Rigetti|Azure|Qiskit)"
+    r"(?:IBM|Google|Microsoft|Rigetti|Azure)"
     r"[\w\s,]*(?:and|,)\s*Amazon\s+Braket",
     r"Amazon\s+Braket[\w\s,]*(?:and|,)\s*"
-    r"(?:IBM|Google|Microsoft|Rigetti|Azure|Qiskit)",
+    r"(?:IBM|Google|Microsoft|Rigetti|Azure)",
     # parenthetical mention: "(e.g., Amazon Braket, IBM Qiskit)"
     r"\([^)]*Amazon\s+Braket[^)]*\)",
 ]
@@ -93,8 +93,14 @@ def is_actual_braket_usage(abstract):
     if has_mention_only:
         return False
 
-    # If "Amazon Braket" is in the abstract but matched neither category,
-    # include it (benefit of the doubt).
+    # Neither pattern matched. The arXiv search may have found "Amazon Braket"
+    # in the full paper text rather than the abstract, so we cannot determine
+    # usage from the abstract alone. Include it to avoid false negatives.
+    if re.search(r"Amazon\s+Braket", text, re.IGNORECASE):
+        return True
+
+    # "Amazon Braket" not in abstract at all — likely mentioned only in the
+    # body.  Without more signal we err on the side of inclusion.
     return True
 
 
