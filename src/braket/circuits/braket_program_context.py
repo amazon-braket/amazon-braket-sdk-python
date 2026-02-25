@@ -20,6 +20,7 @@ from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
+from braket.circuits.compiler_directives import Barrier
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
@@ -30,6 +31,7 @@ from braket.circuits.translations import (
     one_prob_noise_map,
 )
 from braket.parametric import FreeParameterExpression
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class BraketProgramContext(AbstractProgramContext):
@@ -37,7 +39,7 @@ class BraketProgramContext(AbstractProgramContext):
         """Inits a `BraketProgramContext`.
 
         Args:
-            circuit (Optional[Circuit]): A partially-built circuit to continue building with this
+            circuit (Circuit | None): A partially-built circuit to continue building with this
                 context. Default: None.
         """
         super().__init__()
@@ -147,10 +149,10 @@ class BraketProgramContext(AbstractProgramContext):
         """Convert parameter value to required format.
 
         Args:
-            value (Union[float, Expr]): Value of the parameter
+            value (float | Expr): Value of the parameter
 
         Returns:
-            Union[float, FreeParameterExpression]: Return the value directly if numeric,
+            float | FreeParameterExpression]: Returns the value directly if numeric,
             otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
@@ -167,7 +169,7 @@ class BraketProgramContext(AbstractProgramContext):
 
         Args:
             target (tuple[int]): the target qubits to be measured.
-            classical_targets (Optional[Iterable[int]]): the classical registers
+            classical_targets (Iterable[int] | None): the classical registers
                 to use in the qubit measurement.
         """
         for iter, qubit in enumerate(target):
@@ -177,3 +179,13 @@ class BraketProgramContext(AbstractProgramContext):
 
     def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
         self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))
+
+    def add_barrier(self, target: QubitSetInput | None = None) -> None:
+        """Add a barrier instruction to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier. If None or empty,
+                applies barrier to all qubits in the circuit.
+        """
+        target_qubits = QubitSet() if not target else QubitSet(target)
+        self._circuit.add_instruction(Instruction(Barrier(list(target_qubits)), target_qubits))

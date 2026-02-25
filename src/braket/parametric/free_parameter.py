@@ -117,7 +117,7 @@ class FreeParameter(FreeParameterExpression):
         """str: Name of this parameter."""
         return self._name.name
 
-    def subs(self, parameter_values: dict[str, Number]) -> FreeParameter | Number:
+    def subs(self, parameter_values: dict[str, Number]) -> Number | FreeParameter:
         """Substitutes a value in if the parameter exists within the mapping.
 
         Args:
@@ -125,7 +125,7 @@ class FreeParameter(FreeParameterExpression):
                 corresponding value.
 
         Returns:
-            Union[FreeParameter, Number]: The substituted value if this parameter is in
+            Number | FreeParameter: The substituted value if this parameter is in
             parameter_values, otherwise returns self
         """
         return parameter_values.get(self.name, self)

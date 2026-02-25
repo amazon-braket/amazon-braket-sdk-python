@@ -23,8 +23,11 @@ from braket.circuits import Circuit
 from braket.circuits.serialization import SerializableProgram
 from braket.program_sets import ProgramSet
 from braket.pulse import PulseSequence
-from braket.tasks import AnalogHamiltonianSimulationQuantumTaskResult, ProgramSetQuantumTaskResult
-from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
+from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    ProgramSetQuantumTaskResult,
+)
 
 TaskSpecification = (
     Circuit

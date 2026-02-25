@@ -18,6 +18,7 @@ from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.circuits.translations import BRAKET_GATES
 from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 
 
 class GateValidator(ValidationPass):
@@ -31,9 +32,9 @@ class GateValidator(ValidationPass):
             native gates within a verbatim box if any.
 
         Args:
-            supported_gates (Iterable[str], optional): A list of gates supported outside of
+            supported_gates (Iterable[str] | None): A list of gates supported outside of
                 verbatim modeby the emulator. A gate is a Braket gate name.
-            native_gates (Iterable[str], optional): A list of gates supported inside of
+            native_gates (Iterable[str] | None): A list of gates supported inside of
                 verbatim mode by the emulator.
 
         Raises:
@@ -57,8 +58,9 @@ class GateValidator(ValidationPass):
             self._native_gates = frozenset(BRAKET_GATES[gate.lower()] for gate in native_gates)
         except KeyError as e:
             raise ValueError(f"Input {e!s} in native_gates is not a valid Braket gate name.") from e
+        self._supported_specifications = Circuit | ProgramSet
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Checks that all non-verbatim gates used in the circuit are in this validator's
         supported gate set and that all verbatim gates used in the circuit are in this
@@ -71,6 +73,10 @@ class GateValidator(ValidationPass):
             ValueError: If a gate operation or verbatim gate operation is not in this validator's
             supported or native gate set, respectively.
         """
+        if isinstance(circuit, ProgramSet):
+            for item in circuit:
+                self.validate(item)
+            return
         in_verbatim = False
         for instruction in circuit.instructions:
             operator = instruction.operator

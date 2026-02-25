@@ -135,7 +135,8 @@ class GateCalibrations:
                     f"The key {calibration_key} does not exist in this GateCalibrations object."
                 )
             return (
-                self.pulse_sequences[calibration_key]
+                self
+                .pulse_sequences[calibration_key]
                 .to_ir()
                 .replace("cal", self._def_cal_gate(calibration_key), 1)
             )

@@ -1,5 +1,212 @@
 # Changelog
 
+## v1.112.1 (2026-02-18)
+
+### Bug Fixes and Other Changes
+
+ * change qubit number division to floor division
+
+## v1.112.0 (2026-02-16)
+
+### Features
+
+ * Emulator support for ProgramSets, transformation passes
+
+## v1.111.2 (2026-02-09)
+
+### Bug Fixes and Other Changes
+
+ * Print statement was altering the circuit
+
+## v1.111.1 (2026-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Accept qubit 0 as valid Barrier target
+
+## v1.111.0 (2026-01-30)
+
+### Deprecations and Removals
+
+ * Drop Python 3.10
+
+## v1.110.1 (2026-01-26)
+
+### Bug Fixes and Other Changes
+
+ * add barrier gate to BRAKET_GATES
+ * preserve global barrier semantics
+
+### Documentation Changes
+
+ * Update docs badge to point to default version
+
+## v1.110.0 (2026-01-22)
+
+### Features
+
+ * Support targetless observables and Pauli strings in program sets
+
+### Bug Fixes and Other Changes
+
+ * More efficient check for physical qubits
+
+## v1.109.0 (2026-01-20)
+
+### Features
+
+ * support barrier in `from_ir` method
+
+## v1.108.1 (2026-01-12)
+
+### Bug Fixes and Other Changes
+
+ * ruf067 error
+
+## v1.108.0 (2026-01-08)
+
+### Features
+
+ * update device.run to support experimentalCapabilities flag
+
+### Bug Fixes and Other Changes
+
+ * No targetless observables in CircuitBinding
+
+## v1.107.0 (2025-12-22)
+
+### Features
+
+ * circuit binding observables to inputs & program set support for noise model
+ * Add access to hybrid job tasks from the job object
+
+### Bug Fixes and Other Changes
+
+ * Correct diagram gate order of circuits with multi-qubit noise operators
+
+### Documentation Changes
+
+ * Use sphinx autodoc typehints
+
+## v1.106.5 (2025-12-11)
+
+### Bug Fixes and Other Changes
+
+ * update required schemas version
+
+## v1.106.4 (2025-12-08)
+
+### Bug Fixes and Other Changes
+
+ * qubit error for Kraus in noise model
+
+## v1.106.3 (2025-12-03)
+
+### Bug Fixes and Other Changes
+
+ * Increment classical bits when adding circuits
+
+## v1.106.2 (2025-12-02)
+
+### Bug Fixes and Other Changes
+
+ * Correct noise scaling in the emulator
+
+## v1.106.1 (2025-11-26)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets when calling result() synchronously
+
+## v1.106.0 (2025-11-20)
+
+### Features
+
+ * emulator support for AQT devices
+
+## v1.105.0 (2025-11-18)
+
+### Features
+
+ * AQT
+
+## v1.104.1 (2025-10-31)
+
+### Bug Fixes and Other Changes
+
+ * handle no program inputs
+
+## v1.104.0 (2025-10-28)
+
+### Deprecations and Removals
+
+ * retire Aria-2 in devices enum
+
+### Bug Fixes and Other Changes
+
+ * Validate hybrid jobs name
+
+## v1.103.0 (2025-10-16)
+
+### Deprecations and Removals
+
+ * Update minimum default simulator
+
+## v1.102.10 (2025-10-15)
+
+### Bug Fixes and Other Changes
+
+ * Expand controlled operators in `to_unitary`
+
+### Documentation Changes
+
+ * Use idiomatic Python types in docstrings
+ * points to braket doc when using experimental caps
+
+## v1.102.9 (2025-10-14)
+
+### Bug Fixes and Other Changes
+
+ * local job decorator integ test
+ * entry point module name for py312 and up
+
+## v1.102.8 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Allow `Measure` instructions in `to_unitary`
+ * handle executable result with no input in its program
+
+## v1.102.7 (2025-10-13)
+
+### Bug Fixes and Other Changes
+
+ * Always include program inputs in from_ir
+
+## v1.102.6 (2025-10-09)
+
+### Bug Fixes and Other Changes
+
+ * Use nx functions to construct topology graph
+
+## v1.102.5 (2025-10-03)
+
+### Bug Fixes and Other Changes
+
+ * ensure gate_matrix dtype is complex for unitary matrices
+
+## v1.102.4 (2025-09-19)
+
+### Bug Fixes and Other Changes
+
+ * Return results for failed program sets
+
+## v1.102.3 (2025-09-15)
+
+### Bug Fixes and Other Changes
+
+ * Remove throw from local task cancellation
+
 ## v1.102.2 (2025-09-11)
 
 ### Bug Fixes and Other Changes

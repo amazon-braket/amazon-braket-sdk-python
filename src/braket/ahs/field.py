@@ -25,7 +25,7 @@ class Field:
 
         Args:
             time_series (TimeSeries): The time series representing this field.
-            pattern (Optional[Pattern]): The local pattern of real numbers.
+            pattern (Pattern | None): The local pattern of real numbers.
         """
         self._time_series = time_series
         self._pattern = pattern
@@ -37,7 +37,7 @@ class Field:
 
     @property
     def pattern(self) -> Pattern | None:
-        """Optional[Pattern]: The local pattern of real numbers."""
+        """Pattern | None: The local pattern of real numbers."""
         return self._pattern
 
     def discretize(
@@ -51,9 +51,9 @@ class Field:
         closest multiple of their corresponding resolutions.
 
         Args:
-            time_resolution (Optional[Decimal]): Time resolution
-            value_resolution (Optional[Decimal]): Value resolution
-            pattern_resolution (Optional[Decimal]): Pattern resolution
+            time_resolution (Decimal | None): Time resolution
+            value_resolution (Decimal | None): Value resolution
+            pattern_resolution (Decimal | None): Pattern resolution
 
         Returns:
             Field: A new discretized field.

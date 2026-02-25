@@ -78,7 +78,7 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: FreeParameterExpression | float):
+    def __init__(self, probability: float | FreeParameterExpression):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -132,7 +132,7 @@ class BitFlip(SingleProbabilisticNoise):
         """Takes in parameters and attempts to assign them to values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -183,7 +183,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: FreeParameterExpression | float):
+    def __init__(self, probability: float | FreeParameterExpression):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -237,7 +237,7 @@ class PhaseFlip(SingleProbabilisticNoise):
         """Takes in parameters and attempts to assign them to values.
 
         Args:
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -306,16 +306,16 @@ class PauliChannel(PauliNoise):
 
     def __init__(
         self,
-        probX: FreeParameterExpression | float,
-        probY: FreeParameterExpression | float,
-        probZ: FreeParameterExpression | float,
+        probX: float | FreeParameterExpression,
+        probY: float | FreeParameterExpression,
+        probZ: float | FreeParameterExpression,
     ):
         """Creates PauliChannel noise.
 
         Args:
-            probX (Union[FreeParameterExpression, float]): X rotation probability.
-            probY (Union[FreeParameterExpression, float]): Y rotation probability.
-            probZ (Union[FreeParameterExpression, float]): Z rotation probability.
+            probX (float | FreeParameterExpression): X rotation probability.
+            probY (float | FreeParameterExpression): Y rotation probability.
+            probZ (float | FreeParameterExpression): Z rotation probability.
         """
         super().__init__(
             probX=probX,
@@ -459,7 +459,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: FreeParameterExpression | float):
+    def __init__(self, probability: float | FreeParameterExpression):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -584,7 +584,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: FreeParameterExpression | float):
+    def __init__(self, probability: float | FreeParameterExpression):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -709,7 +709,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: FreeParameterExpression | float):
+    def __init__(self, probability: float | FreeParameterExpression):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -988,7 +988,7 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: FreeParameterExpression | float):
+    def __init__(self, gamma: float | FreeParameterExpression):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1104,8 +1104,8 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def __init__(
         self,
-        gamma: FreeParameterExpression | float,
-        probability: FreeParameterExpression | float,
+        gamma: float | FreeParameterExpression,
+        probability: float | FreeParameterExpression,
     ):
         super().__init__(
             gamma=gamma,
@@ -1231,7 +1231,7 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: FreeParameterExpression | float):
+    def __init__(self, gamma: float | FreeParameterExpression):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1438,12 +1438,12 @@ class Kraus(Noise):
 Noise.register_noise(Kraus)
 
 
-def _ascii_representation(noise: str, parameters: list[FreeParameterExpression | float]) -> str:
+def _ascii_representation(noise: str, parameters: list[float | FreeParameterExpression]) -> str:
     """Generates a formatted ascii representation of a noise.
 
     Args:
         noise (str): The name of the noise.
-        parameters (list[Union[FreeParameterExpression, float]]): The parameters to the noise.
+        parameters (list[float | FreeParameterExpression]): The parameters to the noise.
 
     Returns:
         str: The ascii representation of the noise.
@@ -1456,7 +1456,7 @@ def _ascii_representation(noise: str, parameters: list[FreeParameterExpression |
     return f"{noise}({param_str})"
 
 
-def _substitute_value(expr: float, **kwargs) -> FreeParameterExpression | float:
+def _substitute_value(expr: float, **kwargs) -> float | FreeParameterExpression:
     return expr.subs(kwargs) if isinstance(expr, FreeParameterExpression) else expr
 
 
@@ -1464,10 +1464,10 @@ def _parameter_from_dict(parameter: dict | float) -> FreeParameter | float:
     """Converts a parameter from a dictionary if it's a FreeParameter, otherwise returns the float.
 
     Args:
-        parameter(Union[dict, float]): The parameter to convert.
+        parameter(dict | float): The parameter to convert.
 
     Returns:
-        Union[FreeParameter, float]: A FreeParameter representing the parameter, if the parameter
+        FreeParameter | float: A FreeParameter representing the parameter, if the parameter
         is a dictionary, otherwise returns the float.
     """
     if isinstance(parameter, dict):

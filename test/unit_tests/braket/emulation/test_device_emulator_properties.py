@@ -177,3 +177,12 @@ def test_from_json_non_fully_connected_but_directed(reduced_standardized_json_3)
     assert result.qubit_labels == [0, 1, 2]
     assert result.fully_connected == False
     assert result.directed == True
+
+
+def test_aqt_device_properties(reduced_aqt_device_capabilities):
+    device_em_properties = DeviceEmulatorProperties.from_device_properties(
+        reduced_aqt_device_capabilities
+    )
+    assert device_em_properties.qubit_count == 3
+    assert device_em_properties.native_gate_set == ["prx", "cz", "xx"]
+    assert device_em_properties.connectivity_graph == {}

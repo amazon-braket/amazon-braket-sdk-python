@@ -142,6 +142,20 @@ class Observable(QuantumOperator):
         that diagonalizes this observable."""
         raise NotImplementedError
 
+    @staticmethod
+    def get_euler_angles(targets: QubitSetInput) -> dict[str, float]:
+        """Get the ZXZ Euler angle mapping of this observable for the given qubit.
+
+        Args:
+            targets (QubitSetInput): The target qubits; this is used for the parameter names in the
+                output mapping.
+
+        Returns:
+            dict[str, float]: A mapping of standardized free parameter name to ZXZ Euler angle value
+            that diagonalizes this observable.
+        """
+        raise NotImplementedError
+
     @property
     def eigenvalues(self) -> np.ndarray:
         """np.ndarray: The eigenvalues of this observable."""
@@ -244,8 +258,9 @@ class StandardObservable(Observable):
 
 
 def euler_angle_parameter_names(target: QubitInput) -> tuple[str, str, str]:
+    qubit = str(int(target))
     return (
-        f"{EULER_Z1_PREFIX}{int(target)}",
-        f"{EULER_X_PREFIX}{int(target)}",
-        f"{EULER_Z2_PREFIX}{int(target)}",
+        f"{EULER_Z1_PREFIX}{qubit}",
+        f"{EULER_X_PREFIX}{qubit}",
+        f"{EULER_Z2_PREFIX}{qubit}",
     )

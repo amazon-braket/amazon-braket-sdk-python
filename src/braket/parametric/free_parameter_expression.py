@@ -40,7 +40,7 @@ class FreeParameterExpression:
         Below are examples of how FreeParameterExpressions should be made.
 
         Args:
-            expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
+            expression (FreeParameterExpression | Number | Expr | str): The expression to use.
 
         Raises:
             NotImplementedError: Raised if the expression is not of type
@@ -71,7 +71,7 @@ class FreeParameterExpression:
         """Gets the expression.
 
         Returns:
-            Union[Number, Expr]: The expression for the FreeParameterExpression.
+            Number | Expr: The expression for the FreeParameterExpression.
         """
         return self._expression
 
@@ -87,7 +87,7 @@ class FreeParameterExpression:
                 values to be assigned.
 
         Returns:
-            Union[FreeParameterExpression, Number, Expr]: A numerical value if there are no
+            FreeParameterExpression | Number | Expr: A numerical value if there are no
             symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
         new_parameter_values = {}
@@ -107,7 +107,7 @@ class FreeParameterExpression:
 
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Constant):
-            return FreeParameterExpression(node.n)
+            return FreeParameterExpression(node.value)
         if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
         if isinstance(node, ast.BinOp):
@@ -203,7 +203,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs: FreeParameterExpression | s
 
     Args:
         parameter (Any): The parameter.
-        **kwargs (Union[FreeParameterExpression, str]): The kwargs to use to substitute.
+        **kwargs (FreeParameterExpression | str): The kwargs to use to substitute.
 
     Returns:
         Any: The substituted parameters.

@@ -24,16 +24,14 @@ from braket.circuits import (
     Gate,
     Instruction,
     Moments,
-    Noise,
-    Observable,
     QubitSet,
-    ResultType,
     UnicodeCircuitDiagram,
     circuit,
     compiler_directives,
     gates,
-    noise,
+    noises,
     observables,
+    result_types,
 )
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.measure import Measure
@@ -51,27 +49,27 @@ from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, Pu
 
 @pytest.fixture
 def cnot():
-    return Circuit().add_instruction(Instruction(Gate.CNot(), [0, 1]))
+    return Circuit().add_instruction(Instruction(gates.CNot(), [0, 1]))
 
 
 @pytest.fixture
 def cnot_instr():
-    return Instruction(Gate.CNot(), [0, 1])
+    return Instruction(gates.CNot(), [0, 1])
 
 
 @pytest.fixture
 def h():
-    return Circuit().add_instruction(Instruction(Gate.H(), 0))
+    return Circuit().add_instruction(Instruction(gates.H(), 0))
 
 
 @pytest.fixture
 def h_instr():
-    return Instruction(Gate.H(), 0)
+    return Instruction(gates.H(), 0)
 
 
 @pytest.fixture
 def prob():
-    return ResultType.Probability([0, 1])
+    return result_types.Probability([0, 1])
 
 
 @pytest.fixture
@@ -83,8 +81,8 @@ def cnot_prob(cnot_instr, prob):
 def bell_pair(prob):
     return (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
         .add_result_type(prob)
     )
 
@@ -172,10 +170,10 @@ def pulse_sequence_3(predefined_frame_1):
 
 @pytest.fixture
 def gate_calibrations(pulse_sequence, pulse_sequence_2):
-    calibration_key = (Gate.Z(), QubitSet([0, 1]))
-    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
+    calibration_key = (gates.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (gates.Rx(FreeParameter("theta")), QubitSet([0]))
     calibration_key_3 = (
-        Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
+        gates.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
         QubitSet([0, 1]),
     )
     return GateCalibrations({
@@ -272,6 +270,20 @@ def test_call_with_default_parameter_val():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_with_euler_angles_sum_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    h = observables.X() @ observables.Z() @ observables.X() + observables.Y() @ observables.X()
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(h)
+
+
+def test_with_euler_angles_observable_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    obs = [observables.X(0) @ observables.Z(1), observables.Y()]
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(obs)
+
+
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
@@ -279,66 +291,70 @@ def test_add_result_type_default(prob):
 
 
 def test_add_result_type_with_mapping(prob):
-    expected = [ResultType.Probability([10, 11])]
+    expected = [result_types.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target_mapping={0: 10, 1: 11})
     assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
 def test_add_result_type_with_target(prob):
-    expected = [ResultType.Probability([10, 11])]
+    expected = [result_types.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target=[10, 11])
     assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
 def test_add_result_type_already_exists():
-    expected = [ResultType.StateVector()]
+    expected = [result_types.StateVector()]
     circ = Circuit(expected).add_result_type(expected[0])
     assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
 def test_add_result_type_observable_conflict_target():
-    circ = Circuit().add_result_type(ResultType.Probability([0, 1]))
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=0))
+    circ = Circuit().add_result_type(result_types.Probability([0, 1]))
+    circ.add_result_type(result_types.Expectation(observable=observables.Y(), target=0))
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_conflict_all():
-    circ = Circuit().add_result_type(ResultType.Probability())
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+    circ = Circuit().add_result_type(result_types.Probability())
+    circ.add_result_type(result_types.Expectation(observable=observables.Y()))
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_conflict_all_target_then_selected_target():
-    circ = Circuit().add_result_type(ResultType.Probability())
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[0]))
+    circ = Circuit().add_result_type(result_types.Probability())
+    circ.add_result_type(result_types.Expectation(observable=observables.Y(), target=[0]))
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_conflict_different_selected_targets_then_all_target():
-    circ = Circuit().add_result_type(ResultType.Expectation(observable=Observable.Z(), target=[0]))
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1]))
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+    circ = Circuit().add_result_type(
+        result_types.Expectation(observable=observables.Z(), target=[0])
+    )
+    circ.add_result_type(result_types.Expectation(observable=observables.Y(), target=[1]))
+    circ.add_result_type(result_types.Expectation(observable=observables.Y()))
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_conflict_selected_target_then_all_target():
-    circ = Circuit().add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1]))
-    circ.add_result_type(ResultType.Probability())
+    circ = Circuit().add_result_type(
+        result_types.Expectation(observable=observables.Y(), target=[1])
+    )
+    circ.add_result_type(result_types.Probability())
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_no_conflict_all_target():
     expected = [
-        ResultType.Probability(),
-        ResultType.Expectation(observable=Observable.Z(), target=[0]),
+        result_types.Probability(),
+        result_types.Expectation(observable=observables.Z(), target=[0]),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
@@ -347,8 +363,8 @@ def test_add_result_type_observable_no_conflict_all_target():
 
 def test_add_result_type_observable_no_conflict_target_all():
     expected = [
-        ResultType.Expectation(observable=Observable.Z(), target=[0]),
-        ResultType.Probability(),
+        result_types.Expectation(observable=observables.Z(), target=[0]),
+        result_types.Probability(),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
@@ -357,8 +373,8 @@ def test_add_result_type_observable_no_conflict_target_all():
 
 def test_add_result_type_observable_no_conflict_all():
     expected = [
-        ResultType.Variance(observable=Observable.Y()),
-        ResultType.Expectation(observable=Observable.Y()),
+        result_types.Variance(observable=observables.Y()),
+        result_types.Expectation(observable=observables.Y()),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
@@ -367,9 +383,9 @@ def test_add_result_type_observable_no_conflict_all():
 
 def test_add_result_type_observable_no_conflict_all_identity():
     expected = [
-        ResultType.Variance(observable=Observable.Y()),
-        ResultType.Expectation(observable=Observable.I()),
-        ResultType.Expectation(observable=Observable.Y()),
+        result_types.Variance(observable=observables.Y()),
+        result_types.Expectation(observable=observables.I()),
+        result_types.Expectation(observable=observables.Y()),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
@@ -378,8 +394,8 @@ def test_add_result_type_observable_no_conflict_all_identity():
 
 def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
     expected = [
-        ResultType.StateVector(),
-        ResultType.Expectation(observable=Observable.Y()),
+        result_types.StateVector(),
+        result_types.Expectation(observable=observables.Y()),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
@@ -390,10 +406,10 @@ def test_add_result_type_same_observable_wrong_target_order_tensor_product():
     circ = (
         Circuit()
         .add_result_type(
-            ResultType.Expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
+            result_types.Expectation(observable=observables.Y() @ observables.X(), target=[0, 1])
         )
         .add_result_type(
-            ResultType.Variance(observable=Observable.Y() @ Observable.X(), target=[1, 0])
+            result_types.Variance(observable=observables.Y() @ observables.X(), target=[1, 0])
         )
     )
     assert not circ.observables_simultaneously_measurable
@@ -405,10 +421,10 @@ def test_add_result_type_same_observable_wrong_target_order_hermitian():
     circ = (
         Circuit()
         .add_result_type(
-            ResultType.Expectation(observable=Observable.Hermitian(matrix=array), target=[0, 1])
+            result_types.Expectation(observable=observables.Hermitian(matrix=array), target=[0, 1])
         )
         .add_result_type(
-            ResultType.Variance(observable=Observable.Hermitian(matrix=array), target=[1, 0])
+            result_types.Variance(observable=observables.Hermitian(matrix=array), target=[1, 0])
         )
     )
     assert not circ.observables_simultaneously_measurable
@@ -426,13 +442,13 @@ def test_add_instruction_default(cnot_instr):
 
 
 def test_add_instruction_with_mapping(cnot_instr):
-    expected = [Instruction(Gate.CNot(), [10, 11])]
+    expected = [Instruction(gates.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target_mapping={0: 10, 1: 11})
     assert circ.instructions == expected
 
 
 def test_add_instruction_with_target(cnot_instr):
-    expected = [Instruction(Gate.CNot(), [10, 11])]
+    expected = [Instruction(gates.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target=[10, 11])
     assert circ.instructions == expected
 
@@ -457,9 +473,9 @@ def test_add_circuit_with_mapping(bell_pair):
     circ = Circuit().add_circuit(bell_pair, target_mapping={0: 10, 1: 11})
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 10))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
-        .add_result_type(ResultType.Probability([10, 11]))
+        .add_instruction(Instruction(gates.H(), 10))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
+        .add_result_type(result_types.Probability([10, 11]))
     )
     assert circ == expected
 
@@ -468,9 +484,9 @@ def test_add_circuit_with_target(bell_pair):
     circ = Circuit().add_circuit(bell_pair, target=[10, 11])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 10))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
-        .add_result_type(ResultType.Probability([10, 11]))
+        .add_instruction(Instruction(gates.H(), 10))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
+        .add_result_type(result_types.Probability([10, 11]))
     )
     assert circ == expected
 
@@ -480,9 +496,9 @@ def test_add_circuit_with_target_and_non_continuous_qubits():
     circ = Circuit().add_circuit(widget, target=[1, 3, 5])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 1))
-        .add_instruction(Instruction(Gate.H(), 3))
-        .add_instruction(Instruction(Gate.H(), 5))
+        .add_instruction(Instruction(gates.H(), 1))
+        .add_instruction(Instruction(gates.H(), 3))
+        .add_instruction(Instruction(gates.H(), 5))
     )
     assert circ == expected
 
@@ -496,9 +512,9 @@ def test_add_verbatim_box():
     circ = Circuit().h(0).add_verbatim_box(Circuit().cnot(0, 1))
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(gates.H(), 0))
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
     )
     assert circ == expected
@@ -508,11 +524,11 @@ def test_add_verbatim_box_different_qubits():
     circ = Circuit().h(1).add_verbatim_box(Circuit().h(0)).cnot(3, 4)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 1))
+        .add_instruction(Instruction(gates.H(), 1))
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(gates.H(), 0))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
-        .add_instruction(Instruction(Gate.CNot(), [3, 4]))
+        .add_instruction(Instruction(gates.CNot(), [3, 4]))
     )
     assert circ == expected
 
@@ -522,9 +538,9 @@ def test_add_verbatim_box_no_preceding():
     expected = (
         Circuit()
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(gates.H(), 0))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
-        .add_instruction(Instruction(Gate.CNot(), [2, 3]))
+        .add_instruction(Instruction(gates.CNot(), [2, 3]))
     )
     assert circ == expected
 
@@ -540,7 +556,7 @@ def test_add_verbatim_box_with_mapping(cnot):
     expected = (
         Circuit()
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
     )
     assert circ == expected
@@ -551,7 +567,7 @@ def test_add_verbatim_box_with_target(cnot):
     expected = (
         Circuit()
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
     )
     assert circ == expected
@@ -565,7 +581,7 @@ def test_add_verbatim_box_with_target_and_mapping(h):
 def test_add_verbatim_box_result_types():
     with pytest.raises(ValueError):
         Circuit().h(0).add_verbatim_box(
-            Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
+            Circuit().cnot(0, 1).expectation(observable=observables.X(), target=0)
         )
 
 
@@ -573,9 +589,9 @@ def test_measure():
     circ = Circuit().h(0).cnot(0, 1).measure([0])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(index=0), 0))
     )
     assert circ == expected
 
@@ -584,9 +600,9 @@ def test_measure_int():
     circ = Circuit().h(0).cnot(0, 1).measure(0)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(index=0), 0))
     )
     assert circ == expected
 
@@ -595,13 +611,13 @@ def test_measure_multiple_targets():
     circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).cnot(2, 3).measure([0, 1, 3])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
-        .add_instruction(Instruction(Gate.CNot(), [2, 3]))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Measure(), 3))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.CNot(), [1, 2]))
+        .add_instruction(Instruction(gates.CNot(), [2, 3]))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
+        .add_instruction(Instruction(Measure(index=2), 3))
     )
     assert circ == expected
     assert circ._measure_targets == [0, 1, 3]
@@ -611,10 +627,10 @@ def test_measure_with_noise():
     circ = Circuit().x(0).x(1).bit_flip(0, probability=0.1).measure(0)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(gates.X(), 0))
+        .add_instruction(Instruction(gates.X(), 1))
         .add_instruction(Instruction(BitFlip(probability=0.1), 0))
-        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(index=0), 0))
     )
     assert circ == expected
 
@@ -624,10 +640,10 @@ def test_measure_verbatim_box():
     expected = (
         Circuit()
         .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(gates.X(), 0))
+        .add_instruction(Instruction(gates.X(), 1))
         .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
-        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(Measure(index=0), 0))
     )
     expected_ir = OpenQasmProgram(
         source="\n".join([
@@ -656,9 +672,9 @@ def test_measure_qubits_out_of_range():
     circ = Circuit().h(0).cnot(0, 1).measure(4)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(), 4))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(index=0), 4))
     )
     assert circ == expected
 
@@ -667,9 +683,9 @@ def test_measure_empty_circuit():
     circ = Circuit().measure([0, 1, 2])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Measure(), 2))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
+        .add_instruction(Instruction(Measure(index=2), 2))
     )
     assert circ == expected
 
@@ -687,25 +703,25 @@ def test_measure_target_input():
 def test_measure_with_result_types():
     message = "a circuit cannot contain both measure instructions and result types."
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).sample(observable=Observable.Z(), target=0).measure(0)
+        Circuit().h(0).sample(observable=observables.Z(), target=0).measure(0)
 
 
 def test_result_type_with_measure():
     message = "cannot add a result type to a circuit which already contains a measure instruction."
     with pytest.raises(ValueError, match=message):
-        Circuit().h(0).measure(0).sample(observable=Observable.Z(), target=0)
+        Circuit().h(0).measure(0).sample(observable=observables.Z(), target=0)
 
 
 def test_measure_with_multiple_measures():
     circ = Circuit().h(0).cnot(0, 1).h(2).measure([0, 1]).measure(2)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Gate.H(), 2))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Measure(), 2))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.H(), 2))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
+        .add_instruction(Instruction(Measure(index=2), 2))
     )
     assert circ == expected
 
@@ -739,13 +755,13 @@ def test_measure_gate_after():
     # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
-        instr = Instruction(Gate.CNot(), [0, 1])
+        instr = Instruction(gates.CNot(), [0, 1])
         Circuit().measure([0, 1]).add_instruction(instr, target_mapping={0: 0, 1: 1})
 
     # message = "cannot add a gate or noise operation on a qubit after a measure instruction."
     message = "cannot apply instruction to measured qubits."
     with pytest.raises(ValueError, match=message):
-        instr = Instruction(Gate.CNot(), [0, 1])
+        instr = Instruction(gates.CNot(), [0, 1])
         Circuit().h(0).measure(0).add_instruction(instr, target=[0, 1])
 
 
@@ -763,22 +779,22 @@ def test_measure_with_readout_noise():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
+        .apply_readout_noise(noises.BitFlip(probability=0.1), target_qubits=1)
         .measure([0, 1])
     )
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .apply_readout_noise(Noise.BitFlip(probability=0.1), target_qubits=1)
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .apply_readout_noise(noises.BitFlip(probability=0.1), target_qubits=1)
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
     )
     assert circ == expected
 
 
 def test_measure_gate_after_with_target_mapping():
-    instr = Instruction(Gate.CNot(), [0, 1])
+    instr = Instruction(gates.CNot(), [0, 1])
     circuit = (
         Circuit()
         .h(0)
@@ -788,18 +804,18 @@ def test_measure_gate_after_with_target_mapping():
     )
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
     )
     assert circuit == expected
 
 
 def test_measure_gate_after_with_target_mapping_invalid():
     message = "cannot apply instruction to measured qubits."
-    instr = Instruction(Gate.CNot(), [0, 1])
+    instr = Instruction(gates.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
         Circuit().h(10).cnot(10, 11).measure([10, 11]).add_instruction(
             instr, target_mapping={0: 10, 1: 11}
@@ -807,22 +823,22 @@ def test_measure_gate_after_with_target_mapping_invalid():
 
 
 def test_measure_gate_after_with_target():
-    instr = Instruction(Gate.CNot(), [0, 1])
+    instr = Instruction(gates.CNot(), [0, 1])
     circuit = Circuit().h(0).cnot(0, 1).measure([0, 1]).add_instruction(instr, target=[10, 11])
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(Measure(index=1), 1))
+        .add_instruction(Instruction(gates.CNot(), [10, 11]))
     )
     assert circuit == expected
 
 
 def test_measure_gate_after_with_target_invalid():
     message = "cannot apply instruction to measured qubits."
-    instr = Instruction(Gate.CNot(), [0, 1])
+    instr = Instruction(gates.CNot(), [0, 1])
     with pytest.raises(ValueError, match=message):
         Circuit().h(10).cnot(10, 11).measure([10, 11]).add_instruction(instr, target=[10, 11])
 
@@ -831,11 +847,11 @@ def test_measure_gate_after_measurement():
     circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure(0).h(2)
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 0))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Gate.CNot(), [1, 2]))
-        .add_instruction(Instruction(Measure(), 0))
-        .add_instruction(Instruction(Gate.H(), 2))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.CNot(), [1, 2]))
+        .add_instruction(Instruction(Measure(index=0), 0))
+        .add_instruction(Instruction(gates.H(), 2))
     )
     assert circ == expected
 
@@ -845,12 +861,22 @@ def test_measure_add_circuit_target_mapping():
     circuit = Circuit().add_circuit(circuit, target_mapping={0: 1, 1: 0})
     expected = (
         Circuit()
-        .add_instruction(Instruction(Gate.H(), 1))
-        .add_instruction(Instruction(Gate.CNot(), [1, 0]))
-        .add_instruction(Instruction(Measure(), 1))
-        .add_instruction(Instruction(Measure(), 0))
+        .add_instruction(Instruction(gates.H(), 1))
+        .add_instruction(Instruction(gates.CNot(), [1, 0]))
+        .add_instruction(Instruction(Measure(index=0), 1))
+        .add_instruction(Instruction(Measure(index=1), 0))
     )
     assert circuit == expected
+
+
+def test_add_circuit_with_measure():
+    circ1 = Circuit()
+    circ2 = Circuit()
+    for i in range(6):
+        circ1 += Circuit().h(i) + Circuit().measure(i)
+        circ2.h(i).measure(i)
+    assert circ1 == circ2
+    assert circ1.to_ir(IRType.OPENQASM) == circ2.to_ir(IRType.OPENQASM)
 
 
 def test_to_ir_with_measure():
@@ -972,6 +998,41 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
     assert actual_circ == expected_circ
 
 
+@pytest.mark.parametrize(
+    "source_lines, expected_circuit",
+    [
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[3] q;",
+                "h q[0];",
+                "barrier q[0], q[1];",
+                "cnot q[0], q[1];",
+                "barrier;",
+            ],
+            Circuit().h(0).barrier([0, 1]).cnot(0, 1).barrier(),
+        ),
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[2] q;",
+                "h q[0];",
+                "barrier;",
+                "cnot q[0], q[1];",
+            ],
+            Circuit().h(0).barrier().cnot(0, 1),
+        ),
+    ],
+)
+def test_from_ir_with_barriers(source_lines, expected_circuit):
+    ir = OpenQasmProgram(
+        source="\n".join(source_lines),
+        inputs={},
+    )
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circuit
+
+
 def test_add_with_instruction_with_default(cnot_instr):
     circ = Circuit().add(cnot_instr)
     assert circ == Circuit().add_instruction(cnot_instr)
@@ -1011,11 +1072,11 @@ def test_add_with_circuit_with_target(bell_pair):
 
 
 def test_adjoint():
-    circ = Circuit().s(0).add_verbatim_box(Circuit().rz(0, 0.123)).expectation(Observable.X(), 0)
+    circ = Circuit().s(0).add_verbatim_box(Circuit().rz(0, 0.123)).expectation(observables.X(), 0)
     expected = Circuit()
     expected.add_verbatim_box(Circuit().rz(0, -0.123))
     expected.si(0)
-    expected.expectation(Observable.X(), 0)
+    expected.expectation(observables.X(), 0)
     actual = circ.adjoint()
     assert actual == expected
     assert circ == expected.adjoint()
@@ -1070,46 +1131,46 @@ def test_subroutine_register():
     @circuit.subroutine(register=True)
     def _foo(target):
         """this docstring will be added to the registered attribute"""
-        return Instruction(Gate.H(), target)
+        return Instruction(gates.H(), target)
 
     circ = Circuit()._foo(0)
-    assert circ == Circuit(Instruction(Gate.H(), 0))
+    assert circ == Circuit(Instruction(gates.H(), 0))
     assert Circuit._foo.__doc__ == _foo.__doc__
 
 
 def test_subroutine_returns_circuit():
     @circuit.subroutine()
     def foo(target):
-        return Circuit().add(Instruction(Gate.H(), 0))
+        return Circuit().add(Instruction(gates.H(), 0))
 
     circ = Circuit().add(foo, 0)
-    assert circ == Circuit(Instruction(Gate.H(), 0))
+    assert circ == Circuit(Instruction(gates.H(), 0))
 
 
 def test_subroutine_returns_instruction():
     @circuit.subroutine()
     def foo(target):
-        return Instruction(Gate.H(), 0)
+        return Instruction(gates.H(), 0)
 
     circ = Circuit().add(foo, 0)
-    assert circ == Circuit(Instruction(Gate.H(), 0))
+    assert circ == Circuit(Instruction(gates.H(), 0))
 
 
 def test_subroutine_returns_iterable():
     @circuit.subroutine()
     def foo(target):
         for qubit in range(1):
-            yield Instruction(Gate.H(), qubit)
+            yield Instruction(gates.H(), qubit)
 
     circ = Circuit().add(foo, 0)
-    assert circ == Circuit(Instruction(Gate.H(), 0))
+    assert circ == Circuit(Instruction(gates.H(), 0))
 
 
 def test_subroutine_nested():
     @circuit.subroutine()
     def h(target):
         for qubit in target:
-            yield Instruction(Gate.H(), qubit)
+            yield Instruction(gates.H(), qubit)
 
     @circuit.subroutine()
     def h_nested(target):
@@ -1117,7 +1178,7 @@ def test_subroutine_nested():
             yield h(target)
 
     circ = Circuit().add(h_nested, [0, 1])
-    expected = Circuit([Instruction(Gate.H(), j) for i in range(2) for j in range(2)])
+    expected = Circuit([Instruction(gates.H(), j) for i in range(2) for j in range(2)])
     assert circ == expected
 
 
@@ -1139,7 +1200,7 @@ def test_ir_non_empty_instructions_result_types():
 
 
 def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
-    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.X(), target=[0])
+    circ = Circuit().h(0).cnot(0, 1).sample(observable=observables.X(), target=[0])
     expected = jaqcd.Program(
         instructions=[jaqcd.H(target=0), jaqcd.CNot(control=0, target=1)],
         results=[jaqcd.Sample(observable=["x"], targets=[0])],
@@ -1246,7 +1307,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
             Circuit()
             .rx(0, 0.15)
             .add_verbatim_box(Circuit().rx(4, 0.3))
-            .expectation(observable=Observable.I()),
+            .expectation(observable=observables.I()),
             OpenQASMSerializationProperties(QubitReferenceType.PHYSICAL),
             OpenQasmProgram(
                 source="\n".join([
@@ -1278,7 +1339,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
             .rx(0, 0.15)
             .rx(4, 0.3)
             .bit_flip(3, probability=0.2)
-            .expectation(observable=Observable.I(), target=0),
+            .expectation(observable=observables.I(), target=0),
             None,
             OpenQasmProgram(
                 source="\n".join([
@@ -1461,7 +1522,7 @@ def test_circuit_to_ir_openqasm_with_gate_calibrations(
     [
         (
             Circuit().rx(0, 0.2),
-            (Gate.Rx(FreeParameter("alpha")), QubitSet(0)),
+            (gates.Rx(FreeParameter("alpha")), QubitSet(0)),
             OpenQasmProgram(
                 source="\n".join([
                     "OPENQASM 3.0;",
@@ -1503,8 +1564,8 @@ def test_circuit_with_parametric_defcal(circuit, calibration_key, expected_ir, p
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
     circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
-    calibration_key = (Gate.Z(), QubitSet([0, 1]))
-    calibration_key_2 = (Gate.Rx(0.45), QubitSet([0]))
+    calibration_key = (gates.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (gates.Rx(0.45), QubitSet([0]))
     gate_calibrations = GateCalibrations({
         calibration_key: pulse_sequence,
         calibration_key_2: pulse_sequence,
@@ -1553,7 +1614,7 @@ def test_circuit_with_partial_calibrations(pulse_sequence_2):
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     gate_calibrations = (
         GateCalibrations({
-            (Gate.MS(-0.1, FreeParameter("beta"), -0.3), QubitSet([0, 1])): pulse_sequence_2
+            (gates.MS(-0.1, FreeParameter("beta"), -0.3), QubitSet([0, 1])): pulse_sequence_2
         }),
     )
     circuit.to_ir(
@@ -2070,7 +2131,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            Circuit().h(0).sample(observable=observables.Z(), target=0),
             OpenQasmProgram(
                 source="\n".join([
                     "OPENQASM 3.0;",
@@ -2082,7 +2143,7 @@ def test_circuit_user_gate(pulse_sequence_2):
             ),
         ),
         (
-            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            Circuit().h(0).sample(observable=observables.Z(), target=0),
             OpenQasmProgram(
                 source="\n".join([
                     "OPENQASM 3.0;",
@@ -2206,6 +2267,24 @@ def test_from_ir_inputs_updated():
         inputs={"theta": 0.2, "phi": 0.3},
     )
     assert Circuit.from_ir(source=openqasm, inputs={"phi": 0.1}) == circuit
+
+
+def test_from_ir_program_inputs_only():
+    circuit = Circuit().rx(0, FreeParameter("theta")).ry(0, 0.3).measure(0)
+    openqasm = OpenQasmProgram(
+        source="\n".join([
+            "OPENQASM 3.0;",
+            "input float theta;",
+            "input float phi;",
+            "bit[1] b;",
+            "qubit[1] q;",
+            "rx(theta) q[0];",
+            "ry(phi) q[0];",
+            "b[0] = measure q[0];",
+        ]),
+        inputs={"phi": 0.3},
+    )
+    assert Circuit.from_ir(source=openqasm) == circuit
 
 
 @pytest.mark.parametrize(
@@ -2366,48 +2445,26 @@ def test_to_unitary_empty_instructions_returns_empty_array():
 @pytest.mark.parametrize(
     "circuit",
     [
-        (Circuit().phaseshift(0, 0.15).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().cnot(1, 0).apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))),
-        (
-            Circuit()
-            .x(1)
-            .i(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
-        ),
-        (
-            Circuit()
-            .x(1)
-            .i(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
-        ),
-        (Circuit().x(1).i(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().x(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).i(2)),
-        (
-            Circuit()
-            .y(1)
-            .z(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
-        ),
-        (
-            Circuit()
-            .y(1)
-            .z(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
-        ),
-        (Circuit().y(1).z(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().y(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).z(2)),
+        (Circuit().phaseshift(0, 0.15).apply_gate_noise(noises.BitFlip(probability=0.1))),
+        (Circuit().cnot(1, 0).apply_gate_noise(noises.TwoQubitDepolarizing(probability=0.1))),
+        (Circuit().x(1).i(2).apply_gate_noise(noises.BitFlip(probability=0.1), target_qubits=[1])),
+        (Circuit().x(1).i(2).apply_gate_noise(noises.BitFlip(probability=0.1), target_qubits=[2])),
+        (Circuit().x(1).i(2).apply_gate_noise(noises.BitFlip(probability=0.1))),
+        (Circuit().x(1).apply_gate_noise(noises.BitFlip(probability=0.1)).i(2)),
+        (Circuit().y(1).z(2).apply_gate_noise(noises.BitFlip(probability=0.1), target_qubits=[1])),
+        (Circuit().y(1).z(2).apply_gate_noise(noises.BitFlip(probability=0.1), target_qubits=[2])),
+        (Circuit().y(1).z(2).apply_gate_noise(noises.BitFlip(probability=0.1))),
+        (Circuit().y(1).apply_gate_noise(noises.BitFlip(probability=0.1)).z(2)),
         (
             Circuit()
             .cphaseshift(2, 1, 0.15)
             .si(3)
-            .apply_gate_noise(
-                noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2]
-            )
+            .apply_gate_noise(noises.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2])
         ),
         (
             Circuit()
             .cphaseshift(2, 1, 0.15)
-            .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))
+            .apply_gate_noise(noises.TwoQubitDepolarizing(probability=0.1))
             .si(3)
         ),
     ],
@@ -2429,7 +2486,7 @@ def test_to_unitary_noise_not_apply_returns_expected_unitary(recwarn):
         Circuit()
         .cphaseshift(1, 2, 0.15)
         .si(3)
-        .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
+        .apply_gate_noise(noises.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
     )
 
     assert len(recwarn) == 1
@@ -2461,9 +2518,13 @@ def test_to_unitary_with_global_phase():
     "circuit,expected_unitary",
     [
         (Circuit().h(0), gates.H().to_matrix()),
-        (Circuit().h(0).add_result_type(ResultType.Probability(target=[0])), gates.H().to_matrix()),
+        (
+            Circuit().h(0).add_result_type(result_types.Probability(target=[0])),
+            gates.H().to_matrix(),
+        ),
         (Circuit().h(1), gates.H().to_matrix()),
         (Circuit().h(2), gates.H().to_matrix()),
+        (Circuit().h(2).measure(2), gates.H().to_matrix()),
         (Circuit().x(0), gates.X().to_matrix()),
         (Circuit().y(0), gates.Y().to_matrix()),
         (Circuit().z(0), gates.Z().to_matrix()),
@@ -2480,8 +2541,12 @@ def test_to_unitary_with_global_phase():
         (Circuit().gphase(0.15), gates.GPhase(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
-        (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
+        (
+            Circuit().cnot(0, 1).add_result_type(result_types.StateVector()),
+            gates.CNot().to_matrix(),
+        ),
         (Circuit().cnot(2, 4), gates.CNot().to_matrix()),
+        (Circuit().cnot(2, 4).measure([2, 4]), gates.CNot().to_matrix()),
         (Circuit().swap(0, 1), gates.Swap().to_matrix()),
         (Circuit().swap(1, 0), gates.Swap().to_matrix()),
         (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
@@ -2504,7 +2569,7 @@ def test_to_unitary_with_global_phase():
         (
             Circuit()
             .ccnot(0, 1, 2)
-            .add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1])),
+            .add_result_type(result_types.Expectation(observable=observables.Y(), target=[1])),
             gates.CCNot().to_matrix(),
         ),
         (Circuit().ccnot(0, 1, 2), gates.CCNot().to_matrix()),
@@ -2574,7 +2639,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().x(0, control=1),
+            Circuit().x(3, control=7),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0],
@@ -2610,7 +2675,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(1, 2, 0),
+            Circuit().ccnot(3, 6, 1),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2626,7 +2691,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(2, 1, 0),
+            Circuit().ccnot(6, 3, 1),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2642,7 +2707,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(0, 2, 1),
+            Circuit().ccnot(1, 6, 3),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2658,7 +2723,7 @@ def test_to_unitary_with_global_phase():
             ),
         ),
         (
-            Circuit().ccnot(2, 0, 1),
+            Circuit().ccnot(6, 1, 3),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -2669,6 +2734,102 @@ def test_to_unitary_with_global_phase():
                     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
                     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
                     [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().cnot([1, 6], 3),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().cnot([6, 1], 3),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(3, control=[6, 1]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(3, control=[1, 6]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().i(3).cnot(6, 1),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().i(3).x(1, control=[6]),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
                 ],
                 dtype=complex,
             ),
@@ -2807,21 +2968,21 @@ def test_circuit_with_symbol():
 
 
 def test_basis_rotation_instructions_all():
-    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.Y())
+    circ = Circuit().h(0).cnot(0, 1).sample(observable=observables.Y())
     expected = [
-        Instruction(Gate.Z(), 0),
-        Instruction(Gate.S(), 0),
-        Instruction(Gate.H(), 0),
-        Instruction(Gate.Z(), 1),
-        Instruction(Gate.S(), 1),
-        Instruction(Gate.H(), 1),
+        Instruction(gates.Z(), 0),
+        Instruction(gates.S(), 0),
+        Instruction(gates.H(), 0),
+        Instruction(gates.Z(), 1),
+        Instruction(gates.S(), 1),
+        Instruction(gates.H(), 1),
     ]
     assert circ.basis_rotation_instructions == expected
 
 
 def test_basis_rotation_instructions_target():
-    circ = Circuit().h(0).cnot(0, 1).expectation(observable=Observable.X(), target=0)
-    expected = [Instruction(Gate.H(), 0)]
+    circ = Circuit().h(0).cnot(0, 1).expectation(observable=observables.X(), target=0)
+    expected = [Instruction(gates.H(), 0)]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2830,16 +2991,18 @@ def test_basis_rotation_instructions_tensor_product():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.X() @ Observable.Y() @ Observable.Y(), target=[0, 1, 2])
+        .expectation(
+            observable=observables.X() @ observables.Y() @ observables.Y(), target=[0, 1, 2]
+        )
     )
     expected = [
-        Instruction(Gate.H(), 0),
-        Instruction(Gate.Z(), 1),
-        Instruction(Gate.S(), 1),
-        Instruction(Gate.H(), 1),
-        Instruction(Gate.Z(), 2),
-        Instruction(Gate.S(), 2),
-        Instruction(Gate.H(), 2),
+        Instruction(gates.H(), 0),
+        Instruction(gates.Z(), 1),
+        Instruction(gates.S(), 1),
+        Instruction(gates.H(), 1),
+        Instruction(gates.Z(), 2),
+        Instruction(gates.S(), 2),
+        Instruction(gates.H(), 2),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -2849,17 +3012,19 @@ def test_basis_rotation_instructions_tensor_product_shared_factors():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.X() @ Observable.Y() @ Observable.Y(), target=[0, 1, 2])
-        .expectation(observable=Observable.X() @ Observable.Y(), target=[0, 1])
+        .expectation(
+            observable=observables.X() @ observables.Y() @ observables.Y(), target=[0, 1, 2]
+        )
+        .expectation(observable=observables.X() @ observables.Y(), target=[0, 1])
     )
     expected = [
-        Instruction(Gate.H(), 0),
-        Instruction(Gate.Z(), 1),
-        Instruction(Gate.S(), 1),
-        Instruction(Gate.H(), 1),
-        Instruction(Gate.Z(), 2),
-        Instruction(Gate.S(), 2),
-        Instruction(Gate.H(), 2),
+        Instruction(gates.H(), 0),
+        Instruction(gates.Z(), 1),
+        Instruction(gates.S(), 1),
+        Instruction(gates.H(), 1),
+        Instruction(gates.Z(), 2),
+        Instruction(gates.S(), 2),
+        Instruction(gates.H(), 2),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -2872,22 +3037,22 @@ def test_basis_rotation_instructions_identity():
         .cnot(1, 2)
         .cnot(2, 3)
         .cnot(3, 4)
-        .expectation(observable=Observable.X(), target=[0])
-        .expectation(observable=Observable.I(), target=[2])
-        .expectation(observable=Observable.I() @ Observable.Y(), target=[1, 3])
-        .expectation(observable=Observable.I(), target=[0])
-        .expectation(observable=Observable.X() @ Observable.I(), target=[1, 3])
-        .expectation(observable=Observable.Y(), target=[2])
+        .expectation(observable=observables.X(), target=[0])
+        .expectation(observable=observables.I(), target=[2])
+        .expectation(observable=observables.I() @ observables.Y(), target=[1, 3])
+        .expectation(observable=observables.I(), target=[0])
+        .expectation(observable=observables.X() @ observables.I(), target=[1, 3])
+        .expectation(observable=observables.Y(), target=[2])
     )
     expected = [
-        Instruction(Gate.H(), 0),
-        Instruction(Gate.H(), 1),
-        Instruction(Gate.Z(), 2),
-        Instruction(Gate.S(), 2),
-        Instruction(Gate.H(), 2),
-        Instruction(Gate.Z(), 3),
-        Instruction(Gate.S(), 3),
-        Instruction(Gate.H(), 3),
+        Instruction(gates.H(), 0),
+        Instruction(gates.H(), 1),
+        Instruction(gates.Z(), 2),
+        Instruction(gates.S(), 2),
+        Instruction(gates.H(), 2),
+        Instruction(gates.Z(), 3),
+        Instruction(gates.S(), 3),
+        Instruction(gates.H(), 3),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -2897,10 +3062,10 @@ def test_basis_rotation_instructions_multiple_result_types_different_targets():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.X(), target=0)
-        .sample(observable=Observable.H(), target=1)
+        .expectation(observable=observables.X(), target=0)
+        .sample(observable=observables.H(), target=1)
     )
-    expected = [Instruction(Gate.H(), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    expected = [Instruction(gates.H(), 0), Instruction(gates.Ry(-np.pi / 4), 1)]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2909,11 +3074,11 @@ def test_basis_rotation_instructions_multiple_result_types_same_targets():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .variance(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .expectation(observable=observables.H() @ observables.X(), target=[0, 1])
+        .sample(observable=observables.H() @ observables.X(), target=[0, 1])
+        .variance(observable=observables.H() @ observables.X(), target=[0, 1])
     )
-    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.H(), 1)]
+    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.H(), 1)]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2922,10 +3087,10 @@ def test_basis_rotation_instructions_multiple_result_types_all_specified_same_ta
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.H())
-        .sample(observable=Observable.H(), target=[0])
+        .expectation(observable=observables.H())
+        .sample(observable=observables.H(), target=[0])
     )
-    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.Ry(-np.pi / 4), 1)]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2934,10 +3099,10 @@ def test_basis_rotation_instructions_multiple_result_types_specified_all_same_ta
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .sample(observable=Observable.H(), target=[0])
-        .expectation(observable=Observable.H())
+        .sample(observable=observables.H(), target=[0])
+        .expectation(observable=observables.H())
     )
-    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.Ry(-np.pi / 4), 1)]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2946,12 +3111,12 @@ def test_basis_rotation_instructions_multiple_result_types_same_targets_hermitia
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .sample(observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .sample(observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
         .expectation(
-            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1]
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1]
         )
     )
-    expected = [Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1])]
+    expected = [Instruction(gates.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1])]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -2960,17 +3125,19 @@ def test_basis_rotation_instructions_multiple_result_types_different_hermitian_t
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .sample(observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
-        .expectation(observable=Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[0])
+        .sample(observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .expectation(
+            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[0]
+        )
     )
     expected = [
         Instruction(
-            Gate.Unitary(
+            gates.Unitary(
                 matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
             ),
             target=[0],
         ),
-        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1]),
+        Instruction(gates.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1]),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -2982,20 +3149,22 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
         .cnot(0, 1)
         .cnot(1, 2)
         .sample(
-            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ Observable.H(),
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ observables.H(),
             target=[0, 1],
         )
         .variance(
-            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ Observable.H(),
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ observables.H(),
             target=[0, 1],
         )
-        .expectation(observable=Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[2])
+        .expectation(
+            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[2]
+        )
     )
     expected = [
-        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[0]),
-        Instruction(Gate.Ry(-np.pi / 4), 1),
+        Instruction(gates.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[0]),
+        Instruction(gates.Ry(-np.pi / 4), 1),
         Instruction(
-            Gate.Unitary(
+            gates.Unitary(
                 matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
             ),
             target=[2],
@@ -3010,17 +3179,17 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
         .h(0)
         .cnot(0, 1)
         .cnot(1, 2)
-        .expectation(observable=Observable.I(), target=[1])
+        .expectation(observable=observables.I(), target=[1])
         .sample(
-            observable=Observable.Hermitian(matrix=np.eye(4)) @ Observable.H(), target=[0, 1, 2]
+            observable=observables.Hermitian(matrix=np.eye(4)) @ observables.H(), target=[0, 1, 2]
         )
-        .variance(observable=Observable.H(), target=[2])
-        .variance(observable=Observable.Hermitian(matrix=np.eye(4)), target=[0, 1])
-        .expectation(observable=Observable.I(), target=[0])
+        .variance(observable=observables.H(), target=[2])
+        .variance(observable=observables.Hermitian(matrix=np.eye(4)), target=[0, 1])
+        .expectation(observable=observables.I(), target=[0])
     )
     expected = [
-        Instruction(Gate.Unitary(matrix=np.eye(4)), target=[0, 1]),
-        Instruction(Gate.Ry(-np.pi / 4), 2),
+        Instruction(gates.Unitary(matrix=np.eye(4)), target=[0, 1]),
+        Instruction(gates.Ry(-np.pi / 4), 2),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -3032,11 +3201,11 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_probab
         .cnot(0, 1)
         .cnot(1, 2)
         .probability([0, 1])
-        .sample(observable=Observable.Z() @ Observable.Z() @ Observable.H(), target=[0, 1, 2])
-        .variance(observable=Observable.H(), target=[2])
+        .sample(observable=observables.Z() @ observables.Z() @ observables.H(), target=[0, 1, 2])
+        .variance(observable=observables.H(), target=[2])
     )
     expected = [
-        Instruction(Gate.Ry(-np.pi / 4), 2),
+        Instruction(gates.Ry(-np.pi / 4), 2),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -3046,11 +3215,11 @@ def test_basis_rotation_instructions_call_twice():
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .variance(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .expectation(observable=observables.H() @ observables.X(), target=[0, 1])
+        .sample(observable=observables.H() @ observables.X(), target=[0, 1])
+        .variance(observable=observables.H() @ observables.X(), target=[0, 1])
     )
-    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.H(), 1)]
+    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.H(), 1)]
     assert circ.basis_rotation_instructions == expected
     assert circ.basis_rotation_instructions == expected
 
@@ -3098,8 +3267,8 @@ def test_qubit_count_setter(h):
         (
             Circuit()
             .h(0)
-            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            .expectation(observable=observables.H() @ observables.X(), target=[0, 1])
+            .sample(observable=observables.H() @ observables.X(), target=[0, 1]),
             2,
         ),
         (
@@ -3109,7 +3278,7 @@ def test_qubit_count_setter(h):
         (
             Circuit()
             .h(0)
-            .variance(observable=Observable.H(), target=1)
+            .variance(observable=observables.H(), target=1)
             .state_vector()
             .amplitude(["01"]),
             2,
@@ -3127,8 +3296,8 @@ def test_qubit_count(circuit, expected_qubit_count):
         (
             Circuit()
             .h(0)
-            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            .expectation(observable=observables.H() @ observables.X(), target=[0, 1])
+            .sample(observable=observables.H() @ observables.X(), target=[0, 1]),
             QubitSet([0, 1]),
         ),
         (
@@ -3138,7 +3307,7 @@ def test_qubit_count(circuit, expected_qubit_count):
         (
             Circuit()
             .h(0)
-            .variance(observable=Observable.H(), target=1)
+            .variance(observable=observables.H(), target=1)
             .state_vector()
             .amplitude(["01"]),
             QubitSet([0, 1]),
@@ -3186,7 +3355,7 @@ def test_add_parameterized_instr_parameterized_circ_check_true():
     alpha = FreeParameter("alpha")
     alpha2 = FreeParameter("alpha")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=alpha2, target=1).ry(angle=theta, target=2)
-    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+    circ.add_instruction(Instruction(gates.Ry(alpha), 3))
     expected = {theta, alpha}
     assert circ.parameters == expected
 
@@ -3194,7 +3363,7 @@ def test_add_parameterized_instr_parameterized_circ_check_true():
 def test_add_non_parameterized_instr_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.add_instruction(Instruction(Gate.Ry(0.1), 3))
+    circ.add_instruction(Instruction(gates.Ry(0.1), 3))
     expected = {theta}
     assert circ.parameters == expected
 
@@ -3319,7 +3488,7 @@ def test_circuit_with_expr():
         .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
         .rz(angle=theta, target=1)
     )
-    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+    circ.add_instruction(Instruction(gates.Ry(alpha), 3))
 
     new_circ = circ(theta=1, alpha=np.pi)
     expected = (
@@ -3342,7 +3511,7 @@ def test_circuit_with_expr_not_fully_bound():
         .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
         .rz(angle=theta, target=1)
     )
-    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+    circ.add_instruction(Instruction(gates.Ry(alpha), 3))
 
     new_circ = circ(theta=1)
     expected = (
@@ -3598,7 +3767,6 @@ def test_barrier_specific_qubits():
     assert isinstance(instr.operator, compiler_directives.Barrier)
     assert instr.target == QubitSet([0, 1, 2])
     assert instr.operator.qubit_indices == [0, 1, 2]
-    assert circ.qubits_frozen is True
 
 
 def test_barrier_all_qubits():
@@ -3606,18 +3774,24 @@ def test_barrier_all_qubits():
     assert len(circ.instructions) == 3
     barrier_instr = circ.instructions[2]
     assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
-    assert barrier_instr.target == QubitSet([0, 1])
+    assert barrier_instr.target == QubitSet()
+
+
+def test_barrier_applies_to_qubits_added_after():
+    circ = Circuit().rx(0, 3.14).barrier().rx(0, 3.14).rx(1, 3.14)
+    barrier_instr = circ.instructions[1]
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_empty_circuit():
-    circ = Circuit().barrier()
-    assert len(circ.instructions) == 0  # No barrier added to empty circuit
+    with pytest.raises(ValueError, match="Cannot add global barrier to empty circuit"):
+        Circuit().barrier()
 
 
 def test_barrier_none_target():
     circ = Circuit().h(0).h(2).barrier(None)
     barrier_instr = circ.instructions[2]
-    assert barrier_instr.target == QubitSet([0, 2])
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_openqasm_export_specific_qubits():
@@ -3629,7 +3803,7 @@ def test_barrier_openqasm_export_specific_qubits():
 def test_barrier_openqasm_export_all_qubits():
     circ = Circuit().h(0).h(1).barrier().cnot(0, 1)
     qasm = circ.to_ir(IRType.OPENQASM).source
-    assert "barrier q[0], q[1];" in qasm
+    assert "barrier;" in qasm
 
 
 def test_barrier_jaqcd_export_fails():

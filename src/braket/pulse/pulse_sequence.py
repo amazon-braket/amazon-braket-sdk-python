@@ -74,7 +74,7 @@ class PulseSequence:
 
         Args:
             frame (Frame): Frame for which the frequency needs to be set.
-            frequency (Union[float, FreeParameterExpression]): frequency value to set
+            frequency (float | FreeParameterExpression): frequency value to set
                 for the specified frame.
 
         Returns:
@@ -94,7 +94,7 @@ class PulseSequence:
 
         Args:
             frame (Frame): Frame for which the frequency needs to be shifted.
-            frequency (Union[float, FreeParameterExpression]): frequency value by which to shift
+            frequency (float | FreeParameterExpression): frequency value by which to shift
                 the frequency for the specified frame.
 
         Returns:
@@ -111,7 +111,7 @@ class PulseSequence:
 
         Args:
             frame (Frame): Frame for which the frequency needs to be set.
-            phase (Union[float, FreeParameterExpression]): phase value to set
+            phase (float | FreeParameterExpression): phase value to set
                 for the specified frame.
 
         Returns:
@@ -128,7 +128,7 @@ class PulseSequence:
 
         Args:
             frame (Frame): Frame for which the phase needs to be shifted.
-            phase (Union[float, FreeParameterExpression]): phase value by which to shift
+            phase (float | FreeParameterExpression): phase value by which to shift
                 the phase for the specified frame.
 
         Returns:
@@ -165,7 +165,7 @@ class PulseSequence:
 
         Args:
             frame (Frame): Frame for which the scale needs to be set.
-            scale (Union[float, FreeParameterExpression]): scale value to set
+            scale (float | FreeParameterExpression): scale value to set
                 on the specified frame.
 
         Returns:
@@ -185,9 +185,9 @@ class PulseSequence:
         """Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            qubits_or_frames (Union[Frame, list[Frame], QubitSet]): Qubits or frame(s) on which
+            qubits_or_frames (Frame | list[Frame] | QubitSet): Qubits or frame(s) on which
                 the delay needs to be introduced.
-            duration (Union[float, FreeParameterExpression]): value (in seconds) defining
+            duration (float | FreeParameterExpression): value (in seconds) defining
                 the duration of the delay.
 
         Returns:
@@ -211,7 +211,7 @@ class PulseSequence:
         frames.
 
         Args:
-            qubits_or_frames (Union[list[Frame], QubitSet]): Qubits or frames which the delay
+            qubits_or_frames (list[Frame] | QubitSet): Qubits or frames which the delay
                 needs to be introduced.
 
         Returns:
@@ -421,7 +421,7 @@ class PulseSequence:
         Args:
             arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
-            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
+            **kwargs (FreeParameter | str): Arbitrary keyword arguments.
 
         Returns:
             PulseSequence: A pulse sequence with the specified parameters bound.

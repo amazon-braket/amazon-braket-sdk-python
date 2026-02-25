@@ -559,7 +559,8 @@ def test_flattened_tensor_product():
         ),
         (
             np.array([[0, -1j], [1j, 0]]),
-            np.array([
+            np
+            .array([
                 [-0.70710678 + 0.0j, -0.70710678 + 0.0j],
                 [0.0 + 0.70710678j, 0.0 - 0.70710678j],
             ])
@@ -719,6 +720,12 @@ def test_tensor_product_repeated_qubits():
 def test_tensor_product_with_and_without_targets():
     with pytest.raises(ValueError):
         (2 * observables.Z(3)) @ (3 * observables.H())
+
+
+def test_tensor_product_to_openqasm_no_targets():
+    obs = observables.X() @ observables.Y()
+    with pytest.raises(ValueError):
+        obs.to_ir(ir_type=IRType.OPENQASM)
 
 
 def test_observable_from_ir_tensor_product():

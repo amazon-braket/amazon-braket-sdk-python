@@ -70,7 +70,7 @@ class AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the
+            coordinate (tuple[Number, Number] | np.ndarray): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
@@ -354,7 +354,7 @@ class AtomArrangement:
             a1 (tuple[Number, Number]): First lattice vector (x, y) in meters.
             a2 (tuple[Number, Number]): Second lattice vector (x, y) in meters.
             canvas (Canvas): Canvas defining the boundary where atoms can be placed.
-            basis (list[tuple[Number, Number]], optional): Basis vectors for decorated lattice.
+            basis (list[tuple[Number, Number]] | None): Basis vectors for decorated lattice.
                 If None, uses a single atom at (0, 0). Default is None.
             site_type (SiteType): The type of sites to create. Default is FILLED.
 

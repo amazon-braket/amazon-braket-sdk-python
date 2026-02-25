@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
-from enum import Enum
+from enum import StrEnum
 from typing import Any, NamedTuple
 
 from braket.circuits.compiler_directive import CompilerDirective
@@ -27,7 +27,7 @@ from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
-class MomentType(str, Enum):
+class MomentType(StrEnum):
     """The type of moments.
     GATE: a gate
     NOISE: a noise channel added directly to the circuit
@@ -160,7 +160,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """Add one or more instructions to self.
 
         Args:
-            instructions (Union[Iterable[Instruction], Instruction]): Instructions to add to self.
+            instructions (Iterable[Instruction] | Instruction): Instructions to add to self.
                 The instruction is added to the max time slice in which the instruction fits.
             noise_index (int): the number of noise channels at the same moment. For gates, this
                 is the number of gate_noise channels associated with that gate. For all other noise
@@ -218,12 +218,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def _get_qubit_times(self, qubits: QubitSet) -> int:
         return max([self._max_time_for_qubit(qubit) for qubit in qubits] + [self._time_all_qubits])
 
-    def _update_qubit_times(self, qubits: QubitSet) -> int:
-        time = self._get_qubit_times(qubits) + 1
+    def _update_qubit_times(self, qubits: QubitSet, advance: bool = True) -> int:
+        time = self._get_qubit_times(qubits)
+        if advance:
+            time += 1
+            self._number_gphase_in_current_moment = 0
         # Update time for all specified qubits
         for qubit in qubits:
             self._max_times[qubit] = time
-        self._number_gphase_in_current_moment = 0
         return time
 
     def add_noise(
@@ -239,7 +241,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
                 types, noise_index starts from 0; but for gate noise, it starts from 1.
         """
         qubit_range = instruction.target
-        time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
+        time = max(0, self._get_qubit_times(qubit_range))
         if input_type == MomentType.INITIALIZATION_NOISE:
             time = 0
 
@@ -248,6 +250,10 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
+
+        # Update qubit times for direct noise channels so subsequent gates are placed after
+        if input_type == MomentType.NOISE:
+            self._update_qubit_times(qubit_range, False)
 
     def sort_moments(self) -> None:
         """Make the disordered moments in order.

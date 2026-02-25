@@ -137,10 +137,7 @@ class MeasuredEntry:
         """
         # TODO: Use program set payload to calculate expectation
         if self._expectation is None:
-            warnings.warn(
-                "No observable was measured",
-                stacklevel=1,
-            )
+            warnings.warn("No observable was measured", stacklevel=1)
         return self._expectation
 
 
@@ -251,11 +248,11 @@ class CompositeEntry:
     @staticmethod
     def _get_inputs(program: Program, observables: Sum | list[Observable] | None) -> ParameterSets:
         if not observables:
-            return ParameterSets(program.inputs)
+            return ParameterSets(program.inputs or {})
         num_observables = len(observables)
         return ParameterSets({
             k: v[::num_observables]
-            for k, v in program.inputs.items()
+            for k, v in (program.inputs or {}).items()
             if not k.startswith(EULER_OBSERVABLE_PREFIX)
         })
 
@@ -302,7 +299,8 @@ class CompositeEntry:
                 result,
                 program=program.source,
                 shots=shots_per_executable,
-                inputs={k: v[result.inputsIndex] for k, v in program.inputs.items()},
+                inputs={k: v[result.inputsIndex] for k, v in (program.inputs or {}).items()}
+                or None,
                 observable=(
                     observables[result.inputsIndex % len(observables)] if observables else None
                 ),

@@ -62,6 +62,9 @@ from braket.tasks import (
     PhotonicModelQuantumTaskResult,
     ProgramSetQuantumTaskResult,
 )
+from braket.experimental_capabilities.experimental_capability_context import (
+    EnableExperimentalCapability,
+)
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
@@ -316,6 +319,20 @@ def test_state(quantum_task):
     _mock_metadata(quantum_task._aws_session, state_4)
     assert quantum_task.state() == state_4
 
+    state_5 = "FAILED"
+    quantum_task._aws_session.get_quantum_task.return_value = {
+        "status": state_5,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "2",
+            "queuePriority": "Normal",
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
+    assert quantum_task.state() == state_5
+
 
 def test_cancel(quantum_task):
     future = quantum_task.async_result()
@@ -381,6 +398,24 @@ def test_result_program_set(circuit_task):
     assert expected.task_metadata == actual.task_metadata
     assert expected.programs == actual.programs
     assert expected.num_executables == actual.num_executables
+
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_failed_program_set(circuit_task):
+    _mock_metadata_program_set(circuit_task._aws_session, "FAILED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+
+    expected = ProgramSetQuantumTaskResult.from_object(
+        BraketSchemaBase.parse_raw_schema(MockS3.MOCK_S3_RESULT_PROGRAM_SET)
+    )
+    actual = circuit_task.result()
+    assert actual is not None
+    assert expected.task_metadata == actual.task_metadata
 
     s3_bucket = circuit_task.metadata()["outputS3Bucket"]
     s3_object_key = circuit_task.metadata()["outputS3Directory"]
@@ -730,6 +765,78 @@ def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
         S3_TARGET,
         shots,
         reservation_arn=reservation_arn,
+    )
+
+
+def test_create_task_with_experimental_capabilities_enabled(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        experimental_capabilities="ALL",
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        experimental_capabilities="ALL",
+    )
+
+
+def test_create_task_in_experimental_capabilities_context(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    with EnableExperimentalCapability():
+        AwsQuantumTask.create(
+            aws_session,
+            SIMULATOR_ARN,
+            ahs_problem,
+            S3_TARGET,
+            shots,
+        )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        experimental_capabilities="ALL",
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_invalid_experimental_capabilities(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        experimental_capabilities=["NotARealCapability"],
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_invalid_experimental_capabilities_string(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        experimental_capabilities="NotARealCapability",
     )
 
 
@@ -1373,6 +1480,7 @@ def _assert_create_quantum_task_called_with(
     device_parameters=None,
     tags=None,
     reservation_arn=None,
+    experimental_capabilities=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1393,6 +1501,8 @@ def _assert_create_quantum_task_called_with(
                 "type": "RESERVATION_TIME_WINDOW_ARN",
             }
         ]
+    if experimental_capabilities:
+        test_kwargs["experimentalCapabilities"] = {"enabled": "ALL"}
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 
@@ -1411,6 +1521,7 @@ def _mock_metadata(aws_session, state):
                 "queuePriority": "Normal",
                 "message": message,
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
     else:
         aws_session.get_quantum_task.return_value = {
@@ -1422,7 +1533,26 @@ def _mock_metadata(aws_session, state):
                 "position": "2",
                 "queuePriority": "Normal",
             },
+            "actionMetadata": {"actionType": "braket.ir.openqasm.program"},
         }
+
+
+def _mock_metadata_program_set(aws_session, state):
+    message = (
+        f"'Task is in {state} status. AmazonBraket does not show queue position for this status.'"
+    )
+    aws_session.get_quantum_task.return_value = {
+        "status": state,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
+        "queueInfo": {
+            "queue": "QUANTUM_TASKS_QUEUE",
+            "position": "None",
+            "queuePriority": "Normal",
+            "message": message,
+        },
+        "actionMetadata": {"actionType": "braket.ir.openqasm.program_set"},
+    }
 
 
 def _mock_s3(aws_session, result):

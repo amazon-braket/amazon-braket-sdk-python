@@ -53,7 +53,7 @@ class AnnealingQuantumTaskResult:
         """Yields the data in record_array
 
         Args:
-            selected_fields (Optional[list[str]]): selected fields to return.
+            selected_fields (list[str] | None): selected fields to return.
                 Options are 'solution', 'value', and 'solution_count'. Default is None.
             sorted_by (str): Sorts the data by this field.
                 Options are 'solution', 'value', and 'solution_count'. Default is 'value'.

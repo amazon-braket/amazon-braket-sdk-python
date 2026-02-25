@@ -200,7 +200,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
-            items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Instruction | ResultType]): list of instructions or result types
             global_phase (float | None): the integrated global phase up to this column
 
         Returns:

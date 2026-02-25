@@ -186,7 +186,7 @@ class AdjointGradient(ObservableParameterResultType):
                 corresponding term in the observable. Default is `None`, which means the
                 observable must operate only on 1 qubit and it is applied to all qubits
                 in parallel.
-            parameters (list[Union[str, FreeParameter]] | None): The free parameters in the circuit
+            parameters (list[str | FreeParameter] | None): The free parameters in the circuit
                 to differentiate with respect to. Default: `all`.
 
         Raises:
@@ -246,7 +246,7 @@ class AdjointGradient(ObservableParameterResultType):
                 corresponding term in the observable. Default is `None`, which means the
                 observable must operate only on 1 qubit and it is applied to all qubits
                 in parallel.
-            parameters (list[Union[str, FreeParameter]] | None): The free parameters in the circuit
+            parameters (list[str | FreeParameter] | None): The free parameters in the circuit
                 to differentiate with respect to. Default: `all`.
 
         Returns:

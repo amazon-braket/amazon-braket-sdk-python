@@ -28,7 +28,7 @@ class QuantumOperator(Operator):
         """Initializes a `QuantumOperator`.
 
         Args:
-            qubit_count (Optional[int]): Number of qubits this quantum operator acts on.
+            qubit_count (int | None): Number of qubits this quantum operator acts on.
                 If all instances of the operator act on the same number of qubits, this argument
                 should be ``None``, and ``fixed_qubit_count`` should be implemented to return
                 the qubit count; if ``fixed_qubit_count`` is implemented and an int is passed in,

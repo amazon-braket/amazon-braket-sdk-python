@@ -68,8 +68,8 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit a node.
 
         Args:
-            node (Union[ast.QASMNode, ast.Expression]): The node to visit.
-            context (Optional[_ParseState]): The parse state context.
+            node (ast.QASMNode | ast.Expression): The node to visit.
+            context (_ParseState | None): The parse state context.
 
         Returns:
             Any: The parsed return value.
@@ -127,7 +127,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def visit_ClassicalDeclaration(
         self, node: ast.ClassicalDeclaration, context: _ParseState
-    ) -> dict | None:
+    ) -> None:
         """Visit a Classical Declaration.
             node.type, node.identifier, node.init_expression
             angle[20] a = 1+2;
@@ -141,10 +141,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Raises:
             NotImplementedError: Raised if the node is not a PortType, FrameType, or
                 WaveformType.
-
-        Returns:
-            Union[dict, None]: Returns a dict if WaveformType, None otherwise.
-        """  # noqa: DOC202
+        """
         identifier = self.visit(node.identifier, context)
         if type(node.type) is ast.WaveformType:
             context.variables[identifier] = self.visit(node.init_expression, context)

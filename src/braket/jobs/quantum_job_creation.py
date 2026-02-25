@@ -83,9 +83,8 @@ def prepare_quantum_job(
             job.`image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
             for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-        job_name (str | None): A str that specifies the name with which the hybrid job is created.
-            The hybrid job name must be between 0 and 50 characters long and cannot contain
-            underscores.
+        job_name (str | None): A str that specifies the name with which the hybrid job is
+            created. Allowed pattern for hybrid job name: `^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$`
             Default: f'{image_uri_type}-{timestamp}'.
 
         code_location (str | None): The S3 prefix URI where custom code will be uploaded.
@@ -164,6 +163,7 @@ def prepare_quantum_job(
     device_config = DeviceConfig(device)
     timestamp = str(int(time.time() * 1000))
     job_name = job_name or _generate_default_job_name(image_uri=image_uri, timestamp=timestamp)
+    _validate_quantum_job_name(job_name)  # Validate the job_name before continuing
     role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
@@ -494,3 +494,16 @@ def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[
 
 def _exclude_nones_factory(items: list[tuple]) -> dict:
     return {k: v for k, v in items if v is not None}
+
+
+_QUANTUM_JOB_NAME_PATTERN = re.compile(r"^(?!-)[A-Za-z0-9-]{1,50}(?<!-)$")
+
+
+def _validate_quantum_job_name(name: str) -> None:
+    """Raise ValueError if the quantum-job name is invalid."""
+    if not _QUANTUM_JOB_NAME_PATTERN.fullmatch(name):
+        raise ValueError(
+            f"Invalid quantum job name: '{name}'. "
+            "Use between 1 and 50 characters (letters, digits, hyphens); "
+            "no underscores or leading/trailing hyphens."
+        )

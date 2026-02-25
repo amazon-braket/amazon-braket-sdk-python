@@ -218,13 +218,14 @@ def hybrid_job(
                     "device": device or "local:none/none",
                     "source_module": temp_dir,
                     "entry_point": (
-                        f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
+                        f"{temp_dir_path.name}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
                     "wait_until_complete": wait_until_complete,
                     "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
+
                 optional_args = {
                     "image_uri": image_uri,
                     "input_data": job_input_data,

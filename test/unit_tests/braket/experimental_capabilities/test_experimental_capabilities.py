@@ -12,33 +12,64 @@
 # language governing permissions and limitations under the License.
 
 from __future__ import annotations
+import pytest
 
 from braket.experimental_capabilities import EnableExperimentalCapability
 from braket.experimental_capabilities.experimental_capability_context import (
+    ExperimentalCapabilityContextError,
     GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT,
+    EXPERIMENTAL_CAPABILITIES_ALL,
 )
 
 
 def test_enable_experimental_capability_context():
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
     with EnableExperimentalCapability():
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+def test_enable_experimental_capability_context_all_explicit():
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+    with EnableExperimentalCapability(EXPERIMENTAL_CAPABILITIES_ALL):
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
 
 def test_nested_capability_contexts():
     # Test that nested contexts work correctly
     with EnableExperimentalCapability():
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
         # Nested context - should preserve state on exit
         with EnableExperimentalCapability():
-            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
         # After inner context, the capability should still be enabled
-        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
 
     # After nested context, the capability should be disabled
-    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+def test_nested_capability_contexts_all_explicit():
+    # Test that nested contexts work correctly
+    with EnableExperimentalCapability("ALL"):
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+        # Nested context - should preserve state on exit
+        with EnableExperimentalCapability(EXPERIMENTAL_CAPABILITIES_ALL):
+            assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+        # After inner context, the capability should still be enabled
+        assert GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+    # After nested context, the capability should be disabled
+    assert not GLOBAL_EXPERIMENTAL_CAPABILITY_CONTEXT.is_enabled()
+
+
+@pytest.mark.xfail(raises=ExperimentalCapabilityContextError)
+def test_enable_experimental_capability_context_invalid_capability():
+    with EnableExperimentalCapability("INVALID_CAPABILITY"):
+        pass

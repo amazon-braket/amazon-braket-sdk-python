@@ -135,7 +135,7 @@ def _get_compiler_directive_qubit_range(item: Instruction, circuit_qubits: Qubit
     if item.operator.name == "Barrier":
         if not item.target or len(item.target) == 0:
             return circuit_qubits
-        return item.target
+        return QubitSet(item.target)
     return circuit_qubits
 
 
@@ -159,7 +159,7 @@ def _group_items(
 
     Args:
         circuit_qubits (QubitSet): set of qubits in circuit
-        items (list[Union[Instruction, ResultType]]): list of instructions or result types
+        items (list[Instruction | ResultType]): list of instructions or result types
 
     Returns:
         list[tuple[QubitSet, list[Instruction]]]: list of grouped instructions or result types.

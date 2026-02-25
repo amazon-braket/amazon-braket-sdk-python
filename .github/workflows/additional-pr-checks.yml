@@ -1,0 +1,84 @@
+name: Additional pull request checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - public-main
+      - feature/**
+
+permissions:
+  contents: read
+
+jobs:
+  dependent-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dependent:
+          - amazon-braket-pennylane-plugin-python
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
+          pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
+          pip install -e .
+          cd ..
+          git clone https://github.com/aws/${{ matrix.dependent }}.git
+          cd ${{ matrix.dependent }}
+          # Update the amazon-braket-sdk dependency to reference the current commit
+          python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
+          pip install -e .[test]
+      - name: Run unit tests
+        run: |
+          cd ../${{ matrix.dependent }}
+          pytest
+
+  check-code-format:
+    name: Check code format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: |
+          pip install tox
+      - name: Run code format checks
+        run: |
+          tox -e linters_check
+
+  twine-check:
+    name: Check PyPI long description
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - name: Install wheel
+        run: python -m pip install --user --upgrade wheel
+      - name: Install twine
+        run: python -m pip install --user --upgrade twine
+      - name: Install setuptools
+        run: python -m pip install --user --upgrade setuptools
+      - name: Build a binary wheel and a source tarball
+        run: python setup.py sdist bdist_wheel
+      - name: Check that long description will render correctly on PyPI.
+        run: twine check dist/*

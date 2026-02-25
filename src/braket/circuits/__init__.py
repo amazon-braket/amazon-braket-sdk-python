@@ -31,6 +31,7 @@ from braket.circuits.free_parameter_expression import FreeParameterExpression  #
 from braket.circuits.gate import Gate  # noqa: F401
 from braket.circuits.gate_calibrations import GateCalibrations  # noqa: F401
 from braket.circuits.instruction import Instruction  # noqa: F401
+from braket.circuits.measure import Measure  # noqa: F401
 from braket.circuits.moments import Moments, MomentsKey  # noqa: F401
 from braket.circuits.noise import Noise  # noqa: F401
 from braket.circuits.observable import (

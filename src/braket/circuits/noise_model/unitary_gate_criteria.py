@@ -30,7 +30,7 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
 
         Args:
             unitary (Unitary): A unitary gate matrix represented as a Braket Unitary.
-            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
+            qubits (QubitSetInput | None): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
 
         Raises:
@@ -62,7 +62,7 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
+            CriteriaKeyResult | set[Any]: The return value is based on the key type:
             UNITARY_GATE will return a set containing the bytes of the unitary matrix representing
             the unitary gate.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
