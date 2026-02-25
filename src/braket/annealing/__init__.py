@@ -11,9 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Provides classes for defining optimization problems to be solved on
-quantum annealing devices. It includes the Problem class for specifying Ising or
-QUBO (Quadratic Unconstrained Binary Optimization) formulations.
-"""
-
 from braket.annealing.problem import Problem, ProblemType  # noqa: F401
