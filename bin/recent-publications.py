@@ -40,16 +40,17 @@ TARGET_HEADER = "## Recent Publications"
 
 # Patterns that indicate a paper actually ran experiments on Amazon Braket
 USAGE_PATTERNS = [
-    r"(?:executed|ran|run|deployed|implemented|tested|performed|conducted)\s+(?:\w+\s+){0,4}(?:on|with|via|through)\s+(?:Amazon\s+)?Braket",
-    r"using\s+(?:the\s+)?Amazon\s+Braket",
-    r"Amazon\s+Braket\s+SDK",
+    r"(?:executed|ran|run|deployed|implemented|tested|performed|conducted|offered)\s+(?:\w+\s+){0,4}(?:on|with|via|through|by)\s+(?:(?:Amazon|AWS)\s+)?Braket",
+    r"\b(?:on|via|through|using)\s+(?:(?:Amazon|AWS)\s+)?Braket\b",
+    r"using\s+(?:the\s+)?(?:(?:Amazon|AWS)\s+)?Braket",
+    r"(?:(?:Amazon|AWS)\s+)?Braket\s+SDK",
     r"Braket\s+(?:simulator|backend|device|hardware|service|cloud)",
-    r"(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy).*(?:Amazon\s+Braket|Braket)",
-    r"(?:Amazon\s+Braket|Braket).*(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy)",
-    r"(?:submitted|sent|dispatched)\s+(?:\w+\s+){0,4}(?:to|via)\s+(?:Amazon\s+)?Braket",
+    r"(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy).*(?:(?:Amazon|AWS)\s+)?Braket",
+    r"(?:(?:Amazon|AWS)\s+)?Braket.*(?:SV1|DM1|TN1|Aria|Aspen|Harmony|Lucy)",
+    r"(?:submitted|sent|dispatched)\s+(?:\w+\s+){0,4}(?:to|via)\s+(?:(?:Amazon|AWS)\s+)?Braket",
     r"Braket\s+(?:API|tasks|quantum\s+tasks|jobs)",
-    r"(?:results|data|measurements)\s+(?:\w+\s+){0,3}from\s+(?:Amazon\s+)?Braket",
-    r"(?:circuits?|programs?)\s+(?:\w+\s+){0,3}(?:on|to)\s+(?:Amazon\s+)?Braket",
+    r"(?:results|data|measurements)\s+(?:\w+\s+){0,3}from\s+(?:(?:Amazon|AWS)\s+)?Braket",
+    r"(?:circuits?|programs?)\s+(?:\w+\s+){0,3}(?:on|to)\s+(?:(?:Amazon|AWS)\s+)?Braket",
 ]
 
 
