@@ -2,7 +2,7 @@
 
 This file lists recent arXiv preprints that use Amazon Braket.
 
-_Last updated: 2026-02-20_
+_Last updated: 2026-02-25_
 
 <!-- BEGIN_AUTO_PUBLICATIONS -->
 
