@@ -98,23 +98,21 @@ def process_entries(entries_json: RawEntries) -> tuple[list[str], SubTopicMap]:
     """
     topics: list[str] = []
     sub_topics: SubTopicMap = defaultdict(list)
-    seen_sub_topics: dict[str, set[str]] = defaultdict(set)
+    seen_entries: dict[str, set[str]] = defaultdict(set)
 
     for name, entry in entries_json.items():
         location = entry.get("location", "")
         parts = location.split("/")
 
-        # Validate that the path structure is at least "examples/topic/subtopic"
+        # Validate that the path structure is at least "examples/topic/..."
         if len(parts) > 2 and parts[0] == "examples":
             topic = parts[1]
             if topic not in topics:
                 topics.append(topic)
 
-            sub_topic = parts[2]
-
-            # Deduplicate by tracking the sub_topic string
-            if sub_topic not in seen_sub_topics[topic]:
-                seen_sub_topics[topic].add(sub_topic)
+            # Deduplicate by tracking the full location path
+            if location not in seen_entries[topic]:
+                seen_entries[topic].add(location)
                 sub_topics[topic].append(
                     {
                         "name": name,
