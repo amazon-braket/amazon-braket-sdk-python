@@ -93,14 +93,7 @@ def is_actual_braket_usage(abstract):
     if has_mention_only:
         return False
 
-    # Neither pattern matched. The arXiv search may have found "Amazon Braket"
-    # in the full paper text rather than the abstract, so we cannot determine
-    # usage from the abstract alone. Include it to avoid false negatives.
-    if re.search(r"Amazon\s+Braket", text, re.IGNORECASE):
-        return True
-
-    # "Amazon Braket" not in abstract at all — likely mentioned only in the
-    # body.  Without more signal we err on the side of inclusion.
+    # Otherwise, err on the side of inclusion.
     return True
 
 
