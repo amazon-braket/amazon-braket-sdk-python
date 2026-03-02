@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.113.0 (2026-03-02)
+
+### Deprecations and Removals
+
+ * Aria-1 retirement
+
+### Features
+
+ * Automate updating examples list in docs
+
+### Bug Fixes and Other Changes
+
+ * integ test fix after Aria-1 retirement
+
+### Documentation Changes
+
+ * added script to display recent arXiv publications in README
+ * update headings and descriptions for api reference
+ * improve deduplication logic in update_examples script
+
 ## v1.112.1 (2026-02-18)
 
 ### Bug Fixes and Other Changes
