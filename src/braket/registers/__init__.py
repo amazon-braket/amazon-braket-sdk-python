@@ -11,5 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Provides classes for representing and working with qubits. It provides
+Qubit for individual qubit indices and QubitSet for ordered collections of qubits
+used in quantum operations.
+"""
+
 from braket.registers.qubit import Qubit, QubitInput  # noqa: F401
 from braket.registers.qubit_set import QubitSet, QubitSetInput  # noqa: F401
