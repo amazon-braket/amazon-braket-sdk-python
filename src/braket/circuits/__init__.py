@@ -11,6 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Provides classes for building and manipulating quantum circuits,
+including, gates, observables, noise operations, result types,
+and tools for circuit visualization and compilation and serialization.
+"""
+
 from braket.circuits import (
     circuit,  # noqa: F401
     compiler_directives,  # noqa: F401
