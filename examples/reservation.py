@@ -16,7 +16,7 @@ from braket.circuits import Circuit
 from braket.devices import Devices
 
 bell = Circuit().h(0).cnot(0, 1)
-device = AwsDevice(Devices.IonQ.Aria1)
+device = AwsDevice(Devices.IonQ.Forte1)
 
 # To run a task in a device reservation, change the device to the one you reserved
 # and fill in your reservation ARN.
