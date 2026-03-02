@@ -161,6 +161,9 @@ To select a quantum hardware device, specify its ARN as the value of the `device
 ## Sample Notebooks
 Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/amazon-braket/amazon-braket-examples/) repo.
 
+## Recent Publications
+See [PUBLICATIONS.md](PUBLICATIONS.md) for a list of recent arXiv preprints that use Amazon Braket.
+
 ## Braket Python SDK API Reference Documentation
 
 The API reference, can be found on [Read the Docs](https://amazon-braket-sdk-python.readthedocs.io/en/latest/).
