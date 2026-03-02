@@ -451,3 +451,48 @@ def test_parse_from_calibration_schema(predefined_frame_1, predefined_frame_2):
         PulseSequence._parse_from_calibration_schema(calibration_instrs, waveforms, frames)
         == expected_pulse_sequence
     )
+
+
+def test_add_pulse_sequences_with_different_free_parameters(predefined_frame_1):
+    theta1 = FreeParameter("theta1")
+    theta2 = FreeParameter("theta2")
+    pulse_sequence1 = PulseSequence().shift_phase(predefined_frame_1, theta1)
+    pulse_sequence2 = PulseSequence().shift_phase(predefined_frame_1, theta2)
+    pulse_sequence = pulse_sequence1 + pulse_sequence2
+
+    expected_str = "\n".join([
+        "OPENQASM 3.0;",
+        "cal {",
+        *[
+            f"    input float {parameter};"
+            for parameter in reversed(list(pulse_sequence.parameters))
+        ],
+        "    shift_phase(predefined_frame_1, theta1);",
+        "    shift_phase(predefined_frame_1, theta2);",
+        "}",
+    ])
+
+    assert pulse_sequence.to_ir() == expected_str
+    assert pulse_sequence.parameters == {theta1, theta2}
+
+
+def test_add_pulse_sequences_with_capture_v0(predefined_frame_1):
+    pulse_sequence1 = PulseSequence().capture_v0(predefined_frame_1)
+    pulse_sequence2 = PulseSequence()
+    with pytest.raises(
+        ValueError,
+        match="Cannot add a pulse sequence to another"
+        " one that has already measurement instructions.",
+    ):
+        pulse_sequence1 += pulse_sequence2
+
+
+def test_add_pulse_sequences_with_same_free_parameter(predefined_frame_1):
+    theta = FreeParameter("theta")
+    pulse_sequence1 = PulseSequence().shift_phase(predefined_frame_1, theta)
+    with pytest.raises(
+        ValueError,
+        match="A free parameter with the name theta already exists in the pulse"
+        " sequence. Please rename this free parameter.",
+    ):
+        pulse_sequence1 + pulse_sequence1
