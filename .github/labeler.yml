@@ -1,0 +1,97 @@
+# https://github.com/actions/labeler
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'doc/**'
+          - 'README.md'
+          - 'CHANGELOG.md'
+          - 'CONTRIBUTING.md'
+          - 'PUBLICATIONS.md'
+          - '*.rst'
+
+circuits:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/circuits/**'
+
+aws:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/aws/**'
+
+devices:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/devices/**'
+
+jobs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/jobs/**'
+
+ahs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/ahs/**'
+
+pulse:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/pulse/**'
+
+annealing:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/annealing/**'
+
+emulation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/emulation/**'
+
+error-mitigation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/error_mitigation/**'
+
+visualization:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/visualization/**'
+
+quantum-information:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/quantum_information/**'
+
+program-sets:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/program_sets/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'test/**'
+
+CI:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'tox.ini'
+          - '.pre-commit-config.yaml'
+          - '.coveragerc'
+
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'setup.py'
+          - 'setup.cfg'
+          - 'pyproject.toml'
+          - 'MANIFEST.in'
+
+examples:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'examples/**'
