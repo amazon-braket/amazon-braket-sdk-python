@@ -75,9 +75,7 @@ def update_example_file(file_path: Path, new_content: list[str]) -> None:
     insert_at = 0
     for i, line in enumerate(lines):
         if line.strip().startswith(".. toctree::"):
-            insert_at = (
-                i + 3
-            )  # Keeps the toctree and immediate config (like :maxdepth: 1)
+            insert_at = i + 3  # Keeps the toctree and immediate config (like :maxdepth: 1)
             break
 
     with file_path.open("w", encoding="utf-8") as f:
@@ -113,13 +111,11 @@ def process_entries(entries_json: RawEntries) -> tuple[list[str], SubTopicMap]:
             # Deduplicate by tracking the full location path
             if location not in seen_entries[topic]:
                 seen_entries[topic].add(location)
-                sub_topics[topic].append(
-                    {
-                        "name": name,
-                        "url": f"{REPO_BASE_URL}{location}",
-                        "description": m2r2.convert(entry.get("content", "")),
-                    }
-                )
+                sub_topics[topic].append({
+                    "name": name,
+                    "url": f"{REPO_BASE_URL}{location}",
+                    "description": m2r2.convert(entry.get("content", "")),
+                })
 
     return topics, sub_topics
 
@@ -150,9 +146,7 @@ def main() -> None:
         )
         main_examples_file.write_text(initial_content, encoding="utf-8")
 
-    main_examples_list_lines = [
-        f"   examples-{topic.replace('_', '-')}.rst\n" for topic in topics
-    ]
+    main_examples_list_lines = [f"   examples-{topic.replace('_', '-')}.rst\n" for topic in topics]
     update_example_file(main_examples_file, main_examples_list_lines)
 
     # Generate or update individual topic files
@@ -173,14 +167,12 @@ def main() -> None:
             link_text = f"`{entry['name']} <{entry['url']}>`_"
             link_border = "*" * len(link_text)
 
-            topic_lines.extend(
-                [
-                    f"{link_border}\n",
-                    f"{link_text}\n",
-                    f"{link_border}\n\n",
-                    f"{entry['description']}\n\n",
-                ]
-            )
+            topic_lines.extend([
+                f"{link_border}\n",
+                f"{link_text}\n",
+                f"{link_border}\n\n",
+                f"{entry['description']}\n\n",
+            ])
 
         update_example_file(example_file, topic_lines)
 
