@@ -71,6 +71,17 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
+    def _wrapping_delimiter(cls, left: bool, right: bool, up: bool, down: bool) -> str:
+        """character used for directional wrapping delimiter"""
+        match left, right, up, down:
+            case False, False, True, True:
+                return "|"
+            case True, True, False, False:
+                return "-"
+            case _:
+                return " "
+
+    @classmethod
     def _process_item_properties(
         cls, item: Instruction | ResultType, circuit_qubits: QubitSet
     ) -> tuple[QubitSet, QubitSet, QubitSet, QubitSet, list[str], dict | None]:
