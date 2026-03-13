@@ -98,7 +98,7 @@ def _get_display_width(min_width: int = 40, max_width: int = 100000):
     if "BRAKET_DIAGRAM_WIDTH" in os.environ:
         try:
             width = int(os.environ["BRAKET_DIAGRAM_WIDTH"])
-            if min_width == -1 or width > max_width:
+            if width > max_width:
                 width = max_width
             elif width < min_width:
                 width = min_width

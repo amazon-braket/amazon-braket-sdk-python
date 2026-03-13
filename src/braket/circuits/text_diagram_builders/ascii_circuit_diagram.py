@@ -66,7 +66,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         return 0
 
     @classmethod
-    def _duplicate_time_at_bottom(cls, lines: str) -> None:
+    def _duplicate_time_at_bottom(cls, lines: list) -> None:
         # duplicate times after an empty line
         lines.append(lines[0])
 

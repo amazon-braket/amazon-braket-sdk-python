@@ -321,9 +321,7 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
                 prev_len = len(new_lines[-1])
                 next_section = lines[0][0:c0] + lines[0][start : end + 1]
                 next_len = len(next_section) + 3 if end != breaks[-1] else -1
-                u_line = ""
-                h_line = ""
-                l_line = ""
+                u_line, h_line, l_line = "", "", ""
                 for j in range(max(prev_len, next_len)):
                     h_line += cls._wrapping_delimiter(
                         True, j < max(prev_len, next_len) - 1, j == prev_len - 1, j == next_len - 1
@@ -332,10 +330,16 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
                     l_line += cls._wrapping_delimiter(False, False, j == next_len - 1, True)
                 new_lines.extend((u_line, h_line, l_line))
             for line in lines:
-                if len(line) <= start:
-                    continue
-                section = line[0:c0] + line[start : end + 1]
-                if end != breaks[-1]:  # if we aren't at the last circuit
-                    section += "  " + cls._wrapping_delimiter(False, False, True, True)
-                new_lines.append(section.rstrip())
+                if len(line) == 0:  # Preserve empty lines
+                    if len(breaks) > 2 and i < len(breaks) - 2:
+                        h_line = " " * (c0 + end - start + 3)
+                        h_line += cls._wrapping_delimiter(False, False, True, True)
+                        new_lines.append(h_line)
+                    else:
+                        new_lines.append(line)
+                else:
+                    section = line[0:c0] + line[start : end + 1]
+                    if end != breaks[-1]:  # if we aren't at the last circuit
+                        section += "  " + cls._wrapping_delimiter(False, False, True, True)
+                    new_lines.append(section)
         return new_lines
