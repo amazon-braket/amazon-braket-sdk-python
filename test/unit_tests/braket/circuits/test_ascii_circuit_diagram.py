@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
+import os
 import pytest
 
 from braket.circuits.compiler_directives import Barrier
@@ -1057,3 +1058,32 @@ def test_barrier_global_with_vertical_lines():
         "T  : |0|1 |2|",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_circuit_wrapping_ascii():
+    os.environ["BRAKET_DIAGRAM_WIDTH"] = "40"
+    expected = (
+        "T  : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|  |",
+        "                                        |",
+        "q0 : -H-H-H-H-H-H-H-H-H-H-H--H--H--H--  |",
+        "                                        |",
+        "T  : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|  |",
+        "                                        |",
+        "---------------------------------------- ",
+        "                                         ",
+        "T  : |14|15|16|17|18|19|",
+        "                        ",
+        "q0 : -H--H--H--H--H--H--",
+        "",
+        "T  : |14|15|16|17|18|19|",
+    )
+    circ = Circuit()
+    for _ in range(20):
+        circ.h(0)
+
+    try:
+        _assert_correct_diagram(circ, expected)
+    except AssertionError as e:
+        pytest.fail(f"ASCII diagram test failed:\n{e}")
+    finally:
+        del os.environ["BRAKET_DIAGRAM_WIDTH"]

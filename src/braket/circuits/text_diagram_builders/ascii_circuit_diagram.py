@@ -66,9 +66,20 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         return 0
 
     @classmethod
-    def _duplicate_time_at_bottom(cls, lines: str) -> None:
+    def _duplicate_time_at_bottom(cls, lines: list) -> None:
         # duplicate times after an empty line
         lines.append(lines[0])
+
+    @classmethod
+    def _wrapping_delimiter(cls, left: bool, right: bool, up: bool, down: bool) -> str:
+        """character used for directional wrapping delimiter"""
+        match left, right, up, down:
+            case False, False, True, True:
+                return "|"
+            case True, True, False, False:
+                return "-"
+            case _:
+                return " "
 
     @classmethod
     def _process_item_properties(
