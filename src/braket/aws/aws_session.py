@@ -576,36 +576,7 @@ class AwsSession:
                 self.s3_client.create_bucket(
                     Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
                 )
-            self.s3_client.put_public_access_block(
-                Bucket=bucket_name,
-                PublicAccessBlockConfiguration={
-                    "BlockPublicAcls": True,
-                    "IgnorePublicAcls": True,
-                    "BlockPublicPolicy": True,
-                    "RestrictPublicBuckets": True,
-                },
-            )
-            self.s3_client.put_bucket_policy(
-                Bucket=bucket_name,
-                Policy=f"""{{
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {{
-                            "Effect": "Allow",
-                            "Principal": {{
-                                "Service": [
-                                    "braket.amazonaws.com"
-                                ]
-                            }},
-                            "Action": "s3:*",
-                            "Resource": [
-                                "arn:aws:s3:::{bucket_name}",
-                                "arn:aws:s3:::{bucket_name}/*"
-                            ]
-                        }}
-                    ]
-                }}""",
-            )
+
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             message = e.response["Error"]["Message"]
