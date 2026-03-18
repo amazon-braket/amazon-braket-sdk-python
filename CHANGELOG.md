@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.113.1 (2026-03-18)
+
+### Bug Fixes and Other Changes
+
+ * Remove unnecessary configuration from S3 bucket creation
+
 ## v1.113.0 (2026-03-02)
 
 ### Deprecations and Removals
