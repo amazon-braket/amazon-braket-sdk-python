@@ -103,7 +103,7 @@ def _get_display_width(min_width: int = 40, max_width: int = 100000):
             elif width < min_width:
                 width = min_width
         except (ValueError, OverflowError):
-            print(f"Warning: Invalid BRAKET_DIAGRAM_WIDTH value {width}, using default")
+            print(f"Warning: Invalid BRAKET_DIAGRAM_WIDTH value, using default {width}")
     return width
 
 
