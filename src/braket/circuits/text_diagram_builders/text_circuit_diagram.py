@@ -308,9 +308,12 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         max_width = _get_display_width() - 3  # -3 for " |" and 1 for extra padding
         cols = [i for i, c in enumerate(lines[0]) if c == cls._vertical_delimiter()]
         breaks = [cols[0]]
-        for i in range(1, len(cols)):
-            if cols[i] - breaks[-1] > max_width - breaks[0]:
+        i = 1
+        while i < len(cols):
+            if cols[i] - breaks[-1] >= max_width - breaks[0]:
                 breaks.append(cols[i - 1])
+            else:
+                i += 1
         breaks.append(cols[-1])
         return breaks
 

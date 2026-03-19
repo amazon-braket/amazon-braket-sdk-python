@@ -1384,3 +1384,17 @@ def test_unicode_boundary():  # noqa: ANN201
         pytest.fail(f"Unicode diagram test failed:\n{e}")
     finally:
         del os.environ["BRAKET_DIAGRAM_WIDTH"]
+
+
+def test_unicode_wrapping_fine():
+    for width in ["40", "41", "42", "43", "44", "45"]:
+        os.environ["BRAKET_DIAGRAM_WIDTH"] = width
+        circ = Circuit().cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+        circ.cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+        try:
+            for line in circ.diagram().split("\n"):
+                assert len(line) <= int(width)
+        except AssertionError as e:
+            pytest.fail(f"Unicode diagram is wrapping incorrectly :\n{e}")
+        finally:
+            del os.environ["BRAKET_DIAGRAM_WIDTH"]
