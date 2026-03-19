@@ -76,11 +76,9 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
     ) -> str:
         """character used for directional wrapping delimiter"""
         match left, right, up, down, thick:
-            case False, False, True, True, False:
+            case False, False, True, True, _:
                 return "|"
-            case False, False, True, True, True:
-                return "#"
-            case True, True, False, False, False:
+            case True, True, _, _, False:
                 return "-"
             case True, True, False, False, True:
                 return "="
