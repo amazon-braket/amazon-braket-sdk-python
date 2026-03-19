@@ -1,0 +1,11 @@
+{#- Convert snake_case module names to PascalCase class names -#}
+{#- e.g., "aws_device" becomes "AwsDevice" -#}
+{%- set module_name = qualname.split('.')[-1] -%}
+{%- if show_headings %}
+{{- module_name | replace('_', ' ') | title | replace(' ', '') | e | heading }}
+
+{% endif -%}
+.. automodule:: {{ qualname }}
+{%- for option in automodule_options %}
+   :{{ option }}:
+{%- endfor %}

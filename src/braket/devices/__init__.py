@@ -11,6 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Provides a unified interface for interacting with quantum devices. It
+includes the abstract Device base class, LocalSimulator for running circuits locally,
+and the Devices enumeration for convenient access to available Amazon Braket devices.
+"""
+
 from braket.devices.device import Device  # noqa: F401
 from braket.devices.devices import Devices  # noqa: F401
 from braket.devices.local_simulator import LocalSimulator  # noqa: F401

@@ -19,6 +19,7 @@ from braket.circuits import Circuit
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gate import Gate
 from braket.emulation.passes import ValidationPass
+from braket.program_sets import ProgramSet
 from braket.registers.qubit_set import QubitSet
 
 
@@ -93,10 +94,12 @@ class ConnectivityValidator(ValidationPass):
             for edge in self._connectivity_graph.edges:
                 self._connectivity_graph.add_edge(edge[1], edge[0])
 
+        self._supported_specifications = Circuit | ProgramSet
+
     def _graph_node_type(self) -> type:
         return type(next(iter(self._connectivity_graph.nodes)))
 
-    def validate(self, circuit: Circuit) -> None:
+    def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
         device connectivity definied by this validator. If any sub-circuit of the
@@ -104,7 +107,7 @@ class ConnectivityValidator(ValidationPass):
         in the circuit.
 
         Args:
-            circuit (Circuit): The Braket circuit whose gate operations to
+            circuit (Circuit | ProgramSet): The Braket circuit whose gate operations to
                 validate.
 
         Raises:
@@ -112,6 +115,10 @@ class ConnectivityValidator(ValidationPass):
         """
         # If any of the instructions are in verbatim mode, all qubit references
         # must point to hardware qubits. Otherwise, this circuit need not be validated.
+        if isinstance(circuit, ProgramSet):
+            for item in circuit:
+                self.validate(item)
+            return
         if not any(
             isinstance(instruction.operator, StartVerbatimBox)
             for instruction in circuit.instructions

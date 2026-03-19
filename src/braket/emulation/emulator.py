@@ -13,16 +13,19 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable
 from typing import Any
 
-from braket.circuits import Circuit
-from braket.circuits.compiler_directives import EndVerbatimBox, StartVerbatimBox
-from braket.circuits.measure import Measure
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
 from braket.emulation.passes import ValidationPass
+from braket.emulation.passes.circuit_passes import (
+    MeasurementTransformation,
+    NoiseModelTransformation,
+    RemoveVerbatimTransformation,
+)
 from braket.tasks import QuantumTask
 from braket.tasks.quantum_task import TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
@@ -62,6 +65,7 @@ class Emulator(Device):
         **kwargs: Any,
     ) -> QuantumTask:
         """Emulate a quantum task specification on this quantum device emulator.
+
         A quantum task can be a circuit or an annealing problem. Emulation
         involves running all emulator passes on the input program before running
         the program on the emulator's backend.
@@ -79,12 +83,13 @@ class Emulator(Device):
             QuantumTask: The QuantumTask tracking task execution on this device emulator.
         """
 
-        task_specification = self.transform(task_specification, apply_noise_model=False)
-        # Don't apply noise model as the local simulator will automatically apply it.
+        if hasattr(self._backend, "_noise_model") and self._backend._noise_model is not None:
+            warnings.warn("Backend device already has a noise model defined.", stacklevel=2)
+        task_specification = self.transform(task_specification, apply_noise_model=True)
 
-        # Remove the verbatim box before submitting to the braket density matrix simulator
-        task_specification_v2 = self._remove_verbatim_box(task_specification)
-        return self._backend.run(task_specification_v2, shots, inputs, *args, **kwargs)
+        return self._backend.run(
+            RemoveVerbatimTransformation().run(task_specification), shots, inputs, *args, **kwargs
+        )
 
     def run_batch(
         self,
@@ -111,7 +116,9 @@ class Emulator(Device):
         return self._noise_model
 
     def transform(
-        self, task_specification: TaskSpecification, apply_noise_model: bool = True
+        self,
+        task_specification: TaskSpecification,
+        apply_noise_model: bool = True,
     ) -> TaskSpecification:
         """
         Passes the input program through all Pass objects contained in this
@@ -128,46 +135,12 @@ class Emulator(Device):
             TaskSpecification: A compiled program with a noise model applied, if one
             exists for this emulator and apply_noise_model is true.
         """
-
         program = self._pass_manager.transform(task_specification)
 
-        # Apply measurement manually if the circuit has no measurement and no result type.
-        # This ensures that the noise model can apply readout error to the circuit, since
-        # the readout error is applied if and only if there is measurement or result type
-        # in the circuit. The measurement operations should be added even if apply_noise_model
-        # is False.
-        has_measurement = any(
-            isinstance(instr.operator, Measure) for instr in task_specification.instructions
-        )
-        if (not has_measurement) and len(task_specification.result_types) == 0:
-            task_specification.measure(target_qubits=task_specification.qubits)
-
-        return (
-            self._noise_model.apply(program) if apply_noise_model and self.noise_model else program
-        )
-
-    def _remove_verbatim_box(self, noisy_verbatim_circ: Circuit) -> Circuit:
-        """
-        Remove the verbatim box in the noisy circuit before simulating on
-        local braket density matrix simulator.
-
-        Args:
-            noisy_verbatim_circ (Circuit): The input verbatim noisy program
-
-        Returns:
-            Circuit: A verbatim noisy program without the verbatim boxes
-        """
-        noisy_verbatim_circ_2 = [
-            instruction
-            for instruction in noisy_verbatim_circ.instructions
-            if not isinstance(instruction.operator, StartVerbatimBox)
-            and not isinstance(instruction.operator, EndVerbatimBox)
-        ]
-        noisy_verbatim_circ_3 = Circuit(noisy_verbatim_circ_2)
-        for result_type in noisy_verbatim_circ.result_types:
-            noisy_verbatim_circ_3.add(result_type)
-
-        return noisy_verbatim_circ_3
+        modifier = PassManager(MeasurementTransformation())
+        if apply_noise_model:
+            modifier += NoiseModelTransformation(noise_model=self.noise_model)
+        return modifier.transform(program)
 
     def validate(self, task_specification: TaskSpecification) -> None:
         """

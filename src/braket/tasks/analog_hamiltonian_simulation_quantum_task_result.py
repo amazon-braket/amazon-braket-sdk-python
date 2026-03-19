@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 from braket.task_result import (
@@ -25,7 +25,7 @@ from braket.task_result import (
 )
 
 
-class AnalogHamiltonianSimulationShotStatus(str, Enum):
+class AnalogHamiltonianSimulationShotStatus(StrEnum):
     SUCCESS = "Success"
     PARTIAL_SUCCESS = "Partial Success"
     FAILURE = "Failure"

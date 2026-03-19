@@ -56,7 +56,7 @@ def noiseless_emulator(local_dm_simulator):
 def noisy_emulator(setup_local_simulator_devices):
     noise_model = NoiseModel()
     noise_model.add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-    local_backend = LocalSimulator("braket_dm", noise_model=noise_model)
+    local_backend = LocalSimulator("braket_dm")
     qubit_count_validator = QubitCountValidator(4)
     return Emulator(local_backend, noise_model=noise_model, passes=[qubit_count_validator])
 
@@ -102,16 +102,6 @@ def test_apply_noise_model(noisy_emulator):
     assert circuit == target_circ
 
 
-def test_remove_verbatim_box(noiseless_emulator):
-    circuit = Circuit().h(0)
-    circuit = Circuit().add_verbatim_box(circuit).probability()
-    circuit = noiseless_emulator._remove_verbatim_box(circuit)
-
-    target_circuit = Circuit().h(0).probability()
-
-    assert circuit == target_circuit
-
-
 def test_noisy_run(noisy_emulator):
     circuit = Circuit().h(0)
     open_qasm_source = """OPENQASM 3.0;
@@ -124,3 +114,10 @@ b[0] = measure q[0];""".strip()
     result = noisy_emulator.run(circuit, shots=1).result()
     emulation_source = result.additional_metadata.action.source.strip()
     assert emulation_source == open_qasm_source
+
+
+def test_backend_noise_model_warning(local_dm_simulator):
+    with pytest.warns(UserWarning, match="Backend device already has a noise model defined."):
+        emulator = Emulator(local_dm_simulator)
+        circuit = Circuit().h(0)
+        emulator.run(circuit, shots=1)

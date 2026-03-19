@@ -13,11 +13,11 @@
 
 import json
 import os
-from enum import Enum
+from enum import StrEnum
 from functools import cache
 
 
-class Framework(str, Enum):
+class Framework(StrEnum):
     """Supported Frameworks for pre-built containers"""
 
     BASE = "BASE"
