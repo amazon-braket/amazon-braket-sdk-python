@@ -71,13 +71,18 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
         lines.append(lines[0])
 
     @classmethod
-    def _wrapping_delimiter(cls, left: bool, right: bool, up: bool, down: bool) -> str:
+    def _wrapping_delimiter(
+            cls, left: bool, right: bool, up: bool, down: bool, thick: bool = False) -> str:
         """character used for directional wrapping delimiter"""
-        match left, right, up, down:
-            case False, False, True, True:
+        match left, right, up, down, thick:
+            case False, False, True, True, False:
                 return "|"
-            case True, True, False, False:
+            case False, False, True, True, True:
+                return "#"
+            case True, True, False, False, False:
                 return "-"
+            case True, True, False, False, True:
+                return "="
             case _:
                 return " "
 
