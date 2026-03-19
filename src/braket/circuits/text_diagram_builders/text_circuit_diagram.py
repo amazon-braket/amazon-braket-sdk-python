@@ -69,7 +69,8 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
 
     @classmethod
     @abstractmethod
-    def _wrapping_delimiter(cls, left: bool, right: bool, up: bool, down: bool) -> str:
+    def _wrapping_delimiter(cls, left: bool, right: bool, up: bool, down: bool, thick: bool = False
+                            ) -> str:
         """returns directional wrapping delimiters"""
 
     @classmethod
@@ -301,9 +302,9 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         return output
 
     @classmethod
-    def _wrap_circuit(cls, lines: list[str]) -> list[str]:
-        """Wrap the circuit based on the terminal size"""
-        max_width = _get_display_width() - 3
+    def _get_breaks(cls, lines: list[str]) -> list[int]:
+        """Get the break points for the circuit diagram"""
+        max_width = _get_display_width() - 3  # -3 for " |" and 1 for extra padding
         header = lines[0]
         cols = [i for i, c in enumerate(header) if c == cls._vertical_delimiter()]
         c0, breaks = cols[0], [cols[0]]
@@ -313,24 +314,22 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
                 breaks.append(cols[i - 1])
             i += 1
         breaks.append(cols[-1])
+        return breaks
+
+
+    @classmethod
+    def _wrap_circuit(cls, lines: list[str]) -> list[str]:
+        """Wrap the circuit based on the terminal size"""
         new_lines = []
+        breaks = cls._get_breaks(lines)
+        c0 = breaks[0]
         for i in range(len(breaks) - 1):
             start, end = breaks[i], breaks[i + 1]
-            # Add horizontal line between sections
-            if i > 0:
-                prev_len = len(new_lines[-1])
-                next_section = lines[0][0:c0] + lines[0][start : end + 1]
-                next_len = len(next_section) + 3 if end != breaks[-1] else -1
-                u_line, h_line, l_line = "", "", ""
-                for j in range(max(prev_len, next_len)):
-                    h_line += cls._wrapping_delimiter(
-                        True, j < max(prev_len, next_len) - 1, j == prev_len - 1, j == next_len - 1
-                    )
-                    u_line += cls._wrapping_delimiter(False, False, True, j == prev_len - 1)
-                    l_line += cls._wrapping_delimiter(False, False, j == next_len - 1, True)
-                new_lines.extend((u_line, h_line, l_line))
+            final = (i == len(breaks) - 2)  # if we are at the last circuit)
+            before_final = (i == len(breaks) - 3)
+            # add main section
             for line in lines:
-                if len(line) == 0:  # Preserve empty lines
+                if len(line) == 0:  # Preserve empty lines but add padding
                     if len(breaks) > 2 and i < len(breaks) - 2:
                         h_line = " " * (c0 + end - start + 3)
                         h_line += cls._wrapping_delimiter(False, False, True, True)
@@ -339,7 +338,31 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
                         new_lines.append(line)
                 else:
                     section = line[0:c0] + line[start : end + 1]
-                    if end != breaks[-1]:  # if we aren't at the last circuit
-                        section += "  " + cls._wrapping_delimiter(False, False, True, True)
+                    if len(breaks) > 2:
+                        section += "  " + cls._wrapping_delimiter(False, False, True, True, final)
                     new_lines.append(section)
+            # now, begin horizontal section
+            if len(breaks) <= 2:
+                continue
+            prev_len = len(new_lines[-1])
+            next_section = lines[0][0:c0] + lines[0][end : breaks[i + 2] + 1] if not final else ""
+            next_len = len(next_section) + 3 if not final else -1
+            u_line, h_line, l_line = "", "", ""
+            for j in range(max(prev_len, next_len)):
+                h_line += cls._wrapping_delimiter(
+                    True,
+                    j < max(prev_len, next_len) - 1,
+                    j == prev_len - 1,
+                    j == next_len - 1,
+                    final
+                )
+                u_line += cls._wrapping_delimiter(
+                    False, False,
+                    j == prev_len - 1, j == prev_len - 1, final)
+                l_line += cls._wrapping_delimiter(
+                    False, False,
+                    j == next_len - 1, j == next_len - 1, final or before_final)
+            new_lines.extend((u_line, h_line))
+            if not final:
+                new_lines.append(l_line)
         return new_lines
