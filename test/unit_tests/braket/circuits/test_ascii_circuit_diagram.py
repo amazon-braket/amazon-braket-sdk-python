@@ -50,7 +50,13 @@ def test_one_gate_one_qubit():
 def test_one_gate_one_qubit_rotation():
     circ = Circuit().rx(angle=3.14, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : |   0    |", "               ", "q0 : -Rx(3.14)-", "", "T  : |   0    |")
+    expected = (
+        "T  : |   0    |",
+        "               ",
+        "q0 : -Rx(3.14)-",
+        "",
+        "T  : |   0    |",
+    )
     _assert_correct_diagram(circ, expected)
 
 
@@ -678,7 +684,10 @@ def test_multiple_result_types_with_state_vector_amplitude():
         .h(0)
         .variance(observable=Observable.Y(), target=0)
         .expectation(observable=Observable.Y(), target=3)
-        .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
+        .expectation(
+            observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])),
+            target=1,
+        )
         .amplitude(["0001"])
         .state_vector()
     )
@@ -1070,12 +1079,14 @@ def test_circuit_wrapping_ascii():
         "T  : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|  |",
         "                                        |",
         "---------------------------------------- ",
-        "                                         ",
-        "T  : |14|15|16|17|18|19|",
-        "                        ",
-        "q0 : -H--H--H--H--H--H--",
-        "",
-        "T  : |14|15|16|17|18|19|",
+        "                          |              ",
+        "T  : |14|15|16|17|18|19|  |",
+        "                          |",
+        "q0 : -H--H--H--H--H--H--  |",
+        "                          |",
+        "T  : |14|15|16|17|18|19|  |",
+        "                          |",
+        "========================== ",
     )
     circ = Circuit()
     for _ in range(20):

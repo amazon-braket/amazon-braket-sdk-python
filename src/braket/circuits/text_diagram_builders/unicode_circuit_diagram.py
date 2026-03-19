@@ -74,7 +74,11 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
 
     @classmethod
     def _wrapping_delimiter(
-        cls, left: bool = False, right: bool = False, up: bool = False, down: bool = False,
+        cls,
+        left: bool = False,
+        right: bool = False,
+        up: bool = False,
+        down: bool = False,
         thick: bool = False,
     ) -> str:
         match left, right, up, down, thick:

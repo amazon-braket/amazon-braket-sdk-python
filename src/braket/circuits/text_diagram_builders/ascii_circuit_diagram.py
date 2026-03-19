@@ -72,7 +72,8 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
 
     @classmethod
     def _wrapping_delimiter(
-            cls, left: bool, right: bool, up: bool, down: bool, thick: bool = False) -> str:
+        cls, left: bool, right: bool, up: bool, down: bool, thick: bool = False
+    ) -> str:
         """character used for directional wrapping delimiter"""
         match left, right, up, down, thick:
             case False, False, True, True, False:
