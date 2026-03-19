@@ -18,8 +18,8 @@ import json
 import os
 import urllib.request
 import warnings
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, ClassVar
 
 import pydantic
@@ -51,7 +51,7 @@ from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.tasks.quantum_task import TaskSpecification
 
 
-class AwsDeviceType(str, Enum):
+class AwsDeviceType(StrEnum):
     """Possible AWS device types"""
 
     SIMULATOR = "SIMULATOR"
@@ -132,6 +132,7 @@ class AwsDevice(Device):
         inputs: dict[str, float] | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
+        experimental_capabilities: str | None = None,
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
@@ -165,6 +166,10 @@ class AwsDevice(Device):
                 Note: If you are creating tasks in a job that itself was created reservation ARN,
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
+            experimental_capabilities (str | None): Experimental capabilities
+                to enable for the quantum task. Supported values are "ALL" to enable all
+                experimental capabilities. If `None`, the setting from the experimental
+                capability context will be used if active. Default: None.
             *aws_quantum_task_args (Any): Arbitrary arguments.
             **aws_quantum_task_kwargs (Any): Arbitrary keyword arguments.
 
@@ -201,7 +206,7 @@ class AwsDevice(Device):
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """  # noqa: E501
         if self._noise_model:
-            task_specification = self._apply_noise_model_to_circuit(task_specification)
+            task_specification = self._noise_model.apply(task_specification)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -219,6 +224,7 @@ class AwsDevice(Device):
             inputs=inputs,
             gate_definitions=gate_definitions,
             reservation_arn=reservation_arn,
+            experimental_capabilities=experimental_capabilities,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -235,6 +241,7 @@ class AwsDevice(Device):
         inputs: dict[str, float] | list[dict[str, float]] | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
         reservation_arn: str | None = None,
+        experimental_capabilities: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -271,7 +278,10 @@ class AwsDevice(Device):
                 Note: If you are creating tasks in a job that itself was created reservation ARN,
                 those tasks do not need to be created with the reservation ARN.
                 Default: None.
-
+            experimental_capabilities (str | None): Experimental capabilities
+                to enable for the quantum task. Supported values are "ALL" to enable all
+                experimental capabilities. If `None`, the setting from the experimental
+                capability context will be used if active. Default: None.
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the quantum tasks run
 
@@ -280,7 +290,7 @@ class AwsDevice(Device):
         """  # noqa: E501
         if self._noise_model:
             task_specifications = [
-                self._apply_noise_model_to_circuit(task_specification)
+                self._noise_model.apply(task_specification)
                 for task_specification in task_specifications
             ]
         return AwsQuantumTaskBatch(
@@ -302,6 +312,7 @@ class AwsDevice(Device):
             inputs=inputs,
             gate_definitions=gate_definitions,
             reservation_arn=reservation_arn,
+            experimental_capabilities=experimental_capabilities,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -428,7 +439,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.now(tz=timezone.utc)
+        current_datetime_utc = datetime.now(tz=UTC)
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)

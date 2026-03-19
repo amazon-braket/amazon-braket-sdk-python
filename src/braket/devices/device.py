@@ -13,13 +13,11 @@
 
 from __future__ import annotations
 
-import warnings
 from abc import ABC, abstractmethod
 from typing import Any
 
 from braket.device_schema import DeviceActionType
 
-from braket.circuits import Circuit, Noise
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
 from braket.tasks.quantum_task import QuantumTask, TaskSpecification
@@ -124,25 +122,3 @@ class Device(ABC):
                 f"{self.name} does not support noise simulation or the noise model includes noise "
                 f"that is not supported by {self.name}."
             )
-
-    def _apply_noise_model_to_circuit(
-        self, task_specification: TaskSpecification
-    ) -> TaskSpecification:
-        if isinstance(task_specification, Circuit):
-            for instruction in task_specification.instructions:
-                if isinstance(instruction.operator, Noise):
-                    warnings.warn(
-                        "The noise model of the device is applied to a circuit that already has"
-                        " noise instructions.",
-                        stacklevel=2,
-                    )
-                    break
-            task_specification = self._noise_model.apply(task_specification)
-        else:
-            warnings.warn(
-                "Noise model is only applicable to circuits. The type of the task specification is"
-                f" {task_specification.__class__.__name__}. The noise model of the device does not"
-                " apply.",
-                stacklevel=2,
-            )
-        return task_specification

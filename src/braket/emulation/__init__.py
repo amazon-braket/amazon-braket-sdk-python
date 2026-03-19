@@ -11,5 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""The local emulator allows you to emulate quantum programs locally before running
+them on actual quantum hardware. This module provides Emulator and LocalEmulator
+for device emulation, PassManager for applying transformation passes,
+DeviceEmulatorProperties for calibration data, and ValidationPass and
+TransformationPass base classes for custom passes.
+"""
+
 from braket.emulation.emulator import Emulator  # noqa: F401
 from braket.emulation.pass_manager import PassManager  # noqa: F401

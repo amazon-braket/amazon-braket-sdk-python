@@ -270,6 +270,20 @@ def test_call_with_default_parameter_val():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_with_euler_angles_sum_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    h = observables.X() @ observables.Z() @ observables.X() + observables.Y() @ observables.X()
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(h)
+
+
+def test_with_euler_angles_observable_mismatched_targets():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+    obs = [observables.X(0) @ observables.Z(1), observables.Y()]
+    with pytest.raises(ValueError):
+        circ.with_euler_angles(obs)
+
+
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
@@ -982,6 +996,41 @@ def test_from_ir_with_mixed_verbatim_non_verbatim_instr():
     expected_circ.measure(1)
     actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
     assert actual_circ == expected_circ
+
+
+@pytest.mark.parametrize(
+    "source_lines, expected_circuit",
+    [
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[3] q;",
+                "h q[0];",
+                "barrier q[0], q[1];",
+                "cnot q[0], q[1];",
+                "barrier;",
+            ],
+            Circuit().h(0).barrier([0, 1]).cnot(0, 1).barrier(),
+        ),
+        (
+            [
+                "OPENQASM 3.0;",
+                "qubit[2] q;",
+                "h q[0];",
+                "barrier;",
+                "cnot q[0], q[1];",
+            ],
+            Circuit().h(0).barrier().cnot(0, 1),
+        ),
+    ],
+)
+def test_from_ir_with_barriers(source_lines, expected_circuit):
+    ir = OpenQasmProgram(
+        source="\n".join(source_lines),
+        inputs={},
+    )
+    actual_circ = Circuit().from_ir(source=ir.source, inputs=ir.inputs)
+    assert actual_circ == expected_circuit
 
 
 def test_add_with_instruction_with_default(cnot_instr):
@@ -3718,7 +3767,6 @@ def test_barrier_specific_qubits():
     assert isinstance(instr.operator, compiler_directives.Barrier)
     assert instr.target == QubitSet([0, 1, 2])
     assert instr.operator.qubit_indices == [0, 1, 2]
-    assert circ.qubits_frozen is True
 
 
 def test_barrier_all_qubits():
@@ -3726,18 +3774,24 @@ def test_barrier_all_qubits():
     assert len(circ.instructions) == 3
     barrier_instr = circ.instructions[2]
     assert isinstance(barrier_instr.operator, compiler_directives.Barrier)
-    assert barrier_instr.target == QubitSet([0, 1])
+    assert barrier_instr.target == QubitSet()
+
+
+def test_barrier_applies_to_qubits_added_after():
+    circ = Circuit().rx(0, 3.14).barrier().rx(0, 3.14).rx(1, 3.14)
+    barrier_instr = circ.instructions[1]
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_empty_circuit():
-    circ = Circuit().barrier()
-    assert len(circ.instructions) == 0  # No barrier added to empty circuit
+    with pytest.raises(ValueError, match="Cannot add global barrier to empty circuit"):
+        Circuit().barrier()
 
 
 def test_barrier_none_target():
     circ = Circuit().h(0).h(2).barrier(None)
     barrier_instr = circ.instructions[2]
-    assert barrier_instr.target == QubitSet([0, 2])
+    assert barrier_instr.target == QubitSet()
 
 
 def test_barrier_openqasm_export_specific_qubits():
@@ -3749,7 +3803,7 @@ def test_barrier_openqasm_export_specific_qubits():
 def test_barrier_openqasm_export_all_qubits():
     circ = Circuit().h(0).h(1).barrier().cnot(0, 1)
     qasm = circ.to_ir(IRType.OPENQASM).source
-    assert "barrier q[0], q[1];" in qasm
+    assert "barrier;" in qasm
 
 
 def test_barrier_jaqcd_export_fails():

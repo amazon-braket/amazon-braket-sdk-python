@@ -51,6 +51,7 @@ class ResultTypeValidator(ValidationPass):
         }
 
         self._connectivity_graph = connectivity_graph
+        self._supported_specifications = Circuit
 
     def validate(self, circuit: Circuit) -> None:
         """

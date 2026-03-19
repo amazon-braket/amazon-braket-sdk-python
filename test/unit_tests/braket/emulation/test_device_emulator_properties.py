@@ -58,10 +58,8 @@ def test_from_json_3(reduced_standardized_json):
     assert result.qubit_count == 2
     assert result.native_gate_set == valid_nativeGateSet
     assert result.connectivity_graph == {"0": ["1"]}
-    assert (
-        result.one_qubit_properties["0"] == valid_oneQubitProperties,
-        result.one_qubit_properties["1"] == valid_oneQubitProperties_v2,
-    )
+    assert result.one_qubit_properties["0"] == valid_oneQubitProperties
+    assert result.one_qubit_properties["1"] == valid_oneQubitProperties_v2
     assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
     assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1]
@@ -75,10 +73,8 @@ def test_from_device_properties(reduced_standardized_json):
     assert result.qubit_count == 2
     assert result.native_gate_set == valid_nativeGateSet
     assert result.connectivity_graph == {"0": ["1"]}
-    assert (
-        result.one_qubit_properties["0"] == valid_oneQubitProperties,
-        result.one_qubit_properties["1"] == valid_oneQubitProperties_v2,
-    )
+    assert result.one_qubit_properties["0"] == valid_oneQubitProperties
+    assert result.one_qubit_properties["1"] == valid_oneQubitProperties_v2
     assert result.two_qubit_properties["0-1"] == valid_twoQubitProperties
     assert result.supported_result_types == valid_supportedResultTypes
     assert result.qubit_labels == [0, 1]

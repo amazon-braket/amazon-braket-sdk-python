@@ -25,6 +25,7 @@ from braket.circuits.text_diagram_builders.text_circuit_diagram_utils import (
     _add_footers,
     _categorize_result_types,
     _compute_moment_global_phase,
+    _get_display_width,
     _group_items,
     _prepare_qubit_identifier_column,
     _unite_strings,
@@ -60,6 +61,18 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
     @abstractmethod
     def _qubit_line_spacing_below(cls) -> int:
         """number of empty lines below the qubit line."""
+
+    @classmethod
+    @abstractmethod
+    def _duplicate_time_at_bottom(cls, lines: list) -> None:
+        """Duplicates the time label at the bottom of the circuit diagram."""
+
+    @classmethod
+    @abstractmethod
+    def _wrapping_delimiter(
+        cls, left: bool, right: bool, up: bool, down: bool, thick: bool = False
+    ) -> str:
+        """returns directional wrapping delimiters"""
 
     @classmethod
     @abstractmethod
@@ -114,7 +127,8 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
             b. create the column corresponding to the current moment
         3. Add result types at the end of the circuit
         4. Join the columns to get a list of qubit lines
-        5. Add a list of optional parameters:
+        5. Wrap the circuit if it is too long
+        6. Add a list of optional parameters:
             a. the total global phase
             b. results types that do not have any target such as statevector
             c. the list of unassigned parameters
@@ -124,6 +138,16 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
 
         Returns:
             str: string circuit diagram.
+
+        Note:
+            The diagram width can be controlled using the `BRAKET_DIAGRAM_WIDTH`
+            environment variable. This determines when the circuit diagram will wrap
+            to multiple sections. The value must be between 40 and 100000 characters.
+            If not set, the diagram width defaults to the terminal width.
+
+            Example::
+
+                export BRAKET_DIAGRAM_WIDTH=120
         """
         if not circuit.instructions:
             return ""
@@ -152,6 +176,8 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         # Unite strings
         lines = _unite_strings(y_axis_str, column_strs)
         cls._duplicate_time_at_bottom(lines)
+
+        lines = cls._wrap_circuit(lines)
 
         return _add_footers(lines, circuit, global_phase, additional_result_types)
 
@@ -275,3 +301,72 @@ class TextCircuitDiagram(CircuitDiagram, ABC):
         for qubit in qubits:
             output += cls._draw_symbol(symbols[qubit], symbols_width, margins[qubit])
         return output
+
+    @classmethod
+    def _get_breaks(cls, lines: list[str]) -> list[int]:
+        """Get the break points for the circuit diagram"""
+        max_width = _get_display_width() - 3  # -3 for " |" and 1 for extra padding
+        cols = [i for i, c in enumerate(lines[0]) if c == cls._vertical_delimiter()]
+        breaks = [cols[0]]
+        i = 1
+        while i < len(cols):
+            if cols[i] - breaks[-1] >= max_width - breaks[0]:
+                breaks.append(cols[i - 1])
+            else:
+                i += 1
+        breaks.append(cols[-1])
+        return breaks
+
+    @classmethod
+    def _wrap_circuit(cls, lines: list[str]) -> list[str]:
+        """Wrap the circuit based on the terminal size"""
+        new_lines = []
+        breaks = cls._get_breaks(lines)
+        c0 = breaks[0]
+        for i in range(len(breaks) - 1):
+            start, end = breaks[i], breaks[i + 1]
+            final = i == len(breaks) - 2  # if we are at the last circuit)
+            before_final = i == len(breaks) - 3
+            # add main section
+            for line in lines:
+                if len(line) == 0:  # Preserve empty lines but add padding
+                    if len(breaks) > 2:
+                        h_line = " " * (c0 + end - start + 3)
+                        h_line += cls._wrapping_delimiter(False, False, True, True)
+                        new_lines.append(h_line)
+                    else:
+                        new_lines.append(line)
+                else:
+                    section = line[0:c0] + line[start : end + 1]
+                    if len(breaks) > 2:
+                        section += "  " + cls._wrapping_delimiter(False, False, True, True, final)
+                    new_lines.append(section)
+            # now, begin horizontal section
+            if len(breaks) <= 2:
+                continue
+            prev_len = len(new_lines[-1])
+            next_section = lines[0][0:c0] + lines[0][end : breaks[i + 2] + 1] if not final else ""
+            next_len = len(next_section) + 3 if not final else -1
+            u_line, h_line, l_line = "", "", ""
+            for j in range(max(prev_len, next_len)):
+                h_line += cls._wrapping_delimiter(
+                    True,
+                    j < max(prev_len, next_len) - 1,
+                    j == prev_len - 1,
+                    j == next_len - 1,
+                    final,
+                )
+                u_line += cls._wrapping_delimiter(
+                    False, False, j == prev_len - 1, j == prev_len - 1, final
+                )
+                l_line += cls._wrapping_delimiter(
+                    False,
+                    False,
+                    j == next_len - 1,
+                    j == next_len - 1,
+                    final or before_final,
+                )
+            new_lines.extend((u_line, h_line))
+            if not final:
+                new_lines.append(l_line)
+        return new_lines

@@ -17,7 +17,7 @@ from collections import OrderedDict
 from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from numbers import Number
 
 
@@ -27,7 +27,7 @@ class TimeSeriesItem:
     value: Number
 
 
-class StitchBoundaryCondition(str, Enum):
+class StitchBoundaryCondition(StrEnum):
     MEAN = "mean"
     LEFT = "left"
     RIGHT = "right"

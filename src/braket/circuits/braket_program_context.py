@@ -20,6 +20,7 @@ from braket.ir.jaqcd.program_v1 import Results
 from sympy import Expr, Number
 
 from braket.circuits import Circuit, Instruction
+from braket.circuits.compiler_directives import Barrier
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noises import Kraus
@@ -30,6 +31,7 @@ from braket.circuits.translations import (
     one_prob_noise_map,
 )
 from braket.parametric import FreeParameterExpression
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class BraketProgramContext(AbstractProgramContext):
@@ -177,3 +179,13 @@ class BraketProgramContext(AbstractProgramContext):
 
     def add_verbatim_marker(self, marker: VerbatimBoxDelimiter) -> None:
         self._circuit.add_instruction(Instruction(COMPILER_DIRECTIVES[marker](), target=[]))
+
+    def add_barrier(self, target: QubitSetInput | None = None) -> None:
+        """Add a barrier instruction to the circuit.
+
+        Args:
+            target (QubitSetInput | None): Target qubits for the barrier. If None or empty,
+                applies barrier to all qubits in the circuit.
+        """
+        target_qubits = QubitSet() if not target else QubitSet(target)
+        self._circuit.add_instruction(Instruction(Barrier(list(target_qubits)), target_qubits))

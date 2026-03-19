@@ -1,5 +1,119 @@
 # Changelog
 
+## v1.113.1 (2026-03-18)
+
+### Bug Fixes and Other Changes
+
+ * Remove unnecessary configuration from S3 bucket creation
+
+## v1.113.0 (2026-03-02)
+
+### Deprecations and Removals
+
+ * Aria-1 retirement
+
+### Features
+
+ * Automate updating examples list in docs
+
+### Bug Fixes and Other Changes
+
+ * integ test fix after Aria-1 retirement
+
+### Documentation Changes
+
+ * added script to display recent arXiv publications in README
+ * update headings and descriptions for api reference
+ * improve deduplication logic in update_examples script
+
+## v1.112.1 (2026-02-18)
+
+### Bug Fixes and Other Changes
+
+ * change qubit number division to floor division
+
+## v1.112.0 (2026-02-16)
+
+### Features
+
+ * Emulator support for ProgramSets, transformation passes
+
+## v1.111.2 (2026-02-09)
+
+### Bug Fixes and Other Changes
+
+ * Print statement was altering the circuit
+
+## v1.111.1 (2026-02-05)
+
+### Bug Fixes and Other Changes
+
+ * Accept qubit 0 as valid Barrier target
+
+## v1.111.0 (2026-01-30)
+
+### Deprecations and Removals
+
+ * Drop Python 3.10
+
+## v1.110.1 (2026-01-26)
+
+### Bug Fixes and Other Changes
+
+ * add barrier gate to BRAKET_GATES
+ * preserve global barrier semantics
+
+### Documentation Changes
+
+ * Update docs badge to point to default version
+
+## v1.110.0 (2026-01-22)
+
+### Features
+
+ * Support targetless observables and Pauli strings in program sets
+
+### Bug Fixes and Other Changes
+
+ * More efficient check for physical qubits
+
+## v1.109.0 (2026-01-20)
+
+### Features
+
+ * support barrier in `from_ir` method
+
+## v1.108.1 (2026-01-12)
+
+### Bug Fixes and Other Changes
+
+ * ruf067 error
+
+## v1.108.0 (2026-01-08)
+
+### Features
+
+ * update device.run to support experimentalCapabilities flag
+
+### Bug Fixes and Other Changes
+
+ * No targetless observables in CircuitBinding
+
+## v1.107.0 (2025-12-22)
+
+### Features
+
+ * circuit binding observables to inputs & program set support for noise model
+ * Add access to hybrid job tasks from the job object
+
+### Bug Fixes and Other Changes
+
+ * Correct diagram gate order of circuits with multi-qubit noise operators
+
+### Documentation Changes
+
+ * Use sphinx autodoc typehints
+
 ## v1.106.5 (2025-12-11)
 
 ### Bug Fixes and Other Changes

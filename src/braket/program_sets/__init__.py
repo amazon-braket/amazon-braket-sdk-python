@@ -11,6 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Program sets efficiently run multiple quantum circuits in a single quantum task,
+reducing overhead in time and cost. This module provides ProgramSet for managing
+the payload sent to the device, CircuitBinding for sweeping a circuit over parameters
+and observables, and ParameterSets for bundling parameter values.
+"""
+
 from braket.program_sets.circuit_binding import CircuitBinding  # noqa: F401
 from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike  # noqa: F401
 from braket.program_sets.program_set import ProgramSet  # noqa: F401

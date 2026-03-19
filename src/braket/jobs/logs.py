@@ -100,7 +100,7 @@ def multi_stream_iter(
     for s in event_iters:
         try:
             events.append(next(s))
-        except StopIteration:  # noqa: PERF203
+        except StopIteration:
             events.append(None)
 
     while any(events):

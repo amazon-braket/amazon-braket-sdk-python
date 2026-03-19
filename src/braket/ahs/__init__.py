@@ -11,6 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""Analog Hamiltonian Simulation is an emerging paradigm in quantum computing that
+differs significantly from the traditional quantum circuit model. Instead of a
+sequence of gates, an AHS program is defined by the time-dependent and space-dependent
+parameters of the Hamiltonian. This module provides classes for defining atom
+arrangements, driving fields, shifting fields, local detuning, and other components
+for building AHS programs on QuEra devices.
+"""
+
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation  # noqa: F401
 from braket.ahs.atom_arrangement import AtomArrangement, AtomArrangementItem, SiteType  # noqa: F401
 from braket.ahs.canvas import Canvas  # noqa: F401
