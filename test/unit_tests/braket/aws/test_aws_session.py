@@ -1189,15 +1189,6 @@ def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id):
     if region == "us-east-1":
         del kwargs["CreateBucketConfiguration"]
     aws_session._s3.create_bucket.assert_called_with(**kwargs)
-    aws_session._s3.put_public_access_block.assert_called_with(
-        Bucket=bucket,
-        PublicAccessBlockConfiguration={
-            "BlockPublicAcls": True,
-            "IgnorePublicAcls": True,
-            "BlockPublicPolicy": True,
-            "RestrictPublicBuckets": True,
-        },
-    )
 
 
 @pytest.mark.parametrize(

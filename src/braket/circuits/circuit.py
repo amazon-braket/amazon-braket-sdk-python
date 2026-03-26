@@ -1287,10 +1287,25 @@ class Circuit:
 
         Args:
             circuit_diagram_class (type): A `CircuitDiagram` class that builds the
-                diagram for this circuit. Default = `AsciiCircuitDiagram`.
+                diagram for this circuit. Default = `UnicodeCircuitDiagram`.
 
         Returns:
-            str: An ASCII string circuit diagram.
+            str: An Unicode string circuit diagram.
+
+        Note:
+            The diagram width can be controlled using the `BRAKET_DIAGRAM_WIDTH`
+            environment variable. This determines when the circuit diagram will wrap
+            to multiple sections. The value must be between 40 and 100000 characters.
+            If not set, the diagram width defaults to the terminal width.
+
+            Example::
+
+                # From Bash:
+                export BRAKET_DIAGRAM_WIDTH=120
+
+                # From Python:
+                import os
+                os.environ['BRAKET_DIAGRAM_WIDTH'] = "120"
         """
         return circuit_diagram_class.build_diagram(self)
 

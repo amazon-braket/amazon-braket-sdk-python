@@ -81,9 +81,7 @@ def is_actual_braket_usage(abstract):
     text = " ".join(abstract.split())
 
     has_usage = any(re.search(p, text, re.IGNORECASE) for p in USAGE_PATTERNS)
-    has_mention_only = any(
-        re.search(p, text, re.IGNORECASE) for p in MENTION_ONLY_PATTERNS
-    )
+    has_mention_only = any(re.search(p, text, re.IGNORECASE) for p in MENTION_ONLY_PATTERNS)
 
     # If we find clear usage signals, include the paper.
     if has_usage:
@@ -106,19 +104,15 @@ def build_query_url():
     """Construct the arXiv API query URL for the past 12 months."""
     today = datetime.date.today()
     start = today - datetime.timedelta(days=365)
-    date_range = (
-        f"[{start.strftime('%Y%m%d')}0000 TO {today.strftime('%Y%m%d')}2359]"
-    )
+    date_range = f"[{start.strftime('%Y%m%d')}0000 TO {today.strftime('%Y%m%d')}2359]"
     search_query = f'all:"Amazon Braket" AND submittedDate:{date_range}'
-    params = urllib.parse.urlencode(
-        {
-            "search_query": search_query,
-            "start": 0,
-            "max_results": 200,
-            "sortBy": "submittedDate",
-            "sortOrder": "descending",
-        }
-    )
+    params = urllib.parse.urlencode({
+        "search_query": search_query,
+        "start": 0,
+        "max_results": 200,
+        "sortBy": "submittedDate",
+        "sortOrder": "descending",
+    })
     return f"{ARXIV_API_URL}?{params}"
 
 
@@ -215,9 +209,7 @@ def format_publications_table(papers):
     ]
     for p in papers:
         link = f"[arXiv:{p['arxiv_id']}](https://arxiv.org/abs/{p['arxiv_id']})"
-        lines.append(
-            f"| {p['year']} | {p['month']} | {p['title']} | {p['authors']} | {link} |"
-        )
+        lines.append(f"| {p['year']} | {p['month']} | {p['title']} | {p['authors']} | {link} |")
     lines.append("")
     lines.append(END_MARKER)
     return "\n".join(lines)
