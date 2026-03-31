@@ -66,7 +66,9 @@ def save_job_checkpoint(
 
 
 def load_job_checkpoint(
-    job_name: str | None = None, checkpoint_file_suffix: str = ""
+    job_name: str | None = None,
+    checkpoint_file_suffix: str = "",
+    allow_pickle: bool = False,
 ) -> dict[str, Any]:
     """Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
@@ -87,6 +89,10 @@ def load_job_checkpoint(
             `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to locate the
             checkpoint file. Default: ""
 
+        allow_pickle (bool): Whether to allow deserialization of pickled data. Pickle
+            deserialization can execute arbitrary code and is unsafe on untrusted data.
+            Default: False.
+
     Returns:
         dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
 
@@ -95,6 +101,7 @@ def load_job_checkpoint(
             in the directory specified by the container environment variable `CHECKPOINT_DIR`.
         ValueError: If the data stored in the checkpoint file can't be deserialized (possibly due to
             corruption).
+        RuntimeError: If data is in PICKLED_V4 format and allow_pickle is False.
     """
     job_name = job_name or get_job_name()
     checkpoint_directory = get_checkpoint_dir()
@@ -105,7 +112,9 @@ def load_job_checkpoint(
     )
     with open(checkpoint_file_path, encoding="utf-8") as f:
         persisted_data = PersistedJobData.parse_raw(f.read())
-        return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
+        return deserialize_values(
+            persisted_data.dataDictionary, persisted_data.dataFormat, allow_pickle
+        )
 
 
 def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData:
@@ -120,19 +129,29 @@ def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData
         )
 
 
-def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
+def load_job_result(
+    filename: str | Path | None = None, allow_pickle: bool = False
+) -> dict[str, Any]:
     """Loads job result of currently running job.
 
     Args:
         filename (str | Path | None): Location of job results. Default `results.json` in job
             results directory in a job instance or in working directory locally. This file
             must be in the format used by `save_job_result`.
+        allow_pickle (bool): Whether to allow deserialization of pickled data. Pickle
+            deserialization can execute arbitrary code and is unsafe on untrusted data.
+            Default: False.
 
     Returns:
         dict[str, Any]: Job result data of current job
+
+    Raises:
+        RuntimeError: If data is in PICKLED_V4 format and allow_pickle is False.
     """
     persisted_data = _load_persisted_data(filename)
-    return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
+    return deserialize_values(
+        persisted_data.dataDictionary, persisted_data.dataFormat, allow_pickle
+    )
 
 
 def save_job_result(
@@ -180,6 +199,7 @@ def save_job_result(
     current_results = deserialize_values(
         current_persisted_data.dataDictionary,
         current_persisted_data.dataFormat,
+        allow_pickle=True,  # safe: data was written by this SDK inside the job container
     )
     updated_results = current_results | result_data
 
