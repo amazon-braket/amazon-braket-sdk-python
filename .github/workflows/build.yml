@@ -41,7 +41,7 @@ jobs:
           export TMP=${{ runner.temp }}
           tox -e unit-tests
       - name: Upload coverage report to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ strategy.job-index == 0 }}
