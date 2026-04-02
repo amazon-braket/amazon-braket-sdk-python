@@ -24,7 +24,7 @@ jobs:
       - name: Run publications script
         run: python bin/update_braket_publications.py
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "doc: update PUBLICATIONS.md with latest arXiv papers"
           title: "doc: update PUBLICATIONS.md with latest arXiv papers"
