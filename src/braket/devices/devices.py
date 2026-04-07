@@ -57,7 +57,7 @@ class Devices:
         _AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
         _Ankaa2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
         Ankaa3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-3"
-        Cepheus1 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Cepheus-1-108Q"
+        Cepheus1108Q = "arn:aws:braket:us-west-1::device/qpu/rigetti/Cepheus-1-108Q"
 
     class _Xanadu(StrEnum):
         _Borealis = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
