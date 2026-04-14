@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.115.0 (2026-04-07)
+
+### Features
+
+ * launch cepheus device
+
+### Bug Fixes and Other Changes
+
+ * rename Devices.Rigetti.Cepheus1 to Cepheus1108Q to match device name
+
 ## v1.114.0 (2026-03-23)
 
 ### Features
