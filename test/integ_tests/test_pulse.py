@@ -24,7 +24,7 @@ from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 @pytest.fixture
 def device():
-    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2")
+    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Cepheus-1-108Q")
 
 
 @pytest.fixture
@@ -219,7 +219,7 @@ def test_pulse_bell(arbitrary_waveform, device):
         a,
         b,
     ) = (
-        26,
+        24,
         33,
     )  # qubits used
     p0, p1 = 1.1733407221086924, 6.269846678712192
@@ -269,7 +269,7 @@ def test_pulse_sequence(arbitrary_waveform, device):
         a,
         b,
     ) = (
-        26,
+        24,
         33,
     )  # qubits used
     p0, p1 = 1.1733407221086924, 6.269846678712192
@@ -316,7 +316,7 @@ def test_pulse_sequence(arbitrary_waveform, device):
     assert chi_squared < 10  # adjust this threshold if test is flaky
 
 
-@pytest.mark.skip(reason="needs to be updated to work correctly on Ankaa-2")
+@pytest.mark.skip(reason="needs to be updated to work correctly on Cepheus-1-108Q")
 def test_gate_calibration_run(device, pulse_sequence):
     if device.status != "ONLINE":
         pytest.skip("Device not online")
