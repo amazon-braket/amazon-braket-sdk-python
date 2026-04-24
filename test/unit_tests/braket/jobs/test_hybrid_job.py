@@ -24,6 +24,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import job_module
 import pytest
+from braket.jobs_data import PersistedJobDataFormat
 from cloudpickle import cloudpickle
 
 from braket.aws import AwsQuantumJob
@@ -36,7 +37,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
-from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point
+from braket.jobs.hybrid_job import _resolve_data_format, _sanitize, _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
 
@@ -700,6 +701,23 @@ def test_serialization_wrapping():
 
     recovered = cloudpickle.loads(byte_str)
     assert recovered() == (args, kwargs)
+
+
+@pytest.mark.parametrize(
+    "data_format, expected",
+    [
+        (PersistedJobDataFormat.PICKLED_V4, PersistedJobDataFormat.PICKLED_V4),
+        ("pickle", PersistedJobDataFormat.PICKLED_V4),
+        ("PLAINTEXT", PersistedJobDataFormat.PLAINTEXT),
+    ],
+)
+def test_resolve_data_format(data_format, expected):
+    assert _resolve_data_format(data_format) == expected
+
+
+def test_resolve_data_format_invalid():
+    with pytest.raises(ValueError, match="Unknown data_format 'bogus'"):
+        _resolve_data_format("bogus")
 
 
 def test_python_validation(aws_session):
