@@ -562,9 +562,7 @@ class AwsQuantumJob(QuantumJob):
                 if e.response["Error"]["Code"] == "404":
                     return {}
                 raise
-            return AwsQuantumJob._read_and_deserialize_results(
-                temp_dir, job_name, allow_pickle
-            )
+            return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name, allow_pickle)
 
     @staticmethod
     def _read_and_deserialize_results(

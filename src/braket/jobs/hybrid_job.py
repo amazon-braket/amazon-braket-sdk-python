@@ -30,6 +30,7 @@ from types import CodeType, ModuleType
 from typing import Any
 
 import cloudpickle
+from braket.jobs_data import PersistedJobDataFormat
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs._entry_point_template import run_entry_point, symlink_input_data
@@ -44,7 +45,6 @@ from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
 from braket.jobs.local.local_job_container_setup import _get_env_input_data
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
-from braket.jobs_data import PersistedJobDataFormat
 
 DEFAULT_INPUT_CHANNEL = "input"
 INNER_FUNCTION_SOURCE_INPUT_CHANNEL = "_braket_job_decorator_inner_function_source"
@@ -438,7 +438,10 @@ def _resolve_data_format(data_format: PersistedJobDataFormat | str) -> Persisted
 
 
 def _serialize_entry_point(
-    entry_point: Callable, args: tuple, kwargs: dict, data_format: PersistedJobDataFormat | str
+    entry_point: Callable,
+    args: tuple,
+    kwargs: dict,
+    data_format: PersistedJobDataFormat | str = PersistedJobDataFormat.PLAINTEXT,
 ) -> str:
     """Create an entry point from a function"""
     data_format = _resolve_data_format(data_format)
