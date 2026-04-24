@@ -155,6 +155,7 @@ class QuantumJob(ABC):
         self,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
+        allow_pickle: bool = False,
     ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
@@ -165,12 +166,16 @@ class QuantumJob(ABC):
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
 
+            allow_pickle (bool): Whether to allow deserialization of pickled data. Pickle
+                deserialization can execute arbitrary code and is unsafe on untrusted data.
+                Default: False.
 
         Returns:
             dict[str, Any]: Dict specifying the hybrid job results.
 
         Raises:
-            RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
+            RuntimeError: if hybrid job is in a FAILED or CANCELLED state, or if data is in
+                PICKLED_V4 format and allow_pickle is False.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
 

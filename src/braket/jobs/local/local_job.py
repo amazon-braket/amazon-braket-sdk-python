@@ -274,6 +274,7 @@ class LocalQuantumJob(QuantumJob):
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
+        allow_pickle: bool = False,
     ) -> dict[str, Any]:
         """Retrieves the `LocalQuantumJob` result persisted using `save_job_result` function.
 
@@ -282,9 +283,13 @@ class LocalQuantumJob(QuantumJob):
                 Default: 10 days.
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
+            allow_pickle (bool): Whether to allow deserialization of pickled data. Pickle
+                deserialization can execute arbitrary code and is unsafe on untrusted data.
+                Default: False.
 
         Raises:
             ValueError: The local job directory does not exist.
+            RuntimeError: If data is in PICKLED_V4 format and allow_pickle is False.
 
         Returns:
             dict[str, Any]: Dict specifying the hybrid job results.
@@ -292,7 +297,9 @@ class LocalQuantumJob(QuantumJob):
         try:
             with open(os.path.join(self.name, "results.json"), encoding="utf-8") as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
-                return deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
+                return deserialize_values(
+                    persisted_data.dataDictionary, persisted_data.dataFormat, allow_pickle
+                )
         except FileNotFoundError as e:
             raise ValueError(
                 f"Unable to find results in the local job directory {self.name}."
