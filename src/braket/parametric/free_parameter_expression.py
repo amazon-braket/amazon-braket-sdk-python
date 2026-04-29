@@ -90,6 +90,9 @@ class FreeParameterExpression:
             FreeParameterExpression | Number | Expr: A numerical value if there are no
             symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
+        if isinstance(self._expression, Number):
+            return self._expression
+
         new_parameter_values = {}
         for key, val in parameter_values.items():
             if issubclass(type(key), FreeParameterExpression):
