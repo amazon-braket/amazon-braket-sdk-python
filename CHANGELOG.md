@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.117.0 (2026-04-24)
+
+### Deprecations and Removals
+
+ * Disable pickle deserialization by default for security
+
+## v1.116.0 (2026-04-20)
+
+### Deprecations and Removals
+
+ * Retire Rigetti Ankaa-3
+
+## v1.115.0 (2026-04-07)
+
+### Features
+
+ * launch cepheus device
+
+### Bug Fixes and Other Changes
+
+ * rename Devices.Rigetti.Cepheus1 to Cepheus1108Q to match device name
+
 ## v1.114.0 (2026-03-23)
 
 ### Features

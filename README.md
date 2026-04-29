@@ -140,7 +140,7 @@ from braket.aws import AwsDevice
 from braket.circuits import Circuit
 from braket.devices import Devices
 
-device = AwsDevice(Devices.Rigetti.Ankaa3)
+device = AwsDevice(Devices.Rigetti.Cepheus1108Q)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)
