@@ -141,6 +141,12 @@ def test_neg():
     assert -expr == expected_expr and -(-expr) == expr
 
 
+@pytest.mark.parametrize("value", [3.0, 5, 0, -2.5])
+def test_subs_numeric_expression(value):
+    expr = FreeParameterExpression(value)
+    assert expr.subs({"anything": 42}) == value
+
+
 def test_sub_string():
     theta = FreeParameter("theta")
     expr = theta + 1
