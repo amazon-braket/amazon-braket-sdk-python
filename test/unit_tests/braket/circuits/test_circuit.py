@@ -3479,6 +3479,13 @@ def test_make_bound_circuit_bad_value():
         circ.make_bound_circuit({"theta": input_val})
 
 
+def test_make_bound_circuit_with_numeric_free_parameter_expression():
+    circ = Circuit().rz(0, FreeParameterExpression(3.0))
+    bound = circ.make_bound_circuit({})
+    expected = Circuit().rz(0, 3.0)
+    assert bound == expected
+
+
 def test_circuit_with_expr():
     theta = FreeParameter("theta")
     alpha = FreeParameter("alpha")
