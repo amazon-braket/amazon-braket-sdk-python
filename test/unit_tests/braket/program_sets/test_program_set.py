@@ -534,3 +534,170 @@ def test_inequality(circuit_rx_parametrized):
     program_set = ProgramSet([binding, binding])
     assert program_set != ProgramSet([binding, circuit_rx_parametrized])
     assert program_set != circuit_rx_parametrized
+
+
+def test_split_already_fits(circuit_rx_parametrized):
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    program_set = ProgramSet(binding)
+    sub = program_set.split(10)
+    assert sub == [program_set]
+    assert sub[0] is program_set
+
+
+def test_split_exact_fit(circuit_rx_parametrized):
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=[{"theta": 1.23}, {"theta": 3.21}])
+    program_set = ProgramSet(binding)
+    sub = program_set.split(2)
+    assert sub == [program_set]
+    assert sub[0] is program_set
+
+
+def test_split_plain_circuits():
+    circs = [ghz(1), ghz(2), ghz(3), ghz(1), ghz(2)]
+    program_set = ProgramSet(circs, shots_per_executable=10)
+    sub = program_set.split(2)
+    assert [s.total_executables for s in sub] == [2, 2, 1]
+    assert sub[0].entries == circs[0:2]
+    assert sub[1].entries == circs[2:4]
+    assert sub[2].entries == circs[4:5]
+
+
+def test_split_single_binding_packed(circuit_rx_parametrized):
+    inputs = {"theta": [float(i) for i in range(10)]}
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs)
+    program_set = ProgramSet(binding)
+    sub = program_set.split(3)
+    assert [s.total_executables for s in sub] == [3, 3, 3, 1]
+    # Each sub-program-set is a single coalesced binding over a contiguous slice.
+    for s in sub:
+        assert len(s) == 1
+        assert s.entries[0].circuit == circuit_rx_parametrized
+        assert s.entries[0].observables is None
+    thetas = []
+    for s in sub:
+        thetas.extend(s.entries[0].input_sets.as_dict()["theta"])
+    assert thetas == inputs["theta"]
+
+
+def test_split_with_observables(circuit_rx_parametrized):
+    # 5 parameter-set indices, 4 observables => 5 classes of size 4.
+    inputs = {"theta": [float(i) for i in range(5)]}
+    observables = [X(0), Y(0), Z(0), X(0) @ Y(1)]
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs, observables=observables)
+    program_set = ProgramSet(binding)
+    sub = program_set.split(8)
+    assert [s.total_executables for s in sub] == [8, 8, 4]
+    # Observables propagate unchanged (never split across sub-program-sets).
+    for s in sub:
+        assert s.entries[0].observables == observables
+
+
+def test_split_with_sum_hamiltonian(circuit_rx_parametrized):
+    # Sum with 3 summands => class size = 3 per parameter-set index.
+    inputs = {"theta": [float(i) for i in range(4)]}
+    hamiltonian = 1.0 * X(0) + 2.0 * Y(0) + 3.0 * Z(0)
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs, observables=hamiltonian)
+    program_set = ProgramSet(binding)
+    sub = program_set.split(6)
+    assert [s.total_executables for s in sub] == [6, 6]
+    # Sum preserved intact.
+    for s in sub:
+        assert s.entries[0].observables is hamiltonian
+
+
+def test_split_worked_example(circuit_rx_parametrized):
+    # Two bindings: c1 with 100 param sets × 4 obs, c2 with 50 param sets × 2 obs.
+    c1 = circuit_rx_parametrized
+    c2 = Circuit().rx(0, FreeParameter("phi"))
+    obs1 = [X(0), Y(0), Z(0), X(0) @ Y(1)]
+    obs2 = [X(0), Z(0)]
+    binding1 = CircuitBinding(c1, {"theta": [float(i) for i in range(100)]}, obs1)
+    binding2 = CircuitBinding(c2, {"phi": [float(i) for i in range(50)]}, obs2)
+    program_set = ProgramSet([binding1, binding2])
+
+    sub = program_set.split(120)
+    # Greedy packing fills each bucket up to the budget before flushing.
+    assert [s.total_executables for s in sub] == [120, 120, 120, 120, 20]
+    assert sum(s.total_executables for s in sub) == program_set.total_executables
+    # First three buckets are pure c1 (30 × 4 each).
+    for i in range(3):
+        assert len(sub[i]) == 1
+        assert sub[i].entries[0].circuit == c1
+        assert len(sub[i].entries[0].input_sets) == 30
+    # Bucket 3 straddles both bindings (10 × 4 + 40 × 2 = 120); coalesced per binding.
+    assert len(sub[3]) == 2
+    assert sub[3].entries[0].circuit == c1
+    assert len(sub[3].entries[0].input_sets) == 10
+    assert sub[3].entries[1].circuit == c2
+    assert len(sub[3].entries[1].input_sets) == 40
+    # Last bucket is pure c2 remainder (10 × 2 = 20).
+    assert len(sub[4]) == 1
+    assert sub[4].entries[0].circuit == c2
+    assert len(sub[4].entries[0].input_sets) == 10
+
+
+def test_split_preserves_shots(circuit_rx_parametrized):
+    inputs = {"theta": [float(i) for i in range(5)]}
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs)
+    program_set = ProgramSet(binding, shots_per_executable=100)
+    sub = program_set.split(2)
+    assert all(s.shots_per_executable == 100 for s in sub)
+    assert sum(s.total_shots for s in sub) == program_set.total_shots
+
+
+def test_split_coalesces_adjacent_same_binding(circuit_rx_parametrized):
+    # 6 parameter-set indices, class size 1, max_executables=4 => buckets of 4, 2.
+    # Each bucket should contain one coalesced multi-parameter-set binding,
+    # not four (resp. two) separate single-parameter-set bindings.
+    inputs = {"theta": [float(i) for i in range(6)]}
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs)
+    program_set = ProgramSet(binding)
+    sub = program_set.split(4)
+    assert [len(s) for s in sub] == [1, 1]
+    assert len(sub[0].entries[0].input_sets) == 4
+    assert len(sub[1].entries[0].input_sets) == 2
+
+
+def test_split_binding_without_input_sets(circuit_rx_parametrized):
+    # A binding with only observables is a single class of size len(observables).
+    c1 = circuit_rx_parametrized
+    c2 = Circuit().rx(0, FreeParameter("phi"))
+    binding_a = CircuitBinding(c1, observables=[X(0), Y(0)])  # size 2
+    binding_b = CircuitBinding(c2, observables=[X(0), Y(0), Z(0)])  # size 3
+    program_set = ProgramSet([binding_a, binding_b])
+    sub = program_set.split(3)
+    assert [s.total_executables for s in sub] == [2, 3]
+    assert sub[0].entries == [binding_a]
+    assert sub[1].entries == [binding_b]
+
+
+def test_split_non_positive_raises(circuit_rx_parametrized):
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=[{"theta": 1.23}])
+    program_set = ProgramSet(binding)
+    with pytest.raises(ValueError, match="must be positive"):
+        program_set.split(0)
+    with pytest.raises(ValueError, match="must be positive"):
+        program_set.split(-3)
+
+
+def test_split_oversize_class_raises(circuit_rx_parametrized):
+    # One parameter-set index with 3 observables exceeds max_executables=2.
+    inputs = {"theta": [1.0, 2.0]}
+    observables = [X(0), Y(0), Z(0)]
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs, observables=observables)
+    program_set = ProgramSet(binding)
+    with pytest.raises(ValueError, match="exceeding max_executables"):
+        program_set.split(2)
+
+
+def test_split_sub_program_sets_are_serializable(circuit_rx_parametrized):
+    inputs = {"theta": [float(i) for i in range(10)]}
+    observables = [X(0), Y(0)]
+    binding = CircuitBinding(circuit_rx_parametrized, input_sets=inputs, observables=observables)
+    program_set = ProgramSet(binding)
+    sub = program_set.split(6)
+    # Each sub-program set is a fully formed ProgramSet: to_ir() works and returns a
+    # single-program IR (one coalesced CircuitBinding per sub-program set here).
+    for s in sub:
+        ir = s.to_ir()
+        assert len(ir.programs) == len(s)

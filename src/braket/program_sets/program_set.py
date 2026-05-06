@@ -97,6 +97,114 @@ class ProgramSet:
             raise ValueError("No per-executable shots defined")
         return self._shots_per_executable * self.total_executables
 
+    def split(self, max_executables: int) -> list[ProgramSet]:
+        """
+        Split this program set into a list of program sets with
+        at most ``max_executables`` executables.
+
+        Sum Hamiltonians and lists of observables will not be broken into separate program sets;
+        consequently, this method will fail if the size of any Hamiltonian or observable list
+        exceeds ``max_executables``.
+
+        Adjacent triples originating from the same ``CircuitBinding`` are coalesced into
+        a single multi-parameter-set ``CircuitBinding`` in the resulting sub-program set.
+
+        Concatenating the executables of the program sets in the list in order reproduces
+        the executables of the original program set.
+
+        Args:
+            max_executables (int): The maximum number of executables allowed per
+                sub-program set. Must be positive.
+
+        Returns:
+            list[ProgramSet]: The sub-program sets. If this program set already fits
+            within ``max_executables``, a single-element list containing ``self`` is
+            returned.
+
+        Raises:
+            ValueError: If ``max_executables`` is not positive, or if a single triple
+                (one parameter-set index of a single ``CircuitBinding``) requires
+                more than ``max_executables`` executables, because its observable list or
+                ``Sum`` Hamiltonian is larger than allowed.
+
+        Examples:
+            >>> ps = ProgramSet([
+            ...     CircuitBinding(c1, inputs1, obs1),  # 100 param sets, 4 observables
+            ...     CircuitBinding(c2, inputs2, obs2),  # 50 param sets, 2 observables
+            ... ])
+            >>> sub = ps.split(120)
+            >>> [s.total_executables for s in sub]
+            [120, 120, 120, 80, 60]
+        """
+        if max_executables <= 0:
+            raise ValueError(f"max_executables must be positive, got {max_executables}")
+
+        if self.total_executables <= max_executables:
+            return [self]
+
+        program_sets = []
+        current = []
+        current_size = 0
+        for triple in self._enumerate_triples(max_executables):
+            size = triple[2]
+            if current and current_size + size > max_executables:
+                program_sets.append(self._build_sub_program_set(current))
+                current = []
+                current_size = 0
+            current.append(triple)
+            current_size += size
+        program_sets.append(self._build_sub_program_set(current))
+
+        return program_sets
+
+    def _enumerate_triples(self, max_executables: int) -> list[tuple[int, int | None, int]]:
+        triples = []
+        for prog_idx, prog in enumerate(self._programs):
+            if isinstance(prog, Circuit):
+                triples.append((prog_idx, None, 1))
+                continue
+            obs = prog.observables
+            class_size = max(1, len(obs)) if obs is not None else 1
+            if class_size > max_executables:
+                raise ValueError(
+                    f"Program at index {prog_idx} has a single parameter-set index with "
+                    f"{class_size} executables, exceeding max_executables={max_executables}"
+                )
+            input_sets = prog.input_sets
+            if input_sets is None:
+                triples.append((prog_idx, None, class_size))
+            else:
+                triples.extend((prog_idx, i, class_size) for i in range(len(input_sets)))
+        return triples
+
+    def _build_sub_program_set(self, triples: list[tuple[int, int | None, int]]) -> ProgramSet:
+        entries = []
+        i = 0
+        while i < len(triples):
+            prog_idx, param_idx, _ = triples[i]
+            prog = self._programs[prog_idx]
+            if param_idx is None:
+                entries.append(prog)
+                i += 1
+                continue
+            j = i
+            while (
+                j + 1 < len(triples)
+                and triples[j + 1][0] == prog_idx
+                and triples[j + 1][1] == triples[j][1] + 1
+            ):
+                j += 1
+            start, stop = triples[i][1], triples[j][1] + 1
+            entries.append(
+                CircuitBinding(
+                    prog.circuit,
+                    input_sets=prog.input_sets.as_list()[start:stop],
+                    observables=prog.observables,
+                )
+            )
+            i = j + 1
+        return ProgramSet(entries, self._shots_per_executable)
+
     @staticmethod
     def zip(
         circuits: Sequence[Circuit] | CircuitBinding,
