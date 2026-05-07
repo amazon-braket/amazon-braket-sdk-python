@@ -259,9 +259,8 @@ class GraphicalCircuitDiagram(CircuitDiagram):
             ):
                 continue
 
-            target = item.target if item.target else circuit_qubits
-            for q in target:
-                elements.append(BarrierMarker(col=col, row=qubit_index[q]))
+            target = item.target or circuit_qubits
+            elements.extend(BarrierMarker(col=col, row=qubit_index[q]) for q in target)
 
     @classmethod
     def _build_parameters(

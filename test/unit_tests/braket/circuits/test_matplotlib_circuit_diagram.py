@@ -247,8 +247,7 @@ def test_connector_across_gt_two_qubits():
     # We don't emit a per-row primitive for the pass-through qubit; the
     # Connection line is what indicates the gate crosses over it.
     assert any(
-        conn.row_start <= 2 <= conn.row_end
-        for conn in connections
+        conn.row_start <= 2 <= conn.row_end for conn in connections
     )  # rows: q2=0, q3=1, q4=2, q5=3; q4 is row 2
 
 
