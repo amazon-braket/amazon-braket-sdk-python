@@ -117,6 +117,10 @@ class PauliString:
         for indices in itertools.combinations(self._nontrivial, weight):
             idx_set = set(indices)
             nontrivial = {i: self._nontrivial[i] for i in idx_set}
+            # Bypass __init__ via __new__ to skip string parsing. The internal
+            # state (phase, qubit_count, nontrivial dict) is already known here,
+            # so going through PauliString(str) would only round-trip the data
+            # through a dense string representation for no benefit.
             ps = PauliString.__new__(PauliString)
             ps._phase = self._phase
             ps._qubit_count = self._qubit_count
@@ -198,6 +202,10 @@ class PauliString:
         # ignore complex global phase
         out_phase = -1 if (phase_result.real < 0 or phase_result.imag < 0) else 1
 
+        # Bypass __init__ via __new__ to avoid serializing the computed dict
+        # back into a string just to have __init__ parse it again. The fields
+        # below fully define a valid PauliString, so direct assignment is both
+        # faster and avoids an O(qubit_count) dense-string round trip.
         out_pauli_string = PauliString.__new__(PauliString)
         out_pauli_string._phase = out_phase
         out_pauli_string._qubit_count = self._qubit_count
@@ -265,7 +273,10 @@ class PauliString:
         if not isinstance(n, int):
             raise TypeError("Must be raised to integer power")
 
-        # Since pauli ops involutory, result is either identity or unchanged
+        # Since pauli ops involutory, result is either identity or unchanged.
+        # Bypass __init__ via __new__ to skip the PauliString(self) copy path,
+        # which would re-validate fields we already know are consistent. Direct
+        # field assignment keeps the hot path allocation-light.
         pauli_other = PauliString.__new__(PauliString)
         pauli_other._qubit_count = self._qubit_count
         if n % 2 == 0:
