@@ -165,7 +165,7 @@ provided as edge attributes."
         elif len(control_qubits) == 0 and len(target_qubits) == 2:
             e = (target_qubits[0], target_qubits[1])
         else:
-            raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
+            raise ValueError("Unrecognized qubit targeting setup for a 2 qubit gate.")
 
         e = (self._graph_node_type()(int(e[0])), self._graph_node_type()(int(e[1])))
 
