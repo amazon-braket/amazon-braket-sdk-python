@@ -34,7 +34,6 @@ from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
     Connection,
     ControlDot,
     GateBox,
-    JunctionDot,
     SwapMarker,
 )
 from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
@@ -243,9 +242,14 @@ def test_overlapping_qubits_angled_gates():
 
 def test_connector_across_gt_two_qubits():
     layout = _layout(Circuit().h(4).x(control=3, target=5).h(4).h(2))
-    junctions = _elements_of_type(layout, JunctionDot)
-    # q4 is between q3 (control) and q5 (target) → junction
-    assert len(junctions) >= 1
+    connections = _elements_of_type(layout, Connection)
+    # q3 (control) and q5 (target) are spanned by a Connection that crosses q4.
+    # We don't emit a per-row primitive for the pass-through qubit; the
+    # Connection line is what indicates the gate crosses over it.
+    assert any(
+        conn.row_start <= 2 <= conn.row_end
+        for conn in connections
+    )  # rows: q2=0, q3=1, q4=2, q5=3; q4 is row 2
 
 
 def test_connector_across_non_used_qubits():

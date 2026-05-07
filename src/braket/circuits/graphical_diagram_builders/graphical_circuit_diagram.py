@@ -26,7 +26,6 @@ from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
     Connection,
     ControlDot,
     GateBox,
-    JunctionDot,
     SwapMarker,
     _categorize_result_types,
     _compute_moment_global_phase,
@@ -208,8 +207,10 @@ class GraphicalCircuitDiagram(CircuitDiagram):
                 symbols[qubit] = symbol
             elif qubit in control_qubits:
                 symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
-            else:
-                symbols[qubit] = "JUNCTION"
+            # Qubits inside the gate span but not involved (pass-through) are
+            # left with symbols[qubit] = None. The Connection primitive
+            # emitted for the item handles drawing the wire across them;
+            # no per-row primitive is needed or wanted.
 
     @classmethod
     def _emit_symbol_elements(
@@ -231,8 +232,6 @@ class GraphicalCircuitDiagram(CircuitDiagram):
                 elements.append(ControlDot(col=col, row=row, filled=(symbol == "C")))
             elif symbol == "SWAP":
                 elements.append(SwapMarker(col=col, row=row))
-            elif symbol == "JUNCTION":
-                elements.append(JunctionDot(col=col, row=row))
             elif symbol != "||":
                 elements.append(GateBox(col=col, row=row, label=symbol))
 

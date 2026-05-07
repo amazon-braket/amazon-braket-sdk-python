@@ -28,7 +28,6 @@ from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
     Connection,
     ControlDot,
     GateBox,
-    JunctionDot,
     SwapMarker,
 )
 from braket.circuits.moments import MomentType
@@ -81,7 +80,6 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
 
     # Marker sizes
     SWAP_MARKER_SIZE = 8
-    JUNCTION_DOT_SIZE = 4
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> Figure:
@@ -243,8 +241,6 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
                 cls._draw_connection(ax, elem, col_x[elem.col])
             elif isinstance(elem, BarrierLine):
                 cls._draw_barrier(ax, elem, col_x[elem.col])
-            elif isinstance(elem, JunctionDot):
-                cls._draw_junction_dot(ax, elem, col_x[elem.col])
 
     @classmethod
     def _build_footer_lines(cls, layout: CircuitLayout) -> list[str]:
@@ -381,16 +377,4 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
             lw=cls.BARRIER_LW,
             linestyle="--",
             zorder=2,
-        )
-
-    @classmethod
-    def _draw_junction_dot(cls, ax: Axes, elem: JunctionDot, x: float) -> None:
-        y = -elem.row * cls.ROW_HEIGHT
-        ax.plot(
-            x,
-            y,
-            "o",
-            markersize=cls.JUNCTION_DOT_SIZE,
-            color=cls.CONNECTION_COLOR,
-            zorder=3,
         )

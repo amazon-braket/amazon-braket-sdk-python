@@ -74,14 +74,6 @@ class BarrierLine:
 
 
 @dataclass
-class JunctionDot:
-    """A pass-through point where a multi-qubit gate's wire crosses a qubit."""
-
-    col: int
-    row: int
-
-
-@dataclass
 class CircuitLayout:
     """Complete layout description produced by GraphicalCircuitDiagram._compute_layout()."""
 
