@@ -532,6 +532,7 @@ class AwsQuantumJob(QuantumJob):
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
+        allow_pickle: bool = False,
     ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using the `save_job_result` function.
 
@@ -540,12 +541,16 @@ class AwsQuantumJob(QuantumJob):
                 Default: 10 days.
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
+            allow_pickle (bool): Whether to allow deserialization of pickled data. Pickle
+                deserialization can execute arbitrary code and is unsafe on untrusted data.
+                Default: False.
 
         Returns:
             dict[str, Any]: Dict specifying the job results.
 
         Raises:
-            RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
+            RuntimeError: if hybrid job is in a FAILED or CANCELLED state, or if data is in
+                PICKLED_V4 format and allow_pickle is False.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -557,11 +562,16 @@ class AwsQuantumJob(QuantumJob):
                 if e.response["Error"]["Code"] == "404":
                     return {}
                 raise
-            return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
+            return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name, allow_pickle)
 
     @staticmethod
-    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> dict[str, Any]:
-        return load_job_result(Path(temp_dir, job_name, AwsQuantumJob.RESULTS_FILENAME))
+    def _read_and_deserialize_results(
+        temp_dir: str, job_name: str, allow_pickle: bool = False
+    ) -> dict[str, Any]:
+        return load_job_result(
+            Path(temp_dir, job_name, AwsQuantumJob.RESULTS_FILENAME),
+            allow_pickle=allow_pickle,
+        )
 
     def download_result(
         self,

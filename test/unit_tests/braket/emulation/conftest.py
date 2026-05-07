@@ -326,7 +326,7 @@ def reduced_standardized_json_3():
 #################################################
 
 # Rigetti device properties with undirected connectivity
-reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected = {
+reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected_ankaa3 = {
     "action": {
         "braket.ir.openqasm.program": {
             "actionType": "braket.ir.openqasm.program",
@@ -373,6 +373,54 @@ reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_u
         "twoQubitProperties": {"0-1": valid_twoQubitProperties, "1-2": valid_twoQubitProperties},
     },
 }
+# Rigetti device properties with undirected connectivity
+reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected_cepheus1 = {
+    "action": {
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
+            "supportedOperations": [],
+            "supportedResultTypes": valid_supportedResultTypes,
+            "version": ["1"],
+        }
+    },
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "deviceParameters": {},
+    "paradigm": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.gate_model_qpu_paradigm_properties",
+            "version": "1",
+        },
+        "connectivity": {
+            "connectivityGraph": {"0": ["1"], "1": ["0", "2"], "2": ["1"]},
+            "fullyConnected": False,
+        },
+        "nativeGateSet": ["rx", "rz", "cz"],
+        "qubitCount": 3,
+    },
+    "service": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.device_service_properties",
+            "version": "1",
+        },
+        "executionWindows": [],
+        "shotsRange": [1, 20000],
+    },
+    "standardized": {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.standardized_gate_model_qpu_device_properties",
+            "version": "1",
+        },
+        "oneQubitProperties": {
+            "0": valid_oneQubitProperties,
+            "1": valid_oneQubitProperties,
+            "2": valid_oneQubitProperties,
+        },
+        "twoQubitProperties": {"0-1": valid_twoQubitProperties, "1-2": valid_twoQubitProperties},
+    },
+}
 
 
 @pytest.fixture
@@ -381,7 +429,17 @@ def reduced_standardized_json_2():
     Fixture providing a JSON string of Rigetti device properties with undirected connectivity.
     """
     return json.dumps(
-        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected
+        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected_ankaa3
+    )
+
+
+@pytest.fixture
+def reduced_standardized_json_4():
+    """
+    Fixture providing a JSON string of Rigetti device properties with undirected connectivity.
+    """
+    return json.dumps(
+        reduced_standardized_gate_model_qpu_device_properties_dict_non_fully_connected_undirected_cepheus1
     )
 
 
@@ -615,6 +673,16 @@ def valid_verbatim_circ_ankaa3():
     """
     return Circuit().add_verbatim_box(
         Circuit().rx(0, np.pi).rz(1, np.pi).iswap(0, 1).iswap(1, 2).rx(2, np.pi)
+    )
+
+
+@pytest.fixture
+def valid_verbatim_circ_cepheus1():
+    """
+    Fixture providing a valid verbatim circuit for Cepheus-1-108Q device.
+    """
+    return Circuit().add_verbatim_box(
+        Circuit().rx(0, np.pi).rz(1, np.pi).cz(0, 1).cz(1, 2).rx(2, np.pi)
     )
 
 

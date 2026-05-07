@@ -19,7 +19,7 @@ def {function_name}():
     finally:
         clean_links(links)
     if result is not None:
-        save_job_result(result, data_format=PersistedJobDataFormat.PICKLED_V4)
+        save_job_result(result, data_format=PersistedJobDataFormat.{data_format})
     return result
 """
 
