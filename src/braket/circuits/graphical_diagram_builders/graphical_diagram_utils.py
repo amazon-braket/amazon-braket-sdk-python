@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import reduce
+from typing import TYPE_CHECKING
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -23,6 +24,9 @@ from braket.circuits.moments import MomentType
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit_set import QubitSet
+
+if TYPE_CHECKING:
+    from braket.circuits import Circuit
 
 
 @dataclass
@@ -89,7 +93,6 @@ class CircuitLayout:
     global_phase: float | None = None
     additional_result_types: list[str] = field(default_factory=list)
     unassigned_parameters: list[str] = field(default_factory=list)
-
 
 
 def _compute_moment_global_phase(
@@ -184,5 +187,5 @@ def _categorize_result_types(
     return additional_result_types, target_result_types
 
 
-def _has_global_phase(circuit) -> bool:
+def _has_global_phase(circuit: Circuit) -> bool:
     return any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments)

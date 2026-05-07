@@ -58,6 +58,7 @@ def _elements_of_type(layout: CircuitLayout, cls):
 def _gate_labels(layout: CircuitLayout) -> list[str]:
     return [e.label for e in layout.elements if isinstance(e, GateBox)]
 
+
 def test_empty_circuit():
     fig = _fig(Circuit())
     assert isinstance(fig, Figure)
@@ -141,6 +142,7 @@ def test_qubit_width():
     assert len(gates) == 2
     assert all(g.label == "H" for g in gates)
 
+
 def test_different_size_boxes():
     layout = _layout(Circuit().cnot(0, 1).rx(2, 0.3))
     gates = _elements_of_type(layout, GateBox)
@@ -150,6 +152,7 @@ def test_different_size_boxes():
     controls = _elements_of_type(layout, ControlDot)
     assert len(controls) == 1
     assert controls[0].filled is True
+
 
 def test_swap():
     layout = _layout(Circuit().swap(0, 2).x(1))
@@ -189,6 +192,7 @@ def test_time_width():
     assert len(controls) == 7
     connections = _elements_of_type(layout, Connection)
     assert len(connections) == 7
+
 
 def test_connector_across_two_qubits():
     layout = _layout(Circuit().cnot(4, 3).h(range(2, 6)))
@@ -295,26 +299,24 @@ def test_verbatim_2q_following():
 
 
 def test_verbatim_3q_no_preceding():
-    layout = _layout(
-        Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
-    )
+    layout = _layout(Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)))
     gate_labels = _gate_labels(layout)
     assert "StartVerbatim" in gate_labels
     assert "EndVerbatim" in gate_labels
 
 
 def test_verbatim_3q_preceding():
-    layout = _layout(
-        Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
+    layout = _layout(Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)))
+    assert isinstance(
+        _fig(Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))), Figure
     )
-    assert isinstance(_fig(Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))), Figure)
 
 
 def test_verbatim_3q_following():
-    layout = _layout(
-        Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)
+    layout = _layout(Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0))
+    assert isinstance(
+        _fig(Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)), Figure
     )
-    assert isinstance(_fig(Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)), Figure)
 
 
 def test_verbatim_different_qubits():
@@ -327,6 +329,7 @@ def test_verbatim_qubset_qubits():
     circ = Circuit().h(1).cnot(0, 1).cnot(1, 2).add_verbatim_box(Circuit().h(1)).cnot(2, 3)
     layout = _layout(circ)
     assert layout.num_qubits == 4
+
 
 def test_ignore_non_gates():
     class Foo(Operator):
@@ -342,6 +345,7 @@ def test_ignore_non_gates():
     gate_labels = _gate_labels(layout)
     assert "foo" not in gate_labels
     assert "H" in gate_labels
+
 
 def test_single_qubit_result_types_target_none():
     layout = _layout(Circuit().h(0).probability())
@@ -483,6 +487,7 @@ def test_pulse_gate_multi_qubit_circuit():
     gate_labels = _gate_labels(layout)
     assert gate_labels.count("PG") == 2
 
+
 def test_circuit_with_nested_target_list():
     circ = (
         Circuit()
@@ -497,7 +502,8 @@ def test_circuit_with_nested_target_list():
     layout = _layout(circ)
     gate_labels = _gate_labels(layout)
     assert any("Hamiltonian" in g for g in gate_labels)
-    
+
+
 def test_hamiltonian():
     circ = (
         Circuit()
@@ -513,7 +519,6 @@ def test_hamiltonian():
     gate_labels = _gate_labels(layout)
     assert any("AdjointGradient" in g for g in gate_labels)
     assert layout.unassigned_parameters == ["theta"]
-
 
 
 def test_power():
@@ -555,7 +560,6 @@ def test_unbalanced_ascii_symbols():
     gate_labels = _gate_labels(layout)
     assert "FOOO^4" in gate_labels
     assert "FOO^4" in gate_labels
-
 
 
 def test_measure():
@@ -669,6 +673,7 @@ def test_barrier_target_not_mutated_by_diagram():
     assert 0 in barrier_instr.target
     assert 1 in barrier_instr.target
     assert 2 not in barrier_instr.target
+
 
 @pytest.mark.parametrize(
     "circ",

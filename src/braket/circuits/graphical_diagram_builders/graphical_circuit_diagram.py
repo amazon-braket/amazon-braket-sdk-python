@@ -34,7 +34,6 @@ from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
     _has_global_phase,
 )
 from braket.circuits.instruction import Instruction
-from braket.circuits.moments import MomentType
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
@@ -53,7 +52,7 @@ class GraphicalCircuitDiagram(CircuitDiagram):
 
     @classmethod
     @abstractmethod
-    def _render_layout(cls, layout: CircuitLayout):
+    def _render_layout(cls, layout: CircuitLayout) -> object:
         """Convert a CircuitLayout into a visual output."""
 
     @classmethod
@@ -129,7 +128,7 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         circuit_qubits: QubitSet,
         qubit_index: dict[Qubit, int],
         items: list[Instruction | ResultType],
-        global_phase: float | None,
+        global_phase: float | None,  # noqa: ARG003
         elements: list,
     ) -> None:
         """Populate *elements* with layout primitives for one column.
@@ -137,7 +136,7 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         This mirrors ``UnicodeCircuitDiagram._create_diagram_column`` but
         emits dataclass primitives instead of characters.
         """
-        symbols: dict[Qubit, str | None] = {q: None for q in circuit_qubits}
+        symbols: dict[Qubit, str | None] = dict.fromkeys(circuit_qubits)
         connections: dict[Qubit, str] = dict.fromkeys(circuit_qubits, "none")
 
         # Track per-item qubit ranges for emitting separate Connection elements
@@ -158,36 +157,75 @@ class GraphicalCircuitDiagram(CircuitDiagram):
                 item_rows = [qubit_index[q] for q in qubits if q in qubit_index]
                 item_qubit_ranges.append((min(item_rows), max(item_rows)))
 
-            for qubit in qubits:
-                if qubit in target_qubits:
-                    item_qubit_index = [
-                        index for index, q in enumerate(target_qubits) if q == qubit
-                    ][0]
-                    power_string = (
-                        f"^{power}"
-                        if (
-                            (power := getattr(item, "power", 1)) != 1
-                            and ascii_symbols[item_qubit_index] != "C"
-                        )
-                        else ""
-                    )
-                    symbol = (
-                        f"{ascii_symbols[item_qubit_index]}{power_string}"
-                        if power_string
-                        else ascii_symbols[item_qubit_index]
-                    )
-                    symbols[qubit] = symbol
-                elif qubit in control_qubits:
-                    symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
-                else:
-                    symbols[qubit] = "JUNCTION"
+            cls._assign_qubit_symbols(
+                qubits,
+                target_qubits,
+                control_qubits,
+                ascii_symbols,
+                map_control_qubit_states,
+                item,
+                symbols,
+            )
 
-        # Convert symbols + connections into layout primitives
+        cls._emit_symbol_elements(col, circuit_qubits, qubit_index, symbols, elements)
+
+        # Emit connections - one per item so independent gates don't bridge
+        for row_start, row_end in item_qubit_ranges:
+            elements.append(Connection(col=col, row_start=row_start, row_end=row_end))
+
+        cls._emit_barrier_elements(col, items, qubit_index, circuit_qubits, elements)
+
+    @classmethod
+    def _assign_qubit_symbols(
+        cls,
+        qubits: QubitSet,
+        target_qubits: QubitSet,
+        control_qubits: QubitSet,
+        ascii_symbols: list,
+        map_control_qubit_states: dict,
+        item: Instruction | ResultType,
+        symbols: dict[Qubit, str | None],
+    ) -> None:
+        """Assign a symbol string to each qubit involved in an item."""
+        for qubit in qubits:
+            if qubit in target_qubits:
+                item_qubit_index = next(
+                    index for index, q in enumerate(target_qubits) if q == qubit
+                )
+                power_string = (
+                    f"^{power}"
+                    if (
+                        (power := getattr(item, "power", 1)) != 1
+                        and ascii_symbols[item_qubit_index] != "C"
+                    )
+                    else ""
+                )
+                symbol = (
+                    f"{ascii_symbols[item_qubit_index]}{power_string}"
+                    if power_string
+                    else ascii_symbols[item_qubit_index]
+                )
+                symbols[qubit] = symbol
+            elif qubit in control_qubits:
+                symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
+            else:
+                symbols[qubit] = "JUNCTION"
+
+    @classmethod
+    def _emit_symbol_elements(
+        cls,
+        col: int,
+        circuit_qubits: QubitSet,
+        qubit_index: dict[Qubit, int],
+        symbols: dict[Qubit, str | None],
+        elements: list,
+    ) -> None:
+        """Convert symbols into layout primitives."""
         for qubit in circuit_qubits:
             row = qubit_index[qubit]
             symbol = symbols[qubit]
             if symbol is None:
-                continue  # qubit wire only, no element at this column
+                continue
 
             if symbol in {"C", "N"}:
                 elements.append(ControlDot(col=col, row=row, filled=(symbol == "C")))
@@ -195,17 +233,19 @@ class GraphicalCircuitDiagram(CircuitDiagram):
                 elements.append(SwapMarker(col=col, row=row))
             elif symbol == "JUNCTION":
                 elements.append(JunctionDot(col=col, row=row))
-            elif symbol == "||":
-                # Barrier symbol — we handle barrier lines separately below
-                pass
-            else:
+            elif symbol != "||":
                 elements.append(GateBox(col=col, row=row, label=symbol))
 
-        # Emit connections — one per item so independent gates don't bridge
-        for row_start, row_end in item_qubit_ranges:
-            elements.append(Connection(col=col, row_start=row_start, row_end=row_end))
-
-        # Emit barrier lines
+    @classmethod
+    def _emit_barrier_elements(
+        cls,
+        col: int,
+        items: list[Instruction | ResultType],
+        qubit_index: dict[Qubit, int],
+        circuit_qubits: QubitSet,
+        elements: list,
+    ) -> None:
+        """Emit barrier line elements for barrier instructions."""
         for item in items:
             if (
                 isinstance(item, Instruction)

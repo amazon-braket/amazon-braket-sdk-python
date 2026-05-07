@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (  # noqa: F401
+from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
     MatplotlibCircuitDiagram,
 )
 

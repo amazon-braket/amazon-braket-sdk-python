@@ -30,6 +30,9 @@ from braket.circuits import compiler_directives
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
+from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
+    MatplotlibCircuitDiagram,
+)
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
@@ -57,7 +60,6 @@ from braket.circuits.serialization import (
     SerializationProperties,
 )
 from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
-from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import MatplotlibCircuitDiagram
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
@@ -1653,7 +1655,7 @@ class Circuit:
         if qubits := self.qubits:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
-    
+
     def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
         circuit_diagram_class.build_diagram(self)
 
