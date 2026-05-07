@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.117.1 (2026-04-29)
+
+### Bug Fixes and Other Changes
+
+ * FreeParameterExpression.subs() crash when expression is a plain Number
+
 ## v1.117.0 (2026-04-24)
 
 ### Deprecations and Removals
