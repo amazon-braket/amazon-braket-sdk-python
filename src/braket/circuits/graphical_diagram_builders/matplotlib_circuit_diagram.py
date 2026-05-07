@@ -44,13 +44,15 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
     """
 
     # Layout parameters
-    COL_WIDTH = 1.4
+    COL_WIDTH = 1.4  # default/minimum column width, used as a lower bound
+    COL_GAP = 0.2  # horizontal gap between adjacent column boxes
     ROW_HEIGHT = 0.8
     WIRE_EXTEND = 0.5  # extra wire length before first / after last column
 
     # Gate box style
     GATE_BOX_HEIGHT = 0.5
     GATE_BOX_MIN_WIDTH = 0.6
+    GATE_BOX_PADDING = 0.3  # horizontal padding inside the box around the label
     GATE_FONT_SIZE = 10
     GATE_FILL_COLOR = "#D4E6F1"
     GATE_EDGE_COLOR = "black"
@@ -110,29 +112,63 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         return MatplotlibCircuitDiagram._render_layout(layout)
 
     @classmethod
-    def _render_layout(cls, layout: CircuitLayout) -> Figure:
+    def _gate_box_width(cls, label: str) -> float:
+        """Return the width of a gate box rendered with *label*."""
+        char_width = cls.GATE_FONT_SIZE * 0.012
+        text_width = len(label) * char_width
+        return max(cls.GATE_BOX_MIN_WIDTH, text_width + cls.GATE_BOX_PADDING)
+
+    @classmethod
+    def _compute_column_x(cls, layout: CircuitLayout) -> tuple[list[float], list[float]]:
+        """Compute the x center and width of each column based on box sizes.
+
+        Columns are sized to fit the widest gate box they contain, plus a
+        fixed gap. Columns with no boxes fall back to the default width.
+
+        Returns:
+            Tuple of ``(centers, widths)`` lists of length ``num_moments``.
+        """
         n_cols = max(layout.num_moments, 1)
+        widths = [cls.COL_WIDTH] * n_cols
+        for elem in layout.elements:
+            if isinstance(elem, GateBox):
+                widths[elem.col] = max(
+                    widths[elem.col], cls._gate_box_width(elem.label) + cls.COL_GAP
+                )
+        centers: list[float] = []
+        cursor = 0.0
+        for w in widths:
+            centers.append(cursor + w / 2)
+            cursor += w
+        return centers, widths
+
+    @classmethod
+    def _render_layout(cls, layout: CircuitLayout) -> Figure:
         n_rows = max(layout.num_qubits, 1)
 
-        fig_width = max(4, cls.WIRE_EXTEND * 2 + n_cols * cls.COL_WIDTH + 1.5)
+        col_x, col_w = cls._compute_column_x(layout)
+        total_width = sum(col_w)
+        # Right edge of the rightmost column, so wires and xlim cover every box.
+        right_edge = total_width
+
+        fig_width = max(4, cls.WIRE_EXTEND * 2 + total_width + 1.5)
         fig_height = max(2, n_rows * cls.ROW_HEIGHT + 1.5)
         fig, ax = plt.subplots(figsize=(fig_width, fig_height))
 
-        x_start = 0
-        x_end = (n_cols - 1) * cls.COL_WIDTH
-
-        # 1. Draw qubit wires
+        # 1. Draw qubit wires (extend from before column 0 to after the last column)
+        left_wire = col_x[0] - col_w[0] / 2 - cls.WIRE_EXTEND
+        right_wire = right_edge + cls.WIRE_EXTEND
         for row_idx, label in enumerate(layout.qubit_labels):
             y = -row_idx * cls.ROW_HEIGHT
             ax.plot(
-                [x_start - cls.WIRE_EXTEND, x_end + cls.WIRE_EXTEND],
+                [left_wire, right_wire],
                 [y, y],
                 color=cls.WIRE_COLOR,
                 lw=cls.WIRE_LW,
                 zorder=1,
             )
             ax.text(
-                x_start - cls.WIRE_EXTEND - 0.15,
+                left_wire - 0.15,
                 y,
                 f"{label} :",
                 ha="right",
@@ -155,7 +191,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
                 moment_col_ranges.append((label, col_idx, col_idx))
 
         for label, col_start, col_end in moment_col_ranges:
-            cx = ((col_start + col_end) / 2) * cls.COL_WIDTH
+            cx = (col_x[col_start] + col_x[col_end]) / 2
             ax.text(
                 cx, label_y_top, label,
                 ha="center", va="center",
@@ -174,17 +210,17 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         # 3. Draw elements
         for elem in layout.elements:
             if isinstance(elem, GateBox):
-                cls._draw_gate_box(ax, elem)
+                cls._draw_gate_box(ax, elem, col_x[elem.col])
             elif isinstance(elem, ControlDot):
-                cls._draw_control_dot(ax, elem)
+                cls._draw_control_dot(ax, elem, col_x[elem.col])
             elif isinstance(elem, SwapMarker):
-                cls._draw_swap_marker(ax, elem)
+                cls._draw_swap_marker(ax, elem, col_x[elem.col])
             elif isinstance(elem, Connection):
-                cls._draw_connection(ax, elem)
+                cls._draw_connection(ax, elem, col_x[elem.col])
             elif isinstance(elem, BarrierLine):
-                cls._draw_barrier(ax, elem)
+                cls._draw_barrier(ax, elem, col_x[elem.col])
             elif isinstance(elem, JunctionDot):
-                cls._draw_junction_dot(ax, elem)
+                cls._draw_junction_dot(ax, elem, col_x[elem.col])
 
         # 4. Footer text
         footer_lines = []
@@ -202,7 +238,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
             footer_y = label_y_bottom - cls.ROW_HEIGHT * 0.7
             for i, line in enumerate(footer_lines):
                 ax.text(
-                    x_start - cls.WIRE_EXTEND,
+                    left_wire,
                     footer_y - i * cls.ROW_HEIGHT * 0.5,
                     line,
                     ha="left",
@@ -214,8 +250,8 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
 
         # 5. Configure axes
         ax.set_xlim(
-            x_start - cls.WIRE_EXTEND - 1.5,
-            x_end + cls.WIRE_EXTEND + 0.5,
+            left_wire - 1.5,
+            right_wire + 0.5,
         )
         y_top = label_y_top + 0.4
         y_bottom = label_y_bottom - 0.4
@@ -229,14 +265,10 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
 
 
     @classmethod
-    def _draw_gate_box(cls, ax, elem: GateBox) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_gate_box(cls, ax, elem: GateBox, x: float) -> None:
         y = -elem.row * cls.ROW_HEIGHT
 
-        # Compute box width based on label length
-        char_width = cls.GATE_FONT_SIZE * 0.012
-        text_width = len(elem.label) * char_width
-        box_width = max(cls.GATE_BOX_MIN_WIDTH, text_width + 0.3)
+        box_width = cls._gate_box_width(elem.label)
 
         rect = mpatches.FancyBboxPatch(
             (x - box_width / 2, y - cls.GATE_BOX_HEIGHT / 2),
@@ -259,8 +291,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         )
 
     @classmethod
-    def _draw_control_dot(cls, ax, elem: ControlDot) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_control_dot(cls, ax, elem: ControlDot, x: float) -> None:
         y = -elem.row * cls.ROW_HEIGHT
         if elem.filled:
             circle = plt.Circle(
@@ -276,8 +307,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         ax.add_patch(circle)
 
     @classmethod
-    def _draw_swap_marker(cls, ax, elem: SwapMarker) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_swap_marker(cls, ax, elem: SwapMarker, x: float) -> None:
         y = -elem.row * cls.ROW_HEIGHT
         ax.plot(
             x, y, "x",
@@ -288,8 +318,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         )
 
     @classmethod
-    def _draw_connection(cls, ax, elem: Connection) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_connection(cls, ax, elem: Connection, x: float) -> None:
         y_start = -elem.row_start * cls.ROW_HEIGHT
         y_end = -elem.row_end * cls.ROW_HEIGHT
         ax.plot(
@@ -300,8 +329,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         )
 
     @classmethod
-    def _draw_barrier(cls, ax, elem: BarrierLine) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_barrier(cls, ax, elem: BarrierLine, x: float) -> None:
         y_start = -elem.row_start * cls.ROW_HEIGHT
         y_end = -elem.row_end * cls.ROW_HEIGHT
         ax.plot(
@@ -313,8 +341,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         )
 
     @classmethod
-    def _draw_junction_dot(cls, ax, elem: JunctionDot) -> None:
-        x = elem.col * cls.COL_WIDTH
+    def _draw_junction_dot(cls, ax, elem: JunctionDot, x: float) -> None:
         y = -elem.row * cls.ROW_HEIGHT
         ax.plot(
             x, y, "o",
