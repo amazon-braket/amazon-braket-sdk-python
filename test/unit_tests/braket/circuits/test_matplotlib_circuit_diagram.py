@@ -701,3 +701,45 @@ def test_build_diagram_returns_figure(circ):
     assert isinstance(fig, Figure)
     # Verify figure has axes
     assert len(fig.axes) == 1
+
+
+def test_build_diagram_with_global_phase_footer():
+    # Covers _build_footer_lines global-phase branch when build_diagram runs end-to-end.
+    circ = Circuit().h(0).gphase(0.25)
+    fig = _fig(circ)
+    assert isinstance(fig, Figure)
+
+
+def test_build_diagram_with_unassigned_parameters_footer():
+    # Covers _build_footer_lines unassigned-parameters branch in the render path.
+    circ = Circuit().rx(angle=FreeParameter("theta"), target=0)
+    fig = _fig(circ)
+    assert isinstance(fig, Figure)
+
+
+def test_build_diagram_with_barrier_and_following_gate():
+    # Exercises _draw_elements loop continuing past a BarrierLine to another element,
+    circ = Circuit().x(0).barrier(target=[0, 1]).h(0)
+    fig = _fig(circ)
+    assert isinstance(fig, Figure)
+
+
+def test_draw_elements_ignores_unknown_element():
+    # Feeds an unrecognised layout element straight into _render_layout so the
+    # final elif in _draw_elements falls through.
+    class UnknownElement:
+        col = 0
+        row = 0
+
+    layout = CircuitLayout(
+        num_qubits=1,
+        num_moments=1,
+        qubit_labels=["q0"],
+        moment_labels=["0"],
+        elements=[GateBox(col=0, row=0, label="H"), UnknownElement()],
+        global_phase=None,
+        additional_result_types=[],
+        unassigned_parameters=[],
+    )
+    fig = MatplotlibCircuitDiagram._render_layout(layout)
+    assert isinstance(fig, Figure)

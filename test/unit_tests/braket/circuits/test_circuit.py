@@ -2514,6 +2514,13 @@ def test_to_unitary_with_global_phase():
     assert np.allclose(circuit.to_unitary(), 1j * circuit_unitary)
 
 
+def test_show_invokes_build_diagram():
+    diagram_cls = Mock()
+    circ = Circuit().h(0)
+    circ.show(circuit_diagram_class=diagram_cls)
+    diagram_cls.build_diagram.assert_called_once_with(circ)
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [
