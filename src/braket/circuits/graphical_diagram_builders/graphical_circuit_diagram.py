@@ -21,7 +21,7 @@ from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
-    BarrierLine,
+    BarrierMarker,
     CircuitLayout,
     Connection,
     ControlDot,
@@ -244,18 +244,24 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         circuit_qubits: QubitSet,
         elements: list,
     ) -> None:
-        """Emit barrier line elements for barrier instructions."""
+        """Emit barrier marker elements for barrier instructions.
+
+        A barrier is represented as one ``BarrierMarker`` per targeted
+        qubit (or every qubit when no target is given). Rendering is per
+        qubit, so qubits not included in the barrier's target get no
+        marker, making the scope unambiguous.
+        """
         for item in items:
-            if (
+            if not (
                 isinstance(item, Instruction)
                 and isinstance(item.operator, CompilerDirective)
                 and item.operator.name == "Barrier"
             ):
-                if item.target:
-                    rows = sorted(qubit_index[q] for q in item.target)
-                else:
-                    rows = sorted(qubit_index[q] for q in circuit_qubits)
-                elements.append(BarrierLine(col=col, row_start=rows[0], row_end=rows[-1]))
+                continue
+
+            target = item.target if item.target else circuit_qubits
+            for q in target:
+                elements.append(BarrierMarker(col=col, row=qubit_index[q]))
 
     @classmethod
     def _build_parameters(

@@ -23,7 +23,7 @@ from braket.circuits.graphical_diagram_builders.graphical_circuit_diagram import
     GraphicalCircuitDiagram,
 )
 from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
-    BarrierLine,
+    BarrierMarker,
     CircuitLayout,
     Connection,
     ControlDot,
@@ -41,7 +41,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
     - Control qubits are filled/open circles
     - Multi-qubit connections are vertical lines
     - SWAP gates are drawn as ``x`` markers
-    - Barriers are dashed vertical lines
+    - Barriers are hatched markers on each targeted qubit wire
     """
 
     # Layout parameters
@@ -71,7 +71,11 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
     CONNECTION_LW = 1.5
     CONNECTION_COLOR = "black"
     BARRIER_COLOR = "#888888"
-    BARRIER_LW = 1.5
+    BARRIER_FILL_COLOR = "#DDDDDD"
+    BARRIER_LW = 1.0
+    BARRIER_WIDTH = 0.25  # horizontal width of the per-qubit barrier marker
+    BARRIER_HEIGHT_FRAC = 0.6  # fraction of ROW_HEIGHT covered by the marker
+    BARRIER_HATCH = "///"
 
     # Label style
     QUBIT_LABEL_FONT_SIZE = 11
@@ -239,7 +243,7 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
                 cls._draw_swap_marker(ax, elem, col_x[elem.col])
             elif isinstance(elem, Connection):
                 cls._draw_connection(ax, elem, col_x[elem.col])
-            elif isinstance(elem, BarrierLine):
+            elif isinstance(elem, BarrierMarker):
                 cls._draw_barrier(ax, elem, col_x[elem.col])
 
     @classmethod
@@ -367,14 +371,24 @@ class MatplotlibCircuitDiagram(GraphicalCircuitDiagram):
         )
 
     @classmethod
-    def _draw_barrier(cls, ax: Axes, elem: BarrierLine, x: float) -> None:
-        y_start = -elem.row_start * cls.ROW_HEIGHT
-        y_end = -elem.row_end * cls.ROW_HEIGHT
-        ax.plot(
-            [x, x],
-            [y_start - cls.ROW_HEIGHT * 0.3, y_end + cls.ROW_HEIGHT * 0.3],
-            color=cls.BARRIER_COLOR,
-            lw=cls.BARRIER_LW,
-            linestyle="--",
+    def _draw_barrier(cls, ax: Axes, elem: BarrierMarker, x: float) -> None:
+        """Draw a barrier marker on a single qubit wire.
+
+        Rendered as a small hatched rectangle centered on the qubit wire.
+        One marker per targeted qubit; qubits not in the barrier's target
+        get no marker.
+        """
+        y = -elem.row * cls.ROW_HEIGHT
+        half_h = cls.ROW_HEIGHT * cls.BARRIER_HEIGHT_FRAC / 2
+        half_w = cls.BARRIER_WIDTH / 2
+        rect = mpatches.Rectangle(
+            (x - half_w, y - half_h),
+            cls.BARRIER_WIDTH,
+            half_h * 2,
+            facecolor=cls.BARRIER_FILL_COLOR,
+            edgecolor=cls.BARRIER_COLOR,
+            hatch=cls.BARRIER_HATCH,
+            linewidth=cls.BARRIER_LW,
             zorder=2,
         )
+        ax.add_patch(rect)

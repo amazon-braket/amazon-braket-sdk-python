@@ -29,7 +29,7 @@ from braket.circuits.graphical_diagram_builders.graphical_circuit_diagram import
     GraphicalCircuitDiagram,
 )
 from braket.circuits.graphical_diagram_builders.graphical_diagram_utils import (
-    BarrierLine,
+    BarrierMarker,
     CircuitLayout,
     Connection,
     ControlDot,
@@ -615,14 +615,16 @@ def test_measure_with_readout_noise():
 
 def test_barrier_circuit_visualization_without_other_gates():
     layout = _layout(Circuit().barrier(target=[0, 100]))
-    barriers = _elements_of_type(layout, BarrierLine)
-    assert len(barriers) >= 1
+    barriers = _elements_of_type(layout, BarrierMarker)
+    # One marker per targeted qubit.
+    assert sorted(b.row for b in barriers) == [0, 1]
 
 
 def test_barrier_circuit_visualization_with_other_gates():
     layout = _layout(Circuit().x(0).barrier(target=[0, 100]).h(3))
-    barriers = _elements_of_type(layout, BarrierLine)
-    assert len(barriers) >= 1
+    barriers = _elements_of_type(layout, BarrierMarker)
+    # Circuit qubits are {0, 3, 100} → rows 0, 1, 2. Barrier targets q0 and q100.
+    assert sorted(b.row for b in barriers) == [0, 2]
     gate_labels = _gate_labels(layout)
     assert "X" in gate_labels
     assert "H" in gate_labels
@@ -630,28 +632,45 @@ def test_barrier_circuit_visualization_with_other_gates():
 
 def test_barrier_single_qubit():
     layout = _layout(Circuit().x(0).x(1).barrier(target=[0]).h(2))
-    barriers = _elements_of_type(layout, BarrierLine)
-    assert len(barriers) >= 1
+    barriers = _elements_of_type(layout, BarrierMarker)
+    assert len(barriers) == 1
+    assert barriers[0].row == 0
 
 
 def test_barrier_multiple_qubits_with_gates():
     layout = _layout(Circuit().x(0).x(1).barrier(target=[0, 1]).h(0).h(2))
-    barriers = _elements_of_type(layout, BarrierLine)
-    assert len(barriers) >= 1
+    barriers = _elements_of_type(layout, BarrierMarker)
+    assert sorted(b.row for b in barriers) == [0, 1]
     gate_labels = _gate_labels(layout)
     assert "X" in gate_labels
     assert "H" in gate_labels
 
 
-def test_barrier_global_with_vertical_lines():
+def test_barrier_global_marks_all_qubits():
     circ = Circuit().x(0).x(1)
     circ.add_instruction(Instruction(Barrier([]), []))
     circ.h(2)
     layout = _layout(circ)
-    barriers = _elements_of_type(layout, BarrierLine)
-    assert len(barriers) >= 1
-    # Global barrier should span all qubits
-    assert any(b.row_start == 0 and b.row_end == 2 for b in barriers)
+    barriers = _elements_of_type(layout, BarrierMarker)
+    # Global barrier puts a marker on every qubit row.
+    assert sorted(b.row for b in barriers) == [0, 1, 2]
+
+
+def test_barrier_non_contiguous_target_marks_only_targeted_rows():
+    # q0, q1, q2 all present; barrier targets q0 and q2 but skips q1.
+    # Each targeted qubit gets its own marker; q1 is explicitly not marked,
+    # so it's visually obvious the barrier does not apply there.
+    circ = Circuit().h(0).h(1).h(2).barrier([0, 2]).cnot(0, 1).cnot(1, 2)
+    layout = _layout(circ)
+    barriers = _elements_of_type(layout, BarrierMarker)
+    assert sorted(b.row for b in barriers) == [0, 2]
+
+
+def test_barrier_contiguous_target_marks_each_targeted_row():
+    circ = Circuit().h(0).h(1).h(2).barrier([0, 1]).cnot(0, 1)
+    layout = _layout(circ)
+    barriers = _elements_of_type(layout, BarrierMarker)
+    assert sorted(b.row for b in barriers) == [0, 1]
 
 
 def test_barrier_target_not_mutated_by_diagram():
@@ -722,7 +741,7 @@ def test_build_diagram_with_unassigned_parameters_footer():
 
 
 def test_build_diagram_with_barrier_and_following_gate():
-    # Exercises _draw_elements loop continuing past a BarrierLine to another element,
+    # Exercises _draw_elements loop continuing past a BarrierMarker to another element,
     circ = Circuit().x(0).barrier(target=[0, 1]).h(0)
     fig = _fig(circ)
     assert isinstance(fig, Figure)

@@ -65,12 +65,11 @@ class Connection:
 
 
 @dataclass
-class BarrierLine:
-    """A barrier (dashed vertical line) spanning qubits."""
+class BarrierMarker:
+    """A barrier indicator on a single qubit wire."""
 
     col: int
-    row_start: int
-    row_end: int
+    row: int
 
 
 @dataclass
