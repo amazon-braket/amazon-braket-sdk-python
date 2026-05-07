@@ -115,17 +115,17 @@ class PauliString:
         """
         substrings = []
         for indices in itertools.combinations(self._nontrivial, weight):
-            factors = [
-                (
-                    self._nontrivial[qubit]
-                    if qubit in set(indices).intersection(self._nontrivial)
-                    else "I"
-                )
-                for qubit in range(self._qubit_count)
-            ]
-            substrings.append(
-                PauliString(f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}")
-            )
+            idx_set = set(indices)
+            nontrivial = {i: self._nontrivial[i] for i in idx_set}
+            # Bypass __init__ via __new__ to skip string parsing. The internal
+            # state (phase, qubit_count, nontrivial dict) is already known here,
+            # so going through PauliString(str) would only round-trip the data
+            # through a dense string representation for no benefit.
+            ps = PauliString.__new__(PauliString)
+            ps._phase = self._phase
+            ps._qubit_count = self._qubit_count
+            ps._nontrivial = nontrivial
+            substrings.append(ps)
         return tuple(substrings)
 
     def eigenstate(self, signs: str | list[int] | tuple[int, ...] | None = None) -> Circuit:
@@ -186,27 +186,30 @@ class PauliString:
                 f"Input Pauli string must be of length ({self._qubit_count}), "
                 f"not {other._qubit_count}"
             )
-        pauli_result = ""
+        pauli_result = {}
         phase_result = self._phase * other._phase
-        for i in range(self._qubit_count):
-            # Are either identity?
-            if i not in self._nontrivial and i not in other._nontrivial:
-                pauli_result += "I"
-            elif i not in self._nontrivial:
-                pauli_result += other._nontrivial[i]
-            elif i not in other._nontrivial:
-                pauli_result += self._nontrivial[i]
-            elif self._nontrivial[i] == other._nontrivial[i]:
-                pauli_result += "I"
-            else:
+        for i in self._nontrivial:
+            if i not in other._nontrivial:
+                pauli_result[i] = self._nontrivial[i]
+            elif self._nontrivial[i] != other._nontrivial[i]:
                 gate, phase = _PRODUCT_MAP[self._nontrivial[i]][other._nontrivial[i]]
-                pauli_result += gate
+                pauli_result[i] = gate
                 phase_result *= phase
+        for i in other._nontrivial:
+            if i not in self._nontrivial:
+                pauli_result[i] = other._nontrivial[i]
 
         # ignore complex global phase
-        if phase_result.real < 0 or phase_result.imag < 0:
-            pauli_result = f"-{pauli_result}"
-        out_pauli_string = PauliString(pauli_result)
+        out_phase = -1 if (phase_result.real < 0 or phase_result.imag < 0) else 1
+
+        # Bypass __init__ via __new__ to avoid serializing the computed dict
+        # back into a string just to have __init__ parse it again. The fields
+        # below fully define a valid PauliString, so direct assignment is both
+        # faster and avoids an O(qubit_count) dense-string round trip.
+        out_pauli_string = PauliString.__new__(PauliString)
+        out_pauli_string._phase = out_phase
+        out_pauli_string._qubit_count = self._qubit_count
+        out_pauli_string._nontrivial = pauli_result
 
         if inplace:
             self._phase = out_pauli_string._phase
@@ -270,11 +273,18 @@ class PauliString:
         if not isinstance(n, int):
             raise TypeError("Must be raised to integer power")
 
-        # Since pauli ops involutory, result is either identity or unchanged
-        pauli_other = PauliString(self)
+        # Since pauli ops involutory, result is either identity or unchanged.
+        # Bypass __init__ via __new__ to skip the PauliString(self) copy path,
+        # which would re-validate fields we already know are consistent. Direct
+        # field assignment keeps the hot path allocation-light.
+        pauli_other = PauliString.__new__(PauliString)
+        pauli_other._qubit_count = self._qubit_count
         if n % 2 == 0:
             pauli_other._phase = 1
             pauli_other._nontrivial = {}
+        else:
+            pauli_other._phase = self._phase
+            pauli_other._nontrivial = dict(self._nontrivial)
 
         if inplace:
             self._phase = pauli_other._phase
@@ -360,7 +370,9 @@ class PauliString:
         return self._qubit_count
 
     def __repr__(self):
-        factors = [self._nontrivial.get(qubit, "I") for qubit in range(self._qubit_count)]
+        factors = ["I"] * self._qubit_count
+        for i, p in self._nontrivial.items():
+            factors[i] = p
         return f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}"
 
     @staticmethod
