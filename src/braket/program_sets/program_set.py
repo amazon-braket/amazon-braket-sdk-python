@@ -111,7 +111,7 @@ class ProgramSet:
         ``Sum`` Hamiltonian, ``observable_index`` ranges over the summands.
 
         This ordering is used by ``split`` to build its index map and by
-        ``ProgramSetQuantumTaskResult.from_multiple`` to merge results back into the original shape.
+        ``ProgramSetQuantumTaskResult.merge`` to merge results back into the original shape.
 
         Yields:
             tuple[int, int, int]: ``(binding_index, parameter_set_index, observable_index)``.

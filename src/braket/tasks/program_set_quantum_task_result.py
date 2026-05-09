@@ -376,7 +376,7 @@ class ProgramSetQuantumTaskResult:
         )
 
     @staticmethod
-    def from_multiple(
+    def merge(
         results: Sequence[ProgramSetQuantumTaskResult],
         program_set: ProgramSet,
         index_map: list[list[int]],

@@ -571,7 +571,7 @@ def test_from_multiple_single_sub_task_no_split_roundtrips(circuit_rx_parametriz
     )
     reference = ProgramSetQuantumTaskResult.from_object(wire, ps)
 
-    merged = ProgramSetQuantumTaskResult.from_multiple([reference], ps, mapping)
+    merged = ProgramSetQuantumTaskResult.merge([reference], ps, mapping)
 
     assert len(merged) == len(reference) == 1
     ref_composite = reference[0]
@@ -608,7 +608,7 @@ def test_from_multiple_split_list_observables(circuit_rx_parametrized_fixture):
         for sub in subs
     ]
 
-    merged = ProgramSetQuantumTaskResult.from_multiple(sub_results, ps, mapping)
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, mapping)
     assert len(merged) == 1
     composite = merged[0]
     # The merged composite should have 4 MeasuredEntries in canonical order, each with
@@ -653,7 +653,7 @@ def test_from_multiple_split_sum_hamiltonian_reconstructs_expectation(
         for sub in subs
     ]
 
-    merged = ProgramSetQuantumTaskResult.from_multiple(sub_results, ps, mapping)
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, mapping)
     composite = merged[0]
     assert composite.observables is h
     assert len(composite) == 6
@@ -717,7 +717,7 @@ def test_from_multiple_mixed_bindings_and_failures(circuit_rx_parametrized_fixtu
         sub_results.append(_build_sub_quantum_result(sub, programs_execs))
 
     assert failure_injected
-    merged = ProgramSetQuantumTaskResult.from_multiple(sub_results, ps, mapping)
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, mapping)
     assert len(merged) == 2
     # Binding 0: 6 executables, position 5 is a failure.
     assert len(merged[0]) == 6
@@ -743,10 +743,10 @@ def test_from_multiple_validates_mapping_size(circuit_rx_parametrized_fixture):
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
     # mapping has 1 entry for 1 sub-task, but size doesn't match ps.total_executables.
     with pytest.raises(ValueError, match="Index map covers 1"):
-        ProgramSetQuantumTaskResult.from_multiple([sub_result], ps, [[0]])
+        ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0]])
     # Sub-task count doesn't match mapping's length.
     with pytest.raises(ValueError, match="1 task results but 2 entries in index_map"):
-        ProgramSetQuantumTaskResult.from_multiple([sub_result], ps, [[0], [1]])
+        ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0], [1]])
 
 
 @pytest.fixture
@@ -764,7 +764,7 @@ def test_from_multiple_with_plain_circuit_entries():
 
     sub_results = [_build_sub_quantum_result(sub, [[_make_exec_result(0)]]) for sub in subs]
 
-    merged = ProgramSetQuantumTaskResult.from_multiple(sub_results, ps, mapping)
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, mapping)
     assert len(merged) == 2
     assert len(merged[0]) == 1
     assert len(merged[1]) == 1
@@ -780,7 +780,7 @@ def test_from_multiple_rejects_sub_task_over_mapping(circuit_rx_parametrized_fix
     # Sub-task reports 2 executables, but mapping says there's only 1.
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
     with pytest.raises(ValueError, match="produced more executables than index map"):
-        ProgramSetQuantumTaskResult.from_multiple(
+        ProgramSetQuantumTaskResult.merge(
             [sub_result],
             ProgramSet(CircuitBinding(circuit_rx_parametrized_fixture, {"theta": [0.1]})),
             [[0]],
@@ -794,7 +794,7 @@ def test_from_multiple_rejects_sub_task_under_mapping(circuit_rx_parametrized_fi
     # Sub-task reports only 1 executable, but mapping says there are 2.
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0)]])
     with pytest.raises(ValueError, match="expected 2"):
-        ProgramSetQuantumTaskResult.from_multiple([sub_result], ps, [[0, 1]])
+        ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0, 1]])
 
 
 def ghz_test(n):
