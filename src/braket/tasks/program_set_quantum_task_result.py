@@ -423,13 +423,10 @@ class ProgramSetQuantumTaskResult:
                 f"has {total_executables}"
             )
 
-        binding_programs = [_binding_to_program(binding) for binding in program_set.entries]
-        triples = list(program_set.enumerate_executables())
+        programs = [_binding_to_program(binding) for binding in program_set.entries]
+        executable_indices = list(program_set.enumerate_executables())
         binding_executable_counts = [_count_executables(b) for b in program_set.entries]
-
-        metas = [r.task_metadata for r in results]
-        first_num_execs = _num_executables_from_metadata(metas[0])
-        shots_per_executable = metas[0].requestedShots // first_num_execs if first_num_execs else 0
+        shots_per_executable = results[0].entries[0].shots_per_executable
 
         buffer = [None] * total_executables
         for k, result in enumerate(results):
@@ -438,8 +435,8 @@ class ProgramSetQuantumTaskResult:
                 result=result,
                 map_k=index_map[k],
                 program_set=program_set,
-                binding_programs=binding_programs,
-                triples=triples,
+                programs=programs,
+                executable_indices=executable_indices,
                 buffer=buffer,
             )
 
@@ -447,8 +444,8 @@ class ProgramSetQuantumTaskResult:
         start = 0
         for binding_idx, binding in enumerate(program_set.entries):
             count = binding_executable_counts[binding_idx]
-            program = binding_programs[binding_idx]
-            observables = None if isinstance(binding, Circuit) else binding.observables
+            program = programs[binding_idx]
+            observables = binding.observables if isinstance(binding, CircuitBinding) else None
             entries.append(
                 CompositeEntry(
                     entries=buffer[start : start + count],
@@ -461,9 +458,29 @@ class ProgramSetQuantumTaskResult:
             )
             start += count
 
+        metas = [r.task_metadata for r in results]
         return ProgramSetQuantumTaskResult(
             entries=entries,
-            task_metadata=_aggregate_task_metadata(metas, program_set),
+            task_metadata=ProgramSetTaskMetadata(
+                id=";".join(meta.id for meta in metas),  # Better way to do this?
+                deviceId=metas[0].deviceId,
+                requestedShots=sum(m.requestedShots for m in metas),
+                successfulShots=sum(m.successfulShots for m in metas),
+                programMetadata=[
+                    ProgramMetadata(
+                        executables=[
+                            ProgramSetExecutableResultMetadata()
+                            for _ in range(_count_executables(b))
+                        ]
+                    )
+                    for b in program_set.entries
+                ],
+                deviceParameters=None,  # TODO: find a way to fill this in
+                createdAt=min(m.createdAt for m in metas if m.createdAt),
+                endedAt=max(m.endedAt for m in metas if m.endedAt),
+                status="COMPLETED" if any(m.status == "COMPLETED" for m in metas) else "FAILED",
+                totalFailedExecutables=sum(m.totalFailedExecutables for m in metas),
+            ),
             num_executables=total_executables,
             program_set=program_set,
         )
@@ -593,18 +610,13 @@ def _count_executables(binding: CircuitBinding | Circuit) -> int:
     return num_ps * num_obs
 
 
-def _num_executables_from_metadata(metadata: ProgramSetTaskMetadata) -> int:
-    return sum(len(p.executables) for p in metadata.programMetadata)
-
-
 def _buffer_result(
-    *,
     k: int,
     result: ProgramSetQuantumTaskResult,
     map_k: list[int],
     program_set: ProgramSet,
-    binding_programs: list[Program],
-    triples: list[tuple[int, int, int]],
+    programs: list[Program],
+    executable_indices: list[tuple[int, int, int]],
     buffer: list[MeasuredEntry | ProgramSetExecutableFailure | None],
 ) -> None:
     j = 0
@@ -616,11 +628,11 @@ def _buffer_result(
                     "produced more executables than index map expects"
                 )
             orig_idx = map_k[j]
-            b_idx, ps_idx, obs_idx = triples[orig_idx]
+            binding_idx, ps_idx, obs_idx = executable_indices[orig_idx]
             buffer[orig_idx] = _convert_measured_entry(
                 entry,
-                program_set.entries[b_idx],
-                binding_programs[b_idx],
+                program_set.entries[binding_idx],
+                programs[binding_idx],
                 ps_idx,
                 obs_idx,
             )
@@ -655,34 +667,11 @@ def _convert_measured_entry(
         num_obs = len(observables)
     orig_inputs_index = parameter_set_index * num_obs + observable_index
     program_inputs = original_program.inputs or {}
-    inputs = {key: value[orig_inputs_index] for key, value in program_inputs.items()} or None
-    return replace(entry, program=original_program.source, inputs=inputs, observable=observable)
-
-
-def _aggregate_task_metadata(
-    metas: Sequence[ProgramSetTaskMetadata], program_set: ProgramSet
-) -> ProgramSetTaskMetadata:
-    first = metas[0]
-    created_values = [m.createdAt for m in metas if m.createdAt]
-    ended_values = [m.endedAt for m in metas if m.endedAt]
-    return ProgramSetTaskMetadata(
-        id=";".join(meta.id for meta in metas),
-        deviceId=first.deviceId,
-        requestedShots=sum(m.requestedShots for m in metas),
-        successfulShots=sum(m.successfulShots for m in metas),
-        programMetadata=[
-            ProgramMetadata(
-                executables=[
-                    ProgramSetExecutableResultMetadata() for _ in range(_count_executables(b))
-                ]
-            )
-            for b in program_set.entries
-        ],
-        deviceParameters=None,
-        createdAt=min(created_values) if created_values else None,
-        endedAt=max(ended_values) if ended_values else None,
-        status="COMPLETED" if any(m.status == "COMPLETED" for m in metas) else "FAILED",
-        totalFailedExecutables=sum(m.totalFailedExecutables for m in metas),
+    return replace(
+        entry,
+        program=original_program.source,
+        inputs={key: value[orig_inputs_index] for key, value in program_inputs.items()} or None,
+        observable=observable,
     )
 
 

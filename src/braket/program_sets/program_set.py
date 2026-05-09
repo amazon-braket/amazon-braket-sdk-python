@@ -116,15 +116,14 @@ class ProgramSet:
         Yields:
             tuple[int, int, int]: ``(binding_index, parameter_set_index, observable_index)``.
         """
-        for b_idx, prog in enumerate(self._programs):
+        for binding_idx, prog in enumerate(self._programs):
             if isinstance(prog, Circuit):
-                yield b_idx, 0, 0
+                yield binding_idx, 0, 0
                 continue
-            num_ps = len(prog.input_sets) if prog.input_sets is not None else 1
             num_obs = len(prog.observables) if prog.observables is not None else 1
-            for ps_idx in range(num_ps):
+            for ps_idx in range(len(prog.input_sets) if prog.input_sets is not None else 1):
                 for obs_idx in range(num_obs):
-                    yield b_idx, ps_idx, obs_idx
+                    yield binding_idx, ps_idx, obs_idx
 
     def split(self, max_executables: int) -> tuple[list[ProgramSet], list[list[int]]]:
         """Split this program set into program sets of at most ``max_executables`` executables,
@@ -169,33 +168,32 @@ class ProgramSet:
         if self.total_executables <= max_executables:
             return [self], [list(range(self.total_executables))]
 
-        triples = self._enumerate_triples(max_executables)
         program_sets = []
         index_map = []
         current = []
         current_size = 0
-        for cls in triples:
-            if current and current_size + cls.size > max_executables:
+        for block in self._executable_blocks(max_executables):
+            if current and current_size + block.size > max_executables:
                 sub, sub_map = self._build_program_set(current)
                 program_sets.append(sub)
                 index_map.append(sub_map)
                 current = []
                 current_size = 0
-            current.append(cls)
-            current_size += cls.size
+            current.append(block)
+            current_size += block.size
         sub, sub_map = self._build_program_set(current)
         program_sets.append(sub)
         index_map.append(sub_map)
 
         return program_sets, index_map
 
-    def _enumerate_triples(self, max_executables: int) -> list[_Triple]:
-        triples = []
+    def _executable_blocks(self, max_executables: int) -> list[_ExecutableBlock]:
+        blocks = []
         orig_idx = 0
         for prog_idx, prog in enumerate(self._programs):
             if isinstance(prog, Circuit):
-                triples.append(
-                    _Triple(
+                blocks.append(
+                    _ExecutableBlock(
                         prog_idx=prog_idx,
                         param_set_index=None,
                         obs_slice=None,
@@ -206,16 +204,16 @@ class ProgramSet:
                 orig_idx += 1
                 continue
 
-            num_obs = len(prog.observables) if prog.observables is not None else 1
             num_ps = len(prog.input_sets) if prog.input_sets is not None else 1
-            ps_indices = list(range(num_ps)) if prog.input_sets is not None else [None]
-            obs_windows = _observable_windows(num_obs, max_executables)
+            obs_windows = _observable_windows(
+                len(prog.observables) if prog.observables is not None else 1, max_executables
+            )
             split_observables = len(obs_windows) > 1
-            for ps_idx in ps_indices:
+            for ps_idx in range(num_ps) if prog.input_sets is not None else [None]:
                 for start, stop in obs_windows:
                     size = stop - start
-                    triples.append(
-                        _Triple(
+                    blocks.append(
+                        _ExecutableBlock(
                             prog_idx=prog_idx,
                             param_set_index=ps_idx,
                             obs_slice=slice(start, stop) if split_observables else None,
@@ -224,14 +222,14 @@ class ProgramSet:
                         )
                     )
                     orig_idx += size
-        return triples
+        return blocks
 
-    def _build_program_set(self, triples: list[_Triple]) -> tuple[ProgramSet, list[int]]:
+    def _build_program_set(self, blocks: list[_ExecutableBlock]) -> tuple[ProgramSet, list[int]]:
         entries = []
         sub_map = []
         i = 0
-        while i < len(triples):
-            head = triples[i]
+        while i < len(blocks):
+            head = blocks[i]
             prog = self._programs[head.prog_idx]
             if head.param_set_index is None:
                 entries.append(_apply_obs_slice(prog, head.obs_slice))
@@ -241,21 +239,23 @@ class ProgramSet:
 
             j = i
             while (
-                j + 1 < len(triples)
-                and triples[j + 1].prog_idx == head.prog_idx
-                and triples[j + 1].obs_slice == triples[j].obs_slice
-                and triples[j + 1].param_set_index == triples[j].param_set_index + 1
+                j + 1 < len(blocks)
+                and blocks[j + 1].prog_idx == head.prog_idx
+                and blocks[j + 1].obs_slice == blocks[j].obs_slice
+                and blocks[j + 1].param_set_index == blocks[j].param_set_index + 1
             ):
                 j += 1
-            start, stop = head.param_set_index, triples[j].param_set_index + 1
-            coalesced = CircuitBinding(
-                prog.circuit,
-                input_sets=prog.input_sets.as_list()[start:stop],
-                observables=_slice_observables(prog.observables, head.obs_slice),
+            start = head.param_set_index
+            stop = blocks[j].param_set_index + 1
+            entries.append(
+                CircuitBinding(
+                    prog.circuit,
+                    input_sets=prog.input_sets.as_list()[start:stop],
+                    observables=_slice_observables(prog.observables, head.obs_slice),
+                )
             )
-            entries.append(coalesced)
             for k in range(i, j + 1):
-                sub_map.extend(triples[k].original_indices)
+                sub_map.extend(blocks[k].original_indices)
             i = j + 1
         return ProgramSet(entries, self._shots_per_executable), sub_map
 
@@ -368,10 +368,10 @@ class ProgramSet:
         )
 
 
-@dataclass(frozen=True)
-class _Triple:
-    """A contiguous run of executables sharing the same ``(circuit, observable list,
-    single parameter assignment)`` triple.
+@dataclass
+class _ExecutableBlock:
+    """Multi-index range for an equivalence class of executables sharing the same combination of
+    ``(circuit, observable list/Sum Hamiltonian, single parameter assignment)``.
 
     Attributes:
         prog_idx: Index of the originating program in ``ProgramSet.entries``.
@@ -380,8 +380,8 @@ class _Triple:
         obs_slice: Slice into the originating observable list or ``Sum`` summands when observables
             were split to fit the budget; ``None`` means the full original observable list
             (or no observables).
-        size: Number of executables this triple represents (== ``len(original_indices)``).
-        original_indices: The indices of this triple's executables
+        size: Number of executables this block represents (== ``len(original_indices)``).
+        original_indices: The indices of this block's executables
             in the order of the original program set.
     """
 
