@@ -227,15 +227,15 @@ class ProgramSet:
         return triples
 
     def _build_program_set(self, triples: list[_Triple]) -> tuple[ProgramSet, list[int]]:
-        entries: list[CircuitBinding | Circuit] = []
-        sub_sub_map: list[int] = []
+        entries = []
+        sub_map = []
         i = 0
         while i < len(triples):
             head = triples[i]
             prog = self._programs[head.prog_idx]
             if head.param_set_index is None:
                 entries.append(_apply_obs_slice(prog, head.obs_slice))
-                sub_sub_map.extend(head.original_indices)
+                sub_map.extend(head.original_indices)
                 i += 1
                 continue
 
@@ -255,9 +255,9 @@ class ProgramSet:
             )
             entries.append(coalesced)
             for k in range(i, j + 1):
-                sub_sub_map.extend(triples[k].original_indices)
+                sub_map.extend(triples[k].original_indices)
             i = j + 1
-        return ProgramSet(entries, self._shots_per_executable), sub_sub_map
+        return ProgramSet(entries, self._shots_per_executable), sub_map
 
     @staticmethod
     def zip(
