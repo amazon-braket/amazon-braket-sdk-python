@@ -260,7 +260,7 @@ class CompositeEntry:
     def _get_executable_results(
         executable_results: Sequence[
             ProgramSetExecutableResult | ProgramSetExecutableFailure | str
-            ],
+        ],
         program: Program,
         observables: Sum | list[Observable] | None,
         shots_per_executable: int,
@@ -300,7 +300,7 @@ class CompositeEntry:
                 program=program.source,
                 shots=shots_per_executable,
                 inputs={k: v[result.inputsIndex] for k, v in (program.inputs or {}).items()}
-                       or None,
+                or None,
                 observable=(
                     observables[result.inputsIndex % len(observables)] if observables else None
                 ),
