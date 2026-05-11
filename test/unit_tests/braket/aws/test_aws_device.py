@@ -219,7 +219,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Ankaa-2",
+    "deviceName": "Cepheus-1-108Q",
     "deviceType": "QPU",
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
@@ -1491,7 +1491,7 @@ def test_run_device_poll_interval_kwargs(
     capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
     capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
     properties = {
-        "deviceName": "Ankaa-2",
+        "deviceName": "Cepheus-1-108Q",
         "deviceType": "QPU",
         "providerName": "provider1",
         "deviceStatus": "OFFLINE",
@@ -2466,7 +2466,7 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 @pytest.fixture
 def mock_rigetti_qpu_device(rigetti_device_capabilities):
     return {
-        "deviceName": "Ankaa-2",
+        "deviceName": "Cepheus-1-108Q",
         "deviceType": "QPU",
         "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",

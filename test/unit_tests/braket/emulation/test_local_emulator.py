@@ -91,6 +91,13 @@ def test_validate_valid_verbatim_circ_ankaa3(
     emulator.validate(valid_verbatim_circ_ankaa3)
 
 
+def test_validate_valid_verbatim_circ_cepheus1(
+    reduced_standardized_json_4, valid_verbatim_circ_cepheus1
+):
+    emulator = LocalEmulator.from_json(reduced_standardized_json_4)
+    emulator.validate(valid_verbatim_circ_cepheus1)
+
+
 def test_validate_valid_verbatim_circ_aria_1(
     reduced_ionq_device_capabilities_json, valid_verbatim_circ_aria1
 ):
