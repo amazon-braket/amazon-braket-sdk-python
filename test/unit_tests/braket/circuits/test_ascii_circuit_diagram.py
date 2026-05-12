@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
+import os
 import pytest
 
 from braket.circuits.compiler_directives import Barrier
@@ -49,7 +50,13 @@ def test_one_gate_one_qubit():
 def test_one_gate_one_qubit_rotation():
     circ = Circuit().rx(angle=3.14, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : |   0    |", "               ", "q0 : -Rx(3.14)-", "", "T  : |   0    |")
+    expected = (
+        "T  : |   0    |",
+        "               ",
+        "q0 : -Rx(3.14)-",
+        "",
+        "T  : |   0    |",
+    )
     _assert_correct_diagram(circ, expected)
 
 
@@ -677,7 +684,10 @@ def test_multiple_result_types_with_state_vector_amplitude():
         .h(0)
         .variance(observable=Observable.Y(), target=0)
         .expectation(observable=Observable.Y(), target=3)
-        .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
+        .expectation(
+            observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])),
+            target=1,
+        )
         .amplitude(["0001"])
         .state_vector()
     )
@@ -1057,3 +1067,34 @@ def test_barrier_global_with_vertical_lines():
         "T  : |0|1 |2|",
     )
     _assert_correct_diagram(circ, expected)
+
+
+def test_circuit_wrapping_ascii():
+    os.environ["BRAKET_DIAGRAM_WIDTH"] = "40"
+    expected = (
+        "T  : |0|1|2|3|4|5|6|7|8|9|10|11|12|  |",
+        "                                     |",
+        "q0 : -H-H-H-H-H-H-H-H-H-H-H--H--H--  |",
+        "                                     |",
+        "T  : |0|1|2|3|4|5|6|7|8|9|10|11|12|  |",
+        "                                     |",
+        "------------------------------------- ",
+        "                             |        ",
+        "T  : |13|14|15|16|17|18|19|  |",
+        "                             |",
+        "q0 : -H--H--H--H--H--H--H--  |",
+        "                             |",
+        "T  : |13|14|15|16|17|18|19|  |",
+        "                             |",
+        "============================= ",
+    )
+    circ = Circuit()
+    for _ in range(20):
+        circ.h(0)
+
+    try:
+        _assert_correct_diagram(circ, expected)
+    except AssertionError as e:
+        pytest.fail(f"ASCII diagram test failed:\n{e}")
+    finally:
+        del os.environ["BRAKET_DIAGRAM_WIDTH"]

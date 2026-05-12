@@ -13,7 +13,9 @@
 
 from __future__ import annotations
 
+import os
 from functools import reduce
+from shutil import get_terminal_size
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
@@ -85,6 +87,24 @@ def _unite_strings(first_column: str, column_strs: list[str]) -> list:
         for i, line_in_col in enumerate(col_str.split("\n")):
             lines[i] += line_in_col
     return lines
+
+
+def _get_display_width(min_width: int = 40, max_width: int = 100000):
+    """validate display width from environment variable
+
+    If not set, defaults to shutil.get_terminal_size()
+    """
+    width = get_terminal_size().columns
+    if "BRAKET_DIAGRAM_WIDTH" in os.environ:
+        try:
+            width = int(os.environ["BRAKET_DIAGRAM_WIDTH"])
+            if width > max_width:
+                width = max_width
+            elif width < min_width:
+                width = min_width
+        except (ValueError, OverflowError):
+            print(f"Warning: Invalid BRAKET_DIAGRAM_WIDTH value, using default {width}")
+    return width
 
 
 def _compute_moment_global_phase(
