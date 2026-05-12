@@ -85,7 +85,7 @@ class ConnectivityValidator(ValidationPass):
             except Exception as e:
                 raise ValueError(
                     f"connectivity_graph must be a valid DiGraph or a dictionary\
-                        mapping integers (nodes) to a list of integers (adjancency lists): {e}"
+                        mapping integers (nodes) to a list of integers (adjacency lists): {e}"
                 ) from e
         else:
             self._connectivity_graph = connectivity_graph
@@ -168,7 +168,7 @@ class ConnectivityValidator(ValidationPass):
                 (target_qubits[1], target_qubits[0]),
             ])
         else:
-            raise ValueError("Unrecognized qubit targetting setup for a 2 qubit gate.")
+            raise ValueError("Unrecognized qubit targeting setup for a 2 qubit gate.")
         # Check that each edge exists in this validator's connectivity graph
         for edge in gate_connectivity_graph.edges:
             typed_edge = (

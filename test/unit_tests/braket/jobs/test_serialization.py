@@ -38,20 +38,42 @@ def test_job_serialize_data(data_format, submitted_data, expected_serialized_dat
 
 
 @pytest.mark.parametrize(
-    "data_format, submitted_data, expected_deserialized_data",
+    "data_format, submitted_data, expected_deserialized_data, allow_pickle",
     [
         (
             PersistedJobDataFormat.PLAINTEXT,
             {"converged": True, "energy": -0.2},
             {"converged": True, "energy": -0.2},
+            False,
         ),
         (
             PersistedJobDataFormat.PICKLED_V4,
             {"converged": "gASILg==\n", "energy": "gASVCgAAAAAAAABHv8mZmZmZmZou\n"},
             {"converged": True, "energy": -0.2},
+            True,
         ),
     ],
 )
-def test_job_deserialize_data(data_format, submitted_data, expected_deserialized_data):
-    deserialized_data = deserialize_values(submitted_data, data_format)
+def test_job_deserialize_data(
+    data_format, submitted_data, expected_deserialized_data, allow_pickle
+):
+    deserialized_data = deserialize_values(submitted_data, data_format, allow_pickle=allow_pickle)
     assert deserialized_data == expected_deserialized_data
+
+
+def test_deserialize_pickled_data_raises_without_allow_pickle():
+    pickled_data = {"converged": "gASILg==\n"}
+    with pytest.raises(RuntimeError, match="pickle deserialization is disabled by default"):
+        deserialize_values(pickled_data, PersistedJobDataFormat.PICKLED_V4)
+
+
+def test_deserialize_pickled_data_succeeds_with_allow_pickle():
+    pickled_data = {"converged": "gASILg==\n"}
+    result = deserialize_values(pickled_data, PersistedJobDataFormat.PICKLED_V4, allow_pickle=True)
+    assert result == {"converged": True}
+
+
+def test_deserialize_plaintext_ignores_allow_pickle():
+    data = {"key": "value"}
+    result = deserialize_values(data, PersistedJobDataFormat.PLAINTEXT, allow_pickle=False)
+    assert result == {"key": "value"}

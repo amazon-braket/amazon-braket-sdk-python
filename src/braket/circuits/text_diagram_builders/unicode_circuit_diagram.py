@@ -73,6 +73,37 @@ class UnicodeCircuitDiagram(TextCircuitDiagram):
         lines[-1] = lines[0]
 
     @classmethod
+    def _wrapping_delimiter(
+        cls,
+        left: bool = False,
+        right: bool = False,
+        up: bool = False,
+        down: bool = False,
+        thick: bool = False,
+    ) -> str:
+        match left, right, up, down, thick:
+            case False, False, True, True, False:  # vertical delimiter
+                return "\u254f"
+            case True, True, False, False, False:  # horizontal delimiter
+                return "\u2578"
+            case False, False, True, True, True:  # vertical delimiter
+                return "\u2503"
+            case True, True, False, False, True:  # horizontal delimiter
+                return "\u2501"
+            case True, False, True, False, _:  # lower right corner
+                return "\u251b"
+            case True, False, True, True, _:  # -| junction
+                return "\u252b"
+            case True, True, True, False, _:  # _|_ up junction
+                return "\u253b"
+            case True, True, False, True, _:  # -.- down junction
+                return "\u2533"
+            case True, False, False, True, _:  # top right corner
+                return "\u2513"
+            case _:
+                return " "
+
+    @classmethod
     def _create_diagram_column(
         cls,
         circuit_qubits: QubitSet,

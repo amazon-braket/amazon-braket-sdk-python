@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os
+
 import numpy as np
 import pytest
 
@@ -24,9 +26,8 @@ from braket.circuits import (
     Operator,
     UnicodeCircuitDiagram,
 )
-from braket.pulse import Frame, Port, PulseSequence
-
 from braket.circuits.compiler_directives import Barrier
+from braket.pulse import Frame, Port, PulseSequence
 
 
 def _assert_correct_diagram(circ, expected):
@@ -744,7 +745,10 @@ def test_multiple_result_types_with_state_vector_amplitude():
         .h(0)
         .variance(observable=Observable.Y(), target=0)
         .expectation(observable=Observable.Y(), target=3)
-        .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
+        .expectation(
+            observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])),
+            target=1,
+        )
         .amplitude(["0001"])
         .state_vector()
     )
@@ -1214,13 +1218,13 @@ def test_barrier_global_with_vertical_lines():
 
 def test_barrier_target_not_mutated_by_diagram():
     """Test that printing a circuit diagram doesn't mutate barrier instruction targets.
-    
+
     This is a regression test for a bug where the diagram generation code would
     mutate the barrier's target qubits when grouping instructions in the same
     time slice.
     """
     from braket.circuits.serialization import IRType
-    
+
     # Create a circuit with a selective barrier on qubits [0, 1]
     circ = Circuit()
     circ.h(0)
@@ -1229,28 +1233,168 @@ def test_barrier_target_not_mutated_by_diagram():
     circ.barrier([0, 1])  # Barrier only on qubits 0 and 1
     circ.rx(2, 0.5)  # This is in the same time slice as the barrier
     circ.cnot(0, 1)
-    
+
     # Get the barrier instruction
     barrier_instr = circ.instructions[3]
-    
+
     # Store the original target
     original_target = list(barrier_instr.target)
     assert len(original_target) == 2
     assert 0 in original_target
     assert 1 in original_target
     assert 2 not in original_target
-    
+
     # Print the circuit (this used to mutate the barrier target)
     diagram = str(circ)
     assert diagram  # Just verify it produces output
-    
+
     # Verify the barrier target hasn't been mutated
     assert len(barrier_instr.target) == 2
     assert 0 in barrier_instr.target
     assert 1 in barrier_instr.target
     assert 2 not in barrier_instr.target
-    
+
     # Verify the OpenQASM output is correct
     oq3_circuit = circ.to_ir(ir_type=IRType.OPENQASM).source
     assert "barrier q[0], q[1];" in oq3_circuit
     assert "barrier q[0], q[1], q[2];" not in oq3_circuit
+
+
+def test_unicode_wrapping():
+    os.environ["BRAKET_DIAGRAM_WIDTH"] = "40"
+
+    circ = Circuit().cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0).cz(1, 0)
+    circ.h(1).h(0).rx(1, 0.31415).rz(1, -0.3).cnot(1, 0).cnot(0, 1).swap(0, 1)
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │  ╏",
+        "            ┌───┐             ┌───┐   ╏",
+        "q0 : ───●───┤ X ├───●─────●───┤ X ├─  ╏",
+        "        │   └─┬─┘   │     │   └─┬─┘   ╏",
+        "      ┌─┴─┐   │   ┌─┴─┐ ┌─┴─┐   │     ╏",
+        "q1 : ─┤ X ├───●───┤ X ├─┤ X ├───●───  ╏",
+        "      └───┘       └───┘ └───┘         ╏",
+        "T  : │  0  │  1  │  2  │  3  │  4  │  ╏",
+        "                                      ╏",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┳╸╸╸╸┛",
+        "                                 ╏     ",
+        "T  : │  5  │  6  │     7      │  ╏",
+        "      ┌───┐ ┌───┐                ╏",
+        "q0 : ─┤ Z ├─┤ H ├──────────────  ╏",
+        "      └─┬─┘ └───┘                ╏",
+        "        │   ┌───┐ ┌──────────┐   ╏",
+        "q1 : ───●───┤ H ├─┤ Rx(0.31) ├─  ╏",
+        "            └───┘ └──────────┘   ╏",
+        "T  : │  5  │  6  │     7      │  ╏",
+        "                                 ╏ ",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┻┓",
+        "                                  ╏",
+        "T  : │      8      │  9  │ 10  │  ╏",
+        "                    ┌───┐         ╏",
+        "q0 : ───────────────┤ X ├───●───  ╏",
+        "                    └─┬─┘   │     ╏",
+        "      ┌───────────┐   │   ┌─┴─┐   ╏",
+        "q1 : ─┤ Rz(-0.30) ├───●───┤ X ├─  ╏",
+        "      └───────────┘       └───┘   ╏",
+        "T  : │      8      │  9  │ 10  │  ╏",
+        "                                  ╏",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┳╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┛",
+        "                 ┃                 ",
+        "T  : │   11   │  ┃",
+        "                 ┃",
+        "q0 : ────x─────  ┃",
+        "         │       ┃",
+        "         │       ┃",
+        "q1 : ────x─────  ┃",
+        "                 ┃",
+        "T  : │   11   │  ┃",
+        "                 ┃",
+        "━━━━━━━━━━━━━━━━━┛",
+    )
+    try:
+        _assert_correct_diagram(circ, expected)
+    except AssertionError as e:
+        pytest.fail(f"Unicode diagram test failed:\n{e}")
+    finally:
+        del os.environ["BRAKET_DIAGRAM_WIDTH"]
+
+
+def test_unicode_boundary():  # noqa: ANN201
+    os.environ["BRAKET_DIAGRAM_WIDTH"] = "40"
+    expected = (
+        "T  : │  0  │  1  │  2  │  3  │  4  │  ╏",
+        "            ┌───┐             ┌───┐   ╏",
+        "q0 : ───●───┤ X ├───●─────●───┤ X ├─  ╏",
+        "        │   └─┬─┘   │     │   └─┬─┘   ╏",
+        "      ┌─┴─┐   │   ┌─┴─┐ ┌─┴─┐   │     ╏",
+        "q1 : ─┤ X ├───●───┤ X ├─┤ X ├───●───  ╏",
+        "      └───┘       └───┘ └───┘         ╏",
+        "T  : │  0  │  1  │  2  │  3  │  4  │  ╏",
+        "                                      ╏",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┫",
+        "                                      ╏",
+        "T  : │  5  │  6  │  7  │  8  │  9  │  ╏",
+        "      ┌───┐                   ┌───┐   ╏",
+        "q0 : ─┤ Z ├───●─────●─────●───┤ X ├─  ╏",
+        "      └─┬─┘   │     │     │   └─┬─┘   ╏",
+        "        │   ┌─┴─┐ ┌─┴─┐ ┌─┴─┐   │     ╏",
+        "q1 : ───●───┤ X ├─┤ X ├─┤ X ├───●───  ╏",
+        "            └───┘ └───┘ └───┘         ╏",
+        "T  : │  5  │  6  │  7  │  8  │  9  │  ╏",
+        "                                      ╏",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┫",
+        "                                      ╏",
+        "T  : │ 10  │ 11  │ 12  │ 13  │ 14  │  ╏",
+        "                  ┌───┐       ┌───┐   ╏",
+        "q0 : ───●─────●───┤ X ├───●───┤ X ├─  ╏",
+        "        │     │   └─┬─┘   │   └─┬─┘   ╏",
+        "      ┌─┴─┐ ┌─┴─┐   │   ┌─┴─┐   │     ╏",
+        "q1 : ─┤ X ├─┤ X ├───●───┤ X ├───●───  ╏",
+        "      └───┘ └───┘       └───┘         ╏",
+        "T  : │ 10  │ 11  │ 12  │ 13  │ 14  │  ╏",
+        "                                      ╏",
+        "╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸┳╸╸╸╸╸╸╸╸╸╸╸┛",
+        "                          ┃            ",
+        "T  : │ 15  │ 16  │ 17  │  ┃",
+        "                  ┌───┐   ┃",
+        "q0 : ───●─────●───┤ X ├─  ┃",
+        "        │     │   └─┬─┘   ┃",
+        "      ┌─┴─┐ ┌─┴─┐   │     ┃",
+        "q1 : ─┤ X ├─┤ X ├───●───  ┃",
+        "      └───┘ └───┘         ┃",
+        "T  : │ 15  │ 16  │ 17  │  ┃",
+        "                          ┃",
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━┛",
+    )
+    circ = (
+        Circuit()
+        .cnot(0, 1)
+        .cnot(1, 0)
+        .cnot(0, 1)
+        .cnot(0, 1)
+        .cnot(1, 0)
+        .cz(1, 0)
+        .cnot(0, 1)
+        .cnot(0, 1)
+    )
+    circ.cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+    circ.cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+    try:
+        _assert_correct_diagram(circ, expected)
+    except AssertionError as e:
+        pytest.fail(f"Unicode diagram test failed:\n{e}")
+    finally:
+        del os.environ["BRAKET_DIAGRAM_WIDTH"]
+
+
+def test_unicode_wrapping_fine():
+    for width in ["40", "41", "42", "43", "44", "45"]:
+        os.environ["BRAKET_DIAGRAM_WIDTH"] = width
+        circ = Circuit().cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+        circ.cnot(0, 1).cnot(1, 0).cnot(0, 1).cnot(0, 1).cnot(1, 0)
+        try:
+            for line in circ.diagram().split("\n"):
+                assert len(line) <= int(width)
+        except AssertionError as e:
+            pytest.fail(f"Unicode diagram is wrapping incorrectly :\n{e}")
+        finally:
+            del os.environ["BRAKET_DIAGRAM_WIDTH"]

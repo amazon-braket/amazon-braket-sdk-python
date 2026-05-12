@@ -30,6 +30,7 @@ from types import CodeType, ModuleType
 from typing import Any
 
 import cloudpickle
+from braket.jobs_data import PersistedJobDataFormat
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs._entry_point_template import run_entry_point, symlink_input_data
@@ -72,6 +73,7 @@ def hybrid_job(
     logger: Logger = getLogger(__name__),
     quiet: bool | None = None,
     reservation_arn: str | None = None,
+    data_format: PersistedJobDataFormat | str = PersistedJobDataFormat.PLAINTEXT,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.
@@ -207,7 +209,7 @@ def hybrid_job(
                 ) as entry_point_file:
                     template = "\n".join([
                         _process_input_data(input_data),
-                        _serialize_entry_point(entry_point, args, kwargs),
+                        _serialize_entry_point(entry_point, args, kwargs, data_format),
                     ])
                     entry_point_file.write(template)
 
@@ -417,8 +419,32 @@ class _IncludeModules:
             cloudpickle.unregister_pickle_by_value(module)
 
 
-def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> str:
+_DATA_FORMAT_ALIASES = {
+    "pickle": PersistedJobDataFormat.PICKLED_V4,
+    "plaintext": PersistedJobDataFormat.PLAINTEXT,
+}
+
+
+def _resolve_data_format(data_format: PersistedJobDataFormat | str) -> PersistedJobDataFormat:
+    if isinstance(data_format, PersistedJobDataFormat):
+        return data_format
+    resolved = _DATA_FORMAT_ALIASES.get(data_format.lower())
+    if resolved is None:
+        raise ValueError(
+            f"Unknown data_format '{data_format}'. "
+            f"Use {list(_DATA_FORMAT_ALIASES.keys())} or a PersistedJobDataFormat enum."
+        )
+    return resolved
+
+
+def _serialize_entry_point(
+    entry_point: Callable,
+    args: tuple,
+    kwargs: dict,
+    data_format: PersistedJobDataFormat | str = PersistedJobDataFormat.PLAINTEXT,
+) -> str:
     """Create an entry point from a function"""
+    data_format = _resolve_data_format(data_format)
     wrapped_entry_point = functools.partial(entry_point, *args, **kwargs)
 
     try:
@@ -434,6 +460,7 @@ def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> 
     return run_entry_point.format(
         serialized=serialized,
         function_name=entry_point.__name__,
+        data_format=data_format.name,
     )
 
 
