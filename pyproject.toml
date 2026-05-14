@@ -29,6 +29,8 @@ dependencies = [
     "backoff",
     "boltons",
     "boto3>=1.28.53",
+    # SageMaker pinned cloudpickle==2.2.1
+    # see https://github.com/aws/sagemaker-python-sdk/issues/4871
     "cloudpickle==2.2.1",
     "nest-asyncio",
     "networkx",
@@ -42,9 +44,10 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "botocore",
-    "jsonschema",
+    "jsonschema==3.2.0",
     "pytest",
     "pytest-cov",
+    # https://github.com/pytest-dev/pytest-rerunfailures/issues/302
     "pytest-rerunfailures<16.0",
     "pytest-xdist[psutil]",
 ]
@@ -103,8 +106,12 @@ output = "build/coverage/coverage.xml"
 
 [tool.pytest.ini_options]
 xfail_strict = true
+# https://pytest-xdist.readthedocs.io/en/latest/known-limitations.html
 addopts = "--verbose -n logical --durations=0 --durations-min=1 --dist worksteal"
 testpaths = ["test/unit_tests"]
+# Issue #557 in `pytest-cov` (currently v4.x) has not moved for a while now,
+# but once a resolution has been adopted we can drop this "ignore".
+# Ref: https://github.com/pytest-dev/pytest-cov/issues/557
 filterwarnings = [
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated.:DeprecationWarning",
 ]
