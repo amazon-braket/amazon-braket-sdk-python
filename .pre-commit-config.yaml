@@ -1,8 +1,7 @@
 repos:
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
     hooks:
-      - id: tox_linters
-        name: linters
-        entry: tox -e linters_check
-        language: system
-        types: [python]
+      - id: ruff-format
+      - id: ruff
+        args: [--fix]
