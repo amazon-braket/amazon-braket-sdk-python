@@ -4,81 +4,45 @@ documentation:
   - changed-files:
       - any-glob-to-any-file:
           - 'doc/**'
-          - 'README.md'
-          - 'CHANGELOG.md'
-          - 'CONTRIBUTING.md'
-          - 'PUBLICATIONS.md'
+          - '*.md'
           - '*.rst'
 
 circuits:
   - changed-files:
       - any-glob-to-any-file:
           - 'src/braket/circuits/**'
+          - 'src/braket/parametric/**'
+          - 'src/braket/registers/**'
 
 aws:
   - changed-files:
       - any-glob-to-any-file:
           - 'src/braket/aws/**'
+          - 'src/braket/jobs/**'
+          - 'src/braket/tracking/**'
+
+quantum-programs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/ahs/**'
+          - 'src/braket/annealing/**'
+          - 'src/braket/pulse/**'
+          - 'src/braket/program_sets/**'
+          - 'src/braket/timings/**'
 
 devices:
   - changed-files:
       - any-glob-to-any-file:
           - 'src/braket/devices/**'
-
-jobs:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/jobs/**'
-
-ahs:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/ahs/**'
-
-pulse:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/pulse/**'
-
-annealing:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/annealing/**'
-
-emulation:
-  - changed-files:
-      - any-glob-to-any-file:
           - 'src/braket/emulation/**'
-
-error-mitigation:
-  - changed-files:
-      - any-glob-to-any-file:
           - 'src/braket/error_mitigation/**'
-
-visualization:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/visualization/**'
-
-quantum-information:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/quantum_information/**'
-
-program-sets:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'src/braket/program_sets/**'
-
-tests:
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'test/**'
+          - 'src/braket/experimental_capabilities/**'
 
 CI:
   - changed-files:
       - any-glob-to-any-file:
           - '.github/**'
+          - 'bin/**'
           - 'tox.ini'
           - '.pre-commit-config.yaml'
           - '.coveragerc'
