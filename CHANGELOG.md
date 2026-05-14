@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.117.3 (2026-05-14)
+
+### Bug Fixes and Other Changes
+
+ * add barrier adjoint
+
 ## v1.117.2 (2026-05-11)
 
 ### Bug Fixes and Other Changes
