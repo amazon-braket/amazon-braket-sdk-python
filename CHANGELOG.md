@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.117.3 (2026-05-14)
+
+### Bug Fixes and Other Changes
+
+ * add barrier adjoint
+
+## v1.117.2 (2026-05-11)
+
+### Bug Fixes and Other Changes
+
+ * use sparse dict for PauliString
+ * a couple of typos
+
 ## v1.117.1 (2026-04-29)
 
 ### Bug Fixes and Other Changes

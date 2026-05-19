@@ -68,3 +68,8 @@ def test_barrier():
 
     result = barrier.to_ir([], IRType.OPENQASM, props)
     assert result == "barrier;"
+
+
+def test_adjoint_barrier():
+    barrier = compiler_directives.Barrier([0, 1, 2])
+    assert barrier.counterpart() == barrier

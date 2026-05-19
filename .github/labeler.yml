@@ -1,0 +1,61 @@
+# https://github.com/actions/labeler
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'doc/**'
+          - '*.md'
+          - '*.rst'
+
+circuits:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/circuits/**'
+          - 'src/braket/parametric/**'
+          - 'src/braket/registers/**'
+
+aws:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/aws/**'
+          - 'src/braket/jobs/**'
+          - 'src/braket/tracking/**'
+
+quantum-programs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/ahs/**'
+          - 'src/braket/annealing/**'
+          - 'src/braket/pulse/**'
+          - 'src/braket/program_sets/**'
+          - 'src/braket/timings/**'
+
+devices:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/braket/devices/**'
+          - 'src/braket/emulation/**'
+          - 'src/braket/error_mitigation/**'
+          - 'src/braket/experimental_capabilities/**'
+
+CI:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'bin/**'
+          - 'tox.ini'
+          - '.pre-commit-config.yaml'
+          - '.coveragerc'
+
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'setup.py'
+          - 'setup.cfg'
+          - 'pyproject.toml'
+          - 'MANIFEST.in'
+
+examples:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'examples/**'
