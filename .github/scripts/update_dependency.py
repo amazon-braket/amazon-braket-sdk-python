@@ -17,7 +17,7 @@ from pathlib import Path
 # Here we replace the `amazon-braket-sdk` dependency to point to the file system; otherwise
 # pip will install them separately, allowing it to override the version of
 # any mutual dependencies with the sdk. By pointing to the file system, pip will be
-# forced to reconcile the dependencies in setup.py with the dependencies of the sdk,
+# forced to reconcile the dependencies in pyproject.toml with the dependencies of the sdk,
 # and raise an error if there are conflicts. While we can't do this for every upstream
 # dependency, we can do this for the ones we own to make sure that when the sdk updates
 # its dependencies, these upstream github repos will not be impacted.
@@ -25,10 +25,11 @@ from pathlib import Path
 package = "amazon-braket-sdk"
 path = Path.cwd().parent.resolve()
 
-for line in fileinput.input("setup.py", inplace=True):
-    # Update the amazon-braket-sdk dependency in setup.py to use the local path. This
-    # would help catch conflicts during the installation process.
-    replaced_line = (
-        line if package not in line else f'"{package} @ file://{path}/{package}-python",\n'
-    )
-    print(replaced_line, end="")
+with fileinput.input("pyproject.toml", inplace=True) as f:
+    for line in f:
+        # Update the amazon-braket-sdk dependency in pyproject.toml to use the local path. This
+        # would help catch conflicts during the installation process.
+        replaced_line = (
+            line if package not in line else f'    "{package} @ file://{path}/{package}-python",\n'
+        )
+        print(replaced_line, end="")
