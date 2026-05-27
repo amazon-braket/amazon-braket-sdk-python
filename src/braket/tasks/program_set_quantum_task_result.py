@@ -146,7 +146,6 @@ class MeasuredEntry:
         return self._expectation
 
 
-@dataclass
 class CompositeEntry:
     """Results of a program in a program set
 
@@ -157,15 +156,70 @@ class CompositeEntry:
         observables (Sum | list[Observable] | None): The Sum Hamiltonian or observables
             that were measured, if any.
         shots_per_executable (int): The number of shots each underlying executable was run with
-        additional_metadata (AdditionalMetadata): Additional metadata about this program
+        additional_metadata (AdditionalMetadata | None): Additional metadata about this program.
+            ``None`` for entries produced by ``ProgramSetQuantumTaskResult.merge``,
+            since per-program metadata cannot be aggregated meaningfully across underlying tasks.
     """
 
-    entries: list[MeasuredEntry]
-    program: Program
-    inputs: ParameterSets
-    observables: Sum | list[Observable] | None
-    shots_per_executable: int
-    additional_metadata: AdditionalMetadata
+    def __init__(
+        self,
+        entries: list[MeasuredEntry],
+        program: Program,
+        inputs: ParameterSets,
+        observables: Sum | list[Observable] | None,
+        shots_per_executable: int,
+        additional_metadata: AdditionalMetadata | None,
+    ):
+        self._entries = entries
+        self._program = program
+        self._inputs = inputs
+        self._observables = observables
+        self._shots_per_executable = shots_per_executable
+        self._additional_metadata = additional_metadata
+        self._was_merged = False
+        self._expectations = self._compute_expectations() if isinstance(observables, Sum) else None
+
+    @property
+    def entries(self) -> list[MeasuredEntry]:
+        """list[MeasuredEntry]: The results of each executable in this program."""
+        return self._entries
+
+    @property
+    def program(self) -> Program:
+        """Program: The program that was run."""
+        return self._program
+
+    @property
+    def inputs(self) -> ParameterSets:
+        """ParameterSets: The input values this program was run with."""
+        return self._inputs
+
+    @property
+    def observables(self) -> Sum | list[Observable] | None:
+        """Sum | list[Observable] | None: The Sum Hamiltonian or observables measured,
+        if any."""
+        return self._observables
+
+    @property
+    def shots_per_executable(self) -> int:
+        """int: The number of shots each underlying executable was run with."""
+        return self._shots_per_executable
+
+    @property
+    def additional_metadata(self) -> AdditionalMetadata | None:
+        """AdditionalMetadata | None: Additional metadata about this program.
+
+        For entries produced by ``ProgramSetQuantumTaskResult.merge``, this will be ``None``;
+        Use the original per-task results for true per-program metadata.
+        """
+        if self._was_merged:
+            warnings.warn(
+                "additional_metadata for a CompositeEntry on a merged "
+                "ProgramSetQuantumTaskResult is None; "
+                "use the original per-task results for true per-program metadata.",
+                stacklevel=2,
+            )
+        return self._additional_metadata
 
     @staticmethod
     def _from_object(
@@ -195,11 +249,6 @@ class CompositeEntry:
             observables=observables,
             shots_per_executable=shots_per_executable,
             additional_metadata=program_result.additionalMetadata,
-        )
-
-    def __post_init__(self):
-        self._expectations = (
-            self._compute_expectations() if isinstance(self.observables, Sum) else None
         )
 
     def __len__(self):
@@ -315,7 +364,6 @@ class CompositeEntry:
         )
 
 
-@dataclass
 class ProgramSetQuantumTaskResult:
     """The result of a program set task.
 
@@ -328,10 +376,45 @@ class ProgramSetQuantumTaskResult:
             can be automatically computed.
     """
 
-    entries: list[CompositeEntry]
-    task_metadata: ProgramSetTaskMetadata
-    num_executables: int
-    program_set: ProgramSet | None
+    def __init__(
+        self,
+        entries: list[CompositeEntry],
+        task_metadata: ProgramSetTaskMetadata,
+        num_executables: int,
+        program_set: ProgramSet | None,
+    ):
+        self._entries = entries
+        self._task_metadata = task_metadata
+        self._num_executables = num_executables
+        self._program_set = program_set
+        self._was_merged = False
+
+    @property
+    def entries(self) -> list[CompositeEntry]:
+        """list[CompositeEntry]: The results of each program in this program set."""
+        return self._entries
+
+    @property
+    def task_metadata(self) -> ProgramSetTaskMetadata:
+        """ProgramSetTaskMetadata: The metadata of the task."""
+        if self._was_merged:
+            warnings.warn(
+                "task_metadata for a merged ProgramSetQuantumTaskResult is synthesized "
+                "from multiple underlying tasks; it does not reflect any one underlying task. "
+                "Use the original per-task results for true task metadata.",
+                stacklevel=2,
+            )
+        return self._task_metadata
+
+    @property
+    def num_executables(self) -> int:
+        """int: The total number of executables in this program set task."""
+        return self._num_executables
+
+    @property
+    def program_set(self) -> ProgramSet | None:
+        """ProgramSet | None: The program set that was run, if provided to the constructor."""
+        return self._program_set
 
     @staticmethod
     def from_object(
@@ -425,15 +508,14 @@ class ProgramSetQuantumTaskResult:
 
         programs = [_binding_to_program(binding) for binding in program_set.entries]
         executable_indices = list(program_set.enumerate_executables())
-        binding_executable_counts = [_count_executables(b) for b in program_set.entries]
-        shots_per_executable = results[0].entries[0].shots_per_executable
+        shots_per_executable = program_set.shots_per_executable
 
         buffer = [None] * total_executables
         for k, result in enumerate(results):
             _buffer_result(
                 k=k,
                 result=result,
-                map_k=index_map[k],
+                parent_indices=index_map[k],
                 program_set=program_set,
                 programs=programs,
                 executable_indices=executable_indices,
@@ -443,23 +525,23 @@ class ProgramSetQuantumTaskResult:
         entries = []
         start = 0
         for binding_idx, binding in enumerate(program_set.entries):
-            count = binding_executable_counts[binding_idx]
+            count = _count_executables(binding)
             program = programs[binding_idx]
             observables = binding.observables if isinstance(binding, CircuitBinding) else None
-            entries.append(
-                CompositeEntry(
-                    entries=buffer[start : start + count],
-                    program=program,
-                    inputs=CompositeEntry._get_inputs(program, observables),
-                    observables=observables,
-                    shots_per_executable=shots_per_executable,
-                    additional_metadata=None,
-                )
+            entry = CompositeEntry(
+                entries=buffer[start : start + count],
+                program=program,
+                inputs=CompositeEntry._get_inputs(program, observables),
+                observables=observables,
+                shots_per_executable=shots_per_executable,
+                additional_metadata=None,
             )
+            entry._was_merged = True
+            entries.append(entry)
             start += count
 
-        metas = [r.task_metadata for r in results]
-        return ProgramSetQuantumTaskResult(
+        metas = [r._task_metadata for r in results]
+        merged = ProgramSetQuantumTaskResult(
             entries=entries,
             task_metadata=ProgramSetTaskMetadata(
                 id=";".join(meta.id for meta in metas),  # Better way to do this?
@@ -484,6 +566,8 @@ class ProgramSetQuantumTaskResult:
             num_executables=total_executables,
             program_set=program_set,
         )
+        merged._was_merged = True
+        return merged
 
     def __len__(self):
         return len(self.entries)
@@ -613,7 +697,7 @@ def _count_executables(binding: CircuitBinding | Circuit) -> int:
 def _buffer_result(
     k: int,
     result: ProgramSetQuantumTaskResult,
-    map_k: list[int],
+    parent_indices: list[int],
     program_set: ProgramSet,
     programs: list[Program],
     executable_indices: list[tuple[int, int, int]],
@@ -622,12 +706,12 @@ def _buffer_result(
     j = 0
     for composite in result.entries:
         for entry in composite.entries:
-            if j >= len(map_k):
+            if j >= len(parent_indices):
                 raise ValueError(
                     f"t=Task {result.task_metadata.id} at index {k} "
                     "produced more executables than index map expects"
                 )
-            orig_idx = map_k[j]
+            orig_idx = parent_indices[j]
             binding_idx, ps_idx, obs_idx = executable_indices[orig_idx]
             buffer[orig_idx] = _convert_measured_entry(
                 entry,
@@ -637,10 +721,10 @@ def _buffer_result(
                 obs_idx,
             )
             j += 1
-    if j != len(map_k):
+    if j != len(parent_indices):
         raise ValueError(
             f"Task {result.task_metadata.id} at index {k} produced {j} executables "
-            f"but index map expected {len(map_k)}"
+            f"but index map expected {len(parent_indices)}"
         )
 
 

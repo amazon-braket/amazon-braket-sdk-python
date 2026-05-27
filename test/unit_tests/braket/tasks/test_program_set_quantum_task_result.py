@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import warnings
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -269,6 +270,7 @@ def test_local(result_local, metadata, execution_failure):
     with pytest.raises(ValueError):
         entry.expectation(0)
     assert entry.additional_metadata.simulatorMetadata.executionDuration == 50
+    assert entry.shots_per_executable > 0
 
     success = entry[0]
     assert isinstance(success, MeasuredEntry)
@@ -548,7 +550,7 @@ def _build_sub_quantum_result(sub_program_set, programs_execs, shots_per_executa
     return ProgramSetQuantumTaskResult.from_object(wire, sub_program_set)
 
 
-def test_from_multiple_single_sub_task_no_split_roundtrips(circuit_rx_parametrized_fixture):
+def test_from_multiple_single_task_no_split_roundtrips(circuit_rx_parametrized_fixture):
     """If split returns [self], from_multiple should reproduce from_object's output."""
     binding = CircuitBinding(
         circuit_rx_parametrized_fixture,
@@ -556,7 +558,7 @@ def test_from_multiple_single_sub_task_no_split_roundtrips(circuit_rx_parametriz
         observables=10 * Z(0) + X(0) - 0.01 * Y(0) @ X(1),
     )
     ps = ProgramSet(binding)
-    subs, index_map = ps.split(100)  # fits, so one sub-task identical to ps.
+    subs, index_map = ps.split(100)  # fits, so one task identical to ps.
     assert subs == [ps]
 
     # Build a ProgramSetQuantumTaskResult that represents running this ps: the wire
@@ -618,8 +620,9 @@ def test_from_multiple_split_list_observables(circuit_rx_parametrized_fixture):
         assert isinstance(measured, MeasuredEntry)
         assert measured.observable == binding.observables[i]
     assert composite.inputs == ParameterSets({"theta": [0.12]})
-    # task metadata was aggregated across sub-tasks.
+    # task metadata was aggregated across tasks.
     assert merged.num_executables == 4
+    assert merged.program_set is ps
     assert merged.task_metadata.requestedShots == sum(
         r.task_metadata.requestedShots for r in sub_results
     )
@@ -631,7 +634,7 @@ def test_from_multiple_split_list_observables(circuit_rx_parametrized_fixture):
 def test_from_multiple_split_sum_hamiltonian_reconstructs_expectation(
     circuit_rx_parametrized_fixture,
 ):
-    """Splitting a Sum Hamiltonian across multiple sub-tasks and then merging must
+    """Splitting a Sum Hamiltonian across multiple tasks and then merging must
     reconstruct the full expectation value, because scatter+regroup feeds the original
     Sum back into ``_compute_expectations``."""
     # Same fixture as existing test_observables_no_inputs (with known expectation).
@@ -661,8 +664,8 @@ def test_from_multiple_split_sum_hamiltonian_reconstructs_expectation(
 
 
 def test_from_multiple_mixed_bindings_and_failures(circuit_rx_parametrized_fixture):
-    """A program set with multiple bindings, split across sub-tasks, with one
-    executable failing in a sub-task. Failures must land at the correct original
+    """A program set with multiple bindings, split across tasks, with one
+    executable failing in a task. Failures must land at the correct original
     position in the merged result."""
     c1 = circuit_rx_parametrized_fixture
     c2 = Circuit().rx(0, FreeParameter("phi"))
@@ -741,10 +744,10 @@ def test_from_multiple_validates_index_map_size(circuit_rx_parametrized_fixture)
     binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
     ps = ProgramSet(binding)
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
-    # index_map has 1 entry for 1 sub-task, but size doesn't match ps.total_executables.
+    # index_map has 1 entry for 1 task, but size doesn't match ps.total_executables.
     with pytest.raises(ValueError, match="Index map covers 1"):
         ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0]])
-    # Sub-task count doesn't match index_map's length.
+    # Task count doesn't match index_map's length.
     with pytest.raises(ValueError, match="1 task results but 2 entries in index_map"):
         ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0], [1]])
 
@@ -773,11 +776,11 @@ def test_from_multiple_with_plain_circuit_entries():
     assert merged[0].entries[0].inputs is None
 
 
-def test_from_multiple_rejects_sub_task_over_index_map(circuit_rx_parametrized_fixture):
-    """Sub-task has more executables than index_map[k] covers."""
+def test_from_multiple_rejects_task_over_index_map(circuit_rx_parametrized_fixture):
+    """Task has more executables than index_map[k] covers."""
     binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
     ps = ProgramSet(binding)
-    # Sub-task reports 2 executables, but index_map says there's only 1.
+    # Task reports 2 executables, but index_map says there's only 1.
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
     with pytest.raises(ValueError, match="produced more executables than index map"):
         ProgramSetQuantumTaskResult.merge(
@@ -787,14 +790,108 @@ def test_from_multiple_rejects_sub_task_over_index_map(circuit_rx_parametrized_f
         )
 
 
-def test_from_multiple_rejects_sub_task_under_index_map(circuit_rx_parametrized_fixture):
-    """Sub-task has fewer executables than index_map[k] covers."""
+def test_from_multiple_rejects_task_under_index_map(circuit_rx_parametrized_fixture):
+    """Task has fewer executables than index_map[k] covers."""
     binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
     ps = ProgramSet(binding)
-    # Sub-task reports only 1 executable, but index_map says there are 2.
+    # Task reports only 1 executable, but index_map says there are 2.
     sub_result = _build_sub_quantum_result(ps, [[_make_exec_result(0)]])
     with pytest.raises(ValueError, match="expected 2"):
         ProgramSetQuantumTaskResult.merge([sub_result], ps, [[0, 1]])
+
+
+def test_from_object_task_metadata_does_not_warn(circuit_rx_parametrized_fixture):
+    """A result built from a single ProgramSetTaskResult is not merged, so
+    accessing task_metadata should not emit a warning."""
+    binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
+    ps = ProgramSet(binding)
+    result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # turn any UserWarning into an exception
+        # Accessing task_metadata multiple times must not raise.
+        _ = result.task_metadata
+        _ = result.task_metadata.requestedShots
+
+
+def test_merge_task_metadata_warns_on_every_access(circuit_rx_parametrized_fixture):
+    """Every access to task_metadata on a merged result emits a warning."""
+    binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
+    ps = ProgramSet(binding)
+    subs, index_map = ps.split(1)
+    sub_results = [_build_sub_quantum_result(sub, [[_make_exec_result(0)]]) for sub in subs]
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, index_map)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        _ = merged.task_metadata
+        _ = merged.task_metadata
+        _ = merged.task_metadata.id
+    user_warnings = [w for w in caught if issubclass(w.category, UserWarning)]
+    assert len(user_warnings) == 3
+    for w in user_warnings:
+        assert "synthesized from multiple underlying tasks" in str(w.message)
+
+
+def test_from_object_composite_additional_metadata_does_not_warn(circuit_rx_parametrized_fixture):
+    """A CompositeEntry on a non-merged result returns its actual additional_metadata
+    without warning."""
+    binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
+    ps = ProgramSet(binding)
+    result = _build_sub_quantum_result(ps, [[_make_exec_result(0), _make_exec_result(1)]])
+    composite = result[0]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # any UserWarning becomes a test failure
+        meta = composite.additional_metadata
+        _ = composite.additional_metadata  # repeat read also silent
+    assert meta is not None  # populated from the wire fixture
+
+
+def test_merge_composite_additional_metadata_warns_on_every_access(
+    circuit_rx_parametrized_fixture,
+):
+    """Every access to additional_metadata on a merged CompositeEntry emits a
+    warning, and the value is None."""
+    binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
+    ps = ProgramSet(binding)
+    subs, index_map = ps.split(1)
+    sub_results = [_build_sub_quantum_result(sub, [[_make_exec_result(0)]]) for sub in subs]
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, index_map)
+    composite = merged[0]
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        a = composite.additional_metadata
+        b = composite.additional_metadata
+    user_warnings = [w for w in caught if issubclass(w.category, UserWarning)]
+    assert len(user_warnings) == 2
+    for w in user_warnings:
+        assert "additional_metadata for a CompositeEntry on a merged" in str(w.message)
+    assert a is None and b is None
+
+
+def test_merge_does_not_warn_when_reading_inputs_during_construction(
+    circuit_rx_parametrized_fixture,
+):
+    """If an already-merged result is fed back into ``merge`` as an input, the
+    internal read of ``task_metadata`` to build the aggregated metadata must not
+    trigger that input's task_metadata warning."""
+    binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
+    ps = ProgramSet(binding)
+    subs, index_map = ps.split(1)
+    sub_results = [_build_sub_quantum_result(sub, [[_make_exec_result(0)]]) for sub in subs]
+    inner_merged = ProgramSetQuantumTaskResult.merge(sub_results, ps, index_map)
+
+    # Re-merging a single already-merged result is degenerate but exercises the
+    # internal ``task_metadata`` reads inside merge.
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        ProgramSetQuantumTaskResult.merge([inner_merged], ps, [list(range(ps.total_executables))])
+    user_warnings = [w for w in caught if issubclass(w.category, UserWarning)]
+    # No warning should fire from inside merge itself.
+    assert user_warnings == [], (
+        f"merge emitted unexpected warnings during construction: "
+        f"{[str(w.message) for w in user_warnings]}"
+    )
 
 
 def ghz_test(n):
