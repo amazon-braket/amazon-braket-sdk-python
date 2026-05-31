@@ -17,11 +17,39 @@ import ast
 import operator
 from functools import reduce
 from numbers import Number
-from typing import Any
+from typing import Any, ClassVar
 
 import sympy
 from oqpy.base import OQPyExpression
 from oqpy.classical_types import FloatVar
+from sympy.printing.str import StrPrinter
+
+
+class _OpenQASMExpressionPrinter(StrPrinter):
+    _FN_MAP: ClassVar[dict[type, str]] = {
+        sympy.sin: "sin",
+        sympy.cos: "cos",
+        sympy.tan: "tan",
+        sympy.asin: "arcsin",
+        sympy.acos: "arccos",
+        sympy.atan: "arctan",
+        sympy.exp: "exp",
+        sympy.log: "log",
+        sympy.Mod: "mod",
+        sympy.ceiling: "ceiling",
+        sympy.floor: "floor",
+    }
+
+    def _print_Function(self, expr: sympy.Function) -> str:
+        function_name = self._FN_MAP.get(expr.func)
+        if not function_name:
+            raise ValueError(f"No OpenQASM 3 equivalent for {expr.func.__name__}")
+        args = ", ".join(self._print(arg) for arg in expr.args)
+        return f"{function_name}({args})"
+
+
+def _openqasm_doprint(expression: Number | sympy.Expr) -> str:
+    return _OpenQASMExpressionPrinter().doprint(expression)
 
 
 class FreeParameterExpression:
@@ -31,6 +59,8 @@ class FreeParameterExpression:
     FreeParametersExpressions can hold FreeParameters that can later be
     swapped out for a number. Circuits or PulseSequences with FreeParameters
     present will NOT run. Values must be substituted prior to execution.
+    String representations of supported SymPy functions use OpenQASM-compatible
+    names.
     """
 
     def __init__(self, expression: FreeParameterExpression | Number | sympy.Expr | str):
@@ -177,9 +207,17 @@ class FreeParameterExpression:
         """The representation of the :class:'FreeParameterExpression'.
 
         Returns:
-            str: The expression of the class:'FreeParameterExpression' to represent the class.
+            str: The OpenQASM-compatible string for the expression.
         """
-        return repr(self.expression)
+        return str(self)
+
+    def __str__(self) -> str:
+        """The string representation of the :class:'FreeParameterExpression'.
+
+        Returns:
+            str: The OpenQASM-compatible string for the expression.
+        """
+        return _openqasm_doprint(self.expression)
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Transforms into an OQPyExpression.

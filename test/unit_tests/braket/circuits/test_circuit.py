@@ -15,6 +15,7 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+import sympy
 
 import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
@@ -1254,6 +1255,33 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
         )
         == expected_ir
     )
+
+
+def test_circuit_openqasm_uses_openqasm_free_parameter_expression_name():
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(sympy.asin(alpha.expression))
+    source = Circuit().rx(0, expr).measure(0).to_ir(IRType.OPENQASM).source
+
+    assert "rx(arcsin(alpha)) q[0];" in source
+
+
+@pytest.mark.parametrize(
+    ("function", "extra_args", "expected_parameter"),
+    [
+        (sympy.asin, (), "arcsin(alpha)"),
+        (sympy.acos, (), "arccos(alpha)"),
+        (sympy.atan, (), "arctan(alpha)"),
+        (sympy.Mod, (2,), "mod(alpha, 2)"),
+    ],
+)
+def test_circuit_openqasm_emits_supported_free_parameter_expression_names(
+    function, extra_args, expected_parameter
+):
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(function(alpha.expression, *extra_args))
+    source = Circuit().rx(0, expr).measure(0).to_ir(IRType.OPENQASM).source
+
+    assert f"rx({expected_parameter}) q[0];" in source
 
 
 @pytest.mark.parametrize(

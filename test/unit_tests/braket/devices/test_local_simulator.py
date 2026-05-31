@@ -20,6 +20,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+import sympy
 from pydantic.v1 import create_model  # This is temporary for defining properties below
 
 import braket.ir as ir
@@ -27,9 +28,10 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.ahs.atom_arrangement import AtomArrangement
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
-from braket.circuits import Circuit, FreeParameter, Gate, Noise
+from braket.circuits import Circuit, FreeParameter, FreeParameterExpression, Gate, Noise
 from braket.circuits.noise_model import GateCriteria, NoiseModel, NoiseModelInstruction
 from braket.circuits.serialization import IRType, SerializableProgram
+from braket.default_simulator import StateVectorSimulator
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.device_schema.openqasm_device_action_properties import (
     OpenQASMDeviceActionProperties,
@@ -687,6 +689,18 @@ def test_run_program_model_inputs():
     program.inputs.update(update_inputs)
     dummy.run.assert_called_with(program, shots=10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_local_simulator_runs_sympy_inverse_trig_free_parameter_expression():
+    # Use StateVectorSimulator directly so OpenQASM validation runs.
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(sympy.asin(alpha.expression))
+    circuit = Circuit().rx(0, expr).measure(0)
+
+    device = LocalSimulator(StateVectorSimulator())
+    result = device.run(circuit, inputs={"alpha": 0.5}, shots=10).result()
+
+    assert sum(result.measurement_counts.values()) == 10
 
 
 def test_run_jaqcd_only_raises():
