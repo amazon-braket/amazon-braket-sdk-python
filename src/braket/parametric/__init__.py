@@ -20,4 +20,6 @@ interface for parameter binding.
 
 from braket.parametric.free_parameter import FreeParameter  # noqa: F401
 from braket.parametric.free_parameter_expression import FreeParameterExpression  # noqa: F401
+from braket.parametric.free_parameter_expression import OQASM_FUNCTION_MAP  # noqa: F401
+from braket.parametric.free_parameter_expression import subs_if_free_parameter  # noqa: F401
 from braket.parametric.parameterizable import Parameterizable  # noqa: F401

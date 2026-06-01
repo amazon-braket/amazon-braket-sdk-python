@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+ * add math function support to FreeParameterExpression (sin, cos, tan, arcsin, arccos, arctan, exp, log, sqrt, mod, ceiling, floor)
+
 ## v1.117.3 (2026-05-14)
 
 ### Bug Fixes and Other Changes

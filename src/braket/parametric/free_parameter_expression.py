@@ -21,7 +21,22 @@ from typing import Any
 
 import sympy
 from oqpy.base import OQPyExpression
-from oqpy.classical_types import FloatVar
+from oqpy.classical_types import FloatVar, OQFunctionCall
+
+
+OQASM_FUNCTION_MAP = {
+    sympy.sin: "sin",
+    sympy.cos: "cos",
+    sympy.tan: "tan",
+    sympy.asin: "arcsin",
+    sympy.acos: "arccos",
+    sympy.atan: "arctan",
+    sympy.exp: "exp",
+    sympy.log: "log",
+    sympy.sqrt: "sqrt",
+    sympy.ceiling: "ceiling",
+    sympy.floor: "floor",
+}
 
 
 class FreeParameterExpression:
@@ -168,6 +183,107 @@ class FreeParameterExpression:
     def __neg__(self):
         return FreeParameterExpression(-1 * self.expression)
 
+    def sin(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.sin.
+
+        Returns:
+            FreeParameterExpression: sin(self.expression)
+        """
+        return FreeParameterExpression(sympy.sin(self._expression))
+
+    def cos(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.cos.
+
+        Returns:
+            FreeParameterExpression: cos(self.expression)
+        """
+        return FreeParameterExpression(sympy.cos(self._expression))
+
+    def tan(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.tan.
+
+        Returns:
+            FreeParameterExpression: tan(self.expression)
+        """
+        return FreeParameterExpression(sympy.tan(self._expression))
+
+    def arcsin(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.asin.
+
+        Returns:
+            FreeParameterExpression: asin(self.expression)
+        """
+        return FreeParameterExpression(sympy.asin(self._expression))
+
+    def arccos(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.acos.
+
+        Returns:
+            FreeParameterExpression: acos(self.expression)
+        """
+        return FreeParameterExpression(sympy.acos(self._expression))
+
+    def arctan(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.atan.
+
+        Returns:
+            FreeParameterExpression: atan(self.expression)
+        """
+        return FreeParameterExpression(sympy.atan(self._expression))
+
+    def exp(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.exp.
+
+        Returns:
+            FreeParameterExpression: exp(self.expression)
+        """
+        return FreeParameterExpression(sympy.exp(self._expression))
+
+    def log(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.log.
+
+        Returns:
+            FreeParameterExpression: log(self.expression)
+        """
+        return FreeParameterExpression(sympy.log(self._expression))
+
+    def sqrt(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.sqrt.
+
+        Returns:
+            FreeParameterExpression: sqrt(self.expression)
+        """
+        return FreeParameterExpression(sympy.sqrt(self._expression))
+
+    def mod(self, other: FreeParameterExpression | Number) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.Mod.
+
+        Args:
+            other (FreeParameterExpression | Number): The divisor.
+
+        Returns:
+            FreeParameterExpression: Mod(self.expression, other.expression)
+        """
+        if isinstance(other, FreeParameterExpression):
+            return FreeParameterExpression(sympy.Mod(self._expression, other._expression))
+        return FreeParameterExpression(sympy.Mod(self._expression, other))
+
+    def ceiling(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.ceiling.
+
+        Returns:
+            FreeParameterExpression: ceiling(self.expression)
+        """
+        return FreeParameterExpression(sympy.ceiling(self._expression))
+
+    def floor(self) -> FreeParameterExpression:
+        """Returns a new FreeParameterExpression wrapping sympy.floor.
+
+        Returns:
+            FreeParameterExpression: floor(self.expression)
+        """
+        return FreeParameterExpression(sympy.floor(self._expression))
+
     def __eq__(self, other: FreeParameterExpression):
         if isinstance(other, FreeParameterExpression):
             return sympy.sympify(self.expression).equals(sympy.sympify(other.expression))
@@ -193,12 +309,27 @@ class FreeParameterExpression:
                 ops[type(self.expression)],
                 (FreeParameterExpression(x)._to_oqpy_expression() for x in self.expression.args),
             )
+        if isinstance(self.expression, sympy.Function) and type(self.expression) in OQASM_FUNCTION_MAP:
+            func_name = OQASM_FUNCTION_MAP[type(self.expression)]
+            args = [
+                FreeParameterExpression(arg)._to_oqpy_expression()
+                for arg in self.expression.args
+            ]
+            return OQFunctionCall(identifier=func_name, args=args, return_type=None)
+        if isinstance(self.expression, sympy.Mod):
+            args = [
+                FreeParameterExpression(arg)._to_oqpy_expression()
+                for arg in self.expression.args
+            ]
+            return OQFunctionCall(identifier="mod", args=args, return_type=None)
         if isinstance(self.expression, sympy.Number):
             return float(self.expression)
-        fvar = FloatVar(name=self.expression.name, init_expression="input", needs_declaration=False)
-        fvar.size = None
-        fvar.type.size = None
-        return fvar
+        if isinstance(self.expression, sympy.Symbol):
+            fvar = FloatVar(name=self.expression.name, init_expression="input", needs_declaration=False)
+            fvar.size = None
+            fvar.type.size = None
+            return fvar
+        raise ValueError(f"Unsupported expression type: {type(self.expression)}")
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs: FreeParameterExpression | str) -> Any:
