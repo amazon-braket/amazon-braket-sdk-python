@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import warnings
 from unittest.mock import Mock
 
 import numpy as np
@@ -1184,9 +1185,9 @@ def test_subroutine_nested():
 
 def test_ir_empty_instructions_result_types():
     circ = Circuit()
-    assert circ.to_ir() == jaqcd.Program(
-        instructions=[], results=[], basis_rotation_instructions=[]
-    )
+    with pytest.warns(UserWarning, match="JAQCD"):
+        ir = circ.to_ir(IRType.JAQCD)
+    assert ir == jaqcd.Program(instructions=[], results=[], basis_rotation_instructions=[])
 
 
 def test_ir_non_empty_instructions_result_types():
@@ -1196,7 +1197,9 @@ def test_ir_non_empty_instructions_result_types():
         results=[jaqcd.Probability(targets=[0, 1])],
         basis_rotation_instructions=[],
     )
-    assert circ.to_ir() == expected
+    with pytest.warns(UserWarning, match="JAQCD"):
+        ir = circ.to_ir(IRType.JAQCD)
+    assert ir == expected
 
 
 def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
@@ -1206,7 +1209,41 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         results=[jaqcd.Sample(observable=["x"], targets=[0])],
         basis_rotation_instructions=[jaqcd.H(target=0)],
     )
-    assert circ.to_ir() == expected
+    with pytest.warns(UserWarning, match="JAQCD"):
+        ir = circ.to_ir(IRType.JAQCD)
+    assert ir == expected
+
+
+def test_to_ir_default_is_openqasm():
+    """Calling Circuit.to_ir() with no ir_type argument should return an
+    OpenQASM program (after the JAQCD-deprecation default flip)."""
+    circ = Circuit().h(0).cnot(0, 1)
+    assert isinstance(circ.to_ir(), OpenQasmProgram)
+
+
+def test_to_ir_jaqcd_emits_warning():
+    """Passing IRType.JAQCD explicitly should emit a UserWarning that
+    references JAQCD and points the customer at the migration path."""
+    circ = Circuit().h(0)
+    with pytest.warns(UserWarning, match="JAQCD"):
+        out = circ.to_ir(IRType.JAQCD)
+    # The actual JAQCD program is still produced — only the warning is new.
+    assert out == jaqcd.Program(
+        instructions=[jaqcd.H(target=0)], results=[], basis_rotation_instructions=[]
+    )
+
+
+def test_to_ir_default_emits_no_jaqcd_warning():
+    """The new default (OpenQASM) must not emit the JAQCD deprecation
+    warning. We assert specifically on JAQCD-message warnings rather than
+    erroring on all UserWarnings, since other unrelated warnings may fire
+    legitimately."""
+    circ = Circuit().h(0)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        circ.to_ir()
+    jaqcd_warnings = [x for x in w if "JAQCD" in str(x.message)]
+    assert jaqcd_warnings == []
 
 
 @pytest.mark.parametrize(
@@ -3815,5 +3852,8 @@ def test_barrier_openqasm_export_all_qubits():
 
 def test_barrier_jaqcd_export_fails():
     circ = Circuit().h(0).barrier([0, 1])
-    with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):
+    with (
+        pytest.warns(UserWarning, match="JAQCD"),
+        pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"),
+    ):
         circ.to_ir(IRType.JAQCD)

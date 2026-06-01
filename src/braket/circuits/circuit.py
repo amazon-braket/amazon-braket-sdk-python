@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
@@ -1311,12 +1312,23 @@ class Circuit:
 
     def to_ir(
         self,
-        ir_type: IRType = IRType.JAQCD,
+        ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> OpenQasmProgram | JaqcdProgram:
         """Converts the circuit into the canonical intermediate representation.
         If the circuit is sent over the wire, this method is called before it is sent.
+
+        .. versionchanged:: 1.117.4
+            The default ``ir_type`` is now :attr:`IRType.OPENQASM` (previously
+            :attr:`IRType.JAQCD`). Amazon Braket service devices no longer
+            accept JAQCD program submissions; see MCM-150287739.
+
+        .. deprecated:: 1.117.4
+            Passing ``ir_type=IRType.JAQCD`` is deprecated and emits a
+            ``UserWarning``. Use :attr:`IRType.OPENQASM` instead. The
+            ``IRType.JAQCD`` enum member and the JAQCD conversion path are
+            retained so historical task results continue to deserialize.
 
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
@@ -1337,6 +1349,12 @@ class Circuit:
         """
         gate_definitions = gate_definitions or {}
         if ir_type == IRType.JAQCD:
+            warnings.warn(
+                "JAQCD IR is deprecated and will be removed in a future release. "
+                "Use IRType.OPENQASM instead. Amazon Braket service devices no "
+                "longer accept JAQCD program submissions. See MCM-150287739.",
+                stacklevel=2,
+            )
             return self._to_jaqcd()
         if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(

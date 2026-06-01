@@ -17,7 +17,15 @@ from enum import StrEnum
 
 
 class IRType(StrEnum):
-    """Defines the available IRTypes for circuit serialization."""
+    """Defines the available IRTypes for circuit serialization.
+
+    .. deprecated:: 1.117.4
+        ``JAQCD`` is deprecated. Amazon Braket service devices no longer accept
+        JAQCD program submissions; use ``OPENQASM`` instead. The ``JAQCD``
+        enum member is retained so circuits can still be converted to JAQCD
+        for legacy code paths and historical task-result parsing. See
+        MCM-150287739.
+    """
 
     OPENQASM = "OPENQASM"
     JAQCD = "JAQCD"

@@ -692,7 +692,11 @@ def test_run_program_model_inputs():
 def test_run_jaqcd_only():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    # When the local simulator advertises only JAQCD (no OpenQASM), the
+    # LocalSimulator payload constructor falls back to converting the
+    # circuit to JAQCD, which (per the JAQCD deprecation) emits a UserWarning.
+    with pytest.warns(UserWarning, match="JAQCD"):
+        task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
     dummy.assert_qubits(None)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
