@@ -39,6 +39,7 @@ from braket.device_schema.openqasm_device_action_properties import (
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
 from braket.ir.openqasm.program_set_v1 import ProgramSet as OpenQASMProgramSet
+from braket.parametric import cos, sin
 from braket.program_sets import ProgramSet
 from braket.program_sets.circuit_binding import CircuitBinding
 from braket.simulator import BraketSimulator
@@ -699,6 +700,18 @@ def test_local_simulator_runs_sympy_inverse_trig_free_parameter_expression():
 
     device = LocalSimulator(StateVectorSimulator())
     result = device.run(circuit, inputs={"alpha": 0.5}, shots=10).result()
+
+    assert sum(result.measurement_counts.values()) == 10
+
+
+def test_local_simulator_runs_parametric_math_helper_expression():
+    # Use StateVectorSimulator directly so OpenQASM validation runs.
+    alpha = FreeParameter("alpha")
+    expr = sin(alpha / 2) ** 2 + cos(alpha / 2) ** 2
+    circuit = Circuit().rx(0, expr).measure(0)
+
+    device = LocalSimulator(StateVectorSimulator())
+    result = device.run(circuit, inputs={"alpha": math.pi}, shots=10).result()
 
     assert sum(result.measurement_counts.values()) == 10
 
