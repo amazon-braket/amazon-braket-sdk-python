@@ -3242,6 +3242,21 @@ def test_instructions_setter(h, h_instr):
         h.instructions = [h_instr]
 
 
+def test_count_all_instructions():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).rx(2, 0.2)
+
+    assert circ.count() == {"H": 1, "CNot": 2, "Rx": 1}
+
+
+def test_count_instruction_by_name_case_insensitive():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).measure([0, 1])
+
+    assert circ.count("cnot") == 2
+    assert circ.count("CNOT") == 2
+    assert circ.count("measure") == 2
+    assert circ.count("x") == 0
+
+
 def test_moments_getter(h):
     assert h.moments is h._moments
 
