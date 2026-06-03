@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
@@ -1330,7 +1331,7 @@ class Circuit:
 
     def to_ir(
         self,
-        ir_type: IRType = IRType.JAQCD,
+        ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> OpenQasmProgram | JaqcdProgram:
@@ -1356,6 +1357,10 @@ class Circuit:
         """
         gate_definitions = gate_definitions or {}
         if ir_type == IRType.JAQCD:
+            warnings.warn(
+                "The JAQCD action type is deprecated. Please use OpenQASM 3 programs instead.",
+                stacklevel=2,
+            )
             return self._to_jaqcd()
         if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(

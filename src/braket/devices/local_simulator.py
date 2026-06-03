@@ -262,9 +262,6 @@ class LocalSimulator(Device):
             program = circuit.to_ir(ir_type=IRType.OPENQASM)
             program.inputs.update(inputs or {})
             return program
-        if DeviceActionType.JAQCD in simulator.properties.action:
-            validate_circuit_and_shots(circuit, shots)
-            return circuit.to_ir(ir_type=IRType.JAQCD)
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_construct_payload.register

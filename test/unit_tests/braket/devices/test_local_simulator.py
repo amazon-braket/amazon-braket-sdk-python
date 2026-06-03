@@ -689,13 +689,11 @@ def test_run_program_model_inputs():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_run_jaqcd_only():
+def test_run_jaqcd_only_raises():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    dummy.assert_shots(10)
-    dummy.assert_qubits(None)
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    with pytest.raises(NotImplementedError, match="does not support qubit gate-based programs"):
+        sim.run(Circuit().h(0).cnot(0, 1), 10)
 
 
 def test_run_program_model():
