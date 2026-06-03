@@ -44,7 +44,13 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
+from braket.pulse import (
+    DragGaussianWaveform,
+    Frame,
+    GaussianWaveform,
+    Port,
+    PulseSequence,
+)
 
 
 @pytest.fixture
@@ -95,7 +101,11 @@ def port():
 @pytest.fixture
 def predefined_frame_1(port):
     return Frame(
-        frame_id="predefined_frame_1", frequency=2e9, port=port, phase=0, is_predefined=True
+        frame_id="predefined_frame_1",
+        frequency=2e9,
+        port=port,
+        phase=0,
+        is_predefined=True,
     )
 
 
@@ -430,6 +440,7 @@ def test_add_result_type_same_observable_wrong_target_order_hermitian():
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
+
 def test_count_instructions():
     circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
     expected = {
@@ -440,10 +451,12 @@ def test_count_instructions():
     }
     assert circ.count_instructions() == expected
 
+
 def test_count_gates_cnot():
     circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
     expected = 1
     assert circ.count_gates("cnot") == expected
+
 
 def test_add_result_type_with_target_and_mapping(prob):
     with pytest.raises(TypeError):
@@ -1628,7 +1641,10 @@ def test_circuit_with_partial_calibrations(pulse_sequence_2):
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     gate_calibrations = (
         GateCalibrations({
-            (gates.MS(-0.1, FreeParameter("beta"), -0.3), QubitSet([0, 1])): pulse_sequence_2
+            (
+                gates.MS(-0.1, FreeParameter("beta"), -0.3),
+                QubitSet([0, 1]),
+            ): pulse_sequence_2
         }),
     )
     circuit.to_ir(
@@ -2594,7 +2610,10 @@ def test_to_unitary_with_global_phase():
         (Circuit().y(1).z(2), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
         (Circuit().rx(1, 0.15), gates.Rx(0.15).to_matrix()),
         (Circuit().ry(1, 0.15).i(2), np.kron(gates.Ry(0.15).to_matrix(), np.eye(2))),
-        (Circuit().rz(1, 0.15).s(2), np.kron(gates.Rz(0.15).to_matrix(), gates.S().to_matrix())),
+        (
+            Circuit().rz(1, 0.15).s(2),
+            np.kron(gates.Rz(0.15).to_matrix(), gates.S().to_matrix()),
+        ),
         (Circuit().pswap(1, 2, 0.15), gates.PSwap(0.15).to_matrix()),
         (Circuit().pswap(2, 1, 0.15), gates.PSwap(0.15).to_matrix()),
         (Circuit().xy(1, 2, 0.15).i(3), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
@@ -2607,18 +2626,30 @@ def test_to_unitary_with_global_phase():
         (Circuit().ccnot(2, 1, 3), gates.CCNot().to_matrix()),
         (Circuit().cswap(1, 2, 3).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
         (Circuit().cswap(1, 3, 2).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        (Circuit().cswap(1, 2, 3).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
-        (Circuit().cswap(1, 3, 2).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
+        (
+            Circuit().cswap(1, 2, 3).t(4),
+            np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix()),
+        ),
+        (
+            Circuit().cswap(1, 3, 2).t(4),
+            np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix()),
+        ),
         (Circuit().h(0).h(0), gates.I().to_matrix()),
         (Circuit().h(0).x(0), np.dot(gates.X().to_matrix(), gates.H().to_matrix())),
         (Circuit().x(0).h(0), np.dot(gates.H().to_matrix(), gates.X().to_matrix())),
         (
             Circuit().y(0).z(1).cnot(0, 1),
-            np.dot(gates.CNot().to_matrix(), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
+            np.dot(
+                gates.CNot().to_matrix(),
+                np.kron(gates.Y().to_matrix(), gates.Z().to_matrix()),
+            ),
         ),
         (
             Circuit().z(0).y(1).cnot(0, 1),
-            np.dot(gates.CNot().to_matrix(), np.kron(gates.Z().to_matrix(), gates.Y().to_matrix())),
+            np.dot(
+                gates.CNot().to_matrix(),
+                np.kron(gates.Z().to_matrix(), gates.Y().to_matrix()),
+            ),
         ),
         (
             Circuit().y(0).z(1).cnot(0, 1).cnot(1, 2),
@@ -3006,7 +3037,8 @@ def test_basis_rotation_instructions_tensor_product():
         .h(0)
         .cnot(0, 1)
         .expectation(
-            observable=observables.X() @ observables.Y() @ observables.Y(), target=[0, 1, 2]
+            observable=observables.X() @ observables.Y() @ observables.Y(),
+            target=[0, 1, 2],
         )
     )
     expected = [
@@ -3027,7 +3059,8 @@ def test_basis_rotation_instructions_tensor_product_shared_factors():
         .h(0)
         .cnot(0, 1)
         .expectation(
-            observable=observables.X() @ observables.Y() @ observables.Y(), target=[0, 1, 2]
+            observable=observables.X() @ observables.Y() @ observables.Y(),
+            target=[0, 1, 2],
         )
         .expectation(observable=observables.X() @ observables.Y(), target=[0, 1])
     )
@@ -3104,7 +3137,10 @@ def test_basis_rotation_instructions_multiple_result_types_all_specified_same_ta
         .expectation(observable=observables.H())
         .sample(observable=observables.H(), target=[0])
     )
-    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.Ry(-np.pi / 4), 1)]
+    expected = [
+        Instruction(gates.Ry(-np.pi / 4), 0),
+        Instruction(gates.Ry(-np.pi / 4), 1),
+    ]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -3116,7 +3152,10 @@ def test_basis_rotation_instructions_multiple_result_types_specified_all_same_ta
         .sample(observable=observables.H(), target=[0])
         .expectation(observable=observables.H())
     )
-    expected = [Instruction(gates.Ry(-np.pi / 4), 0), Instruction(gates.Ry(-np.pi / 4), 1)]
+    expected = [
+        Instruction(gates.Ry(-np.pi / 4), 0),
+        Instruction(gates.Ry(-np.pi / 4), 1),
+    ]
     assert circ.basis_rotation_instructions == expected
 
 
@@ -3125,9 +3164,13 @@ def test_basis_rotation_instructions_multiple_result_types_same_targets_hermitia
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .sample(observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .sample(
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])),
+            target=[1],
+        )
         .expectation(
-            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1]
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])),
+            target=[1],
         )
     )
     expected = [Instruction(gates.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1])]
@@ -3139,9 +3182,13 @@ def test_basis_rotation_instructions_multiple_result_types_different_hermitian_t
         Circuit()
         .h(0)
         .cnot(0, 1)
-        .sample(observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .sample(
+            observable=observables.Hermitian(matrix=np.array([[1, 0], [0, -1]])),
+            target=[1],
+        )
         .expectation(
-            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[0]
+            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])),
+            target=[0],
         )
     )
     expected = [
@@ -3171,7 +3218,8 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
             target=[0, 1],
         )
         .expectation(
-            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[2]
+            observable=observables.Hermitian(matrix=np.array([[0, 1], [1, 0]])),
+            target=[2],
         )
     )
     expected = [
@@ -3195,7 +3243,8 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
         .cnot(1, 2)
         .expectation(observable=observables.I(), target=[1])
         .sample(
-            observable=observables.Hermitian(matrix=np.eye(4)) @ observables.H(), target=[0, 1, 2]
+            observable=observables.Hermitian(matrix=np.eye(4)) @ observables.H(),
+            target=[0, 1, 2],
         )
         .variance(observable=observables.H(), target=[2])
         .variance(observable=observables.Hermitian(matrix=np.eye(4)), target=[0, 1])
@@ -3215,7 +3264,10 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_probab
         .cnot(0, 1)
         .cnot(1, 2)
         .probability([0, 1])
-        .sample(observable=observables.Z() @ observables.Z() @ observables.H(), target=[0, 1, 2])
+        .sample(
+            observable=observables.Z() @ observables.Z() @ observables.H(),
+            target=[0, 1, 2],
+        )
         .variance(observable=observables.H(), target=[2])
     )
     expected = [
@@ -3571,7 +3623,8 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
     )
 
     pulse_sequence_2.play(
-        user_defined_frame, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf_ignore")
+        user_defined_frame,
+        GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf_ignore"),
     )
 
     assert circuit.to_ir(
@@ -3642,7 +3695,10 @@ def test_pulse_circuit_conflicting_frame(user_defined_frame):
     pulse_sequence_user_defined_frame_x = (
         PulseSequence()
         .set_frequency(user_defined_frame_x, 3e9)
-        .play(user_defined_frame_x, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+        .play(
+            user_defined_frame_x,
+            GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"),
+        )
     )
 
     pulse_sequence_user_defined_frame = (
@@ -3676,7 +3732,10 @@ def test_parametrized_pulse_circuit(user_defined_frame):
     pulse_sequence = (
         PulseSequence()
         .set_frequency(user_defined_frame, frequency_parameter)
-        .play(user_defined_frame, GaussianWaveform(length=length, sigma=0.7, id="gauss_wf"))
+        .play(
+            user_defined_frame,
+            GaussianWaveform(length=length, sigma=0.7, id="gauss_wf"),
+        )
     )
 
     circuit = (
