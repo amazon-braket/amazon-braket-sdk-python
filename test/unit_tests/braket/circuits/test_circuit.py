@@ -551,6 +551,25 @@ def test_add_verbatim_box_empty():
     assert not circuit.qubits_frozen
 
 
+def test_add_verbatim_box_defaults_to_self():
+    circ = Circuit().h(0).cnot(0, 1).add_verbatim_box()
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+    )
+    assert circ == expected
+    assert circ.qubits_frozen
+
+
+def test_add_verbatim_box_self_empty():
+    circuit = Circuit().add_verbatim_box()
+    assert circuit == Circuit()
+    assert not circuit.qubits_frozen
+
+
 def test_add_verbatim_box_with_mapping(cnot):
     circ = Circuit().add_verbatim_box(cnot, target_mapping={0: 10, 1: 11})
     expected = (
@@ -578,10 +597,108 @@ def test_add_verbatim_box_with_target_and_mapping(h):
         Circuit().add_verbatim_box(h, target=[10], target_mapping={0: 10})
 
 
+def test_add_verbatim_box_self_with_target_raises():
+    with pytest.raises(TypeError, match="'target' and 'target_mapping' cannot be supplied"):
+        Circuit().h(0).add_verbatim_box(target=[1])
+
+
 def test_add_verbatim_box_result_types():
     with pytest.raises(ValueError):
         Circuit().h(0).add_verbatim_box(
             Circuit().cnot(0, 1).expectation(observable=observables.X(), target=0)
+        )
+
+
+def test_add_verbatim_box_self_result_types():
+    with pytest.raises(ValueError):
+        Circuit().h(0).expectation(observable=observables.X(), target=0).add_verbatim_box()
+
+
+def test_remove_verbatim_boxes_all():
+    circ = (
+        Circuit()
+        .add_verbatim_box(Circuit().h(0))
+        .x(1)
+        .add_verbatim_box(Circuit().cnot(0, 1))
+        .remove_verbatim_boxes()
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.X(), 1))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+    )
+    assert circ == expected
+    assert not circ.qubits_frozen
+
+
+def test_remove_verbatim_boxes_by_index():
+    circ = (
+        Circuit()
+        .add_verbatim_box(Circuit().h(0))
+        .x(1)
+        .add_verbatim_box(Circuit().cnot(0, 1))
+        .remove_verbatim_boxes(box_index=1)
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+        .add_instruction(Instruction(gates.X(), 1))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+    )
+    assert circ == expected
+    assert circ.qubits_frozen
+
+
+def test_remove_verbatim_boxes_preserves_result_types():
+    circ = (
+        Circuit()
+        .add_verbatim_box(Circuit().h(0))
+        .expectation(observable=observables.X(), target=0)
+        .remove_verbatim_boxes()
+    )
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_result_type(result_types.Expectation(observable=observables.X(), target=0))
+    )
+    assert circ == expected
+
+
+def test_remove_verbatim_boxes_missing_index():
+    with pytest.raises(IndexError, match="No verbatim box exists at index 1"):
+        Circuit().add_verbatim_box(Circuit().h(0)).remove_verbatim_boxes(box_index=1)
+
+
+def test_remove_verbatim_boxes_negative_index():
+    with pytest.raises(ValueError, match="'box_index' must be non-negative"):
+        Circuit().add_verbatim_box(Circuit().h(0)).remove_verbatim_boxes(box_index=-1)
+
+
+def test_remove_verbatim_boxes_end_without_start():
+    with pytest.raises(ValueError, match="Already outside of verbatim box"):
+        Circuit().add_instruction(
+            Instruction(compiler_directives.EndVerbatimBox())
+        ).remove_verbatim_boxes()
+
+
+def test_remove_verbatim_boxes_start_without_end():
+    with pytest.raises(ValueError, match="No end verbatim box found for the circuit"):
+        Circuit().add_instruction(
+            Instruction(compiler_directives.StartVerbatimBox())
+        ).remove_verbatim_boxes()
+
+
+def test_remove_verbatim_boxes_nested_start():
+    with pytest.raises(ValueError, match="Already in verbatim box"):
+        (
+            Circuit()
+            .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+            .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+            .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+            .remove_verbatim_boxes()
         )
 
 

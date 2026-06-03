@@ -152,6 +152,44 @@ class Circuit:
         if addable is not None:
             self.add(addable, *args, **kwargs)
 
+    def _reset(self) -> None:
+        self._moments = Moments()
+        self._result_types = {}
+        self._qubit_observable_mapping = {}
+        self._qubit_observable_target_mapping = {}
+        self._qubit_observable_set = set()
+        self._parameters = set()
+        self._observables_simultaneously_measurable = True
+        self._requires_physical_qubits = False
+        self._measure_targets = None
+
+    def _replace_instructions(self, instructions: Iterable[Instruction]) -> None:
+        result_types = self.result_types
+        self._reset()
+        for instruction in instructions:
+            self.add_instruction(instruction)
+        for result_type in result_types:
+            self.add_result_type(result_type)
+
+    @staticmethod
+    def _verbatim_box_ranges(instructions: list[Instruction]) -> list[tuple[int, int]]:
+        ranges = []
+        start_index = None
+        for index, instruction in enumerate(instructions):
+            if isinstance(instruction.operator, compiler_directives.StartVerbatimBox):
+                if start_index is not None:
+                    raise ValueError("Already in verbatim box.")
+                start_index = index
+            elif isinstance(instruction.operator, compiler_directives.EndVerbatimBox):
+                if start_index is None:
+                    raise ValueError("Already outside of verbatim box.")
+                ranges.append((start_index, index))
+                start_index = None
+
+        if start_index is not None:
+            raise ValueError("No end verbatim box found for the circuit.")
+        return ranges
+
     @property
     def depth(self) -> int:
         """int: Get the circuit depth."""
@@ -692,15 +730,17 @@ class Circuit:
 
     def add_verbatim_box(
         self,
-        verbatim_circuit: Circuit,
+        verbatim_circuit: Circuit | None = None,
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """Add a verbatim `Circuit` to `self`, ensuring that the circuit is not modified in
-        any way by the compiler.
+        """Add a verbatim box to `self`, ensuring that the circuit is not modified in
+        any way by the compiler. If `verbatim_circuit` is not supplied, wrap the instructions
+        currently in `self` in a verbatim box.
 
         Args:
-            verbatim_circuit (Circuit): Circuit to add into self.
+            verbatim_circuit (Circuit | None): Circuit to add into self. If `None`, wrap the
+                instructions currently in `self` in a verbatim box. Default = `None`.
             target (QubitSetInput | None): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
@@ -713,10 +753,18 @@ class Circuit:
             Circuit: self
 
         Raises:
-            TypeError: If both `target_mapping` and `target` are supplied.
+            TypeError: If both `target_mapping` and `target` are supplied, or if `target` or
+                `target_mapping` are supplied when `verbatim_circuit` is `None`.
             ValueError: If `circuit` has result types attached
 
         Examples:
+            >>> circ = Circuit().h(0).h(1).add_verbatim_box()
+            >>> print(list(circ.instructions))
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(1)])),
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
+
             >>> widget = Circuit().h(0).h(1)
             >>> circ = Circuit().add_verbatim_box(widget)
             >>> print(list(circ.instructions))
@@ -743,6 +791,10 @@ class Circuit:
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        if verbatim_circuit is None:
+            return self._add_current_verbatim_box(target, target_mapping)
+
         if target is not None:
             keys = sorted(verbatim_circuit.qubits)
             values = target
@@ -760,6 +812,68 @@ class Circuit:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
             self._requires_physical_qubits = True
+        return self
+
+    def _add_current_verbatim_box(
+        self,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+    ) -> Circuit:
+        if target is not None or target_mapping is not None:
+            raise TypeError(
+                "'target' and 'target_mapping' cannot be supplied when 'verbatim_circuit' is None."
+            )
+        if self.result_types:
+            raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
+        if self._measure_targets:
+            raise ValueError("cannot measure a subcircuit inside a verbatim box.")
+
+        verbatim_instructions = self.instructions
+        if verbatim_instructions:
+            self._replace_instructions([
+                Instruction(compiler_directives.StartVerbatimBox()),
+                *verbatim_instructions,
+                Instruction(compiler_directives.EndVerbatimBox()),
+            ])
+        return self
+
+    def remove_verbatim_boxes(self, box_index: int | None = None) -> Circuit:
+        """Remove verbatim box delimiters from `self`.
+
+        Args:
+            box_index (int | None): Zero-based verbatim box index to remove. If `None`, remove all
+                verbatim box delimiters. Default = `None`.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            ValueError: If `box_index` is negative, or if verbatim box delimiters are unbalanced.
+            IndexError: If `box_index` does not identify a verbatim box.
+
+        Examples:
+            >>> circ = Circuit().add_verbatim_box(Circuit().h(0)).remove_verbatim_boxes()
+            >>> print(list(circ.instructions))
+            [Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)]))]
+        """
+        if box_index is not None and box_index < 0:
+            raise ValueError("'box_index' must be non-negative.")
+
+        current_instructions = self.instructions
+        verbatim_box_ranges = self._verbatim_box_ranges(current_instructions)
+        if box_index is not None and box_index >= len(verbatim_box_ranges):
+            raise IndexError(f"No verbatim box exists at index {box_index}.")
+
+        ranges_to_remove = (
+            verbatim_box_ranges if box_index is None else [verbatim_box_ranges[box_index]]
+        )
+        delimiter_indices = {index for box_range in ranges_to_remove for index in box_range}
+        instructions = [
+            instruction
+            for index, instruction in enumerate(current_instructions)
+            if index not in delimiter_indices
+        ]
+        self._replace_instructions(instructions)
         return self
 
     def barrier(self, target: QubitSetInput | None = None) -> Circuit:
