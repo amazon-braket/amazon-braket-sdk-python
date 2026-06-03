@@ -152,6 +152,25 @@ class Circuit:
         if addable is not None:
             self.add(addable, *args, **kwargs)
 
+    def count_instructions(self) -> dict[str, int]:
+        """Count the number of intructions in  the circuit"""
+        count_dict = {}
+        for instr in self.instructions:
+            print(instr.operator)
+            if instr.operator.name.lower() not in count_dict:
+                count_dict[instr.operator.name.lower()] = 1
+            else:
+                count_dict[instr.operator.name.lower()] += 1
+        return count_dict
+
+    def count_gates(self, gate_name: str) -> int:
+        """Given a gate, count the number of times it appears in the circuit"""
+        count = 0
+        for instr in self.instructions:
+            if instr.operator.name.lower() == gate_name.lower():
+                count += 1
+        return count
+
     @property
     def depth(self) -> int:
         """int: Get the circuit depth."""

@@ -430,6 +430,20 @@ def test_add_result_type_same_observable_wrong_target_order_hermitian():
     assert not circ.observables_simultaneously_measurable
     assert not circ.basis_rotation_instructions
 
+def test_count_instructions():
+    circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
+    expected = {
+        "h": 1,
+        "cnot": 1,
+        "rx": 1,
+        "measure": 1,
+    }
+    assert circ.count_instructions() == expected
+
+def test_count_gates_cnot():
+    circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
+    expected = 1
+    assert circ.count_gates("cnot") == expected
 
 def test_add_result_type_with_target_and_mapping(prob):
     with pytest.raises(TypeError):
