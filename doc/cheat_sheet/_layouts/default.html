@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>{{ site.title }}</title>
+  <link href="{{ site.baseurl }}/cheatsheet.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+  <header>
+    {% include header.html %}
+  </header>
+  {{ content }}
+
+  <footer>
+    <div class="github-info">
+      Source and contribution instructions are
+      <a href="https://github.com/amazon-braket/amazon-braket-sdk-python/tree/main/doc/cheat_sheet">
+        in the SDK repository
+      </a>.
+    </div>
+  </footer>
+
+</body>
+
+</html>

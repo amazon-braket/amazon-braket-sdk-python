@@ -1,0 +1,6 @@
+url: https://amazon-braket.github.io
+baseurl: /amazon-braket-sdk-python
+title: Amazon Braket SDK Cheat Sheet
+description: "A compact reference for common Amazon Braket Python SDK APIs."
+github_username: amazon-braket
+markdown: kramdown
