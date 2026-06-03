@@ -54,7 +54,7 @@ def test_equality_str():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+    FreeParameterExpression("theta//1")
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -115,6 +115,14 @@ def test_r_truediv():
     r_truediv_expr = 1 / FreeParameter("theta")
     expected = FreeParameterExpression(1 / FreeParameter("theta"))
     assert r_truediv_expr == expected
+
+
+def test_truediv_str():
+    truediv_str_expr = FreeParameterExpression("theta/alpha") 
+    expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(
+        FreeParameter("alpha"))
+    
+    assert truediv_str_expr == expected
 
 
 def test_pow():
