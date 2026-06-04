@@ -26,6 +26,9 @@
   fr: Tâches
 - file: Simulators.md
   title: Simulators
+- file: Emulators.md
+  title: Emulators
+  fr: Émulateurs
 - file: NoiseSimulation.md
   title: Noise Simulation
 - file: LLDC.md
