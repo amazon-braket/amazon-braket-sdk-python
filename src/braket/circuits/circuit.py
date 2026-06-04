@@ -157,7 +157,6 @@ class Circuit:
         """Count the number of intructions in  the circuit"""
         count_dict = {}
         for instr in self.instructions:
-            print(instr.operator)
             if instr.operator.name.lower() not in count_dict:
                 count_dict[instr.operator.name.lower()] = 1
             else:
