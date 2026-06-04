@@ -40,8 +40,6 @@ from braket.registers import QubitSet
 
 @dataclass
 class _ParsedOpenQASM:
-    """Information obtained from a single pass over an OpenQASM string."""
-
     lines: Sequence[str]
     declarations_index: int
     measure_index: int
