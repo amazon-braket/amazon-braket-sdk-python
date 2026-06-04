@@ -2,7 +2,7 @@
 
 TL;DR:
 
-- See `_config.yml`, `index.br.html` and `_includes/`
+- See `_config.yml`, `index.fr.html` and `_includes/`
 
 The translation of this cheat-sheet requires the followings steps:
 
