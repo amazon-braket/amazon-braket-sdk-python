@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from numbers import Number
@@ -57,7 +56,9 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.text_diagram_builders.unicode_circuit_diagram import UnicodeCircuitDiagram
+from braket.circuits.text_diagram_builders.unicode_circuit_diagram import (
+    UnicodeCircuitDiagram,
+)
 from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
@@ -67,7 +68,11 @@ from braket.registers.qubit import QubitInput
 from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 SubroutineReturn = TypeVar(
-    "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
+    "SubroutineReturn",
+    Iterable[Instruction],
+    Instruction,
+    ResultType,
+    Iterable[ResultType],
 )
 SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., SubroutineReturn])
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
@@ -153,23 +158,11 @@ class Circuit:
         if addable is not None:
             self.add(addable, *args, **kwargs)
 
-    def count_instructions(self) -> dict[str, int]:
-        """Count the number of intructions in  the circuit"""
-        count_dict = {}
-        for instr in self.instructions:
-            print(instr.operator)
-            if instr.operator.name.lower() not in count_dict:
-                count_dict[instr.operator.name.lower()] = 1
-            else:
-                count_dict[instr.operator.name.lower()] += 1
-        return count_dict
-
-    def count_gates(self, gate_name: str) -> int:
-        """Given a gate, count the number of times it appears in the circuit"""
-        count = 0
-        for instr in self.instructions:
-            if instr.operator.name.lower() == gate_name.lower():
-                count += 1
+    def count(self, operator_name: str | None = None) -> int | Counter[str]:
+        """Count istructions in a circuit"""
+        count = Counter(instr.operator.name.lower() for instr in self.instructions)
+        if operator_name is not None:
+            return count[operator_name.lower()]
         return count
 
     @property
@@ -1129,7 +1122,8 @@ class Circuit:
             if self._check_for_params(instruction):
                 fixed_circ.add(
                     Instruction(
-                        instruction.operator.bind_values(**param_values), target=instruction.target
+                        instruction.operator.bind_values(**param_values),
+                        target=instruction.target,
                     )
                 )
             else:
@@ -1331,7 +1325,7 @@ class Circuit:
 
     def to_ir(
         self,
-        ir_type: IRType = IRType.OPENQASM,
+        ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> OpenQasmProgram | JaqcdProgram:
@@ -1357,10 +1351,6 @@ class Circuit:
         """
         gate_definitions = gate_definitions or {}
         if ir_type == IRType.JAQCD:
-            warnings.warn(
-                "The JAQCD action type is deprecated. Please use OpenQASM 3 programs instead.",
-                stacklevel=2,
-            )
             return self._to_jaqcd()
         if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
@@ -1400,7 +1390,9 @@ class Circuit:
                 inputs_copy.update(inputs)
             inputs = inputs_copy
             source = source.source
-        from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
+        from braket.circuits.braket_program_context import (
+            BraketProgramContext,
+        )  # noqa: PLC0415
 
         return Interpreter(BraketProgramContext()).build_circuit(
             source=source,
@@ -1430,7 +1422,8 @@ class Circuit:
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend([
             instruction.to_ir(
-                ir_type=openqasm_ir_type, serialization_properties=serialization_properties
+                ir_type=openqasm_ir_type,
+                serialization_properties=serialization_properties,
             )
             for instruction in self.instructions
         ])
@@ -1438,7 +1431,8 @@ class Circuit:
         if self.result_types:
             ir_instructions.extend([
                 result_type.to_ir(
-                    ir_type=openqasm_ir_type, serialization_properties=serialization_properties
+                    ir_type=openqasm_ir_type,
+                    serialization_properties=serialization_properties,
                 )
                 for result_type in self.result_types
             ])
@@ -1544,12 +1538,15 @@ class Circuit:
                 for param in calibration.parameters:
                     self._parameters.add(param)
                 arguments = [
-                    param._to_oqpy_expression() if isinstance(param, FreeParameter) else param
+                    (param._to_oqpy_expression() if isinstance(param, FreeParameter) else param)
                     for param in arguments
                 ]
 
                 with oqpy.defcal(
-                    program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
+                    program,
+                    [oqpy.PhysicalQubits[int(k)] for k in qubits],
+                    gate_name,
+                    arguments,
                 ):
                     program += calibration._program
 
@@ -1641,7 +1638,11 @@ class Circuit:
                 )
                 additional_calibrations[bound_key] = calibration(**{
                     p.name if isinstance(p, FreeParameterExpression) else p: v
-                    for p, v in zip(gate.parameters, instruction.operator.parameters, strict=True)
+                    for p, v in zip(
+                        gate.parameters,
+                        instruction.operator.parameters,
+                        strict=True,
+                    )
                 })
         return additional_calibrations
 
@@ -1779,7 +1780,9 @@ def subroutine(register: bool = False) -> Callable:
         Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
     """
 
-    def _subroutine_function_wrapper(func: Callable[..., SubroutineReturn]) -> SubroutineReturn:
+    def _subroutine_function_wrapper(
+        func: Callable[..., SubroutineReturn],
+    ) -> SubroutineReturn:
         if register:
             Circuit.register_subroutine(func)
         return func

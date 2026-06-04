@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-
+from collections import Counter
 import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
     Circuit,
@@ -441,21 +441,16 @@ def test_add_result_type_same_observable_wrong_target_order_hermitian():
     assert not circ.basis_rotation_instructions
 
 
-def test_count_instructions():
-    circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
-    expected = {
-        "h": 1,
-        "cnot": 1,
-        "rx": 1,
-        "measure": 1,
-    }
-    assert circ.count_instructions() == expected
-
-
-def test_count_gates_cnot():
+def test_count_using_operator_name():
     circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
     expected = 1
-    assert circ.count_gates("cnot") == expected
+    assert circ.count("cnot") == expected
+
+
+def test_count_without_operator_name():
+    circ = Circuit().h(0).cnot(0, 1).rx(1, 0).measure(0)
+    expected = Counter({"h": 1, "cnot": 1, "rx": 1, "measure": 1})
+    assert circ.count() == expected
 
 
 def test_add_result_type_with_target_and_mapping(prob):
