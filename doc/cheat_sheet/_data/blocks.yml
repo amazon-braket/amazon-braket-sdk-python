@@ -19,6 +19,9 @@
   title: Device
 - file: DeviceProperties.md
   title: Device Properties
+- file: ExperimentalCapabilities.md
+  title: Experimental Capabilities
+  fr: Fonctionnalités expérimentales
 - file: Pricing.md
   title: Pricing
 - file: HybridJobs.md
