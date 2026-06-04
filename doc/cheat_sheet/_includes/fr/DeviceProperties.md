@@ -1,9 +1,7 @@
-|                      |                                                       |
-| -------------------- | ----------------------------------------------------- | 
-|  Connectivity graph|  device.properties.paradigm.connectivity| 
-|  Fidelities dictionary|  device.properties.provider.specs| 
-|  Native gate set|  device.properties.paradigm.nativeGateSet| 
-|  Cost and availability|  device.properties.service| 
-|  Pulse properties|  device.properties.pulse| 
-|  Actions properties|  action_properties = device.properties.action['braket.ir.openqasm.program']| 
-|  Supported gates|  action_properties.supportedOperations| 
+| Graphe de connectivité | `device.properties.paradigm.connectivity` |
+| Dictionnaire des fidélités | `device.properties.provider.specs` |
+| Jeu de portes natives | `device.properties.paradigm.nativeGateSet` |
+| Coût et disponibilité | `device.properties.service` |
+| Propriétés d'impulsion | `device.properties.pulse` |
+| Propriétés des actions | `action_properties = device.properties.action['braket.ir.openqasm.program']` |
+| Portes prises en charge | `action_properties.supportedOperations` |

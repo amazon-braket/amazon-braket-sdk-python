@@ -1,6 +1,4 @@
-|                                     |                                        |
-| ----------------------------------- | -------------------------------------- |
-|  Retrieve results |  `result = task.results()` |
-|  Get measurement counts |  `result.measurement_counts` |
-|  Get measured qubits |  `result.measured_qubits` |
-|  Compiled programs |  `res.additional_metadata.rigettiMetada.compiledProgram` |
+| Récupérer les résultats | `result = task.result()` |
+| Obtenir le décompte des mesures | `result.measurement_counts` |
+| Obtenir les qubits mesurés | `result.measured_qubits` |
+| Obtenir le circuit compilé | `result.get_compiled_circuit()` |

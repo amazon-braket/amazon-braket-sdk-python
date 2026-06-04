@@ -1,12 +1,13 @@
-|                      |                                                       |
-| -------------------- | ----------------------------------------------------- |
-| Create a pulse sequence | pulse_sequence = PulseSequence() |
-| Dictionary of predefined ports | device.ports |
-| Dictionary of predefined frames | device.frames |
-| Create a frame | Frame(port, frequency[, phase]) |
-| Predefined waveforms | ConstantWaveform(length, iq) | GaussianWaveform(length, width, amplitude, zero_at_edges) | DragGaussianWaveform(length, width, amplitude, beta, zero_at_edges) |
-| Play a waveform | pulse_sequence.play(frame, waveform) |
-| Add a delay | pulse_sequence.delay(frame, delay) |
-| Set and Shift frequency | pulse_sequence.set_frequency(frame, frequency).shift_frequency(frame, detuning) |
-| Set and Shift phase | pulse_sequence.set_phase(frame, phase).shift_phase(frame, phi) |
-| Get the time series | pulse_sequence.to_time_traces() |
+| Imports | `from braket.pulse import PulseSequence, Frame`<br>`from braket.pulse.waveforms import *` |
+| Créer une nouvelle séquence d'impulsions | `pulse_sequence = PulseSequence()` |
+| Ports prédéfinis | `device.ports` |
+| Frames prédéfinis | `device.frames` |
+| Créer un frame | `Frame(port, frequency[, phase])` |
+| Formes d'onde prédéfinies | `ConstantWaveform(length, iq)`<br>`GaussianWaveform(length, width, amplitude, zero_at_edges)`<br>`DragGaussianWaveform(length, width, amplitude, beta, zero_at_edges)` |
+| Jouer une forme d'onde | `pulse_sequence.play(frame, waveform)` |
+| Ajouter un délai | `pulse_sequence.delay(frame, delay)` |
+| Définir la fréquence | `pulse_sequence.set_frequency(frame, frequency)` |
+| Décaler la fréquence | `pulse_sequence.shift_frequency(frame, detuning)` |
+| Définir la phase | `pulse_sequence.set_phase(frame, phase)` |
+| Décaler la phase | `pulse_sequence.shift_phase(frame, phi)` |
+| Obtenir la série temporelle | `pulse_sequence.to_time_traces()` |

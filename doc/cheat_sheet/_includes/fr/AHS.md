@@ -1,8 +1,7 @@
-|                      |                                                       |
-| -------------------- | ----------------------------------------------------- |
-| Atom arrangement | register = AtomArrangement() |
-| Add an atom | register.add((5.7e-6, 5.7e-6)) |
-| Get coordinates | register.coordinate_list(axis) |
-| Create a driving field | DrivingField(amplitude, phase, detuning) |
-| Create an AHS program | ahs_program = AnalogHamiltonianSimulation(register, drive) |
-| Run an AHS program | device.run(ahs_program) |
+| Imports | `from braket.ahs import AtomArrangement, DrivingField, AnalogHamiltonianSimulation` |
+| Arrangement d'atomes | `register = AtomArrangement()` |
+| Ajouter un atome par coordonnées (en mètres) | `register.add((5.7e-6, 5.7e-6))` |
+| Obtenir les coordonnées | `register.coordinate_list(axis)` |
+| Créer un champ d'excitation | `DrivingField(amplitude, phase, detuning)` |
+| Créer un programme AHS | `ahs_program = AnalogHamiltonianSimulation(register, drive)` |
+| Exécuter un programme AHS | `device.run(ahs_program)` |

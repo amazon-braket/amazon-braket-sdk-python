@@ -86,6 +86,31 @@ def check_imports() -> list[str]:
     return failures
 
 
+def check_language_parity() -> list[str]:
+    """Every translated section must carry the exact same code as its English source.
+
+    Descriptions are translated, but the code spans are not -- so the verified
+    English snippets stay verified in every language, and translations cannot
+    silently drift out of sync.
+    """
+    failures: list[str] = []
+    base = EN_DIR.parent
+    for en in sorted(EN_DIR.glob("*.md")):
+        en_code = CODE_SPAN.findall(en.read_text(encoding="utf-8"))
+        for lang_dir in sorted(p for p in base.iterdir() if p.is_dir() and p.name != "en"):
+            translated = lang_dir / en.name
+            if not translated.exists():
+                failures.append(f"[{lang_dir.name}/{en.name}] missing translation")
+                continue
+            other_code = CODE_SPAN.findall(translated.read_text(encoding="utf-8"))
+            if other_code != en_code:
+                failures.append(
+                    f"[{lang_dir.name}/{en.name}] code differs from en "
+                    f"(en={len(en_code)} rows, {lang_dir.name}={len(other_code)} rows)"
+                )
+    return failures
+
+
 def check_behaviour() -> list[str]:
     """Run the local snippets and signature-check the cloud-only ones."""
     failures: list[str] = []
@@ -247,8 +272,9 @@ def check_behaviour() -> list[str]:
 
 def main() -> int:
     import_failures = check_imports()
+    parity_failures = check_language_parity()
     behaviour_failures = check_behaviour()
-    failures = import_failures + behaviour_failures
+    failures = import_failures + parity_failures + behaviour_failures
 
     if failures:
         print("CHEAT SHEET VERIFICATION FAILED\n")

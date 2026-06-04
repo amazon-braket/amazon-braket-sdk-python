@@ -1,4 +1,2 @@
-|                      |                                                       |
-| -------------------- | ----------------------------------------------------- |
-| Debias | task = device.run(circuit, device_parameters={"errorMitigation": Debias()}) |
-| Sharpening | result.additional_metadata.ionqMetadata.sharpenedProbabilities |
+| Débiaisage | `device.run(circuit, shots=2500, device_parameters={"errorMitigation": Debias()})` |
+| Affinage (si le débiaisage est utilisé) | `result.additional_metadata.ionqMetadata.sharpenedProbabilities` |

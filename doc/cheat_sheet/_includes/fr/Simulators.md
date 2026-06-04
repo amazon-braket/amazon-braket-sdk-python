@@ -1,3 +1,2 @@
-|                      |                                                       |
-| -------------------- | ----------------------------------------------------- |
-| Instantiate the local simulator | local_sim = LocalSimulator() |
+| Imports | `from braket.devices import LocalSimulator` |
+| Instancier le simulateur local | `local_sim = LocalSimulator()` |
