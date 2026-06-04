@@ -243,6 +243,34 @@ class Circuit:
         """
         return self._parameters
 
+    def count_instructions(self, operators=None, **kwargs) -> Counter[str]:
+        """
+        Count instructions in the circuit with optional filtering.
+
+        Args:
+            operators: Filter by operator name or type.
+            qubits: Filter by qubit. Accepts a single int or an iterable of ints.
+            qubit_match (QubitMatch): ANY = instruction touches any specified qubit; ALL = all. Default ANY.
+            include_types (Iterable[MomentType]): Moment types to count. Default: GATE only.
+
+        Returns:
+            Counter[str]: Operator names mapped to occurrence counts.
+
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
+            >>> circ.count_instructions()
+            Counter({'H': 1, 'CNot': 1, 'Rx': 1})
+            >>> circ.count_instructions("h")
+            Counter({'H': 1})
+            >>> circ.count_instructions(["H", "CNot"])
+            Counter({'H': 1, 'CNot': 1})
+            >>> circ.count_instructions(qubits=0)
+            Counter({'H': 1, 'CNot': 1, 'Rx': 1})
+        """
+        from braket.circuits.circuit_analysis import count_instructions as _count_instructions
+
+        return _count_instructions(self, operators, **kwargs)
+
     def with_euler_angles(self, observables: Sequence[Observable] | Sum) -> Circuit:
         """Returns a copy of the circuit with parametrized Euler angles on the observables' qubits
 
