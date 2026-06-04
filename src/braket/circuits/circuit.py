@@ -33,6 +33,9 @@ from braket.circuits.gate import Gate
 from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
     MatplotlibCircuitDiagram,
 )
+from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+    PlotlyCircuitDiagram,
+)
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
@@ -1656,8 +1659,29 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
-        circuit_diagram_class.build_diagram(self)
+    def show(self, circuit_diagram_class: type | str = MatplotlibCircuitDiagram) -> Any:
+        """Build a graphical diagram for the current circuit.
+
+        Args:
+            circuit_diagram_class (type | str): A graphical ``CircuitDiagram``
+                class, ``"matplotlib"`` for the default static renderer, or
+                ``"interactive"`` / ``"plotly"`` for an interactive Plotly figure.
+
+        Returns:
+            The figure object returned by the selected diagram builder.
+        """
+        if isinstance(circuit_diagram_class, str):
+            diagram_type = circuit_diagram_class.lower()
+            if diagram_type in {"matplotlib", "static"}:
+                circuit_diagram_class = MatplotlibCircuitDiagram
+            elif diagram_type in {"interactive", "plotly"}:
+                circuit_diagram_class = PlotlyCircuitDiagram
+            else:
+                raise ValueError(
+                    "circuit_diagram_class must be a CircuitDiagram class, "
+                    "'matplotlib', 'static', 'interactive', or 'plotly'."
+                )
+        return circuit_diagram_class.build_diagram(self)
 
     @property
     def qubits_frozen(self) -> bool:

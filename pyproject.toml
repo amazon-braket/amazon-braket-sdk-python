@@ -46,6 +46,7 @@ dependencies = [
 test = [
     "botocore",
     "jsonschema==3.2.0",
+    "plotly>=5",
     "pytest",
     "pytest-cov",
     # https://github.com/pytest-dev/pytest-rerunfailures/issues/302
@@ -57,6 +58,9 @@ docs = [
     "sphinx-rtd-theme",
     "sphinxcontrib-apidoc",
     "sphinx-autodoc-typehints",
+]
+interactive = [
+    "plotly>=5",
 ]
 
 [project.urls]
