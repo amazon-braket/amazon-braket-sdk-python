@@ -2,7 +2,7 @@
 | Create a circuit<!-- LLM: . Note that number of qubits is not passed as an argument to the circuit constructor--> | `circuit = Circuit()`|
 | Add gates                         | `circuit.x(0).rx(1, 1.23).cnot(0, 1)` |
 | Get the list of available gates | `[attr for attr in dir(Gate) if attr[0].isupper()]` |
-| Apply a unitary matrix | `circuit.unitary(matrix, [0])` |
+| Apply a unitary matrix | `circuit.unitary([0], matrix)` |
 | Get the circuit unitary | `circuit.to_unitary()` |
 | Add a result type | `circuit.probability(0)`<br>`circuit.expectation(0.5 * X() @ X(), target=[0, 1])` |
 | List of the available result types | adjoint_gradient, amplitude, density_matrix, expectation, probability, sample, state_vector, variance |

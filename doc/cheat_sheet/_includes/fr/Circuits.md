@@ -2,7 +2,7 @@
 | --------------------------------- | ------------------------------------------- |
 | Create a circuit                  | `circuit = Circuit()`                       |
 | Add gates                         | `circuit.x(0).cnot(0, 1)`                   |
-| Apply a unitary matrix | `circuit.unitary(matrix, [0])` |
+| Apply a unitary matrix | `circuit.unitary([0], matrix)` |
 | Add a result type | `circuit.probability(0)` |
 | Add a verbatim box | `circuit.add_verbatim_box(circuit2)` |
 | Gate modifiers | `circuit.x(0, control=1, neg_control=2)` |
