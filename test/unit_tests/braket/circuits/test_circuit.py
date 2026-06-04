@@ -3831,3 +3831,18 @@ def test_barrier_jaqcd_export_fails():
         pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"),
     ):
         circ.to_ir(IRType.JAQCD)
+
+
+def test_circuit_count_ops():
+    circ = Circuit().h(0).h(1).cnot(0, 1).measure([0, 1])
+    assert circ.count("cnot") == 1
+    assert circ.count("h") == 2
+    assert circ.count() == {"cnot": 1, "h": 2, "measure": 2}
+    assert circ.count(qubits={0}) == {"cnot": 1, "h": 1, "measure": 1}
+    assert circ.count(qubits={0}, operator="h") == 1
+
+    with pytest.raises(
+        ValueError,
+        match="All qubits in the 'qubits' argument must be present in the circuit",
+    ):
+        circ.count(qubits={2})
