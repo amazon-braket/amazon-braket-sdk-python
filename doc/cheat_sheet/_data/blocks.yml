@@ -17,6 +17,9 @@
   title: Results
 - file: Device.md
   title: Device
+- file: Reservations.md
+  title: Reservations
+  fr: Réservations
 - file: DeviceProperties.md
   title: Device Properties
 - file: ExperimentalCapabilities.md
