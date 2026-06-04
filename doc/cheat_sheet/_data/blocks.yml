@@ -1,15 +1,11 @@
 - file: What-is.md
   title: What is…?
-  fr: De quoi s'agit-il ?
 - file: Circuits.md
   title: Circuits
-  fr: Circuits
 - file: FreeParameters.md
   title: FreeParameters
-  fr: Paramètres libres
 - file: Tasks.md
   title: Tasks
-  fr: Tâches
 - file: ProgramSets.md
   title: Program Sets
 - file: Results.md
@@ -22,7 +18,6 @@
   title: Pricing
 - file: HybridJobs.md
   title: Hybrid Jobs
-  fr: Tâches
 - file: Reservations.md
   title: Reservations
 - file: Simulators.md

@@ -13,11 +13,4 @@ t:
     github-3: "Pull requests are welcome!"
     github-4: "This cheat sheet is inspired by"
     translate: "Help translate!" # Not used for `en`
-  fr:
-    name: "Français"
-    fast-track: "Aide-mémoire"
-    github-1: "Les sources de cette page sont"
-    github-2: "disponibles ici"
-    github-3: "Pull Requests bienvenues !"
-    github-4: "Cet aide-memoire est inspiré de"
-    translate: "Aidez à traduire !" # Not used for `en`
+ 
