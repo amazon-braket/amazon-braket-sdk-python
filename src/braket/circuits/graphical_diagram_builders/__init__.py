@@ -14,5 +14,8 @@
 from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
     MatplotlibCircuitDiagram,
 )
+from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+    PlotlyCircuitDiagram,
+)
 
-__all__ = ["MatplotlibCircuitDiagram"]
+__all__ = ["MatplotlibCircuitDiagram", "PlotlyCircuitDiagram"]

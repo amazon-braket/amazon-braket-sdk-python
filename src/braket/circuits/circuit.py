@@ -33,6 +33,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
     MatplotlibCircuitDiagram,
 )
+from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import PlotlyCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
@@ -1656,8 +1657,33 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
-        circuit_diagram_class.build_diagram(self)
+    def show(self, circuit_diagram_class: Any = MatplotlibCircuitDiagram, **diagram_kwargs) -> Any:
+        """Build a graphical circuit diagram.
+
+        Args:
+            circuit_diagram_class: Diagram builder class, or ``"interactive"``/``"plotly"``
+                for the Plotly renderer.
+            **diagram_kwargs: Keyword arguments forwarded to the selected diagram builder.
+
+        Returns:
+            The figure returned by the selected diagram builder.
+        """
+        diagram_builder = circuit_diagram_class
+        if isinstance(circuit_diagram_class, str):
+            diagram_builders = {
+                "interactive": PlotlyCircuitDiagram,
+                "plotly": PlotlyCircuitDiagram,
+                "matplotlib": MatplotlibCircuitDiagram,
+                "static": MatplotlibCircuitDiagram,
+            }
+            try:
+                diagram_builder = diagram_builders[circuit_diagram_class.lower()]
+            except KeyError as exc:
+                raise ValueError(
+                    "Unknown circuit diagram type. Use 'interactive', 'plotly', "
+                    "'matplotlib', or pass a CircuitDiagram class."
+                ) from exc
+        return diagram_builder.build_diagram(self, **diagram_kwargs)
 
     @property
     def qubits_frozen(self) -> bool:
