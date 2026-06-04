@@ -111,6 +111,22 @@ def check_language_parity() -> list[str]:
     return failures
 
 
+def check_genai_in_sync() -> list[str]:
+    """The committed GenAI cheat sheet must match what the generator produces."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        from generate_genai_cheat_sheet import OUTPUT, render
+    except Exception as exc:  # noqa: BLE001
+        return [f"[genai] could not import the generator: {exc}"]
+    current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
+    if current != render():
+        return [
+            "[genai] doc/genai_cheat_sheet.md is out of date; regenerate with "
+            "doc/cheat_sheet/_scripts/generate_genai_cheat_sheet.py"
+        ]
+    return []
+
+
 def check_behaviour() -> list[str]:
     """Run the local snippets and signature-check the cloud-only ones."""
     failures: list[str] = []
@@ -273,8 +289,9 @@ def check_behaviour() -> list[str]:
 def main() -> int:
     import_failures = check_imports()
     parity_failures = check_language_parity()
+    genai_failures = check_genai_in_sync()
     behaviour_failures = check_behaviour()
-    failures = import_failures + parity_failures + behaviour_failures
+    failures = import_failures + parity_failures + genai_failures + behaviour_failures
 
     if failures:
         print("CHEAT SHEET VERIFICATION FAILED\n")

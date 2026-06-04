@@ -1,38 +1,19 @@
 # Braket CheatSheet
 
-<!-- This comment will not show up in the rendered Markdown -->
-
 **Circuits**
 
-***Import Braket modules:***
+***Imports:***
+
 ```
 from braket.circuits import Circuit, Gate, Instruction
-from braket.circuits.observables import X, Y, Z
-from braket.circuits.gates import Rx, Ry, Rz, CNot, Unitary, CCNot
-from braket.circuits.instruction import Instruction
+from braket.circuits.observables import X
 ```
 
-***Create an empty circuit (default constructor):***
+***Create a circuit. Note that number of qubits is not passed as an argument to the circuit constructor:***
 
 `circuit = Circuit()`
 
-***Create an circuit with arbitrary number of qubits. Note that number of qubits is not passed as an argument to the circuit constructor:***
-
-`circuit = Circuit()`
-
-***Add X gate to circuit at qubit 0:***
-
-`circuit.x(0)`
-
-***Add Rx gate to qubit 1 with a float angle 1.234	angle = 1.234:***
-
-`circuit.rx(1, angle)`
-
-***Add cnot gate to pair of qubits:***
-
-`circuit.cnot(0, 1)`
-
-***Add gates sequentially: X gate, Rx gate, cnot gate:***
+***Add gates:***
 
 `circuit.x(0).rx(1, 1.23).cnot(0, 1)`
 
@@ -40,368 +21,462 @@ from braket.circuits.instruction import Instruction
 
 `[attr for attr in dir(Gate) if attr[0].isupper()]`
 
-***Create a single qubit gate from unitary matrix:***
+***Apply a unitary matrix:***
 
-```
-matrix = np.eye(2)
-G = Unitary(matrix)
-```
+`circuit.unitary([0], matrix)`
 
 ***Get the circuit unitary:***
+
 `circuit.to_unitary()`
 
-***Add a probability result type to qubit 0 (will return exact probabilities, corresponds to shots=0 case when running on a simulator):***
-
-`circuit.probability(0)`
-
-***Add probability result type to all qubits. Add probability result type only when measuring exact probabilities:***
-
-```	
-for i in range(len(circuit.qubits)):
-    circuit.probability(i)
-```
-
-***Show all result types attached to the circuit:***
-
-`print(circuit._result_types)`
-
-Get circuit depth:
-
-`circuit.depth`
-
-Attach Expectation result type to measure both qubits [0, 1] in X basis. 
-The expectation method allows to pass an arbitrary tensor product of Pauli operators applied to each qubit, e.g. X() @ Y() @ Z():
+***Add a result type:***
 
 ```
-circuit.expectation(X() @ X(), target=[0, 1]);
-circuit.expectation(X() @ Y() @ Z(), target=[0, 1, 2]);
+circuit.probability(0)
+circuit.expectation(0.5 * X() @ X(), target=[0, 1])
 ```
 
-List of the available result types	
-adjoint_gradient, amplitude, density_matrix, expectation, probability, sample, state_vector, variance:
+***List of the available result types:***
 
-`print(circuit._result_types)`
+adjoint_gradient, amplitude, density_matrix, expectation, probability, sample, state_vector, variance
 
-Append a circuit (new_circuit) to a given circuit:
+***Add a verbatim box:***
 
-`circuit.add_circuit(new_circuit)`
+`circuit.add_verbatim_box(circuit2)`
 
-Wrap a new_circuit to a verbatim box and append to a circuit:
-
-`circuit.add_verbatim_box(new_circuit)`
-
-Wrap a circuit to a verbatim box (will be executed without as is without modifications):
-
-`Circuit().add_verbatim_box(circuit)`
-
-Gate modifiers (conditional gates with control and target qubits).
-Gate modifiers allow to specify a fractional power applied to a gate:
+***Gate modifiers:***
 
 `circuit.x(0, control=[1, 2], control_state=[0, 1], power=-0.5)`
 
-Print a circuit:
-	
+***Draw a circuit:***
+
 `print(circuit)`
 
-Create circuit from OpenQASM3 string:
+***Import from OpenQASM3:***
 
 `Circuit.from_ir(source=qasm_str)`
 
-Export to OpenQASM3:
+***Export to OpenQASM3:***
 
 `Circuit.to_ir("OPENQASM")`
 
-Create an instruction from a gate:
+***Create an instruction:***
 
 `inst = Instruction(Gate.CPhaseShift(1.23), target=[0, 1])`
 
-Add an instruction to the circuit:
+***Add an instruction:***
 
 `circuit.add(inst)`
 
-Sample random pairs of indexes (i, j) to generate random circuit:
-```
-(control, target) = random.sample(range(num_qubits), 2)
-instruction = Instruction(CNot(), target=[target], control=[control])
-circuit.add(instruction)
-```
+**FreeParameters**
 
-**FreeParameters (parametric gates)**
-
-Imports	
+***Imports:***
 
 `from braket.circuits import FreeParameter`
 
-Create a FreeParameter (symbolic parameter):
+***Create a free parameter:***
 
-`alpha = FreeParameter(“alpha”)`
+`alpha = FreeParameter("alpha")`
 
-Use FreeParameters:
+***Use a free Parameter:***
 
-`circuit.rx(0, alpha+1)`
+`circuit.rx(0, alpha)`
 
-Bind a FreeParameter to a specific value:
+***Free parameter algebra:***
 
-`circuit.make_bound_circuit({“alpha”: 0.1})`
+`beta = 2 * alpha + 1`
 
-Get the list of unbound FreeParameters:
+***Bind a value:***
+
+`circuit.make_bound_circuit({"alpha": 0.1})`
+
+***Get the list of unbound FreeParameters:***
 
 `circuit.parameters`
 
-Run circuit on a device with parametric compilation enabled.	
+***Inline compilation:***
 
-`device.run(circuit, inputs={“alpha”: 0.1})`
+`device.run(circuit, inputs={"alpha": 0.1})`
 
 **Tasks**
 
-Imports:
+***Imports:***
 
 `from braket.aws import AwsSession, AwsQuantumTask`
 
-Create a quantum task by executing a circuit on a device:
+***Create a quantum task by executing a circuit:***
 
 `task = device.run(circuit)`
 
-Disable qubit rewiring (forces trivial mapping between logical and physical qubits on QPU):
+***disable qubit rewiring:***
 
 `device.run(circuit, disable_qubit_rewiring=True)`
 
-Instantiate an AwsSession:	
+***Instantiate an AwsSession:***
+
 `session = AwsSession(...)`
 
-Re-create a previously created quantum task from ARN:
+***Recreate a quantum task:***
+
 `task = AwsQuantumTask(arn[, aws_session])`
 
-Task Queue position:
+***Queue position:***
+
 `task.queue_position()`
 
-Quantum Task batching:
+**Program Sets**
+
+***Imports:***
 
 ```
-n_batch = 5  # define circuit batch size
-circuits = [circuit for _ in range(n_batch)]  # Create a list of circuits in the batch
-batch = device.run_batch(circuits, s3_folder, shots=100)   # Submit batch of circuits
-print(batch.results()[0].measurement_counts)  # The result of the first quantum task in the batch
+from braket.program_sets import ProgramSet, CircuitBinding
+from braket.circuits.observables import X, Z
 ```
 
-Attach tag to a Quantum Task:
+***Bundle several circuits in one task. Circuits inside a program set cannot have result types attached:***
 
-```
-task = device.run(
-    circuit,
-    shots=100,
-    tags={"MyTag": "MyValue"}
-)
-```
+`program_set = ProgramSet([circuit1, circuit2], shots_per_executable=100)`
 
-**Quantum Task attributes:**
+***Sweep one circuit over parameter sets:***
 
-Cancel task: `task.cancel()`
-Task metadata: `task.metadata()`
-Task state (CREATED, COMPLETED, CANCELED, FAILED): `task.state()`
-Task position in the queue: `task.queue_position()`
-Get Task result dicitonary: `task.result()`
+`binding = CircuitBinding(circuit, input_sets=[{"theta": 0.1}, {"theta": 0.2}])`
+
+***Sweep over a Hamiltonian (observables):***
+
+`binding = CircuitBinding(circuit, {"theta": [0.1, 0.2]}, 2.1 * X(0) @ Z(1) - 4.5 * Z(0) @ Z(1))`
+
+***Build a program set from bindings:***
+
+`program_set = ProgramSet(binding)`
+
+***Pair circuits with inputs/observables:***
+
+`ProgramSet.zip([circuit1, circuit2], observables=[X(0), Z(0)])`
+
+***Cartesian product of circuits × observables:***
+
+`ProgramSet.product([circuit1], [X(0), Z(0)])`
+
+***Total number of executables:***
+
+`program_set.total_executables`
+
+***Run a program set:***
+
+`task = device.run(program_set, shots=1000)`
+
+***Expectation value of the i-th executable:***
+
+`task.result().expectation(0)`
 
 **Results**
 
-Retrieve task results:
+***Retrieve results:***
 
 `result = task.result()`
 
-Get measurement counts:
+***Get measurement counts:***
 
 `result.measurement_counts`
 
-Get measurement probabilities (for Probability Result Type):
-
-`result.measurement_probabilities`
-
-Get measured qubits:
+***Get measured qubits:***
 
 `result.measured_qubits`
 
-Get compiled circuit:
+***Get compiled circuit:***
 
 `result.get_compiled_circuit()`
 
 **Device**
 
-Imports	
+***Imports:***
 
 ```
 from braket.aws import AwsDevice
 from braket.devices import Devices
 ```
 
-Instantiate a device:
+***Instantiate a device:***
 
 `AwsDevice("<deviceARN>")`
 
-Device alias (use in place of string ARN):
+***Device alias (use in place of string ARN):***
 
-`Devices.Rigetti.AspenM3`
+`Devices.Rigetti.Cepheus1108Q`
 
-QuantumTask Queue depth:
+***Queue depth:***
 
 `device.queue_depth()`
 
-Gate pulse implementation:
+***Gate pulse implementation:***
 
 `device.gate_calibrations`
 
-SV1 Simulator ARN:
+**Reservations**
 
-“arn:aws:braket:::device/quantum-simulator/amazon/sv1”
+***Imports:***
 
-TN1 Simulator ARN (Tensor Network simulator):
+`from braket.aws import AwsDevice, DirectReservation`
 
-“arn:aws:braket:::device/quantum-simulator/amazon/tn1”
+***Reserve via a context manager. Every task created inside the context is submitted against the reservation:***
 
-DM1 Simulator ARN (density matrix simulator):
+```
+with DirectReservation(device, reservation_arn="<arn>"):
+    task = device.run(circuit, shots=100)
+```
 
-“arn:aws:braket:::device/quantum-simulator/amazon/dm1”
+***Start / stop a reservation explicitly:***
 
-Rydberg atom devices Aquila (AHS device from QuEra):
+```
+res = DirectReservation(device, reservation_arn="<arn>")
+res.start()
+res.stop()
+```
 
-“arn:aws:braket:us-east-1::device/qpu/quera/Aquila”
+***Apply to a single quantum task:***
 
-Rigetti Aspen M3 device	"arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
+`device.run(circuit, shots=100, reservation_arn="<arn>")`
 
-IQM Garnet device (20 qubits):
+***Apply to a hybrid job:***
 
-"arn:aws:braket:eu-north-1::device/qpu/iqm/Garnet"
+`@hybrid_job(device=Devices.IQM.Garnet, reservation_arn="<arn>")`
 
 **Device Properties**
 
-Connectivity graph	
-device.properties.paradigm.connectivity
+***Connectivity graph:***
 
-Fidelities dictionary:
+`device.properties.paradigm.connectivity`
+
+***Fidelities dictionary:***
+
 `device.properties.provider.specs`
 
-Native gate set:
+***Native gate set:***
 
 `device.properties.paradigm.nativeGateSet`
 
-Cost and availability:
+***Cost and availability:***
 
 `device.properties.service`
 
-Pulse properties:
+***Pulse properties:***
+
 `device.properties.pulse`
 
-Actions properties:
+***Actions properties:***
+
 `action_properties = device.properties.action['braket.ir.openqasm.program']`
 
-Supported gates:
+***Supported gates:***
 
 `action_properties.supportedOperations`
 
-Get 2Q gate fidelitis for a qubit pair (i, j):
+**Experimental Capabilities**
 
-`device.properties.dict()["provider"]["specs"]["2Q"][f"{i}-{j}"]`
+***Imports:***
 
+```
+import math
+from braket.circuits import Circuit
+from braket.experimental_capabilities import EnableExperimentalCapability
+```
+
+***Enable experimental capabilities. Experimental operations raise an error unless created inside this context manager:***
+
+```
+with EnableExperimentalCapability():
+    circuit = Circuit()
+```
+
+***Mid-circuit measurement into a feedback register (IQM):***
+
+`circuit.measure_ff(0, feedback_key=0)`
+
+***Classically-controlled PRx, conditioned on a feedback key (IQM):***
+
+`circuit.cc_prx(1, math.pi / 2, math.pi / 4, feedback_key=0)`
+
+***Available on:***
+
+IQM devices (e.g. `Devices.IQM.Garnet`)
 
 **Pricing**
 
-Imports:
+***Imports:***
+
 `from braket.tracking import Tracker`
 
-Start the cost tracker:
+***Start the cost tracker:***
+
 `tracker=Tracker().start()`
 
-Print costs:
+***Print costs:***
+
 ```
 tracker.qpu_tasks_cost()
 tracker.simulator_tasks_cost()
 ```
 
-Cost summary:
+***Cost summary:***
 
 `tracker.quantum_tasks_statistics()`
 
-
-
 **Hybrid Jobs**
 
-Imports	
-`from braket.aws import AwsQuantumJob`
+***Imports:***
 
-Create a job	
 ```
-job = AwsQuantumJob.create(arn, source_module="algorithm_script.py", entry_point="algorithm_script:start_here", wait_until_complete=True)
+from braket.aws import AwsQuantumJob
+from braket.devices import Devices
+from braket.jobs import hybrid_job, save_job_result
+from braket.jobs.metrics import log_metric
 ```
 
-AwsQuantumJob Queue position:
+***Create a script-based job:***
 
-`job.queue_position()`
+`job = AwsQuantumJob.create(Devices.Amazon.SV1, source_module="algorithm_script.py", entry_point="algorithm_script:start_here", wait_until_complete=True)`
 
-Job decorator (local mode):
+***Decorate an entry point. The job is created when the decorated function is called:***
+
+```
+@hybrid_job(device=Devices.Amazon.SV1)
+def my_job():
+    return save_job_result({"theta": 0.5})
+```
+
+***Run the job (creates it):***
+
+`job = my_job()`
+
+***Run locally without creating an AWS job:***
 
 `@hybrid_job(device=None, local=True)`
 
-Records Braket Hybrid Job metrics (will be displayed on Hybrid Jobbs concole metrics log):
+***Add Python dependencies:***
 
-`log_metric(metric_name=metric_name, value=value, iteration_number=iteration_number)`
+`@hybrid_job(device=Devices.Amazon.SV1, dependencies="requirements.txt")`
 
+***Include extra source modules:***
 
-**Simulator**
+`@hybrid_job(device=Devices.Amazon.SV1, include_modules=["my_module"])`
 
-Imports	
-from braket.devices import LocalSimulator
+***Pass input data:***
 
-Instantiate the local simulator	
-local_sim = LocalSimulator()
+`@hybrid_job(device=Devices.Amazon.SV1, input_data="s3://my-bucket/input")`
+
+***Use a reservation:***
+
+`@hybrid_job(device=Devices.IQM.Garnet, reservation_arn="<arn>")`
+
+***Record metrics inside the job:***
+
+`log_metric(metric_name="loss", value=0.123, iteration_number=0)`
+
+***Retrieve the result:***
+
+`job.result()`
+
+***Queue position:***
+
+`job.queue_position()`
+
+**Simulators**
+
+***Imports:***
+
+`from braket.devices import LocalSimulator`
+
+***Instantiate the local simulator:***
+
+`local_sim = LocalSimulator()`
+
+**Emulators**
+
+***Imports:***
+
+```
+from braket.aws import AwsDevice
+from braket.devices import Devices, LocalSimulator
+from braket.emulation import Emulator
+from braket.emulation.local_emulator import LocalEmulator
+```
+
+***Get an emulator for a QPU. Emulators are only available for QPUs; requesting one from a managed simulator raises an error:***
+
+`emulator = AwsDevice(Devices.IQM.Garnet).emulator`
+
+***Validate a circuit against device constraints:***
+
+`emulator.validate(circuit)`
+
+***Compile a circuit to the device's native gates and connectivity:***
+
+`compiled = emulator.transform(circuit)`
+
+***Run on the emulated backend (applies device noise):***
+
+`result = emulator.run(circuit, shots=100).result()`
+
+***Inspect the device noise model:***
+
+`emulator.noise_model`
+
+***Build a custom emulator:***
+
+`emulator = Emulator(backend=LocalSimulator("braket_dm"))`
+
+***Emulator from a device-properties JSON:***
+
+`emulator = LocalEmulator.from_json(properties_json)`
 
 **Noise Simulation**
 
-Imports:
+***Imports:***
 
-`from braket.circuits import Noise`
+`from braket.circuits import Noise, Gate`
 
-Apply Depolarizing noise:
+***Depolarizing noise:***
 
 `circuit.depolarizing(0, 0.1)`
 
-Apply a Kraus operator:
+***Apply a Kraus operator:***
 
 `circuit.kraus([0,2], [E0, E1])`
 
-Phase dampling channel:
+***Phase damping channel:***
 
 `noise = Noise.PhaseDamping(0.1)`
 
-Apply a noise channel to an individual X gate	
+***Apply a noise channel:***
 
 `circuit.apply_gate_noise(noise, Gate.X)`
 
-
-
 **Low-Level Device Control**
 
-Imports	
+***Imports:***
+
 ```
 from braket.pulse import PulseSequence, Frame
 from braket.pulse.waveforms import *
 ```
 
-Create a new pulse sequence:
+***Create a new pulse sequence:***
 
 `pulse_sequence = PulseSequence()`
 
-Predefined ports:
+***Predefined ports:***
 
 `device.ports`
 
-Predefined frames:
+***Predefined frames:***
 
 `device.frames`
 
-Create a frame:
+***Create a frame:***
 
 `Frame(port, frequency[, phase])`
 
-Predefined waveforms:
+***Predefined waveforms:***
 
 ```
 ConstantWaveform(length, iq)
@@ -409,82 +484,158 @@ GaussianWaveform(length, width, amplitude, zero_at_edges)
 DragGaussianWaveform(length, width, amplitude, beta, zero_at_edges)
 ```
 
-Play a waveform:
+***Play a waveform:***
 
 `pulse_sequence.play(frame, waveform)`
 
-Add a delay:
+***Add a delay:***
 
 `pulse_sequence.delay(frame, delay)`
 
-Set frequency:
+***Set frequency:***
 
 `pulse_sequence.set_frequency(frame, frequency)`
 
-Shift frequency:
+***Shift frequency:***
 
 `pulse_sequence.shift_frequency(frame, detuning)`
 
-`Set phase:`
-pulse_sequence.set_phase(frame, phase)
+***Set phase:***
 
-`Shift phase:`
+`pulse_sequence.set_phase(frame, phase)`
 
-pulse_sequence.shift_phase(frame, phi)
+***Shift phase:***
 
-Get the time series:
+`pulse_sequence.shift_phase(frame, phi)`
+
+***Get the time series:***
 
 `pulse_sequence.to_time_traces()`
 
-
 **Analog Hamiltonian Simulation**
 
-Imports:
+***Imports:***
+
 `from braket.ahs import AtomArrangement, DrivingField, AnalogHamiltonianSimulation`
 
-Atom arrangement:
+***Atom arrangement:***
 
 `register = AtomArrangement()`
 
-Add an atom with (x, y) coordinates (in meters):
+***Add an atom by coordinates (in meters):***
 
 `register.add((5.7e-6, 5.7e-6))`
 
-Add atoms in square lattice with lattice spacing a
+***Get coordinates:***
 
-```
-a = 5e-6
-for i in range(nx): 
-    for j in range(ny): 
-        register.add((i*a, j*a))
-```
+`register.coordinate_list(axis)`
 
-Get atom coordinates along x-axis:
-
-`register.coordinate_list(0)`
-
-Get atom coordinates along y-axis:
-
-`register.coordinate_list(1)`
-
-Create a driving field:
+***Create a driving field:***
 
 `DrivingField(amplitude, phase, detuning)`
 
-Create an AHS program:
+***Create an AHS program:***
 
 `ahs_program = AnalogHamiltonianSimulation(register, drive)`
 
-Run an AHS program:
+***Run an AHS program:***
 
 `device.run(ahs_program)`
 
 **Error Mitigation**
 
-Debias:
+***Debias:***
 
 `device.run(circuit, shots=2500, device_parameters={"errorMitigation": Debias()})`
 
-Sharpening (if debiasing used):
+***Sharpening (if debiasing used):***
 
 `result.additional_metadata.ionqMetadata.sharpenedProbabilities`
+
+**Console**
+
+***Device tab:***
+
+```
+Device summary
+Connectivity
+```
+
+***Notebook:***
+
+Jupyter hub
+
+***Braket Direct:***
+
+```
+Device reservation
+Office hours
+```
+
+**API Calls**
+
+***Cancel a Braket hybrid job:***
+
+CancelJob
+
+***Cancel the specified task:***
+
+CancelQuantumTask
+
+***Create a Braket hybrid job:***
+
+CreateJob
+
+***Create a quantum task:***
+
+CreateQuantumTask
+
+***Retrieve the devices available in Braket:***
+
+GetDevice
+
+***Retrieve the specified Braket hybrid job:***
+
+GetJob
+
+***Retrieve the specified quantum task:***
+
+GetQuantumTask
+
+***Show the tags associated with this resource:***
+
+ListTagsForResource
+
+***Search for devices using the specified filters:***
+
+SearchDevices
+
+***Search for Braket hybrid jobs that match the specified filter values:***
+
+SearchJobs
+
+***Search for tasks that match the specified filter values:***
+
+SearchQuantumTasks
+
+***Add a tag to the specified resource:***
+
+TagResource
+
+***Remove tags from a resource:***
+
+UntagResource
+
+**Qiskit Provider**
+
+***Imports:***
+
+`from qiskit_braket_provider import AWSBraketProvider`
+
+***Instantiate a provider:***
+
+`provider = AWSBraketProvider()`
+
+***Instantiate a backend:***
+
+`provider.get_backend(name)`
