@@ -10,6 +10,9 @@
 - file: Tasks.md
   title: Tasks
   fr: Tâches
+- file: ProgramSets.md
+  title: Program Sets
+  fr: Ensembles de programmes
 - file: Results.md
   title: Results
 - file: Device.md
