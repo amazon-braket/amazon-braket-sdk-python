@@ -4,6 +4,7 @@
 
 ### Bug Fixes and Other Changes
 
+ * accept division in `FreeParameterExpression` string constructor
  * raise DiscretizationError when rydbergLocal params missing
 
 ## v1.117.3 (2026-05-14)

@@ -54,7 +54,7 @@ def test_equality_str():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+    FreeParameterExpression("theta//1")
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -109,6 +109,26 @@ def test_truediv():
         FreeParameter("alpha")
     )
     assert truediv_expr == expected
+
+
+def test_truediv_str():
+    truediv_expr = FreeParameterExpression("theta/alpha")
+    expected = FreeParameter("theta") / FreeParameter("alpha")
+    assert truediv_expr == expected
+
+
+@pytest.mark.parametrize(
+    ("string_expression", "operator_expression"),
+    [
+        ("theta+alpha", FreeParameter("theta") + FreeParameter("alpha")),
+        ("theta-alpha", FreeParameter("theta") - FreeParameter("alpha")),
+        ("theta*alpha", FreeParameter("theta") * FreeParameter("alpha")),
+        ("theta/alpha", FreeParameter("theta") / FreeParameter("alpha")),
+        ("theta**alpha", FreeParameter("theta") ** FreeParameter("alpha")),
+    ],
+)
+def test_basic_binary_operator_strings_match_operator_path(string_expression, operator_expression):
+    assert FreeParameterExpression(string_expression) == operator_expression
 
 
 def test_r_truediv():
