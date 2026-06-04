@@ -19,6 +19,7 @@ from braket.circuits.serialization import IRType
 from braket.parametric import FreeParameter
 from braket.program_sets import CircuitBinding
 from braket.quantum_information import PauliString
+from braket.registers import QubitSet
 
 
 def _source(circuit):
@@ -260,13 +261,41 @@ def test_string_circuit_no_measure_or_version_line():
     assert serialized.rstrip().endswith("rz(_OBSERVABLE_OMEGA_1) q[1];")
 
 
-def test_parse_source_defaults_when_no_register_declared():
-    # Exercises the `_parse_source` fallback to qubit_format "q[{}]" when no
-    # `qubit[N] <name>;` declaration is present and no physical qubits are used.
+def test_parse_openqasm_physical_when_no_register_declared():
+    # With no `qubit[N] <name>;` declaration, the source is treated as addressing physical
+    # qubits (`$N`).
     from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
 
-    parsed = _parse_openqasm("h q[0];")
+    parsed = _parse_openqasm("rx(0.5) $0;\ncnot $0, $1;")
+    assert parsed.qubit_format == "${}"
+    assert parsed.qubits == QubitSet([0, 1])
+
+
+def test_parse_openqasm_qubit_count_from_declaration():
+    # The qubit set comes from the register declaration size, covering broadcast gates
+    # like `h q;` that carry no explicit index.
+    from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
+
+    parsed = _parse_openqasm("OPENQASM 3.0;\nqubit[3] q;\nh q;")
     assert parsed.qubit_format == "q[{}]"
+    assert parsed.qubits == QubitSet([0, 1, 2])
+
+
+def test_parse_openqasm_single_unindexed_qubit():
+    # `qubit q;` (no size) declares a single qubit at index 0.
+    from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
+
+    parsed = _parse_openqasm("OPENQASM 3.0;\nqubit q;\nh q;")
+    assert parsed.qubits == QubitSet([0])
+
+
+def test_string_circuit_broadcast_gate():
+    # A register-broadcast gate (`h q;`) should still yield Euler rotations on every qubit.
+    src = "OPENQASM 3.0;\nqubit[2] q;\nh q;"
+    cb = CircuitBinding(src, observables=[X(0) @ Y(1)])
+    serialized = cb.to_ir().source
+    assert "rz(_OBSERVABLE_THETA_0) q[0];" in serialized
+    assert "rz(_OBSERVABLE_THETA_1) q[1];" in serialized
 
 
 def test_circuit_binding_dunders(circuit_rx_parametrized):

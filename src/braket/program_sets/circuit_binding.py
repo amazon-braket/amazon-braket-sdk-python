@@ -20,7 +20,6 @@ from dataclasses import dataclass
 
 from braket.default_simulator.openqasm.parser.openqasm_ast import (
     Identifier,
-    IndexedIdentifier,
     IntegerLiteral,
     QASMNode,
     QuantumMeasurementStatement,
@@ -55,31 +54,28 @@ def _parse_openqasm(source: str) -> _ParsedOpenQASM:
     program = parse(source)
     declarations_index = 1 if program.version is not None else 0
     measure_index = len(lines)
-    register_name = "q"
+    register_name = None
+    register_size = 0
     for stmt in program.statements:
-        if isinstance(stmt, QubitDeclaration) and register_name == "q":
+        if isinstance(stmt, QubitDeclaration) and register_name is None:
             register_name = stmt.qubit.name
+            # stmt.size is None for a single unindexed qubit
+            register_size = stmt.size.value if isinstance(stmt.size, IntegerLiteral) else 1
         if isinstance(stmt, QuantumMeasurementStatement) and measure_index == len(lines):
-            # AST spans are 1-indexed; convert to a 0-indexed line index.
+            # span is 1-indexed; convert to a 0-indexed line index.
             measure_index = stmt.span.start_line - 1
 
-    qubits_physical = set()
-    qubits_virtual = set()
-    for node in _walk(program):
-        if isinstance(node, Identifier) and node.name.startswith("$"):
-            qubits_physical.add(int(node.name[1:]))
-        elif (
-            isinstance(node, IndexedIdentifier)
-            and node.name.name == register_name
-            and len(node.indices) == 1
-            and len(node.indices[0]) == 1
-            and isinstance(node.indices[0][0], IntegerLiteral)
-        ):
-            qubits_virtual.add(node.indices[0][0].value)
     qubit_format, qubits = (
-        ("${}", QubitSet(qubits_physical))
-        if qubits_physical
-        else (f"{register_name}[{{}}]", QubitSet(qubits_virtual))
+        (f"{register_name}[{{}}]", QubitSet(range(register_size)))
+        if register_name
+        else (
+            "${}",
+            QubitSet(
+                int(node.name[1:])
+                for node in _walk(program)
+                if isinstance(node, Identifier) and node.name.startswith("$")
+            ),
+        )
     )
     return _ParsedOpenQASM(
         lines=lines,
