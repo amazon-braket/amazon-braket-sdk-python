@@ -262,8 +262,14 @@ def check_behaviour() -> list[str]:
         run_params = inspect.signature(AwsDevice.run).parameters
         assert "reservation_arn" in run_params
         job_params = inspect.signature(hybrid_job).parameters
-        for expected in ("device", "local", "dependencies", "include_modules",
-                         "input_data", "reservation_arn"):
+        for expected in (
+            "device",
+            "local",
+            "dependencies",
+            "include_modules",
+            "input_data",
+            "reservation_arn",
+        ):
             assert expected in job_params, expected
         assert "reservation_arn" in inspect.signature(AwsQuantumJob.create).parameters
         res_params = inspect.signature(DirectReservation.__init__).parameters
