@@ -17,9 +17,13 @@ These helpers let you build symbolic OpenQASM math expressions without importing
 SymPy or touching the internal expression attribute.
 
 Examples:
-    >>> from braket.parametric import FreeParameter, cos, sin
+    >>> from braket.circuits import Circuit
+    >>> from braket.parametric import FreeParameter, arcsin
     >>> alpha = FreeParameter("alpha")
-    >>> expr = sin(alpha / 2) ** 2 + cos(alpha / 2) ** 2
+    >>> circuit = Circuit().rx(0, arcsin(alpha))
+    >>> source = circuit.to_ir("OPENQASM").source
+    >>> "rx(arcsin(alpha)) q[0];" in source
+    True
 """
 
 from __future__ import annotations
@@ -48,7 +52,7 @@ def sin(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the sine of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic sine expression.
@@ -60,7 +64,7 @@ def cos(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the cosine of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic cosine expression.
@@ -72,7 +76,7 @@ def tan(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the tangent of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic tangent expression.
@@ -84,7 +88,7 @@ def arcsin(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the arcsine (inverse sine) of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic arcsine expression.
@@ -96,7 +100,7 @@ def arccos(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the arccosine (inverse cosine) of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic arccosine expression.
@@ -108,7 +112,7 @@ def arctan(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the arctangent (inverse tangent) of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic arctangent expression.
@@ -120,7 +124,7 @@ def exp(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the exponential of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic exponential expression.
@@ -132,7 +136,7 @@ def log(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the natural logarithm of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic natural logarithm expression.
@@ -144,7 +148,7 @@ def sqrt(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the square root of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic square root expression.
@@ -159,8 +163,8 @@ def mod(
     """Returns the remainder of a free parameter expression divided by ``m``.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The dividend expression.
-        m (FreeParameterExpression | FreeParameter | Number): The divisor expression.
+        x (FreeParameterExpression | Number): The dividend expression.
+        m (FreeParameterExpression | Number): The divisor expression.
 
     Returns:
         FreeParameterExpression: The symbolic modulo expression.
@@ -172,7 +176,7 @@ def ceiling(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the ceiling of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic ceiling expression.
@@ -184,7 +188,7 @@ def floor(x: FreeParameterExpression | Number) -> FreeParameterExpression:
     """Returns the floor of a free parameter expression.
 
     Args:
-        x (FreeParameterExpression | FreeParameter | Number): The expression.
+        x (FreeParameterExpression | Number): The expression.
 
     Returns:
         FreeParameterExpression: The symbolic floor expression.

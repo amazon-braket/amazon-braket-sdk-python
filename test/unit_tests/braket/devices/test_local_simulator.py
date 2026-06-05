@@ -693,7 +693,6 @@ def test_run_program_model_inputs():
 
 
 def test_local_simulator_runs_sympy_inverse_trig_free_parameter_expression():
-    # Use StateVectorSimulator directly so OpenQASM validation runs.
     alpha = FreeParameter("alpha")
     expr = FreeParameterExpression(sympy.asin(alpha.expression))
     circuit = Circuit().rx(0, expr).measure(0)
@@ -705,7 +704,6 @@ def test_local_simulator_runs_sympy_inverse_trig_free_parameter_expression():
 
 
 def test_local_simulator_runs_parametric_math_helper_expression():
-    # Use StateVectorSimulator directly so OpenQASM validation runs.
     alpha = FreeParameter("alpha")
     expr = sin(alpha / 2) ** 2 + cos(alpha / 2) ** 2
     circuit = Circuit().rx(0, expr).measure(0)

@@ -42,7 +42,7 @@ class _OpenQASMExpressionPrinter(StrPrinter):
 
     def _print_Function(self, expr: sympy.Function) -> str:
         function_name = self._FN_MAP.get(expr.func)
-        if not function_name:
+        if function_name is None:
             raise ValueError(f"No OpenQASM 3 equivalent for {expr.func.__name__}")
         args = ", ".join(self._print(arg) for arg in expr.args)
         return f"{function_name}({args})"
