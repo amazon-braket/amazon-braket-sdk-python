@@ -52,9 +52,10 @@ def test_equality_str():
     assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+def test_truediv_str():
+    expr_1 = FreeParameterExpression("alpha/beta")
+    expr_2 = FreeParameter("alpha") / FreeParameter("beta")
+    assert expr_1 == expr_2
 
 
 @pytest.mark.xfail(raises=ValueError)
