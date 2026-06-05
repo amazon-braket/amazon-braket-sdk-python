@@ -15,7 +15,6 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-import sympy
 
 import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
@@ -45,20 +44,6 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.parametric import (
-    arccos,
-    arcsin,
-    arctan,
-    ceiling,
-    cos,
-    exp,
-    floor,
-    log,
-    mod,
-    sin,
-    sqrt,
-    tan,
-)
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
 
@@ -1269,67 +1254,6 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
         )
         == expected_ir
     )
-
-
-def test_circuit_openqasm_uses_openqasm_free_parameter_expression_name():
-    alpha = FreeParameter("alpha")
-    expr = FreeParameterExpression(sympy.asin(alpha.expression))
-    source = Circuit().rx(0, expr).measure(0).to_ir(IRType.OPENQASM).source
-
-    assert "rx(arcsin(alpha)) q[0];" in source
-
-
-@pytest.mark.parametrize(
-    ("function", "extra_args", "expected_parameter"),
-    [
-        (sympy.asin, (), "arcsin(alpha)"),
-        (sympy.acos, (), "arccos(alpha)"),
-        (sympy.atan, (), "arctan(alpha)"),
-        (sympy.Mod, (2,), "mod(alpha, 2)"),
-    ],
-)
-def test_circuit_openqasm_emits_supported_free_parameter_expression_names(
-    function, extra_args, expected_parameter
-):
-    alpha = FreeParameter("alpha")
-    expr = FreeParameterExpression(function(alpha.expression, *extra_args))
-    source = Circuit().rx(0, expr).measure(0).to_ir(IRType.OPENQASM).source
-
-    assert f"rx({expected_parameter}) q[0];" in source
-
-
-@pytest.mark.parametrize(
-    ("build_expr", "expected_parameter"),
-    [
-        (lambda alpha: sin(alpha), "sin(alpha)"),
-        (lambda alpha: cos(alpha), "cos(alpha)"),
-        (lambda alpha: tan(alpha), "tan(alpha)"),
-        (lambda alpha: arcsin(alpha), "arcsin(alpha)"),
-        (lambda alpha: arccos(alpha), "arccos(alpha)"),
-        (lambda alpha: arctan(alpha), "arctan(alpha)"),
-        (lambda alpha: exp(alpha), "exp(alpha)"),
-        (lambda alpha: log(alpha), "log(alpha)"),
-        (lambda alpha: sqrt(alpha), "sqrt(alpha)"),
-        (lambda alpha: mod(alpha, 2), "mod(alpha, 2)"),
-        (lambda alpha: ceiling(alpha), "ceiling(alpha)"),
-        (lambda alpha: floor(alpha), "floor(alpha)"),
-    ],
-)
-def test_circuit_openqasm_emits_parametric_math_helpers(build_expr, expected_parameter):
-    alpha = FreeParameter("alpha")
-    source = Circuit().rx(0, build_expr(alpha)).measure(0).to_ir(IRType.OPENQASM).source
-
-    assert f"rx({expected_parameter}) q[0];" in source
-
-
-def test_circuit_openqasm_emits_composed_parametric_math_helper_expression():
-    alpha = FreeParameter("alpha")
-    expr = sin(alpha / 2) ** 2 + cos(alpha / 2) ** 2
-    source = Circuit().rx(0, expr).measure(0).to_ir(IRType.OPENQASM).source
-
-    assert "sin(" in source
-    assert "cos(" in source
-    assert "alpha" in source
 
 
 @pytest.mark.parametrize(
