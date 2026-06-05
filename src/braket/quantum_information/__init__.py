@@ -12,8 +12,8 @@
 # language governing permissions and limitations under the License.
 
 """Provides utilities for working with quantum information concepts. It
-includes the PauliString class for representing and manipulating tensor products
-of Pauli operators.
+includes the PauliString and PauliSum classes for representing and manipulating
+tensor products of Pauli operators.
 """
 
-from braket.quantum_information.pauli_string import PauliString  # noqa: F401
+from braket.quantum_information.pauli_string import PauliString, PauliSum  # noqa: F401

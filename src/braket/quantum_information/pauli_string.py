@@ -14,9 +14,12 @@
 from __future__ import annotations
 
 import itertools
+import numbers
+from collections.abc import Iterable, Iterator
 
 from braket.circuits.circuit import Circuit
-from braket.circuits.observables import I, TensorProduct, X, Y, Z
+from braket.circuits.observable import Observable
+from braket.circuits.observables import I, Sum, TensorProduct, X, Y, Z
 
 _IDENTITY = "I"
 _PAULI_X = "X"
@@ -217,7 +220,7 @@ class PauliString:
             self._nontrivial = out_pauli_string._nontrivial
         return out_pauli_string
 
-    def __mul__(self, other: PauliString) -> PauliString:
+    def __mul__(self, other: PauliString | numbers.Number) -> PauliString | PauliSum:
         """Right multiplication operator overload using `dot()`.
 
         Returns the result of multiplying the current circuit by the argument on its right.
@@ -234,7 +237,28 @@ class PauliString:
         See Also:
             `braket.quantum_information.PauliString.dot()`
         """
-        return self.dot(other)
+        if isinstance(other, PauliString):
+            return self.dot(other)
+        if isinstance(other, numbers.Number):
+            return PauliSum.from_terms([(other, self)])
+        raise TypeError("PauliString can only multiply PauliString or scalar values")
+
+    def __rmul__(self, other: numbers.Number) -> PauliSum:
+        """Returns a weighted Pauli sum from scalar multiplication."""
+
+        if isinstance(other, numbers.Number):
+            return PauliSum.from_terms([(other, self)])
+        raise TypeError("PauliString coefficients must be numbers")
+
+    def __add__(self, other: PauliString | PauliSum) -> PauliSum:
+        """Returns a Pauli sum containing this Pauli string and the argument."""
+
+        return PauliSum.from_terms([(1, self)]) + other
+
+    def __sub__(self, other: PauliString | PauliSum) -> PauliSum:
+        """Returns a Pauli sum containing this Pauli string minus the argument."""
+
+        return PauliSum.from_terms([(1, self)]) - other
 
     def __imul__(self, other: PauliString) -> PauliString:
         """Operator overload for right-multiplication assignment (`*=`) using `dot()`.
@@ -375,6 +399,9 @@ class PauliString:
             factors[i] = p
         return f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}"
 
+    def __hash__(self):
+        return hash((self._phase, self._qubit_count, tuple(sorted(self._nontrivial.items()))))
+
     @staticmethod
     def _split(pauli_word: str) -> tuple[int, str]:
         index = 0
@@ -408,3 +435,230 @@ class PauliString:
             elif state == -2:
                 circ.h(qubit).si(qubit)
         return circ
+
+
+class PauliSum:
+    """A weighted sum of Pauli strings."""
+
+    def __init__(self, terms: Iterable[tuple[numbers.Number, str | PauliString | PauliSum]]):
+        """Initializes a `PauliSum`.
+
+        Args:
+            terms (Iterable[tuple[numbers.Number, str | PauliString | PauliSum]]): Weighted terms
+                as ``(coefficient, pauli_string)`` pairs.
+        """
+        self._terms: dict[PauliString, numbers.Number] = {}
+        self._qubit_count: int | None = None
+        for coefficient, pauli in terms:
+            self._add_term(coefficient, pauli)
+
+    @property
+    def qubit_count(self) -> int | None:
+        """int | None: Number of qubits for non-empty sums, otherwise `None`."""
+
+        return self._qubit_count
+
+    @classmethod
+    def from_terms(
+        cls, terms: Iterable[tuple[numbers.Number, str | PauliString | PauliSum]]
+    ) -> PauliSum:
+        """Returns a `PauliSum` from weighted Pauli strings."""
+
+        return cls(terms)
+
+    @classmethod
+    def from_list(cls, terms: list[tuple[numbers.Number, str | PauliString]]) -> PauliSum:
+        """Returns a `PauliSum` from a list of weighted Pauli strings."""
+
+        return cls(terms)
+
+    @classmethod
+    def from_sum(cls, observable_sum: Sum) -> PauliSum:
+        """Returns a `PauliSum` from a Braket `Sum` of Pauli observables.
+
+        Args:
+            observable_sum (Sum): Observable sum made from `I`, `X`, `Y`, `Z`, and their tensor
+                products.
+
+        Returns:
+            PauliSum: The equivalent weighted Pauli string sum.
+        """
+
+        if not isinstance(observable_sum, Sum):
+            raise TypeError("Input must be a braket.circuits.observables.Sum")
+        return cls(PauliSum._term_from_observable(summand) for summand in observable_sum.summands)
+
+    def to_list(self) -> list[tuple[numbers.Number, str]]:
+        """Returns terms as `(coefficient, pauli_string)` pairs."""
+
+        return [(coefficient, repr(pauli)) for pauli, coefficient in self._terms.items()]
+
+    def to_sum(self) -> Sum:
+        """Returns this Pauli sum as a Braket observable `Sum`."""
+
+        if not self._terms:
+            raise ValueError("Cannot convert an empty PauliSum to an observable Sum")
+        return Sum([
+            coefficient * pauli.to_unsigned_observable(include_trivial=True)
+            for pauli, coefficient in self._terms.items()
+        ])
+
+    def commutes_with(self, other: str | PauliString | PauliSum) -> bool:
+        """Returns `True` if every term commutes with every term in `other`."""
+
+        other_sum = PauliSum.from_terms([(1, other)])
+        return all(
+            PauliSum._commutes(left, right) for left in self._terms for right in other_sum._terms
+        )
+
+    def is_self_commuting(self) -> bool:
+        """Returns `True` if every pair of terms in this sum commute."""
+
+        terms = tuple(self._terms)
+        return all(
+            PauliSum._commutes(terms[left], terms[right])
+            for left in range(len(terms))
+            for right in range(left + 1, len(terms))
+        )
+
+    def __add__(self, other: str | PauliString | PauliSum) -> PauliSum:
+        out = PauliSum((coefficient, pauli) for pauli, coefficient in self._terms.items())
+        out._add_term(1, other)
+        return out
+
+    def __radd__(self, other: str | PauliString) -> PauliSum:
+        return self + other
+
+    def __sub__(self, other: str | PauliString | PauliSum) -> PauliSum:
+        return self + (-1 * PauliSum.from_terms([(1, other)]))
+
+    def __rsub__(self, other: str | PauliString) -> PauliSum:
+        return PauliSum.from_terms([(1, other)]) - self
+
+    def __mul__(self, other: numbers.Number | str | PauliString | PauliSum) -> PauliSum:
+        if isinstance(other, numbers.Number):
+            return PauliSum(
+                (coefficient * other, pauli) for pauli, coefficient in self._terms.items()
+            )
+
+        other_sum = PauliSum.from_terms([(1, other)])
+        return PauliSum(
+            (left_coefficient * right_coefficient, left * right)
+            for left, left_coefficient in self._terms.items()
+            for right, right_coefficient in other_sum._terms.items()
+        )
+
+    def __rmul__(self, other: numbers.Number | str | PauliString) -> PauliSum:
+        if isinstance(other, numbers.Number):
+            return self * other
+        return PauliSum.from_terms([(1, other)]) * self
+
+    def __neg__(self) -> PauliSum:
+        return -1 * self
+
+    def __getitem__(self, item: str | PauliString) -> numbers.Number:
+        key, phase = self._canonicalize(item)
+        return phase * self._terms[key]
+
+    def __contains__(self, item: str | PauliString) -> bool:
+        key, _ = self._canonicalize(item)
+        return key in self._terms
+
+    def __iter__(self) -> Iterator[tuple[PauliString, numbers.Number]]:
+        return iter(self._terms.items())
+
+    def __len__(self):
+        return len(self._terms)
+
+    def __eq__(self, other: PauliSum):
+        if isinstance(other, PauliSum):
+            return self._terms == other._terms
+        return False
+
+    def __repr__(self):
+        if not self._terms:
+            return "PauliSum([])"
+        terms = ", ".join(
+            f"({coefficient!r}, {pauli!r})" for pauli, coefficient in self._terms.items()
+        )
+        return f"PauliSum([{terms}])"
+
+    def _add_term(self, coefficient: numbers.Number, pauli: str | PauliString | PauliSum) -> None:
+        if isinstance(pauli, PauliSum):
+            for sum_pauli, sum_coefficient in pauli:
+                self._add_term(coefficient * sum_coefficient, sum_pauli)
+            return
+        if not isinstance(coefficient, numbers.Number):
+            raise TypeError("PauliSum coefficients must be numbers")
+
+        canonical, phase = self._canonicalize(pauli)
+        self._validate_qubit_count(canonical)
+        next_coefficient = self._terms.get(canonical, 0) + coefficient * phase
+        if next_coefficient:
+            self._terms[canonical] = next_coefficient
+        else:
+            self._terms.pop(canonical, None)
+            if not self._terms:
+                self._qubit_count = None
+
+    def _validate_qubit_count(self, pauli: PauliString) -> None:
+        if self._qubit_count is None:
+            self._qubit_count = pauli.qubit_count
+        elif self._qubit_count != pauli.qubit_count:
+            raise ValueError(
+                f"Input Pauli string must be of length ({self._qubit_count}), "
+                f"not {pauli.qubit_count}"
+            )
+
+    @staticmethod
+    def _canonicalize(pauli: str | PauliString) -> tuple[PauliString, int]:
+        if isinstance(pauli, str):
+            pauli = PauliString(pauli)
+        if not isinstance(pauli, PauliString):
+            raise TypeError("PauliSum terms must be PauliString, PauliSum, or str values")
+
+        factors = ["I"] * pauli.qubit_count
+        for i, p in pauli._nontrivial.items():
+            factors[i] = p
+        return PauliString(f"+{''.join(factors)}"), pauli.phase
+
+    @staticmethod
+    def _commutes(left: PauliString, right: PauliString) -> bool:
+        if left.qubit_count != right.qubit_count:
+            raise ValueError(
+                f"Input Pauli string must be of length ({left.qubit_count}), "
+                f"not {right.qubit_count}"
+            )
+        anticommuting_factors = sum(
+            left_factor not in {"I", right_factor} and right_factor != "I"
+            for left_factor, right_factor in (
+                (_pauli_factor(left, qubit), _pauli_factor(right, qubit))
+                for qubit in range(left.qubit_count)
+            )
+        )
+        return anticommuting_factors % 2 == 0
+
+    @staticmethod
+    def _term_from_observable(observable: Observable) -> tuple[numbers.Number, PauliString]:
+        coefficient = observable.coefficient
+        if isinstance(observable, TensorProduct):
+            return coefficient, PauliString(
+                "".join(PauliSum._factor_from_observable(factor) for factor in observable.factors)
+            )
+        return coefficient, PauliString(PauliSum._factor_from_observable(observable))
+
+    @staticmethod
+    def _factor_from_observable(observable: Observable) -> str:
+        if isinstance(observable, I):
+            return _IDENTITY
+        if isinstance(observable, X):
+            return _PAULI_X
+        if isinstance(observable, Y):
+            return _PAULI_Y
+        if isinstance(observable, Z):
+            return _PAULI_Z
+        raise TypeError("Only Pauli observables can be converted to PauliSum")
+
+
+def _pauli_factor(pauli: PauliString, qubit: int) -> str:
+    return (_IDENTITY, _PAULI_X, _PAULI_Y, _PAULI_Z)[pauli[qubit]]
