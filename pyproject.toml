@@ -43,6 +43,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+interactive = ["plotly"]
 test = [
     "botocore",
     "jsonschema==3.2.0",

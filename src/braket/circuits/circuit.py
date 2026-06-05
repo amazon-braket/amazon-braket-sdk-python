@@ -1656,8 +1656,14 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
+    def show(self, circuit_diagram_class: type | str = MatplotlibCircuitDiagram) -> object | None:
+        if isinstance(circuit_diagram_class, str) and circuit_diagram_class == "interactive":
+            from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+                PlotlyCircuitDiagram,
+            )
+            return PlotlyCircuitDiagram.build_diagram(self)
         circuit_diagram_class.build_diagram(self)
+        return None
 
     @property
     def qubits_frozen(self) -> bool:
