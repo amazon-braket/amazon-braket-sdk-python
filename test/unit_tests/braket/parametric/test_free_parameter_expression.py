@@ -52,9 +52,21 @@ def test_equality_str():
     assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
 
 
+@pytest.mark.parametrize(
+    ("string_expr", "operator_expr"),
+    [
+        ("theta/alpha", FreeParameter("theta") / FreeParameter("alpha")),
+        ("theta/2", FreeParameter("theta") / 2),
+        ("2/theta", 2 / FreeParameter("theta")),
+    ],
+)
+def test_truediv_str(string_expr: str, operator_expr: FreeParameterExpression) -> None:
+    assert FreeParameterExpression(string_expr) == operator_expr
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+    FreeParameterExpression("theta//1")
 
 
 @pytest.mark.xfail(raises=ValueError)

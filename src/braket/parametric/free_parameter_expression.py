@@ -54,6 +54,7 @@ class FreeParameterExpression:
             ast.Add: self.__add__,
             ast.Sub: self.__sub__,
             ast.Mult: self.__mul__,
+            ast.Div: self.__truediv__,
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
