@@ -172,6 +172,33 @@ class Circuit:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
         return list(self._moments.values())
 
+    def count(
+        self, operator: str | None = None, target: QubitSetInput | None = None
+    ) -> int | Counter[str]:
+        """Count circuit instructions by operator name.
+
+        Args:
+            operator (str | None): Optional operator name to count. Matching is case-insensitive.
+                If omitted, all instruction operators are counted.
+            target (QubitSetInput | None): Optional target qubit or qubits. When provided, only
+                instructions that include every requested target qubit are counted.
+
+        Returns:
+            int | Counter[str]: Count for `operator`, or a counter of all operator names when
+            `operator` is omitted.
+        """
+        target_qubits = QubitSet(target) if target is not None else None
+        counts = Counter(
+            instruction.operator.name.lower()
+            for instruction in self.instructions
+            if target_qubits is None or all(qubit in instruction.target for qubit in target_qubits)
+        )
+
+        if operator is not None:
+            return counts[operator.lower()]
+
+        return counts
+
     @property
     def result_types(self) -> list[ResultType]:
         """list[ResultType]: Get a list of requested result types in the circuit."""

@@ -202,6 +202,29 @@ def test_str(h):
     assert str(h) == expected
 
 
+def test_count_operator() -> None:
+    circ = Circuit().h(0).cnot(0, 1).x(1).cnot(1, 2)
+
+    assert circ.count("cnot") == 2
+    assert circ.count("CNOT") == 2
+    assert circ.count("h") == 1
+    assert circ.count("rx") == 0
+
+
+def test_count_all_operators() -> None:
+    circ = Circuit().h(0).cnot(0, 1).x(1).cnot(1, 2)
+
+    assert dict(circ.count()) == {"h": 1, "cnot": 2, "x": 1}
+
+
+def test_count_by_target() -> None:
+    circ = Circuit().h(0).cnot(0, 1).x(2).cnot(1, 2)
+
+    assert dict(circ.count(target=1)) == {"cnot": 2}
+    assert circ.count("cnot", target=[1, 2]) == 1
+    assert circ.count("x", target=0) == 0
+
+
 def test_equality():
     circ_1 = Circuit().h(0).probability([0, 1])
     circ_2 = Circuit().h(0).probability([0, 1])
