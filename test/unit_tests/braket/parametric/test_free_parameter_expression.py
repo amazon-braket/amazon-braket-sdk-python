@@ -52,9 +52,15 @@ def test_equality_str():
     assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
 
 
+def test_div_str():
+    expr_1 = FreeParameterExpression("theta/2")
+    expr_2 = FreeParameterExpression(FreeParameter("theta") / 2)
+    assert expr_1 == expr_2
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+    FreeParameterExpression("theta%1")
 
 
 @pytest.mark.xfail(raises=ValueError)
