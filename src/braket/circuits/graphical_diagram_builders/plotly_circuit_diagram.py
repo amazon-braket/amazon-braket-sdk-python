@@ -17,37 +17,6 @@ This module provides :class:`PlotlyCircuitDiagram`, a sibling to
 :class:`~braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram.MatplotlibCircuitDiagram`
 that renders a :class:`~braket.circuits.circuit.Circuit` as an interactive
 ``plotly.graph_objects.FigureWidget``.
-
-Quick-start::
-
-    from braket.circuits import Circuit
-    circ = Circuit().h(0).cnot(0, 1)
-    fig = circ.show("interactive")  # renders inline in Jupyter
-
-Features
---------
-* Hover tooltips on every gate showing gate name, target qubits, parameters,
-  and a placeholder hook for device-specific fidelity/error metadata.
-* Expandable / collapsible verbatim boxes – click the collapsed block to
-  reveal the individual gates inside; click again to collapse.
-* Zoom, pan and scroll via Plotly's built-in toolbar.
-* Optional ``device_metadata`` dict passed to ``build_diagram`` so callers
-  can populate fidelity values without modifying this module.
-
-Extension path for future sub-structures
------------------------------------------
-The expand/collapse mechanism lives entirely in :meth:`PlotlyCircuitDiagram._VerbatimBlock`
-and the ``_toggle_verbatim`` callback.  When the BDK adds support for
-``box`` / ``scope`` / nested subroutines it is sufficient to:
-
-1. Add a new ``_BoxBlock`` (or similar) dataclass that mirrors
-   ``_VerbatimBlock``.
-2. In :meth:`_identify_blocks` detect the new open/close compiler directives.
-3. Pass the new block objects through the same ``_render_layout_with_state``
-   rendering path.
-
-No stub implementation is provided for unrecognised structures; the listed
-three steps are all that is required.
 """
 
 from __future__ import annotations
@@ -90,73 +59,27 @@ except Exception:  # pragma: no cover
     _FIGUREWIDGET_AVAILABLE = False
 
 
-# ---------------------------------------------------------------------------
-# Internal dataclasses
-# ---------------------------------------------------------------------------
-
 @dataclass
 class _VerbatimBlock:
-    """Tracks one collapsed verbatim sub-region.
-
-    Attributes:
-        col_start: Layout column where ``StartVerbatimBox`` lives.
-        col_end:   Layout column where ``EndVerbatimBox`` lives.
-        expanded:  Current toggle state (``False`` = collapsed summary block).
-    """
-
     col_start: int
     col_end: int
     expanded: bool = False
 
-
 @dataclass
 class _RenderState:
-    """Mutable rendering state shared between the initial render and
-    expand/collapse callbacks.
-
-    Attributes:
-        layout:          Frozen circuit layout produced by _compute_layout.
-        verbatim_blocks: All verbatim regions discovered in the circuit.
-        device_metadata: Optional mapping of gate-label -> metadata string
-                         surfaced in hover tooltips.
-    """
-
     layout: CircuitLayout
     verbatim_blocks: list[_VerbatimBlock] = field(default_factory=list)
     device_metadata: dict[str, str] = field(default_factory=dict)
 
 
-# ---------------------------------------------------------------------------
-# Main class
-# ---------------------------------------------------------------------------
-
 class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
     """Renders circuit diagrams as interactive Plotly FigureWidgets.
-
-    This class is a direct sibling of
-    :class:`~braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram.MatplotlibCircuitDiagram`
-    and shares the same layout-computation pipeline provided by
-    :class:`GraphicalCircuitDiagram`.
-
-    Usage::
-
-        from braket.circuits import Circuit
-        circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
-        fig = circ.show("interactive")
-
-    Args:
-        device_metadata (dict[str, str] | None): Optional mapping from gate
-            label strings to additional metadata text that will appear in the
-            hover tooltip.  Intended as a hook for device-specific fidelities
-            and error rates.
 
     Note:
         Plotly must be installed.  Use::
 
             pip install "amazon-braket-sdk[interactive]"
     """
-
-    # ---- Layout geometry constants ----------------------------------------
     COL_WIDTH: float = 1.6
     COL_GAP: float = 0.2
     ROW_HEIGHT: float = 1.0
@@ -167,22 +90,7 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
     GATE_BOX_PADDING: float = 0.35
     GATE_FONT_SIZE: int = 13
 
-    # ---- Colour palette ---------------------------------------------------
-    GATE_FILL_COLOR: str = "#D4E6F1"
-    GATE_LINE_COLOR: str = "#1A5276"
-    CONTROL_DOT_COLOR: str = "#1A5276"
-    SWAP_COLOR: str = "#1A5276"
-    WIRE_COLOR: str = "#555555"
-    CONNECTION_COLOR: str = "#1A5276"
-    BARRIER_FILL_COLOR: str = "#EAECEE"
-    BARRIER_LINE_COLOR: str = "#888888"
-    VERBATIM_FILL_COLOR: str = "#FEF9E7"
-    VERBATIM_LINE_COLOR: str = "#D4AC0D"
-    VERBATIM_EXPANDED_FILL: str = "#FEF5E7"
-    VERBATIM_EXPANDED_LINE: str = "#E59866"
     FOOTER_COLOR: str = "#555555"
-
-    # ---- Sizing helpers ---------------------------------------------------
     @classmethod
     def _gate_box_width(cls, label: str) -> float:
         char_width = cls.GATE_FONT_SIZE * 0.011
@@ -210,30 +118,12 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 cursor += w
         return centers, widths
 
-    # ---- Public entry point -----------------------------------------------
-
     @staticmethod
     def build_diagram(
         circuit: cir.Circuit,
         device_metadata: dict[str, str] | None = None,
     ) -> Any:
-        """Build an interactive Plotly Figure for *circuit*.
-
-        Args:
-            circuit: The circuit to visualise.
-            device_metadata: Optional gate-label -> metadata string mapping.
-                For example ``{"Rx(0.5)": "fidelity: 0.998"}``.  The metadata
-                is appended to the hover tooltip for any gate whose label
-                matches a key in this dict.
-
-        Returns:
-            A ``plotly.graph_objects.Figure`` (or ``FigureWidget`` when
-            ``anywidget`` is installed) that renders inline in Jupyter
-            notebooks.
-
-        Raises:
-            ImportError: If ``plotly`` is not installed.
-        """
+        """Build an interactive Plotly Figure for *circuit*."""
         if not _PLOTLY_AVAILABLE:
             raise ImportError(
                 "Plotly is required for interactive visualization. "
@@ -279,20 +169,10 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         )
         return PlotlyCircuitDiagram._build_figure(state)
 
-    # ---- Verbatim block detection -----------------------------------------
-
     @staticmethod
     def _identify_blocks(
         circuit: cir.Circuit, layout: CircuitLayout  # noqa: ARG004
     ) -> list[_VerbatimBlock]:
-        """Scan the circuit instructions and record verbatim box column spans.
-
-        The column assignment mirrors the moment pipeline in
-        ``GraphicalCircuitDiagram._compute_layout``: each time-slice maps to
-        one or more layout columns.  We walk the same slices, tracking an
-        open-block column when a ``StartVerbatimBox`` is seen, and closing it
-        when ``EndVerbatimBox`` arrives.
-        """
         blocks: list[_VerbatimBlock] = []
         open_start: int | None = None
         col = 0
@@ -324,16 +204,11 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
 
         return blocks
 
-    # ---- Figure construction ----------------------------------------------
-
     @classmethod
     def _build_figure(cls, state: _RenderState) -> Any:
-        """Construct and return the FigureWidget from current state."""
         layout = state.layout
         n_rows = max(layout.num_qubits, 1)
 
-        # Determine which columns are interior verbatim columns that should
-        # be hidden when the block is collapsed.
         hidden_cols: set[int] = set()
         for block in state.verbatim_blocks:
             if not block.expanded:
@@ -343,11 +218,8 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
 
         col_x, col_w = cls._compute_column_x(layout, hidden_cols)
 
-        # Total width from first visible center to last visible center
         visible_xs = [x for x in col_x if x is not None]
-        total_width = sum(
-            w for idx, w in enumerate(col_w) if idx not in hidden_cols
-        )
+        total_width = sum(w for idx, w in enumerate(col_w) if idx not in hidden_cols)
 
         left_wire = (visible_xs[0] if visible_xs else 0) - col_w[0] / 2 - cls.WIRE_EXTEND
         right_wire = left_wire + total_width + cls.WIRE_EXTEND * 2
@@ -398,8 +270,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
             },
         )
 
-        # Attach click callbacks for expand/collapse on verbatim FigureWidget traces.
-        # on_click is only available on FigureWidget (requires anywidget); skip for plain Figure.
         if _FIGUREWIDGET_AVAILABLE and isinstance(fig, _FigureWidget):
             for trace_idx, trace in enumerate(fig.data):
                 if getattr(trace, "name", "").startswith("__verbatim__"):
@@ -420,8 +290,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                     trace.on_click(_make_callback(block_idx, state))
 
         return fig
-
-    # ---- Wire drawing -----------------------------------------------------
 
     @classmethod
     def _add_qubit_wires(
@@ -450,8 +318,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 hoverinfo="skip",
                 showlegend=False,
             ))
-
-    # ---- Gate element drawing --------------------------------------------
 
     @classmethod
     def _add_elements(
@@ -503,7 +369,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
             "layer": "above",
         })
 
-        # Build hover tooltip
         tooltip_lines = [
             f"<b>Gate:</b> {elem.label}",
             f"<b>Qubit row:</b> {elem.row}",
@@ -594,8 +459,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
             "layer": "above",
         })
 
-    # ---- Verbatim block overlay ------------------------------------------
-
     @classmethod
     def _add_verbatim_blocks(
         cls,
@@ -606,16 +469,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         col_w: list[float],
         state: _RenderState,
     ) -> None:
-        """Render collapsed or expanded verbatim block overlays.
-
-        Collapsed blocks render as a single wide rectangle spanning their
-        entire column range and are clickable. Expanded blocks render a
-        light background highlight behind their inner gate columns plus a
-        visible border.
-
-        Clicking a collapsed or expanded block toggles its state; the
-        callback is attached in :meth:`_build_figure`.
-        """
         n_rows = max(layout.num_qubits, 1)
         top_y = cls.ROW_HEIGHT * 0.35
         bot_y = -(n_rows - 1) * cls.ROW_HEIGHT - cls.ROW_HEIGHT * 0.35
@@ -660,8 +513,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 showlegend=False,
             ))
 
-    # ---- Footer ----------------------------------------------------------
-
     @classmethod
     def _build_footer_text(cls, layout: CircuitLayout) -> str:
         lines: list[str] = []
@@ -673,16 +524,7 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
             lines.append(f"Unassigned parameters: {', '.join(layout.unassigned_parameters)}")
         return "<br>".join(lines)
 
-    # ---- Abstract method implementation ----------------------------------
-
     @classmethod
     def _render_layout(cls, layout: CircuitLayout) -> Any:
-        """Convert a :class:`CircuitLayout` into a Plotly FigureWidget.
-
-        This method satisfies the abstract requirement of
-        :class:`GraphicalCircuitDiagram`.  Callers should prefer
-        :meth:`build_diagram` which also handles empty-circuit and
-        global-phase-only edge cases.
-        """
         state = _RenderState(layout=layout)
         return cls._build_figure(state)

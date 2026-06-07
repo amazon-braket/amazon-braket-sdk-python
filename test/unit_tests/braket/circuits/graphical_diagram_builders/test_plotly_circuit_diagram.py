@@ -11,17 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Unit tests for PlotlyCircuitDiagram.
-
-Coverage
---------
-* Single-qubit, multi-qubit, and parameterized gates render without error.
-* Hover tooltip text contains gate name and qubit row.
-* Verbatim block detection and collapsed / expanded toggle logic.
-* Edge cases: empty circuit, global-phase-only circuit, large circuits.
-* ``circuit.show("interactive")`` API integration.
-* ``circuit.show("unknown")`` raises ValueError.
-"""
+"""Unit tests for PlotlyCircuitDiagram."""
 
 from __future__ import annotations
 
@@ -40,10 +30,6 @@ from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import ( 
     _VerbatimBlock,
 )
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _make_state(circuit: Circuit) -> _RenderState:
     layout = PlotlyCircuitDiagram._compute_layout(circuit)
@@ -73,10 +59,6 @@ def _collect_trace_texts(fig: go.FigureWidget) -> list[str]:
     return texts
 
 
-# ---------------------------------------------------------------------------
-# Basic rendering
-# ---------------------------------------------------------------------------
-
 class TestBasicRendering:
     def test_empty_circuit_returns_figure(self):
         circ = Circuit()
@@ -95,8 +77,6 @@ class TestBasicRendering:
         fig = PlotlyCircuitDiagram.build_diagram(circ)
         assert isinstance(fig, go.Figure)
         texts = _collect_trace_texts(fig)
-        # CNOT: target qubit 1 renders as 'X' (NOT symbol); control qubit 0 renders as a dot.
-        # The hover text for the control dot contains "Control".
         hovers = _collect_hover_texts(fig)
         assert any("X" in t for t in texts), f"CNOT target 'X' label not found; texts: {texts}"
         assert any("Control" in h for h in hovers), f"Control hover not found; hovers: {hovers}"
@@ -105,7 +85,6 @@ class TestBasicRendering:
         circ = Circuit().swap(0, 1)
         fig = PlotlyCircuitDiagram.build_diagram(circ)
         assert isinstance(fig, go.Figure)
-        # SWAP markers are added as scatter traces with mode "markers+text"
         swap_traces = [t for t in fig.data if t.mode and "markers" in t.mode]
         assert any("SWAP" in (t.hovertext or "") for t in swap_traces), (
             "SWAP hover text not found"
@@ -130,10 +109,6 @@ class TestBasicRendering:
         assert isinstance(fig, go.Figure)
 
 
-# ---------------------------------------------------------------------------
-# Parameterized gates
-# ---------------------------------------------------------------------------
-
 class TestParameterizedGates:
     def test_rotation_gate_rx(self):
         circ = Circuit().rx(0, 0.5)
@@ -154,7 +129,6 @@ class TestParameterizedGates:
         circ = Circuit().rx(0, theta)
         fig = PlotlyCircuitDiagram.build_diagram(circ)
         assert isinstance(fig, go.Figure)
-        # Footer should mention unassigned parameter
         title_text = fig.layout.title.text or ""
         assert "theta" in title_text, (
             f"Unassigned parameter 'theta' not in title: {title_text!r}"
@@ -169,10 +143,6 @@ class TestParameterizedGates:
         assert "theta" in title_text
         assert "phi" in title_text
 
-
-# ---------------------------------------------------------------------------
-# Hover tooltip accuracy
-# ---------------------------------------------------------------------------
 
 class TestHoverTooltips:
     def test_hover_contains_gate_name(self):
@@ -215,10 +185,6 @@ class TestHoverTooltips:
         assert any("SWAP" in h for h in hovers), f"'SWAP' not in hovers: {hovers}"
 
 
-# ---------------------------------------------------------------------------
-# Verbatim box detection and expand/collapse
-# ---------------------------------------------------------------------------
-
 class TestVerbatimBoxes:
     def _make_verbatim_circuit(self) -> Circuit:
         inner = Circuit().h(0).cnot(0, 1)
@@ -248,7 +214,6 @@ class TestVerbatimBoxes:
     def test_expanded_block_label_changes(self):
         circ = self._make_verbatim_circuit()
         state = _make_state(circ)
-        # Manually expand
         state.verbatim_blocks[0].expanded = True
         fig = PlotlyCircuitDiagram._build_figure(state)
         texts = _collect_trace_texts(fig)
@@ -267,14 +232,10 @@ class TestVerbatimBoxes:
         assert not state.verbatim_blocks[0].expanded
 
     def test_collapsed_hides_inner_gate_labels(self):
-        """In collapsed state, inner gates should be absent from visible text traces."""
         circ = self._make_verbatim_circuit()
         state = _make_state(circ)
-        # Collapsed state: inner columns hidden → H/CNOT labels should not appear
         fig = PlotlyCircuitDiagram._build_figure(state)
         texts = _collect_trace_texts(fig)
-        # Qubit wire labels will still be there; gate labels should be hidden
-        # (they are in hidden_cols so no trace is emitted for them)
         inner_gate_labels = {"H", "CNOT"}
         found = {t for t in texts if t in inner_gate_labels}
         assert len(found) == 0, f"Inner gate labels visible in collapsed state: {found}"
@@ -304,10 +265,6 @@ class TestVerbatimBoxes:
         state = _make_state(circ)
         assert len(state.verbatim_blocks) == 2
 
-
-# ---------------------------------------------------------------------------
-# Edge cases
-# ---------------------------------------------------------------------------
 
 class TestEdgeCases:
     def test_empty_circuit(self):
@@ -348,10 +305,6 @@ class TestEdgeCases:
         assert isinstance(fig, go.Figure)
 
 
-# ---------------------------------------------------------------------------
-# Circuit API integration
-# ---------------------------------------------------------------------------
-
 class TestCircuitAPIIntegration:
     def test_show_interactive_returns_figure_widget(self):
         circ = Circuit().h(0).cnot(0, 1)
@@ -370,7 +323,6 @@ class TestCircuitAPIIntegration:
             circ.show("unknown_renderer")
 
     def test_show_class_argument_still_works(self):
-        """Passing a class directly should still work (backwards-compat)."""
         from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
             MatplotlibCircuitDiagram,
         )
