@@ -36,6 +36,8 @@ class GateBox:
     col: int
     row: int
     label: str
+    metadata_key: str | None = None
+    parameter_text: str | None = None
 
 
 @dataclass
@@ -90,7 +92,7 @@ def _compute_moment_global_phase(
     global_phase: float | None, items: list[Instruction]
 ) -> float | None:
     moment_phase = sum(
-        item.operator.angle
+        item.operator.angle * item.power
         for item in items
         if (
             isinstance(item, Instruction)
