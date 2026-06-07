@@ -56,6 +56,7 @@ class FreeParameterExpression:
             ast.Mult: self.__mul__,
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
+            ast.Div: self.__truediv__,
         }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
