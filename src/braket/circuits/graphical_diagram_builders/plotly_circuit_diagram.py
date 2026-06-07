@@ -90,6 +90,18 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
     GATE_BOX_PADDING: float = 0.35
     GATE_FONT_SIZE: int = 13
 
+    GATE_FILL_COLOR: str = "#D4E6F1"
+    GATE_LINE_COLOR: str = "#1A5276"
+    CONTROL_DOT_COLOR: str = "#1A5276"
+    SWAP_COLOR: str = "#1A5276"
+    WIRE_COLOR: str = "#555555"
+    CONNECTION_COLOR: str = "#1A5276"
+    BARRIER_FILL_COLOR: str = "#EAECEE"
+    BARRIER_LINE_COLOR: str = "#888888"
+    VERBATIM_FILL_COLOR: str = "#FEF9E7"
+    VERBATIM_LINE_COLOR: str = "#D4AC0D"
+    VERBATIM_EXPANDED_FILL: str = "#FEF5E7"
+    VERBATIM_EXPANDED_LINE: str = "#E59866"
     FOOTER_COLOR: str = "#555555"
     @classmethod
     def _gate_box_width(cls, label: str) -> float:
