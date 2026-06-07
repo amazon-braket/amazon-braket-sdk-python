@@ -43,6 +43,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+interactive = [
+    "plotly>=5.0",
+    "ipywidgets>=7.0",
+]
 test = [
     "botocore",
     "jsonschema==3.2.0",
