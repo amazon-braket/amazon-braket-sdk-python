@@ -20,8 +20,64 @@ from numbers import Number
 from typing import Any
 
 import sympy
+import sympy.printing
 from oqpy.base import OQPyExpression
 from oqpy.classical_types import FloatVar
+
+
+class _OpenQASMPrinter(sympy.printing.StrPrinter):
+    """A SymPy string printer that emits valid OpenQASM 3 function names.
+
+    SymPy uses its own canonical names for several functions (e.g. ``asin``,
+    ``Mod``, ``Abs``) that differ from the names OpenQASM 3 expects
+    (``arcsin``, ``mod``, and no equivalent respectively).  This printer
+    overrides the rendering of those functions so that
+    ``str(FreeParameterExpression(...))`` always produces a string that can
+    be embedded verbatim in an OpenQASM 3 program.
+    """
+
+    _FN_MAP: dict[type, str] = {
+        sympy.sin: "sin",
+        sympy.cos: "cos",
+        sympy.tan: "tan",
+        sympy.asin: "arcsin",
+        sympy.acos: "arccos",
+        sympy.atan: "arctan",
+        sympy.exp: "exp",
+        sympy.log: "log",
+        sympy.sqrt: "sqrt",
+        sympy.Mod: "mod",
+        sympy.ceiling: "ceiling",
+        sympy.floor: "floor",
+    }
+
+    # Functions with no OpenQASM 3 equivalent — raise at stringify time
+    # rather than silently emitting invalid QASM.
+    _UNSUPPORTED: frozenset[type] = frozenset({
+        sympy.Abs,
+        sympy.re,
+        sympy.im,
+        sympy.conjugate,
+    })
+
+    def _print_Function(self, expr: sympy.Expr) -> str:
+        fn_type = type(expr)
+        if fn_type in self._UNSUPPORTED:
+            raise ValueError(
+                f"{fn_type.__name__} has no OpenQASM 3 equivalent and cannot be "
+                "serialized. Use a supported function instead."
+            )
+        if fn_type in self._FN_MAP:
+            name = self._FN_MAP[fn_type]
+            args = ", ".join(self._print(a) for a in expr.args)
+            return f"{name}({args})"
+        # Fall back to SymPy default for any other function
+        return super()._print_Function(expr)
+
+
+# Module-level singleton printer — reused across calls to avoid repeated
+# object creation in hot serialization paths.
+_OPENQASM_PRINTER = _OpenQASMPrinter()
 
 
 class FreeParameterExpression:
@@ -109,6 +165,25 @@ class FreeParameterExpression:
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
 
+    # Maps string function names (as they appear in a parsed expression) to
+    # the corresponding SymPy functions recognised by _OpenQASMPrinter.
+    _STRING_FN_MAP: dict[str, Any] = {
+        "sin": sympy.sin,
+        "cos": sympy.cos,
+        "tan": sympy.tan,
+        "arcsin": sympy.asin,
+        "arccos": sympy.acos,
+        "arctan": sympy.atan,
+        "asin": sympy.asin,
+        "acos": sympy.acos,
+        "atan": sympy.atan,
+        "exp": sympy.exp,
+        "log": sympy.log,
+        "sqrt": sympy.sqrt,
+        "ceiling": sympy.ceiling,
+        "floor": sympy.floor,
+    }
+
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Constant):
             return FreeParameterExpression(node.value)
@@ -124,6 +199,15 @@ class FreeParameterExpression:
             if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
             return self._eval_operation(node.operand)._operations[type(node.op)]()
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name):
+                raise ValueError(f"Unsupported callable in expression: {node.func}")
+            fn_name = node.func.id
+            if fn_name not in self._STRING_FN_MAP:
+                raise ValueError(f"Unsupported function in expression: {fn_name!r}")
+            sympy_fn = self._STRING_FN_MAP[fn_name]
+            args = [self._eval_operation(a).expression for a in node.args]
+            return FreeParameterExpression(sympy_fn(*args))
         raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other: FreeParameterExpression):
@@ -174,13 +258,24 @@ class FreeParameterExpression:
             return sympy.sympify(self.expression).equals(sympy.sympify(other.expression))
         return False
 
+    def __str__(self) -> str:
+        """Return the OpenQASM 3-compatible string representation.
+
+        Uses :class:`_OpenQASMPrinter` so that function names match what
+        OpenQASM 3 devices expect (e.g. ``arcsin`` rather than ``asin``).
+
+        Returns:
+            str: OpenQASM 3-compatible serialization of this expression.
+        """
+        return _OPENQASM_PRINTER.doprint(self.expression)
+
     def __repr__(self) -> str:
         """The representation of the :class:'FreeParameterExpression'.
 
         Returns:
             str: The expression of the class:'FreeParameterExpression' to represent the class.
         """
-        return repr(self.expression)
+        return _OPENQASM_PRINTER.doprint(self.expression)
 
     def _to_oqpy_expression(self) -> OQPyExpression:
         """Transforms into an OQPyExpression.
