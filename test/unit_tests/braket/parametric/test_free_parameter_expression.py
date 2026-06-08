@@ -52,6 +52,10 @@ def test_equality_str():
     assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
 
 
+def test_truediv_str_with_constant():
+    assert FreeParameterExpression("theta/1") == FreeParameter("theta") / 1
+
+
 def test_truediv_str():
     expr_1 = FreeParameterExpression("alpha/beta")
     expr_2 = FreeParameter("alpha") / FreeParameter("beta")
