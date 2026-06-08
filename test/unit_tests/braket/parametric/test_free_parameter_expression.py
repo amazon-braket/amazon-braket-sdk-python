@@ -63,6 +63,11 @@ def test_truediv_str():
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_unsupported_bin_op_str():
+    FreeParameterExpression("theta % 1")
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_unsupported_un_op_str():
     FreeParameterExpression("~theta")
 
