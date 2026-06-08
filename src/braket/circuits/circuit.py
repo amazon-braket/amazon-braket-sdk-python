@@ -1390,9 +1390,7 @@ class Circuit:
                 inputs_copy.update(inputs)
             inputs = inputs_copy
             source = source.source
-        from braket.circuits.braket_program_context import (
-            BraketProgramContext,
-        )  # noqa: PLC0415
+        from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
 
         return Interpreter(BraketProgramContext()).build_circuit(
             source=source,
