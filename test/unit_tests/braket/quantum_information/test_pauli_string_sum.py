@@ -118,3 +118,45 @@ def test_from_sum_rejects_non_sum_observable():
 def test_from_sum_rejects_non_pauli_observable_terms():
     with pytest.raises(TypeError, match="Unsupported observable factor H"):
         PauliStringSum.from_sum(H() + X())
+
+
+def test_empty_sum_has_zero_qubit_count_and_repr():
+    empty_sum = PauliStringSum()
+
+    assert empty_sum.qubit_count == 0
+    assert repr(empty_sum) == "PauliStringSum([])"
+
+
+def test_zero_coefficient_terms_cancel_to_empty_sum():
+    pauli_sum = PauliStringSum([(1.0, "X"), (-1.0, "X"), (2.0, "Y")])
+
+    assert pauli_sum.to_list() == [(2.0, "+Y")]
+
+
+def test_zero_coefficient_term_is_ignored():
+    pauli_sum = PauliStringSum([(0.0, "X"), (2.0, "Y")])
+
+    assert pauli_sum.to_list() == [(2.0, "+Y")]
+
+
+def test_radd_and_non_matching_eq_type():
+    assert "ZY" + PauliStringSum([(1.0, "X")]) == PauliStringSum(
+        [(1.0, "X"), (1.0, "ZY")]
+    )
+    assert PauliStringSum([(1.0, "X")]) != 1
+
+
+def test_from_sum_uses_default_target_for_standard_observables_and_rejects_unmapped_observable():
+    from braket.circuits.observables import Sum
+
+    from_sum_with_no_targets = PauliStringSum.from_sum(Sum([1.0 * X()]))
+    assert from_sum_with_no_targets.to_list() == [(1.0, "+X")]
+
+    class NonStandardObservable:
+        coefficient = 1.0
+
+        def _unscaled(self):
+            return object()
+
+    with pytest.raises(TypeError, match="Unsupported observable type"):
+        PauliStringSum._term_from_observable(NonStandardObservable())
