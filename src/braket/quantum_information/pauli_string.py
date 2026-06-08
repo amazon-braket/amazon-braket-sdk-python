@@ -220,7 +220,7 @@ class PauliString:
             self._nontrivial = out_pauli_string._nontrivial
         return out_pauli_string
 
-    def __mul__(self, other: PauliString | numbers.Number) -> PauliString | PauliSum:
+    def __mul__(self, other: PauliString | PauliSum | numbers.Number) -> PauliString | PauliSum:
         """Right multiplication operator overload using `dot()`.
 
         Returns the result of multiplying the current circuit by the argument on its right.
@@ -239,9 +239,11 @@ class PauliString:
         """
         if isinstance(other, PauliString):
             return self.dot(other)
+        if isinstance(other, PauliSum):
+            return PauliSum.from_terms([(1, self)]) * other
         if isinstance(other, numbers.Number):
             return PauliSum.from_terms([(other, self)])
-        raise TypeError("PauliString can only multiply PauliString or scalar values")
+        raise TypeError("PauliString can only multiply PauliString, PauliSum, or scalar values")
 
     def __rmul__(self, other: numbers.Number) -> PauliSum:
         """Returns a weighted Pauli sum from scalar multiplication."""

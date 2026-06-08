@@ -20,7 +20,7 @@ import pytest
 
 from braket.circuits import gates
 from braket.circuits.circuit import Circuit
-from braket.circuits.observables import I, X, Y, Z
+from braket.circuits.observables import H, I, X, Y, Z
 from braket.quantum_information import PauliString, PauliSum
 
 ORDER = ["I", "X", "Y", "Z"]
@@ -275,6 +275,19 @@ def test_pauli_sum_from_arithmetic():
     assert pauli_sum["ZZ"] == -0.5
 
 
+def test_pauli_string_arithmetic_with_scalars_and_strings():
+    assert PauliString("X") * 2 == PauliSum.from_terms([(2, "X")])
+    assert PauliString("X") + "Y" == PauliSum.from_terms([(1, "X"), (1, "Y")])
+    assert PauliString("X") - "Y" == PauliSum.from_terms([(1, "X"), (-1, "Y")])
+
+
+def test_pauli_string_arithmetic_invalid_types():
+    with pytest.raises(TypeError, match="can only multiply"):
+        PauliString("X") * "Y"
+    with pytest.raises(TypeError, match="coefficients must be numbers"):
+        "Y" * PauliString("X")
+
+
 def test_pauli_sum_combines_like_terms_and_drops_zeros():
     pauli_sum = PauliSum.from_terms([
         (2, "XX"),
@@ -289,10 +302,27 @@ def test_pauli_sum_combines_like_terms_and_drops_zeros():
     assert len(pauli_sum) == 0
 
 
+def test_pauli_sum_drops_zero_term_without_resetting_qubit_count():
+    pauli_sum = PauliSum.from_terms([(1, "XX"), (1, "YY"), (-1, "XX")])
+
+    assert pauli_sum == PauliSum.from_terms([(1, "YY")])
+    assert pauli_sum.qubit_count == 2
+
+
 def test_pauli_sum_multiplication_by_pauli_string():
     pauli_sum = (2 * PauliString("X") + 3 * PauliString("Y")) * PauliString("Z")
 
     assert pauli_sum == PauliSum.from_terms([(2, "-Y"), (3, "X")])
+
+
+def test_pauli_sum_reverse_arithmetic():
+    pauli_sum = PauliSum.from_terms([(2, "X")])
+
+    assert "Y" + pauli_sum == PauliSum.from_terms([(2, "X"), (1, "Y")])
+    assert "Y" - pauli_sum == PauliSum.from_terms([(-2, "X"), (1, "Y")])
+    assert PauliString("Z") * pauli_sum == PauliSum.from_terms([(2, "Y")])
+    assert "Z" * pauli_sum == PauliSum.from_terms([(2, "Y")])
+    assert -pauli_sum == PauliSum.from_terms([(-2, "X")])
 
 
 def test_pauli_sum_multiplication_by_pauli_sum():
@@ -321,12 +351,48 @@ def test_pauli_sum_to_and_from_observable_sum():
     assert PauliSum.from_sum(pauli_sum.to_sum()) == pauli_sum
 
 
+def test_pauli_sum_to_and_from_single_factor_observable_sum():
+    observable_sum = 2 * X() + -3 * Y() + 4 * I()
+
+    assert PauliSum.from_sum(observable_sum) == PauliSum.from_terms([
+        (2, "X"),
+        (-3, "Y"),
+        (4, "I"),
+    ])
+
+
+def test_pauli_sum_observable_conversion_invalid_inputs():
+    with pytest.raises(TypeError, match="Input must be"):
+        PauliSum.from_sum(X())
+    with pytest.raises(ValueError, match="empty PauliSum"):
+        PauliSum.from_terms([]).to_sum()
+    with pytest.raises(TypeError, match="Only Pauli observables"):
+        PauliSum.from_sum(X() + H())
+
+
 def test_pauli_sum_commutes():
     pauli_sum = PauliSum.from_terms([(2, "XX"), (3, "YY")])
 
     assert pauli_sum.commutes_with("ZZ")
     assert pauli_sum.is_self_commuting()
     assert not pauli_sum.commutes_with("XI")
+
+
+def test_pauli_sum_commutes_unequal_lengths():
+    with pytest.raises(ValueError, match="Input Pauli string"):
+        PauliSum.from_terms([(1, "XX")]).commutes_with("X")
+
+
+def test_pauli_sum_representations_and_invalid_terms():
+    empty = PauliSum.from_terms([])
+    pauli_sum = PauliSum.from_terms([(1, "X")])
+
+    assert repr(empty) == "PauliSum([])"
+    assert pauli_sum != "X"
+    with pytest.raises(TypeError, match="coefficients must be numbers"):
+        PauliSum.from_terms([("not-a-number", "X")])
+    with pytest.raises(TypeError, match="terms must be"):
+        PauliSum.from_terms([(1, object())])
 
 
 @pytest.mark.xfail(raises=ValueError)
