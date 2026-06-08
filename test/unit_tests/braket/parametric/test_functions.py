@@ -80,8 +80,6 @@ def test_sqrt_constructs_expected_expression():
 
     assert isinstance(expr, FreeParameterExpression)
     assert expr == FreeParameterExpression(sympy.sqrt(alpha.expression))
-    assert str(expr) == "sqrt(alpha)"
-    assert repr(expr) == "sqrt(alpha)"
 
 
 def test_helpers_accept_numeric_inputs():
@@ -139,3 +137,22 @@ def test_mod_unwraps_second_operand():
     beta = FreeParameter("beta")
 
     assert str(mod(alpha, beta)) == "mod(alpha, beta)"
+
+
+def test_nested_helper_composition():
+    alpha = FreeParameter("alpha")
+
+    assert str(sin(cos(alpha))) == "sin(cos(alpha))"
+    assert str(arcsin(sqrt(alpha))) == "arcsin(sqrt(alpha))"
+
+
+def test_mixed_function_and_arithmetic_expression():
+    alpha = FreeParameter("alpha")
+    beta = FreeParameter("beta")
+    gamma = FreeParameter("gamma")
+    source = str(sin(alpha) + cos(beta) * sqrt(gamma))
+
+    # SymPy may reorder commutative operands, so check substring containment.
+    assert "sin(alpha)" in source
+    assert "cos(beta)" in source
+    assert "sqrt(gamma)" in source

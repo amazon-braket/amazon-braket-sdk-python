@@ -697,6 +697,8 @@ def test_local_simulator_runs_sympy_inverse_trig_free_parameter_expression():
     expr = FreeParameterExpression(sympy.asin(alpha.expression))
     circuit = Circuit().rx(0, expr).measure(0)
 
+    assert "arcsin(alpha)" in circuit.to_ir("OPENQASM").source
+
     device = LocalSimulator(StateVectorSimulator())
     result = device.run(circuit, inputs={"alpha": 0.5}, shots=10).result()
 
