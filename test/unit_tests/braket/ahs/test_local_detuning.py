@@ -15,6 +15,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.local_detuning import LocalDetuning
 from braket.timings.time_series import StitchBoundaryCondition
@@ -132,6 +133,15 @@ def test_discretize():
     )
     assert field is not discretized_field
     assert discretized_field.magnitude == magnitude_mock.discretize.return_value
+
+
+def test_discretize_raises_when_rydberg_local_missing():
+    magnitude_mock = Mock()
+    mock_properties = Mock()
+    mock_properties.rydberg.rydbergLocal = None
+    field = LocalDetuning(magnitude=magnitude_mock)
+    with pytest.raises(DiscretizationError, match="rydbergLocal"):
+        field.discretize(mock_properties)
 
 
 @pytest.mark.xfail(raises=ValueError)
