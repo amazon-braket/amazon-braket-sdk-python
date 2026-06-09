@@ -110,6 +110,7 @@ def test_commutation_checks():
     non_commuting_sum = PauliStringSum([(1.0, "XI"), (2.0, "ZI")])
 
     assert commuting_sum.is_self_commuting()
+    assert commuting_sum.all_terms_commute
     assert commuting_sum.commutes_with("ZZ")
     assert not non_commuting_sum.is_self_commuting()
     assert not non_commuting_sum.commutes_with("YI")
