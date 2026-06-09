@@ -159,14 +159,20 @@ class PauliStringSum:
 
     def __sub__(self, other) -> PauliStringSum:
         if isinstance(other, (PauliStringSum, PauliString, tuple)):
-            return self.__add__(-PauliStringSum([other] if not isinstance(other, PauliStringSum) else list(other)))
+            return self.__add__(
+                -PauliStringSum(
+                    [other] if not isinstance(other, PauliStringSum) else list(other)
+                )
+            )
         return NotImplemented
 
     def __rsub__(self, other) -> PauliStringSum:
         return (-self).__add__(other)
 
     def __isub__(self, other) -> PauliStringSum:
-        neg = -PauliStringSum([other] if not isinstance(other, PauliStringSum) else list(other))
+        neg = -PauliStringSum(
+            [other] if not isinstance(other, PauliStringSum) else list(other)
+        )
         return self.__iadd__(neg)
 
     def __mul__(self, other) -> PauliStringSum:
@@ -237,7 +243,11 @@ class PauliStringSum:
         if isinstance(other, PauliString):
             other = PauliStringSum([other])
         ab = self * other if isinstance(other, PauliString) else self._mul_sum(other)
-        ba = other._mul_sum(self) if isinstance(other, PauliStringSum) else PauliStringSum([other]).multiply_sum(self)
+        ba = (
+            other._mul_sum(self)
+            if isinstance(other, PauliStringSum)
+            else PauliStringSum([other])._mul_sum(self)
+        )
         return (ab + (-ba)) == PauliStringSum()
 
     def _mul_sum(self, other: PauliStringSum) -> PauliStringSum:
