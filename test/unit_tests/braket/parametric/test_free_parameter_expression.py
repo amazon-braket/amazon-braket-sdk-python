@@ -104,9 +104,10 @@ def test_openqasm_arithmetic_str_and_repr_match():
     assert "alpha" in expr_str
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+def test_truediv_str():
+    truediv_expr = FreeParameterExpression("theta/1")
+    expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(1)
+    assert truediv_expr == expected
 
 
 @pytest.mark.xfail(raises=ValueError)
