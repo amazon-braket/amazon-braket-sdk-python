@@ -172,6 +172,41 @@ class Circuit:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
         return list(self._moments.values())
 
+    def instruction_density(self) -> dict[str, Any]:
+        """Returns a deterministic instruction count and density summary for the circuit.
+
+        The returned densities are normalized by the total number of instructions. Multi-qubit
+        instructions contribute once to each qubit they touch, including control qubits.
+
+        Returns:
+            dict[str, Any]: Summary containing total instruction count, counts by operator,
+            operator densities, counts per qubit, and per-qubit densities.
+        """
+        instructions = self.instructions
+        total = len(instructions)
+        by_operator = Counter(instruction.operator.name.lower() for instruction in instructions)
+        per_qubit: Counter[int] = Counter()
+
+        for instruction in instructions:
+            touched_qubits = instruction.target.union(instruction.control or QubitSet())
+            per_qubit.update(int(qubit) for qubit in touched_qubits)
+
+        return {
+            "total": total,
+            "by_operator": dict(sorted(by_operator.items())),
+            "operator_density": {
+                operator: count / total for operator, count in sorted(by_operator.items())
+            }
+            if total
+            else {},
+            "per_qubit": dict(sorted(per_qubit.items())),
+            "per_qubit_density": {
+                qubit: count / total for qubit, count in sorted(per_qubit.items())
+            }
+            if total
+            else {},
+        }
+
     @property
     def result_types(self) -> list[ResultType]:
         """list[ResultType]: Get a list of requested result types in the circuit."""
