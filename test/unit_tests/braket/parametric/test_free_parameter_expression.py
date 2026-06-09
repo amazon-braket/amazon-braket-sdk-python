@@ -118,11 +118,26 @@ def test_r_truediv():
 
 
 def test_truediv_str():
-    truediv_str_expr = FreeParameterExpression("theta/alpha") 
+    truediv_str_expr = FreeParameterExpression("theta/alpha")
     expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(
-        FreeParameter("alpha"))
-    
+        FreeParameter("alpha")
+    )
+
     assert truediv_str_expr == expected
+
+
+@pytest.mark.parametrize(
+    ("string_expression", "operator_expression"),
+    [
+        ("theta+alpha", FreeParameter("theta") + FreeParameter("alpha")),
+        ("theta-alpha", FreeParameter("theta") - FreeParameter("alpha")),
+        ("theta*alpha", FreeParameter("theta") * FreeParameter("alpha")),
+        ("theta/alpha", FreeParameter("theta") / FreeParameter("alpha")),
+        ("theta**alpha", FreeParameter("theta") ** FreeParameter("alpha")),
+    ],
+)
+def test_basic_operator_str_matches_python_operator(string_expression, operator_expression):
+    assert FreeParameterExpression(string_expression) == operator_expression
 
 
 def test_pow():

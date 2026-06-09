@@ -5,7 +5,6 @@
 ### Bug Fixes and Other Changes
 
  * raise DiscretizationError when rydbergLocal params missing
- * support division in FreeParameterExpression string constructor, fixing QBP#153
 
 ## v1.117.3 (2026-05-14)
 
