@@ -1206,9 +1206,9 @@ def test_subroutine_nested():
 
 def test_ir_empty_instructions_result_types():
     circ = Circuit()
-    with pytest.warns(UserWarning, match="JAQCD"):
-        ir = circ.to_ir(IRType.JAQCD)
-    assert ir == jaqcd.Program(instructions=[], results=[], basis_rotation_instructions=[])
+    assert circ.to_ir() == jaqcd.Program(
+        instructions=[], results=[], basis_rotation_instructions=[]
+    )
 
 
 def test_ir_non_empty_instructions_result_types():
@@ -1218,9 +1218,7 @@ def test_ir_non_empty_instructions_result_types():
         results=[jaqcd.Probability(targets=[0, 1])],
         basis_rotation_instructions=[],
     )
-    with pytest.warns(UserWarning, match="JAQCD"):
-        ir = circ.to_ir(IRType.JAQCD)
-    assert ir == expected
+    assert circ.to_ir() == expected
 
 
 def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
@@ -1230,16 +1228,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         results=[jaqcd.Sample(observable=["x"], targets=[0])],
         basis_rotation_instructions=[jaqcd.H(target=0)],
     )
-    with pytest.warns(UserWarning, match="JAQCD"):
-        ir = circ.to_ir(IRType.JAQCD)
-    assert ir == expected
-
-
-def test_to_ir_default_is_openqasm():
-    """Calling Circuit.to_ir() with no ir_type argument should return an
-    OpenQASM program (after the JAQCD-deprecation default flip)."""
-    circ = Circuit().h(0).cnot(0, 1)
-    assert isinstance(circ.to_ir(), OpenQasmProgram)
+    assert circ.to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -3894,8 +3883,5 @@ def test_barrier_openqasm_export_all_qubits():
 
 def test_barrier_jaqcd_export_fails():
     circ = Circuit().h(0).barrier([0, 1])
-    with (
-        pytest.warns(UserWarning, match="JAQCD"),
-        pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"),
-    ):
+    with pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"):
         circ.to_ir(IRType.JAQCD)
