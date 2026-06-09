@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.119.0 (2026-06-09)
+
+### Features
+
+ * support math functions in FreeParameterExpression
+
 ## v1.118.0 (2026-06-04)
 
 ### Deprecations and Removals
