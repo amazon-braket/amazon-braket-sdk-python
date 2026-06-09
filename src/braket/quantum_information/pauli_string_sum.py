@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import numbers
 from collections.abc import Iterable
-from itertools import combinations
+from itertools import combinations, starmap
 
 from braket.circuits.observable import Observable, StandardObservable
 from braket.circuits.observables import I, Sum, TensorProduct, X, Y, Z
@@ -35,8 +35,15 @@ class PauliStringSum:
                 Pauli string.
         """
         self._terms: dict[str, numbers.Number] = {}
+        self._all_terms_commute = True
         for coefficient, pauli_string in terms:
             self._add_term(coefficient, PauliString(pauli_string))
+        self._all_terms_commute = self._compute_all_terms_commute()
+
+    @property
+    def all_terms_commute(self) -> bool:
+        """bool: Whether all terms in the sum commute with each other."""
+        return self._all_terms_commute
 
     @classmethod
     def from_list(cls, terms: Iterable[tuple[numbers.Number, str | PauliString]]) -> PauliStringSum:
@@ -81,10 +88,7 @@ class PauliStringSum:
 
     def is_self_commuting(self) -> bool:
         """Returns whether all terms in this sum commute with each other."""
-        return all(
-            self._pauli_strings_commute(left, right)
-            for (_, left), (_, right) in combinations(self.terms, 2)
-        )
+        return self._all_terms_commute
 
     @classmethod
     def from_sum(cls, observable_sum: Sum) -> PauliStringSum:
@@ -163,6 +167,13 @@ class PauliStringSum:
             self._terms.pop(pauli, None)
         else:
             self._terms[pauli] = new_coefficient
+        self._all_terms_commute = self._compute_all_terms_commute()
+
+    def _compute_all_terms_commute(self) -> bool:
+        if len(self._terms) <= 1:
+            return True
+        paulis = [PauliString(pauli) for pauli in self._terms]
+        return all(starmap(self._pauli_strings_commute, combinations(paulis, 2)))
 
     @staticmethod
     def _canonical_term(
