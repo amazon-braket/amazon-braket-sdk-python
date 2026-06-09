@@ -90,6 +90,21 @@ def test_from_sum_with_targeted_observables():
     ]
 
 
+def test_from_list_alias_and_empty_sum_edges():
+    assert PauliStringSum.from_list([(2, "XY"), (-2.0, "XY")]).to_list() == []
+    assert len(PauliStringSum.from_list([(2, "XY"), (-2.0, "XY")])) == 0
+    assert PauliStringSum().is_self_commuting()
+    assert PauliStringSum().commutes_with("I")
+
+
+def test_from_sum_with_targetless_tensor_product():
+    from braket.circuits.observables import Sum
+
+    observable = Sum([1.0 * (X() @ Y())])
+
+    assert PauliStringSum.from_sum(observable).to_list() == [(1.0, "+XY")]
+
+
 def test_commutation_checks():
     commuting_sum = PauliStringSum([(1.0, "XX"), (2.0, "YY")])
     non_commuting_sum = PauliStringSum([(1.0, "XI"), (2.0, "ZI")])
@@ -140,9 +155,7 @@ def test_zero_coefficient_term_is_ignored():
 
 
 def test_radd_and_non_matching_eq_type():
-    assert "ZY" + PauliStringSum([(1.0, "X")]) == PauliStringSum(
-        [(1.0, "X"), (1.0, "ZY")]
-    )
+    assert "ZY" + PauliStringSum([(1.0, "X")]) == PauliStringSum([(1.0, "X"), (1.0, "ZY")])
     assert PauliStringSum([(1.0, "X")]) != 1
 
 
