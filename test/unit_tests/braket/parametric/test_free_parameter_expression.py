@@ -106,7 +106,7 @@ def test_openqasm_arithmetic_str_and_repr_match():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_unsupported_bin_op_str():
-    FreeParameterExpression("theta/1")
+    FreeParameterExpression("theta//1")
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -167,6 +167,29 @@ def test_r_truediv():
     r_truediv_expr = 1 / FreeParameter("theta")
     expected = FreeParameterExpression(1 / FreeParameter("theta"))
     assert r_truediv_expr == expected
+
+
+def test_truediv_str():
+    truediv_str_expr = FreeParameterExpression("theta/alpha")
+    expected = FreeParameterExpression(FreeParameter("theta")) / FreeParameterExpression(
+        FreeParameter("alpha")
+    )
+
+    assert truediv_str_expr == expected
+
+
+@pytest.mark.parametrize(
+    ("string_expression", "operator_expression"),
+    [
+        ("theta+alpha", FreeParameter("theta") + FreeParameter("alpha")),
+        ("theta-alpha", FreeParameter("theta") - FreeParameter("alpha")),
+        ("theta*alpha", FreeParameter("theta") * FreeParameter("alpha")),
+        ("theta/alpha", FreeParameter("theta") / FreeParameter("alpha")),
+        ("theta**alpha", FreeParameter("theta") ** FreeParameter("alpha")),
+    ],
+)
+def test_basic_operator_str_matches_python_operator(string_expression, operator_expression):
+    assert FreeParameterExpression(string_expression) == operator_expression
 
 
 def test_pow():
