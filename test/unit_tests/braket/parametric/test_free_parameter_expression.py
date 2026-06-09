@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
+import sympy
 
 from braket.parametric import FreeParameter, FreeParameterExpression
 from braket.parametric.free_parameter_expression import subs_if_free_parameter
@@ -50,6 +51,57 @@ def test_equality_str():
     assert expr_1 == expr_2
     assert expr_1.subs(param_values) == expr_2.subs(param_values)
     assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
+
+
+@pytest.mark.parametrize(
+    ("function", "extra_args", "expected"),
+    [
+        (sympy.sin, (), "sin(alpha)"),
+        (sympy.cos, (), "cos(alpha)"),
+        (sympy.tan, (), "tan(alpha)"),
+        (sympy.asin, (), "arcsin(alpha)"),
+        (sympy.acos, (), "arccos(alpha)"),
+        (sympy.atan, (), "arctan(alpha)"),
+        (sympy.exp, (), "exp(alpha)"),
+        (sympy.log, (), "log(alpha)"),
+        (sympy.Mod, (2,), "mod(alpha, 2)"),
+        (sympy.ceiling, (), "ceiling(alpha)"),
+        (sympy.floor, (), "floor(alpha)"),
+    ],
+)
+def test_openqasm_function_names(function, extra_args, expected):
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(function(alpha.expression, *extra_args))
+
+    assert str(expr) == expected
+    assert repr(expr) == expected
+
+
+def test_openqasm_sqrt_function_name():
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(sympy.sqrt(alpha.expression))
+
+    assert str(expr) == "sqrt(alpha)"
+    assert repr(expr) == "sqrt(alpha)"
+
+
+@pytest.mark.parametrize("stringify", [str, repr])
+@pytest.mark.parametrize("sympy_function", [sympy.Abs, sympy.re, sympy.im, sympy.conjugate])
+def test_unsupported_openqasm_function_raises_value_error(sympy_function, stringify):
+    alpha = FreeParameter("alpha")
+    expr = FreeParameterExpression(sympy_function(alpha.expression))
+
+    with pytest.raises(ValueError, match="No OpenQASM 3 equivalent"):
+        stringify(expr)
+
+
+def test_openqasm_arithmetic_str_and_repr_match():
+    expr = FreeParameter("theta") + 2 * FreeParameter("alpha")
+    expr_str = str(expr)
+
+    assert expr_str == repr(expr)
+    assert "theta" in expr_str
+    assert "alpha" in expr_str
 
 
 @pytest.mark.xfail(raises=ValueError)
