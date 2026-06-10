@@ -183,6 +183,45 @@ def gate_calibrations(pulse_sequence, pulse_sequence_2):
     })
 
 
+def test_instruction_density_empty_circuit():
+    assert Circuit().instruction_density() == {
+        "total": 0,
+        "by_operator": {},
+        "operator_density": {},
+        "per_qubit": {},
+        "per_qubit_density": {},
+    }
+
+
+def test_instruction_density_counts_operators_and_touched_qubits():
+    circuit = (
+        Circuit()
+        .add_instruction(Instruction(gates.H(), 0))
+        .add_instruction(Instruction(gates.CNot(), [0, 1]))
+        .add_instruction(Instruction(gates.Rz(0.125), 1))
+    )
+
+    summary = circuit.instruction_density()
+
+    assert summary["total"] == 3
+    assert summary["by_operator"] == {"cnot": 1, "h": 1, "rz": 1}
+    assert summary["operator_density"] == {"cnot": 1 / 3, "h": 1 / 3, "rz": 1 / 3}
+    assert summary["per_qubit"] == {0: 2, 1: 2}
+    assert summary["per_qubit_density"] == {0: 2 / 3, 1: 2 / 3}
+
+
+def test_instruction_density_includes_control_qubits():
+    circuit = Circuit().add_instruction(Instruction(gates.H(), 2, control=[0, 1]))
+
+    summary = circuit.instruction_density()
+
+    assert summary["total"] == 1
+    assert summary["by_operator"] == {"h": 1}
+    assert summary["operator_density"] == {"h": 1.0}
+    assert summary["per_qubit"] == {0: 1, 1: 1, 2: 1}
+    assert summary["per_qubit_density"] == {0: 1.0, 1: 1.0, 2: 1.0}
+
+
 def test_repr_instructions(h):
     expected = f"Circuit('instructions': {h.instructions})"
     assert repr(h) == expected
