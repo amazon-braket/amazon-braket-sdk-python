@@ -172,6 +172,33 @@ class Circuit:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
         return list(self._moments.values())
 
+    def count(self, gate_name: str | None = None) -> int | dict[str, int]:
+        """Count the occurrences of instructions in the circuit.
+        
+        Args:
+            gate_name (str | None): The name of the gate to count. If None, returns
+                a dictionary with counts of all gate types. Default = None.
+                
+        Returns:
+            int | dict[str, int]: The count of the specified gate, or a dictionary
+                with counts of all gate types.
+                
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1).h(1)
+            >>> circ.count('h')
+            2
+            >>> circ.count()
+            {'h': 2, 'cnot': 1}
+        """
+        counts = {}
+        for instruction in self.instructions:
+            name = instruction.operator.name.lower()
+            counts[name] = counts.get(name, 0) + 1
+        
+        if gate_name is not None:
+            return counts.get(gate_name.lower(), 0)
+        return counts
+
     @property
     def result_types(self) -> list[ResultType]:
         """list[ResultType]: Get a list of requested result types in the circuit."""

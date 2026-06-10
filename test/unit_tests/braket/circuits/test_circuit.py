@@ -3831,3 +3831,27 @@ def test_barrier_jaqcd_export_fails():
         pytest.raises(NotImplementedError, match="Barrier is not supported in JAQCD"),
     ):
         circ.to_ir(IRType.JAQCD)
+
+class TestCircuitCount:
+    """Tests for the Circuit.count() method."""
+
+    def test_count_single_gate(self):
+        circ = Circuit().h(0).cnot(0, 1).h(1)
+        assert circ.count('h') == 2
+        assert circ.count('cnot') == 1
+
+    def test_count_all_gates(self):
+        circ = Circuit().h(0).cnot(0, 1).h(1)
+        counts = circ.count()
+        assert counts['h'] == 2
+        assert counts['cnot'] == 1
+
+    def test_count_empty_circuit(self):
+        circ = Circuit()
+        assert circ.count() == {}
+        assert circ.count('h') == 0
+
+    def test_count_case_insensitive(self):
+        circ = Circuit().h(0).cnot(0, 1)
+        assert circ.count('H') == 1
+        assert circ.count('CNOT') == 1
