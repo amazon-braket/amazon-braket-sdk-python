@@ -2517,8 +2517,27 @@ def test_to_unitary_with_global_phase():
 def test_show_invokes_build_diagram():
     diagram_cls = Mock()
     circ = Circuit().h(0)
-    circ.show(circuit_diagram_class=diagram_cls)
+    result = circ.show(circuit_diagram_class=diagram_cls)
+    assert result is None
     diagram_cls.build_diagram.assert_called_once_with(circ)
+
+
+def test_show_matplotlib_alias_preserves_none_return():
+    assert Circuit().h(0).show("matplotlib") is None
+
+
+def test_show_rejects_device_metadata_for_matplotlib_alias():
+    with pytest.raises(ValueError, match="device_metadata"):
+        Circuit().h(0).show("matplotlib", device_metadata={"H": "native"})
+
+
+def test_show_rejects_device_metadata_for_custom_diagram():
+    diagram_cls = Mock()
+
+    with pytest.raises(ValueError, match="device_metadata"):
+        Circuit().h(0).show(circuit_diagram_class=diagram_cls, device_metadata={"H": "native"})
+
+    diagram_cls.build_diagram.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -3745,6 +3764,11 @@ def test_circuit_with_global_phase():
         "x $0;",
         "b[0] = measure $0;",
     ])
+
+
+def test_circuit_with_powered_global_phase():
+    circuit = Circuit().gphase(0.15, power=2).x(0)
+    assert circuit.global_phase == pytest.approx(0.3)
 
 
 def test_from_ir_round_trip_transformation_with_targeted_measurements():

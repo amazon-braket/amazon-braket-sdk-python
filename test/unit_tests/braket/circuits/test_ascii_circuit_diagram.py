@@ -92,6 +92,13 @@ def test_one_gate_with_global_phase(target):
     _assert_correct_diagram(circ, expected)
 
 
+def test_powered_global_phase_after_gate_does_not_draw_powered_gate():
+    diagram = AsciiCircuitDiagram.build_diagram(Circuit().h(0).gphase(0.5, power=2))
+
+    assert "Global phase: 1.0" in diagram
+    assert "-^2" not in diagram
+
+
 def test_one_gate_with_zero_global_phase():
     circ = Circuit().gphase(-0.15).x(target=0).gphase(0.15)
     expected = (

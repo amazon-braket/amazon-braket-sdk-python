@@ -136,6 +136,7 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         emits dataclass primitives instead of characters.
         """
         symbols: dict[Qubit, str | None] = dict.fromkeys(circuit_qubits)
+        gate_box_metadata: dict[Qubit, tuple[str | None, str | None]] = {}
         connections: dict[Qubit, str] = dict.fromkeys(circuit_qubits, "none")
 
         # Track per-item qubit ranges for emitting separate Connection elements
@@ -164,9 +165,12 @@ class GraphicalCircuitDiagram(CircuitDiagram):
                 map_control_qubit_states,
                 item,
                 symbols,
+                gate_box_metadata,
             )
 
-        cls._emit_symbol_elements(col, circuit_qubits, qubit_index, symbols, elements)
+        cls._emit_symbol_elements(
+            col, circuit_qubits, qubit_index, symbols, gate_box_metadata, elements
+        )
 
         # Emit connections - one per item so independent gates don't bridge
         for row_start, row_end in item_qubit_ranges:
@@ -184,27 +188,29 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         map_control_qubit_states: dict,
         item: Instruction | ResultType,
         symbols: dict[Qubit, str | None],
+        gate_box_metadata: dict[Qubit, tuple[str | None, str | None]],
     ) -> None:
         """Assign a symbol string to each qubit involved in an item."""
+        metadata_key = cls._gate_box_metadata_key(item)
         for qubit in qubits:
             if qubit in target_qubits:
                 item_qubit_index = next(
                     index for index, q in enumerate(target_qubits) if q == qubit
                 )
+                ascii_symbol = ascii_symbols[item_qubit_index]
+                if ascii_symbol is None:
+                    continue
                 power_string = (
                     f"^{power}"
-                    if (
-                        (power := getattr(item, "power", 1)) != 1
-                        and ascii_symbols[item_qubit_index] != "C"
-                    )
+                    if ((power := getattr(item, "power", 1)) != 1 and ascii_symbol != "C")
                     else ""
                 )
-                symbol = (
-                    f"{ascii_symbols[item_qubit_index]}{power_string}"
-                    if power_string
-                    else ascii_symbols[item_qubit_index]
-                )
+                symbol = f"{ascii_symbol}{power_string}" if power_string else ascii_symbol
                 symbols[qubit] = symbol
+                gate_box_metadata[qubit] = (
+                    metadata_key,
+                    cls._gate_parameter_text(item, symbol),
+                )
             elif qubit in control_qubits:
                 symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
             # Qubits inside the gate span but not involved (pass-through) are
@@ -219,6 +225,7 @@ class GraphicalCircuitDiagram(CircuitDiagram):
         circuit_qubits: QubitSet,
         qubit_index: dict[Qubit, int],
         symbols: dict[Qubit, str | None],
+        gate_box_metadata: dict[Qubit, tuple[str | None, str | None]],
         elements: list,
     ) -> None:
         """Convert symbols into layout primitives."""
@@ -233,7 +240,43 @@ class GraphicalCircuitDiagram(CircuitDiagram):
             elif symbol == "SWAP":
                 elements.append(SwapMarker(col=col, row=row))
             elif symbol != "||":
-                elements.append(GateBox(col=col, row=row, label=symbol))
+                metadata_key, parameter_text = gate_box_metadata.get(qubit, (None, None))
+                elements.append(
+                    GateBox(
+                        col=col,
+                        row=row,
+                        label=symbol,
+                        metadata_key=metadata_key,
+                        parameter_text=parameter_text,
+                    )
+                )
+
+    @staticmethod
+    def _gate_box_metadata_key(item: Instruction | ResultType) -> str | None:
+        if not (isinstance(item, Instruction) and isinstance(item.operator, Gate)):
+            return None
+        return item.operator.name
+
+    @classmethod
+    def _gate_parameter_text(cls, item: Instruction | ResultType, label: str) -> str | None:
+        if not (isinstance(item, Instruction) and isinstance(item.operator, Gate)):
+            return None
+        parameters = getattr(item.operator, "parameters", None)
+        if not parameters:
+            return "None"
+        return cls._parameter_text_from_label(label) or ", ".join(
+            str(parameter) for parameter in parameters
+        )
+
+    @staticmethod
+    def _parameter_text_from_label(label: str) -> str | None:
+        _, separator, raw_parameters = label.partition("(")
+        if not separator:
+            return None
+        end = raw_parameters.rfind(")")
+        if end == -1:
+            return None
+        return raw_parameters[:end] or "None"
 
     @classmethod
     def _emit_barrier_elements(

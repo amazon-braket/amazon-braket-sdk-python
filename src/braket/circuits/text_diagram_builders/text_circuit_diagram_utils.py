@@ -27,6 +27,14 @@ from braket.circuits.result_type import ResultType
 from braket.registers.qubit_set import QubitSet
 
 
+def _is_global_phase_instruction(item: Instruction | ResultType) -> bool:
+    return (
+        isinstance(item, Instruction)
+        and isinstance(item.operator, Gate)
+        and item.operator.name == "GPhase"
+    )
+
+
 def _add_footers(
     lines: list,
     circuit: cir.Circuit,
@@ -121,24 +129,14 @@ def _compute_moment_global_phase(
         float | None: The updated integrated phase.
     """
     moment_phase = sum(
-        item.operator.angle
-        for item in items
-        if (
-            isinstance(item, Instruction)
-            and isinstance(item.operator, Gate)
-            and item.operator.name == "GPhase"
-        )
+        item.operator.angle * item.power for item in items if _is_global_phase_instruction(item)
     )
     return global_phase + moment_phase if global_phase is not None else None
 
 
 def _get_qubit_range_for_item(item: Instruction | ResultType, circuit_qubits: QubitSet) -> QubitSet:
     """Get the qubit range for a given item."""
-    if (
-        isinstance(item, Instruction)
-        and isinstance(item.operator, Gate)
-        and item.operator.name == "GPhase"
-    ):
+    if _is_global_phase_instruction(item):
         return QubitSet()
 
     if isinstance(item, ResultType) and not item.target:

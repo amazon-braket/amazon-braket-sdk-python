@@ -74,7 +74,7 @@ def test_one_gate_one_qubit():
     assert layout.num_moments == 1
     gates = _elements_of_type(layout, GateBox)
     assert len(gates) == 1
-    assert gates[0] == GateBox(col=0, row=0, label="H")
+    assert gates[0] == GateBox(col=0, row=0, label="H", metadata_key="H", parameter_text="None")
     assert isinstance(_fig(Circuit().h(0)), Figure)
 
 
