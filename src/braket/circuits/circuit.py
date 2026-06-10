@@ -172,6 +172,30 @@ class Circuit:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
         return list(self._moments.values())
 
+    def count(self, instruction_name: str | None = None) -> int:
+        """Count instructions in the circuit.
+
+        Args:
+            instruction_name (str | None): The instruction name to count. Matching is
+                case-insensitive. If `None`, returns the total number of instructions.
+                Default = `None`.
+
+        Returns:
+            int: The number of matching instructions.
+
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1).cnot(1, 2)
+            >>> circ.count()
+            3
+            >>> circ.count("cnot")
+            2
+        """
+        if instruction_name is None:
+            return len(self.instructions)
+        return Counter(instr.operator.name.lower() for instr in self.instructions)[
+            instruction_name.lower()
+        ]
+
     @property
     def result_types(self) -> list[ResultType]:
         """list[ResultType]: Get a list of requested result types in the circuit."""
