@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.119.1 (2026-06-10)
+
+### Bug Fixes and Other Changes
+
+ * support division in FreeParameterExpression string constructor
+
 ## v1.119.0 (2026-06-09)
 
 ### Features
