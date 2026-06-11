@@ -1656,8 +1656,45 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
-        circuit_diagram_class.build_diagram(self)
+    def show(self, mode: str = "static", circuit_diagram_class: type | None = None) -> object:
+        """Visualize the circuit as a graphical diagram.
+
+        Args:
+            mode: Rendering mode. ``"static"`` (default) uses matplotlib;
+                ``"interactive"`` uses Plotly with hover tooltips and
+                expandable/collapsible verbatim blocks.
+            circuit_diagram_class: Optional explicit diagram class override.
+                When provided, *mode* is ignored and this class is used
+                directly.
+
+        Returns:
+            A ``matplotlib.figure.Figure`` (static mode) or
+            ``plotly.graph_objects.Figure`` (interactive mode).
+
+        Raises:
+            ImportError: If ``mode="interactive"`` and plotly is not installed.
+            ValueError: If *mode* is not ``"static"`` or ``"interactive"``.
+
+        Examples:
+            >>> circuit.show()                    # Matplotlib (default)
+            >>> circuit.show("interactive")       # Plotly interactive
+        """
+        if circuit_diagram_class is not None:
+            return circuit_diagram_class.build_diagram(self)
+        if mode == "interactive":
+            try:
+                from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+                    PlotlyCircuitDiagram,
+                )
+            except ImportError as e:
+                raise ImportError(
+                    "Plotly is required for interactive visualization.  "
+                    "Install it with: pip install amazon-braket-sdk[interactive]"
+                ) from e
+            return PlotlyCircuitDiagram.build_diagram(self)
+        if mode == "static":
+            return MatplotlibCircuitDiagram.build_diagram(self)
+        raise ValueError(f"Unknown mode {mode!r}; expected 'static' or 'interactive'.")
 
     @property
     def qubits_frozen(self) -> bool:

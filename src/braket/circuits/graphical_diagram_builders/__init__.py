@@ -16,3 +16,12 @@ from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram impor
 )
 
 __all__ = ["MatplotlibCircuitDiagram"]
+
+try:
+    from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+        PlotlyCircuitDiagram,
+    )
+
+    __all__.append("PlotlyCircuitDiagram")
+except ImportError:
+    pass
