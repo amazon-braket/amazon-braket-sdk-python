@@ -43,9 +43,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+interactive = [
+    "plotly>=5.0.0",
+]
 test = [
     "botocore",
     "jsonschema==3.2.0",
+    "plotly>=5.0.0",
     "pytest",
     "pytest-cov",
     # https://github.com/pytest-dev/pytest-rerunfailures/issues/302
