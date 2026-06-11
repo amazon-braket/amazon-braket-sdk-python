@@ -202,6 +202,29 @@ def test_str(h):
     assert str(h) == expected
 
 
+def test_count_empty_circuit():
+    circ = Circuit()
+    assert circ.count() == 0
+    assert circ.count("h") == 0
+
+
+def test_count_instructions_by_name():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).rx(0, 0.5)
+    assert circ.count() == 4
+    assert circ.count("cnot") == 2
+    assert circ.count("CNOT") == 2
+    assert circ.count("h") == 1
+    assert circ.count("rx") == 1
+    assert circ.count("x") == 0
+
+
+def test_count_noise_and_measure_instructions():
+    circ = Circuit().x(0).bit_flip(0, probability=0.1).measure(0)
+    assert circ.count() == 3
+    assert circ.count("bitflip") == 1
+    assert circ.count("measure") == 1
+
+
 def test_equality():
     circ_1 = Circuit().h(0).probability([0, 1])
     circ_2 = Circuit().h(0).probability([0, 1])
