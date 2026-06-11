@@ -25,6 +25,9 @@ Examples
 
 Explore Amazon Braket examples.
 
+The SDK also includes a compact cheat sheet source in ``doc/cheat_sheet`` with
+section-level contribution instructions in ``doc/cheat_sheet/README.md``.
+
 .. toctree::
     :maxdepth: 3
 
