@@ -1626,6 +1626,57 @@ class Circuit:
                 })
         return additional_calibrations
 
+    def count(
+        self,
+        operator: str | None = None,
+        qubits: QubitSet | None = None,
+    ) -> int | Counter[str]:
+        """Counts circuit instructions by operator name, optionally filtered by specific
+        operators and/or qubits.
+
+        Args:
+            operator (str | None): Optional operator name to count. Matching is case-insensitive.
+                If not provided, returns counts for all operator names.
+            qubits (QubitSet | None): Optional set of qubits to consider. If not provided,
+                considers all qubits.
+
+        Returns:
+            int | Counter[str]: The count for ``operator`` if provided, otherwise a ``Counter``
+            keyed by operator name.
+
+        Raises:
+            ValueError: If any qubits in ``qubits`` are not present in the circuit
+
+        Examples:
+            >>> circuit = Circuit().h(0).h(1).cnot(0, 1)
+            >>> circuit.count("cnot")
+            1
+            >>> circuit.count()
+            Counter({'cnot': 1, 'h': 2})
+            >>> circuit.count(qubits={0})
+            Counter({'cnot': 1, 'h': 1})
+            >>> circuit.count(qubits={0}, operator="h")
+            1
+        """
+        counts: dict[str, int] = {}
+
+        if qubits and qubits.intersection(self.qubits) != qubits:
+            raise ValueError(
+                "All qubits in the 'qubits' argument must be present in the circuit. "
+                f"Invalid qubits: {qubits - self.qubits}"
+            )
+
+        for instruction in self.instructions:
+            if qubits and not set(instruction.target).intersection(qubits):
+                continue
+            name = instruction.operator.name.lower()
+            counts[name] = counts.get(name, 0) + 1
+
+        if operator:
+            return counts.get(operator.lower(), 0)
+
+        return Counter(counts)
+
     def to_unitary(self) -> np.ndarray:
         """Returns the unitary matrix representation of the entire circuit.
 
