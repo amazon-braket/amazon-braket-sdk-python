@@ -21,7 +21,7 @@ import pytest
 from braket.circuits import gates
 from braket.circuits.circuit import Circuit
 from braket.circuits.observables import I, X, Y, Z
-from braket.quantum_information import PauliString
+from braket.quantum_information import PauliString, PauliStringSum
 
 ORDER = ["I", "X", "Y", "Z"]
 PAULI_INDEX_MATRICES = {
@@ -260,3 +260,89 @@ def test_power_invalid_exp(circ, n, operation):
 )
 def test_to_circuit(circ, circ_res):
     assert circ.to_circuit() == circ_res
+
+
+def test_pauli_string_sum_from_terms_combines_like_terms():
+    pauli_sum = PauliStringSum.from_terms([(1.5, "XI"), (2, "-XI"), (3, "IZ")])
+
+    assert pauli_sum.qubit_count == 2
+    assert pauli_sum.to_terms() == [(-0.5, "+XI"), (3.0, "+IZ")]
+
+
+def test_pauli_string_sum_add_subtract_and_scalar_multiply():
+    first = PauliString("XI")
+    second = PauliString("IZ")
+
+    pauli_sum = 2 * first + second - PauliString("-XI")
+
+    assert isinstance(pauli_sum, PauliStringSum)
+    assert pauli_sum.to_terms() == [(3.0, "+XI"), (1.0, "+IZ")]
+    assert (0.5 * pauli_sum).to_terms() == [(1.5, "+XI"), (0.5, "+IZ")]
+    assert (-pauli_sum).to_terms() == [(-3.0, "+XI"), (-1.0, "+IZ")]
+
+
+def test_pauli_string_sum_multiplies_by_pauli_string_on_right_and_left():
+    pauli_sum = PauliStringSum.from_terms([(2, "XI"), (3, "IZ")])
+
+    assert (pauli_sum * PauliString("ZI")).to_terms() == [(-2.0, "+YI"), (3.0, "+ZZ")]
+    assert (PauliString("ZI") * pauli_sum).to_terms() == [(2.0, "+YI"), (3.0, "+ZZ")]
+
+
+def test_pauli_string_sum_index_and_contains():
+    pauli_sum = PauliStringSum.from_terms([(2, "-XI"), (3, "IZ")])
+
+    assert PauliString("XI") in pauli_sum
+    assert PauliString("-XI") in pauli_sum
+    assert pauli_sum[0] == (-2.0, PauliString("XI"))
+    assert len(pauli_sum) == 2
+    assert list(pauli_sum) == list(pauli_sum.terms)
+    assert repr(pauli_sum) == "PauliStringSum([(-2.0, '+XI'), (3.0, '+IZ')])"
+
+
+def test_pauli_string_sum_empty_copy_and_cancellation():
+    empty = PauliStringSum()
+    assert empty.qubit_count is None
+    assert empty.to_terms() == []
+
+    original = PauliStringSum(PauliString("XI"))
+    copied = PauliStringSum(original)
+    assert copied == original
+    assert copied != PauliStringSum(PauliString("IZ"))
+    assert copied != PauliString("XI")
+
+    cancelled = original + PauliString("-XI")
+    assert cancelled.to_terms() == []
+    assert cancelled.qubit_count is None
+
+
+def test_pauli_string_and_sum_reverse_arithmetic():
+    first = PauliString("XI")
+    second = PauliString("IZ")
+    pauli_sum = PauliStringSum.from_terms([(2, "XI"), (3, "IZ")])
+
+    assert (first + pauli_sum).to_terms() == [(3.0, "+XI"), (3.0, "+IZ")]
+    assert (pauli_sum + first).to_terms() == [(3.0, "+XI"), (3.0, "+IZ")]
+    assert (first - pauli_sum).to_terms() == [(-1.0, "+XI"), (-3.0, "+IZ")]
+    assert (pauli_sum - first).to_terms() == [(1.0, "+XI"), (3.0, "+IZ")]
+    assert (second - pauli_sum).to_terms() == [(-2.0, "+IZ"), (-2.0, "+XI")]
+
+
+def test_pauli_string_sum_unsupported_operands_return_not_implemented():
+    pauli_string = PauliString("X")
+    pauli_sum = PauliStringSum(pauli_string)
+    unsupported = object()
+
+    assert pauli_string.__rmul__(unsupported) is NotImplemented
+    assert pauli_sum.__add__(unsupported) is NotImplemented
+    assert pauli_sum.__mul__(unsupported) is NotImplemented
+    assert pauli_sum.__rmul__(unsupported) is NotImplemented
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_pauli_string_sum_rejects_unequal_lengths():
+    PauliStringSum.from_terms([(1, "XI"), (1, "Z")])
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_pauli_string_sum_rejects_non_real_coefficients():
+    PauliStringSum.from_terms([(1j, "X")])

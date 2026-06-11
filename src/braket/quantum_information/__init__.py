@@ -16,4 +16,4 @@ includes the PauliString class for representing and manipulating tensor products
 of Pauli operators.
 """
 
-from braket.quantum_information.pauli_string import PauliString  # noqa: F401
+from braket.quantum_information.pauli_string import PauliString, PauliStringSum  # noqa: F401
