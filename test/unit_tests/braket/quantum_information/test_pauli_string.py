@@ -295,6 +295,47 @@ def test_pauli_string_sum_index_and_contains():
     assert PauliString("-XI") in pauli_sum
     assert pauli_sum[0] == (-2.0, PauliString("XI"))
     assert len(pauli_sum) == 2
+    assert list(pauli_sum) == list(pauli_sum.terms)
+    assert repr(pauli_sum) == "PauliStringSum([(-2.0, '+XI'), (3.0, '+IZ')])"
+
+
+def test_pauli_string_sum_empty_copy_and_cancellation():
+    empty = PauliStringSum()
+    assert empty.qubit_count is None
+    assert empty.to_terms() == []
+
+    original = PauliStringSum(PauliString("XI"))
+    copied = PauliStringSum(original)
+    assert copied == original
+    assert copied != PauliStringSum(PauliString("IZ"))
+    assert copied != PauliString("XI")
+
+    cancelled = original + PauliString("-XI")
+    assert cancelled.to_terms() == []
+    assert cancelled.qubit_count is None
+
+
+def test_pauli_string_and_sum_reverse_arithmetic():
+    first = PauliString("XI")
+    second = PauliString("IZ")
+    pauli_sum = PauliStringSum.from_terms([(2, "XI"), (3, "IZ")])
+
+    assert (first + pauli_sum).to_terms() == [(3.0, "+XI"), (3.0, "+IZ")]
+    assert (pauli_sum + first).to_terms() == [(3.0, "+XI"), (3.0, "+IZ")]
+    assert (first - pauli_sum).to_terms() == [(-1.0, "+XI"), (-3.0, "+IZ")]
+    assert (pauli_sum - first).to_terms() == [(1.0, "+XI"), (3.0, "+IZ")]
+    assert (second - pauli_sum).to_terms() == [(-2.0, "+IZ"), (-2.0, "+XI")]
+
+
+def test_pauli_string_sum_unsupported_operands_return_not_implemented():
+    pauli_string = PauliString("X")
+    pauli_sum = PauliStringSum(pauli_string)
+    unsupported = object()
+
+    assert pauli_string.__rmul__(unsupported) is NotImplemented
+    assert pauli_sum.__add__(unsupported) is NotImplemented
+    assert pauli_sum.__mul__(unsupported) is NotImplemented
+    assert pauli_sum.__rmul__(unsupported) is NotImplemented
 
 
 @pytest.mark.xfail(raises=ValueError)
