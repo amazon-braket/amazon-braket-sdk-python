@@ -223,6 +223,16 @@ def test_call():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_count_instructions():
+    circ = Circuit().h(0).cnot(0, 1).cnot(1, 2).rx(0, 0).probability([0, 1])
+
+    assert dict(circ.count()) == {"h": 1, "cnot": 2, "rx": 1}
+    assert circ.count("cnot") == 2
+    assert circ.count("CNOT") == 2
+    assert circ.count("x") == 0
+    assert dict(Circuit().count()) == {}
+
+
 def test_call_with_result_type(prob):
     alpha = FreeParameter("alpha")
     theta = FreeParameter("theta")
