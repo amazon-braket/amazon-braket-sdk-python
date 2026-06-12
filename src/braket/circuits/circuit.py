@@ -31,6 +31,9 @@ from braket.circuits import compiler_directives
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
+from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
+    MatplotlibCircuitDiagram,
+)
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
@@ -1657,6 +1660,53 @@ class Circuit:
         if qubits := self.qubits:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
+
+    def show(self, renderer: str | type = MatplotlibCircuitDiagram) -> object:
+        """Visualise this circuit.
+
+        Args:
+            renderer (str | type): The renderer to use.
+
+                - Pass a :class:`~braket.circuits.graphical_diagram_builders.graphical_circuit_diagram.GraphicalCircuitDiagram`
+                  subclass directly (default: :class:`~braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram.MatplotlibCircuitDiagram`).
+                - Pass ``"interactive"`` to use the Plotly renderer. Requires the
+                  ``interactive`` extras to be installed::
+
+                      pip install "amazon-braket-sdk[interactive]"
+
+        Returns:
+            object: The generated figure.  For the Matplotlib renderer this is a
+            ``matplotlib.figure.Figure``; for the Plotly renderer it is a
+            ``plotly.graph_objects.FigureWidget`` that displays inline in
+            Jupyter notebooks.
+
+        Raises:
+            ImportError: If ``renderer="interactive"`` is requested but
+                ``plotly`` is not installed.
+            ValueError: If *renderer* is an unrecognised string.
+
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1)
+            >>> fig = circ.show()                   # Matplotlib (default)
+            >>> fig = circ.show("interactive")       # Plotly interactive
+        """
+        if renderer == "interactive":
+            try:
+                from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+                    PlotlyCircuitDiagram,
+                )
+            except ImportError as exc:
+                raise ImportError(
+                    "Plotly is required for interactive visualization. "
+                    "Install it with: pip install 'amazon-braket-sdk[interactive]'"
+                ) from exc
+            return PlotlyCircuitDiagram.build_diagram(self)
+        if isinstance(renderer, str):
+            raise ValueError(
+                f"Unknown renderer {renderer!r}. "
+                "Pass a GraphicalCircuitDiagram subclass or 'interactive'."
+            )
+        return renderer.build_diagram(self)
 
     @property
     def qubits_frozen(self) -> bool:

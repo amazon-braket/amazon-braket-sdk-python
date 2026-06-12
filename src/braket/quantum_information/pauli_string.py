@@ -234,6 +234,8 @@ class PauliString:
         See Also:
             `braket.quantum_information.PauliString.dot()`
         """
+        if not isinstance(other, PauliString):
+            return NotImplemented
         return self.dot(other)
 
     def __imul__(self, other: PauliString) -> PauliString:

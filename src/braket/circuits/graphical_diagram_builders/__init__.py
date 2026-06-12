@@ -11,10 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Provides utilities for working with quantum information concepts. It
-includes the PauliString class for representing and manipulating tensor products
-of Pauli operators.
-"""
+from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
+    MatplotlibCircuitDiagram,
+)
 
-from braket.quantum_information.pauli_string import PauliString  # noqa: F401
-from braket.quantum_information.pauli_string_sum import PauliStringSum  # noqa: F401
+__all__ = ["MatplotlibCircuitDiagram"]
+
+try:
+    from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+        PlotlyCircuitDiagram,
+    )
+    __all__ += ["PlotlyCircuitDiagram"]
+except ImportError:
+    pass
