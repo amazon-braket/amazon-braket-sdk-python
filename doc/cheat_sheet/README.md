@@ -1,45 +1,27 @@
-\# Amazon Braket SDK Cheat Sheet
-
-
+# Amazon Braket SDK Cheat Sheet
 
 This directory contains the source files for the Amazon Braket SDK cheat sheet.
 
+## Structure
 
+* `_data/blocks.yml` controls the order of cheat sheet sections.
+* `_includes/en/*.md` contains the individual cheat sheet sections.
+* `index.html` renders the cheat sheet using the configured blocks.
+* `doc/genai_cheat_sheet.md` contains a generated Markdown version for text-based use.
+* `_scripts/generate_genai_cheat_sheet.py` generates the AI-readable Markdown cheat sheet.
+* `Gemfile` lists the Ruby dependencies required to build and serve the Jekyll site locally.
 
-\## Structure
+## Adding a new section
 
-
-
-\- `\_data/blocks.yml` controls the order of cheat sheet sections.
-
-\- `\_includes/en/\*.md` contains the individual cheat sheet sections.
-
-\- `index.html` renders the cheat sheet using the configured blocks.
-
-\- `genai\_cheat\_sheet.md` contains a generated Markdown version for text-based use.
-
-
-
-\## Adding a new section
-
-
-
-1\. Create a new Markdown file in `\_includes/en/`.
-
-2\. Add the file to `\_data/blocks.yml`.
-
-3\. Keep the section in the compact two-column format:
-
-
+1. Create a new Markdown file in `_includes/en/`.
+2. Add the file to `_data/blocks.yml`.
+3. Keep the section in the compact two-column format:
 
 ```markdown
-
 | Task | Code |
-
 |---|---|
-
-| Description | `code\_snippet` |
-
+| Description | `code_snippet` |
+```
 
 ## Generating the AI cheat sheet
 
@@ -97,7 +79,21 @@ cd doc/cheat_sheet
 bundle install
 ```
 
-### 4. Serve the site locally
+### 4. Build the site locally
+
+From `doc/cheat_sheet`, run:
+
+```bash
+bundle exec jekyll build
+```
+
+The generated site is written to:
+
+```text
+doc/cheat_sheet/_site
+```
+
+### 5. Serve the site locally
 
 From `doc/cheat_sheet`, run:
 
@@ -115,10 +111,10 @@ http://127.0.0.1:4000/
 
 If `bundle` is not recognized, Ruby/Bundler is not installed or Ruby is not on your `PATH`.
 
-If Jekyll fails on Ruby 3 with a missing `webrick` error, run:
+If Jekyll fails with a missing dependency error, run:
 
 ```bash
 bundle install
 ```
 
-The `Gemfile` already includes `webrick` for local serving.
+The `Gemfile` includes the gems required for local builds, including `jekyll`, `kramdown`, `kramdown-parser-gfm`, `webrick`, `base64`, and `bigdecimal`.
