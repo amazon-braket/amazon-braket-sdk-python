@@ -4,7 +4,7 @@
 | Get the list of available gates | `[attr for attr in dir(Gate) if attr[0].isupper()]` |
 | Apply a unitary matrix | `circuit.unitary(matrix, [0])` |
 | Get the circuit unitary | `circuit.to_unitary()` |
-| Add a result type | `circuit.probability(0)`<br>`circuit.expectation(0.5 * X(0) @ X(1))` |
+| Add a result type | `circuit.probability(0)`<br>`circuit.expectation(0.5 * X() @ X(), target=[0, 1])` |
 | List available result types | `adjoint_gradient`, `amplitude`, `density_matrix`, `expectation`, `probability`, `sample`, `state_vector`, `variance` |
 | Add a verbatim box | `circuit.add_verbatim_box(circuit2)` |
 | Gate modifiers | `circuit.x(0, control=[1, 2], control_state=[0, 1], power=-0.5)` |
