@@ -101,12 +101,38 @@ python doc/cheat_sheet/_scripts/generate_genai_cheat_sheet.py --check
 
 ## Preview the site locally
 
-The site is a standard Jekyll project:
+The site is a standard Jekyll project. The [`Gemfile`](Gemfile) here pins Jekyll
+so you get a faithful local preview of the same sources. (The published site is
+built by GitHub Pages via the publish workflow, not from this Gemfile.)
+
+### Prerequisites
+
+You need Ruby and Bundler. Check what you have:
+
+```bash
+ruby --version      # 3.0 or newer is fine
+bundler --version   # if this fails, run: gem install bundler
+```
+
+If you do not have Ruby, follow the Jekyll install guide for your OS:
+https://jekyllrb.com/docs/installation/
+
+### Build and serve
+
+From this directory:
 
 ```bash
 cd doc/cheat_sheet
-bundle exec jekyll serve   # then open http://127.0.0.1:4000
+bundle install                 # installs Jekyll and its dependencies (first time only)
+bundle exec jekyll serve       # builds the site and starts a local server
 ```
+
+Then open http://127.0.0.1:4000 in your browser. The French page is at
+http://127.0.0.1:4000/fr/.
+
+> The `Gemfile` includes `webrick` because Ruby 3.0+ no longer ships it in the
+> standard library and `jekyll serve` needs it. If you ever see a `webrick`
+> `LoadError`, run `bundle install` again.
 
 ## Add a new language
 
