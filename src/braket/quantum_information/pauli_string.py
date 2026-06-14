@@ -257,6 +257,55 @@ class PauliString:
         """
         return self.dot(other, inplace=True)
 
+    def __add__(self, other: PauliString | str):
+        """Operator overload for addition with another Pauli string.
+
+        Args:
+            other (PauliString | str): The Pauli string to add.
+
+        Returns:
+            PauliStringSum: The sum containing both Pauli strings.
+        """
+        if not isinstance(other, (PauliString, str)):
+            return NotImplemented
+        from braket.quantum_information.pauli_string_sum import PauliStringSum  # noqa: PLC0415
+
+        return PauliStringSum([(1, self), (1, other)])
+
+    def __radd__(self, other: PauliString | str):
+        """Operator overload for reverse addition with another Pauli string.
+
+        Args:
+            other (PauliString | str): The Pauli string to add.
+
+        Returns:
+            PauliStringSum: The sum containing both Pauli strings.
+        """
+        if not isinstance(other, (PauliString, str)):
+            return NotImplemented
+        from braket.quantum_information.pauli_string_sum import PauliStringSum  # noqa: PLC0415
+
+        return PauliStringSum([(1, other), (1, self)])
+
+    def commutes_with(self, other: PauliString | str) -> bool:
+        """Returns whether this Pauli string commutes with another Pauli string.
+
+        Args:
+            other (PauliString | str): The Pauli string to check against.
+
+        Returns:
+            bool: Whether the Pauli strings commute.
+        """
+        other_pauli = PauliString(other)
+        anticommuting_factors = 0
+        qubit_count = max(self._qubit_count, other_pauli._qubit_count)
+        for qubit in range(qubit_count):
+            left_factor = self[qubit] if qubit < self._qubit_count else 0
+            right_factor = other_pauli[qubit] if qubit < other_pauli._qubit_count else 0
+            if left_factor and right_factor and left_factor != right_factor:
+                anticommuting_factors += 1
+        return anticommuting_factors % 2 == 0
+
     def power(self, n: int, inplace: bool = False) -> PauliString:
         """Composes Pauli string with itself n times.
 
