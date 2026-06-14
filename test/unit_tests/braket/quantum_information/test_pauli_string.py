@@ -21,7 +21,7 @@ import pytest
 from braket.circuits import gates
 from braket.circuits.circuit import Circuit
 from braket.circuits.observables import I, X, Y, Z
-from braket.quantum_information import PauliString
+from braket.quantum_information import PauliString, PauliStringSum
 
 ORDER = ["I", "X", "Y", "Z"]
 PAULI_INDEX_MATRICES = {
@@ -170,6 +170,23 @@ def test_dot(circ_arg_1, circ_arg_2, circ_res):
     assert circ1 * circ2 == PauliString(circ_res)
     circ1 *= circ2
     assert circ1 == PauliString(circ_res)
+
+
+def test_pauli_string_addition_builds_pauli_string_sum():
+    pauli_sum = PauliString("XI") + PauliString("-IZ")
+
+    assert pauli_sum == PauliStringSum([(1, "XI"), (1, "-IZ")])
+
+
+def test_pauli_string_addition_accepts_strings_and_reverse_addition():
+    assert PauliString("XI") + "IZ" == PauliStringSum([(1, "XI"), (1, "IZ")])
+    assert "IZ" + PauliString("XI") == PauliStringSum([(1, "IZ"), (1, "XI")])
+
+
+def test_pauli_string_commutation_check():
+    assert PauliString("XX").commutes_with("YY")
+    assert PauliString("X").commutes_with("IZ")
+    assert not PauliString("XI").commutes_with("ZI")
 
 
 @pytest.mark.xfail(raises=ValueError)
