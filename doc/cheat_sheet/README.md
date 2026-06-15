@@ -31,11 +31,30 @@ Markdown companion file for readers who want a plain-text reference.
 
 ## Build Locally
 
-Use the same source path as the GitHub Pages workflow:
+The cheat sheet is a standalone Jekyll project under `doc/cheat_sheet`. Use
+Ruby 3.1 or newer, install Bundler, then install the GitHub Pages-compatible
+Jekyll bundle from this directory:
 
 ```bash
-bundle exec jekyll build --source doc/cheat_sheet --destination build/cheat_sheet
+cd doc/cheat_sheet
+ruby --version
+gem install bundler
+bundle install
+```
+
+Build the site from the repository root with the same source path as the
+GitHub Pages workflow:
+
+```bash
+BUNDLE_GEMFILE=doc/cheat_sheet/Gemfile bundle exec jekyll build --source doc/cheat_sheet --destination build/cheat_sheet
 python3 doc/cheat_sheet/_scripts/generate_markdown.py --output build/cheat_sheet/genai_cheat_sheet.md
+```
+
+Alternatively, build from inside `doc/cheat_sheet`:
+
+```bash
+bundle exec jekyll build --source . --destination ../../build/cheat_sheet
+python3 _scripts/generate_markdown.py --output ../../build/cheat_sheet/genai_cheat_sheet.md
 ```
 
 If Ruby/Jekyll is not available, run the Python generator and `tox -e docs` to
