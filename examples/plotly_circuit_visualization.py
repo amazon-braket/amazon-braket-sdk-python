@@ -28,5 +28,5 @@ device_metadata = {
     "CZ": {"fidelity": 0.985, "duration": "140 ns"},
 }
 
-figure = circuit.show("interactive", device_metadata=device_metadata)
+figure = circuit.to_plotly(device_metadata=device_metadata)
 figure.write_html("plotly_circuit_visualization.html", include_plotlyjs="cdn")

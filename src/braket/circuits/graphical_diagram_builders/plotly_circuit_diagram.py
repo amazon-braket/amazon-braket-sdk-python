@@ -14,7 +14,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import braket.circuits.circuit as cir
 from braket.circuits.graphical_diagram_builders.graphical_circuit_diagram import (
@@ -34,21 +35,49 @@ if TYPE_CHECKING:
     import plotly.graph_objects as go
 
 
+class _VerbatimTraceGroup(NamedTuple):
+    start: int
+    end: int
+    collapsed_indices: list[int]
+    expanded_indices: list[int]
+
+
+@dataclass
+class _TraceParts:
+    gate_x: list[float | None] = field(default_factory=list)
+    gate_y: list[float | None] = field(default_factory=list)
+    gate_text_x: list[float] = field(default_factory=list)
+    gate_text_y: list[float] = field(default_factory=list)
+    gate_text: list[str] = field(default_factory=list)
+    barrier_x: list[float | None] = field(default_factory=list)
+    barrier_y: list[float | None] = field(default_factory=list)
+    barrier_text_x: list[float] = field(default_factory=list)
+    barrier_text_y: list[float] = field(default_factory=list)
+    connection_x: list[float | None] = field(default_factory=list)
+    connection_y: list[float | None] = field(default_factory=list)
+    hover_x: list[float] = field(default_factory=list)
+    hover_y: list[float] = field(default_factory=list)
+    hover_text: list[str] = field(default_factory=list)
+    filled_control_x: list[float] = field(default_factory=list)
+    filled_control_y: list[float] = field(default_factory=list)
+    filled_control_hover: list[str] = field(default_factory=list)
+    open_control_x: list[float] = field(default_factory=list)
+    open_control_y: list[float] = field(default_factory=list)
+    open_control_hover: list[str] = field(default_factory=list)
+    swap_x: list[float] = field(default_factory=list)
+    swap_y: list[float] = field(default_factory=list)
+    swap_hover: list[str] = field(default_factory=list)
+
+
 class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
     """Renders circuit diagrams as interactive Plotly figures.
 
     Examples:
         >>> from braket.circuits import Circuit
-        >>> fig = Circuit().h(0).cnot(0, 1).show("interactive")
+        >>> fig = Circuit().h(0).cnot(0, 1).to_plotly()
 
     The returned figure includes hover tooltips and, for verbatim boxes, buttons to switch
-    between collapsed and expanded views.
-
-    The collapse path is intentionally range-based: the renderer detects nestable column
-    ranges, draws a synthetic collapsed layout, and keeps the expanded layout behind the same
-    toggle. Future ``box`` or ``scope`` circuit structures can reuse this path by contributing
-    their own ranges and collapsed labels once the SDK exposes them in the layout.
-    The current verbatim control is one global ``updatemenus`` toggle for the figure.
+    individual boxes between collapsed and expanded views.
     """
 
     COL_WIDTH = 1.4
@@ -103,7 +132,7 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
 
         Examples:
             >>> from braket.circuits import Circuit
-            >>> fig = Circuit().h(0).cnot(0, 1).show("interactive")
+            >>> fig = Circuit().h(0).cnot(0, 1).to_plotly()
         """
         go = PlotlyCircuitDiagram._get_plotly()
 
@@ -122,7 +151,7 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
             return fig
 
         layout = PlotlyCircuitDiagram._compute_layout(circuit)
-        return PlotlyCircuitDiagram._render_layout(layout, device_metadata)
+        return PlotlyCircuitDiagram._render_layout(layout, device_metadata, go)
 
     @staticmethod
     def _get_plotly() -> Any:
@@ -163,22 +192,26 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         cls,
         layout: CircuitLayout,
         device_metadata: Mapping[str, Any] | None = None,
+        plotly_module: Any | None = None,
     ) -> go.Figure:
         verbatim_ranges = cls._find_verbatim_ranges(layout)
-        if verbatim_ranges:
-            collapsed_layout = cls._collapse_verbatim_layout(layout, verbatim_ranges)
-            collapsed_fig = cls._render_base_layout(collapsed_layout, device_metadata)
-            expanded_fig = cls._render_base_layout(layout, device_metadata)
-            return cls._add_verbatim_toggle(collapsed_fig, expanded_fig)
-        return cls._render_base_layout(layout, device_metadata)
+        return cls._render_base_layout(
+            layout,
+            device_metadata,
+            plotly_module=plotly_module,
+            verbatim_ranges=verbatim_ranges,
+        )
 
     @classmethod
     def _render_base_layout(
         cls,
         layout: CircuitLayout,
         device_metadata: Mapping[str, Any] | None = None,
+        *,
+        plotly_module: Any | None = None,
+        verbatim_ranges: list[tuple[int, int]] | None = None,
     ) -> go.Figure:
-        go = cls._get_plotly()
+        go = plotly_module or cls._get_plotly()
         fig = go.Figure()
         n_rows = max(layout.num_qubits, 1)
 
@@ -192,13 +225,21 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
 
         cls._draw_qubit_wires(fig, layout, left_wire, right_wire)
         cls._draw_moment_labels(fig, layout, col_x, label_y_top, label_y_bottom)
-        cls._draw_elements(fig, layout, col_x, device_metadata)
+        trace_groups = cls._draw_elements(
+            fig,
+            layout,
+            col_x,
+            device_metadata,
+            plotly_module=go,
+            verbatim_ranges=verbatim_ranges or [],
+        )
 
         footer_lines = cls._build_footer_lines(layout)
         if footer_lines:
             cls._draw_footer(fig, footer_lines, left_wire, label_y_bottom)
 
         cls._configure_axes(fig, left_wire, right_wire, label_y_top, label_y_bottom, footer_lines)
+        cls._add_verbatim_toggles(fig, trace_groups, col_x, left_wire, right_wire)
         return fig
 
     @classmethod
@@ -230,52 +271,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         return ranges
 
     @classmethod
-    def _collapse_verbatim_layout(
-        cls, layout: CircuitLayout, verbatim_ranges: list[tuple[int, int]]
-    ) -> CircuitLayout:
-        col_map: dict[int, int] = {}
-        collapsed_elements: list = []
-        collapsed_moment_labels: list[str] = []
-        new_col = 0
-        col = 0
-        while col < layout.num_moments:
-            verbatim_range = next(
-                ((start, end) for start, end in verbatim_ranges if start == col),
-                None,
-            )
-            if verbatim_range:
-                start, end = verbatim_range
-                for source_col in range(start, end + 1):
-                    col_map[source_col] = new_col
-                collapsed_moment_labels.append("Verbatim")
-                collapsed_elements.extend(
-                    cls._build_collapsed_verbatim_elements(layout, start, end, new_col)
-                )
-                new_col += 1
-                col = end + 1
-            else:
-                col_map[col] = new_col
-                collapsed_moment_labels.append(layout.moment_labels[col])
-                new_col += 1
-                col += 1
-
-        for elem in layout.elements:
-            if cls._is_in_verbatim_range(elem.col, verbatim_ranges):
-                continue
-            collapsed_elements.append(cls._clone_element_with_col(elem, col_map[elem.col]))
-
-        return CircuitLayout(
-            num_qubits=layout.num_qubits,
-            num_moments=new_col,
-            qubit_labels=layout.qubit_labels,
-            moment_labels=collapsed_moment_labels,
-            elements=collapsed_elements,
-            global_phase=layout.global_phase,
-            additional_result_types=layout.additional_result_types,
-            unassigned_parameters=layout.unassigned_parameters,
-        )
-
-    @classmethod
     def _build_collapsed_verbatim_elements(
         cls, layout: CircuitLayout, start: int, end: int, col: int
     ) -> list:
@@ -304,133 +299,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
     def _is_in_verbatim_range(col: int, verbatim_ranges: list[tuple[int, int]]) -> bool:
         return any(start <= col <= end for start, end in verbatim_ranges)
 
-    @staticmethod
-    def _clone_element_with_col(elem: object, col: int) -> object:
-        if isinstance(elem, GateBox):
-            return GateBox(
-                col=col,
-                row=elem.row,
-                label=elem.label,
-                metadata_key=elem.metadata_key,
-                parameter_text=elem.parameter_text,
-            )
-        if isinstance(elem, ControlDot):
-            return ControlDot(col=col, row=elem.row, filled=elem.filled)
-        if isinstance(elem, SwapMarker):
-            return SwapMarker(col=col, row=elem.row)
-        if isinstance(elem, Connection):
-            return Connection(col=col, row_start=elem.row_start, row_end=elem.row_end)
-        if isinstance(elem, BarrierMarker):
-            return BarrierMarker(col=col, row=elem.row)
-        return elem
-
-    @classmethod
-    def _add_verbatim_toggle(cls, collapsed_fig: go.Figure, expanded_fig: go.Figure) -> go.Figure:
-        collapsed_trace_count = len(collapsed_fig.data)
-        expanded_trace_count = len(expanded_fig.data)
-
-        for trace in expanded_fig.data:
-            trace.visible = False
-            collapsed_fig.add_trace(trace)
-
-        collapsed_shapes = cls._visible_layout_items(collapsed_fig.layout.shapes, visible=True)
-        expanded_shapes = cls._visible_layout_items(expanded_fig.layout.shapes, visible=False)
-        collapsed_annotations = cls._visible_layout_items(
-            collapsed_fig.layout.annotations, visible=True
-        )
-        expanded_annotations = cls._visible_layout_items(
-            expanded_fig.layout.annotations, visible=False
-        )
-        collapsed_fig.update_layout(
-            shapes=collapsed_shapes + expanded_shapes,
-            annotations=collapsed_annotations + expanded_annotations,
-            updatemenus=[
-                {
-                    "type": "buttons",
-                    "direction": "right",
-                    "x": 1,
-                    "xanchor": "right",
-                    "y": 1.08,
-                    "yanchor": "top",
-                    "buttons": [
-                        {
-                            "label": "Collapse verbatim",
-                            "method": "update",
-                            "args": [
-                                {
-                                    "visible": [True] * collapsed_trace_count
-                                    + [False] * expanded_trace_count
-                                },
-                                cls._verbatim_layout_update(
-                                    collapsed_fig,
-                                    expanded_fig,
-                                    collapsed_shapes,
-                                    expanded_shapes,
-                                    collapsed_annotations,
-                                    expanded_annotations,
-                                    expand=False,
-                                ),
-                            ],
-                        },
-                        {
-                            "label": "Expand verbatim",
-                            "method": "update",
-                            "args": [
-                                {
-                                    "visible": [False] * collapsed_trace_count
-                                    + [True] * expanded_trace_count
-                                },
-                                cls._verbatim_layout_update(
-                                    collapsed_fig,
-                                    expanded_fig,
-                                    collapsed_shapes,
-                                    expanded_shapes,
-                                    collapsed_annotations,
-                                    expanded_annotations,
-                                    expand=True,
-                                ),
-                            ],
-                        },
-                    ],
-                }
-            ],
-        )
-        return collapsed_fig
-
-    @staticmethod
-    def _visible_layout_items(items: tuple, visible: bool) -> list[dict]:
-        visible_items = []
-        for item in items:
-            item_dict = item.to_plotly_json()
-            item_dict["visible"] = visible
-            visible_items.append(item_dict)
-        return visible_items
-
-    @staticmethod
-    def _verbatim_layout_update(
-        collapsed_fig: go.Figure,
-        expanded_fig: go.Figure,
-        collapsed_shapes: list[dict],
-        expanded_shapes: list[dict],
-        collapsed_annotations: list[dict],
-        expanded_annotations: list[dict],
-        *,
-        expand: bool,
-    ) -> dict:
-        active_fig = expanded_fig if expand else collapsed_fig
-        return {
-            "shapes": [{**shape, "visible": not expand} for shape in collapsed_shapes]
-            + [{**shape, "visible": expand} for shape in expanded_shapes],
-            "annotations": [
-                {**annotation, "visible": not expand} for annotation in collapsed_annotations
-            ]
-            + [{**annotation, "visible": expand} for annotation in expanded_annotations],
-            "xaxis": active_fig.layout.xaxis.to_plotly_json(),
-            "yaxis": active_fig.layout.yaxis.to_plotly_json(),
-            "width": active_fig.layout.width,
-            "height": active_fig.layout.height,
-        }
-
     @classmethod
     def _draw_qubit_wires(
         cls, fig: go.Figure, layout: CircuitLayout, left_wire: float, right_wire: float
@@ -444,6 +312,7 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 y0=y,
                 y1=y,
                 line={"color": cls.WIRE_COLOR, "width": cls.WIRE_WIDTH},
+                layer="below",
             )
             fig.add_annotation(
                 x=left_wire - 0.15,
@@ -495,65 +364,455 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         layout: CircuitLayout,
         col_x: list[float],
         device_metadata: Mapping[str, Any] | None = None,
-    ) -> None:
-        for elem in layout.elements:
-            if isinstance(elem, GateBox):
-                cls._draw_gate_box(fig, elem, col_x[elem.col], layout, device_metadata)
-            elif isinstance(elem, ControlDot):
-                cls._draw_control_dot(fig, elem, col_x[elem.col], layout)
-            elif isinstance(elem, SwapMarker):
-                cls._draw_swap_marker(fig, elem, col_x[elem.col], layout)
-            elif isinstance(elem, Connection):
-                cls._draw_connection(fig, elem, col_x[elem.col], layout)
-            elif isinstance(elem, BarrierMarker):
-                cls._draw_barrier(fig, elem, col_x[elem.col], layout)
+        *,
+        plotly_module: Any,
+        verbatim_ranges: list[tuple[int, int]],
+    ) -> list[_VerbatimTraceGroup]:
+        if not verbatim_ranges:
+            cls._draw_element_batch(
+                fig,
+                layout,
+                col_x,
+                layout.elements,
+                device_metadata,
+                plotly_module=plotly_module,
+                visible=True,
+            )
+            return []
+
+        always_elements = [
+            elem
+            for elem in layout.elements
+            if not cls._is_in_verbatim_range(elem.col, verbatim_ranges)
+        ]
+        cls._draw_element_batch(
+            fig,
+            layout,
+            col_x,
+            always_elements,
+            device_metadata,
+            plotly_module=plotly_module,
+            visible=True,
+        )
+
+        trace_groups: list[_VerbatimTraceGroup] = []
+        for start, end in verbatim_ranges:
+            expanded_elements = [elem for elem in layout.elements if start <= elem.col <= end]
+            expanded_indices = cls._draw_element_batch(
+                fig,
+                layout,
+                col_x,
+                expanded_elements,
+                device_metadata,
+                plotly_module=plotly_module,
+                visible=False,
+            )
+
+            collapsed_col_x = col_x.copy()
+            collapsed_col_x[start] = (col_x[start] + col_x[end]) / 2
+            collapsed_elements = cls._build_collapsed_verbatim_elements(
+                layout,
+                start,
+                end,
+                start,
+            )
+            collapsed_indices = cls._draw_element_batch(
+                fig,
+                layout,
+                collapsed_col_x,
+                collapsed_elements,
+                device_metadata,
+                plotly_module=plotly_module,
+                visible=True,
+            )
+            trace_groups.append(
+                _VerbatimTraceGroup(
+                    start=start,
+                    end=end,
+                    collapsed_indices=collapsed_indices,
+                    expanded_indices=expanded_indices,
+                )
+            )
+        return trace_groups
 
     @classmethod
-    def _draw_gate_box(
+    def _draw_element_batch(
         cls,
         fig: go.Figure,
-        elem: GateBox,
-        x: float,
         layout: CircuitLayout,
+        col_x: list[float],
+        elements: list[object],
         device_metadata: Mapping[str, Any] | None = None,
-    ) -> None:
-        y = -elem.row * cls.ROW_HEIGHT
-        box_width = cls._gate_box_width(elem.label)
-        fig.add_shape(
-            type="rect",
-            x0=x - box_width / 2,
-            x1=x + box_width / 2,
-            y0=y - cls.GATE_BOX_HEIGHT / 2,
-            y1=y + cls.GATE_BOX_HEIGHT / 2,
-            fillcolor=cls.GATE_FILL_COLOR,
-            line={"color": cls.GATE_EDGE_COLOR, "width": 1.2},
-            layer="above",
-        )
-        fig.add_annotation(
-            x=x,
-            y=y,
-            text=elem.label,
-            showarrow=False,
-            xanchor="center",
-            yanchor="middle",
-            font={
-                "family": "monospace",
-                "size": cls.GATE_FONT_SIZE,
-                "color": cls.GATE_TEXT_COLOR,
-            },
-        )
-        cls._add_hover_marker(
+        *,
+        plotly_module: Any,
+        visible: bool,
+    ) -> list[int]:
+        parts = _TraceParts()
+        for elem in elements:
+            cls._collect_element_trace_parts(parts, elem, layout, col_x, device_metadata)
+
+        return cls._flush_element_traces(
             fig,
+            plotly_module,
+            visible=visible,
+            parts=parts,
+        )
+
+    @classmethod
+    def _collect_element_trace_parts(
+        cls,
+        parts: _TraceParts,
+        elem: object,
+        layout: CircuitLayout,
+        col_x: list[float],
+        device_metadata: Mapping[str, Any] | None,
+    ) -> None:
+        if isinstance(elem, GateBox):
+            cls._collect_gate_box_trace_parts(parts, elem, layout, col_x, device_metadata)
+        elif isinstance(elem, ControlDot):
+            cls._collect_control_trace_parts(parts, elem, layout, col_x)
+        elif isinstance(elem, SwapMarker):
+            x = col_x[elem.col]
+            y = -elem.row * cls.ROW_HEIGHT
+            parts.swap_x.append(x)
+            parts.swap_y.append(y)
+            parts.swap_hover.append(f"SWAP<br>Qubit: {layout.qubit_labels[elem.row]}")
+        elif isinstance(elem, Connection):
+            x = col_x[elem.col]
+            y_start = -elem.row_start * cls.ROW_HEIGHT
+            y_end = -elem.row_end * cls.ROW_HEIGHT
+            parts.connection_x.extend([x, x, None])
+            parts.connection_y.extend([y_start, y_end, None])
+            parts.hover_x.append(x)
+            parts.hover_y.append((y_start + y_end) / 2)
+            parts.hover_text.append(
+                "Connection"
+                f"<br>From: {layout.qubit_labels[elem.row_start]}"
+                f"<br>To: {layout.qubit_labels[elem.row_end]}"
+            )
+        elif isinstance(elem, BarrierMarker):
+            x = col_x[elem.col]
+            y = -elem.row * cls.ROW_HEIGHT
+            cls._append_rect(
+                parts.barrier_x,
+                parts.barrier_y,
+                x,
+                y,
+                cls.BARRIER_WIDTH,
+                cls.ROW_HEIGHT * cls.BARRIER_HEIGHT_FRAC,
+            )
+            parts.barrier_text_x.append(x)
+            parts.barrier_text_y.append(y)
+            parts.hover_x.append(x)
+            parts.hover_y.append(y)
+            parts.hover_text.append(f"Barrier<br>Qubit: {layout.qubit_labels[elem.row]}")
+
+    @classmethod
+    def _collect_gate_box_trace_parts(
+        cls,
+        parts: _TraceParts,
+        elem: GateBox,
+        layout: CircuitLayout,
+        col_x: list[float],
+        device_metadata: Mapping[str, Any] | None,
+    ) -> None:
+        x = col_x[elem.col]
+        y = -elem.row * cls.ROW_HEIGHT
+        cls._append_rect(
+            parts.gate_x,
+            parts.gate_y,
             x,
             y,
+            cls._gate_box_width(elem.label),
+            cls.GATE_BOX_HEIGHT,
+        )
+        parts.gate_text_x.append(x)
+        parts.gate_text_y.append(y)
+        parts.gate_text.append(elem.label)
+        parts.hover_x.append(x)
+        parts.hover_y.append(y)
+        parts.hover_text.append(
             cls._gate_hover_text(
                 elem.label,
                 layout.qubit_labels[elem.row],
                 metadata_key=elem.metadata_key,
                 parameter_text=elem.parameter_text,
                 device_metadata=device_metadata,
-            ),
+            )
         )
+
+    @classmethod
+    def _collect_control_trace_parts(
+        cls,
+        parts: _TraceParts,
+        elem: ControlDot,
+        layout: CircuitLayout,
+        col_x: list[float],
+    ) -> None:
+        x = col_x[elem.col]
+        y = -elem.row * cls.ROW_HEIGHT
+        text = (
+            f"{'Control' if elem.filled else 'Anti-control'}"
+            f"<br>Qubit: {layout.qubit_labels[elem.row]}"
+        )
+        if elem.filled:
+            parts.filled_control_x.append(x)
+            parts.filled_control_y.append(y)
+            parts.filled_control_hover.append(text)
+        else:
+            parts.open_control_x.append(x)
+            parts.open_control_y.append(y)
+            parts.open_control_hover.append(text)
+
+    @staticmethod
+    def _append_rect(
+        x_values: list[float | None],
+        y_values: list[float | None],
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        x0 = x - width / 2
+        x1 = x + width / 2
+        y0 = y - height / 2
+        y1 = y + height / 2
+        x_values.extend([x0, x1, x1, x0, x0, None])
+        y_values.extend([y0, y0, y1, y1, y0, None])
+
+    @classmethod
+    def _flush_element_traces(
+        cls,
+        fig: go.Figure,
+        plotly_module: Any,
+        *,
+        visible: bool,
+        parts: _TraceParts,
+    ) -> list[int]:
+        trace_indices: list[int] = []
+        if parts.connection_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.connection_x,
+                        y=parts.connection_y,
+                        mode="lines",
+                        line={"color": cls.CONNECTION_COLOR, "width": cls.CONNECTION_WIDTH},
+                        hoverinfo="skip",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        if parts.gate_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.gate_x,
+                        y=parts.gate_y,
+                        mode="lines",
+                        fill="toself",
+                        fillcolor=cls.GATE_FILL_COLOR,
+                        line={"color": cls.GATE_EDGE_COLOR, "width": 1.2},
+                        hoverinfo="skip",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        if parts.barrier_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.barrier_x,
+                        y=parts.barrier_y,
+                        mode="lines",
+                        fill="toself",
+                        fillcolor=cls.BARRIER_FILL_COLOR,
+                        line={"color": cls.BARRIER_COLOR, "width": 1},
+                        hoverinfo="skip",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        trace_indices.extend(
+            cls._add_control_traces(
+                fig,
+                plotly_module,
+                visible=visible,
+                parts=parts,
+            )
+        )
+        if parts.swap_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.swap_x,
+                        y=parts.swap_y,
+                        text=parts.swap_hover,
+                        mode="markers",
+                        marker={
+                            "symbol": "x",
+                            "size": cls.SWAP_MARKER_SIZE,
+                            "color": cls.CONNECTION_COLOR,
+                            "line": {"width": 2},
+                        },
+                        hovertemplate="%{text}<extra></extra>",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        if parts.gate_text:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.gate_text_x,
+                        y=parts.gate_text_y,
+                        text=parts.gate_text,
+                        mode="text",
+                        textfont={
+                            "family": "monospace",
+                            "size": cls.GATE_FONT_SIZE,
+                            "color": cls.GATE_TEXT_COLOR,
+                        },
+                        hoverinfo="skip",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        if parts.barrier_text_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.barrier_text_x,
+                        y=parts.barrier_text_y,
+                        text=["/"] * len(parts.barrier_text_x),
+                        mode="text",
+                        textfont={"size": cls.GATE_FONT_SIZE, "color": cls.BARRIER_COLOR},
+                        hoverinfo="skip",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        if parts.hover_x:
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=parts.hover_x,
+                        y=parts.hover_y,
+                        text=parts.hover_text,
+                        mode="markers",
+                        marker={"size": 24, "color": "rgba(0,0,0,0)"},
+                        hovertemplate="%{text}<extra></extra>",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        return trace_indices
+
+    @classmethod
+    def _add_control_traces(
+        cls,
+        fig: go.Figure,
+        plotly_module: Any,
+        *,
+        visible: bool,
+        parts: _TraceParts,
+    ) -> list[int]:
+        trace_indices: list[int] = []
+        for x_values, y_values, hover_values, fill in (
+            (parts.filled_control_x, parts.filled_control_y, parts.filled_control_hover, "black"),
+            (parts.open_control_x, parts.open_control_y, parts.open_control_hover, "white"),
+        ):
+            if not x_values:
+                continue
+            trace_indices.append(
+                cls._add_trace(
+                    fig,
+                    plotly_module.Scatter(
+                        x=x_values,
+                        y=y_values,
+                        text=hover_values,
+                        mode="markers",
+                        marker={
+                            "symbol": "circle",
+                            "size": cls.CONTROL_DOT_SIZE,
+                            "color": fill,
+                            "line": {"color": "black", "width": 2},
+                        },
+                        hovertemplate="%{text}<extra></extra>",
+                        showlegend=False,
+                        visible=visible,
+                    ),
+                )
+            )
+        return trace_indices
+
+    @staticmethod
+    def _add_trace(fig: go.Figure, trace: Any) -> int:
+        fig.add_trace(trace)
+        return len(fig.data) - 1
+
+    @classmethod
+    def _add_verbatim_toggles(
+        cls,
+        fig: go.Figure,
+        trace_groups: list[_VerbatimTraceGroup],
+        col_x: list[float],
+        left_wire: float,
+        right_wire: float,
+    ) -> None:
+        if not trace_groups:
+            return
+
+        x_min = left_wire - 1.5
+        x_max = right_wire + 0.5
+        x_span = x_max - x_min
+        updatemenus = []
+        for index, trace_group in enumerate(trace_groups, start=1):
+            trace_indices = trace_group.collapsed_indices + trace_group.expanded_indices
+            collapsed_visibility = [True] * len(trace_group.collapsed_indices) + [False] * len(
+                trace_group.expanded_indices
+            )
+            expanded_visibility = [False] * len(trace_group.collapsed_indices) + [True] * len(
+                trace_group.expanded_indices
+            )
+            group_center = (col_x[trace_group.start] + col_x[trace_group.end]) / 2
+            updatemenus.append({
+                "type": "buttons",
+                "direction": "right",
+                "showactive": True,
+                "active": 0,
+                "x": min(max((group_center - x_min) / x_span, 0), 1),
+                "xanchor": "center",
+                "y": 1.08 + (index - 1) * 0.08,
+                "yanchor": "top",
+                "buttons": [
+                    {
+                        "label": f"Collapse verbatim {index}",
+                        "method": "restyle",
+                        "args": [{"visible": collapsed_visibility}, trace_indices],
+                    },
+                    {
+                        "label": f"Expand verbatim {index}",
+                        "method": "restyle",
+                        "args": [{"visible": expanded_visibility}, trace_indices],
+                    },
+                ],
+            })
+        fig.update_layout(updatemenus=updatemenus)
 
     @classmethod
     def _gate_hover_text(
@@ -601,117 +860,6 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 return "N/A (not attached)"
             return ", ".join(f"{key}: {value}" for key, value in metadata.items())
         return str(metadata)
-
-    @classmethod
-    def _draw_control_dot(
-        cls, fig: go.Figure, elem: ControlDot, x: float, layout: CircuitLayout
-    ) -> None:
-        y = -elem.row * cls.ROW_HEIGHT
-        fill = "black" if elem.filled else "white"
-        fig.add_trace(
-            cls._get_plotly().Scatter(
-                x=[x],
-                y=[y],
-                mode="markers",
-                marker={
-                    "symbol": "circle",
-                    "size": cls.CONTROL_DOT_SIZE,
-                    "color": fill,
-                    "line": {"color": "black", "width": 2},
-                },
-                hovertemplate=(
-                    f"{'Control' if elem.filled else 'Anti-control'}"
-                    f"<br>Qubit: {layout.qubit_labels[elem.row]}<extra></extra>"
-                ),
-                showlegend=False,
-            )
-        )
-
-    @classmethod
-    def _draw_swap_marker(
-        cls, fig: go.Figure, elem: SwapMarker, x: float, layout: CircuitLayout
-    ) -> None:
-        y = -elem.row * cls.ROW_HEIGHT
-        fig.add_trace(
-            cls._get_plotly().Scatter(
-                x=[x],
-                y=[y],
-                mode="markers",
-                marker={
-                    "symbol": "x",
-                    "size": cls.SWAP_MARKER_SIZE,
-                    "color": cls.CONNECTION_COLOR,
-                    "line": {"width": 2},
-                },
-                hovertemplate=f"SWAP<br>Qubit: {layout.qubit_labels[elem.row]}<extra></extra>",
-                showlegend=False,
-            )
-        )
-
-    @classmethod
-    def _draw_connection(
-        cls, fig: go.Figure, elem: Connection, x: float, layout: CircuitLayout
-    ) -> None:
-        y_start = -elem.row_start * cls.ROW_HEIGHT
-        y_end = -elem.row_end * cls.ROW_HEIGHT
-        fig.add_shape(
-            type="line",
-            x0=x,
-            x1=x,
-            y0=y_start,
-            y1=y_end,
-            line={"color": cls.CONNECTION_COLOR, "width": cls.CONNECTION_WIDTH},
-        )
-        cls._add_hover_marker(
-            fig,
-            x,
-            (y_start + y_end) / 2,
-            (
-                "Connection"
-                f"<br>From: {layout.qubit_labels[elem.row_start]}"
-                f"<br>To: {layout.qubit_labels[elem.row_end]}"
-            ),
-        )
-
-    @classmethod
-    def _draw_barrier(
-        cls, fig: go.Figure, elem: BarrierMarker, x: float, layout: CircuitLayout
-    ) -> None:
-        y = -elem.row * cls.ROW_HEIGHT
-        half_h = cls.ROW_HEIGHT * cls.BARRIER_HEIGHT_FRAC / 2
-        half_w = cls.BARRIER_WIDTH / 2
-        fig.add_shape(
-            type="rect",
-            x0=x - half_w,
-            x1=x + half_w,
-            y0=y - half_h,
-            y1=y + half_h,
-            fillcolor=cls.BARRIER_FILL_COLOR,
-            line={"color": cls.BARRIER_COLOR, "width": 1},
-        )
-        fig.add_annotation(
-            x=x,
-            y=y,
-            text="/",
-            showarrow=False,
-            xanchor="center",
-            yanchor="middle",
-            font={"size": cls.GATE_FONT_SIZE, "color": cls.BARRIER_COLOR},
-        )
-        cls._add_hover_marker(fig, x, y, f"Barrier<br>Qubit: {layout.qubit_labels[elem.row]}")
-
-    @classmethod
-    def _add_hover_marker(cls, fig: go.Figure, x: float, y: float, text: str) -> None:
-        fig.add_trace(
-            cls._get_plotly().Scatter(
-                x=[x],
-                y=[y],
-                mode="markers",
-                marker={"size": 24, "color": "rgba(0,0,0,0)"},
-                hovertemplate=f"{text}<extra></extra>",
-                showlegend=False,
-            )
-        )
 
     @classmethod
     def _build_footer_lines(cls, layout: CircuitLayout) -> list[str]:

@@ -1312,6 +1312,29 @@ class Circuit:
         """
         return circuit_diagram_class.build_diagram(self)
 
+    def to_plotly(
+        self,
+        *,
+        device_metadata: Mapping[str, Any] | None = None,
+    ) -> object:
+        """Build and return an interactive Plotly figure for this circuit.
+
+        Args:
+            device_metadata: Optional gate metadata to include in Plotly hover text.
+
+        Returns:
+            A ``plotly.graph_objects.Figure``.
+
+        Raises:
+            ImportError: If the interactive Plotly renderer is requested without Plotly
+                installed.
+        """
+        from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (  # noqa: PLC0415
+            PlotlyCircuitDiagram,
+        )
+
+        return PlotlyCircuitDiagram.build_diagram(self, device_metadata=device_metadata)
+
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
@@ -1661,21 +1684,16 @@ class Circuit:
         circuit_diagram_class: type | str = MatplotlibCircuitDiagram,
         *,
         device_metadata: Mapping[str, Any] | None = None,
-    ) -> object | None:
-        """Build a graphical diagram for this circuit.
+    ) -> None:
+        """Display a graphical diagram for this circuit.
 
         Args:
             circuit_diagram_class: Diagram builder class, or one of the built-in aliases
                 ``"matplotlib"``, ``"interactive"``, or ``"plotly"``. The ``"interactive"``
-                and ``"plotly"`` aliases return a Plotly figure and require Plotly to be
-                installed.
+                and ``"plotly"`` aliases display a Plotly figure and require Plotly to be
+                installed. Use :meth:`to_plotly` to get the Figure object directly.
             device_metadata: Optional gate metadata to include in interactive Plotly hover text.
                 Only supported by the ``"interactive"`` and ``"plotly"`` aliases.
-
-        Returns:
-            A Plotly figure for ``"interactive"`` and ``"plotly"``. The default matplotlib
-            path and custom diagram builders preserve the existing side-effect-only behavior
-            and return ``None``.
 
         Raises:
             ValueError: If a string alias is not supported, or if ``device_metadata`` is
@@ -1691,11 +1709,8 @@ class Circuit:
                     )
                 circuit_diagram_class = MatplotlibCircuitDiagram
             elif circuit_diagram_class in {"interactive", "plotly"}:
-                from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (  # noqa: PLC0415
-                    PlotlyCircuitDiagram,
-                )
-
-                return PlotlyCircuitDiagram.build_diagram(self, device_metadata=device_metadata)
+                self.to_plotly(device_metadata=device_metadata).show()
+                return
             else:
                 raise ValueError(
                     "circuit_diagram_class must be a diagram class, 'matplotlib', "
@@ -1704,7 +1719,7 @@ class Circuit:
         if device_metadata is not None:
             raise ValueError("device_metadata is only supported with 'interactive' or 'plotly'")
         circuit_diagram_class.build_diagram(self)
-        return None
+        return
 
     @property
     def qubits_frozen(self) -> bool:
