@@ -716,3 +716,123 @@ def test_empty_circuit_figure():
 
     fig = PlotlyCircuitDiagram.build_diagram(Circuit())
     assert isinstance(fig, Figure)
+
+
+# -- show() / plotly() API ----------------------------------------------------
+
+def test_show_returns_none():
+    """show() should be side-effect only (returns None) for both backends."""
+    circ = Circuit().h(0)
+    assert circ.show() is None
+    assert circ.show("interactive") is None
+
+
+def test_plotly_returns_figure():
+    """plotly() should return a go.Figure."""
+    from plotly.graph_objects import Figure
+
+    circ = Circuit().h(0)
+    fig = circ.plotly()
+    assert isinstance(fig, Figure)
+
+
+def test_plotly_global_phase_only():
+    """A circuit with only global phase should produce a non-empty figure."""
+    from plotly.graph_objects import Figure
+
+    circ = Circuit().gphase(0.5)
+    fig = circ.plotly()
+    assert isinstance(fig, Figure)
+
+
+def test_plotly_empty_circuit():
+    from plotly.graph_objects import Figure
+
+    fig = Circuit().plotly()
+    assert isinstance(fig, Figure)
+
+
+# -- per-box updatemenus ------------------------------------------------------
+
+def test_single_vb_has_one_updatemenu():
+    from plotly.graph_objects import Figure
+
+    circ = Circuit().h(0).add_verbatim_box(Circuit().x(0).y(0))
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    assert isinstance(fig, Figure)
+    assert fig.layout.updatemenus is not None
+    assert len(fig.layout.updatemenus) == 1
+    assert len(fig.layout.updatemenus[0].buttons) == 2
+    assert "Collapse box 1" in fig.layout.updatemenus[0].buttons[0].label
+    assert "Expand box 1" in fig.layout.updatemenus[0].buttons[1].label
+
+
+def test_multiple_vb_has_per_box_updatemenus():
+    from plotly.graph_objects import Figure
+
+    circ = (
+        Circuit()
+        .add_verbatim_box(Circuit().x(0))
+        .h(0)
+        .add_verbatim_box(Circuit().y(0))
+    )
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    assert isinstance(fig, Figure)
+    assert fig.layout.updatemenus is not None
+    assert len(fig.layout.updatemenus) == 2
+    for i, menu in enumerate(fig.layout.updatemenus):
+        assert len(menu.buttons) == 2
+        assert f"Collapse box {i + 1}" in menu.buttons[0].label
+        assert f"Expand box {i + 1}" in menu.buttons[1].label
+
+
+def test_no_vb_has_no_updatemenu():
+    from plotly.graph_objects import Figure
+
+    circ = Circuit().h(0).cnot(0, 1)
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    assert isinstance(fig, Figure)
+    assert fig.layout.updatemenus is None or len(fig.layout.updatemenus) == 0
+
+
+# -- figure title -------------------------------------------------------------
+
+def test_figure_title_with_vb():
+    circ = Circuit().add_verbatim_box(Circuit().x(0))
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    assert "verbatim boxes collapsed" in fig.layout.title.text
+
+
+def test_figure_title_without_vb():
+    circ = Circuit().h(0)
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    assert "verbatim" not in fig.layout.title.text
+
+
+# -- trace consolidation ------------------------------------------------------
+
+def test_large_circuit_trace_count():
+    """A 50-gate circuit should produce far fewer traces than 2 per gate."""
+    circ = Circuit()
+    for i in range(50):
+        circ.h(i % 10)
+    fig = PlotlyCircuitDiagram.build_diagram(circ)
+    n_traces = len(fig.data)
+    # Structural traces + gate polygons + 1 text + 0 non-gate
+    # Upper bound: wires(10) + qlabels(10) + moment_labels(≤100) + footer(0)
+    #   + gate polygons(50) + gate text(1 consolidated) < 200
+    assert n_traces < 200, f"Expected < 200 traces, got {n_traces}"
+
+
+# -- verbatim detection edge cases -------------------------------------------
+
+def test_verbatim_empty_box():
+    """An empty verbatim box (no inner gates) should still produce a range."""
+    from braket.circuits.compiler_directives import StartVerbatimBox, EndVerbatimBox
+
+    circ = Circuit()
+    circ.add_instruction(Instruction(StartVerbatimBox(), []))
+    circ.add_instruction(Instruction(EndVerbatimBox(), []))
+    vr = _verbatim(circ)
+    assert len(vr) == 1
+    assert vr[0].gate_count == 0

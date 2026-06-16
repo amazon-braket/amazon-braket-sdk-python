@@ -33,6 +33,13 @@ from braket.circuits.gate import Gate
 from braket.circuits.graphical_diagram_builders.matplotlib_circuit_diagram import (
     MatplotlibCircuitDiagram,
 )
+
+try:
+    from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
+        PlotlyCircuitDiagram,
+    )
+except ImportError:
+    PlotlyCircuitDiagram = None  # type: ignore[assignment]
 from braket.circuits.instruction import Instruction
 from braket.circuits.measure import Measure
 from braket.circuits.moments import Moments, MomentType
@@ -1656,14 +1663,31 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type | str = MatplotlibCircuitDiagram) -> object | None:
+    def show(
+        self, circuit_diagram_class: type | str = MatplotlibCircuitDiagram
+    ) -> None:
         if isinstance(circuit_diagram_class, str) and circuit_diagram_class == "interactive":
-            from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (
-                PlotlyCircuitDiagram,
+            if PlotlyCircuitDiagram is None:
+                raise ImportError(
+                    "plotly is required for interactive visualization. "
+                    "Install it with: pip install amazon-braket-sdk[interactive]"
+                )
+            PlotlyCircuitDiagram.build_diagram(self)
+        else:
+            circuit_diagram_class.build_diagram(self)
+
+    def plotly(self) -> object:
+        """Build and return an interactive Plotly figure for this circuit.
+
+        Returns:
+            ``plotly.graph_objects.Figure`` for the circuit.
+        """
+        if PlotlyCircuitDiagram is None:
+            raise ImportError(
+                "plotly is required for interactive visualization. "
+                "Install it with: pip install amazon-braket-sdk[interactive]"
             )
-            return PlotlyCircuitDiagram.build_diagram(self)
-        circuit_diagram_class.build_diagram(self)
-        return None
+        return PlotlyCircuitDiagram.build_diagram(self)
 
     @property
     def qubits_frozen(self) -> bool:

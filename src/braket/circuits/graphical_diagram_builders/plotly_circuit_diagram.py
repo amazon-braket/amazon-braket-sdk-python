@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 try:
     import plotly.graph_objects as go
@@ -55,6 +55,52 @@ class VerbatimRange:
     row_top: int
     row_bottom: int
     gate_count: int
+
+
+@dataclass
+class _GateBoxData:
+    x: float
+    y: float
+    bw: float
+    hh: float
+    hover: str
+    label: str
+
+
+@dataclass
+class _ConnData:
+    x: float
+    y1: float
+    y2: float
+
+
+@dataclass
+class _ControlDotData:
+    x: float
+    y: float
+    filled: bool
+
+
+@dataclass
+class _SwapData:
+    x: float
+    y: float
+
+
+@dataclass
+class _BarrierData:
+    x: float
+    y: float
+
+
+@dataclass
+class _GroupData:
+    """Accumulates drawing primitives for one visibility group."""
+    gate_boxes: list[_GateBoxData] = field(default_factory=list)
+    connections: list[_ConnData] = field(default_factory=list)
+    control_dots: list[_ControlDotData] = field(default_factory=list)
+    swaps: list[_SwapData] = field(default_factory=list)
+    barriers: list[_BarrierData] = field(default_factory=list)
 
 
 class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
@@ -355,127 +401,167 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         y_top = cls.ROW_HEIGHT * 0.8
         y_bottom = -(n_rows - 1) * cls.ROW_HEIGHT - cls.ROW_HEIGHT * 0.8
 
-        # Which columns belong to a verbatim region?
-        vb_cols: set[int] = set()
-        for vr in verbatim_ranges:
+        # Map column -> verbatim box index (-1 if not in any VB)
+        vb_col_idx: dict[int, int] = {}
+        for bi, vr in enumerate(verbatim_ranges):
             for c in range(vr.col_start, vr.col_end + 1):
-                vb_cols.add(c)
+                vb_col_idx[c] = bi
 
-        # Collect all traces flat; track indices inside verbatim regions
-        # so the updatemenu can toggle them.
+        # ---- 1. Always-visible structural traces (wires, labels, footer) ----
+        structural_traces: list[go.Scatter] = []
+        cls._add_wires(structural_traces, layout, left_wire, right_wire)
+        cls._add_qlabels(structural_traces, layout, left_wire)
+        cls._add_moment_labels(structural_traces, layout, col_x, y_top, y_bottom)
+        cls._add_footer(structural_traces, layout, left_wire, y_bottom)
+
+        # ---- 2. Classify every layout element into a visibility group ----
+        n_boxes = len(verbatim_ranges)
+        always_data = _GroupData()
+        per_box_data = [_GroupData() for _ in range(n_boxes)]
+
+        for elem in layout.elements:
+            bi = vb_col_idx.get(elem.col, -1)
+            group = per_box_data[bi] if bi >= 0 else always_data
+            if isinstance(elem, GateBox):
+                x = cls._qx(elem.col, col_x)
+                y = cls._qy(elem.row)
+                bw = cls._gate_box_w(elem.label)
+                hh = cls.GATE_BOX_HEIGHT / 2
+                td = tooltips.get((elem.col, elem.row))
+                hover = cls._tooltip_html(td) if td else elem.label
+                group.gate_boxes.append(
+                    _GateBoxData(x=x, y=y, bw=bw, hh=hh, hover=hover, label=elem.label)
+                )
+            elif isinstance(elem, Connection):
+                x = cls._qx(elem.col, col_x)
+                y1 = cls._qy(elem.row_start)
+                y2 = cls._qy(elem.row_end)
+                group.connections.append(_ConnData(x=x, y1=y1, y2=y2))
+            elif isinstance(elem, ControlDot):
+                x = cls._qx(elem.col, col_x)
+                y = cls._qy(elem.row)
+                group.control_dots.append(
+                    _ControlDotData(x=x, y=y, filled=elem.filled)
+                )
+            elif isinstance(elem, SwapMarker):
+                x = cls._qx(elem.col, col_x)
+                y = cls._qy(elem.row)
+                group.swaps.append(_SwapData(x=x, y=y))
+            elif isinstance(elem, BarrierMarker):
+                x = cls._qx(elem.col, col_x)
+                y = cls._qy(elem.row)
+                group.barriers.append(_BarrierData(x=x, y=y))
+
+        # ---- 3. Build consolidated traces per visibility group ----
         all_traces: list[go.Scatter] = []
-        # Index ranges for toggling
-        always_visible_range: list[int] = []
-        inside_vb_range: list[int] = []
-        collapsed_vb_range: list[int] = []
+        # index_ranges[i] = (start, end) for group i (0 = always, 1..N = box 0..N-1 expanded)
+        # We build groups in order: always, box_0_expanded, box_1_expanded, ...
+        # collapsed overlays come later.
+        group_ranges: list[tuple[int, int]] = []
 
-        # ---- 1.  Background wires & qubit labels (always visible) ----
-        _start = len(all_traces)
-        cls._add_wires(all_traces, layout, left_wire, right_wire)
-        cls._add_qlabels(all_traces, layout, left_wire)
-        cls._add_moment_labels(all_traces, layout, col_x, y_top, y_bottom)
-        cls._add_footer(all_traces, layout, left_wire, y_bottom)
-        always_visible_range = list(range(_start, len(all_traces)))
+        def _add_group(d: _GroupData) -> tuple[int, int]:
+            start = len(all_traces)
+            cls._group_to_traces(all_traces, d)
+            return start, len(all_traces)
 
-        # ---- 2.  Connections (visibility depends on verbatim status) ----
-        for elem in layout.elements:
-            if not isinstance(elem, Connection):
-                continue
-            before = len(all_traces)
-            cls._add_connection(all_traces, elem, cls._qx(elem.col, col_x))
-            if elem.col in vb_cols:
-                inside_vb_range.append(before)
-            else:
-                always_visible_range.append(before)
+        # Group 0 = always visible (non-VB elements)
+        always_start = len(all_traces)
+        all_traces.extend(structural_traces)
+        cls._group_to_traces(all_traces, always_data)
+        always_end = len(all_traces)
+        group_ranges.append((always_start, always_end))
 
-        # ---- 3.  Gate boxes, control dots, swap markers, barriers ----
-        for elem in layout.elements:
-            cls._render_elem(all_traces, elem, col_x, tooltips, vb_cols,
-                             always_visible_range, inside_vb_range)
+        # Groups 1..N = expanded content for each verbatim box
+        box_exp_ranges: list[tuple[int, int]] = []
+        for bd in per_box_data:
+            s, e = _add_group(bd)
+            box_exp_ranges.append((s, e))
 
-        # ---- 4.  Verbatim collapsed overlays ----
-        _start = len(all_traces)
-        cls._add_vb_collapsed(all_traces, layout, verbatim_ranges, col_x)
-        collapsed_vb_range = list(range(_start, len(all_traces)))
+        # ---- 4. Collapsed overlays per verbatim box ----
+        box_coll_ranges: list[tuple[int, int]] = []
+        for vr in verbatim_ranges:
+            start = len(all_traces)
+            cls._add_vb_collapsed(all_traces, vr, col_x)
+            box_coll_ranges.append((start, len(all_traces)))
 
-        # ---- Remove duplicate connections spanning verbatim regions ----
-        # (Verbatim regions already own connections in the collapsed overlay)
-
-        # ---- 5.  Build figure ----
+        # ---- 5. Build figure ----
         fig = go.Figure()
         for t in all_traces:
             fig.add_trace(t)
 
-        # Default: collapsed state
-        all_idx = set(range(len(all_traces)))
-        always_set = set(always_visible_range)
-        vb_inside_v = len(inside_vb_range) > 0
+        n_traces = len(all_traces)
+        always_set = set(range(always_start, always_end))
 
-        if vb_inside_v:
-            coll_vis = [False] * len(all_traces)
-            for i in always_set:
-                coll_vis[i] = True
-            for i in collapsed_vb_range:
-                coll_vis[i] = True
+        # ---- 6. Default visibility: all boxes collapsed ----
+        for i in range(n_traces):
+            all_traces[i].visible = i in always_set
+        for s, e in box_coll_ranges:
+            for i in range(s, e):
+                all_traces[i].visible = True
 
-            exp_vis = [False] * len(all_traces)
-            for i in always_set:
-                exp_vis[i] = True
-            for i in inside_vb_range:
-                exp_vis[i] = True
+        # ---- 7. Per-box updatemenus ----
+        if n_boxes:
+            updatemenus = []
+            for bi in range(n_boxes):
+                exp_s, exp_e = box_exp_ranges[bi]
+                coll_s, coll_e = box_coll_ranges[bi]
 
-            fig.update_layout(
-                updatemenus=[
-                    {
-                        "type": "buttons",
-                        "direction": "right",
-                        "x": 0.5,
-                        "y": 1.08,
-                        "xanchor": "center",
-                        "buttons": [
-                            {
-                                "label": "Collapse verbatim boxes",
-                                "method": "update",
-                                "args": [
-                                    {"visible": coll_vis},
-                                    {
-                                        "title": (
-                                            "Circuit Diagram"
-                                            " (verbatim boxes collapsed)"
-                                        ),
-                                    },
-                                ],
-                            },
-                            {
-                                "label": "Expand verbatim boxes",
-                                "method": "update",
-                                "args": [
-                                    {"visible": exp_vis},
-                                    {
-                                        "title": (
-                                            "Circuit Diagram"
-                                            " (verbatim boxes expanded)"
-                                        ),
-                                    },
-                                ],
-                            },
-                        ],
-                    }
-                ]
-            )
+                # Collapse box bi: show always + this box's collapsed + other boxes' default
+                coll_vis = [False] * n_traces
+                for i in always_set:
+                    coll_vis[i] = True
+                for j in range(n_boxes):
+                    cs, ce = box_coll_ranges[j]
+                    for i in range(cs, ce):
+                        coll_vis[i] = True
+                # Hide this box's expanded content
+                for i in range(exp_s, exp_e):
+                    coll_vis[i] = False
 
-        # ---- 6.  Apply initial visibility ----
-        if vb_inside_v:
-            for i in range(len(all_traces)):
-                if i in always_set or i in collapsed_vb_range:
-                    all_traces[i].visible = True
-                else:
-                    all_traces[i].visible = False
+                # Expand box bi: show always + this box's expanded + other boxes' collapsed
+                exp_vis = [False] * n_traces
+                for i in always_set:
+                    exp_vis[i] = True
+                for i in range(exp_s, exp_e):
+                    exp_vis[i] = True
+                for j in range(n_boxes):
+                    if j != bi:
+                        cs, ce = box_coll_ranges[j]
+                        for i in range(cs, ce):
+                            exp_vis[i] = True
+                # Hide this box's collapsed overlay
+                for i in range(coll_s, coll_e):
+                    exp_vis[i] = False
 
-        # ---- 7.  Axes / layout ----
-        y_extra = 0
-        if verbatim_ranges:
-            y_extra = 0.6
+                updatemenus.append({
+                    "type": "buttons",
+                    "direction": "right",
+                    "x": 0.5,
+                    "y": 1.08 + 0.055 * bi,
+                    "xanchor": "center",
+                    "buttons": [
+                        {
+                            "label": f"Collapse box {bi + 1}",
+                            "method": "update",
+                            "args": [
+                                {"visible": coll_vis},
+                                {"title": "Circuit Diagram (verbatim boxes collapsed)"},
+                            ],
+                        },
+                        {
+                            "label": f"Expand box {bi + 1}",
+                            "method": "update",
+                            "args": [
+                                {"visible": exp_vis},
+                                {"title": "Circuit Diagram (verbatim boxes expanded)"},
+                            ],
+                        },
+                    ],
+                })
+            fig.update_layout(updatemenus=updatemenus)
+
+        # ---- 8. Axes / layout ----
+        y_extra = 0.6 if verbatim_ranges else 0
         footer_lines = cls._build_footer_lines(layout)
         yb = y_bottom - 0.4
         if footer_lines:
@@ -509,49 +595,126 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
         return fig
 
     # ------------------------------------------------------------------
-    # Element rendering dispatcher
+    # Consolidated trace builder
     # ------------------------------------------------------------------
 
     @classmethod
-    def _render_elem(
-        cls,
-        all_traces: list,
-        elem: object,
-        col_x: list[float],
-        tooltips: dict,
-        vb_cols: set[int],
-        always_idx: list[int],
-        vb_idx: list[int],
+    def _group_to_traces(
+        cls, traces: list[go.Scatter], data: _GroupData
     ) -> None:
-        if isinstance(elem, GateBox):
-            before = len(all_traces)
-            td = tooltips.get((elem.col, elem.row))
-            hover = cls._tooltip_html(td) if td else elem.label
-            cls._add_gate_box(
-                all_traces, elem, cls._qx(
-                    elem.col, col_x), hover)
-            if elem.col in vb_cols:
-                vb_idx.extend(range(before, len(all_traces)))
-            else:
-                always_idx.extend(range(before, len(all_traces)))
-        elif isinstance(elem, ControlDot):
-            before = len(all_traces)
-            cls._add_control_dot(all_traces, elem, cls._qx(elem.col, col_x))
-            if elem.col in vb_cols:
-                vb_idx.append(before)
-            else:
-                always_idx.append(before)
-        elif isinstance(elem, SwapMarker):
-            before = len(all_traces)
-            cls._add_swap(all_traces, elem, cls._qx(elem.col, col_x))
-            if elem.col in vb_cols:
-                vb_idx.append(before)
-            else:
-                always_idx.append(before)
-        elif isinstance(elem, BarrierMarker):
-            before = len(all_traces)
-            cls._add_barrier(all_traces, elem, cls._qx(elem.col, col_x))
-            always_idx.append(before)
+        """Append consolidated traces for one visibility group to *traces*.
+        Gate boxes remain as individual traces (one polygon + one text),
+        while connections, dots, swaps, and barriers are consolidated into
+        single traces to keep the total trace count low.
+        """
+
+        # Individual gate box polygons + text
+        for gb in data.gate_boxes:
+            traces.append(go.Scatter(
+                x=[gb.x - gb.bw / 2, gb.x + gb.bw / 2,
+                   gb.x + gb.bw / 2, gb.x - gb.bw / 2, gb.x - gb.bw / 2],
+                y=[gb.y - gb.hh, gb.y - gb.hh,
+                   gb.y + gb.hh, gb.y + gb.hh, gb.y - gb.hh],
+                mode="lines",
+                fill="toself",
+                fillcolor=cls.GATE_FILL,
+                line={"color": cls.GATE_EDGE, "width": 1.2},
+                showlegend=False,
+                hoverinfo="text",
+                text=gb.hover,
+                hovertemplate="%{text}<extra></extra>",
+            ))
+            traces.append(go.Scatter(
+                x=[gb.x],
+                y=[gb.y],
+                mode="text",
+                text=[gb.label],
+                textposition="middle center",
+                textfont={
+                    "family": "monospace",
+                    "size": cls.GATE_FONT_SIZE,
+                    "color": cls.GATE_TEXT,
+                },
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+
+        # Connections — one trace with NaN-separated segments
+        if data.connections:
+            conn_xs: list[float] = []
+            conn_ys: list[float] = []
+            for c in data.connections:
+                conn_xs.extend([c.x, c.x, None])
+                conn_ys.extend([c.y1, c.y2, None])
+            traces.append(go.Scatter(
+                x=conn_xs,
+                y=conn_ys,
+                mode="lines",
+                line={"color": cls.CONNECTION_COLOR, "width": cls.CONNECTION_LW},
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+
+        # Control dots — single marker trace
+        if data.control_dots:
+            dot_xs = [d.x for d in data.control_dots]
+            dot_ys = [d.y for d in data.control_dots]
+            dot_fills = [cls.CONTROL_DOT_FILL if d.filled else "white"
+                         for d in data.control_dots]
+            dot_texts = ["Control" if d.filled else "Anti-control"
+                         for d in data.control_dots]
+            dot_line_widths = [0 if d.filled else 1.5 for d in data.control_dots]
+            traces.append(go.Scatter(
+                x=dot_xs,
+                y=dot_ys,
+                mode="markers",
+                marker={
+                    "symbol": "circle",
+                    "size": cls.CONTROL_DOT_RADIUS,
+                    "color": dot_fills,
+                    "line": {
+                        "color": cls.CONTROL_DOT_FILL,
+                        "width": dot_line_widths,
+                    },
+                },
+                showlegend=False,
+                hoverinfo="text",
+                text=dot_texts,
+                hovertemplate="%{text}<extra></extra>",
+            ))
+
+        # Swap markers — single marker trace
+        if data.swaps:
+            sw_xs = [s.x for s in data.swaps]
+            sw_ys = [s.y for s in data.swaps]
+            traces.append(go.Scatter(
+                x=sw_xs,
+                y=sw_ys,
+                mode="markers",
+                marker={
+                    "symbol": "x",
+                    "size": cls.SWAP_SIZE,
+                    "color": cls.CONNECTION_COLOR,
+                    "line": {"width": 2},
+                },
+                showlegend=False,
+                hoverinfo="skip",
+            ))
+
+        # Barriers — individual filled rectangles
+        for b in data.barriers:
+            hh = cls.ROW_HEIGHT * cls.BARRIER_HEIGHT_FRAC / 2
+            hw = cls.BARRIER_WIDTH / 2
+            traces.append(go.Scatter(
+                x=[b.x - hw, b.x + hw, b.x + hw, b.x - hw, b.x - hw],
+                y=[b.y - hh, b.y - hh, b.y + hh, b.y + hh, b.y - hh],
+                mode="lines",
+                fill="toself",
+                fillcolor=cls.BARRIER_FILL,
+                line={"color": cls.BARRIER_EDGE, "width": cls.BARRIER_LW},
+                showlegend=False,
+                hoverinfo="skip",
+            ))
 
     # ------------------------------------------------------------------
     # Individual drawing helpers
@@ -665,174 +828,70 @@ class PlotlyCircuitDiagram(GraphicalCircuitDiagram):
                 showlegend=False, hoverinfo="skip",
             ))
 
-    @classmethod
-    def _add_gate_box(
-        cls, traces: list, elem: GateBox, x: float, hover: str,
-    ) -> None:
-        y = cls._qy(elem.row)
-        hh = cls.GATE_BOX_HEIGHT / 2
-        bw = cls._gate_box_w(elem.label)
-
-        traces.append(go.Scatter(
-            x=[x - bw / 2, x + bw / 2, x + bw / 2, x - bw / 2, x - bw / 2],
-            y=[y - hh, y - hh, y + hh, y + hh, y - hh],
-            mode="lines",
-            fill="toself",
-            fillcolor=cls.GATE_FILL,
-            line={"color": cls.GATE_EDGE, "width": 1.2},
-            showlegend=False,
-            hoverinfo="text",
-            text=hover,
-            hovertemplate="%{text}<extra></extra>",
-        ))
-        traces.append(
-            go.Scatter(
-                x=[x],
-                y=[y],
-                mode="text",
-                text=[
-                    elem.label],
-                textposition="middle center",
-                textfont={
-                    "family": "monospace",
-                    "size": cls.GATE_FONT_SIZE,
-                    "color": cls.GATE_TEXT,
-                },
-                showlegend=False,
-                hoverinfo="skip",
-            ))
-
-    @classmethod
-    def _add_control_dot(
-            cls,
-            traces: list,
-            elem: ControlDot,
-            x: float) -> None:
-        y = cls._qy(elem.row)
-        fill = cls.CONTROL_DOT_FILL if elem.filled else "white"
-        line_w = 0 if elem.filled else 1.5
-        text = "Control" if elem.filled else "Anti-control"
-        traces.append(go.Scatter(
-            x=[x], y=[y],
-            mode="markers",
-            marker={
-                "symbol": "circle",
-                "size": cls.CONTROL_DOT_RADIUS,
-                "color": fill,
-                "line": {"color": cls.CONTROL_DOT_FILL, "width": line_w},
-            },
-            showlegend=False,
-            hoverinfo="text", text=text,
-            hovertemplate="%{text}<extra></extra>",
-        ))
-
-    @classmethod
-    def _add_swap(cls, traces: list, elem: SwapMarker, x: float) -> None:
-        y = cls._qy(elem.row)
-        traces.append(go.Scatter(
-            x=[x], y=[y],
-            mode="markers",
-            marker={
-                "symbol": "x",
-                "size": cls.SWAP_SIZE,
-                "color": cls.CONNECTION_COLOR,
-                "line": {"width": 2},
-            },
-            showlegend=False, hoverinfo="skip",
-        ))
-
-    @classmethod
-    def _add_connection(cls, traces: list, elem: Connection, x: float) -> None:
-        traces.append(go.Scatter(
-            x=[x, x],
-            y=[cls._qy(elem.row_start), cls._qy(elem.row_end)],
-            mode="lines",
-            line={"color": cls.CONNECTION_COLOR, "width": cls.CONNECTION_LW},
-            showlegend=False, hoverinfo="skip",
-        ))
-
-    @classmethod
-    def _add_barrier(cls, traces: list, elem: BarrierMarker, x: float) -> None:
-        y = cls._qy(elem.row)
-        hh = cls.ROW_HEIGHT * cls.BARRIER_HEIGHT_FRAC / 2
-        hw = cls.BARRIER_WIDTH / 2
-        traces.append(go.Scatter(
-            x=[x - hw, x + hw, x + hw, x - hw, x - hw],
-            y=[y - hh, y - hh, y + hh, y + hh, y - hh],
-            mode="lines",
-            fill="toself",
-            fillcolor=cls.BARRIER_FILL,
-            line={"color": cls.BARRIER_EDGE, "width": cls.BARRIER_LW},
-            showlegend=False, hoverinfo="skip",
-        ))
-
     # ------------------------------------------------------------------
     # Verbatim collapse / expand
     # ------------------------------------------------------------------
 
     @classmethod
     def _add_vb_collapsed(
-        cls, traces: list, layout: CircuitLayout,
-        verbatim_ranges: list[VerbatimRange], col_x: list[float],
+        cls, traces: list, vr: VerbatimRange, col_x: list[float],
     ) -> None:
-        """Append traces for the collapsed verbatim-box overlay."""
-        for vr in verbatim_ranges:
-            if vr.col_start >= len(col_x) or vr.col_end >= len(col_x):
-                continue
-            x1 = col_x[vr.col_start]
-            x2 = col_x[vr.col_end]
-            cx = (x1 + x2) / 2
-            bw = abs(x2 - x1) + cls.COL_WIDTH * 0.5
-            y1 = cls._qy(vr.row_top)
-            y2 = cls._qy(vr.row_bottom)
-            mid_y = (y1 + y2) / 2
-            bh = abs(y2 - y1) + cls.GATE_BOX_HEIGHT
+        """Append traces for one collapsed verbatim-box overlay."""
+        if vr.col_start >= len(col_x) or vr.col_end >= len(col_x):
+            return
+        x1 = col_x[vr.col_start]
+        x2 = col_x[vr.col_end]
+        cx = (x1 + x2) / 2
+        bw = abs(x2 - x1) + cls.COL_WIDTH * 0.5
+        y1 = cls._qy(vr.row_top)
+        y2 = cls._qy(vr.row_bottom)
+        mid_y = (y1 + y2) / 2
+        bh = abs(y2 - y1) + cls.GATE_BOX_HEIGHT
 
-            label = f"Verbatim ({
-                vr.gate_count} gate{
-                's' if vr.gate_count != 1 else ''})"
+        label = f"Verbatim ({
+            vr.gate_count} gate{
+            's' if vr.gate_count != 1 else ''})"
 
-            # Dashed border box
-            traces.append(go.Scatter(
-                x=[cx - bw / 2, cx + bw / 2,
-                   cx + bw / 2, cx - bw / 2, cx - bw / 2],
-                y=[mid_y - bh / 2, mid_y - bh / 2,
-                   mid_y + bh / 2, mid_y + bh / 2, mid_y - bh / 2],
-                mode="lines",
-                fill="toself",
-                fillcolor=cls.VB_FILL,
-                line={"color": cls.VB_EDGE, "width": 2, "dash": "dash"},
+        # Dashed border box
+        traces.append(go.Scatter(
+            x=[cx - bw / 2, cx + bw / 2,
+               cx + bw / 2, cx - bw / 2, cx - bw / 2],
+            y=[mid_y - bh / 2, mid_y - bh / 2,
+               mid_y + bh / 2, mid_y + bh / 2, mid_y - bh / 2],
+            mode="lines",
+            fill="toself",
+            fillcolor=cls.VB_FILL,
+            line={"color": cls.VB_EDGE, "width": 2, "dash": "dash"},
+            showlegend=False,
+            hoverinfo="text",
+            text=(
+                f"Verbatim box: {vr.gate_count}"
+                f" gate{'s' if vr.gate_count != 1 else ''}. "
+                "Click the box's 'Expand' button above to view."
+            ),
+            hovertemplate="%{text}<extra></extra>",
+        ))
+        # Label
+        traces.append(
+            go.Scatter(
+                x=[cx],
+                y=[mid_y],
+                mode="text",
+                text=[label],
+                textposition="middle center",
+                textfont={
+                    "family": "monospace",
+                    "size": cls.VB_FONT_SIZE,
+                    "color": cls.VB_EDGE,
+                },
                 showlegend=False,
-                hoverinfo="text",
-                text=(
-                    f"Verbatim box: {vr.gate_count}"
-                    f" gate{'s' if vr.gate_count != 1 else ''}. "
-                    "Click 'Expand verbatim boxes'"
-                    " above to view."
-                ),
-                hovertemplate="%{text}<extra></extra>",
+                hoverinfo="skip",
             ))
-            # Label
-            traces.append(
-                go.Scatter(
-                    x=[cx],
-                    y=[mid_y],
-                    mode="text",
-                    text=[label],
-                    textposition="middle center",
-                    textfont={
-                        "family": "monospace",
-                        "size": cls.VB_FONT_SIZE,
-                        "color": cls.VB_EDGE,
-                    },
-                    showlegend=False,
-                    hoverinfo="skip",
-                ))
-            # Vertical dashed line spanning all qubits of the verbatim box
-            if vr.row_top != vr.row_bottom:
-                traces.append(go.Scatter(
-                    x=[cx, cx], y=[y1, y2],
-                    mode="lines",
-                    line={"color": cls.VB_EDGE, "width": 1.5, "dash": "dash"},
-                    showlegend=False, hoverinfo="skip",
-                ))
+        # Vertical dashed line spanning all qubits of the verbatim box
+        if vr.row_top != vr.row_bottom:
+            traces.append(go.Scatter(
+                x=[cx, cx], y=[y1, y2],
+                mode="lines",
+                line={"color": cls.VB_EDGE, "width": 1.5, "dash": "dash"},
+                showlegend=False, hoverinfo="skip",
+            ))
