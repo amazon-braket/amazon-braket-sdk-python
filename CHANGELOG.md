@@ -1,5 +1,42 @@
 # Changelog
 
+## v1.119.1 (2026-06-10)
+
+### Bug Fixes and Other Changes
+
+ * support division in FreeParameterExpression string constructor
+
+## v1.119.0 (2026-06-09)
+
+### Features
+
+ * support math functions in FreeParameterExpression
+
+## v1.118.0 (2026-06-04)
+
+### Deprecations and Removals
+
+ * `Circuit.to_ir` default to OpenQASM, warn on JAQCD
+
+## v1.117.4 (2026-06-03)
+
+### Bug Fixes and Other Changes
+
+ * raise DiscretizationError when rydbergLocal params missing
+
+## v1.117.3 (2026-05-14)
+
+### Bug Fixes and Other Changes
+
+ * add barrier adjoint
+
+## v1.117.2 (2026-05-11)
+
+### Bug Fixes and Other Changes
+
+ * use sparse dict for PauliString
+ * a couple of typos
+
 ## v1.117.1 (2026-04-29)
 
 ### Bug Fixes and Other Changes

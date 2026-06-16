@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from braket.ahs.discretization_types import DiscretizationProperties
+from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.pattern import Pattern
@@ -149,12 +149,19 @@ class LocalDetuning(Hamiltonian):
 
         Returns:
             LocalDetuning: A new discretized LocalDetuning.
+
+        Raises:
+            DiscretizationError: If local detuning parameters are not available from
+                the device properties.
         """
         local_detuning_parameters = properties.rydberg.rydbergLocal
-        time_resolution = (
-            local_detuning_parameters.timeResolution if local_detuning_parameters else None
-        )
+        if not local_detuning_parameters:
+            raise DiscretizationError(
+                "Local detuning parameters (rydbergLocal) are not available from the device "
+                "properties. Ensure that the device supports local detuning and that the "
+                "rydbergLocal capability data is returned by GetDevice."
+            )
         discretized_magnitude = self.magnitude.discretize(
-            time_resolution=time_resolution,
+            time_resolution=local_detuning_parameters.timeResolution,
         )
         return LocalDetuning(discretized_magnitude)

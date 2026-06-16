@@ -14,10 +14,24 @@
 """You can define a circuit with gates that depend on free parameters and specify
 the values of these parameters when submitting the circuit as a quantum task.
 This module provides FreeParameter for defining symbolic parameters,
-FreeParameterExpression for mathematical expressions, and Parameterizable
-interface for parameter binding.
+FreeParameterExpression for mathematical expressions, math helper functions,
+and Parameterizable interface for parameter binding.
 """
 
 from braket.parametric.free_parameter import FreeParameter  # noqa: F401
 from braket.parametric.free_parameter_expression import FreeParameterExpression  # noqa: F401
+from braket.parametric.functions import (
+    arccos,  # noqa: F401
+    arcsin,  # noqa: F401
+    arctan,  # noqa: F401
+    ceiling,  # noqa: F401
+    cos,  # noqa: F401
+    exp,  # noqa: F401
+    floor,  # noqa: F401
+    log,  # noqa: F401
+    mod,  # noqa: F401
+    sin,  # noqa: F401
+    sqrt,  # noqa: F401
+    tan,  # noqa: F401
+)
 from braket.parametric.parameterizable import Parameterizable  # noqa: F401
