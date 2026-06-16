@@ -8,3 +8,5 @@
 - [Pennylane plugin](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python)
 - [Qiskit-Braket plugin](https://github.com/qiskit-community/qiskit-braket-provider)
 - [Braket Julia SDK](https://github.com/amazon-braket/Braket.jl)
+- [Braket Direct reservations](https://docs.aws.amazon.com/braket/latest/developerguide/braket-reservations.html)
+- [Braket pricing](https://aws.amazon.com/braket/pricing/)

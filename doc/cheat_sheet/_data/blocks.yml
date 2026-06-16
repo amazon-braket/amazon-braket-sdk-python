@@ -12,6 +12,8 @@
   fr: Tâches
 - file: Results.md
   title: Results
+- file: ProgramSets.md
+  title: Program Sets
 - file: Device.md
   title: Device
 - file: DeviceProperties.md
@@ -23,6 +25,8 @@
   fr: Tâches
 - file: Simulators.md
   title: Simulators
+- file: Emulators.md
+  title: Emulators
 - file: NoiseSimulation.md
   title: Noise Simulation
 - file: LLDC.md
@@ -31,6 +35,10 @@
   title: Analog Hamiltonian Simulation
 - file: ErrorMitigation.md
   title: Error Mitigation
+- file: Reservations.md
+  title: Reservations
+- file: ExperimentalFeatures.md
+  title: Experimental Features
 - file: Console.md
   title: Console
 - file: APICalls.md

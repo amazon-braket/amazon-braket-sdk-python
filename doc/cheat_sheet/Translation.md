@@ -1,17 +1,30 @@
-# Translation Guide
+# Translation
 
-TL;DR:
+Thank you for your interest in translating the Amazon Braket cheat sheet!
 
-- See `_config.yml`, `index.br.html` and `_includes/`
+## How to translate
 
-The translation of this cheat-sheet requires the followings steps:
+1.  Copy the `doc/cheat_sheet/_includes/en/` directory to a new directory with your language code.
+    For example, for a French translation: `doc/cheat_sheet/_includes/fr/`
 
-- Choose a tag for your language, such as `en` for English or `fr` for French;
-- On [`_config.yml`](_config.yml), add your tag and translate the given phrases;
-- Copy `index.html` to `index.TAG.html`, where TAG is your tag;
-- Modify `index.TAG.html`, changing `lang: TAG` and `permalink: /TAG/`;
-- Copy the folder `_includes/en/` to `_includes/TAG/`, i.e., create a folder `TAG`
-  inside `_includes` with a copy of all the `.md` files; **don't change the .md names**;
-- On file `_data/blocks.yml`, add a `  TAG: translated title` line for each title;
-- Translate each block in `_includes/TAG`.
+2.  Translate the content of each `.md` file, keeping the table structure intact.
+    *   **Only translate the text after the `|` separators** — the pipe characters that separate columns.
+        Leave pipe characters, filenames, code snippets, and links unchanged.
 
+3.  Add your language code to `doc/cheat_sheet/_data/blocks.yml`.
+    For example, `fr: Votre titre` for a French title.
+
+4.  Add your language to `doc/cheat_sheet/_config.yml` under the `t:` section.
+
+5.  Create an `index.<lang>.html` page (e.g., `index.fr.html`) with `lang: <lang>` in the front matter.
+
+6.  Submit a pull request with your translation.
+
+## How to add or modify sections
+
+1.  Add a new `.md` file in `doc/cheat_sheet/_includes/en/` (or your language directory).
+2.  Add an entry for it in `doc/cheat_sheet/_data/blocks.yml`.
+    - `file`: The filename of your new section.
+    - `title`: The display title in English.
+    - `fr`: (optional) The display title in French.
+3.  Submit a pull request with your changes.

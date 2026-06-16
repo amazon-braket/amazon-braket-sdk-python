@@ -8,7 +8,7 @@ import zipfile
 
 def download_zip_file(version=None):
     if version is None:
-        zip_file_url = "https://github.com/amazon-braket/amazon-braket-sdk-python/zipball/jcjaskula-aws/add_cheat_sheet"
+        zip_file_url = "https://github.com/amazon-braket/amazon-braket-sdk-python/zipball/main"
     else:
         zip_file_url = f"https://github.com/amazon-braket/amazon-braket-sdk-python/archive/refs/tags/v{version}.zip"
 
