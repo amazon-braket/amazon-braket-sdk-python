@@ -28,8 +28,7 @@ from braket.circuits.angled_gate import (
     AngledGate,  # noqa: F401
     DoubleAngledGate,  # noqa: F401
 )
-from braket.circuits.circuit import Circuit  # noqa: F401
-from braket.circuits.circuit_analysis import QubitMatch  # noqa: F401
+from braket.circuits.circuit import Circuit, QubitMatch  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401
 from braket.circuits.free_parameter import FreeParameter  # noqa: F401

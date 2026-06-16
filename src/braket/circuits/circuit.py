@@ -16,8 +16,9 @@ from __future__ import annotations
 import warnings
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
+from enum import StrEnum
 from numbers import Number
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Union
 
 import numpy as np
 import oqpy
@@ -45,6 +46,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable, euler_angle_parameter_names
 from braket.circuits.observables import Sum, TensorProduct
+from braket.circuits.operator import Operator
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.result_type import (
     ObservableParameterResultType,
@@ -71,6 +73,16 @@ SubroutineReturn = TypeVar(
 )
 SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., SubroutineReturn])
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
+
+
+class QubitMatch(StrEnum):
+    """Controls how multiple qubits are matched in count."""
+
+    ANY = "ANY"
+    ALL = "ALL"
+
+
+OperatorIdentifier = Union[str, type[Operator], Operator]
 
 
 class Circuit:
@@ -243,33 +255,84 @@ class Circuit:
         """
         return self._parameters
 
-    def count_instructions(self, operators=None, **kwargs) -> Counter[str]:
+    @staticmethod
+    def _normalize_operator_name(identifier: OperatorIdentifier) -> str:
+        if isinstance(identifier, type):
+            return identifier.__name__.upper()
+        if isinstance(identifier, str):
+            return identifier.upper()
+        return identifier.name.upper()
+
+    @staticmethod
+    def _to_operator_names(
+        operators: OperatorIdentifier | Iterable[OperatorIdentifier] | None,
+    ) -> list[str]:
+        if operators is None:
+            return []
+        if isinstance(operators, (str, type)) or isinstance(operators, Operator):
+            return [Circuit._normalize_operator_name(operators)]
+        return [Circuit._normalize_operator_name(op) for op in operators]
+
+    def count(
+        self,
+        operators: OperatorIdentifier | Iterable[OperatorIdentifier] | None = None,
+        qubits: QubitInput | Iterable[QubitInput] | None = None,
+        qubit_match: QubitMatch = QubitMatch.ANY,
+        include_types: Iterable[MomentType] = (MomentType.GATE,),
+    ) -> Counter[str]:
         """
         Count instructions in the circuit with optional filtering.
 
+        When both ``operators`` and ``qubits`` are specified, an instruction must satisfy
+        both filters to be counted (AND semantics).
+
         Args:
-            operators: Filter by operator name or type.
-            qubits: Filter by qubit. Accepts a single int or an iterable of ints.
-            qubit_match (QubitMatch): ANY = instruction touches any specified qubit; ALL = all. Default ANY.
+            operators: Filter by operator name or type. Defaults to None (no filter).
+            qubits: Filter by qubit. Matched against the union of target and control qubits.
+            qubit_match (QubitMatch): How multiple qubits relate. ANY = instruction on
+            any specified qubit; ALL = instruction on all specified qubits. Default ANY.
             include_types (Iterable[MomentType]): Moment types to count. Default: GATE only.
+                Pass additional MomentType values to include noise, measures, etc.
 
         Returns:
             Counter[str]: Operator names mapped to occurrence counts.
 
         Examples:
             >>> circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
-            >>> circ.count_instructions()
+            >>> circ.count()
             Counter({'H': 1, 'CNot': 1, 'Rx': 1})
-            >>> circ.count_instructions("h")
+            >>> circ.count("h")
             Counter({'H': 1})
-            >>> circ.count_instructions(["H", "CNot"])
+            >>> circ.count(["H", "CNot"])
             Counter({'H': 1, 'CNot': 1})
-            >>> circ.count_instructions(qubits=0)
+            >>> circ.count(qubits=0)
             Counter({'H': 1, 'CNot': 1, 'Rx': 1})
         """
-        from braket.circuits.circuit_analysis import count_instructions as _count_instructions
+        include_types_set = set(include_types)
+        operator_names_set = set(self._to_operator_names(operators))
+        _qs = QubitSet(qubits) if qubits is not None else None
+        filter_qubits = _qs if _qs else None  # empty QubitSet treated as no filter
 
-        return _count_instructions(self, operators, **kwargs)
+        result: Counter[str] = Counter()
+
+        for key, instruction in self.moments.items():
+            if key.moment_type not in include_types_set:
+                continue
+
+            instr_qubits = instruction.target.union(instruction.control)
+            instr_name_upper = instruction.operator.name.upper()
+
+            qubit_pass = filter_qubits is None or (
+                any(q in instr_qubits for q in filter_qubits)
+                if qubit_match == QubitMatch.ANY
+                else all(q in instr_qubits for q in filter_qubits)
+            )
+            operator_pass = not operator_names_set or instr_name_upper in operator_names_set
+
+            if qubit_pass and operator_pass:
+                result[instruction.operator.name] += 1
+
+        return result
 
     def with_euler_angles(self, observables: Sequence[Observable] | Sum) -> Circuit:
         """Returns a copy of the circuit with parametrized Euler angles on the observables' qubits
