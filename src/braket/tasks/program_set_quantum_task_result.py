@@ -510,16 +510,16 @@ class ProgramSetQuantumTaskResult:
         executable_indices = list(program_set.enumerate_executables())
         shots_per_executable = program_set.shots_per_executable
 
-        buffer = [None] * total_executables
+        executable_results_in_order = [None] * total_executables
         for k, result in enumerate(results):
-            _buffer_result(
+            _reorder_executable_results(
                 k=k,
                 result=result,
                 parent_indices=index_map[k],
                 program_set=program_set,
                 programs=programs,
                 executable_indices=executable_indices,
-                buffer=buffer,
+                out=executable_results_in_order,
             )
 
         entries = []
@@ -529,7 +529,7 @@ class ProgramSetQuantumTaskResult:
             program = programs[binding_idx]
             observables = binding.observables if isinstance(binding, CircuitBinding) else None
             entry = CompositeEntry(
-                entries=buffer[start : start + count],
+                entries=executable_results_in_order[start : start + count],
                 program=program,
                 inputs=CompositeEntry._get_inputs(program, observables),
                 observables=observables,
@@ -694,14 +694,14 @@ def _count_executables(binding: CircuitBinding | Circuit) -> int:
     return num_ps * num_obs
 
 
-def _buffer_result(
+def _reorder_executable_results(
     k: int,
     result: ProgramSetQuantumTaskResult,
     parent_indices: list[int],
     program_set: ProgramSet,
     programs: list[Program],
     executable_indices: list[tuple[int, int, int]],
-    buffer: list[MeasuredEntry | ProgramSetExecutableFailure | None],
+    out: list[MeasuredEntry | ProgramSetExecutableFailure | None],
 ) -> None:
     j = 0
     for composite in result.entries:
@@ -713,7 +713,7 @@ def _buffer_result(
                 )
             orig_idx = parent_indices[j]
             binding_idx, ps_idx, obs_idx = executable_indices[orig_idx]
-            buffer[orig_idx] = _convert_measured_entry(
+            out[orig_idx] = _convert_measured_entry(
                 entry,
                 program_set.entries[binding_idx],
                 programs[binding_idx],
