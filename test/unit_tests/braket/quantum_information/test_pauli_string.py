@@ -183,9 +183,21 @@ def test_pauli_string_addition_accepts_strings_and_reverse_addition():
     assert "IZ" + PauliString("XI") == PauliStringSum([(1, "IZ"), (1, "XI")])
 
 
+def test_pauli_string_operator_overloads_reject_unsupported_types():
+    pauli_string = PauliString("XI")
+
+    with pytest.raises(TypeError):
+        pauli_string * "IZ"
+    with pytest.raises(TypeError):
+        pauli_string + 1
+    with pytest.raises(TypeError):
+        1 + pauli_string
+
+
 def test_pauli_string_commutation_check():
     assert PauliString("XX").commutes_with("YY")
     assert PauliString("X").commutes_with("IZ")
+    assert PauliString("IZ").commutes_with("X")
     assert not PauliString("XI").commutes_with("ZI")
 
 
