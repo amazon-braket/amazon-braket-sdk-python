@@ -32,14 +32,16 @@ Markdown companion file for readers who want a plain-text reference.
 ## Build Locally
 
 The cheat sheet is a standalone Jekyll project under `doc/cheat_sheet`. Use
-Ruby 3.1 or newer, install Bundler, then install the GitHub Pages-compatible
-Jekyll bundle from this directory:
+Ruby 3.1 or a newer Ruby 3.x release, install Bundler, then install the GitHub
+Pages-compatible Jekyll bundle. Ruby 4 is not currently supported by the
+current GitHub Pages dependency stack.
+
+From the repository root:
 
 ```bash
-cd doc/cheat_sheet
 ruby --version
 gem install bundler
-bundle install
+BUNDLE_GEMFILE=doc/cheat_sheet/Gemfile bundle install
 ```
 
 Build the site from the repository root with the same source path as the
@@ -50,12 +52,25 @@ BUNDLE_GEMFILE=doc/cheat_sheet/Gemfile bundle exec jekyll build --source doc/che
 python3 doc/cheat_sheet/_scripts/generate_markdown.py --output build/cheat_sheet/genai_cheat_sheet.md
 ```
 
-Alternatively, build from inside `doc/cheat_sheet`:
+Alternatively, install and build from inside `doc/cheat_sheet`:
 
 ```bash
+cd doc/cheat_sheet
+bundle install
 bundle exec jekyll build --source . --destination ../../build/cheat_sheet
 python3 _scripts/generate_markdown.py --output ../../build/cheat_sheet/genai_cheat_sheet.md
 ```
+
+The Gemfile includes `csv` and `bigdecimal` explicitly because newer Ruby
+versions no longer load every library used by the GitHub Pages-compatible
+Jekyll stack as a default gem. If Jekyll reports `cannot load such file --
+csv` or `cannot load such file -- bigdecimal`, pull the latest Gemfile and
+rerun the relevant `bundle install` command above before `bundle exec`.
+
+If Bundler reports that Ruby 4 does not satisfy the Gemfile, switch to a Ruby
+3.x runtime before installing the bundle. For example, on Homebrew use
+`brew install ruby@3.3` and run the commands with
+`PATH="/opt/homebrew/opt/ruby@3.3/bin:$PATH"`.
 
 If Ruby/Jekyll is not available, run the Python generator and `tox -e docs` to
 check the repository documentation path.
