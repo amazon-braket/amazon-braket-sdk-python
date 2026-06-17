@@ -17,3 +17,4 @@ of Pauli operators.
 """
 
 from braket.quantum_information.pauli_string import PauliString  # noqa: F401
+from braket.quantum_information.pauli_string import PauliStringSum  # noqa: F401

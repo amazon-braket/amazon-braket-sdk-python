@@ -21,7 +21,7 @@ import pytest
 from braket.circuits import gates
 from braket.circuits.circuit import Circuit
 from braket.circuits.observables import I, X, Y, Z
-from braket.quantum_information import PauliString
+from braket.quantum_information import PauliString, PauliStringSum
 
 ORDER = ["I", "X", "Y", "Z"]
 PAULI_INDEX_MATRICES = {
@@ -260,3 +260,60 @@ def test_power_invalid_exp(circ, n, operation):
 )
 def test_to_circuit(circ, circ_res):
     assert circ.to_circuit() == circ_res
+
+
+def test_pauli_string_sum_canonicalizes_coefficients():
+    pauli_sum = PauliStringSum([(2, "XI"), (-3, "-XI"), PauliString("IZ"), "IZ"])
+
+    assert pauli_sum.to_list() == [(5.0, "+XI"), (2.0, "+IZ")]
+    assert pauli_sum[PauliString("-XI")] == -5.0
+    assert "XI" in pauli_sum
+    assert pauli_sum[0] == (5.0, PauliString("XI"))
+
+
+def test_pauli_string_sum_arithmetic_combines_like_terms():
+    pauli_sum = PauliString("XX") + 0.5 * PauliString("-YY") - PauliString("XX")
+
+    assert pauli_sum == PauliStringSum([(-0.5, "YY")])
+    assert (-2 * pauli_sum).to_list() == [(1.0, "+YY")]
+
+
+def test_pauli_string_sum_multiplication_distributes_over_terms():
+    right_product = PauliStringSum([(2, "XI"), (3, "YY")]) * PauliString("IZ")
+    left_product = PauliString("IZ") * PauliStringSum([(3, "YY")])
+
+    assert right_product == PauliStringSum([(2, "XZ"), (3, "YX")])
+    assert left_product == PauliStringSum([(-3, "YX")])
+
+
+def test_pauli_string_sum_multiplication_distributes_over_sums():
+    result = PauliStringSum([(2, "XI"), (3, "YY")]) * PauliStringSum([(4, "IZ")])
+
+    assert result == PauliStringSum([(8, "XZ"), (12, "YX")])
+
+
+def test_pauli_string_sum_to_and_from_observable_sum():
+    pauli_sum = PauliStringSum([(2, "XI"), (-3, "IZ")])
+
+    observable_sum = pauli_sum.to_sum()
+
+    assert PauliStringSum.from_sum(observable_sum) == pauli_sum
+    assert observable_sum.summands == (
+        2 * (X() @ I()),
+        -3 * (I() @ Z()),
+    )
+
+
+def test_pauli_string_sum_commutation_helpers():
+    commuting_sum = PauliStringSum(["XX", "ZZ"])
+    non_commuting_sum = PauliStringSum(["XI", "ZX"])
+
+    assert commuting_sum.is_self_commuting
+    assert commuting_sum.commutes_with(PauliString("YY"))
+    assert not non_commuting_sum.is_self_commuting
+    assert not PauliStringSum(["XI"]).commutes_with(PauliString("ZX"))
+
+
+def test_pauli_string_sum_empty_to_sum_fails():
+    with pytest.raises(ValueError, match="Cannot convert an empty PauliStringSum"):
+        PauliStringSum([(1, "X"), (-1, "X")]).to_sum()
