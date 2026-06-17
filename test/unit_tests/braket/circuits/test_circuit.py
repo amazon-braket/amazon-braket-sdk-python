@@ -3834,15 +3834,25 @@ def test_barrier_jaqcd_export_fails():
 
 
 def test_circuit_count_ops():
-    circ = Circuit().h(0).h(1).cnot(0, 1).measure([0, 1])
+    circ = Circuit().h(0).h(1).cnot(0, 1).measure([0, 1]).gphase(0.5)
     assert circ.count("cnot") == 1
     assert circ.count("h") == 2
-    assert circ.count() == {"cnot": 1, "h": 2, "measure": 2}
+    assert circ.count() == {"cnot": 1, "h": 2, "measure": 2, "gphase": 1}
     assert circ.count(qubits={0}) == {"cnot": 1, "h": 1, "measure": 1}
     assert circ.count(qubits={0}, operator="h") == 1
+
+    circ = Circuit().cnot(0, 2)
+    assert circ.count(qubits={1}) == {}
+
+    circ = Circuit().amplitude_damping(0, gamma=0.1)
+
+    assert circ.count() == {}
+    assert circ.count(include_noise=True) == {"amplitudedamping": 1}
+    assert circ.count(qubits={0}, include_noise=True) == {"amplitudedamping": 1}
+    assert circ.count(operator="amplitudedamping", include_noise=True) == 1
 
     with pytest.raises(
         ValueError,
         match="All qubits in the 'qubits' argument must be present in the circuit",
     ):
-        circ.count(qubits={2})
+        circ.count(qubits={3})

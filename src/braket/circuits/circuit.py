@@ -1630,6 +1630,7 @@ class Circuit:
         self,
         operator: str | None = None,
         qubits: QubitSet | None = None,
+        include_noise: bool = False,
     ) -> int | Counter[str]:
         """Counts circuit instructions by operator name, optionally filtered by specific
         operators and/or qubits.
@@ -1639,6 +1640,8 @@ class Circuit:
                 If not provided, returns counts for all operator names.
             qubits (QubitSet | None): Optional set of qubits to consider. If not provided,
                 considers all qubits.
+            include_noise (bool): Whether to include noise instructions in the count.
+                Default is False.
 
         Returns:
             int | Counter[str]: The count for ``operator`` if provided, otherwise a ``Counter``
@@ -1648,7 +1651,7 @@ class Circuit:
             ValueError: If any qubits in ``qubits`` are not present in the circuit
 
         Examples:
-            >>> circuit = Circuit().h(0).h(1).cnot(0, 1)
+            >>> circuit = Circuit().h(0).h(1).cnot(0, 1).amplitude_damping(0, gamma=0.1)
             >>> circuit.count("cnot")
             1
             >>> circuit.count()
@@ -1657,17 +1660,28 @@ class Circuit:
             Counter({'cnot': 1, 'h': 1})
             >>> circuit.count(qubits={0}, operator="h")
             1
+            >>> circuit.count(include_noise=True)
+            Counter({'cnot': 1, 'h': 2, 'amplitude_damping': 1})
         """
         counts: dict[str, int] = {}
 
-        if qubits and qubits.intersection(self.qubits) != qubits:
+        # to avoid erroring on qubits that are part of the circuit but not targeted
+        # by any instruction we construct the following set as opposed to just using
+        # :attr:`self.qubits` directly
+        circuit_qubits = set(
+            range(min(self.qubits), max(self.qubits) + 1)
+        ) if self.qubits else set()
+
+        if qubits and qubits.intersection(circuit_qubits) != qubits:
             raise ValueError(
                 "All qubits in the 'qubits' argument must be present in the circuit. "
-                f"Invalid qubits: {qubits - self.qubits}"
+                f"Invalid qubits: {qubits - circuit_qubits}"
             )
 
         for instruction in self.instructions:
             if qubits and not set(instruction.target).intersection(qubits):
+                continue
+            if not include_noise and isinstance(instruction.operator, Noise):
                 continue
             name = instruction.operator.name.lower()
             counts[name] = counts.get(name, 0) + 1
