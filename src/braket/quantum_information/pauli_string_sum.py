@@ -24,18 +24,17 @@ from braket.quantum_information.pauli_string import PauliString
 _OBSERVABLE_TO_FACTOR = {I: "I", X: "X", Y: "Y", Z: "Z"}
 
 
-class PauliStringSum:
+class PauliSum:
     """A weighted sum of Pauli strings."""
 
     def __init__(self, terms: Iterable[tuple[numbers.Number, str | PauliString]] = ()):
-        """Initializes a ``PauliStringSum``.
+        """Initializes a ``PauliSum``.
 
         Args:
             terms (Iterable[tuple[numbers.Number, str | PauliString]]): Pairs of coefficient and
                 Pauli string.
         """
         self._terms: dict[str, numbers.Number] = {}
-        self._all_terms_commute = True
         for coefficient, pauli_string in terms:
             self._add_term(coefficient, PauliString(pauli_string))
         self._all_terms_commute = self._compute_all_terms_commute()
@@ -46,8 +45,8 @@ class PauliStringSum:
         return self._all_terms_commute
 
     @classmethod
-    def from_list(cls, terms: Iterable[tuple[numbers.Number, str | PauliString]]) -> PauliStringSum:
-        """Builds a ``PauliStringSum`` from a list of weighted Pauli strings."""
+    def from_list(cls, terms: Iterable[tuple[numbers.Number, str | PauliString]]) -> PauliSum:
+        """Builds a ``PauliSum`` from a list of weighted Pauli strings."""
         return cls(terms)
 
     @property
@@ -71,15 +70,17 @@ class PauliStringSum:
     def to_sum(self) -> Sum:
         """Converts the weighted Pauli strings into a circuit ``Sum`` observable."""
         if not self._terms:
-            raise ValueError("Cannot convert an empty PauliStringSum to Sum")
+            raise ValueError("Cannot convert an empty PauliSum to Sum")
         observables = []
         for coefficient, pauli in self.terms:
             observables.append(coefficient * pauli.to_unsigned_observable(include_trivial=True))
         return Sum(observables)
 
-    def commutes_with(self, other: PauliStringSum | PauliString | str) -> bool:
+    def commutes_with(self, other: PauliSum | PauliString | str) -> bool:
         """Returns whether all terms commute with ``other``."""
         other_sum = self._coerce(other)
+        if not self.all_terms_commute or not other_sum.all_terms_commute:
+            return False
         return all(
             self._pauli_strings_commute(left, right)
             for _, left in self.terms
@@ -91,46 +92,46 @@ class PauliStringSum:
         return self._all_terms_commute
 
     @classmethod
-    def from_sum(cls, observable_sum: Sum) -> PauliStringSum:
-        """Builds a ``PauliStringSum`` from a circuit ``Sum`` observable."""
+    def from_sum(cls, observable_sum: Sum) -> PauliSum:
+        """Builds a ``PauliSum`` from a circuit ``Sum`` observable."""
         if not isinstance(observable_sum, Sum):
             raise TypeError("Expected a Sum observable")
         return cls(cls._term_from_observable(observable) for observable in observable_sum.summands)
 
-    def __add__(self, other: PauliStringSum | PauliString | str) -> PauliStringSum:
+    def __add__(self, other: PauliSum | PauliString | str) -> PauliSum:
         other_sum = self._coerce(other)
-        return PauliStringSum((*self.terms, *other_sum.terms))
+        return PauliSum((*self.terms, *other_sum.terms))
 
-    def __radd__(self, other: PauliStringSum | PauliString | str) -> PauliStringSum:
+    def __radd__(self, other: PauliSum | PauliString | str) -> PauliSum:
         return self + other
 
-    def __sub__(self, other: PauliStringSum | PauliString | str) -> PauliStringSum:
+    def __sub__(self, other: PauliSum | PauliString | str) -> PauliSum:
         return self + (-1 * self._coerce(other))
 
-    def __rsub__(self, other: PauliStringSum | PauliString | str) -> PauliStringSum:
+    def __rsub__(self, other: PauliSum | PauliString | str) -> PauliSum:
         return self._coerce(other) + (-self)
 
-    def __neg__(self) -> PauliStringSum:
+    def __neg__(self) -> PauliSum:
         return -1 * self
 
-    def __mul__(self, other: numbers.Number | PauliString | str) -> PauliStringSum:
+    def __mul__(self, other: numbers.Number | PauliString | str) -> PauliSum:
         if isinstance(other, numbers.Number):
-            return PauliStringSum((coefficient * other, pauli) for coefficient, pauli in self.terms)
+            return PauliSum((coefficient * other, pauli) for coefficient, pauli in self.terms)
         pauli = PauliString(other)
         qubit_count = max(self.qubit_count, pauli.qubit_count)
         right = self._pad_pauli_string(pauli, qubit_count)
-        return PauliStringSum(
+        return PauliSum(
             (coefficient, self._pad_pauli_string(term, qubit_count).dot(right))
             for coefficient, term in self.terms
         )
 
-    def __rmul__(self, other: numbers.Number | PauliString | str) -> PauliStringSum:
+    def __rmul__(self, other: numbers.Number | PauliString | str) -> PauliSum:
         if isinstance(other, numbers.Number):
             return self * other
         pauli = PauliString(other)
         qubit_count = max(self.qubit_count, pauli.qubit_count)
         left = self._pad_pauli_string(pauli, qubit_count)
-        return PauliStringSum(
+        return PauliSum(
             (coefficient, left.dot(self._pad_pauli_string(term, qubit_count)))
             for coefficient, term in self.terms
         )
@@ -148,17 +149,17 @@ class PauliStringSum:
     def __len__(self) -> int:
         return len(self._terms)
 
-    def __eq__(self, other: PauliStringSum) -> bool:
-        if not isinstance(other, PauliStringSum):
+    def __eq__(self, other: PauliSum) -> bool:
+        if not isinstance(other, PauliSum):
             return False
         return self._terms == other._terms
 
     def __repr__(self) -> str:
-        return f"PauliStringSum({self.to_list()})"
+        return f"PauliSum({self.to_list()})"
 
     def _add_term(self, coefficient: numbers.Number, pauli_string: PauliString) -> None:
         if not isinstance(coefficient, numbers.Number):
-            raise TypeError("PauliStringSum coefficients must be numbers")
+            raise TypeError("PauliSum coefficients must be numbers")
         coefficient, pauli = self._canonical_term(pauli_string, coefficient)
         if coefficient == 0:
             return
@@ -167,7 +168,6 @@ class PauliStringSum:
             self._terms.pop(pauli, None)
         else:
             self._terms[pauli] = new_coefficient
-        self._all_terms_commute = self._compute_all_terms_commute()
 
     def _compute_all_terms_commute(self) -> bool:
         if len(self._terms) <= 1:
@@ -185,10 +185,10 @@ class PauliStringSum:
         return coefficient * pauli_string.phase, f"+{''.join(factors)}"
 
     @staticmethod
-    def _coerce(other: PauliStringSum | PauliString | str) -> PauliStringSum:
-        if isinstance(other, PauliStringSum):
+    def _coerce(other: PauliSum | PauliString | str) -> PauliSum:
+        if isinstance(other, PauliSum):
             return other
-        return PauliStringSum([(1, other)])
+        return PauliSum([(1, other)])
 
     @staticmethod
     def _pauli_strings_commute(left: PauliString, right: PauliString) -> bool:
@@ -216,16 +216,16 @@ class PauliStringSum:
         coefficient = observable.coefficient
         unscaled = observable._unscaled()
         if isinstance(unscaled, StandardObservable):
-            factors = PauliStringSum._factors_from_standard(unscaled)
+            factors = PauliSum._factors_from_standard(unscaled)
         elif isinstance(unscaled, TensorProduct):
-            factors = PauliStringSum._factors_from_tensor_product(unscaled)
+            factors = PauliSum._factors_from_tensor_product(unscaled)
         else:
             raise TypeError(f"Unsupported observable type {type(observable).__name__}")
         return coefficient, f"+{''.join(factors)}"
 
     @staticmethod
     def _factors_from_standard(observable: StandardObservable) -> list[str]:
-        factor = PauliStringSum._factor_from_standard(observable)
+        factor = PauliSum._factor_from_standard(observable)
         if observable.targets:
             factors = ["I"] * (max(observable.targets) + 1)
             factors[int(observable.targets[0])] = factor
@@ -237,9 +237,9 @@ class PauliStringSum:
         if observable.targets:
             factors = ["I"] * (max(observable.targets) + 1)
             for factor, target in zip(observable.factors, observable.targets, strict=True):
-                factors[int(target)] = PauliStringSum._factor_from_standard(factor)
+                factors[int(target)] = PauliSum._factor_from_standard(factor)
             return factors
-        return [PauliStringSum._factor_from_standard(factor) for factor in observable.factors]
+        return [PauliSum._factor_from_standard(factor) for factor in observable.factors]
 
     @staticmethod
     def _factor_from_standard(observable: StandardObservable) -> str:
@@ -247,3 +247,6 @@ class PauliStringSum:
             if isinstance(observable, observable_type):
                 return factor
         raise TypeError(f"Unsupported observable factor {type(observable).__name__}")
+
+
+PauliStringSum = PauliSum

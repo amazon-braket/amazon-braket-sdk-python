@@ -264,13 +264,13 @@ class PauliString:
             other (PauliString | str): The Pauli string to add.
 
         Returns:
-            PauliStringSum: The sum containing both Pauli strings.
+            PauliSum: The sum containing both Pauli strings.
         """
         if not isinstance(other, (PauliString, str)):
             return NotImplemented
-        from braket.quantum_information.pauli_string_sum import PauliStringSum  # noqa: PLC0415
+        from braket.quantum_information.pauli_string_sum import PauliSum  # noqa: PLC0415
 
-        return PauliStringSum([(1, self), (1, other)])
+        return PauliSum([(1, self), (1, other)])
 
     def __radd__(self, other: PauliString | str):
         """Operator overload for reverse addition with another Pauli string.
@@ -279,13 +279,13 @@ class PauliString:
             other (PauliString | str): The Pauli string to add.
 
         Returns:
-            PauliStringSum: The sum containing both Pauli strings.
+            PauliSum: The sum containing both Pauli strings.
         """
         if not isinstance(other, (PauliString, str)):
             return NotImplemented
-        from braket.quantum_information.pauli_string_sum import PauliStringSum  # noqa: PLC0415
+        from braket.quantum_information.pauli_string_sum import PauliSum  # noqa: PLC0415
 
-        return PauliStringSum([(1, other), (1, self)])
+        return PauliSum([(1, other), (1, self)])
 
     def commutes_with(self, other: PauliString | str) -> bool:
         """Returns whether this Pauli string commutes with another Pauli string.

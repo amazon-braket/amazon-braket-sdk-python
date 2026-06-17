@@ -14,7 +14,7 @@
 import pytest
 
 from braket.circuits.observables import H, X, Y, Z
-from braket.quantum_information import PauliString, PauliStringSum
+from braket.quantum_information import PauliString, PauliStringSum, PauliSum
 
 
 def test_initializes_from_weighted_list_and_combines_terms():
@@ -117,7 +117,7 @@ def test_commutation_checks():
 
 
 def test_empty_sum_cannot_convert_to_observable_sum():
-    with pytest.raises(ValueError, match="empty PauliStringSum"):
+    with pytest.raises(ValueError, match="empty PauliSum"):
         PauliStringSum().to_sum()
 
 
@@ -140,7 +140,7 @@ def test_empty_sum_has_zero_qubit_count_and_repr():
     empty_sum = PauliStringSum()
 
     assert empty_sum.qubit_count == 0
-    assert repr(empty_sum) == "PauliStringSum([])"
+    assert repr(empty_sum) == "PauliSum([])"
 
 
 def test_zero_coefficient_terms_cancel_to_empty_sum():
@@ -158,6 +158,14 @@ def test_zero_coefficient_term_is_ignored():
 def test_radd_and_non_matching_eq_type():
     assert "ZY" + PauliStringSum([(1.0, "X")]) == PauliStringSum([(1.0, "X"), (1.0, "ZY")])
     assert PauliStringSum([(1.0, "X")]) != 1
+
+
+def test_pauli_sum_export_and_non_commuting_short_circuit():
+    non_commuting_sum = PauliSum([(1.0, "XI"), (2.0, "ZI")])
+
+    assert PauliStringSum is PauliSum
+    assert isinstance(PauliSum([(1.0, "X")]), PauliSum)
+    assert not non_commuting_sum.commutes_with("II")
 
 
 def test_from_sum_uses_default_target_for_standard_observables_and_rejects_unmapped_observable():
