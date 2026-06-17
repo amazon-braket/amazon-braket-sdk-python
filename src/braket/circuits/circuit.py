@@ -1661,7 +1661,7 @@ class Circuit:
             >>> circuit.count(qubits={0}, operator="h")
             1
             >>> circuit.count(include_noise=True)
-            Counter({'cnot': 1, 'h': 2, 'amplitude_damping': 1})
+            Counter({'cnot': 1, 'h': 2, 'amplitudedamping': 1})
         """
         counts: dict[str, int] = {}
 
