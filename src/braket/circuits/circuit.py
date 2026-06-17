@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from numbers import Number
 from typing import Any, TypeVar
 
@@ -162,9 +162,9 @@ class Circuit:
 
     @property
     def global_phase(self) -> float:
-        """float: Get the global phase of the circuit."""
+        """float: Get the effective global phase of the circuit, including gate powers."""
         return sum(
-            instr.operator.angle
+            instr.operator.angle * instr.power
             for moment, instr in self._moments.items()
             if moment.moment_type == MomentType.GLOBAL_PHASE
         )
@@ -1312,6 +1312,29 @@ class Circuit:
         """
         return circuit_diagram_class.build_diagram(self)
 
+    def to_plotly(
+        self,
+        *,
+        device_metadata: Mapping[str, Any] | None = None,
+    ) -> object:
+        """Build and return an interactive Plotly figure for this circuit.
+
+        Args:
+            device_metadata: Optional gate metadata to include in Plotly hover text.
+
+        Returns:
+            A ``plotly.graph_objects.Figure``.
+
+        Raises:
+            ImportError: If the interactive Plotly renderer is requested without Plotly
+                installed.
+        """
+        from braket.circuits.graphical_diagram_builders.plotly_circuit_diagram import (  # noqa: PLC0415
+            PlotlyCircuitDiagram,
+        )
+
+        return PlotlyCircuitDiagram.build_diagram(self, device_metadata=device_metadata)
+
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
@@ -1656,8 +1679,47 @@ class Circuit:
             return calculate_unitary_big_endian(self.instructions, qubits)
         return np.zeros(0, dtype=complex)
 
-    def show(self, circuit_diagram_class: type = MatplotlibCircuitDiagram) -> None:
+    def show(
+        self,
+        circuit_diagram_class: type | str = MatplotlibCircuitDiagram,
+        *,
+        device_metadata: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Display a graphical diagram for this circuit.
+
+        Args:
+            circuit_diagram_class: Diagram builder class, or one of the built-in aliases
+                ``"matplotlib"``, ``"interactive"``, or ``"plotly"``. The ``"interactive"``
+                and ``"plotly"`` aliases display a Plotly figure and require Plotly to be
+                installed. Use :meth:`to_plotly` to get the Figure object directly.
+            device_metadata: Optional gate metadata to include in interactive Plotly hover text.
+                Only supported by the ``"interactive"`` and ``"plotly"`` aliases.
+
+        Raises:
+            ValueError: If a string alias is not supported, or if ``device_metadata`` is
+                provided for a renderer that cannot display it.
+            ImportError: If the interactive Plotly renderer is requested without Plotly
+                installed.
+        """
+        if isinstance(circuit_diagram_class, str):
+            if circuit_diagram_class == "matplotlib":
+                if device_metadata is not None:
+                    raise ValueError(
+                        "device_metadata is only supported with 'interactive' or 'plotly'"
+                    )
+                circuit_diagram_class = MatplotlibCircuitDiagram
+            elif circuit_diagram_class in {"interactive", "plotly"}:
+                self.to_plotly(device_metadata=device_metadata).show()
+                return
+            else:
+                raise ValueError(
+                    "circuit_diagram_class must be a diagram class, 'matplotlib', "
+                    "'interactive', or 'plotly'"
+                )
+        if device_metadata is not None:
+            raise ValueError("device_metadata is only supported with 'interactive' or 'plotly'")
         circuit_diagram_class.build_diagram(self)
+        return
 
     @property
     def qubits_frozen(self) -> bool:

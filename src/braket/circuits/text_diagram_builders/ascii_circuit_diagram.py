@@ -18,10 +18,12 @@ from typing import Literal
 
 import braket.circuits.circuit as cir
 from braket.circuits.compiler_directive import CompilerDirective
-from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.result_type import ResultType
 from braket.circuits.text_diagram_builders.text_circuit_diagram import TextCircuitDiagram
+from braket.circuits.text_diagram_builders.text_circuit_diagram_utils import (
+    _is_global_phase_instruction,
+)
 from braket.registers.qubit_set import QubitSet
 
 
@@ -122,11 +124,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                 ascii_symbols = [ascii_symbol, *after]
             control_qubits = QubitSet()
             map_control_qubit_states = None
-        elif (
-            isinstance(item, Instruction)
-            and isinstance(item.operator, Gate)
-            and item.operator.name == "GPhase"
-        ):
+        elif _is_global_phase_instruction(item):
             target_qubits = circuit_qubits
             control_qubits = QubitSet()
             target_and_control = QubitSet()
@@ -180,6 +178,7 @@ class AsciiCircuitDiagram(TextCircuitDiagram):
                     # when a user has a gate genuinely named C, but
                     # is necessary to enable proper printing of custom
                     # gates with built-in control qubits
+                    and not _is_global_phase_instruction(item)
                     and ascii_symbols[item_qubit_index] != "C"
                 )
                 else ""
