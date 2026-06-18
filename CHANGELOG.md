@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.119.1 (2026-06-10)
+
+### Bug Fixes and Other Changes
+
+ * support division in FreeParameterExpression string constructor
+
+## v1.119.0 (2026-06-09)
+
+### Features
+
+ * support math functions in FreeParameterExpression
+
+## v1.118.0 (2026-06-04)
+
+### Deprecations and Removals
+
+ * `Circuit.to_ir` default to OpenQASM, warn on JAQCD
+
 ## v1.117.4 (2026-06-03)
 
 ### Bug Fixes and Other Changes
