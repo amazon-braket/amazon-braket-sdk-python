@@ -18,7 +18,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from enum import StrEnum
 from numbers import Number
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 import numpy as np
 import oqpy
@@ -82,7 +82,7 @@ class QubitMatch(StrEnum):
     ALL = "ALL"
 
 
-OperatorIdentifier = Union[str, type[Operator], Operator]
+OperatorIdentifier = str | type[Operator] | Operator
 
 
 class Circuit:
@@ -269,7 +269,7 @@ class Circuit:
     ) -> list[str]:
         if operators is None:
             return []
-        if isinstance(operators, (str, type)) or isinstance(operators, Operator):
+        if isinstance(operators, (str, type, Operator)):
             return [Circuit._normalize_operator_name(operators)]
         return [Circuit._normalize_operator_name(op) for op in operators]
 
@@ -310,8 +310,8 @@ class Circuit:
         """
         include_types_set = set(include_types)
         operator_names_set = set(self._to_operator_names(operators))
-        _qs = QubitSet(qubits) if qubits is not None else None
-        filter_qubits = _qs if _qs else None  # empty QubitSet treated as no filter
+        qs = QubitSet(qubits) if qubits is not None else None
+        filter_qubits = qs or None  # empty QubitSet treated as no filter
 
         result: Counter[str] = Counter()
 
