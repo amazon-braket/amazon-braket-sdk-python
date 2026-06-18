@@ -268,7 +268,7 @@ class PauliString:
         """
         if not isinstance(other, (PauliString, str)):
             return NotImplemented
-        from braket.quantum_information.pauli_string_sum import PauliSum  # noqa: PLC0415
+        from braket.quantum_information.pauli_sum import PauliSum  # noqa: PLC0415
 
         return PauliSum([(1, self), (1, other)])
 
@@ -283,7 +283,7 @@ class PauliString:
         """
         if not isinstance(other, (PauliString, str)):
             return NotImplemented
-        from braket.quantum_information.pauli_string_sum import PauliSum  # noqa: PLC0415
+        from braket.quantum_information.pauli_sum import PauliSum  # noqa: PLC0415
 
         return PauliSum([(1, other), (1, self)])
 
