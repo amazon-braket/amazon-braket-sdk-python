@@ -21,11 +21,21 @@ def test_operator_filter_multiple_mixed_identifiers(mixed_circuit):
     assert mixed_circuit.count(operators=["h", gates.CNot]) == Counter({"H": 2, "CNot": 1})
 
 
+def test_operator_filter_gate_instance(mixed_circuit):
+    assert mixed_circuit.count(operators=gates.CNot()) == Counter({"CNot": 1})
+
+
 def test_include_gate_noise_type():
     circ = Circuit().h(0)
     circ.apply_gate_noise(BitFlip(0.1))
     result = circ.count(include_types=[MomentType.GATE, MomentType.GATE_NOISE])
     assert result == Counter({"H": 1, "BitFlip": 1})
+
+
+def test_gate_noise_excluded_by_default():
+    circ = Circuit().h(0)
+    circ.apply_gate_noise(BitFlip(0.1))
+    assert circ.count() == Counter({"H": 1})
 
 
 def test_qubit_filter_single_qubit(mixed_circuit):
