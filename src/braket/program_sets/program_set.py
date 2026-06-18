@@ -136,6 +136,8 @@ class ProgramSet:
         (``Sum`` summands are sliced with coefficients preserved). Observable splitting is only
         performed when necessary; otherwise the full observable list or ``Sum`` is kept intact.
 
+        The indices in the list of positions take values in the range [0, total_executables - 1].
+
         Args:
             max_executables (int): The maximum number of executables per program
                 set. Must be positive.
@@ -188,6 +190,25 @@ class ProgramSet:
         return program_sets, index_map
 
     def _executable_blocks(self, max_executables: int) -> list[_ExecutableBlock]:
+        """Enumerate this program set's executables as a list of ``_ExecutableBlock``s in the order
+        of ``enumerate_executables``
+
+        Each block is a contiguous run of executables that share the same
+        ``(circuit, observable list/Sum Hamiltonian, single parameter assignment)`` and can thus be
+        kept together when packing program sets in ``split``. A ``Circuit`` entry and a
+        ``CircuitBinding`` with no input sets each yield a single block; a ``CircuitBinding`` with
+        input sets yields one block per parameter set index. Within a parameter set index,
+        the observables are chunked into slices of at most ``max_executables``, so an observable
+        list or ``Sum`` Hamiltonian larger than the ``max_executables`` is split across multiple
+        blocks with a slice recorded on each.
+
+        Args:
+            max_executables (int): The maximum number of executables per program
+                set. Must be positive.
+
+        Returns:
+            list[_ExecutableBlock]: The blocks in order.
+        """
         blocks = []
         orig_idx = 0
         for prog_idx, prog in enumerate(self._programs):
