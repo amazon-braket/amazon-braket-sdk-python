@@ -33,3 +33,11 @@ __pycache__/
 .venv/
 
 /doc/examples*.rst
+
+# Jekyll local preview artifacts for the cheat sheet
+/doc/cheat_sheet/_site/
+/doc/cheat_sheet/.jekyll-cache/
+/doc/cheat_sheet/.jekyll-metadata
+/doc/cheat_sheet/.bundle/
+/doc/cheat_sheet/vendor/
+/doc/cheat_sheet/Gemfile.lock

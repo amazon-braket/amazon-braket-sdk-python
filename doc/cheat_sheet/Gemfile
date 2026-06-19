@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+# Jekyll builds the static site locally. The deployed site is built by GitHub
+# Pages (the publish workflow uses actions/jekyll-build-pages); this Gemfile
+# gives contributors a faithful local preview of the same sources.
+gem "jekyll", "~> 4.3"
+
+# Ruby 3.0+ dropped webrick from the standard library and `jekyll serve`
+# needs it. Without this line the local server fails to start.
+gem "webrick", "~> 1.8"
