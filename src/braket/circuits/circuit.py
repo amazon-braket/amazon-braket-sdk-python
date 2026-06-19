@@ -1669,8 +1669,8 @@ class Circuit:
         # by any instruction we construct the following set as opposed to just using
         # :attr:`self.qubits` directly
         circuit_qubits = set(
-            range(min(self.qubits), max(self.qubits) + 1)
-        ) if self.qubits else set()
+            set(range(min(self.qubits), max(self.qubits) + 1)) if self.qubits else set()
+        )
 
         if qubits and qubits.intersection(circuit_qubits) != qubits:
             raise ValueError(

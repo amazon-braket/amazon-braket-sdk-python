@@ -3837,7 +3837,9 @@ def test_circuit_count_ops():
     circ = Circuit().h(0).h(1).cnot(0, 1).measure([0, 1]).gphase(0.5)
     assert circ.count("cnot") == 1
     assert circ.count("h") == 2
+    assert circ.count("unknown") == 0
     assert circ.count() == {"cnot": 1, "h": 2, "measure": 2, "gphase": 1}
+    assert circ.count(qubits={0, 1}) == {"cnot": 1, "h": 2, "measure": 2}
     assert circ.count(qubits={0}) == {"cnot": 1, "h": 1, "measure": 1}
     assert circ.count(qubits={0}, operator="h") == 1
 
