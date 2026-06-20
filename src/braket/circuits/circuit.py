@@ -297,6 +297,10 @@ class Circuit:
         Returns:
             Counter[str]: Operator names mapped to occurrence counts.
 
+        Raises:
+            ValueError: If a requested qubit is not part of the circuit. A qubit that is in the
+                circuit but has no matching instructions yields an empty Counter rather than raising.
+
         Examples:
             >>> circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
             >>> circ.count()
@@ -311,6 +315,10 @@ class Circuit:
         include_types_set = set(include_types)
         operator_names_set = set(self._to_operator_names(operators))
         qs = QubitSet(qubits) if qubits is not None else None
+        if qs:
+            missing_qubits = [qubit for qubit in qs if qubit not in self.qubits]
+            if missing_qubits:
+                raise ValueError(f"Qubit(s) {missing_qubits} are not part of the circuit.")
         filter_qubits = qs or None  # empty QubitSet treated as no filter
 
         result: Counter[str] = Counter()

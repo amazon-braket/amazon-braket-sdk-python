@@ -59,13 +59,16 @@ def test_unknown_operator_returns_empty(mixed_circuit):
     assert mixed_circuit.count(operators="ZZZ") == Counter()
 
 
-def test_qubit_not_in_circuit_returns_empty(mixed_circuit):
-    assert mixed_circuit.count(qubits=99) == Counter()
+def test_qubit_not_in_circuit_raises(mixed_circuit):
+    with pytest.raises(ValueError, match="not part of the circuit"):
+        mixed_circuit.count(qubits=99)
 
 
-def test_partial_qubits_not_in_circuit_any(mixed_circuit):
-    assert mixed_circuit.count(qubits=[0, 99]) == Counter({"H": 1, "CNot": 1, "Rx": 1})
+def test_partial_qubits_not_in_circuit_raises(mixed_circuit):
+    with pytest.raises(ValueError, match="not part of the circuit"):
+        mixed_circuit.count(qubits=[0, 99])
 
 
-def test_partial_qubits_not_in_circuit_all(mixed_circuit):
-    assert mixed_circuit.count(qubits=[0, 99], qubit_match=QubitMatch.ALL) == Counter()
+def test_in_circuit_qubit_without_gates_returns_empty():
+    circ = Circuit().h(0).measure(1)
+    assert circ.count(qubits=1) == Counter()
