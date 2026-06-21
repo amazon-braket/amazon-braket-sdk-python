@@ -84,8 +84,6 @@ class LocalSimulator(Device):
             status="AVAILABLE",
         )
         self._delegate = delegate
-        if noise_model:
-            self._validate_device_noise_model_support(noise_model)
         self._noise_model = noise_model
 
     def run(
