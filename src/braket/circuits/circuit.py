@@ -273,6 +273,16 @@ class Circuit:
             return [Circuit._normalize_operator_name(operators)]
         return [Circuit._normalize_operator_name(op) for op in operators]
 
+    @staticmethod
+    def _known_operator_names() -> set[str]:
+        names: set[str] = set()
+        to_visit = Operator.__subclasses__()
+        while to_visit:
+            cls = to_visit.pop()
+            names.add(cls.__name__.upper())
+            to_visit += cls.__subclasses__()
+        return names
+
     def count(
         self,
         operators: OperatorIdentifier | Iterable[OperatorIdentifier] | None = None,
@@ -298,8 +308,8 @@ class Circuit:
             Counter[str]: Operator names mapped to occurrence counts.
 
         Raises:
-            ValueError: If a requested qubit is not part of the circuit. A qubit that is in the
-                circuit but has no matching instructions yields an empty Counter rather than raising.
+            ValueError: If an operator name is not a valid Braket operation, or a requested qubit
+                is not part of the circuit.
 
         Examples:
             >>> circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
@@ -314,6 +324,13 @@ class Circuit:
         """
         include_types_set = set(include_types)
         operator_names_set = set(self._to_operator_names(operators))
+        if operator_names_set:
+            unknown_operators = operator_names_set - self._known_operator_names()
+            if unknown_operators:
+                raise ValueError(
+                    f"Unknown operator(s): {sorted(unknown_operators)}. "
+                    "Operators must be valid Braket operations."
+                )
         qs = QubitSet(qubits) if qubits is not None else None
         if qs:
             missing_qubits = [qubit for qubit in qs if qubit not in self.qubits]

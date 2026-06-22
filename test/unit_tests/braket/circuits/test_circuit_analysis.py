@@ -55,8 +55,13 @@ def test_operator_and_qubit_filters_intersect(mixed_circuit):
     assert mixed_circuit.count(operators="CNot", qubits=[1]) == Counter({"CNot": 1})
 
 
-def test_unknown_operator_returns_empty(mixed_circuit):
-    assert mixed_circuit.count(operators="ZZZ") == Counter()
+def test_unknown_operator_raises(mixed_circuit):
+    with pytest.raises(ValueError, match="Unknown operator"):
+        mixed_circuit.count(operators="ZZZ")
+
+
+def test_valid_operator_absent_from_circuit_returns_empty(mixed_circuit):
+    assert mixed_circuit.count(operators="S") == Counter()
 
 
 def test_qubit_not_in_circuit_raises(mixed_circuit):
