@@ -77,3 +77,42 @@ def test_partial_qubits_not_in_circuit_raises(mixed_circuit):
 def test_in_circuit_qubit_without_gates_returns_empty():
     circ = Circuit().h(0).measure(1)
     assert circ.count(qubits=1) == Counter()
+
+
+def test_empty_operators_list_is_no_filter(mixed_circuit):
+    assert mixed_circuit.count(operators=[]) == mixed_circuit.count()
+
+
+def test_empty_qubits_list_is_no_filter(mixed_circuit):
+    assert mixed_circuit.count(qubits=[]) == mixed_circuit.count()
+
+
+def test_empty_include_types_returns_empty(mixed_circuit):
+    assert mixed_circuit.count(include_types=[]) == Counter()
+
+
+def test_compiler_directive_barrier():
+    circ = Circuit().h(0).cnot(0, 1).barrier([0, 1])
+    assert circ.count() == Counter({"H": 1, "CNot": 1})
+    assert circ.count(include_types=[MomentType.COMPILER_DIRECTIVE]) == Counter({"Barrier": 1})
+    assert circ.count(
+        operators="Barrier", include_types=[MomentType.COMPILER_DIRECTIVE]
+    ) == Counter({"Barrier": 1})
+
+
+def test_runtime_defined_operator():
+    import numpy as np
+
+    from braket.circuits import Gate
+    from braket.circuits.instruction import Instruction
+
+    class RuntimeGate(Gate):
+        def __init__(self):
+            super().__init__(qubit_count=1, ascii_symbols=["RG"])
+
+        def to_matrix(self, *args, **kwargs):
+            return np.eye(2)
+
+    circ = Circuit().add_instruction(Instruction(RuntimeGate(), target=0))
+    assert circ.count(operators="RuntimeGate") == Counter({"RuntimeGate": 1})
+    assert circ.count(operators=RuntimeGate()) == Counter({"RuntimeGate": 1})
