@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.120.0 (2026-06-22)
+
+### Features
+
+ * Add `PauliSum` container
+ * Split program sets
+ * complete the Braket SDK cheat sheet with verified snippets
+
 ## v1.119.1 (2026-06-10)
 
 ### Bug Fixes and Other Changes
