@@ -349,7 +349,23 @@ def test_cancel_without_fetching_result(quantum_task):
     quantum_task.cancel()
 
     assert quantum_task.result() is None
-    assert quantum_task._future.cancelled()
+    quantum_task._aws_session.cancel_quantum_task.assert_called_with(quantum_task.id)
+
+
+def test_cancel_without_event_loop(quantum_task):
+    errors = []
+
+    def run():
+        try:
+            quantum_task.cancel()
+        except BaseException as e:
+            errors.append(e)
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    thread.join()
+
+    assert not errors
     quantum_task._aws_session.cancel_quantum_task.assert_called_with(quantum_task.id)
 
 
