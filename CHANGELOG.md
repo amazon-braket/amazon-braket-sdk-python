@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.121.0 (2026-06-26)
+
+### Deprecations and Removals
+
+ * tn1 retirement
+
+### Bug Fixes and Other Changes
+
+ * task cancellation from non-main thread
+
 ## v1.120.0 (2026-06-22)
 
 ### Features
