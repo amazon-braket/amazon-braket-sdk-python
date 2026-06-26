@@ -25,8 +25,7 @@ from braket.aws.aws_session import AwsSession
 
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
-TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
-SIMULATOR_ARNS = [SV1_ARN, DM1_ARN, TN1_ARN]
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
 
 job_complete_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
 job_fail_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=12))
