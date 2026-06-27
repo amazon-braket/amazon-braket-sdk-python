@@ -9,6 +9,9 @@ This documentation provides information about the Amazon Braket Python SDK libra
 homepage is in Github https://github.com/amazon-braket/amazon-braket-sdk-python. The project
 includes SDK source, installation instructions, and other information.
 
+For a one-page overview of common Amazon Braket SDK calls, see the
+`Amazon Braket SDK cheat sheet <https://amazon-braket.github.io/amazon-braket-sdk-python/>`_.
+
 ***************
 Getting Started
 ***************
