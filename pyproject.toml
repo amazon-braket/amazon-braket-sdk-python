@@ -39,6 +39,7 @@ dependencies = [
     "openqasm3",
     "sympy",
     "backports.entry-points-selectable",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
