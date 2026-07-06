@@ -68,9 +68,6 @@ CREATE_EVENTS = [
         arn="notjob_sim_task:::region", shots=0, is_job_task=False, device="simulator/bar"
     ),
     _TaskCreationEvent(
-        arn="task_fail:::region", shots=0, is_job_task=False, device="simulator/tn1"
-    ),
-    _TaskCreationEvent(
         arn="task_cancel:::region", shots=0, is_job_task=False, device="simulator/baz"
     ),
     _TaskCreationEvent(
@@ -114,7 +111,6 @@ COMPLETE_EVENTS = [
     _TaskCompletionEvent(
         arn="notjob_sim_task:::region", execution_duration=1729, status="COMPLETED"
     ),
-    _TaskCompletionEvent(arn="task_fail:::region", execution_duration=12345, status="FAILED"),
     _TaskCompletionEvent(arn="task_cancel:::region", execution_duration=None, status="CANCELLED"),
     _TaskCompletionEvent(
         arn="unbilled_task0:::region",
@@ -186,7 +182,7 @@ def test_qpu_task_cost(price_mock, completed_tracker):
 def test_simulator_task_cost(price_mock, completed_tracker):
     price_mock.return_value = [{"PricePerUnit": "6.0", "Currency": "USD", "Unit": "minutes"}]
     cost = completed_tracker.simulator_tasks_cost()
-    expected = Decimal("0.0001") * (3000 + 3000 + 12345)
+    expected = Decimal("0.0001") * (3000 + 3000)
     assert cost == expected
 
     price_mock.return_value = []
@@ -212,12 +208,6 @@ def test_quantum_task_statistics(completed_tracker):
             "tasks": {"COMPLETED": 2, "CREATED": 1},
             "execution_duration": timedelta(seconds=1, microseconds=852000),
             "billed_execution_duration": timedelta(seconds=6),
-        },
-        "simulator/tn1": {
-            "shots": 0,
-            "tasks": {"FAILED": 1},
-            "execution_duration": timedelta(seconds=12, microseconds=345000),
-            "billed_execution_duration": timedelta(seconds=12, microseconds=345000),
         },
         "simulator/baz": {"shots": 0, "tasks": {"CANCELLED": 1}},
         "qpu/Ibex-Q1": {"shots": 100, "tasks": {"CREATED": 1}},

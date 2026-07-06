@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.121.0 (2026-06-26)
+
+### Deprecations and Removals
+
+ * tn1 retirement
+
+### Bug Fixes and Other Changes
+
+ * task cancellation from non-main thread
+
+## v1.120.0 (2026-06-22)
+
+### Features
+
+ * Add `PauliSum` container
+ * Split program sets
+ * complete the Braket SDK cheat sheet with verified snippets
+
 ## v1.119.1 (2026-06-10)
 
 ### Bug Fixes and Other Changes
