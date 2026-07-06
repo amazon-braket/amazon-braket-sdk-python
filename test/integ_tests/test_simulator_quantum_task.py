@@ -266,7 +266,6 @@ def test_bell_pair_openqasm_results(
     )
 
 
-@pytest.mark.xfail  # TODO: re-enable once this test case works on managed simulators
 def test_openqasm_probability_results(aws_session, s3_destination_folder, braket_simulators):
     device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/dm1", aws_session)
     openqasm_noisy_circuit_1qubit_noise_full_probability(
