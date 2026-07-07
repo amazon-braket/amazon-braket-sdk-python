@@ -39,19 +39,31 @@ from braket.registers import QubitSet
 
 
 @dataclass
-class _ParsedOpenQASM:
-    lines: Sequence[str]
-    declarations_index: int
-    measure_index: int
+class _AngleInjectionPlan:
+    declarations_offset: int
+    measure_offset: int
     qubit_format: str
     qubits: QubitSet
 
 
-def _parse_openqasm(source: str) -> _ParsedOpenQASM:
-    lines = source.splitlines()
+def _span_offset(node: QASMNode, line_offsets: Sequence[int]) -> int:
+    return line_offsets[node.span.start_line - 1] + node.span.start_column
+
+
+def _plan_injection(source: str) -> _AngleInjectionPlan:
     program = parse(source)
-    declarations_index = 1 if program.version is not None else 0
-    measure_index = len(lines)
+
+    line_offsets = [0]
+    offset = 0
+    for line in source.split("\n")[:-1]:
+        offset += len(line) + 1
+        line_offsets.append(offset)
+
+    declarations_offset = (
+        _span_offset(program.statements[0], line_offsets) if program.statements else len(source)
+    )
+
+    measure_offset = len(source)
     register_name = None
     register_size = 0
     for stmt in program.statements:
@@ -59,9 +71,12 @@ def _parse_openqasm(source: str) -> _ParsedOpenQASM:
             register_name = stmt.qubit.name
             # stmt.size is None for a single unindexed qubit
             register_size = stmt.size.value if isinstance(stmt.size, IntegerLiteral) else 1
-        if isinstance(stmt, QuantumMeasurementStatement) and measure_index == len(lines):
-            # span is 1-indexed; convert to a 0-indexed line index.
-            measure_index = stmt.span.start_line - 1
+
+        measure_offset = (
+            min(measure_offset, _span_offset(stmt, line_offsets))
+            if isinstance(stmt, QuantumMeasurementStatement)
+            else len(source)
+        )
 
     qubit_format, qubits = (
         (f"{register_name}[{{}}]", QubitSet(range(register_size)))
@@ -75,10 +90,9 @@ def _parse_openqasm(source: str) -> _ParsedOpenQASM:
             ),
         )
     )
-    return _ParsedOpenQASM(
-        lines=lines,
-        declarations_index=declarations_index,
-        measure_index=measure_index,
+    return _AngleInjectionPlan(
+        declarations_offset=declarations_offset,
+        measure_offset=measure_offset,
         qubit_format=qubit_format,
         qubits=qubits,
     )
@@ -137,9 +151,11 @@ class CircuitBinding:
         if isinstance(circuit, Circuit) and circuit.result_types:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
-        self._parsed_source = _parse_openqasm(circuit) if isinstance(circuit, str) else None
         self._input_sets = ParameterSets(input_sets) if input_sets else None
         self._observables = CircuitBinding._to_observables(observables)
+        self._injection_plan = (
+            _plan_injection(circuit) if isinstance(circuit, str) and self._observables else None
+        )
 
     @staticmethod
     def _to_observables(
@@ -213,7 +229,10 @@ class CircuitBinding:
             )
         else:
             source = _inject_euler_angles(
-                self._parsed_source, self._euler_rotation_targets(), euler_angles.keys()
+                self._circuit,
+                self._injection_plan,
+                self._euler_rotation_targets(),
+                euler_angles.keys(),
             )
         return Program(
             source=source,
@@ -233,7 +252,7 @@ class CircuitBinding:
     def _circuit_qubits(self) -> QubitSet:
         if isinstance(self._circuit, Circuit):
             return self._circuit.qubits
-        return self._parsed_source.qubits
+        return self._injection_plan.qubits
 
     def _euler_rotation_targets(self) -> QubitSet:
         observables = self._observables
@@ -351,12 +370,16 @@ class CircuitBinding:
                 )
             euler_angles = self._get_euler_angles()
             source = _inject_euler_angles(
-                self._parsed_source, self._euler_rotation_targets(), euler_angles.keys()
+                source,
+                self._injection_plan,
+                self._euler_rotation_targets(),
+                euler_angles.keys(),
             )
             parameters = self._input_sets * euler_angles if parameters else euler_angles
         if inplace:
             self._circuit = source
-            self._parsed_source = _parse_openqasm(source)
+            # Observables are now bound into the source, so no further injection plan is needed.
+            self._injection_plan = None
             self._observables = None
             self._input_sets = parameters
             return self
@@ -389,23 +412,25 @@ class CircuitBinding:
 
 
 def _inject_euler_angles(
-    parsed: _ParsedOpenQASM,
+    source: str,
+    plan: _AngleInjectionPlan,
     targets: QubitSet,
     parameter_names: Sequence[str],
 ) -> str:
     rotations = []
     for q in targets:
         theta, phi, omega = euler_angle_parameter_names(q)
-        formatted = parsed.qubit_format.format(int(q))
+        formatted = plan.qubit_format.format(int(q))
         rotations.extend([
             f"rz({theta}) {formatted};",
             f"rx({phi}) {formatted};",
             f"rz({omega}) {formatted};",
         ])
-    return "\n".join(
-        list(parsed.lines[: parsed.declarations_index])
-        + [f"input float {name};" for name in parameter_names]
-        + list(parsed.lines[parsed.declarations_index : parsed.measure_index])
-        + rotations
-        + list(parsed.lines[parsed.measure_index :])
-    )
+    for offset, statements in (
+        (plan.measure_offset, rotations),
+        (plan.declarations_offset, [f"input float {name};" for name in parameter_names]),
+    ):
+        block = "\n".join(statements)
+        prefix = "" if offset == 0 or source[offset - 1] == "\n" else "\n"
+        source = f"{source[:offset]}{prefix}{block}\n{source[offset:]}"
+    return source

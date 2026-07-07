@@ -16,10 +16,10 @@ import pytest
 from braket.circuits import Circuit
 from braket.circuits.observables import X, Y, Z
 from braket.circuits.serialization import IRType
+from braket.default_simulator.openqasm.parser.openqasm_parser import parse
 from braket.parametric import FreeParameter
 from braket.program_sets import CircuitBinding
 from braket.quantum_information import PauliString
-from braket.registers import QubitSet
 
 
 def _source(circuit):
@@ -182,6 +182,8 @@ def test_string_circuit_no_observables(circuit_rx_parametrized):
     program = cb.to_ir()
     assert program.source == src
     assert program.inputs == {"theta": [1.23, 3.21]}
+    # With no observables to inject, the source is emitted verbatim and never parsed.
+    assert cb._injection_plan is None
 
 
 def test_string_circuit_matches_circuit_to_ir(circuit_rx_parametrized):
@@ -250,8 +252,8 @@ def test_string_circuit_custom_register_name():
 
 
 def test_string_circuit_no_measure_or_version_line():
-    # Source with no `OPENQASM 3.0;` line and no measurement — exercises the fallback branches
-    # of _parse_source for declarations_index and measure_index.
+    # Source with no `OPENQASM 3.0;` line and no measurement — exercises the fallback offsets
+    # of _plan_injection for declarations_offset and measure_offset.
     src = "qubit[2] q;\nh q[0];\ncnot q[0], q[1];"
     cb = CircuitBinding(src, observables=[X(0) @ Y(1)])
     serialized = cb.to_ir().source
@@ -261,41 +263,100 @@ def test_string_circuit_no_measure_or_version_line():
     assert serialized.rstrip().endswith("rz(_OBSERVABLE_OMEGA_1) q[1];")
 
 
-def test_parse_openqasm_physical_when_no_register_declared():
-    # With no `qubit[N] <name>;` declaration, the source is treated as addressing physical
-    # qubits (`$N`).
-    from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
+def test_string_circuit_single_line_source():
+    # A newline-free program must inject the same statements as its multi-line equivalent.
+    multiline = (
+        "OPENQASM 3.0;\n"
+        "input float theta;\n"
+        "bit[2] b;\n"
+        "qubit[2] q;\n"
+        "rx(theta) q[0];\n"
+        "cnot q[0], q[1];\n"
+        "b[0] = measure q[0];\n"
+        "b[1] = measure q[1];"
+    )
+    single_line = multiline.replace("\n", " ")
+    observable = [X(0) @ Z(1)]
+    ml_program = CircuitBinding(multiline, {"theta": [0.5]}, observable).to_ir()
+    sl_program = CircuitBinding(single_line, {"theta": [0.5]}, observable).to_ir()
+    assert sl_program.inputs == ml_program.inputs
+    # The injected statements match; only the original (un-split) lines differ in packing.
+    injected = "input float _OBSERVABLE"
+    assert sl_program.source.count(injected) == ml_program.source.count(injected)
+    # Both forms parse back into the same circuit.
+    assert Circuit.from_ir(sl_program.source) == Circuit.from_ir(ml_program.source)
 
-    parsed = _parse_openqasm("rx(0.5) $0;\ncnot $0, $1;")
-    assert parsed.qubit_format == "${}"
-    assert parsed.qubits == QubitSet([0, 1])
+
+def test_string_circuit_single_line_reparses():
+    # The injected single-line result must be valid OpenQASM that round-trips through from_ir.
+    src = "OPENQASM 3.0; bit[1] b; qubit[1] q; rx(0.5) q[0]; b[0] = measure q[0];"
+    serialized = CircuitBinding(src, observables=[X(0)]).to_ir().source
+    assert "input float _OBSERVABLE_THETA_0;" in serialized
+    assert "rz(_OBSERVABLE_THETA_0) q[0];" in serialized
+    # Rotations are injected before the measurement.
+    assert serialized.index("rz(_OBSERVABLE_THETA_0)") < serialized.index("measure q[0]")
+    Circuit.from_ir(serialized)
 
 
-def test_parse_openqasm_qubit_count_from_declaration():
-    # The qubit set comes from the register declaration size, covering broadcast gates
-    # like `h q;` that carry no explicit index.
-    from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
+def test_string_circuit_midcircuit_measurement():
+    # With a mid-circuit measurement, rotations must anchor before the *terminal* measurement
+    # block, not the first measurement — otherwise the basis change lands ahead of a readout it
+    # is not meant to affect and no-ops for the terminal readout.
+    src = (
+        "OPENQASM 3.0;\n"
+        "bit[2] b;\n"
+        "qubit[2] q;\n"
+        "h q[0];\n"
+        "b[0] = measure q[0];\n"  # mid-circuit measurement
+        "if (b[0]) x q[1];\n"
+        "b[1] = measure q[1];"  # terminal measurement
+    )
+    serialized = CircuitBinding(src, observables=[X(0) @ Z(1)]).to_ir().source
+    # Rotations sit after the mid-circuit measurement + branch, before the terminal measurement.
+    assert (
+        serialized.index("b[0] = measure")
+        < serialized.index("if (b[0])")
+        < serialized.index("rz(_OBSERVABLE_THETA_0)")
+        < serialized.index("b[1] = measure")
+    )
+    # The result is still valid OpenQASM.
+    parse(serialized)
 
-    parsed = _parse_openqasm("OPENQASM 3.0;\nqubit[3] q;\nh q;")
-    assert parsed.qubit_format == "q[{}]"
-    assert parsed.qubits == QubitSet([0, 1, 2])
+
+def test_string_circuit_measurement_then_gate_is_not_terminal():
+    # A lone measurement followed by a gate is not a terminal-measurement block; rotations
+    # append at the end (fallback), leaving the earlier measurement untouched.
+    src = "OPENQASM 3.0;\nqubit[1] q;\nh q[0];\nb[0] = measure q[0];\nx q[0];"
+    serialized = CircuitBinding(src, observables=[X(0)]).to_ir().source
+    assert serialized.index("x q[0];") < serialized.index("rz(_OBSERVABLE_THETA_0)")
+    assert serialized.rstrip().endswith("rz(_OBSERVABLE_OMEGA_0) q[0];")
 
 
-def test_parse_openqasm_single_unindexed_qubit():
-    # `qubit q;` (no size) declares a single qubit at index 0.
-    from braket.program_sets.circuit_binding import _parse_openqasm  # noqa: PLC0415
-
-    parsed = _parse_openqasm("OPENQASM 3.0;\nqubit q;\nh q;")
-    assert parsed.qubits == QubitSet([0])
+def test_string_circuit_no_instructions():
+    # An instruction-free (header-only) program has no statements; injected declarations and
+    # rotations append after the header, and the result stays valid OpenQASM.
+    serialized = CircuitBinding("OPENQASM 3.0;", observables=[X(0)]).to_ir().source
+    assert serialized.startswith("OPENQASM 3.0;")
+    assert "input float _OBSERVABLE_THETA_0;" in serialized
+    assert "rz(_OBSERVABLE_THETA_0) $0;" in serialized
+    parse(serialized)
 
 
 def test_string_circuit_broadcast_gate():
-    # A register-broadcast gate (`h q;`) should still yield Euler rotations on every qubit.
+    # A register-broadcast gate (`h q;`) should still yield Euler rotations on every qubit,
+    # driven by the declared register size rather than explicit `q[i]` references.
     src = "OPENQASM 3.0;\nqubit[2] q;\nh q;"
-    cb = CircuitBinding(src, observables=[X(0) @ Y(1)])
-    serialized = cb.to_ir().source
+    serialized = CircuitBinding(src, observables=[X(0) @ Y(1)]).to_ir().source
     assert "rz(_OBSERVABLE_THETA_0) q[0];" in serialized
     assert "rz(_OBSERVABLE_THETA_1) q[1];" in serialized
+
+
+def test_string_circuit_single_unindexed_qubit():
+    # `qubit q;` (no size) declares a single qubit at index 0.
+    src = "OPENQASM 3.0;\nqubit q;\nh q;"
+    serialized = CircuitBinding(src, observables=[X(0)]).to_ir().source
+    assert "rz(_OBSERVABLE_THETA_0) q[0];" in serialized
+    assert "q[1]" not in serialized
 
 
 def test_circuit_binding_dunders(circuit_rx_parametrized):
@@ -333,6 +394,8 @@ def test_string_circuit_bind_observables_to_inputs(circuit_rx_parametrized):
 
     cb1.bind_observables_to_inputs(inplace=True)
     assert cb1 == cb2
+    # Observables are now folded into the source, so no injection plan remains.
+    assert cb1._injection_plan is None
 
 
 def test_string_circuit_bind_no_observables(circuit_rx_parametrized):
