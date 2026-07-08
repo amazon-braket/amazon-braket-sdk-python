@@ -68,6 +68,7 @@ def _plan_injection(source: str) -> _AngleInjectionPlan:
     register_size = 0
     for stmt in program.statements:
         if isinstance(stmt, QubitDeclaration) and register_name is None:
+            # TODO: support multiple qubit registers
             register_name = stmt.qubit.name
             # stmt.size is None for a single unindexed qubit
             register_size = stmt.size.value if isinstance(stmt.size, IntegerLiteral) else 1
@@ -216,7 +217,7 @@ class CircuitBinding:
         """
         if not self._observables:
             return Program(
-                source=self._circuit_source(gate_definitions),
+                source=self._circuit_openqasm(gate_definitions),
                 inputs=self._input_sets.as_dict() if self._input_sets else None,
             )
         euler_angles = self._get_euler_angles()
@@ -241,7 +242,7 @@ class CircuitBinding:
             ).as_dict(),
         )
 
-    def _circuit_source(
+    def _circuit_openqasm(
         self,
         gate_definitions: Mapping[tuple[Gate, QubitSet], PulseSequence] | None,
     ) -> str:
@@ -259,7 +260,8 @@ class CircuitBinding:
         circuit_qubits = self._circuit_qubits()
         if isinstance(observables, Sum):
             if observables.targets:
-                return QubitSet(t for obs in observables.summands for t in obs.targets)
+                # Sum.targets is a per-summand list of QubitSets
+                return QubitSet().union(*observables.targets)
             return circuit_qubits
         targets = QubitSet()
         for obs in observables:
