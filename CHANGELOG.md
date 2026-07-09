@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.122.0 (2026-07-08)
+
+### Features
+
+ * Allow OpenQASM strings in `CircuitBinding`
+
 ## v1.121.0 (2026-06-26)
 
 ### Deprecations and Removals
