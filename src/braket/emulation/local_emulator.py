@@ -75,6 +75,7 @@ class LocalEmulator(Emulator):
             device_em_properties = DeviceEmulatorProperties.from_device_properties(
                 device_properties
             )
+            kwargs["device_capabilities"] = device_properties
         else:
             raise TypeError(
                 f"device_properties must be an instance of either DeviceCapabilities or "

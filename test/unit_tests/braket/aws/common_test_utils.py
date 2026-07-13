@@ -22,7 +22,6 @@ IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
-TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 XANADU_ARN = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
 
 RIGETTI_REGION = "us-west-1"

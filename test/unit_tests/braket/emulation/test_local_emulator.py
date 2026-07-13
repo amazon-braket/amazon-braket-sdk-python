@@ -46,6 +46,7 @@ def test_from_device_properties(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
+    assert emulator.properties is device_properties
 
 
 def test_from_device_properties_non_fully_connected(reduced_standardized_json_2):
