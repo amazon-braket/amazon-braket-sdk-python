@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.123.0 (2026-07-10)
+
+### Features
+
+ * Add `properties` to `Device` and `Emulator`
+
 ## v1.122.0 (2026-07-08)
 
 ### Features
