@@ -31,7 +31,7 @@ from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
-from braket.pulse.waveforms import Waveform
+from braket.pulse.waveforms import Waveform, WaveformDict
 from braket.registers.qubit_set import QubitSet
 
 
@@ -44,8 +44,12 @@ class PulseSequence:
         self._capture_v0_count = 0
         self._program = Program(simplify_constants=False)
         self._frames = {}
-        self._waveforms = {}
+        self._waveforms = WaveformDict({}, self)
         self._free_parameters = set()
+
+    @property
+    def waveforms(self) -> WaveformDict:
+        return self._waveforms
 
     def to_time_trace(self) -> PulseSequenceTrace:
         """Generate an approximate trace of the amplitude, frequency, phase for each frame
