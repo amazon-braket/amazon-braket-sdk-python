@@ -32,7 +32,6 @@ from common_test_utils import (
     RIGETTI_ARN,
     RIGETTI_REGION,
     SV1_ARN,
-    TN1_ARN,
     run_and_assert,
     run_batch_and_assert,
 )
@@ -219,7 +218,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Ankaa-2",
+    "deviceName": "Cepheus-1-108Q",
     "deviceType": "QPU",
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
@@ -977,7 +976,7 @@ def test_device_simulator_not_found():
             "Error": {
                 "Code": "ResourceNotFoundException",
                 "Message": (
-                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/dm1' "
                     "not found in us-west-1. You can find a list of all supported device "
                     "ARNs and the regions in which they are available in the documentation: "
                     "https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html"
@@ -1001,7 +1000,7 @@ def test_device_qpu_not_found(mock_copy_session):
             "Error": {
                 "Code": "ResourceNotFoundException",
                 "Message": (
-                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/dm1' "
                     "not found in us-west-1. You can find a list of all supported device "
                     "ARNs and the regions in which they are available in the documentation: "
                     "https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html"
@@ -1025,7 +1024,7 @@ def test_device_qpu_exception(mock_copy_session):
                 "Error": {
                     "Code": "ResourceNotFoundException",
                     "Message": (
-                        "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                        "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/dm1' "
                         "not found in us-west-1. You can find a list of all supported device "
                         "ARNs and the regions in which they are available in the documentation: "
                         "https://docs.aws.amazon.com/braket/latest/developerguide/braket-"
@@ -1491,7 +1490,7 @@ def test_run_device_poll_interval_kwargs(
     capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
     capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
     properties = {
-        "deviceName": "Ankaa-2",
+        "deviceName": "Cepheus-1-108Q",
         "deviceType": "QPU",
         "providerName": "provider1",
         "deviceStatus": "OFFLINE",
@@ -1851,7 +1850,7 @@ def test_get_devices_simulators_only(mock_copy_session, aws_session):
     session_for_region.get_device.side_effect = ValueError("should not be reachable")
     mock_copy_session.return_value = session_for_region
     results = AwsDevice.get_devices(
-        arns=[SV1_ARN, TN1_ARN],
+        arns=[SV1_ARN, DM1_ARN],
         types=["SIMULATOR"],
         provider_names=["Amazon Braket"],
         statuses=["ONLINE"],
@@ -2466,7 +2465,7 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 @pytest.fixture
 def mock_rigetti_qpu_device(rigetti_device_capabilities):
     return {
-        "deviceName": "Ankaa-2",
+        "deviceName": "Cepheus-1-108Q",
         "deviceType": "QPU",
         "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",

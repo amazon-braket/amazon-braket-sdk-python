@@ -121,3 +121,10 @@ def test_backend_noise_model_warning(local_dm_simulator):
         emulator = Emulator(local_dm_simulator)
         circuit = Circuit().h(0)
         emulator.run(circuit, shots=1)
+
+
+def test_emulator_properties(local_dm_simulator):
+    device_capabilities = local_dm_simulator.properties
+    emulator = Emulator(local_dm_simulator, device_capabilities=device_capabilities)
+
+    assert emulator.properties is device_capabilities

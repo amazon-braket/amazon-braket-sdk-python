@@ -142,10 +142,11 @@ def test_load_job_checkpoint(
         with open(file_path, "w") as f:
             f.write(saved_data)
 
+        allow_pickle = data_format == PersistedJobDataFormat.PICKLED_V4
         with patch.dict(
             os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
         ):
-            loaded_data = load_job_checkpoint(job_name, file_suffix)
+            loaded_data = load_job_checkpoint(job_name, file_suffix, allow_pickle=allow_pickle)
             assert loaded_data == expected_checkpoint_data
 
 
@@ -188,7 +189,7 @@ def test_load_job_checkpoint_raises_error_corrupted_data():
         with patch.dict(
             os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
         ):
-            load_job_checkpoint(job_name, file_suffix)
+            load_job_checkpoint(job_name, file_suffix, allow_pickle=True)
 
 
 @dataclass
@@ -211,7 +212,7 @@ def test_save_and_load_job_checkpoint():
             os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
         ):
             save_job_checkpoint(data, data_format=PersistedJobDataFormat.PICKLED_V4)
-            retrieved = load_job_checkpoint(job_name)
+            retrieved = load_job_checkpoint(job_name, allow_pickle=True)
             assert retrieved == data
 
 
@@ -308,7 +309,10 @@ def test_update_result_data(
             save_job_result(first_result_data, first_data_format)
             save_job_result(second_result_data, second_data_format)
 
-            assert load_job_result() == expected_result_data
+            allow_pickle = first_data_format == PersistedJobDataFormat.PICKLED_V4 or (
+                second_data_format == PersistedJobDataFormat.PICKLED_V4
+            )
+            assert load_job_result(allow_pickle=allow_pickle) == expected_result_data
 
 
 def test_update_pickled_results_as_plaintext_error():
@@ -322,3 +326,22 @@ def test_update_pickled_results_as_plaintext_error():
             )
             with pytest.raises(TypeError, match=cannot_convert_pickled_to_plaintext):
                 save_job_result("hello", PersistedJobDataFormat.PLAINTEXT)
+
+
+def test_load_job_result_raises_without_allow_pickle():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        with patch.dict(os.environ, {"AMZN_BRAKET_JOB_RESULTS_DIR": tmp_dir}):
+            save_job_result({"key": "value"}, PersistedJobDataFormat.PICKLED_V4)
+            with pytest.raises(RuntimeError, match="pickle deserialization is disabled by default"):
+                load_job_result()
+
+
+def test_load_job_checkpoint_raises_without_allow_pickle():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        job_name = "test_job"
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
+            save_job_checkpoint({"key": "value"}, data_format=PersistedJobDataFormat.PICKLED_V4)
+            with pytest.raises(RuntimeError, match="pickle deserialization is disabled by default"):
+                load_job_checkpoint(job_name)

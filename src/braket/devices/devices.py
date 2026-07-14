@@ -17,7 +17,7 @@ from enum import StrEnum
 class Devices:
     class _Amazon(StrEnum):
         SV1 = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
-        TN1 = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
+        _TN1 = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
         DM1 = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 
     class _AQT(StrEnum):
@@ -56,7 +56,8 @@ class Devices:
         _AspenM2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2"
         _AspenM3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
         _Ankaa2 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-2"
-        Ankaa3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-3"
+        _Ankaa3 = "arn:aws:braket:us-west-1::device/qpu/rigetti/Ankaa-3"
+        Cepheus1108Q = "arn:aws:braket:us-west-1::device/qpu/rigetti/Cepheus-1-108Q"
 
     class _Xanadu(StrEnum):
         _Borealis = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"

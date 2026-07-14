@@ -1,5 +1,118 @@
 # Changelog
 
+## v1.124.0 (2026-07-14)
+
+### Features
+
+ * count circuit operation on circuit or given qubits
+
+## v1.123.0.post0 (2026-07-13)
+
+### Documentation Changes
+
+ * add cheat sheet links
+
+## v1.123.0 (2026-07-10)
+
+### Features
+
+ * Add `properties` to `Device` and `Emulator`
+
+## v1.122.0 (2026-07-08)
+
+### Features
+
+ * Allow OpenQASM strings in `CircuitBinding`
+
+## v1.121.0 (2026-06-26)
+
+### Deprecations and Removals
+
+ * tn1 retirement
+
+### Bug Fixes and Other Changes
+
+ * task cancellation from non-main thread
+
+## v1.120.0 (2026-06-22)
+
+### Features
+
+ * Add `PauliSum` container
+ * Split program sets
+ * complete the Braket SDK cheat sheet with verified snippets
+
+## v1.119.1 (2026-06-10)
+
+### Bug Fixes and Other Changes
+
+ * support division in FreeParameterExpression string constructor
+
+## v1.119.0 (2026-06-09)
+
+### Features
+
+ * support math functions in FreeParameterExpression
+
+## v1.118.0 (2026-06-04)
+
+### Deprecations and Removals
+
+ * `Circuit.to_ir` default to OpenQASM, warn on JAQCD
+
+## v1.117.4 (2026-06-03)
+
+### Bug Fixes and Other Changes
+
+ * raise DiscretizationError when rydbergLocal params missing
+
+## v1.117.3 (2026-05-14)
+
+### Bug Fixes and Other Changes
+
+ * add barrier adjoint
+
+## v1.117.2 (2026-05-11)
+
+### Bug Fixes and Other Changes
+
+ * use sparse dict for PauliString
+ * a couple of typos
+
+## v1.117.1 (2026-04-29)
+
+### Bug Fixes and Other Changes
+
+ * FreeParameterExpression.subs() crash when expression is a plain Number
+
+## v1.117.0 (2026-04-24)
+
+### Deprecations and Removals
+
+ * Disable pickle deserialization by default for security
+
+## v1.116.0 (2026-04-20)
+
+### Deprecations and Removals
+
+ * Retire Rigetti Ankaa-3
+
+## v1.115.0 (2026-04-07)
+
+### Features
+
+ * launch cepheus device
+
+### Bug Fixes and Other Changes
+
+ * rename Devices.Rigetti.Cepheus1 to Cepheus1108Q to match device name
+
+## v1.114.0 (2026-03-23)
+
+### Features
+
+ * wrap circuit diagrams
+
 ## v1.113.1 (2026-03-18)
 
 ### Bug Fixes and Other Changes

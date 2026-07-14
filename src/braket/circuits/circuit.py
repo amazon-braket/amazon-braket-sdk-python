@@ -13,8 +13,10 @@
 
 from __future__ import annotations
 
+import warnings
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
+from enum import StrEnum
 from numbers import Number
 from typing import Any, TypeVar
 
@@ -44,6 +46,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable, euler_angle_parameter_names
 from braket.circuits.observables import Sum, TensorProduct
+from braket.circuits.operator import Operator
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.result_type import (
     ObservableParameterResultType,
@@ -70,6 +73,16 @@ SubroutineReturn = TypeVar(
 )
 SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., SubroutineReturn])
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
+
+
+class QubitMatch(StrEnum):
+    """Controls how multiple qubits are matched in count."""
+
+    ANY = "ANY"
+    ALL = "ALL"
+
+
+OperatorIdentifier = str | type[Operator] | Operator
 
 
 class Circuit:
@@ -241,6 +254,110 @@ class Circuit:
             set[FreeParameter]: The `FreeParameters` in the Circuit.
         """
         return self._parameters
+
+    @staticmethod
+    def _normalize_operator_name(identifier: OperatorIdentifier) -> str:
+        if isinstance(identifier, type):
+            return identifier.__name__.upper()
+        if isinstance(identifier, str):
+            return identifier.upper()
+        return identifier.name.upper()
+
+    @staticmethod
+    def _to_operator_names(
+        operators: OperatorIdentifier | Iterable[OperatorIdentifier] | None,
+    ) -> list[str]:
+        if operators is None:
+            return []
+        if isinstance(operators, (str, type, Operator)):
+            return [Circuit._normalize_operator_name(operators)]
+        return [Circuit._normalize_operator_name(op) for op in operators]
+
+    @staticmethod
+    def _known_operator_names() -> set[str]:
+        names: set[str] = set()
+        to_visit = Operator.__subclasses__()
+        while to_visit:
+            cls = to_visit.pop()
+            names.add(cls.__name__.upper())
+            to_visit += cls.__subclasses__()
+        return names
+
+    def count(
+        self,
+        operators: OperatorIdentifier | Iterable[OperatorIdentifier] | None = None,
+        qubits: QubitInput | Iterable[QubitInput] | None = None,
+        qubit_match: QubitMatch = QubitMatch.ANY,
+        include_types: Iterable[MomentType] = (MomentType.GATE,),
+    ) -> Counter[str]:
+        """
+        Count instructions in the circuit with optional filtering.
+
+        When both ``operators`` and ``qubits`` are specified, an instruction must satisfy
+        both filters to be counted (AND semantics).
+
+        Args:
+            operators: Filter by operator name or type. Defaults to None (no filter).
+            qubits: Filter by qubit. Matched against the union of target and control qubits.
+            qubit_match (QubitMatch): How multiple qubits relate. ANY = instruction on
+            any specified qubit; ALL = instruction on all specified qubits. Default ANY.
+            include_types (Iterable[MomentType]): Moment types to count. Default: GATE only.
+                Pass additional MomentType values to include noise, measures, etc.
+
+        Returns:
+            Counter[str]: Operator names mapped to occurrence counts.
+
+        Raises:
+            ValueError: If an operator name is not a valid Braket operation, or a requested qubit
+                is not part of the circuit.
+
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1).rx(0, 0.5)
+            >>> circ.count()
+            Counter({'H': 1, 'CNot': 1, 'Rx': 1})
+            >>> circ.count("h")
+            Counter({'H': 1})
+            >>> circ.count(["H", "CNot"])
+            Counter({'H': 1, 'CNot': 1})
+            >>> circ.count(qubits=0)
+            Counter({'H': 1, 'CNot': 1, 'Rx': 1})
+        """
+        include_types_set = set(include_types)
+        operator_names_set = set(self._to_operator_names(operators))
+        if operator_names_set:
+            unknown_operators = operator_names_set - self._known_operator_names()
+            if unknown_operators:
+                raise ValueError(
+                    f"Unknown operator(s): {sorted(unknown_operators)}. "
+                    "Operators must be valid Braket operations."
+                )
+        qs = QubitSet(qubits) if qubits is not None else None
+        if qs:
+            missing_qubits = [qubit for qubit in qs if qubit not in self.qubits]
+            if missing_qubits:
+                raise ValueError(f"Qubit(s) {missing_qubits} are not part of the circuit.")
+        filter_qubits = qs or None  # empty QubitSet treated as no filter
+
+        result: Counter[str] = Counter()
+
+        for key, instruction in self.moments.items():
+            if key.moment_type not in include_types_set:
+                continue
+
+            instr_qubits = instruction.target.union(instruction.control)
+            instr_name_upper = instruction.operator.name.upper()
+
+            qubit_pass = filter_qubits is None or (
+                any(q in instr_qubits for q in filter_qubits)
+                if qubit_match == QubitMatch.ANY
+                else all(q in instr_qubits for q in filter_qubits)
+            )
+            operator_pass = not operator_names_set or instr_name_upper in operator_names_set
+
+            if qubit_pass and operator_pass:
+                result[instruction.operator.name] += 1
+
+        return result
 
     def with_euler_angles(self, observables: Sequence[Observable] | Sum) -> Circuit:
         """Returns a copy of the circuit with parametrized Euler angles on the observables' qubits
@@ -1311,7 +1428,7 @@ class Circuit:
 
     def to_ir(
         self,
-        ir_type: IRType = IRType.JAQCD,
+        ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties | None = None,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> OpenQasmProgram | JaqcdProgram:
@@ -1337,6 +1454,10 @@ class Circuit:
         """
         gate_definitions = gate_definitions or {}
         if ir_type == IRType.JAQCD:
+            warnings.warn(
+                "The JAQCD action type is deprecated. Please use OpenQASM 3 programs instead.",
+                stacklevel=2,
+            )
             return self._to_jaqcd()
         if ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(

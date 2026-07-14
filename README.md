@@ -9,6 +9,9 @@
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
 
+## Quick reference
+For a one-page overview of common Amazon Braket SDK calls, see the [Amazon Braket SDK cheat sheet](https://amazon-braket.github.io/amazon-braket-sdk-python/).
+
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
@@ -140,7 +143,7 @@ from braket.aws import AwsDevice
 from braket.circuits import Circuit
 from braket.devices import Devices
 
-device = AwsDevice(Devices.Rigetti.Ankaa3)
+device = AwsDevice(Devices.Rigetti.Cepheus1108Q)
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell)

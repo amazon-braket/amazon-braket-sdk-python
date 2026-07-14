@@ -46,6 +46,7 @@ def test_from_device_properties(reduced_standardized_json):
     device_properties = IqmDeviceCapabilities.parse_raw(reduced_standardized_json)
     emulator = LocalEmulator.from_device_properties(device_properties)
     assert isinstance(emulator, LocalEmulator)
+    assert emulator.properties is device_properties
 
 
 def test_from_device_properties_non_fully_connected(reduced_standardized_json_2):
@@ -89,6 +90,13 @@ def test_validate_valid_verbatim_circ_ankaa3(
 ):
     emulator = LocalEmulator.from_json(reduced_standardized_json_2)
     emulator.validate(valid_verbatim_circ_ankaa3)
+
+
+def test_validate_valid_verbatim_circ_cepheus1(
+    reduced_standardized_json_4, valid_verbatim_circ_cepheus1
+):
+    emulator = LocalEmulator.from_json(reduced_standardized_json_4)
+    emulator.validate(valid_verbatim_circ_cepheus1)
 
 
 def test_validate_valid_verbatim_circ_aria_1(

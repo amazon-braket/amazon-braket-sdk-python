@@ -16,7 +16,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from braket.device_schema import DeviceActionType
+from braket.device_schema import DeviceActionType, DeviceCapabilities
 
 from braket.circuits.noise_model import NoiseModel
 from braket.circuits.translations import SUPPORTED_NOISE_PRAGMA_TO_NOISE
@@ -109,6 +109,11 @@ class Device(ABC):
             str: The status of this Device
         """
         return self._status
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        """DeviceCapabilities: Return the device properties."""
+        raise NotImplementedError("Device properties are not implemented for this device.")
 
     def _validate_device_noise_model_support(self, noise_model: NoiseModel) -> None:
         supported_noises = {

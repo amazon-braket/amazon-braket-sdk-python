@@ -95,3 +95,6 @@ class Barrier(CompilerDirective):
                 return f"barrier {qubits};"
             return "barrier;"
         return super().to_ir(target, ir_type, serialization_properties, **kwargs)
+
+    def counterpart(self) -> CompilerDirective:
+        return Barrier(self._qubit_indices)
