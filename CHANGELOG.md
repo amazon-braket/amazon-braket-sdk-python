@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.124.0 (2026-07-14)
+
+### Features
+
+ * count circuit operation on circuit or given qubits
+
 ## v1.123.0.post0 (2026-07-13)
 
 ### Documentation Changes
