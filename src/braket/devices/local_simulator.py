@@ -192,13 +192,10 @@ class LocalSimulator(Device):
 
         tasks_and_inputs = zip(task_specifications, inputs, strict=False)
 
-        if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
-        else:
-            tasks_and_inputs = list(tasks_and_inputs)
-
         payloads = []
-        for task_specification, input_map in tasks_and_inputs:
+        for task_specification, input_map in (
+            [next(tasks_and_inputs)] if single_task and single_input else list(tasks_and_inputs)
+        ):
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
                 if unbounded_parameters := param_names - set(input_map.keys()):
