@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
 from typing import Any
@@ -31,6 +32,12 @@ from braket.pulse.pulse_sequence import PulseSequence
 from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task import TaskResult, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
+
+_TaskInputsGateDefinitions = tuple[
+    TaskSpecification,
+    dict[str, float],
+    dict[tuple[Gate, QubitSet], PulseSequence],
+]
 
 
 class AwsQuantumTaskBatch(QuantumTaskBatch):
@@ -53,7 +60,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         device_arn: str,
         task_specifications: TaskSpecification | list[TaskSpecification],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int,
+        shots: int | Sequence[int],
         max_parallel: int,
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -79,10 +86,11 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
                 to store quantum task results in.
-            shots (int): The number of times to run the quantum task on the device. If the device is
-                a simulator, this implies the state is sampled N times, where N = `shots`.
-                `shots=0` is only available on simulators and means that the simulator
-                will compute the exact results based on the quantum task specification.
+            shots (int | Sequence[int]): The number of times to run each quantum task on the
+                device. If an integer, this value is used for every task. If a sequence, each
+                element is used for the corresponding task. On a simulator, `shots=0` means
+                that the simulator will compute the exact results based on the quantum task
+                specification.
             max_parallel (int): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device.
@@ -108,18 +116,19 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 capability context will be used if active. Default: None.
             **aws_quantum_task_kwargs (Any): Arbitrary kwargs for `QuantumTask`.,
         """  # noqa: E501
+        tasks_inputs_gatedefs = AwsQuantumTaskBatch._tasks_inputs_gatedefs(
+            task_specifications, inputs, gate_definitions
+        )
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
             device_arn,
-            task_specifications,
+            tasks_inputs_gatedefs,
             s3_destination_folder,
             shots,
             max_parallel,
             max_workers,
             poll_timeout_seconds,
             poll_interval_seconds,
-            inputs,
-            gate_definitions,
             reservation_arn,
             experimental_capabilities,
             *aws_quantum_task_args,
@@ -131,15 +140,15 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         # Cache execution inputs for retries.
         self._device_arn = device_arn
-        self._task_specifications = task_specifications
+        self._tasks_inputs_gatedefs = tasks_inputs_gatedefs
         self._s3_destination_folder = s3_destination_folder
-        self._shots = shots
+        self._shots = AwsQuantumTaskBatch._normalize_shots(shots, len(tasks_inputs_gatedefs))
         self._max_parallel = max_parallel
         self._max_workers = max_workers
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
-        self._inputs = inputs
         self._reservation_arn = reservation_arn
+        self._experimental_capabilities = experimental_capabilities
         self._aws_quantum_task_args = aws_quantum_task_args
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
@@ -150,13 +159,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence]
         | list[dict[tuple[Gate, QubitSet], PulseSequence]]
         | None = None,
-    ) -> list[
-        tuple[
-            TaskSpecification,
-            dict[str, float],
-            dict[tuple[Gate, QubitSet], PulseSequence],
-        ]
-    ]:
+    ) -> list[_TaskInputsGateDefinitions]:
         inputs = inputs or {}
         gate_definitions = gate_definitions or {}
 
@@ -200,30 +203,35 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return tasks_inputs_definitions
 
     @staticmethod
+    def _normalize_shots(
+        shots: int | Sequence[int],
+        batch_length: int,
+    ) -> list[int]:
+        if isinstance(shots, Sequence):
+            if len(shots) != batch_length:
+                raise ValueError("Multiple shots and quantum tasks must be equal in number.")
+            if any(shot is None for shot in shots):
+                raise ValueError("Shots must be specified for every quantum task.")
+            return list(shots)
+        return list(repeat(shots, batch_length))
+
+    @staticmethod
     def _execute(
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: TaskSpecification | list[TaskSpecification],
+        tasks_inputs_gatedefs: Sequence[_TaskInputsGateDefinitions],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int,
+        shots: int | Sequence[int],
         max_parallel: int,
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: dict[str, float] | list[dict[str, float]] | None = None,
-        gate_definitions: (
-            dict[tuple[Gate, QubitSet], PulseSequence]
-            | list[dict[tuple[Gate, QubitSet], PulseSequence]]
-            | None
-        ) = None,
         reservation_arn: str | None = None,
         experimental_capabilities: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
-        tasks_inputs_gatedefs = AwsQuantumTaskBatch._tasks_inputs_gatedefs(
-            task_specifications, inputs, gate_definitions
-        )
+        task_shots = AwsQuantumTaskBatch._normalize_shots(shots, len(tasks_inputs_gatedefs))
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in tasks_inputs_gatedefs]
         try:
@@ -236,7 +244,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         device_arn,
                         task,
                         s3_destination_folder,
-                        shots,
+                        shots_for_task,
                         poll_timeout_seconds=poll_timeout_seconds,
                         poll_interval_seconds=poll_interval_seconds,
                         inputs=input_map,
@@ -246,7 +254,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                         *args,
                         **kwargs,
                     )
-                    for task, input_map, gatedefs in tasks_inputs_gatedefs
+                    for (task, input_map, gatedefs), shots_for_task in zip(
+                        tasks_inputs_gatedefs, task_shots, strict=True
+                    )
                 ]
         except KeyboardInterrupt:
             # If an exception is thrown before the thread pool has finished,
@@ -369,14 +379,15 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         retried_tasks = AwsQuantumTaskBatch._execute(
             self._aws_session,
             self._device_arn,
-            [self._task_specifications[i] for i in unsuccessful_indices],
+            [self._tasks_inputs_gatedefs[i] for i in unsuccessful_indices],
             self._s3_destination_folder,
-            self._shots,
+            [self._shots[i] for i in unsuccessful_indices],
             self._max_parallel,
             self._max_workers,
             self._poll_timeout_seconds,
             self._poll_interval_seconds,
             self._reservation_arn,
+            self._experimental_capabilities,
             *self._aws_quantum_task_args,
             **self._aws_quantum_task_kwargs,
         )

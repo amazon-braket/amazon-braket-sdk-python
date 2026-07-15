@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Sequence
 from functools import singledispatchmethod
 from itertools import repeat
 from os import cpu_count
@@ -135,7 +136,7 @@ class LocalSimulator(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: int | None = 0,
+        shots: int | Sequence[int] | None = 0,
         max_parallel: int | None = None,
         inputs: dict[str, float] | list[dict[str, float]] | None = None,
         *args,
@@ -146,7 +147,8 @@ class LocalSimulator(Device):
         Args:
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of quantum task specification.
-            shots (int | None): The number of times to run the quantum task.
+            shots (int | Sequence[int] | None): The number of times to run each
+                quantum task. Per-task shot sequences are not supported by `LocalSimulator`.
                 Default: 0.
             max_parallel (int | None): The maximum number of quantum tasks to run  in parallel.
                 Default is the number of logical CPUs.
@@ -160,6 +162,8 @@ class LocalSimulator(Device):
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
         """
+        if isinstance(shots, Sequence):
+            raise NotImplementedError("LocalSimulator.run_batch does not support per-task shots.")
         inputs = inputs or {}
 
         if self._noise_model:

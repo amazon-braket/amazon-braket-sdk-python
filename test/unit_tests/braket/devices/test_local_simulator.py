@@ -592,6 +592,15 @@ def test_batch_with_max_parallel():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_batch_with_shot_sequence_not_implemented():
+    dummy = DummyProgramSimulator()
+    task = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+
+    with pytest.raises(NotImplementedError, match="per-task shots"):
+        device.run_batch([task, task], shots=[10, 20])
+
+
 def test_batch_with_annealing_problems():
     dummy = DummyAnnealingSimulator()
     problem = Problem(ProblemType.ISING)

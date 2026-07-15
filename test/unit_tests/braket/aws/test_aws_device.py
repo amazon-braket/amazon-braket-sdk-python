@@ -1612,6 +1612,29 @@ def test_run_batch_with_shots(
 @patch("braket.aws.aws_session.boto3.Session")
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_shot_sequence(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+):
+    task_mock = Mock()
+    task_mock.state.return_value = "COMPLETED"
+    aws_quantum_task_mock.return_value = task_mock
+
+    shots = [10, 20, 30]
+    device("arn:aws:braket:::device/quantum-simulator/amazon/sim").run_batch(
+        [Circuit().h(0), Circuit().x(0), Circuit().y(0)],
+        shots=shots,
+        max_parallel=1,
+    )
+
+    assert [call.args[4] for call in aws_quantum_task_mock.call_args_list] == shots
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_max_parallel_and_kwargs(
     aws_quantum_task_mock,
     aws_session_mock,
