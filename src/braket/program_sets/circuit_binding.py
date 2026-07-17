@@ -16,7 +16,16 @@ from __future__ import annotations
 import warnings
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
+from braket.default_simulator.openqasm.parser.openqasm_ast import (
+    Identifier,
+    IntegerLiteral,
+    QASMNode,
+    QuantumMeasurementStatement,
+    QubitDeclaration,
+)
+from braket.default_simulator.openqasm.parser.openqasm_parser import parse
 from braket.ir.openqasm import Program
 
 from braket.circuits import Circuit, Gate, Observable
@@ -29,10 +38,79 @@ from braket.quantum_information import PauliString
 from braket.registers import QubitSet
 
 
+@dataclass
+class _AngleInjectionPlan:
+    declarations_offset: int
+    measure_offset: int
+    qubit_format: str
+    qubits: QubitSet
+
+
+def _span_offset(node: QASMNode, line_offsets: Sequence[int]) -> int:
+    return line_offsets[node.span.start_line - 1] + node.span.start_column
+
+
+def _plan_injection(source: str) -> _AngleInjectionPlan:
+    program = parse(source)
+
+    line_offsets = [0]
+    offset = 0
+    for line in source.split("\n")[:-1]:
+        offset += len(line) + 1
+        line_offsets.append(offset)
+
+    declarations_offset = (
+        _span_offset(program.statements[0], line_offsets) if program.statements else len(source)
+    )
+
+    measure_offset = len(source)
+    register_name = None
+    register_size = 0
+    for stmt in program.statements:
+        if isinstance(stmt, QubitDeclaration) and register_name is None:
+            # TODO: support multiple qubit registers
+            register_name = stmt.qubit.name
+            # stmt.size is None for a single unindexed qubit
+            register_size = stmt.size.value if isinstance(stmt.size, IntegerLiteral) else 1
+
+        measure_offset = (
+            min(measure_offset, _span_offset(stmt, line_offsets))
+            if isinstance(stmt, QuantumMeasurementStatement)
+            else len(source)
+        )
+
+    qubit_format, qubits = (
+        (f"{register_name}[{{}}]", QubitSet(range(register_size)))
+        if register_name
+        else (
+            "${}",
+            QubitSet(
+                int(node.name[1:])
+                for node in _walk(program)
+                if isinstance(node, Identifier) and node.name.startswith("$")
+            ),
+        )
+    )
+    return _AngleInjectionPlan(
+        declarations_offset=declarations_offset,
+        measure_offset=measure_offset,
+        qubit_format=qubit_format,
+        qubits=qubits,
+    )
+
+
+def _walk(node: QASMNode):
+    yield node
+    for value in vars(node).values():
+        for child in value if isinstance(value, list) else [value]:
+            if isinstance(child, QASMNode):
+                yield from _walk(child)
+
+
 class CircuitBinding:
     def __init__(
         self,
-        circuit: Circuit,
+        circuit: Circuit | str,
         input_sets: ParameterSetsLike | None = None,
         observables: Sequence[Observable | PauliString | str] | Sum | None = None,
     ):
@@ -51,7 +129,8 @@ class CircuitBinding:
         Note: Circuits cannot have result types attached.
 
         Args:
-            circuit (Circuit): The parametrized circuit
+            circuit (Circuit | str): The parametrized circuit, either as a Circuit object or as
+                an OpenQASM string.
             input_sets (ParameterSetsLike | None): The inputs to the circuit, if specified.
             observables (Sequence[Observable | PauliString | str] | Sum | None): The observables
                 or Hamiltonian to measure, if specified.
@@ -70,11 +149,14 @@ class CircuitBinding:
             and any(isinstance(obs, Sum) for obs in observables)
         ):
             raise TypeError("Cannot have Sum Hamiltonian in list of observables")
-        if circuit.result_types:
+        if isinstance(circuit, Circuit) and circuit.result_types:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
         self._input_sets = ParameterSets(input_sets) if input_sets else None
         self._observables = CircuitBinding._to_observables(observables)
+        self._injection_plan = (
+            _plan_injection(circuit) if isinstance(circuit, str) and self._observables else None
+        )
 
     @staticmethod
     def _to_observables(
@@ -96,9 +178,9 @@ class CircuitBinding:
         return obs
 
     @property
-    def circuit(self) -> Circuit:
+    def circuit(self) -> Circuit | str:
         """
-        Circuit: The parametrized circuit
+        Circuit | str: The parametrized circuit, either as a Circuit object or an OpenQASM string.
         """
         return self._circuit
 
@@ -135,22 +217,59 @@ class CircuitBinding:
         """
         if not self._observables:
             return Program(
-                source=self._circuit.to_ir(
-                    IRType.OPENQASM, gate_definitions=gate_definitions
-                ).source,
+                source=self._circuit_openqasm(gate_definitions),
                 inputs=self._input_sets.as_dict() if self._input_sets else None,
             )
-        # with_euler_angles validates that the observable has valid Euler angle gates
-        circuit_with_euler_angles = self._circuit.with_euler_angles(self._observables)
         euler_angles = self._get_euler_angles()
+        if isinstance(self._circuit, Circuit):
+            source = (
+                self._circuit
+                .with_euler_angles(self._observables)
+                .to_ir(IRType.OPENQASM, gate_definitions=gate_definitions)
+                .source
+            )
+        else:
+            source = _inject_euler_angles(
+                self._circuit,
+                self._injection_plan,
+                self._euler_rotation_targets(),
+                euler_angles.keys(),
+            )
         return Program(
-            source=circuit_with_euler_angles.to_ir(
-                IRType.OPENQASM, gate_definitions=gate_definitions
-            ).source,
+            source=source,
             inputs=(
                 self._input_sets * euler_angles if self._input_sets else ParameterSets(euler_angles)
             ).as_dict(),
         )
+
+    def _circuit_openqasm(
+        self,
+        gate_definitions: Mapping[tuple[Gate, QubitSet], PulseSequence] | None,
+    ) -> str:
+        if isinstance(self._circuit, Circuit):
+            return self._circuit.to_ir(IRType.OPENQASM, gate_definitions=gate_definitions).source
+        return self._circuit
+
+    def _circuit_qubits(self) -> QubitSet:
+        if isinstance(self._circuit, Circuit):
+            return self._circuit.qubits
+        return self._injection_plan.qubits
+
+    def _euler_rotation_targets(self) -> QubitSet:
+        observables = self._observables
+        circuit_qubits = self._circuit_qubits()
+        if isinstance(observables, Sum):
+            if observables.targets:
+                # Sum.targets is a per-summand list of QubitSets
+                return QubitSet().union(*observables.targets)
+            return circuit_qubits
+        targets = QubitSet()
+        for obs in observables:
+            if obs.targets:
+                targets |= obs.targets
+            else:
+                targets |= circuit_qubits
+        return targets
 
     def _get_euler_angles(self) -> dict[str, float] | None:
         observables = self._observables
@@ -164,7 +283,7 @@ class CircuitBinding:
         euler_angles = defaultdict(list)
         summands = observables.summands
         if not observables.targets:
-            targets = self._circuit.qubits
+            targets = self._circuit_qubits()
             for obs in summands:
                 for param, angle in obs.get_euler_angles(targets).items():
                     euler_angles[param].append(angle)
@@ -179,7 +298,7 @@ class CircuitBinding:
 
     def _get_euler_angles_list(self, observables: Sequence[Observable]) -> dict[str, float]:
         euler_angles = defaultdict(list)
-        circuit_qubits = self._circuit.qubits
+        circuit_qubits = self._circuit_qubits()
         targets = QubitSet(q for obs in observables for q in (obs.targets or circuit_qubits))
         for obs in observables:
             if not obs.targets:
@@ -207,12 +326,17 @@ class CircuitBinding:
         well as CompositeEntry.expectation.
 
         Kwargs:
-            inplace (bool): whether or not to return a new circuit binding or use the same one
-            add_measure (bool): whether or not to apply Measure instructions to the circuit
+            inplace (bool): Whether to return a new circuit binding or use the same one
+            add_measure (bool): Whether to apply Measure instructions to the circuit. Only
+                applies when the underlying circuit is a `Circuit`; for OpenQASM string
+                circuits, the source is preserved verbatim aside from injected Euler-angle
+                rotations.
 
         Returns:
             CircuitBinding: A new circuit binding with the observables bound.
         """
+        if isinstance(self._circuit, str):
+            return self._bind_observables_to_inputs_str(inplace)
         measure = Circuit()
         parameters = self._input_sets.as_dict() if self._input_sets else None
         if observables := self._observables:
@@ -235,6 +359,33 @@ class CircuitBinding:
             self._input_sets = parameters
             return self
         return CircuitBinding(self._circuit + measure, input_sets=parameters)
+
+    def _bind_observables_to_inputs_str(self, inplace: bool) -> CircuitBinding:
+        source = self._circuit
+        parameters = self._input_sets.as_dict() if self._input_sets else None
+        if observables := self._observables:
+            if isinstance(observables, Sum):
+                warnings.warn(
+                    "Binding a Sum discards information on observable weights; please "
+                    "distribute your observable in advance using observable.summands.",
+                    stacklevel=2,
+                )
+            euler_angles = self._get_euler_angles()
+            source = _inject_euler_angles(
+                source,
+                self._injection_plan,
+                self._euler_rotation_targets(),
+                euler_angles.keys(),
+            )
+            parameters = self._input_sets * euler_angles if parameters else euler_angles
+        if inplace:
+            self._circuit = source
+            # Observables are now bound into the source, so no further injection plan is needed.
+            self._injection_plan = None
+            self._observables = None
+            self._input_sets = parameters
+            return self
+        return CircuitBinding(source, input_sets=parameters)
 
     def __len__(self):
         input_sets = self._input_sets
@@ -260,3 +411,28 @@ class CircuitBinding:
             f"input_sets={self._input_sets}, "
             f"observables={self._observables})"
         )
+
+
+def _inject_euler_angles(
+    source: str,
+    plan: _AngleInjectionPlan,
+    targets: QubitSet,
+    parameter_names: Sequence[str],
+) -> str:
+    rotations = []
+    for q in targets:
+        theta, phi, omega = euler_angle_parameter_names(q)
+        formatted = plan.qubit_format.format(int(q))
+        rotations.extend([
+            f"rz({theta}) {formatted};",
+            f"rx({phi}) {formatted};",
+            f"rz({omega}) {formatted};",
+        ])
+    for offset, statements in (
+        (plan.measure_offset, rotations),
+        (plan.declarations_offset, [f"input float {name};" for name in parameter_names]),
+    ):
+        block = "\n".join(statements)
+        prefix = "" if offset == 0 or source[offset - 1] == "\n" else "\n"
+        source = f"{source[:offset]}{prefix}{block}\n{source[offset:]}"
+    return source

@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.124.0 (2026-07-14)
+
+### Features
+
+ * count circuit operation on circuit or given qubits
+
+## v1.123.0.post0 (2026-07-13)
+
+### Documentation Changes
+
+ * add cheat sheet links
+
+## v1.123.0 (2026-07-10)
+
+### Features
+
+ * Add `properties` to `Device` and `Emulator`
+
+## v1.122.0 (2026-07-08)
+
+### Features
+
+ * Allow OpenQASM strings in `CircuitBinding`
+
+## v1.121.0 (2026-06-26)
+
+### Deprecations and Removals
+
+ * tn1 retirement
+
+### Bug Fixes and Other Changes
+
+ * task cancellation from non-main thread
+
+## v1.120.0 (2026-06-22)
+
+### Features
+
+ * Add `PauliSum` container
+ * Split program sets
+ * complete the Braket SDK cheat sheet with verified snippets
+
 ## v1.119.1 (2026-06-10)
 
 ### Bug Fixes and Other Changes

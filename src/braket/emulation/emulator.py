@@ -17,6 +17,8 @@ import warnings
 from collections.abc import Iterable
 from typing import Any
 
+from braket.device_schema import DeviceCapabilities
+
 from braket.circuits.noise_model import NoiseModel
 from braket.devices import Device
 from braket.emulation.pass_manager import PassManager
@@ -42,6 +44,8 @@ class Emulator(Device):
             Defaults to None.
         passes (Iterable[ValidationPass] | None): A list of validation passes to apply to the
             emulated circuits. Defaults to None.
+        device_capabilities (DeviceCapabilities | None): The capabilities of the device being
+            emulated. Defaults to None.
     """
 
     def __init__(
@@ -49,12 +53,15 @@ class Emulator(Device):
         backend: Device,
         noise_model: NoiseModel | None = None,
         passes: Iterable[ValidationPass] | None = None,
+        *,
+        device_capabilities: DeviceCapabilities | None = None,
         **kwargs,
     ):
         Device.__init__(self, name=kwargs.get("name", "DeviceEmulator"), status="AVAILABLE")
         self._pass_manager = PassManager(passes)
         self._noise_model = noise_model
         self._backend = backend
+        self._device_capabilities = device_capabilities
 
     def run(
         self,
@@ -114,6 +121,11 @@ class Emulator(Device):
             NoiseModel: This emulator's noise model.
         """
         return self._noise_model
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        """DeviceCapabilities: The capabilities of the emulated device."""
+        return self._device_capabilities or super().properties
 
     def transform(
         self,

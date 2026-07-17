@@ -25,14 +25,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./doc/cheat_sheet
           destination: ./_site
+      - name: Fix permissions
+        run: sudo chown -R $(whoami) _site/
       - name: Compile cheat sheet for genAI
         run: |
           python3 doc/cheat_sheet/_scripts/generate_genai_cheat_sheet.py
@@ -49,4 +51,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

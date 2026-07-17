@@ -316,10 +316,9 @@ class AwsQuantumTask(QuantumTask):
         return self._arn
 
     def _cancel_future(self) -> None:
-        """Cancel the future if it exists. Else, create a cancelled future."""
-        if not hasattr(self, "_future"):
-            self._future = asyncio.Future()
-        self._future.cancel()
+        """Cancel the future if it exists."""
+        if hasattr(self, "_future"):
+            self._future.cancel()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the quantum task in Amazon
