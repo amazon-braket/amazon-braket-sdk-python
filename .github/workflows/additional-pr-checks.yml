@@ -63,6 +63,22 @@ jobs:
         run: |
           tox -e linters_check
 
+  type-check:
+    name: Static type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install tox
+      - name: Run mypy static type checks
+        run: |
+          tox -e type-check
+
   twine-check:
     name: Check PyPI long description
     runs-on: ubuntu-latest
