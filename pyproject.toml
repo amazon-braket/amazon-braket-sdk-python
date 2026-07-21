@@ -179,6 +179,7 @@ lint.ignore = [
     "PLW1641", # Object with equal and not __hash__
     "PTH",     # Prefer builtin path
     "PYI034",  # Return class type hint here instead of self
+    "RUF105",  # Preview rule; keep standard `# noqa`, not ruff-only `ruff:ignore`
     "S104",    # Possible binding to all interfaces
     "S403",    # Pickle is used
     "S404",    # Using subprocess is alright.
