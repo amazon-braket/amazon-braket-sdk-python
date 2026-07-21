@@ -51,6 +51,9 @@ test = [
     "pytest-rerunfailures<16.0",
     "pytest-xdist[psutil]",
 ]
+type-check = [
+    "mypy==2.3.0",
+]
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
