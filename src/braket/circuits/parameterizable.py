@@ -11,4 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.parametric.parameterizable import Parameterizable  # noqa: F401
+from braket.parametric.parameterizable import Parameterizable  # ruff:ignore[unused-import]

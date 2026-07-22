@@ -107,7 +107,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 experimental capabilities. If `None`, the setting from the experimental
                 capability context will be used if active. Default: None.
             **aws_quantum_task_kwargs (Any): Arbitrary kwargs for `QuantumTask`.,
-        """  # noqa: E501
+        """  # ruff:ignore[line-too-long]
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
             device_arn,

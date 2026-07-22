@@ -151,7 +151,7 @@ class ResultType:
             >>> new_result_type.target
             QubitSet(Qubit(5))
         """
-        copy = self.__copy__()  # noqa: PLC2801
+        copy = self.__copy__()  # ruff:ignore[unnecessary-dunder-call]
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
         if target is not None:
