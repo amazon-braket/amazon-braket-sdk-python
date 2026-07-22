@@ -88,7 +88,7 @@ class QuantumTask(ABC):
             asyncio.Task: Get the quantum task result asynchronously.
         """
 
-    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # noqa: B027
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:  # ruff:ignore[empty-method-without-abstract-decorator]
         """Get task metadata.
 
         Args:

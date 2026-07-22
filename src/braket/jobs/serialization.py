@@ -77,7 +77,7 @@ def deserialize_values(
                 "Only do this if you trust the source of the data."
             )
         return {
-            k: pickle.loads(codecs.decode(v.encode(), "base64"))  # noqa: S301
+            k: pickle.loads(codecs.decode(v.encode(), "base64"))  # ruff:ignore[suspicious-pickle-usage]
             for k, v in data_dictionary.items()
         }
     return data_dictionary

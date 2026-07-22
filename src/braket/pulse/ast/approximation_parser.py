@@ -251,7 +251,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             return ~self.visit(node.expression, context)
         raise NotImplementedError
 
-    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # noqa: C901, PLR0912
+    def visit_BinaryExpression(self, node: ast.BinaryExpression, context: _ParseState) -> Any:  # ruff:ignore[complex-structure, too-many-branches]
         """Visit Binary Expression.
             node.lhs, node.rhs, node.op
             1+2
@@ -498,7 +498,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)
             elif isinstance(amps, str):
-                raise NameError(f"waveform '{amps}' is not defined.")  # noqa: TRY004
+                raise NameError(f"waveform '{amps}' is not defined.")  # ruff:ignore[type-check-without-type-error]
         else:
             raise NotImplementedError
         frame_data = context.frame_data[frame_id]

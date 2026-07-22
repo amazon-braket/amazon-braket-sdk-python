@@ -17,6 +17,9 @@ the payload sent to the device, CircuitBinding for sweeping a circuit over param
 and observables, and ParameterSets for bundling parameter values.
 """
 
-from braket.program_sets.circuit_binding import CircuitBinding  # noqa: F401
-from braket.program_sets.parameter_sets import ParameterSets, ParameterSetsLike  # noqa: F401
-from braket.program_sets.program_set import ProgramSet  # noqa: F401
+from braket.program_sets.circuit_binding import CircuitBinding  # ruff:ignore[unused-import]
+from braket.program_sets.parameter_sets import (  # ruff:ignore[unused-import]
+    ParameterSets,
+    ParameterSetsLike,
+)
+from braket.program_sets.program_set import ProgramSet  # ruff:ignore[unused-import]

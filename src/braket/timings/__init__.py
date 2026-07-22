@@ -16,4 +16,4 @@ sequences and analog Hamiltonian simulations. It provides TimeSeries for definin
 values that vary over time and TimeSeriesItem for individual time-value pairs.
 """
 
-from braket.timings.time_series import TimeSeries, TimeSeriesItem  # noqa: F401
+from braket.timings.time_series import TimeSeries, TimeSeriesItem  # ruff:ignore[unused-import]

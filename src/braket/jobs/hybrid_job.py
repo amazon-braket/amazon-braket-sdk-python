@@ -413,7 +413,7 @@ class _IncludeModules:
         for module in self._modules:
             cloudpickle.register_pickle_by_value(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
+    def __exit__(self, exc_type, exc_val, exc_tb):  # ruff:ignore[missing-type-function-argument]
         """Unregister included modules with cloudpickle to be pickled by value"""
         for module in self._modules:
             cloudpickle.unregister_pickle_by_value(module)
@@ -563,7 +563,7 @@ def _process_input_data(input_data: dict) -> list[str]:
 def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
     """Create an AWS or Local hybrid job"""
     if local:
-        from braket.jobs.local import LocalQuantumJob  # noqa: PLC0415
+        from braket.jobs.local import LocalQuantumJob  # ruff:ignore[import-outside-top-level]
 
         for aws_only_arg in [
             "wait_until_complete",
@@ -576,6 +576,6 @@ def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
         ]:
             job_args.pop(aws_only_arg, None)
         return LocalQuantumJob.create(**job_args)
-    from braket.aws import AwsQuantumJob  # noqa: PLC0415
+    from braket.aws import AwsQuantumJob  # ruff:ignore[import-outside-top-level]
 
     return AwsQuantumJob.create(**job_args)
