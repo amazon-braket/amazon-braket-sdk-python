@@ -138,7 +138,7 @@ class H(Gate):
 Gate.register_gate(H)
 
 
-class I(Gate):  # noqa: E742
+class I(Gate):  # ruff:ignore[ambiguous-class-name]
     r"""Identity gate.
 
     Unitary matrix:

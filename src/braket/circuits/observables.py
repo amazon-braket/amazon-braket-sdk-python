@@ -81,7 +81,7 @@ class H(StandardObservable):
 Observable.register_observable(H)
 
 
-class I(Observable):  # noqa: E742
+class I(Observable):  # ruff:ignore[ambiguous-class-name]
     """Identity operation as an observable."""
 
     def __init__(self, target: QubitInput | None = None):

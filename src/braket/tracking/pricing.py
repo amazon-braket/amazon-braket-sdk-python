@@ -53,7 +53,7 @@ class Pricing:
             text_response.readline()
         self._price_list = list(csv.DictReader(text_response))
 
-    @lru_cache  # noqa: B019
+    @lru_cache  # ruff:ignore[cached-instance-method]
     def price_search(self, **kwargs: str) -> list[dict[str, str]]:
         """Searches the price list for a given set of parameters.
 

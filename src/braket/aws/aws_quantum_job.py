@@ -638,7 +638,7 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
         with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
-            tar.extractall(extract_path)  # noqa: S202
+            tar.extractall(extract_path)  # ruff:ignore[tarfile-unsafe-members]
 
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"

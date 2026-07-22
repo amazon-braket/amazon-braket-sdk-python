@@ -16,6 +16,6 @@ includes the abstract Device base class, LocalSimulator for running circuits loc
 and the Devices enumeration for convenient access to available Amazon Braket devices.
 """
 
-from braket.devices.device import Device  # noqa: F401
-from braket.devices.devices import Devices  # noqa: F401
-from braket.devices.local_simulator import LocalSimulator  # noqa: F401
+from braket.devices.device import Device  # ruff:ignore[unused-import]
+from braket.devices.devices import Devices  # ruff:ignore[unused-import]
+from braket.devices.local_simulator import LocalSimulator  # ruff:ignore[unused-import]
