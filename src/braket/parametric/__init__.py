@@ -18,20 +18,22 @@ FreeParameterExpression for mathematical expressions, math helper functions,
 and Parameterizable interface for parameter binding.
 """
 
-from braket.parametric.free_parameter import FreeParameter  # noqa: F401
-from braket.parametric.free_parameter_expression import FreeParameterExpression  # noqa: F401
-from braket.parametric.functions import (
-    arccos,  # noqa: F401
-    arcsin,  # noqa: F401
-    arctan,  # noqa: F401
-    ceiling,  # noqa: F401
-    cos,  # noqa: F401
-    exp,  # noqa: F401
-    floor,  # noqa: F401
-    log,  # noqa: F401
-    mod,  # noqa: F401
-    sin,  # noqa: F401
-    sqrt,  # noqa: F401
-    tan,  # noqa: F401
+from braket.parametric.free_parameter import FreeParameter  # ruff:ignore[unused-import]
+from braket.parametric.free_parameter_expression import (
+    FreeParameterExpression,  # ruff:ignore[unused-import]
 )
-from braket.parametric.parameterizable import Parameterizable  # noqa: F401
+from braket.parametric.functions import (
+    arccos,  # ruff:ignore[unused-import]
+    arcsin,  # ruff:ignore[unused-import]
+    arctan,  # ruff:ignore[unused-import]
+    ceiling,  # ruff:ignore[unused-import]
+    cos,  # ruff:ignore[unused-import]
+    exp,  # ruff:ignore[unused-import]
+    floor,  # ruff:ignore[unused-import]
+    log,  # ruff:ignore[unused-import]
+    mod,  # ruff:ignore[unused-import]
+    sin,  # ruff:ignore[unused-import]
+    sqrt,  # ruff:ignore[unused-import]
+    tan,  # ruff:ignore[unused-import]
+)
+from braket.parametric.parameterizable import Parameterizable  # ruff:ignore[unused-import]

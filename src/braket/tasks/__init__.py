@@ -19,16 +19,22 @@ QuantumTaskBatch for tracking execution and launching multiple tasks in parallel
 and LocalQuantumTask and LocalQuantumTaskBatch for local simulation results.
 """
 
-from braket.tasks import _jupyter_setup  # noqa: F401
-from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # noqa: F401
+from braket.tasks import _jupyter_setup  # ruff:ignore[unused-import]
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # ruff:ignore[unused-import]
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnalogHamiltonianSimulationShotStatus,
 )
-from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult  # noqa: F401
-from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult  # noqa: F401
-from braket.tasks.photonic_model_quantum_task_result import (
-    PhotonicModelQuantumTaskResult,  # noqa: F401
+from braket.tasks.annealing_quantum_task_result import (
+    AnnealingQuantumTaskResult,  # ruff:ignore[unused-import]
 )
-from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult  # noqa: F401
-from braket.tasks.quantum_task import QuantumTask  # noqa: F401
-from braket.tasks.quantum_task_batch import QuantumTaskBatch  # noqa: F401
+from braket.tasks.gate_model_quantum_task_result import (
+    GateModelQuantumTaskResult,  # ruff:ignore[unused-import]
+)
+from braket.tasks.photonic_model_quantum_task_result import (
+    PhotonicModelQuantumTaskResult,  # ruff:ignore[unused-import]
+)
+from braket.tasks.program_set_quantum_task_result import (
+    ProgramSetQuantumTaskResult,  # ruff:ignore[unused-import]
+)
+from braket.tasks.quantum_task import QuantumTask  # ruff:ignore[unused-import]
+from braket.tasks.quantum_task_batch import QuantumTaskBatch  # ruff:ignore[unused-import]

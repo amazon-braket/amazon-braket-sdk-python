@@ -61,7 +61,7 @@ class _LocalJobContainer:
         self._container_name = self._start_container(self.image_uri, self._force_update)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
+    def __exit__(self, exc_type, exc_val, exc_tb):  # ruff:ignore[missing-type-function-argument]
         """Stops and removes the local docker container."""
         self._end_session()
 
@@ -297,7 +297,7 @@ class _LocalJobContainer:
             self.run_log = _stream_output(process)
         except Exception as e:
             self.run_log = e
-            self._logger.exception(e)  # noqa: TRY401
+            self._logger.exception(e)  # ruff:ignore[verbose-log-message]
 
     def _end_session(self) -> None:
         """Stops and removes the local container."""
