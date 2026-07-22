@@ -18,5 +18,5 @@ DeviceEmulatorProperties for calibration data, and ValidationPass and
 TransformationPass base classes for custom passes.
 """
 
-from braket.emulation.emulator import Emulator  # noqa: F401
-from braket.emulation.pass_manager import PassManager  # noqa: F401
+from braket.emulation.emulator import Emulator  # ruff:ignore[unused-import]
+from braket.emulation.pass_manager import PassManager  # ruff:ignore[unused-import]
