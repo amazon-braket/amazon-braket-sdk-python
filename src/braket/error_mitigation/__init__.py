@@ -17,5 +17,5 @@ and Debias for debiasing, which maps a circuit into multiple variants to reduce
 the effect of systematic errors.
 """
 
-from braket.error_mitigation.debias import Debias  # noqa: F401
-from braket.error_mitigation.error_mitigation import ErrorMitigation  # noqa: F401
+from braket.error_mitigation.debias import Debias  # ruff:ignore[unused-import]
+from braket.error_mitigation.error_mitigation import ErrorMitigation  # ruff:ignore[unused-import]

@@ -214,7 +214,7 @@ class AwsSession:
         )
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # ruff:ignore[unused-static-method-argument]
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -688,7 +688,7 @@ class AwsSession:
                 r"^[sS]3://([^./]+)/(.+)$", s3_uri
             )
             if s3_uri_match is None:
-                raise AssertionError  # noqa: TRY301
+                raise AssertionError  # ruff:ignore[raise-within-try]
             bucket, key = s3_uri_match.groups()
         except (AssertionError, ValueError) as e:
             raise ValueError(f"Not a valid S3 uri: {s3_uri}") from e
@@ -829,7 +829,7 @@ class AwsSession:
             )
         return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
 
-    @cache  # noqa: B019
+    @cache  # ruff:ignore[cached-instance-method]
     def get_full_image_tag(self, image_uri: str) -> str:
         """Get verbose image tag from image uri.
 

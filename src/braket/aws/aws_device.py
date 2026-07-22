@@ -205,7 +205,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
-        """  # noqa: E501
+        """  # ruff:ignore[line-too-long]
         if self._noise_model:
             task_specification = self._noise_model.apply(task_specification)
         return AwsQuantumTask.create(
@@ -290,7 +290,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
-        """  # noqa: E501
+        """  # ruff:ignore[line-too-long]
         if self._noise_model:
             task_specifications = [
                 self._noise_model.apply(task_specification)
@@ -805,7 +805,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(  # noqa: S310
+                with urllib.request.urlopen(  # ruff:ignore[suspicious-url-open-usage]
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(
@@ -846,7 +846,7 @@ class AwsDevice(Device):
             structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration represented as a
             `PulseSequence`.
 
-        """  # noqa: E501
+        """  # ruff:ignore[line-too-long]
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
         parsed_calibration_data = {}
         for qubit_node in calibration_data["gates"]:

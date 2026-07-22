@@ -61,7 +61,7 @@ class QubitSet(IndexedSet):
             Qubit(2)
             Qubit(3)
         """
-        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None  # noqa: RUF052
+        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None  # ruff:ignore[used-dummy-variable]
         super().__init__(_qubits)
 
     def map(self, mapping: dict[QubitInput, QubitInput]) -> QubitSet:
@@ -81,7 +81,7 @@ class QubitSet(IndexedSet):
             >>> mapping = {0: 10, Qubit(1): Qubit(11)}
             >>> qubits.map(mapping)
             QubitSet([Qubit(10), Qubit(11)])
-        """  # noqa: E501
+        """  # ruff:ignore[line-too-long]
         new_qubits = [mapping.get(qubit, qubit) for qubit in self]
 
         return QubitSet(new_qubits)

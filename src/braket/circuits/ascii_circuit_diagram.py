@@ -14,5 +14,5 @@
 # Moving ascii_circuit_diagram.py into the text_diagram_builders folder in order
 # to group all classes that print circuits in a text format.
 from braket.circuits.text_diagram_builders.ascii_circuit_diagram import (
-    AsciiCircuitDiagram,  # noqa: F401
+    AsciiCircuitDiagram,  # ruff:ignore[unused-import]
 )

@@ -17,4 +17,4 @@ manager, Pricing for retrieving AWS pricing data, and TrackingContext for managi
 tracker registration and event broadcasting.
 """
 
-from braket.tracking.tracker import Tracker  # noqa: F401
+from braket.tracking.tracker import Tracker  # ruff:ignore[unused-import]

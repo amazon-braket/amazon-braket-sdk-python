@@ -16,6 +16,6 @@ and emergent new software features.
 """
 
 from braket.experimental_capabilities.experimental_capability_context import (
-    EnableExperimentalCapability,  # noqa: F401
+    EnableExperimentalCapability,  # ruff:ignore[unused-import]
 )
-from braket.experimental_capabilities.iqm import classical_control  # noqa: F401
+from braket.experimental_capabilities.iqm import classical_control  # ruff:ignore[unused-import]
