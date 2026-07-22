@@ -51,6 +51,9 @@ test = [
     "pytest-rerunfailures<16.0",
     "pytest-xdist[psutil]",
 ]
+type-check = [
+    "mypy==2.3.0",
+]
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
@@ -176,6 +179,7 @@ lint.ignore = [
     "PLW1641", # Object with equal and not __hash__
     "PTH",     # Prefer builtin path
     "PYI034",  # Return class type hint here instead of self
+    "RUF105",  # Preview rule; keep standard `# noqa`, not ruff-only `ruff:ignore`
     "S104",    # Possible binding to all interfaces
     "S403",    # Pickle is used
     "S404",    # Using subprocess is alright.
@@ -207,3 +211,121 @@ mypy-init-return = false
 
 [tool.ruff.lint.flake8-builtins]
 builtins-allowed-modules = ["operator"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+files = ["src/braket"]
+namespace_packages = true
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_configs = true
+
+# The modules below have pre-existing type errors and are temporarily exempted.
+# Burn the list down over time (fix a module, then remove it here); don't add new
+# modules — new code must type-check.
+[[tool.mypy.overrides]]
+module = [
+    "braket.ahs.analog_hamiltonian_simulation",
+    "braket.ahs.atom_arrangement",
+    "braket.ahs.canvas",
+    "braket.ahs.driving_field",
+    "braket.ahs.field",
+    "braket.ahs.local_detuning",
+    "braket.ahs.pattern",
+    "braket.aws.aws_device",
+    "braket.aws.aws_quantum_job",
+    "braket.aws.aws_quantum_task_batch",
+    "braket.aws.aws_quantum_task",
+    "braket.aws.aws_session",
+    "braket.circuits.angled_gate",
+    "braket.circuits.basis_state",
+    "braket.circuits.braket_program_context",
+    "braket.circuits.circuit_helpers",
+    "braket.circuits.circuit",
+    "braket.circuits.compiler_directive",
+    "braket.circuits.compiler_directives",
+    "braket.circuits.gate_calibrations",
+    "braket.circuits.gate",
+    "braket.circuits.gates",
+    "braket.circuits.instruction",
+    "braket.circuits.measure",
+    "braket.circuits.moments",
+    "braket.circuits.noise_helpers",
+    "braket.circuits.noise_model.circuit_instruction_criteria",
+    "braket.circuits.noise_model.criteria_input_parsing",
+    "braket.circuits.noise_model.criteria",
+    "braket.circuits.noise_model.gate_criteria",
+    "braket.circuits.noise_model.noise_model",
+    "braket.circuits.noise_model.observable_criteria",
+    "braket.circuits.noise_model.qubit_initialization_criteria",
+    "braket.circuits.noise",
+    "braket.circuits.noises",
+    "braket.circuits.observable",
+    "braket.circuits.observables",
+    "braket.circuits.quantum_operator",
+    "braket.circuits.result_type",
+    "braket.circuits.result_types",
+    "braket.circuits.text_diagram_builders.ascii_circuit_diagram",
+    "braket.circuits.text_diagram_builders.text_circuit_diagram_utils",
+    "braket.circuits.text_diagram_builders.text_circuit_diagram",
+    "braket.circuits.text_diagram_builders.unicode_circuit_diagram",
+    "braket.devices.device",
+    "braket.devices.local_simulator",
+    "braket.emulation._standardization",
+    "braket.emulation.device_emulator_properties",
+    "braket.emulation.emulator",
+    "braket.emulation.local_emulator",
+    "braket.emulation.pass_manager",
+    "braket.emulation.passes._device_emulator_validators",
+    "braket.emulation.passes.circuit_passes.connectivity_validator",
+    "braket.emulation.passes.circuit_passes.gate_connectivity_validator",
+    "braket.emulation.passes.circuit_passes.gate_validator",
+    "braket.emulation.passes.circuit_passes.measurement_transformation",
+    "braket.emulation.passes.circuit_passes.not_implemented_validator",
+    "braket.emulation.passes.circuit_passes.qubit_count_validator",
+    "braket.emulation.passes.circuit_passes.result_type_validator",
+    "braket.emulation.passes.circuit_passes.verbatim_transformation",
+    "braket.emulation.passes.generic.program_set_validator",
+    "braket.emulation.passes.generic.specification_validator",
+    "braket.emulation.passes.passes",
+    "braket.experimental_capabilities.iqm.classical_control",
+    "braket.jobs.config",
+    "braket.jobs.environment_variables",
+    "braket.jobs.hybrid_job",
+    "braket.jobs.local.local_job_container_setup",
+    "braket.jobs.local.local_job_container",
+    "braket.jobs.local.local_job",
+    "braket.jobs.logs",
+    "braket.jobs.metrics_data.cwl_insights_metrics_fetcher",
+    "braket.jobs.metrics_data.definitions",
+    "braket.jobs.metrics_data.log_metrics_parser",
+    "braket.jobs.quantum_job_creation",
+    "braket.parametric.free_parameter_expression",
+    "braket.parametric.free_parameter",
+    "braket.program_sets.circuit_binding",
+    "braket.program_sets.parameter_sets",
+    "braket.program_sets.program_set",
+    "braket.pulse.ast.approximation_parser",
+    "braket.pulse.ast.free_parameters",
+    "braket.pulse.frame",
+    "braket.pulse.port",
+    "braket.pulse.pulse_sequence",
+    "braket.pulse.waveforms",
+    "braket.quantum_information.pauli_string",
+    "braket.quantum_information.pauli_sum",
+    "braket.tasks.analog_hamiltonian_simulation_quantum_task_result",
+    "braket.tasks.annealing_quantum_task_result",
+    "braket.tasks.gate_model_quantum_task_result",
+    "braket.tasks.local_quantum_task_batch",
+    "braket.tasks.local_quantum_task",
+    "braket.tasks.photonic_model_quantum_task_result",
+    "braket.tasks.program_set_quantum_task_result",
+    "braket.tasks.quantum_task",
+    "braket.timings.time_series",
+    "braket.tracking.pricing",
+    "braket.tracking.tracker",
+    "braket.tracking.tracking_context",
+]
+ignore_errors = true
