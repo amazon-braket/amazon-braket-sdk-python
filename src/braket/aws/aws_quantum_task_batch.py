@@ -17,7 +17,7 @@ import time
 from collections.abc import Sequence
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Any
+from typing import Any, TypeAlias
 
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -33,7 +33,7 @@ from braket.registers.qubit_set import QubitSet
 from braket.tasks.quantum_task import TaskResult, TaskSpecification
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
-_TaskInputsGateDefinitions = tuple[
+_TaskInputsGateDefinitions: TypeAlias = tuple[
     TaskSpecification,
     dict[str, float],
     dict[tuple[Gate, QubitSet], PulseSequence],

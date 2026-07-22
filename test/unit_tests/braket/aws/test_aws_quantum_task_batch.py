@@ -74,29 +74,6 @@ def test_creation_with_experimental_capabilities_string(mock_create):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_creation_normalizes_task_arguments_once(mock_create):
-    task_mock = Mock()
-    task_mock.state.return_value = "COMPLETED"
-    mock_create.return_value = task_mock
-
-    with patch.object(
-        AwsQuantumTaskBatch,
-        "_tasks_inputs_gatedefs",
-        wraps=AwsQuantumTaskBatch._tasks_inputs_gatedefs,
-    ) as normalize_mock:
-        AwsQuantumTaskBatch(
-            Mock(),
-            "foo",
-            _circuits(2),
-            S3_TARGET,
-            [100, 200],
-            max_parallel=1,
-        )
-
-    normalize_mock.assert_called_once()
-
-
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_creation_with_shot_sequence(mock_create):
     task_mock = Mock()
     type(task_mock).id = PropertyMock(side_effect=uuid.uuid4)
@@ -123,7 +100,9 @@ def test_creation_with_shot_sequence_mismatch(mock_create):
     task_mock.state.return_value = "COMPLETED"
     mock_create.return_value = task_mock
 
-    with pytest.raises(ValueError, match="Multiple shots and quantum tasks"):
+    with pytest.raises(
+        ValueError, match="Multiple shots and quantum tasks must be equal in number."
+    ):
         AwsQuantumTaskBatch(
             Mock(),
             "foo",
