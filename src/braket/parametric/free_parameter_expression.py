@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import operator
+from collections.abc import Callable
 from functools import reduce
 from numbers import Number
 from typing import Any, ClassVar
@@ -97,6 +98,21 @@ class FreeParameterExpression:
         else:
             raise NotImplementedError
 
+    _STRING_FUNCTIONS: ClassVar[dict[str, Callable[..., Any]]] = {
+        "sin": sympy.sin,
+        "cos": sympy.cos,
+        "tan": sympy.tan,
+        "arcsin": sympy.asin,
+        "arccos": sympy.acos,
+        "arctan": sympy.atan,
+        "exp": sympy.exp,
+        "log": sympy.log,
+        "sqrt": sympy.sqrt,
+        "mod": sympy.Mod,
+        "ceiling": sympy.ceiling,
+        "floor": sympy.floor,
+    }
+
     @property
     def expression(self) -> Number | sympy.Expr:
         """Gets the expression.
@@ -144,6 +160,15 @@ class FreeParameterExpression:
             return FreeParameterExpression(node.value)
         if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name) or node.keywords:
+                raise ValueError(f"Unsupported string detected: {node}")
+            function = self._STRING_FUNCTIONS.get(node.func.id)
+            if function is None:
+                raise ValueError(f"Unsupported string function: {node.func.id}")
+            return FreeParameterExpression(
+                function(*(self._eval_operation(arg).expression for arg in node.args))
+            )
         if isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")

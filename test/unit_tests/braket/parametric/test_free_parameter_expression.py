@@ -54,6 +54,26 @@ def test_equality_str():
 
 
 @pytest.mark.parametrize(
+    ("string_expression", "expected_expression"),
+    [
+        ("exp(alpha)", sympy.exp(sympy.Symbol("alpha"))),
+        ("log(alpha)", sympy.log(sympy.Symbol("alpha"))),
+        ("sqrt(alpha)", sympy.sqrt(sympy.Symbol("alpha"))),
+        ("mod(alpha, 2)", sympy.Mod(sympy.Symbol("alpha"), 2)),
+    ],
+)
+def test_string_function_expression_matches_sympy(string_expression, expected_expression):
+    assert FreeParameterExpression(string_expression) == FreeParameterExpression(
+        expected_expression
+    )
+
+
+def test_unsupported_string_function_raises_value_error():
+    with pytest.raises(ValueError, match="Unsupported string function: custom"):
+        FreeParameterExpression("custom(alpha)")
+
+
+@pytest.mark.parametrize(
     ("function", "extra_args", "expected"),
     [
         (sympy.sin, (), "sin(alpha)"),
