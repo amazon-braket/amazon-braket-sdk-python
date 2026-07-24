@@ -42,3 +42,20 @@ def test_broadcast_event():
     broadcast_event("EVENT")
     tracker.receive_event.assert_called_with("EVENT")
     deregister_tracker(tracker)
+
+
+def test_broadcast_event_tracker_deregisters_during_broadcast():
+    class SelfDeregisteringTracker:
+        def __init__(self):
+            self.events = []
+
+        def receive_event(self, event):
+            self.events.append(event)
+            deregister_tracker(self)
+
+    trackers = [SelfDeregisteringTracker() for _ in range(2)]
+    for tracker in trackers:
+        register_tracker(tracker)
+    broadcast_event("EVENT")
+    assert all(tracker.events == ["EVENT"] for tracker in trackers)
+    assert active_trackers() == set()
