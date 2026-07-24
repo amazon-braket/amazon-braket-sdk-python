@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import Any
 
 from braket.device_schema import DeviceActionType, DeviceCapabilities
@@ -68,7 +69,7 @@ class Device(ABC):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: int | None,
+        shots: int | Sequence[int] | None,
         max_parallel: int | None,
         inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,
@@ -79,7 +80,9 @@ class Device(ABC):
         Args:
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of circuits or problems to run on device.
-            shots (int | None): The number of times to run the circuit or annealing problem.
+            shots (int | Sequence[int] | None): The number of times to run each
+                circuit or annealing problem. If an integer, this value is used for every task.
+                If a sequence, each element is used for the corresponding task.
             max_parallel (int | None): The maximum number of quantum tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device.

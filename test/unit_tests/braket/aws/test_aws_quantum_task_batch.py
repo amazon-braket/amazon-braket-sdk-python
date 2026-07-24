@@ -74,6 +74,67 @@ def test_creation_with_experimental_capabilities_string(mock_create):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_creation_with_shot_sequence(mock_create):
+    task_mock = Mock()
+    type(task_mock).id = PropertyMock(side_effect=uuid.uuid4)
+    task_mock.state.return_value = "COMPLETED"
+    mock_create.return_value = task_mock
+
+    shots = [100, 200, 300]
+    batch = AwsQuantumTaskBatch(
+        Mock(),
+        "foo",
+        _circuits(len(shots)),
+        S3_TARGET,
+        shots,
+        max_parallel=1,
+    )
+
+    assert batch.size == len(shots)
+    assert [call.args[4] for call in mock_create.call_args_list] == shots
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_creation_with_shot_sequence_mismatch(mock_create):
+    task_mock = Mock()
+    task_mock.state.return_value = "COMPLETED"
+    mock_create.return_value = task_mock
+
+    with pytest.raises(
+        ValueError, match="Multiple shots and quantum tasks must be equal in number."
+    ):
+        AwsQuantumTaskBatch(
+            Mock(),
+            "foo",
+            _circuits(3),
+            S3_TARGET,
+            [100, 200],
+            max_parallel=1,
+        )
+
+    mock_create.assert_not_called()
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_creation_with_incomplete_shot_sequence(mock_create):
+    task_mock = Mock()
+    task_mock.state.return_value = "COMPLETED"
+    mock_create.return_value = task_mock
+
+    with pytest.raises(ValueError, match="Shots must be specified for every quantum task"):
+        AwsQuantumTaskBatch(
+            Mock(),
+            "foo",
+            _circuits(2),
+            S3_TARGET,
+            [100, None],
+            max_parallel=1,
+        )
+
+    mock_create.assert_not_called()
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_successful(mock_create):
     task_mock = Mock()
     type(task_mock).id = PropertyMock(side_effect=uuid.uuid4)
@@ -176,6 +237,35 @@ def test_retry(mock_create):
     batch._results = None
     with pytest.raises(RuntimeError):
         batch.retry_unsuccessful_tasks()
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_retry_with_shot_sequence(mock_create):
+    bad_task_mock = Mock()
+    type(bad_task_mock).id = PropertyMock(side_effect=uuid.uuid4)
+    bad_task_mock.state.return_value = random.choice(["CANCELLED", "FAILED"])
+    bad_task_mock.result.return_value = None
+
+    good_task_mock = Mock()
+    good_task_mock.state.return_value = "COMPLETED"
+    result = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    good_task_mock.result.return_value = result
+
+    mock_create.side_effect = [bad_task_mock, good_task_mock, good_task_mock]
+
+    shots = [100, 200]
+    batch = AwsQuantumTaskBatch(
+        Mock(),
+        "foo",
+        [Circuit().h(0), Circuit().h(1)],
+        S3_TARGET,
+        shots,
+        max_parallel=1,
+    )
+    assert batch.results(max_retries=0) == [None, result]
+
+    assert batch.retry_unsuccessful_tasks()
+    assert [call.args[4] for call in mock_create.call_args_list] == [100, 200, 100]
 
 
 @patch("braket.aws.aws_quantum_task_batch.ThreadPoolExecutor")

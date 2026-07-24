@@ -18,6 +18,7 @@ import json
 import os
 import urllib.request
 import warnings
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, ClassVar
@@ -233,7 +234,7 @@ class AwsDevice(Device):
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
         s3_destination_folder: AwsSession.S3DestinationFolder | None = None,
-        shots: int | None = None,
+        shots: int | Sequence[int] | None = None,
         max_parallel: int | None = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -254,8 +255,10 @@ class AwsDevice(Device):
             s3_destination_folder (S3DestinationFolder | None): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
-            shots (int | None): The number of times to run the circuit or annealing problem.
-                Default is 1000 for QPUs and 0 for simulators.
+            shots (int | Sequence[int] | None): The number of times to run each
+                circuit or annealing problem. If an integer, this value is used for every task.
+                If a sequence, each element is used for the corresponding task. Default is 1000
+                for QPUs and 0 for simulators.
             max_parallel (int | None): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device. Default: 10
