@@ -99,7 +99,7 @@ Many quantum algorithms need to run multiple independent circuits, and submittin
 circuits = [bell for _ in range(5)]
 batch = device.run_batch(circuits, shots=100)
 # The result of the first quantum task in the batch
-print(batch.results()[0].measurement_counts)  
+print(batch.results()[0].measurement_counts)
 ```
 
 ### Running a hybrid job
