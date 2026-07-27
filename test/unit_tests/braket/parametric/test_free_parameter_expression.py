@@ -73,6 +73,12 @@ def test_unsupported_string_function_raises_value_error():
         FreeParameterExpression("custom(alpha)")
 
 
+@pytest.mark.parametrize("string_expression", ["sin(alpha, beta=1)", "math.sin(alpha)"])
+def test_unsupported_string_call_raises_value_error(string_expression):
+    with pytest.raises(ValueError, match="Unsupported string detected"):
+        FreeParameterExpression(string_expression)
+
+
 @pytest.mark.parametrize(
     ("function", "extra_args", "expected"),
     [
