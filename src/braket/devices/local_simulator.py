@@ -13,8 +13,8 @@
 
 from __future__ import annotations
 
-import sys
 from functools import singledispatchmethod
+from importlib.metadata import entry_points
 from itertools import repeat
 from os import cpu_count
 from typing import Any
@@ -47,11 +47,6 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult
 from braket.tasks.quantum_task import TaskSpecification
-
-if sys.version_info.minor == 9:
-    from backports.entry_points_selectable import entry_points
-else:
-    from importlib.metadata import entry_points
 
 _simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
 

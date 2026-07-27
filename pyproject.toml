@@ -38,7 +38,6 @@ dependencies = [
     "openpulse",
     "openqasm3",
     "sympy",
-    "backports.entry-points-selectable",
 ]
 
 [project.optional-dependencies]
@@ -92,9 +91,7 @@ show_missing = true
 ignore_errors = true
 exclude_lines = [
     "pragma: no cover",
-    "from importlib.metadata import entry_points",
     "raise NotImplementedError",
-    "if sys.version_info.minor == 9:",
     "if TYPE_CHECKING:",
 ]
 
@@ -187,7 +184,7 @@ lint.ignore = [
     "TD",      # Allow TODO Statements
     "TRY003",  # Longer messages are fine.
 ]
-lint.per-file-ignores."tests/**/*.py" = [
+lint.per-file-ignores."test/**/*.py" = [
     "D",       # don't care about documentation in tests
     "FBT",     # don't care about booleans as positional arguments in tests
     "INP001",  # no implicit namespace
