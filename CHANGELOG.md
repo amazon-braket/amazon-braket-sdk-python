@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.124.3 (2026-07-28)
+
+### Bug Fixes and Other Changes
+
+ * default emulator to None shots
+
 ## v1.124.2 (2026-07-27)
 
 ### Bug Fixes and Other Changes
