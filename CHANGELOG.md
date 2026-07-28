@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.124.2 (2026-07-27)
+
+### Bug Fixes and Other Changes
+
+ * drop Python 3.9 shim
+
+## v1.124.1 (2026-07-23)
+
+### Bug Fixes and Other Changes
+
+ * Format with new ruff rules
+
 ## v1.124.0 (2026-07-14)
 
 ### Features
