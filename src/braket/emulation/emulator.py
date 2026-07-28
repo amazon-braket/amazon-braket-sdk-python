@@ -66,7 +66,7 @@ class Emulator(Device):
     def run(
         self,
         task_specification: TaskSpecification,
-        shots: int | None = 0,
+        shots: int | None = None,
         inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
