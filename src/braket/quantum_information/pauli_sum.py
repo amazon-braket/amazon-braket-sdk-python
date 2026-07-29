@@ -182,7 +182,7 @@ class PauliSum:
         factors = ["I"] * pauli_string.qubit_count
         for qubit in range(pauli_string.qubit_count):
             factors[qubit] = "IXYZ"[pauli_string[qubit]]
-        return coefficient * pauli_string.phase, f"+{''.join(factors)}"
+        return coefficient * pauli_string.phase, "".join(factors)
 
     @staticmethod
     def _coerce(other: PauliSum | PauliString | str) -> PauliSum:
@@ -221,7 +221,7 @@ class PauliSum:
             factors = PauliSum._factors_from_tensor_product(unscaled)
         else:
             raise TypeError(f"Unsupported observable type {type(observable).__name__}")
-        return coefficient, f"+{''.join(factors)}"
+        return coefficient, "".join(factors)
 
     @staticmethod
     def _factors_from_standard(observable: StandardObservable) -> list[str]:
