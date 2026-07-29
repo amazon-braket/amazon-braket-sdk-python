@@ -84,9 +84,9 @@ def test_string_function_keyword_arguments_raise_value_error():
         FreeParameterExpression("sin(alpha, beta=1)")
 
 
-def test_unsupported_string_callable_raises_value_error():
+def test_unsupported_string_callable_raises_type_error():
     with pytest.raises(
-        ValueError,
+        TypeError,
         match="Unsupported function call target 'Attribute'; expected a direct function name",
     ):
         FreeParameterExpression("math.sin(alpha)")

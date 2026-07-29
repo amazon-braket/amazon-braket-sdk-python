@@ -148,25 +148,7 @@ class FreeParameterExpression:
         if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
         if isinstance(node, ast.Call):
-            if not isinstance(node.func, ast.Name):
-                raise ValueError(
-                    "Unsupported function call target "
-                    f"'{type(node.func).__name__}'; expected a direct function name"
-                )
-            if node.keywords:
-                raise ValueError(
-                    f"Keyword arguments are not supported for string function '{node.func.id}'"
-                )
-            function = _STRING_FUNCTIONS.get(node.func.id)
-            if function is None:
-                supported_functions = ", ".join(_STRING_FUNCTIONS)
-                raise ValueError(
-                    f"Unsupported string function '{node.func.id}'; "
-                    f"supported functions are: {supported_functions}"
-                )
-            return FreeParameterExpression(
-                function(*(self._eval_operation(arg).expression for arg in node.args))
-            )
+            return self._eval_function_call(node)
         if isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -178,6 +160,27 @@ class FreeParameterExpression:
                 raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
             return self._eval_operation(node.operand)._operations[type(node.op)]()
         raise ValueError(f"Unsupported string detected: {node}")
+
+    def _eval_function_call(self, node: ast.Call) -> FreeParameterExpression:
+        if not isinstance(node.func, ast.Name):
+            raise TypeError(
+                "Unsupported function call target "
+                f"'{type(node.func).__name__}'; expected a direct function name"
+            )
+        if node.keywords:
+            raise ValueError(
+                f"Keyword arguments are not supported for string function '{node.func.id}'"
+            )
+        function = _STRING_FUNCTIONS.get(node.func.id)
+        if function is None:
+            supported_functions = ", ".join(_STRING_FUNCTIONS)
+            raise ValueError(
+                f"Unsupported string function '{node.func.id}'; "
+                f"supported functions are: {supported_functions}"
+            )
+        return FreeParameterExpression(
+            function(*(self._eval_operation(arg).expression for arg in node.args))
+        )
 
     def __add__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
