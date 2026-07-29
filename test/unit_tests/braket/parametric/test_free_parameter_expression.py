@@ -69,14 +69,27 @@ def test_string_function_expression_matches_sympy(string_expression, expected_ex
 
 
 def test_unsupported_string_function_raises_value_error():
-    with pytest.raises(ValueError, match="Unsupported string function: custom"):
+    with pytest.raises(
+        ValueError,
+        match="Unsupported string function 'custom'; supported functions are:",
+    ):
         FreeParameterExpression("custom(alpha)")
 
 
-@pytest.mark.parametrize("string_expression", ["sin(alpha, beta=1)", "math.sin(alpha)"])
-def test_unsupported_string_call_raises_value_error(string_expression):
-    with pytest.raises(ValueError, match="Unsupported string detected"):
-        FreeParameterExpression(string_expression)
+def test_string_function_keyword_arguments_raise_value_error():
+    with pytest.raises(
+        ValueError,
+        match="Keyword arguments are not supported for string function 'sin'",
+    ):
+        FreeParameterExpression("sin(alpha, beta=1)")
+
+
+def test_unsupported_string_callable_raises_value_error():
+    with pytest.raises(
+        ValueError,
+        match="Unsupported function call target 'Attribute'; expected a direct function name",
+    ):
+        FreeParameterExpression("math.sin(alpha)")
 
 
 @pytest.mark.parametrize(
