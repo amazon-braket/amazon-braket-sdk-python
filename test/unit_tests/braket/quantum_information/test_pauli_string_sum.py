@@ -20,35 +20,35 @@ from braket.quantum_information import PauliString, PauliStringSum, PauliSum
 def test_initializes_from_weighted_list_and_combines_terms():
     pauli_sum = PauliStringSum.from_list([(1.5, "XZ"), (2.0, "-XZ"), (3.0, "YY")])
 
-    assert pauli_sum.to_list() == [(-0.5, "+XZ"), (3.0, "+YY")]
+    assert pauli_sum.to_list() == [(-0.5, "XZ"), (3.0, "YY")]
 
 
 def test_addition_subtraction_and_scalar_multiplication():
     first = PauliStringSum([(1.0, "XI")])
     second = PauliStringSum([(2.0, "IZ")])
 
-    assert (first + second - PauliString("XI")).to_list() == [(2.0, "+IZ")]
-    assert (0.5 * second).to_list() == [(1.0, "+IZ")]
-    assert (-second).to_list() == [(-2.0, "+IZ")]
+    assert (first + second - PauliString("XI")).to_list() == [(2.0, "IZ")]
+    assert (0.5 * second).to_list() == [(1.0, "IZ")]
+    assert (-second).to_list() == [(-2.0, "IZ")]
 
 
 def test_multiplication_by_pauli_string():
     pauli_sum = PauliStringSum([(2.0, "XY"), (3.0, "ZZ")])
 
-    assert (pauli_sum * PauliString("YZ")).to_list() == [(-2.0, "+ZX"), (-3.0, "+XI")]
+    assert (pauli_sum * PauliString("YZ")).to_list() == [(-2.0, "ZX"), (-3.0, "XI")]
 
 
 def test_multiplication_by_pauli_string_pads_mixed_width_terms():
     pauli_sum = PauliStringSum([(1.0, "X"), (2.0, "IZ")])
 
-    assert (pauli_sum * PauliString("ZZ")).to_list() == [(-1.0, "+YZ"), (2.0, "+ZI")]
+    assert (pauli_sum * PauliString("ZZ")).to_list() == [(-1.0, "YZ"), (2.0, "ZI")]
 
 
 def test_left_multiplication_by_pauli_string_preserves_order():
     pauli_sum = PauliStringSum([(2.0, "X")])
 
-    assert (pauli_sum * PauliString("Z")).to_list() == [(-2.0, "+Y")]
-    assert (PauliString("Z") * pauli_sum).to_list() == [(2.0, "+Y")]
+    assert (pauli_sum * PauliString("Z")).to_list() == [(-2.0, "Y")]
+    assert (PauliString("Z") * pauli_sum).to_list() == [(2.0, "Y")]
 
 
 def test_indexing_and_membership():
@@ -78,15 +78,15 @@ def test_equality_is_independent_of_term_insertion_order():
 def test_reverse_subtraction():
     pauli_sum = PauliStringSum([(2.0, "XI")])
 
-    assert (PauliString("IZ") - pauli_sum).to_list() == [(1, "+IZ"), (-2.0, "+XI")]
+    assert (PauliString("IZ") - pauli_sum).to_list() == [(1, "IZ"), (-2.0, "XI")]
 
 
 def test_from_sum_with_targeted_observables():
     observable_sum = 2.0 * (X(0) @ Y(2)) - 3.0 * Z(1)
 
     assert PauliStringSum.from_sum(observable_sum).to_list() == [
-        (2.0, "+XIY"),
-        (-3.0, "+IZ"),
+        (2.0, "XIY"),
+        (-3.0, "IZ"),
     ]
 
 
@@ -102,7 +102,7 @@ def test_from_sum_with_targetless_tensor_product():
 
     observable = Sum([1.0 * (X() @ Y())])
 
-    assert PauliStringSum.from_sum(observable).to_list() == [(1.0, "+XY")]
+    assert PauliStringSum.from_sum(observable).to_list() == [(1.0, "XY")]
 
 
 def test_commutation_checks():
@@ -146,13 +146,13 @@ def test_empty_sum_has_zero_qubit_count_and_repr():
 def test_zero_coefficient_terms_cancel_to_empty_sum():
     pauli_sum = PauliStringSum([(1.0, "X"), (-1.0, "X"), (2.0, "Y")])
 
-    assert pauli_sum.to_list() == [(2.0, "+Y")]
+    assert pauli_sum.to_list() == [(2.0, "Y")]
 
 
 def test_zero_coefficient_term_is_ignored():
     pauli_sum = PauliStringSum([(0.0, "X"), (2.0, "Y")])
 
-    assert pauli_sum.to_list() == [(2.0, "+Y")]
+    assert pauli_sum.to_list() == [(2.0, "Y")]
 
 
 def test_radd_and_non_matching_eq_type():
@@ -172,7 +172,7 @@ def test_from_sum_uses_default_target_for_standard_observables_and_rejects_unmap
     from braket.circuits.observables import Sum
 
     from_sum_with_no_targets = PauliStringSum.from_sum(Sum([1.0 * X()]))
-    assert from_sum_with_no_targets.to_list() == [(1.0, "+X")]
+    assert from_sum_with_no_targets.to_list() == [(1.0, "X")]
 
     class NonStandardObservable:
         coefficient = 1.0

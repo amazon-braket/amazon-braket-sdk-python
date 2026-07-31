@@ -15,33 +15,36 @@ from __future__ import annotations
 
 import ast
 import operator
+from collections.abc import Callable
 from functools import reduce
 from numbers import Number
-from typing import Any, ClassVar
+from typing import Any
 
 import sympy
 from oqpy.base import OQPyExpression
 from oqpy.classical_types import FloatVar
 from sympy.printing.str import StrPrinter
 
+_STRING_FUNCTIONS: dict[str, Callable[..., Any]] = {
+    "sin": sympy.sin,
+    "cos": sympy.cos,
+    "tan": sympy.tan,
+    "arcsin": sympy.asin,
+    "arccos": sympy.acos,
+    "arctan": sympy.atan,
+    "exp": sympy.exp,
+    "log": sympy.log,
+    "sqrt": sympy.sqrt,
+    "mod": sympy.Mod,
+    "ceiling": sympy.ceiling,
+    "floor": sympy.floor,
+}
+_FN_MAP = {function: name for name, function in _STRING_FUNCTIONS.items()}
+
 
 class _OpenQASMExpressionPrinter(StrPrinter):
-    _FN_MAP: ClassVar[dict[type, str]] = {
-        sympy.sin: "sin",
-        sympy.cos: "cos",
-        sympy.tan: "tan",
-        sympy.asin: "arcsin",
-        sympy.acos: "arccos",
-        sympy.atan: "arctan",
-        sympy.exp: "exp",
-        sympy.log: "log",
-        sympy.Mod: "mod",
-        sympy.ceiling: "ceiling",
-        sympy.floor: "floor",
-    }
-
     def _print_Function(self, expr: sympy.Function) -> str:
-        function_name = self._FN_MAP.get(expr.func)
+        function_name = _FN_MAP.get(expr.func)
         if function_name is None:
             raise ValueError(f"No OpenQASM 3 equivalent for {expr.func.__name__}")
         args = ", ".join(self._print(arg) for arg in expr.args)
@@ -144,6 +147,8 @@ class FreeParameterExpression:
             return FreeParameterExpression(node.value)
         if isinstance(node, ast.Name):
             return FreeParameterExpression(sympy.Symbol(node.id))
+        if isinstance(node, ast.Call):
+            return self._eval_function_call(node)
         if isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations:
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -155,6 +160,27 @@ class FreeParameterExpression:
                 raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
             return self._eval_operation(node.operand)._operations[type(node.op)]()
         raise ValueError(f"Unsupported string detected: {node}")
+
+    def _eval_function_call(self, node: ast.Call) -> FreeParameterExpression:
+        if not isinstance(node.func, ast.Name):
+            raise TypeError(
+                "Unsupported function call target "
+                f"'{type(node.func).__name__}'; expected a direct function name"
+            )
+        if node.keywords:
+            raise ValueError(
+                f"Keyword arguments are not supported for string function '{node.func.id}'"
+            )
+        function = _STRING_FUNCTIONS.get(node.func.id)
+        if function is None:
+            supported_functions = ", ".join(_STRING_FUNCTIONS)
+            raise ValueError(
+                f"Unsupported string function '{node.func.id}'; "
+                f"supported functions are: {supported_functions}"
+            )
+        return FreeParameterExpression(
+            function(*(self._eval_operation(arg).expression for arg in node.args))
+        )
 
     def __add__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
