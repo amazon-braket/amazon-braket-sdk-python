@@ -40,7 +40,7 @@ jobs:
           python3 doc/cheat_sheet/_scripts/generate_genai_cheat_sheet.py
           cp doc/genai_cheat_sheet.md _site/genai_cheat_sheet.md
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
 
   deploy:
     environment:
