@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.125.0 (2026-08-03)
+
+### Features
+
+ * Per-task shots in `run_batch`
+
+### Bug Fixes and Other Changes
+
+ * parse function calls in FreeParameterExpression
+ * remove redundant sign
+
 ## v1.124.3 (2026-07-28)
 
 ### Bug Fixes and Other Changes
