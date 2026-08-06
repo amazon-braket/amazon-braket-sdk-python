@@ -1,11 +1,14 @@
 """Sphinx configuration."""
 
 import datetime
+import os
 import shutil
 import subprocess
 import sys
 from importlib.metadata import version
 from pathlib import Path
+
+from sphinx.application import Sphinx
 
 DOC_DIR = Path(__file__).parent
 SCRIPT_PATH = DOC_DIR / "update_examples.py"
@@ -84,3 +87,38 @@ apidoc_template_dir = "_templates"
 typehints_fully_qualified = False
 always_document_param_types = True
 typehints_document_rtype = True
+
+LLMS_TXT_TITLE = "Amazon Braket Python SDK"
+LLMS_TXT_SUMMARY = (
+    "Open source Python SDK to design and build quantum circuits, submit them to "
+    "Amazon Braket devices as quantum tasks, and monitor their execution."
+)
+LLMS_TXT_BASE_URL = "https://amazon-braket-sdk-python.readthedocs.io/en/stable/"
+
+
+def _write_llms_txt(app: Sphinx, exception: Exception | None) -> None:
+    """Write llms.txt, a manifest of every built page for LLM discoverability. The format follows https://llmstxt.org ."""
+    if exception or app.builder.name != "html":
+        return
+
+    # Read the Docs passes the canonical URL to every build automatically, so this
+    # is set in any RTD build and the default only applies elsewhere. See
+    # https://docs.readthedocs.com/platform/stable/canonical-urls.html#how-to-specify-the-canonical-url
+    base_url = os.environ.get("READTHEDOCS_CANONICAL_URL", LLMS_TXT_BASE_URL)
+    if base_url and not base_url.endswith("/"):
+        base_url += "/"
+
+    env = app.env
+    lines = [f"# {LLMS_TXT_TITLE}", "", f"> {LLMS_TXT_SUMMARY}", "", "## Docs", ""]
+    for docname in sorted(env.all_docs):
+        title = env.titles[docname].astext() if docname in env.titles else docname
+        lines.append(f"- [{title}]({base_url}{app.builder.get_target_uri(docname)})")
+
+    out = Path(app.outdir) / "llms.txt"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"--> Wrote {out.name} with {len(lines) - 6} entries")
+
+
+def setup(app: Sphinx) -> None:
+    """Register build hooks."""
+    app.connect("build-finished", _write_llms_txt)
