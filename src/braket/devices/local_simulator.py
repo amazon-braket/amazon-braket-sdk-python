@@ -161,19 +161,21 @@ class LocalSimulator(Device):
             raise NotImplementedError("LocalSimulator.run_batch does not support per-task shots.")
         inputs = inputs or {}
 
-        if self._noise_model:
-            task_specifications = [
-                self._noise_model.apply(task_specification)
-                for task_specification in task_specifications
-            ]
-
-        if not max_parallel:
-            max_parallel = cpu_count()
-
         single_task = isinstance(
             task_specifications,
             Circuit | OpenQASMProgram | Problem | AnalogHamiltonianSimulation,
         )
+
+        if self._noise_model:
+            if single_task:
+                task_specifications = self._noise_model.apply(task_specifications)
+            else:
+                task_specifications = [
+                    self._noise_model.apply(task_specification)
+                    for task_specification in task_specifications
+                ]
+
+        max_parallel = max_parallel or cpu_count()
 
         single_input = isinstance(inputs, dict)
 
