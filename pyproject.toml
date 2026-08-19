@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "amazon-braket-schemas>=1.27.0",
+    "amazon-braket-schemas>=1.30.0",
     "amazon-braket-default-simulator>=1.32.0",
     "oqpy~=0.3.7",
     "backoff",
