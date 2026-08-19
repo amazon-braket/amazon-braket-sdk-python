@@ -52,6 +52,8 @@ test = [
 ]
 type-check = [
     "mypy==2.3.0",
+    # numpy>=2.5 stubs use PEP 695 syntax, unsupported on Python 3.11
+    "numpy==2.4.6",
 ]
 docs = [
     "sphinx",
