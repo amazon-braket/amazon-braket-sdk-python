@@ -20,9 +20,6 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Any, TypeAlias
 
-# The numeric types accepted for the times and values of a time series. A single series may
-# hold a mix of these types, so arithmetic between its entries is typed as `Any`; mixing
-# `Decimal` with `float` is unsupported by Python's numeric tower.
 Number: TypeAlias = float | Decimal
 
 
@@ -249,8 +246,6 @@ class TimeSeries:
             return TimeSeries.from_lists(times=self.times(), values=self.values())
 
         new_time_series = TimeSeries()
-        # The entries of a series may mix numeric types, so the shift and the boundary value
-        # below are computed dynamically
         left_t: Any = self.times()[-1]
         right_t: Any = other.times()[0]
         other_times = [t - right_t + left_t for t in other.times()]
@@ -419,7 +414,6 @@ def _all_close(first: TimeSeries, second: TimeSeries, tolerance: float = 1e-7) -
         return False
     if len(first) == 0:
         return True
-    # The entries of a series may mix numeric types, so their differences are computed dynamically
     first_times: list[Any] = first.times()
     second_times: list[Any] = second.times()
     first_values: list[Any] = first.values()

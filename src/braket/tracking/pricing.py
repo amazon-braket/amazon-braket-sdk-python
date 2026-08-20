@@ -36,7 +36,6 @@ class Pricing:
             "BRAKET_PRICE_OFFERS_URL",
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",
         )
-        # `preload_content=False` streams the response, so the concrete `HTTPResponse` is returned
         response = cast(
             urllib3.HTTPResponse,
             http.request(
@@ -47,8 +46,6 @@ class Pricing:
         )
         response.auto_close = False
 
-        # `HTTPResponse` is a read-only binary stream; the cast satisfies the buffer protocol
-        # that `TextIOWrapper` expects, which also includes write methods we never call
         text_response = io.TextIOWrapper(cast(io.BufferedReader, response), encoding="utf-8")
 
         # Data starts on line 6

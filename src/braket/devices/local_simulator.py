@@ -162,7 +162,6 @@ class LocalSimulator(Device):
         inputs = inputs or {}
 
         if self._noise_model:
-            # A noise model is applied per specification, so only list inputs are supported here
             task_specifications = [
                 self._noise_model.apply(task_specification)
                 for task_specification in cast("list[TaskSpecification]", task_specifications)
@@ -178,8 +177,6 @@ class LocalSimulator(Device):
 
         single_input = isinstance(inputs, dict)
 
-        # The `single_task` and `single_input` flags already establish which of the union members
-        # is in hand, but they are opaque to the type checker, hence the casts below.
         if (
             not single_task
             and not single_input
@@ -354,7 +351,6 @@ class LocalSimulator(Device):
 
     @_to_result_object.register
     def _(self, result: ProgramSetTaskResult, task_specification: TaskSpecification | None = None):
-        # A `ProgramSetTaskResult` is only produced for program set specifications
         return ProgramSetQuantumTaskResult.from_object(
             result, cast("ProgramSet | None", task_specification)
         )
