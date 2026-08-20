@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -71,7 +72,7 @@ class S3DataSourceConfig:
             s3_data (str): Defines the location of s3 data to train on.
             content_type (str | None): MIME type of the input data (default: None).
         """
-        self.config = {
+        self.config: dict[str, Any] = {
             "dataSource": {
                 "s3DataSource": {
                     "s3Uri": s3_data,

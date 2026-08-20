@@ -108,7 +108,7 @@ class CwlInsightsMetricsFetcher:
 
     def _parse_log_query_results(
         self, results: list[Any], metric_type: MetricType, statistic: MetricStatistic
-    ) -> dict[str, list[str | float | int]]:
+    ) -> dict[str, list[str | float | None]]:
         """Parses CloudWatch Insights results and returns all found metrics.
 
         Args:
@@ -119,7 +119,7 @@ class CwlInsightsMetricsFetcher:
                 when there is a conflict.
 
         Returns:
-            dict[str, list[str | float | int]]: The metrics data.
+            dict[str, list[str | float | None]]: The metrics data.
         """
         parser = LogMetricsParser()
         for result in results:
@@ -134,7 +134,7 @@ class CwlInsightsMetricsFetcher:
         job_start_time: int | None = None,
         job_end_time: int | None = None,
         stream_prefix: str | None = None,
-    ) -> dict[str, list[str | float | int]]:
+    ) -> dict[str, list[str | float | None]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
@@ -151,7 +151,7 @@ class CwlInsightsMetricsFetcher:
                 of the job name.
 
         Returns:
-            dict[str, list[str | float | int]]: The metrics data, where the keys
+            dict[str, list[str | float | None]]: The metrics data, where the keys
             are the column names and the values are a list containing the values in each row.
 
         Example:

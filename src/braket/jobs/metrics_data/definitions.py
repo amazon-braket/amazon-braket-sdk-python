@@ -18,20 +18,20 @@ from enum import Enum, unique
 class MetricPeriod(Enum):
     """Period over which the cloudwatch metric is aggregated."""
 
-    ONE_MINUTE: int = 60
+    ONE_MINUTE = 60
 
 
 @unique
 class MetricStatistic(Enum):
     """Metric data aggregation to use over the specified period."""
 
-    MIN: str = "Min"
-    MAX: str = "Max"
+    MIN = "Min"
+    MAX = "Max"
 
 
 @unique
 class MetricType(Enum):
     """Metric type."""
 
-    TIMESTAMP: str = "Timestamp"
-    ITERATION_NUMBER: str = "IterationNumber"
+    TIMESTAMP = "Timestamp"
+    ITERATION_NUMBER = "IterationNumber"

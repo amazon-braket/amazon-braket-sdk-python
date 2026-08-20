@@ -13,12 +13,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from functools import singledispatchmethod
 from importlib.metadata import entry_points
 from itertools import repeat
 from os import cpu_count
-from typing import Any
+from typing import Any, cast
 
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.ir.ahs import Program as AHSProgram
@@ -162,9 +162,10 @@ class LocalSimulator(Device):
         inputs = inputs or {}
 
         if self._noise_model:
+            # A noise model is applied per specification, so only list inputs are supported here
             task_specifications = [
                 self._noise_model.apply(task_specification)
-                for task_specification in task_specifications
+                for task_specification in cast("list[TaskSpecification]", task_specifications)
             ]
 
         if not max_parallel:
@@ -177,15 +178,28 @@ class LocalSimulator(Device):
 
         single_input = isinstance(inputs, dict)
 
-        if not single_task and not single_input and len(task_specifications) != len(inputs):
+        # The `single_task` and `single_input` flags already establish which of the union members
+        # is in hand, but they are opaque to the type checker, hence the casts below.
+        if (
+            not single_task
+            and not single_input
+            and len(cast("list[TaskSpecification]", task_specifications))
+            != len(cast("list[dict[str, float]]", inputs))
+        ):
             raise ValueError("Multiple inputs and task specifications must be equal in number.")
-        if single_task:
-            task_specifications = repeat(task_specifications)
 
-        if single_input:
-            inputs = repeat(inputs)
+        specifications: Iterable[TaskSpecification] = (
+            repeat(cast("TaskSpecification", task_specifications))
+            if single_task
+            else cast("list[TaskSpecification]", task_specifications)
+        )
+        input_maps: Iterable[dict[str, float]] = (
+            repeat(cast("dict[str, float]", inputs))
+            if single_input
+            else cast("list[dict[str, float]]", inputs)
+        )
 
-        tasks_and_inputs = zip(task_specifications, inputs, strict=False)
+        tasks_and_inputs = zip(specifications, input_maps, strict=False)
 
         payloads = []
         for task_specification, input_map in (
@@ -340,7 +354,10 @@ class LocalSimulator(Device):
 
     @_to_result_object.register
     def _(self, result: ProgramSetTaskResult, task_specification: TaskSpecification | None = None):
-        return ProgramSetQuantumTaskResult.from_object(result, task_specification)
+        # A `ProgramSetTaskResult` is only produced for program set specifications
+        return ProgramSetQuantumTaskResult.from_object(
+            result, cast("ProgramSet | None", task_specification)
+        )
 
     @_to_result_object.register
     def _(

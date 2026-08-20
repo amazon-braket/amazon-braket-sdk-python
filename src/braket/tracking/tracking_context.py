@@ -13,12 +13,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from braket.tracking.tracker import Tracker
+    from braket.tracking.tracking_events import _TrackingEvent
+
 
 class TrackingContext:
     def __init__(self):
-        self._trackers = set()
+        self._trackers: set[Tracker] = set()
 
-    def register_tracker(self, tracker: Tracker) -> None:  # ruff:ignore[undefined-name]
+    def register_tracker(self, tracker: Tracker) -> None:
         """Registers a tracker.
 
         Args:
@@ -26,7 +32,7 @@ class TrackingContext:
         """
         self._trackers.add(tracker)
 
-    def deregister_tracker(self, tracker: Tracker) -> None:  # ruff:ignore[undefined-name]
+    def deregister_tracker(self, tracker: Tracker) -> None:
         """Deregisters a tracker.
 
         Args:
@@ -34,7 +40,7 @@ class TrackingContext:
         """
         self._trackers.remove(tracker)
 
-    def broadcast_event(self, event: _TrackingEvent) -> None:  # ruff:ignore[undefined-name]
+    def broadcast_event(self, event: _TrackingEvent) -> None:
         """Broadcasts an event to all trackers.
 
         Args:
@@ -43,11 +49,11 @@ class TrackingContext:
         for tracker in self._trackers:
             tracker.receive_event(event)
 
-    def active_trackers(self) -> set:
+    def active_trackers(self) -> set[Tracker]:
         """Gets the active trackers.
 
         Returns:
-            set: The set of active trackers.
+            set[Tracker]: The set of active trackers.
         """
         return self._trackers
 

@@ -14,11 +14,16 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from numbers import Number
+from typing import Any, TypeAlias
+
+# The numeric types accepted for the times and values of a time series. A single series may
+# hold a mix of these types, so arithmetic between its entries is typed as `Any`; mixing
+# `Decimal` with `float` is unsupported by Python's numeric tower.
+Number: TypeAlias = float | Decimal
 
 
 @dataclass
@@ -35,9 +40,9 @@ class StitchBoundaryCondition(StrEnum):
 
 class TimeSeries:
     def __init__(self):
-        self._series = OrderedDict()
+        self._series: OrderedDict[Number, TimeSeriesItem] = OrderedDict()
         self._sorted = True
-        self._largest_time = -1
+        self._largest_time: Number = -1
 
     def put(
         self,
@@ -82,11 +87,11 @@ class TimeSeries:
         self._ensure_sorted()
         return [item.value for item in self._series.values()]
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[TimeSeriesItem]:
         self._ensure_sorted()
         return self._series.values().__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._series.values().__len__()
 
     def _ensure_sorted(self) -> None:
@@ -95,12 +100,12 @@ class TimeSeries:
             self._sorted = True
 
     @staticmethod
-    def from_lists(times: list[float], values: list[float]) -> TimeSeries:
+    def from_lists(times: Sequence[Number], values: Sequence[Number]) -> TimeSeries:
         """Create a time series from the list of time and value points
 
         Args:
-            times (list[float]): list of time points
-            values (list[float]): list of value points
+            times (Sequence[Number]): list of time points
+            values (Sequence[Number]): list of value points
 
         Returns:
             TimeSeries: time series constructed from lists
@@ -120,13 +125,13 @@ class TimeSeries:
         return ts
 
     @staticmethod
-    def constant_like(times: list | float | TimeSeries, constant: float = 0.0) -> TimeSeries:
+    def constant_like(times: list[Number] | TimeSeries, constant: Number = 0.0) -> TimeSeries:
         """Obtain a constant time series given another time series or the list of time points,
         and the constant values.
 
         Args:
-            times (list | float | TimeSeries): list of time points or a time series
-            constant (float): constant value
+            times (list[Number] | TimeSeries): list of time points or a time series
+            constant (Number): constant value
 
         Returns:
             TimeSeries: A constant time series
@@ -172,7 +177,8 @@ class TimeSeries:
                 concat_ts.values() = [1, 2, 4, 5]
         """
         not_empty_ts = len(other.times()) * len(self.times()) != 0
-        if not_empty_ts and min(other.times()) <= max(self.times()):
+        other_start: Any = min(other.times(), default=None)
+        if not_empty_ts and other_start <= max(self.times()):
             raise ValueError(
                 "The time points in the first TimeSeries must be strictly smaller \
                 then the time points in the second TimeSeries."
@@ -243,11 +249,16 @@ class TimeSeries:
             return TimeSeries.from_lists(times=self.times(), values=self.values())
 
         new_time_series = TimeSeries()
-        left_t, right_t = self.times()[-1], other.times()[0]
+        # The entries of a series may mix numeric types, so the shift and the boundary value
+        # below are computed dynamically
+        left_t: Any = self.times()[-1]
+        right_t: Any = other.times()[0]
         other_times = [t - right_t + left_t for t in other.times()]
         new_times = self.times() + other_times[1:]
 
-        left, right = self.values()[-1], other.values()[0]
+        left: Any = self.values()[-1]
+        right: Any = other.values()[0]
+        bndry_val: Any
         if boundary == StitchBoundaryCondition.MEAN:
             bndry_val = 0.5 * sum([left, right])
         elif boundary == StitchBoundaryCondition.LEFT:
@@ -388,7 +399,7 @@ class TimeSeries:
 
 
 # TODO: Verify if this belongs here.
-def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) -> bool:
+def _all_close(first: TimeSeries, second: TimeSeries, tolerance: float = 1e-7) -> bool:
     """Returns True if the times and values in two time series are all within (less than)
     a given tolerance range. The values in the TimeSeries must be numbers that can be
     subtracted from each-other, support getting the absolute value, and can be compared
@@ -397,7 +408,7 @@ def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) 
     Args:
         first (TimeSeries): A time series.
         second (TimeSeries): A time series.
-        tolerance (Number): The tolerance value.
+        tolerance (float): The tolerance value.
 
     Returns:
         bool: True if the times and values in two time series are all within (less than)
@@ -408,10 +419,11 @@ def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) 
         return False
     if len(first) == 0:
         return True
-    first_times = first.times()
-    second_times = second.times()
-    first_values = first.values()
-    second_values = second.values()
+    # The entries of a series may mix numeric types, so their differences are computed dynamically
+    first_times: list[Any] = first.times()
+    second_times: list[Any] = second.times()
+    first_values: list[Any] = first.values()
+    second_values: list[Any] = second.values()
     for index in range(len(first)):
         if abs(first_times[index] - second_times[index]) >= tolerance:
             return False

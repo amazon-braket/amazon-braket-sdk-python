@@ -60,11 +60,11 @@ class Tracker:
         """
         return self.__exit__()
 
-    def receive_event(self, event: _TaskCreationEvent) -> None:
-        """Process a Tack Creation Event.
+    def receive_event(self, event: _TrackingEvent) -> None:
+        """Process a tracking event.
 
         Args:
-            event (_TaskCreationEvent): The event to process.
+            event (_TrackingEvent): The event to process.
         """
         self._receive_internal(event)
 
@@ -141,7 +141,7 @@ class Tracker:
                  'execution_duration' : datetime.timedelta(seconds=5, microseconds=654321),
                  'billed_execution_duration' : datetime.timedelta(seconds=6, microseconds=123456)}}
         """
-        stats = {}
+        stats: dict[str, dict[str, Any]] = {}
         for details in self._resources.values():
             device_stats = stats.get(details["device"], {})
 
