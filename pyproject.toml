@@ -210,7 +210,7 @@ mypy-init-return = false
 builtins-allowed-modules = ["operator"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 mypy_path = "src"
 files = ["src/braket"]
 namespace_packages = true
