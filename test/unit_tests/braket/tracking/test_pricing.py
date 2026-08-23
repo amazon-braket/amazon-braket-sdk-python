@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
-from braket.tracking.pricing import Pricing
+from braket.tracking.pricing import Pricing, _http_client
 
 
 @pytest.fixture
@@ -49,3 +49,40 @@ def test_price_offer_env_var(mock_http):
     pricer.get_prices()
 
     mock_http.request.assert_called_with("GET", "https://myurl", preload_content=False)
+
+
+@patch.dict("os.environ", {"HTTPS_PROXY": "http://proxy.internal:8080"}, clear=True)
+def test_http_client_uses_proxy():
+    with patch("urllib3.ProxyManager") as proxy_manager:
+        assert _http_client("https://pricing.us-east-1.amazonaws.com/index.csv") is (
+            proxy_manager.return_value
+        )
+    proxy_manager.assert_called_once_with("http://proxy.internal:8080")
+
+
+@patch.dict(
+    "os.environ",
+    {"HTTPS_PROXY": "http://proxy.internal:8080", "NO_PROXY": "pricing.us-east-1.amazonaws.com"},
+    clear=True,
+)
+def test_http_client_honors_no_proxy():
+    with patch("urllib3.PoolManager") as pool_manager:
+        assert _http_client("https://pricing.us-east-1.amazonaws.com/index.csv") is (
+            pool_manager.return_value
+        )
+
+
+@patch.dict("os.environ", {"HTTP_PROXY": "http://proxy.internal:8080"}, clear=True)
+def test_http_client_ignores_proxy_for_other_scheme():
+    with patch("urllib3.PoolManager") as pool_manager:
+        assert _http_client("https://pricing.us-east-1.amazonaws.com/index.csv") is (
+            pool_manager.return_value
+        )
+
+
+@patch("braket.tracking.pricing.getproxies", return_value={})
+def test_http_client_without_proxy(_getproxies):
+    with patch("urllib3.PoolManager") as pool_manager:
+        assert _http_client("https://pricing.us-east-1.amazonaws.com/index.csv") is (
+            pool_manager.return_value
+        )
