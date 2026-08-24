@@ -15,6 +15,7 @@ from braket.circuits import Circuit
 from braket.circuits.noise_model import NoiseModel
 from braket.emulation.passes import TransformationPass
 from braket.program_sets import ProgramSet
+from braket.tasks.quantum_task import TaskSpecification
 
 
 class NoiseModelTransformation(TransformationPass):
@@ -47,7 +48,7 @@ class NoiseModelTransformation(TransformationPass):
         self._noise_model = noise_model
         self._supported_specifications = Circuit | ProgramSet
 
-    def transform(self, circuits: Circuit | ProgramSet) -> Circuit | ProgramSet:
+    def transform(self, circuits: TaskSpecification) -> TaskSpecification:
         """Apply noise model to circuits.
 
         Args:

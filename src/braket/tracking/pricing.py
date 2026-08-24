@@ -17,13 +17,14 @@ import csv
 import io
 import os
 from functools import lru_cache
+from typing import cast
 
 import urllib3
 
 
 class Pricing:
     def __init__(self):
-        self._price_list = []
+        self._price_list: list[dict[str, str]] = []
 
     def get_prices(self) -> None:
         """Retrieves the price list."""
@@ -35,14 +36,17 @@ class Pricing:
             "BRAKET_PRICE_OFFERS_URL",
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",
         )
-        response = http.request(
-            "GET",
-            price_url,
-            preload_content=False,
+        response = cast(
+            urllib3.HTTPResponse,
+            http.request(
+                "GET",
+                price_url,
+                preload_content=False,
+            ),
         )
         response.auto_close = False
 
-        text_response = io.TextIOWrapper(response, encoding="utf-8")
+        text_response = io.TextIOWrapper(cast(io.BufferedReader, response), encoding="utf-8")
 
         # Data starts on line 6
         #

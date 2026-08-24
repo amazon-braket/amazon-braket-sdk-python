@@ -13,7 +13,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeAlias
 
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
@@ -29,7 +29,7 @@ from braket.tasks import (
     ProgramSetQuantumTaskResult,
 )
 
-TaskSpecification = (
+TaskSpecification: TypeAlias = (
     Circuit
     | SerializableProgram
     | ProgramSet
@@ -38,7 +38,7 @@ TaskSpecification = (
     | AnalogHamiltonianSimulation
     | PulseSequence
 )
-TaskResult = (
+TaskResult: TypeAlias = (
     GateModelQuantumTaskResult
     | ProgramSetQuantumTaskResult
     | AnalogHamiltonianSimulationQuantumTaskResult
