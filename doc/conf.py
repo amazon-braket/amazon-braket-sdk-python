@@ -1,11 +1,14 @@
 """Sphinx configuration."""
 
 import datetime
+import os
 import shutil
 import subprocess
 import sys
 from importlib.metadata import version
 from pathlib import Path
+
+from sphinx.application import Sphinx
 
 DOC_DIR = Path(__file__).parent
 SCRIPT_PATH = DOC_DIR / "update_examples.py"
@@ -84,3 +87,61 @@ apidoc_template_dir = "_templates"
 typehints_fully_qualified = False
 always_document_param_types = True
 typehints_document_rtype = True
+
+LLMS_TXT_TITLE = "Amazon Braket Python SDK"
+LLMS_TXT_SUMMARY = (
+    "Open source Python SDK to design and build quantum circuits, submit them to "
+    "Amazon Braket devices as quantum tasks, and monitor their execution."
+)
+LLMS_TXT_BASE_URL = "https://amazon-braket-sdk-python.readthedocs.io/en/stable/"
+LLMS_TXT_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Docs", ()),
+    ("Examples", ("examples",)),
+    ("API Reference", (f"{apidoc_output_dir}/",)),
+)
+
+
+def _llms_txt_section(docname: str) -> str:
+    """Return the llms.txt section heading a document belongs under."""
+    for heading, prefixes in LLMS_TXT_SECTIONS:
+        if any(docname.startswith(prefix) for prefix in prefixes):
+            return heading
+    return LLMS_TXT_SECTIONS[0][0]
+
+
+def _write_llms_txt(app: Sphinx, exception: Exception | None) -> None:
+    """Write llms.txt, a manifest of every built page for LLM discoverability.
+
+    The format follows https://llmstxt.org: an H1 name, a blockquote summary, then
+    one file list per H2 section. Pages are grouped so that an agent can tell
+    narrative docs, runnable examples and generated API reference apart.
+    """
+    if exception or app.builder.name != "html":
+        return
+
+    # Read the Docs passes the canonical URL to every build automatically, so this
+    # is set in any RTD build and the default only applies elsewhere. See
+    # https://docs.readthedocs.com/platform/stable/canonical-urls.html#how-to-specify-the-canonical-url
+    base_url = os.environ.get("READTHEDOCS_CANONICAL_URL", LLMS_TXT_BASE_URL)
+    if base_url and not base_url.endswith("/"):
+        base_url += "/"
+
+    env = app.env
+    sections: dict[str, list[str]] = {heading: [] for heading, _ in LLMS_TXT_SECTIONS}
+    for docname in sorted(env.all_docs):
+        url = f"{base_url}{app.builder.get_target_uri(docname)}"
+        sections[_llms_txt_section(docname)].append(f"- [{env.titles[docname].astext()}]({url})")
+
+    lines = [f"# {LLMS_TXT_TITLE}", "", f"> {LLMS_TXT_SUMMARY}"]
+    for heading, _ in LLMS_TXT_SECTIONS:
+        if sections[heading]:
+            lines += ["", f"## {heading}", "", *sections[heading]]
+
+    out = Path(app.outdir) / "llms.txt"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"--> Wrote {out.name}")
+
+
+def setup(app: Sphinx) -> None:
+    """Register build hooks."""
+    app.connect("build-finished", _write_llms_txt)
