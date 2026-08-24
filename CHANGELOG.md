@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.126.0 (2026-08-24)
+
+### Features
+
+ * add outputs to GateModelQuantumTaskResult
+
+### Documentation Changes
+
+ * add llms.txt generation
+
 ## v1.125.0 (2026-08-03)
 
 ### Features
