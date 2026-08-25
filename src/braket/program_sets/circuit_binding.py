@@ -112,7 +112,9 @@ class CircuitBinding:
         self,
         circuit: Circuit | str,
         input_sets: ParameterSetsLike | None = None,
-        observables: Sequence[Observable | PauliString | str] | Sum | None = None,
+        observables: (
+            Observable | PauliString | str | Sum | Sequence[Observable | PauliString | str] | None
+        ) = None,
     ):
         """
         A single parametrized circuit and multiple parameter sets and observables.
@@ -132,8 +134,10 @@ class CircuitBinding:
             circuit (Circuit | str): The parametrized circuit, either as a Circuit object or as
                 an OpenQASM string.
             input_sets (ParameterSetsLike | None): The inputs to the circuit, if specified.
-            observables (Sequence[Observable | PauliString | str] | Sum | None): The observables
-                or Hamiltonian to measure, if specified.
+            observables (Observable | PauliString | str | Sum |
+                Sequence[Observable | PauliString | str] | None): A single observable, Pauli
+                string, Pauli word, Sum Hamiltonian, or a sequence of observables to measure,
+                if specified.
 
         Examples:
             >>> circuit = Circuit().rx(0, FreeParameter("theta")).cnot(0, 1)
@@ -141,6 +145,7 @@ class CircuitBinding:
             >>> # observable = [X(0) @ Z(1), Z(0) @ Y(1)]  # Or a list of single-term observables
             >>> binding = CircuitBinding(circuit, {"theta": [1.23, 1.73, 0.73]}, observable)
         """
+        observables = CircuitBinding._to_observables(observables)
         if not input_sets and not observables:
             raise ValueError("At least one of input_sets and observables must be specified")
         if (
@@ -153,19 +158,23 @@ class CircuitBinding:
             raise ValueError("Circuit cannot have result types")
         self._circuit = circuit
         self._input_sets = ParameterSets(input_sets) if input_sets else None
-        self._observables = CircuitBinding._to_observables(observables)
+        self._observables = observables
         self._injection_plan = (
             _plan_injection(circuit) if isinstance(circuit, str) and self._observables else None
         )
 
     @staticmethod
     def _to_observables(
-        observables: Sequence[Observable | PauliString | str] | Sum | None,
+        observables: (
+            Observable | PauliString | str | Sum | Sequence[Observable | PauliString | str] | None
+        ),
     ) -> Sequence[Observable] | Sum | None:
         if not observables:
             return None
         if isinstance(observables, Sum):
             return observables
+        if isinstance(observables, (Observable, PauliString, str)):
+            observables = [observables]
         obs = []
         for o in observables:
             if isinstance(o, Observable):

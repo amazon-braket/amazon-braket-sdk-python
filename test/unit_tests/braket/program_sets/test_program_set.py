@@ -451,6 +451,13 @@ def test_product_observables(circuit_rx_parametrized):
     )
 
 
+def test_product_single_pauli_word():
+    program_set = ProgramSet.product([Circuit().h(0).cnot(0, 1)], observables="XZ")
+
+    assert program_set.total_executables == 1
+    assert program_set[0].observables == [X() @ Z()]
+
+
 def test_product_sum(circuit_rx_parametrized):
     ghz2 = ghz(2)
     ghz3 = ghz(3)

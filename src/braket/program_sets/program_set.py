@@ -23,6 +23,7 @@ from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
 from braket.program_sets.circuit_binding import CircuitBinding
 from braket.pulse import PulseSequence
+from braket.quantum_information import PauliString
 from braket.registers import QubitSet
 
 
@@ -316,7 +317,9 @@ class ProgramSet:
     @staticmethod
     def product(
         circuits: Sequence[Circuit | CircuitBinding],
-        observables: Sum | Sequence[Observable],
+        observables: (
+            Observable | PauliString | str | Sum | Sequence[Observable | PauliString | str]
+        ),
         shots_per_executable: int | None = None,
     ) -> ProgramSet:
         """
@@ -330,8 +333,9 @@ class ProgramSet:
         Args:
             circuits (Sequence[Circuit] | CircuitBinding): The parametrized circuit with parameters
                 or set of fixed circuits to run with multiple observables.
-            observables (Sum | Sequence[Observable]): A set of observables to measure
-                with the circuits.
+            observables (Observable | PauliString | str | Sum |
+                Sequence[Observable | PauliString | str]): A single observable, Pauli string,
+                Pauli word, or a sequence of observables to measure with the circuits.
             shots_per_executable (int | None): The number of shots to run each executable;
                 this will be used to enforce the total shots on task creation. If not provided,
                 the only validation at task creation will be divisibility by number of executables.
