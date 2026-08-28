@@ -73,6 +73,16 @@ def test_multiple_programs(circuit_rx_parametrized):
     )
 
 
+def test_openqasm_program():
+    source = "OPENQASM 3.0;\nbit[1] b;\nqubit[1] q;\nh q[0];\nb[0] = measure q[0];"
+    program_set = ProgramSet([source], shots_per_executable=100)
+
+    assert program_set.entries == [source]
+    assert program_set.total_executables == 1
+    assert program_set.total_shots == 100
+    assert program_set.to_ir() == IrProgramSet(programs=[Program(source=source, inputs=None)])
+
+
 def test_add(circuit_rx_parametrized):
     circuit_h = ghz(1)
     circuit_bell = ghz(2)
@@ -563,6 +573,21 @@ def test_split_plain_circuits():
     assert subs[1].entries == circs[2:4]
     assert subs[2].entries == circs[4:5]
     assert mapping == [[0, 1], [2, 3], [4]]
+
+
+def test_split_openqasm_programs():
+    sources = [
+        f"OPENQASM 3.0;\nbit[1] b;\nqubit[1] q;\n{gate} q[0];\nb[0] = measure q[0];"
+        for gate in ("h", "x", "y", "z", "i")
+    ]
+    program_set = ProgramSet(sources, shots_per_executable=10)
+
+    subs, mapping = program_set.split(2)
+
+    assert [s.total_executables for s in subs] == [2, 2, 1]
+    assert [s.entries for s in subs] == [sources[:2], sources[2:4], sources[4:]]
+    assert mapping == [[0, 1], [2, 3], [4]]
+    assert [program.source for sub in subs for program in sub.to_ir().programs] == sources
 
 
 def test_split_single_binding_packed(circuit_rx_parametrized):

@@ -680,14 +680,16 @@ class ProgramSetQuantumTaskResult:
         return counter
 
 
-def _binding_to_program(binding: CircuitBinding | Circuit) -> Program:
+def _binding_to_program(binding: CircuitBinding | Circuit | str) -> Program:
+    if isinstance(binding, str):
+        return Program(source=binding, inputs=None)
     if isinstance(binding, Circuit):
         return Program(source=binding.to_ir(IRType.OPENQASM).source, inputs=None)
     return binding.to_ir()
 
 
-def _count_executables(binding: CircuitBinding | Circuit) -> int:
-    if isinstance(binding, Circuit):
+def _count_executables(binding: CircuitBinding | Circuit | str) -> int:
+    if not isinstance(binding, CircuitBinding):
         return 1
     num_ps = len(binding.input_sets) if binding.input_sets is not None else 1
     num_obs = len(binding.observables) if binding.observables is not None else 1
@@ -730,14 +732,14 @@ def _reorder_executable_results(
 
 def _convert_measured_entry(
     entry: MeasuredEntry | ProgramSetExecutableFailure,
-    original_binding: CircuitBinding | Circuit,
+    original_binding: CircuitBinding | Circuit | str,
     original_program: Program,
     parameter_set_index: int,
     observable_index: int,
 ) -> MeasuredEntry | ProgramSetExecutableFailure:
     if isinstance(entry, ProgramSetExecutableFailure):
         return entry
-    if isinstance(original_binding, Circuit):
+    if not isinstance(original_binding, CircuitBinding):
         return replace(entry, program=original_program.source, inputs=None, observable=None)
     observables = original_binding.observables
     if observables is None:

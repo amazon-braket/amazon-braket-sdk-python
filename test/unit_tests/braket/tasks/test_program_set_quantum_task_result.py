@@ -538,8 +538,10 @@ def _build_sub_quantum_result(sub_program_set, programs_execs, shots_per_executa
     for entry, execs in zip(sub_program_set.entries, programs_execs, strict=True):
         if isinstance(entry, CircuitBinding):
             source_dict = entry.to_ir().dict()
-        else:
+        elif isinstance(entry, Circuit):
             source_dict = Program(source=entry.to_ir(IRType.OPENQASM).source, inputs=None).dict()
+        else:
+            source_dict = Program(source=entry, inputs=None).dict()
         program_results.append(_make_program_result(source_dict, execs))
         counts.append(len(execs))
     wire = _parse(
@@ -774,6 +776,29 @@ def test_from_multiple_with_plain_circuit_entries():
     assert merged[0].observables is None
     assert merged[0].entries[0].observable is None
     assert merged[0].entries[0].inputs is None
+
+
+def test_merge_with_openqasm_entries():
+    sources = [
+        f"OPENQASM 3.0;\nbit[2] b;\nqubit[2] q;\n{gate} q[0];\n"
+        "b[0] = measure q[0];\nb[1] = measure q[1];"
+        for gate in ("h", "x")
+    ]
+    program_set = ProgramSet(sources)
+    subs, index_map = program_set.split(1)
+    sub_results = [_build_sub_quantum_result(sub, [[_make_exec_result(0)]]) for sub in subs]
+
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, program_set, index_map)
+
+    assert [entry.program for entry in merged.entries] == [
+        Program(source=source, inputs=None) for source in sources
+    ]
+    for source, composite in zip(sources, merged.entries, strict=True):
+        assert composite.inputs == ParameterSets({})
+        assert composite.observables is None
+        assert composite.entries[0].program == source
+        assert composite.entries[0].inputs is None
+        assert composite.entries[0].observable is None
 
 
 def test_from_multiple_rejects_task_over_index_map(circuit_rx_parametrized_fixture):
