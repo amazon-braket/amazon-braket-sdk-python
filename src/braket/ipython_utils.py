@@ -22,12 +22,11 @@ def running_in_jupyter() -> bool:
     Returns:
         bool: True if running in Jupyter, else False.
     """
-    in_ipython = False
-    # if IPython hasn't been imported, there's nothing to check
-    if "IPython" in sys.modules:
-        get_ipython = sys.modules["IPython"].__dict__["get_ipython"]
+    ipython_module = sys.modules.get("IPython")
+    get_ipython = getattr(ipython_module, "get_ipython", None)
 
-        ip = get_ipython()
-        in_ipython = ip is not None
+    if not callable(get_ipython):
+        return False
 
-    return getattr(ip, "kernel", None) is not None if in_ipython else False
+    ip = get_ipython()
+    return getattr(ip, "kernel", None) is not None
