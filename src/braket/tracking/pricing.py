@@ -17,6 +17,8 @@ import csv
 import io
 import os
 from functools import lru_cache
+from urllib.parse import urlparse
+from urllib.request import getproxies, proxy_bypass
 
 import urllib3
 
@@ -30,11 +32,11 @@ class Pricing:
         # Using AWS Pricing Bulk API. Format for the response is described at
         # https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-an-offer.html
 
-        http = urllib3.PoolManager()
         price_url = os.environ.get(
             "BRAKET_PRICE_OFFERS_URL",
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",
         )
+        http = _http_client(price_url)
         response = http.request(
             "GET",
             price_url,
@@ -68,6 +70,22 @@ class Pricing:
         return [
             entry for entry in self._price_list if all(entry[k] == v for k, v in kwargs.items())
         ]
+
+
+def _http_client(url: str) -> urllib3.PoolManager:
+    """Creates an HTTP client honoring the standard proxy environment variables.
+
+    Args:
+        url (str): The URL the client will be used to request.
+
+    Returns:
+        PoolManager: A proxy-aware client if a proxy applies to `url`, otherwise a direct one.
+    """
+    parsed = urlparse(url)
+    proxy = getproxies().get(parsed.scheme)
+    if proxy and not proxy_bypass(parsed.netloc):
+        return urllib3.ProxyManager(proxy)
+    return urllib3.PoolManager()
 
 
 _pricing = Pricing()
