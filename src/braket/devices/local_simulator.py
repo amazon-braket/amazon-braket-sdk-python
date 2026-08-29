@@ -167,15 +167,14 @@ class LocalSimulator(Device):
         )
 
         if self._noise_model:
-            if single_task:
-                task_specifications = self._noise_model.apply(task_specifications)
-            else:
-                task_specifications = [
+            task_specifications = (
+                self._noise_model.apply(task_specifications)
+                if single_task
+                else [
                     self._noise_model.apply(task_specification)
                     for task_specification in task_specifications
                 ]
-
-        max_parallel = max_parallel or cpu_count()
+            )
 
         single_input = isinstance(inputs, dict)
 
@@ -202,7 +201,7 @@ class LocalSimulator(Device):
             payloads.append(self._construct_payload(task_specification, input_map, shots))
 
         results = self._delegate.run_multiple(
-            payloads, *args, shots=shots, max_parallel=max_parallel, **kwargs
+            payloads, *args, shots=shots, max_parallel=max_parallel or cpu_count(), **kwargs
         )
         return LocalQuantumTaskBatch([self._to_result_object(result) for result in results])
 
