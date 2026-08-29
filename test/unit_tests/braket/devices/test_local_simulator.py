@@ -920,6 +920,22 @@ def test_run_batch_with_noise_model(mock_run_multiple, noise_model):
         assert mock_apply.call_count == 2
 
 
+@patch.object(DummyProgramDensityMatrixSimulator, "run_multiple")
+def test_run_batch_single_circuit_with_noise_model(mock_run_multiple, noise_model):
+    mock_run_multiple.return_value = [GATE_MODEL_RESULT]
+    device = LocalSimulator("dummy_oq3_dm", noise_model=noise_model)
+    circuit = Circuit().h(0).cnot(0, 1)
+
+    with patch.object(device._noise_model, "apply", wraps=device._noise_model.apply) as mock_apply:
+        results = device.run_batch(circuit, shots=4).results()
+
+    assert len(results) == 1
+    mock_apply.assert_called_once_with(circuit)
+    payloads = mock_run_multiple.call_args.args[0]
+    assert len(payloads) == 1
+    assert "#pragma braket noise bit_flip(0.05) q[0]" in payloads[0].source
+
+
 @patch.object(DummyProgramDensityMatrixSimulator, "run")
 def test_run_noisy_circuit_with_noise_model(mock_run, noise_model):
     mock_run.return_value = GATE_MODEL_RESULT
