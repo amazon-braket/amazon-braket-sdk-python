@@ -121,7 +121,7 @@ class Circuit:
             Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
         """
 
-        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:  # noqa: ANN001
+        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:  # ruff:ignore[missing-type-function-argument]
             return self.add(func, *args, **kwargs)
 
         function_name = func.__name__
@@ -524,7 +524,7 @@ class Circuit:
                 current_observable == identity and new_observable != identity
             )
             if (
-                not add_observable  # noqa: PLR1714
+                not add_observable  # ruff:ignore[repeated-equality-comparison]
                 and identity != current_observable
                 and identity != new_observable
                 and current_observable != new_observable
@@ -619,7 +619,7 @@ class Circuit:
         ):
             raise ValueError("cannot apply instruction to measured qubits.")
 
-    def add_instruction(  # noqa: C901
+    def add_instruction(  # ruff:ignore[complex-structure]
         self,
         instruction: Instruction,
         target: QubitSetInput | None = None,
@@ -1497,7 +1497,9 @@ class Circuit:
                 inputs_copy.update(inputs)
             inputs = inputs_copy
             source = source.source
-        from braket.circuits.braket_program_context import BraketProgramContext  # noqa: PLC0415
+        from braket.circuits.braket_program_context import (  # ruff:ignore[import-outside-top-level]
+            BraketProgramContext,
+        )
 
         return Interpreter(BraketProgramContext()).build_circuit(
             source=source,
@@ -1658,7 +1660,7 @@ class Circuit:
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence]
     ) -> tuple[dict[str, Frame], dict[str, Waveform]]:
-        from braket.circuits.gates import PulseGate  # noqa: PLC0415
+        from braket.circuits.gates import PulseGate  # ruff:ignore[import-outside-top-level]
 
         frames = {}
         waveforms = {}

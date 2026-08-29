@@ -16,5 +16,5 @@ Qubit for individual qubit indices and QubitSet for ordered collections of qubit
 used in quantum operations.
 """
 
-from braket.registers.qubit import Qubit, QubitInput  # noqa: F401
-from braket.registers.qubit_set import QubitSet, QubitSetInput  # noqa: F401
+from braket.registers.qubit import Qubit, QubitInput  # ruff:ignore[unused-import]
+from braket.registers.qubit_set import QubitSet, QubitSetInput  # ruff:ignore[unused-import]

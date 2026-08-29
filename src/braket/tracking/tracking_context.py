@@ -21,7 +21,7 @@ class TrackingContext:
         self._trackers = set()
         self._lock = threading.Lock()
 
-    def register_tracker(self, tracker: Tracker) -> None:  # noqa: F821
+    def register_tracker(self, tracker: Tracker) -> None:  # ruff:ignore[undefined-name]
         """Registers a tracker.
 
         Args:
@@ -30,7 +30,7 @@ class TrackingContext:
         with self._lock:
             self._trackers.add(tracker)
 
-    def deregister_tracker(self, tracker: Tracker) -> None:  # noqa: F821
+    def deregister_tracker(self, tracker: Tracker) -> None:  # ruff:ignore[undefined-name]
         """Deregisters a tracker.
 
         Args:
@@ -39,7 +39,7 @@ class TrackingContext:
         with self._lock:
             self._trackers.remove(tracker)
 
-    def broadcast_event(self, event: _TrackingEvent) -> None:  # noqa: F821
+    def broadcast_event(self, event: _TrackingEvent) -> None:  # ruff:ignore[undefined-name]
         """Broadcasts an event to all trackers.
 
         Args:

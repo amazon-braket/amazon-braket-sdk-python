@@ -50,7 +50,7 @@ class Tracker:
         Returns:
             Tracker: self.
         """
-        return self.__enter__()  # noqa: PLC2801
+        return self.__enter__()  # ruff:ignore[unnecessary-dunder-call]
 
     def stop(self) -> Tracker:
         """Stop tracking resources with this tracker.

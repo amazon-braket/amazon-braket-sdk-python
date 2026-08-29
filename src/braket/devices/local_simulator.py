@@ -13,8 +13,9 @@
 
 from __future__ import annotations
 
-import sys
+from collections.abc import Sequence
 from functools import singledispatchmethod
+from importlib.metadata import entry_points
 from itertools import repeat
 from os import cpu_count
 from typing import Any
@@ -47,11 +48,6 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult
 from braket.tasks.quantum_task import TaskSpecification
-
-if sys.version_info.minor == 9:
-    from backports.entry_points_selectable import entry_points
-else:
-    from importlib.metadata import entry_points
 
 _simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
 
@@ -135,7 +131,7 @@ class LocalSimulator(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: int | None = 0,
+        shots: int | Sequence[int] | None = 0,
         max_parallel: int | None = None,
         inputs: dict[str, float] | list[dict[str, float]] | None = None,
         *args,
@@ -146,7 +142,8 @@ class LocalSimulator(Device):
         Args:
             task_specifications (TaskSpecification | list[TaskSpecification]):
                 Single instance or list of quantum task specification.
-            shots (int | None): The number of times to run the quantum task.
+            shots (int | Sequence[int] | None): The number of times to run each
+                quantum task. Per-task shot sequences are not supported by `LocalSimulator`.
                 Default: 0.
             max_parallel (int | None): The maximum number of quantum tasks to run  in parallel.
                 Default is the number of logical CPUs.
@@ -160,6 +157,8 @@ class LocalSimulator(Device):
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
         """
+        if isinstance(shots, Sequence):
+            raise NotImplementedError("LocalSimulator.run_batch does not support per-task shots.")
         inputs = inputs or {}
 
         if self._noise_model:
@@ -188,13 +187,10 @@ class LocalSimulator(Device):
 
         tasks_and_inputs = zip(task_specifications, inputs, strict=False)
 
-        if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
-        else:
-            tasks_and_inputs = list(tasks_and_inputs)
-
         payloads = []
-        for task_specification, input_map in tasks_and_inputs:
+        for task_specification, input_map in (
+            [next(tasks_and_inputs)] if single_task and single_input else list(tasks_and_inputs)
+        ):
             if isinstance(task_specification, Circuit):
                 param_names = {param.name for param in task_specification.parameters}
                 if unbounded_parameters := param_names - set(input_map.keys()):

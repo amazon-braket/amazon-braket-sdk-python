@@ -19,13 +19,13 @@ waveform classes for signal envelopes, and PulseSequenceTrace for
 execution trace data.
 """
 
-from braket.pulse.frame import Frame  # noqa: F401
-from braket.pulse.port import Port  # noqa: F401
-from braket.pulse.pulse_sequence import PulseSequence  # noqa: F401
+from braket.pulse.frame import Frame  # ruff:ignore[unused-import]
+from braket.pulse.port import Port  # ruff:ignore[unused-import]
+from braket.pulse.pulse_sequence import PulseSequence  # ruff:ignore[unused-import]
 from braket.pulse.waveforms import (
-    ArbitraryWaveform,  # noqa: F401
-    ConstantWaveform,  # noqa: F401
-    DragGaussianWaveform,  # noqa: F401
-    ErfSquareWaveform,  # noqa: F401
-    GaussianWaveform,  # noqa: F401
+    ArbitraryWaveform,  # ruff:ignore[unused-import]
+    ConstantWaveform,  # ruff:ignore[unused-import]
+    DragGaussianWaveform,  # ruff:ignore[unused-import]
+    ErfSquareWaveform,  # ruff:ignore[unused-import]
+    GaussianWaveform,  # ruff:ignore[unused-import]
 )

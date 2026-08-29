@@ -40,7 +40,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
             raise ValueError("Observables cannot be sampled simultaneously")
         for rt in circuit.result_types:
             if isinstance(rt, ResultType.Amplitude | ResultType.StateVector):
-                raise ValueError("StateVector or Amplitude cannot be specified when shots>0")  # noqa: TRY004
+                raise ValueError("StateVector or Amplitude cannot be specified when shots>0")  # ruff:ignore[type-check-without-type-error]
             if isinstance(rt, ResultType.Probability):
                 num_qubits = len(rt.target) or circuit.qubit_count
                 if num_qubits > 40:

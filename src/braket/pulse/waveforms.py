@@ -666,7 +666,7 @@ class ErfSquareWaveform(Waveform, Parameterizable):
 
 
 def _make_identifier_name() -> str:
-    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa: S311
+    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # ruff:ignore[suspicious-non-cryptographic-random-usage]
 
 
 def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:

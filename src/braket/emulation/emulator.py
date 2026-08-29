@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Any
 
 from braket.device_schema import DeviceCapabilities
@@ -66,7 +66,7 @@ class Emulator(Device):
     def run(
         self,
         task_specification: TaskSpecification,
-        shots: int | None = 0,
+        shots: int | None = None,
         inputs: dict[str, float] | None = None,
         *args: Any,
         **kwargs: Any,
@@ -101,7 +101,7 @@ class Emulator(Device):
     def run_batch(
         self,
         task_specifications: TaskSpecification | list[TaskSpecification],
-        shots: int | None,
+        shots: int | Sequence[int] | None,
         max_parallel: int | None,
         inputs: dict[str, float] | list[dict[str, float]] | None,
         *args: Any,

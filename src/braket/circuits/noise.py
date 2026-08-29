@@ -260,7 +260,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         }
 
 
-class SingleProbabilisticNoise_34(SingleProbabilisticNoise):  # noqa: N801
+class SingleProbabilisticNoise_34(SingleProbabilisticNoise):  # ruff:ignore[invalid-class-name]
     """Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
     channels parameterized by a single probability.
     """
@@ -294,7 +294,7 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):  # noqa: N801
         )
 
 
-class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):  # noqa: N801
+class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):  # ruff:ignore[invalid-class-name]
     """Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
     parameterized by a single probability.
     """

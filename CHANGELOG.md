@@ -1,5 +1,50 @@
 # Changelog
 
+## v1.126.1 (2026-08-28)
+
+### Bug Fixes and Other Changes
+
+ * handle IPython 9.17.0 initialization pattern
+
+## v1.126.0 (2026-08-24)
+
+### Features
+
+ * add outputs to GateModelQuantumTaskResult
+
+### Documentation Changes
+
+ * add llms.txt generation
+
+## v1.125.0 (2026-08-03)
+
+### Features
+
+ * Per-task shots in `run_batch`
+
+### Bug Fixes and Other Changes
+
+ * parse function calls in FreeParameterExpression
+ * remove redundant sign
+
+## v1.124.3 (2026-07-28)
+
+### Bug Fixes and Other Changes
+
+ * default emulator to None shots
+
+## v1.124.2 (2026-07-27)
+
+### Bug Fixes and Other Changes
+
+ * drop Python 3.9 shim
+
+## v1.124.1 (2026-07-23)
+
+### Bug Fixes and Other Changes
+
+ * Format with new ruff rules
+
 ## v1.124.0 (2026-07-14)
 
 ### Features

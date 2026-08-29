@@ -45,7 +45,7 @@ class _NotImplementedValidator(ValidationPass):
 
         # Validate out unsupported specifications
         if not isinstance(program, supported_specifications):
-            raise ValueError(f"Specification {type(program)} is not supported yet.")  # noqa: TRY004
+            raise ValueError(f"Specification {type(program)} is not supported yet.")  # ruff:ignore[type-check-without-type-error]
 
         if isinstance(program, ProgramSet):
             for item in program:

@@ -204,7 +204,7 @@ class DeviceEmulatorProperties:
     @property
     def supported_specifications(self) -> tuple[BraketSchemaBase] | BraketSchemaBase:
         return (
-            tuple(sum((ACTION_TO_SPECIFICATION[action] for action in self._supported_actions), []))  # noqa: RUF017
+            tuple(sum((ACTION_TO_SPECIFICATION[action] for action in self._supported_actions), []))  # ruff:ignore[quadratic-list-summation]
             if self._supported_actions
             else Circuit
         )
