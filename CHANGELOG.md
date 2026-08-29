@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.126.1 (2026-08-28)
+
+### Bug Fixes and Other Changes
+
+ * handle IPython 9.17.0 initialization pattern
+
 ## v1.126.0 (2026-08-24)
 
 ### Features
