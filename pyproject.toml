@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "amazon-braket-schemas>=1.27.0",
+    "amazon-braket-schemas>=1.30.0",
     "amazon-braket-default-simulator>=1.32.0",
     "oqpy~=0.3.7",
     "backoff",
@@ -52,6 +52,8 @@ test = [
 ]
 type-check = [
     "mypy==2.3.0",
+    # numpy>=2.5 stubs use PEP 695 syntax, unsupported on Python 3.11
+    "numpy==2.4.6",
 ]
 docs = [
     "sphinx",

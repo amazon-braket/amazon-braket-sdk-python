@@ -88,6 +88,10 @@ class GateModelQuantumTaskResult:
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data. Default is None.
             Only available when shots > 0.
+        outputs (list[dict[str, Any]] | None): The per-shot values of the OpenQASM ``output``
+            variables declared by the program. Each entry is one shot, mapping output
+            variable name to its value for that shot. Default is None. Only available
+            when shots > 0 and the program declares at least one ``output`` variable.
     """
 
     task_metadata: TaskMetadata
@@ -101,6 +105,7 @@ class GateModelQuantumTaskResult:
     measurements_copied_from_device: bool = None
     measurement_counts_copied_from_device: bool = None
     measurement_probabilities_copied_from_device: bool = None
+    outputs: list[dict[str, Any]] = None
 
     _result_types_indices: dict[str, int] = None
 
@@ -316,6 +321,7 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device=measurements_copied_from_device,
             measurement_counts_copied_from_device=m_counts_copied_from_device,
             measurement_probabilities_copied_from_device=m_probabilities_copied_from_device,
+            outputs=result.outputs,
         )
 
     @classmethod
