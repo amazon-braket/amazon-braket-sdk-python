@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.126.2 (2026-08-31)
+
+### Bug Fixes and Other Changes
+
+ * treat scalar observables as one observable
+ * honor HTTP(S)_PROXY when fetching the price list
+ * support single circuits with noise in run_batch
+ * make TrackingContext thread-safe
+
 ## v1.126.1 (2026-08-28)
 
 ### Bug Fixes and Other Changes
