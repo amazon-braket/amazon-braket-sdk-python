@@ -16,7 +16,8 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
-from braket.ir.openqasm import Program, ProgramSet as OpenQASMProgramSet
+from braket.ir.openqasm import Program
+from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 
 from braket.circuits import Circuit, Gate, Observable
 from braket.circuits.observables import Sum
@@ -524,7 +525,7 @@ def _slice_program_inputs(program: Program, start: int, stop: int) -> Program:
     inputs = {}
     for name, values in (program.inputs or {}).items():
         if not isinstance(values, list):
-            raise ValueError("All Program inputs must be lists when using ProgramSet")
+            raise TypeError("All Program inputs must be lists when using ProgramSet")
         inputs[name] = values[start:stop]
     return Program(source=program.source, inputs=inputs)
 

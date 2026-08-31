@@ -22,7 +22,7 @@ from braket.ir.openqasm.program_set_v1 import ProgramSet as IrProgramSet
 from braket.ir.openqasm.program_v1 import Program
 from braket.parametric import FreeParameter
 from braket.program_sets.circuit_binding import CircuitBinding
-from braket.program_sets.program_set import ProgramSet
+from braket.program_sets.program_set import ProgramSet, _slice_program_inputs
 
 
 def test_single_circuit_binding(circuit_rx_parametrized):
@@ -652,6 +652,20 @@ def test_split_openqasm_programs():
     assert [program.source for sub in subs for program in sub.to_ir().programs] == sources
 
 
+def test_split_openqasm_program_without_inputs():
+    program = Program(source="OPENQASM 3.0;\nqubit[1] q;\nh q[0];")
+    sources = [
+        "OPENQASM 3.0;\nqubit[1] q;\nx q[0];",
+        "OPENQASM 3.0;\nqubit[1] q;\ny q[0];",
+    ]
+    program_set = ProgramSet([program, *sources])
+
+    subs, mapping = program_set.split(1)
+
+    assert [sub.entries for sub in subs] == [[program], [sources[0]], [sources[1]]]
+    assert mapping == [[0], [1], [2]]
+
+
 def test_split_openqasm_program_slices_inputs():
     source = (
         "OPENQASM 3.0;\ninput float theta;\ninput float phi;\nqubit[1] q;\nrx(theta + phi) q[0];"
@@ -676,6 +690,16 @@ def test_split_openqasm_program_slices_inputs():
         Program(source=source, inputs={"theta": [6.0], "phi": [16.0]}),
     ]
     assert [sub.to_ir().programs[0] for sub in subs] == [sub.entries[0] for sub in subs]
+
+
+def test_slice_openqasm_program_rejects_scalar_inputs():
+    program = Program(
+        source="OPENQASM 3.0;\ninput float theta;",
+        inputs={"theta": 0.1},
+    )
+
+    with pytest.raises(TypeError, match="inputs must be lists"):
+        _slice_program_inputs(program, 0, 1)
 
 
 def test_split_single_binding_packed(circuit_rx_parametrized):
