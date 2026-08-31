@@ -73,7 +73,7 @@ def test_multiple_programs(circuit_rx_parametrized):
     )
 
 
-def test_openqasm_program():
+def test_openqasm_string():
     source = "OPENQASM 3.0;\nbit[1] b;\nqubit[1] q;\nh q[0];\nb[0] = measure q[0];"
     program_set = ProgramSet([source], shots_per_executable=100)
 
@@ -81,6 +81,61 @@ def test_openqasm_program():
     assert program_set.total_executables == 1
     assert program_set.total_shots == 100
     assert program_set.to_ir() == IrProgramSet(programs=[Program(source=source, inputs=None)])
+
+
+def test_standalone_openqasm_program():
+    program = Program(
+        source="OPENQASM 3.0;\ninput float theta;\nqubit[1] q;\nrx(theta) q[0];",
+        inputs={"theta": [0.1, 0.2, 0.3]},
+    )
+    program_set = ProgramSet(program, shots_per_executable=100)
+
+    assert program_set.entries == [program]
+    assert program_set.total_executables == 3
+    assert program_set.total_shots == 300
+    assert program_set.to_ir() == IrProgramSet(programs=[program])
+    assert list(program_set.enumerate_executables()) == [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 2, 0),
+    ]
+
+
+def test_openqasm_programs_in_list():
+    programs = [
+        Program(source="OPENQASM 3.0;\nqubit[1] q;\nh q[0];"),
+        Program(
+            source="OPENQASM 3.0;\ninput float theta;\nqubit[1] q;\nrx(theta) q[0];",
+            inputs={"theta": [0.1, 0.2]},
+        ),
+    ]
+    program_set = ProgramSet(programs)
+
+    assert program_set.entries == programs
+    assert program_set.total_executables == 3
+    assert program_set.to_ir() == IrProgramSet(programs=programs)
+
+
+@pytest.mark.parametrize(
+    "programs",
+    [
+        Program(source="OPENQASM 3.0;\ninput float theta;", inputs={"theta": 0.1}),
+        [Program(source="OPENQASM 3.0;\ninput float theta;", inputs={"theta": 0.1})],
+    ],
+)
+def test_openqasm_program_inputs_must_be_lists(programs):
+    with pytest.raises(ValueError, match="inputs must be lists"):
+        ProgramSet(programs)
+
+
+def test_openqasm_program_input_lists_must_have_equal_length():
+    program = Program(
+        source="OPENQASM 3.0;\ninput float theta;\ninput float phi;",
+        inputs={"theta": [0.1, 0.2], "phi": [0.3]},
+    )
+
+    with pytest.raises(ValueError, match="same length"):
+        ProgramSet(program)
 
 
 def test_add(circuit_rx_parametrized):
@@ -595,6 +650,32 @@ def test_split_openqasm_programs():
     assert [s.entries for s in subs] == [sources[:2], sources[2:4], sources[4:]]
     assert mapping == [[0, 1], [2, 3], [4]]
     assert [program.source for sub in subs for program in sub.to_ir().programs] == sources
+
+
+def test_split_openqasm_program_slices_inputs():
+    source = (
+        "OPENQASM 3.0;\ninput float theta;\ninput float phi;\nqubit[1] q;\nrx(theta + phi) q[0];"
+    )
+    program = Program(
+        source=source,
+        inputs={
+            "theta": [float(i) for i in range(7)],
+            "phi": [float(i + 10) for i in range(7)],
+        },
+    )
+    program_set = ProgramSet(program, shots_per_executable=10)
+
+    subs, mapping = program_set.split(3)
+
+    assert [sub.total_executables for sub in subs] == [3, 3, 1]
+    assert [sub.shots_per_executable for sub in subs] == [10, 10, 10]
+    assert mapping == [[0, 1, 2], [3, 4, 5], [6]]
+    assert [sub.entries[0] for sub in subs] == [
+        Program(source=source, inputs={"theta": [0.0, 1.0, 2.0], "phi": [10.0, 11.0, 12.0]}),
+        Program(source=source, inputs={"theta": [3.0, 4.0, 5.0], "phi": [13.0, 14.0, 15.0]}),
+        Program(source=source, inputs={"theta": [6.0], "phi": [16.0]}),
+    ]
+    assert [sub.to_ir().programs[0] for sub in subs] == [sub.entries[0] for sub in subs]
 
 
 def test_split_single_binding_packed(circuit_rx_parametrized):

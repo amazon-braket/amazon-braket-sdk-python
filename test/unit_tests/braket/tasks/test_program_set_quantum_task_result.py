@@ -540,6 +540,8 @@ def _build_sub_quantum_result(sub_program_set, programs_execs, shots_per_executa
             source_dict = entry.to_ir().dict()
         elif isinstance(entry, Circuit):
             source_dict = Program(source=entry.to_ir(IRType.OPENQASM).source, inputs=None).dict()
+        elif isinstance(entry, Program):
+            source_dict = entry.dict()
         else:
             source_dict = Program(source=entry, inputs=None).dict()
         program_results.append(_make_program_result(source_dict, execs))
@@ -799,6 +801,42 @@ def test_merge_with_openqasm_entries():
         assert composite.entries[0].program == source
         assert composite.entries[0].inputs is None
         assert composite.entries[0].observable is None
+
+
+def test_merge_with_openqasm_program_inputs():
+    source = (
+        "OPENQASM 3.0;\ninput float theta;\ninput float phi;\n"
+        "bit[2] b;\nqubit[2] q;\nrx(theta + phi) q[0];\n"
+        "b[0] = measure q[0];\nb[1] = measure q[1];"
+    )
+    inputs = {
+        "theta": [0.1, 0.2, 0.3, 0.4],
+        "phi": [1.1, 1.2, 1.3, 1.4],
+    }
+    program = Program(source=source, inputs=inputs)
+    program_set = ProgramSet(program)
+    subs, index_map = program_set.split(2)
+    sub_results = [
+        _build_sub_quantum_result(
+            sub, [[_make_exec_result(i) for i in range(sub.total_executables)]]
+        )
+        for sub in subs
+    ]
+
+    merged = ProgramSetQuantumTaskResult.merge(sub_results, program_set, index_map)
+
+    assert len(merged.entries) == 1
+    composite = merged.entries[0]
+    assert composite.program == program
+    assert composite.inputs == ParameterSets(inputs)
+    assert [entry.inputs for entry in composite.entries] == [
+        {"theta": 0.1, "phi": 1.1},
+        {"theta": 0.2, "phi": 1.2},
+        {"theta": 0.3, "phi": 1.3},
+        {"theta": 0.4, "phi": 1.4},
+    ]
+    assert all(entry.program == source for entry in composite.entries)
+    assert all(entry.observable is None for entry in composite.entries)
 
 
 def test_from_multiple_rejects_task_over_index_map(circuit_rx_parametrized_fixture):
