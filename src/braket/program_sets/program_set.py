@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
+from braket.ir.openqasm import Program
 from braket.ir.openqasm import ProgramSet as OpenQASMProgramSet
 
 from braket.circuits import Circuit, Gate, Observable
@@ -30,23 +31,32 @@ from braket.registers import QubitSet
 class ProgramSet:
     def __init__(
         self,
-        programs: list[CircuitBinding | Circuit] | CircuitBinding,
+        programs: list[CircuitBinding | Circuit | Program | str] | CircuitBinding | Program,
         shots_per_executable: int | None = None,
     ):
         """
         A set of programs to be run together on a device.
 
         Args:
-            programs (list[CircuitBinding | Circuit] | CircuitBinding): A list of circuit bindings
-                or circuits to execute. It is also possible to provide a single circuit binding.
-                Note: circuits cannot have result types.
+            programs (list[CircuitBinding | Circuit | Program | str] | CircuitBinding | Program):
+                A list of circuit bindings, circuits, OpenQASM programs, or OpenQASM strings to
+                execute. It is also possible to provide a single circuit binding or OpenQASM
+                program. OpenQASM program input values must be equal-length lists. Note: circuits
+                cannot have result types.
             shots_per_executable (int | None): The number of shots to run each executable;
                 this will be used to enforce the total shots on task creation. If not provided,
                 the only validation at task creation will be divisibility by number of executables.
+
+        Raises:
+            ValueError: If a circuit has result types, or if an OpenQASM program's inputs are not
+                equal-length lists.
         """
-        self._programs = [programs] if isinstance(programs, CircuitBinding) else programs
+        self._programs = [programs] if isinstance(programs, CircuitBinding | Program) else programs
         if any(isinstance(circuit, Circuit) and circuit.result_types for circuit in self._programs):
             raise ValueError("Circuit cannot have result types")
+        for program in self._programs:
+            if isinstance(program, Program):
+                _program_executable_count(program)
         self._shots_per_executable = shots_per_executable
 
     def to_ir(
@@ -63,26 +73,27 @@ class ProgramSet:
         Returns:
             braket.ir.openqasm.ProgramSet: The serialized program set.
         """
-        return OpenQASMProgramSet(
-            programs=[
-                (
-                    circuit_binding.to_ir(IRType.OPENQASM, gate_definitions=gate_definitions)
-                    if isinstance(circuit_binding, Circuit)
-                    else circuit_binding.to_ir(gate_definitions=gate_definitions)
-                )
-                for circuit_binding in self._programs
-            ]
-        )
+        programs = []
+        for program in self._programs:
+            if isinstance(program, Program):
+                programs.append(program)
+            elif isinstance(program, str):
+                programs.append(Program(source=program))
+            elif isinstance(program, Circuit):
+                programs.append(program.to_ir(IRType.OPENQASM, gate_definitions=gate_definitions))
+            else:
+                programs.append(program.to_ir(gate_definitions=gate_definitions))
+        return OpenQASMProgramSet(programs=programs)
 
     @property
-    def entries(self) -> list[CircuitBinding | Circuit]:
-        """list[CircuitBinding | Circuit]: The circuit bindings or circuits in this program set"""
+    def entries(self) -> list[CircuitBinding | Circuit | Program | str]:
+        """list[CircuitBinding | Circuit | Program | str]: The entries in this program set."""
         return self._programs
 
     @property
     def total_executables(self) -> int:
         """int: The total number of executables in this program set"""
-        return sum(len(prog) if isinstance(prog, CircuitBinding) else 1 for prog in self._programs)
+        return sum(_entry_executable_count(program) for program in self._programs)
 
     @property
     def shots_per_executable(self) -> int | None:
@@ -107,9 +118,10 @@ class ProgramSet:
         iterate over parameter set indices; within each parameter set index,
         iterate over observable indices. The total number of yields is ``self.total_executables``.
 
-        For ``Circuit``s and ``CircuitBinding``s with no input sets, ``parameter_set_index`` is 0.
-        For entries with no observables, ``observable_index`` is 0. For ``CircuitBinding``s with a
-        ``Sum`` Hamiltonian, ``observable_index`` ranges over the summands.
+        For ``Circuit``s, OpenQASM strings, OpenQASM ``Program``s with no inputs, and
+        ``CircuitBinding``s with no input sets, ``parameter_set_index`` is 0. For entries with no
+        observables, ``observable_index`` is 0. For ``CircuitBinding``s with a ``Sum`` Hamiltonian,
+        ``observable_index`` ranges over the summands.
 
         This ordering is used by ``split`` to build its index map and by
         ``ProgramSetQuantumTaskResult.merge`` to merge results back into the original shape.
@@ -118,7 +130,11 @@ class ProgramSet:
             tuple[int, int, int]: ``(binding_index, parameter_set_index, observable_index)``.
         """
         for binding_idx, prog in enumerate(self._programs):
-            if isinstance(prog, Circuit):
+            if isinstance(prog, Program):
+                for ps_idx in range(_program_executable_count(prog)):
+                    yield binding_idx, ps_idx, 0
+                continue
+            if not isinstance(prog, CircuitBinding):
                 yield binding_idx, 0, 0
                 continue
             num_obs = len(prog.observables) if prog.observables is not None else 1
@@ -136,6 +152,7 @@ class ProgramSet:
         the budget, the observable list is split into chunks of at most ``max_executables`` entries
         (``Sum`` summands are sliced with coefficients preserved). Observable splitting is only
         performed when necessary; otherwise the full observable list or ``Sum`` is kept intact.
+        OpenQASM ``Program`` input lists are sliced into contiguous chunks when necessary.
 
         The indices in the list of positions take values in the range [0, total_executables - 1].
 
@@ -198,10 +215,12 @@ class ProgramSet:
         ``(circuit, observable list/Sum Hamiltonian, single parameter assignment)`` and can thus be
         kept together when packing program sets in ``split``. A ``Circuit`` entry and a
         ``CircuitBinding`` with no input sets each yield a single block; a ``CircuitBinding`` with
-        input sets yields one block per parameter set index. Within a parameter set index,
-        the observables are chunked into slices of at most ``max_executables``, so an observable
-        list or ``Sum`` Hamiltonian larger than the ``max_executables`` is split across multiple
-        blocks with a slice recorded on each.
+        input sets yields one block per parameter set index. An OpenQASM ``Program`` with inputs
+        yields one block per input index. Within a parameter set index, the observables are chunked
+        into slices of at most ``max_executables``, so an observable list or ``Sum`` Hamiltonian
+        larger than the ``max_executables`` is split across multiple blocks with a slice recorded
+        on each. A ``Circuit``, OpenQASM string, or input-free OpenQASM ``Program`` entry yields a
+        single block.
 
         Args:
             max_executables (int): The maximum number of executables per program
@@ -213,7 +232,33 @@ class ProgramSet:
         blocks = []
         orig_idx = 0
         for prog_idx, prog in enumerate(self._programs):
-            if isinstance(prog, Circuit):
+            if isinstance(prog, Program):
+                num_executables = _program_executable_count(prog)
+                if num_executables <= 1:
+                    blocks.append(
+                        _ExecutableBlock(
+                            prog_idx=prog_idx,
+                            param_set_index=None,
+                            obs_slice=None,
+                            size=num_executables,
+                            original_indices=list(range(orig_idx, orig_idx + num_executables)),
+                        )
+                    )
+                    orig_idx += num_executables
+                    continue
+                for ps_idx in range(num_executables):
+                    blocks.append(
+                        _ExecutableBlock(
+                            prog_idx=prog_idx,
+                            param_set_index=ps_idx,
+                            obs_slice=None,
+                            size=1,
+                            original_indices=[orig_idx],
+                        )
+                    )
+                    orig_idx += 1
+                continue
+            if not isinstance(prog, CircuitBinding):
                 blocks.append(
                     _ExecutableBlock(
                         prog_idx=prog_idx,
@@ -269,13 +314,16 @@ class ProgramSet:
                 j += 1
             start = head.param_set_index
             stop = blocks[j].param_set_index + 1
-            entries.append(
-                CircuitBinding(
-                    prog.circuit,
-                    input_sets=prog.input_sets.as_list()[start:stop],
-                    observables=_slice_observables(prog.observables, head.obs_slice),
+            if isinstance(prog, Program):
+                entries.append(_slice_program_inputs(prog, start, stop))
+            else:
+                entries.append(
+                    CircuitBinding(
+                        prog.circuit,
+                        input_sets=prog.input_sets.as_list()[start:stop],
+                        observables=_slice_observables(prog.observables, head.obs_slice),
+                    )
                 )
-            )
             for k in range(i, j + 1):
                 sub_map.extend(blocks[k].original_indices)
             i = j + 1
@@ -400,8 +448,9 @@ class _ExecutableBlock:
 
     Attributes:
         prog_idx: Index of the originating program in ``ProgramSet.entries``.
-        param_set_index: Index into the originating ``CircuitBinding``'s ``input_sets``, or ``None``
-            for ``Circuit`` entries and ``CircuitBinding``s with no input sets.
+        param_set_index: Index into the originating ``CircuitBinding``'s ``input_sets`` or OpenQASM
+            ``Program``'s inputs, or ``None`` for ``Circuit`` entries, OpenQASM strings, input-free
+            OpenQASM ``Program``s, and ``CircuitBinding``s with no input sets.
         obs_slice: Slice into the originating observable list or ``Sum`` summands when observables
             were split to fit the budget; ``None`` means the full original observable list
             (or no observables).
@@ -440,15 +489,45 @@ def _slice_observables(
 
 
 def _apply_obs_slice(
-    prog: CircuitBinding | Circuit, obs_slice: slice | None
-) -> CircuitBinding | Circuit:
-    if obs_slice is None or isinstance(prog, Circuit) or prog.observables is None:
+    prog: CircuitBinding | Circuit | Program | str, obs_slice: slice | None
+) -> CircuitBinding | Circuit | Program | str:
+    if obs_slice is None or not isinstance(prog, CircuitBinding) or prog.observables is None:
         return prog
     return CircuitBinding(
         prog.circuit,
         input_sets=prog.input_sets,
         observables=_slice_observables(prog.observables, obs_slice),
     )
+
+
+def _program_executable_count(program: Program) -> int:
+    if not program.inputs:
+        return 1
+    input_lengths = {
+        len(value) if isinstance(value, list) else -1 for value in program.inputs.values()
+    }
+    if -1 in input_lengths:
+        raise ValueError("All Program inputs must be lists when using ProgramSet")
+    if len(input_lengths) > 1:
+        raise ValueError("All Program inputs must have the same length when using ProgramSet")
+    return input_lengths.pop()
+
+
+def _entry_executable_count(program: CircuitBinding | Circuit | Program | str) -> int:
+    if isinstance(program, CircuitBinding):
+        return len(program)
+    if isinstance(program, Program):
+        return _program_executable_count(program)
+    return 1
+
+
+def _slice_program_inputs(program: Program, start: int, stop: int) -> Program:
+    inputs = {}
+    for name, values in (program.inputs or {}).items():
+        if not isinstance(values, list):
+            raise TypeError("All Program inputs must be lists when using ProgramSet")
+        inputs[name] = values[start:stop]
+    return Program(source=program.source, inputs=inputs)
 
 
 def _zip_circuit_bindings(
