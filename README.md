@@ -109,16 +109,17 @@ from braket.aws import AwsQuantumJob
 
 job = AwsQuantumJob.create(
     device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-    source_module="job.py",
-    entry_point="job:run_job",
+    source_module="examples/hybrid_job_script.py",
+    entry_point="hybrid_job_script:run_hybrid_job",
+    hyperparameters={"num_tasks": 5},
     wait_until_complete=True,
 )
 print(job.result())
 ```
-where `run_job` is a function in the file `job.py`.
+where `run_hybrid_job` is a function in `examples/hybrid_job_script.py`.
 
 
-The code sample imports the Amazon Braket framework, then creates a hybrid job with the entry point being the `run_job` function. The hybrid job creates quantum tasks against the SV1 AWS Simulator. The hybrid job runs synchronously, and prints logs until it completes. The complete example can be found in `../examples/job.py`.
+The code sample imports the Amazon Braket framework, then creates a hybrid job with the entry point being the `run_hybrid_job` function. The hybrid job creates quantum tasks against the SV1 AWS Simulator. The hybrid job runs synchronously, and prints logs until it completes. The complete example can be found in [`examples/hybrid_job_script.py`](examples/hybrid_job_script.py).
 
 ### Available Simulators
 Amazon Braket provides access to two types of simulators: fully managed simulators, available through the Amazon Braket service, and the local simulators that are part of the Amazon Braket SDK.
