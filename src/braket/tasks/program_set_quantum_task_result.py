@@ -41,6 +41,7 @@ from braket.circuits.observable import EULER_OBSERVABLE_PREFIX
 from braket.circuits.observables import Sum
 from braket.circuits.serialization import IRType
 from braket.program_sets import CircuitBinding, ParameterSets, ProgramSet
+from braket.program_sets.program_set import _entry_executable_count
 from braket.tasks.measurement_utils import (
     expectation_from_measurements,
     measurement_counts_from_measurements,
@@ -525,7 +526,7 @@ class ProgramSetQuantumTaskResult:
         entries = []
         start = 0
         for binding_idx, binding in enumerate(program_set.entries):
-            count = _count_executables(binding)
+            count = _entry_executable_count(binding)
             program = programs[binding_idx]
             observables = binding.observables if isinstance(binding, CircuitBinding) else None
             entry = CompositeEntry(
@@ -552,7 +553,7 @@ class ProgramSetQuantumTaskResult:
                     ProgramMetadata(
                         executables=[
                             ProgramSetExecutableResultMetadata()
-                            for _ in range(_count_executables(b))
+                            for _ in range(_entry_executable_count(b))
                         ]
                     )
                     for b in program_set.entries
@@ -680,18 +681,14 @@ class ProgramSetQuantumTaskResult:
         return counter
 
 
-def _binding_to_program(binding: CircuitBinding | Circuit) -> Program:
+def _binding_to_program(binding: CircuitBinding | Circuit | Program | str) -> Program:
+    if isinstance(binding, Program):
+        return binding
+    if isinstance(binding, str):
+        return Program(source=binding, inputs=None)
     if isinstance(binding, Circuit):
         return Program(source=binding.to_ir(IRType.OPENQASM).source, inputs=None)
     return binding.to_ir()
-
-
-def _count_executables(binding: CircuitBinding | Circuit) -> int:
-    if isinstance(binding, Circuit):
-        return 1
-    num_ps = len(binding.input_sets) if binding.input_sets is not None else 1
-    num_obs = len(binding.observables) if binding.observables is not None else 1
-    return num_ps * num_obs
 
 
 def _reorder_executable_results(
@@ -730,14 +727,27 @@ def _reorder_executable_results(
 
 def _convert_measured_entry(
     entry: MeasuredEntry | ProgramSetExecutableFailure,
-    original_binding: CircuitBinding | Circuit,
+    original_binding: CircuitBinding | Circuit | Program | str,
     original_program: Program,
     parameter_set_index: int,
     observable_index: int,
 ) -> MeasuredEntry | ProgramSetExecutableFailure:
     if isinstance(entry, ProgramSetExecutableFailure):
         return entry
-    if isinstance(original_binding, Circuit):
+    if isinstance(original_binding, Program):
+        program_inputs = original_program.inputs or {}
+        return replace(
+            entry,
+            program=original_program.source,
+            inputs={
+                key: value[parameter_set_index]
+                for key, value in program_inputs.items()
+                if isinstance(value, list)
+            }
+            or None,
+            observable=None,
+        )
+    if not isinstance(original_binding, CircuitBinding):
         return replace(entry, program=original_program.source, inputs=None, observable=None)
     observables = original_binding.observables
     if observables is None:

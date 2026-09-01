@@ -117,6 +117,22 @@ def test_string_in_list():
     )
 
 
+@pytest.mark.parametrize(
+    ("observable", "expected"),
+    [
+        ("-XZ", -1 * X() @ Z()),
+        (PauliString("-XZ"), -1 * X() @ Z()),
+        (X(0) @ Z(1), X(0) @ Z(1)),
+    ],
+)
+def test_single_observable(observable, expected):
+    circuit = Circuit().h(0).cnot(0, 1)
+    binding = CircuitBinding(circuit, observables=observable)
+
+    assert binding.observables == [expected]
+    assert len(binding) == 1
+
+
 def test_sum_in_observable_list():
     with pytest.raises(TypeError):
         CircuitBinding(Circuit().h(0), observables=[X(0) + Y(0)])
