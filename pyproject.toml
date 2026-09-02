@@ -29,6 +29,7 @@ dependencies = [
     "backoff",
     "boltons",
     "boto3>=1.28.53",
+    "cloudpickle>=3",
     "nest-asyncio",
     "networkx",
     "numpy",
