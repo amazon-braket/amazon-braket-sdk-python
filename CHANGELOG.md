@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.127.0 (2026-09-02)
+
+### Features
+
+ * Allow `Program`s and OpenQASM strings in `ProgramSet`
+
+### Documentation Changes
+
+ * fix hybrid job example reference
+
 ## v1.126.2 (2026-08-31)
 
 ### Bug Fixes and Other Changes
