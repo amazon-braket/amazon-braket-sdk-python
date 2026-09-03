@@ -13,6 +13,7 @@
 
 import json
 import warnings
+from collections import Counter
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -283,6 +284,26 @@ def test_local(result_local, metadata, execution_failure):
         assert success.expectation is None
     assert entry[1] == BraketSchemaBase.parse_raw_schema(json.dumps(execution_failure))
     assert result.task_metadata == BraketSchemaBase.parse_raw_schema(json.dumps(metadata))
+
+
+def test_expectation_from_measurements_without_attached_observable():
+    """Regression test for #1316: expectation is recoverable from measurements per observable."""
+    # wire 0 always 0 (<Z> = +1); wire 1 always 1 (<Z> = -1)
+    entry = MeasuredEntry(
+        measurements=np.array([[0, 1]] * 10),
+        counts=Counter({"01": 10}),
+        probabilities={"01": 1.0},
+        measured_qubits=[0, 1],
+        measurements_from_device=True,
+        probabilities_from_device=False,
+        program="",
+        inputs=None,
+        observable=None,
+    )
+    with pytest.warns(UserWarning):
+        assert entry.expectation is None
+    assert np.isclose(entry.compute_expectation(Z(0)), 1.0)
+    assert np.isclose(entry.compute_expectation(Z(1)), -1.0)
 
 
 @patch("braket.tasks.program_set_quantum_task_result.boto3.client")
