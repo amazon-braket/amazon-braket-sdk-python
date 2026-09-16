@@ -12,11 +12,13 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import concurrent.futures
+import itertools
 import json
 import threading
 import time
 import warnings
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import DEFAULT, MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
@@ -401,6 +403,55 @@ def test_result_circuit(circuit_task):
     circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
         s3_bucket, f"{s3_object_key}/results.json"
     )
+
+
+def test_result_circuit_from_running_event_loop(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "RUNNING")
+    running = circuit_task._aws_session.get_quantum_task.return_value
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    circuit_task._aws_session.get_quantum_task.side_effect = itertools.chain(
+        [running], itertools.repeat(DEFAULT)
+    )
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    circuit_task._poll_interval_seconds = 0
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+
+    # Mimic nested event loop (like running from a Jupyter notebook)
+    async def call_result_from_coroutine():
+        return circuit_task.result()
+
+    assert asyncio.run(call_result_from_coroutine()) == expected
+
+
+def test_result_from_running_event_loop_interrupt_stops_polling(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "RUNNING")
+    circuit_task._poll_interval_seconds = 0.01
+    circuit_task._poll_timeout_seconds = 5
+
+    async def call_result_from_coroutine():
+        return circuit_task.result()
+
+    with (
+        patch.object(concurrent.futures.Future, "result", side_effect=KeyboardInterrupt),
+        pytest.raises(KeyboardInterrupt),
+    ):
+        asyncio.run(call_result_from_coroutine())
+
+    # Check that the loop was interrupted by the user's KeyboardInterrupt, rather than
+    # waiting for a timeout (which would be closer to 500 calls)
+    assert circuit_task._aws_session.get_quantum_task.call_count < 10
+
+
+def test_async_result_from_running_event_loop(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+
+    # Mimic nested event loop when the user calls async_result directly.
+    async def await_async_result():
+        return await circuit_task.async_result()
+
+    assert asyncio.run(await_async_result()) == expected
 
 
 def test_result_program_set(circuit_task):
