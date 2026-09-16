@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.1 (2026-09-16)
+
+### Bug Fixes and Other Changes
+
+ * allow computing MeasuredEntry expectation from program set measurements
+
 ## v1.127.0 (2026-09-02)
 
 ### Features
