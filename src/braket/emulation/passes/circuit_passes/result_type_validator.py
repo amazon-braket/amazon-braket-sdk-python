@@ -16,6 +16,7 @@ from collections.abc import Iterable, Mapping
 from braket.device_schema.result_type import ResultType
 
 from braket.circuits import Circuit
+from braket.circuits.observables import TensorProduct
 from braket.circuits.result_type import ObservableResultType
 from braket.emulation.passes import ValidationPass
 
@@ -74,13 +75,20 @@ class ResultTypeValidator(ValidationPass):
                 )
 
             if isinstance(result_type, ObservableResultType):
-                observable_name = result_type.observable.name.lower()
-                if observable_name not in self._supported_result_types[result_type.name]:
-                    raise ValueError(
-                        f"Observable {observable_name} is not supported for result type "
-                        f"{result_type.name} on this device. Supported observables are: "
-                        f"{self._supported_result_types[result_type.name]}."
-                    )
+                observable = result_type.observable
+                # Devices only report the primitive observables they support, so a tensor
+                # product is supported when each of its factors is.
+                factors = (
+                    observable.factors if isinstance(observable, TensorProduct) else (observable,)
+                )
+                for factor in factors:
+                    observable_name = factor.name.lower()
+                    if observable_name not in self._supported_result_types[result_type.name]:
+                        raise ValueError(
+                            f"Observable {observable_name} is not supported for result type "
+                            f"{result_type.name} on this device. Supported observables are: "
+                            f"{self._supported_result_types[result_type.name]}."
+                        )
 
             # Check if target qubits are valid qubits in the device
             target = result_type.target
