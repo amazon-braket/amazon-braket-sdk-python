@@ -269,7 +269,8 @@ class CompositeEntry:
     def expectation(self, i: int | None = None) -> float | None:
         """
         float | None: The expectation value of the Hamiltonian whose terms are the observables
-        of the underlying entries, if observables were specified.
+        of the underlying entries, if observables were specified; ``None`` if any of the
+        executables for that parameter set failed.
         """
         expectations = self._expectations
         if not expectations:
@@ -284,14 +285,17 @@ class CompositeEntry:
             raise ValueError(f"At most {num_expectations} expectation values available")
         return expectations[i]
 
-    def _compute_expectations(self) -> dict[int, float]:
+    def _compute_expectations(self) -> dict[int, float | None]:
         num_expectations = len(self.inputs) or 1
         expectations = {}
         for i in range(num_expectations):
             num_summands = len(self.observables)
             start = i * num_summands
-            expectations[i] = sum(
-                entry.expectation for entry in self.entries[start : start + num_summands]
+            entries = self.entries[start : start + num_summands]
+            expectations[i] = (
+                sum(entry.expectation for entry in entries)
+                if all(isinstance(entry, MeasuredEntry) for entry in entries)
+                else None
             )
         return expectations
 
