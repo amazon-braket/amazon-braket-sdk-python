@@ -101,6 +101,32 @@ def test_standalone_openqasm_program():
     ]
 
 
+def test_standalone_openqasm_string():
+    source = "OPENQASM 3.0;\nbit[1] b;\nqubit[1] q;\nh q[0];\nb[0] = measure q[0];"
+    program_set = ProgramSet(source, shots_per_executable=100)
+
+    assert program_set.entries == [source]
+    assert program_set.total_executables == 1
+    assert program_set.total_shots == 100
+    assert program_set.to_ir() == IrProgramSet(programs=[Program(source=source, inputs=None)])
+    assert list(program_set.enumerate_executables()) == [(0, 0, 0)]
+    assert program_set == ProgramSet([source], shots_per_executable=100)
+
+
+def test_standalone_circuit():
+    circuit = Circuit().h(0).cnot(0, 1)
+    program_set = ProgramSet(circuit, shots_per_executable=100)
+
+    assert program_set.entries == [circuit]
+    assert program_set.total_executables == 1
+    assert program_set.total_shots == 100
+    assert program_set.to_ir() == IrProgramSet(
+        programs=[Program(source=get_circuit_source(circuit), inputs={})]
+    )
+    assert list(program_set.enumerate_executables()) == [(0, 0, 0)]
+    assert program_set == ProgramSet([circuit], shots_per_executable=100)
+
+
 def test_openqasm_programs_in_list():
     programs = [
         Program(source="OPENQASM 3.0;\nqubit[1] q;\nh q[0];"),
