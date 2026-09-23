@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.2 (2026-09-23)
+
+### Bug Fixes and Other Changes
+
+ * treat a single OpenQASM string or Circuit as one ProgramSet entry
+
 ## v1.127.1 (2026-09-16)
 
 ### Bug Fixes and Other Changes
