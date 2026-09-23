@@ -101,12 +101,20 @@ def test_invalid_qubit_target():
         ).validate(circuit)
 
 
-def test_observables(supported_result_types, connectivity_graph):
-    circuit = Circuit().h(0).cnot(0, 1).sample(Observable.Z(0) @ Observable.Z(1))
-    observable_name = circuit.result_types[0].observable.name.lower()
+def test_tensor_product_observable(supported_result_types, connectivity_graph):
+    """
+    A tensor product is supported when each of its factors is.
+    """
+    circuit = Circuit().h(0).cnot(0, 1).sample(Observable.Z(0) @ Observable.X(1))
+    ResultTypeValidator(supported_result_types, connectivity_graph).validate(circuit)
+
+
+def test_observables(connectivity_graph):
+    supported_result_types = [ResultType(name="Sample", observables=["z"])]
+    circuit = Circuit().h(0).cnot(0, 1).sample(Observable.Z(0) @ Observable.X(1))
     error_messasge = re.escape(
-        f"Observable {observable_name} is not supported for result type Sample on this device. "
-        f"Supported observables are: ['x', 'y', 'z', 'h', 'i']."
+        "Observable x is not supported for result type Sample on this device. "
+        "Supported observables are: ['z']."
     )
     with pytest.raises(
         ValueError,
