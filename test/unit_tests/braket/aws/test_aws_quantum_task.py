@@ -625,6 +625,7 @@ def test_async_result_queued(circuit_task, status, result):
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
 
     future = circuit_task.async_result()
+    asyncio.get_event_loop().run_until_complete(asyncio.sleep(0))
 
     # test the different ways to get the result from async
 
