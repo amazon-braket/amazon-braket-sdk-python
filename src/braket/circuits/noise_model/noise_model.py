@@ -247,7 +247,9 @@ class NoiseModel:
             new_model.add_noise(item.noise, item.criteria)
         return new_model
 
-    def apply(self, task_specification: TaskSpecification) -> TaskSpecification:
+    def apply(
+        self, task_specification: TaskSpecification, control_aware: bool = False
+    ) -> TaskSpecification:
         """Applies this noise model to a circuit, and returns a new circuit that's the `noisy`
         version of the given circuit. If multiple noise will act on the same instruction,
         they will be applied in the order they are added to the noise model.
@@ -255,6 +257,9 @@ class NoiseModel:
         Args:
             task_specification (TaskSpecification): a (supported) task to apply noise to
                 see NoiseModel.supported_specifications for supported tasks.
+            control_aware (bool): Match controlled X, Y, Z, V, Swap, and CNot gates against
+                their equivalent named gates where available. Other controlled gates retain
+                the original matching behavior. The default is False.
 
         Returns:
             task_specification: A new task with noise inserted.
@@ -262,9 +267,9 @@ class NoiseModel:
 
         match task_specification:
             case Circuit():
-                return self._apply_to_circuit(task_specification)
+                return self._apply_to_circuit(task_specification, control_aware=control_aware)
             case ProgramSet():
-                return self._apply_to_program_set(task_specification)
+                return self._apply_to_program_set(task_specification, control_aware=control_aware)
         warnings.warn(
             f"The type of the task specification is {task_specification.__class__.__name__}, "
             "which is not supported by the noise model.",
@@ -272,7 +277,7 @@ class NoiseModel:
         )
         return task_specification
 
-    def _apply_to_program_set(self, program_set: ProgramSet):
+    def _apply_to_program_set(self, program_set: ProgramSet, control_aware: bool = False):
         """
         Apply noise model to program set by casting observables to paramterized circuits
 
@@ -291,15 +296,25 @@ class NoiseModel:
                     )
                 new_programs.append(
                     CircuitBinding(
-                        self._apply_to_circuit(current_binding.circuit, allow_warning=(not n)),
+                        self._apply_to_circuit(
+                            current_binding.circuit,
+                            allow_warning=(not n),
+                            control_aware=control_aware,
+                        ),
                         current_binding.input_sets,
                     )
                 )
             else:
-                new_programs.append(self._apply_to_circuit(program, allow_warning=(not n)))
+                new_programs.append(
+                    self._apply_to_circuit(
+                        program, allow_warning=(not n), control_aware=control_aware
+                    )
+                )
         return ProgramSet(new_programs, shots_per_executable=program_set.shots_per_executable)
 
-    def _apply_to_circuit(self, circuit: Circuit, allow_warning: bool = True) -> Circuit:
+    def _apply_to_circuit(
+        self, circuit: Circuit, allow_warning: bool = True, control_aware: bool = False
+    ) -> Circuit:
         if allow_warning:
             for instruction in circuit.instructions:
                 if isinstance(instruction.operator, Noise):
@@ -310,7 +325,9 @@ class NoiseModel:
                     )
                     break
         instructions = self.get_instructions_by_type()
-        new_circuit = NoiseModel._apply_gate_noise(circuit, instructions.gate_noise)
+        new_circuit = NoiseModel._apply_gate_noise(
+            circuit, instructions.gate_noise, control_aware=control_aware
+        )
         new_circuit = NoiseModel._apply_init_noise(new_circuit, instructions.initialization_noise)
         return NoiseModel._apply_readout_noise(new_circuit, instructions.readout_noise)
 
@@ -323,6 +340,7 @@ class NoiseModel:
         cls,
         circuit: Circuit,
         gate_noise_instructions: list[NoiseModelInstruction],
+        control_aware: bool = False,
     ) -> Circuit:
         """Applies the gate noise to return a new circuit that's the `noisy` version of the given
         circuit.
@@ -331,6 +349,7 @@ class NoiseModel:
             circuit (Circuit): a circuit to apply `noise` to.
             gate_noise_instructions (list[NoiseModelInstruction]): a list of gate noise
                 instructions to apply to the circuit.
+            control_aware (bool): Match controlled gates against equivalent named gates.
 
         Returns:
             Circuit: A new circuit that's a `noisy` version of the passed in circuit. The targets
@@ -341,9 +360,14 @@ class NoiseModel:
             new_circuit.add_instruction(circuit_instruction)
 
             if not isinstance(circuit_instruction.operator, Measure):
+                matching_instruction = (
+                    _equivalent_controlled_gate(circuit_instruction)
+                    if control_aware
+                    else circuit_instruction
+                )
                 _apply_noise_on_instruction(
                     new_circuit,
-                    circuit_instruction,
+                    matching_instruction,
                     gate_noise_instructions,
                 )
 
@@ -435,6 +459,27 @@ class NoiseModel:
             for item in noise_dict["instructions"]
         )
         return model
+
+
+def _equivalent_controlled_gate(instruction: Instruction) -> Instruction:
+    """Use a named gate for noise matching when it represents the same controlled operation."""
+    control_count = len(instruction.control)
+    if not control_count or instruction.power != 1 or not all(instruction.control_state):
+        return instruction
+
+    equivalents = {
+        (Gate.X, 1): Gate.CNot,
+        (Gate.Y, 1): Gate.CY,
+        (Gate.Z, 1): Gate.CZ,
+        (Gate.V, 1): Gate.CV,
+        (Gate.Swap, 1): Gate.CSwap,
+        (Gate.X, 2): Gate.CCNot,
+        (Gate.CNot, 1): Gate.CCNot,
+    }
+    equivalent = equivalents.get((type(instruction.operator), control_count))
+    if equivalent is None:
+        return instruction
+    return Instruction(equivalent(), [*instruction.control, *instruction.target])
 
 
 def _apply_noise_on_instruction(
