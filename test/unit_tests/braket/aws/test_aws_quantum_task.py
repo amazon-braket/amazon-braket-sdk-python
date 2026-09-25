@@ -378,6 +378,7 @@ def asyncio_get_event_loop_side_effect(*args, **kwargs):
         yield mock
 
 
+@patch.object(AwsQuantumTask, "_wait_for_completion", new=MagicMock())
 @patch("braket.aws.aws_quantum_task.asyncio")
 def test_initialize_asyncio_event_loop_if_required(mock_asyncio, quantum_task):
     mock_asyncio.get_event_loop.side_effect = asyncio_get_event_loop_side_effect()
