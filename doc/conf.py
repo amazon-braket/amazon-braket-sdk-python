@@ -60,6 +60,8 @@ html_theme_options = {
     "prev_next_buttons_location": "both",
     "collapse_navigation": True,
 }
+html_static_path = ["_static"]
+html_js_files = ["copy-markdown.js"]
 htmlhelp_basename = f"{project}doc"
 
 language = "en"
