@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (tag === "a") {
       const text = children().trim();
-      const href = node.getAttribute("href");
+      const href = node.href;
 
       return href ? `[${text}](${href})` : text;
     }
