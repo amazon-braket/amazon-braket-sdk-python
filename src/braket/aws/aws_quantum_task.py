@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import contextlib
 import time
 import warnings
@@ -451,12 +452,37 @@ class AwsQuantumTask(QuantumTask):
         if status in self.NO_RESULT_TERMINAL_STATES:
             return self._result
         try:
+            if self._in_running_loop():
+                return self._result_in_worker_thread()
             async_result = self.async_result()
             return async_result.get_loop().run_until_complete(async_result)
         except asyncio.CancelledError:
             # Future was cancelled, return whatever is in self._result if anything
             self._logger.warning("Task future was cancelled")
             return self._result
+
+    def _result_in_worker_thread(self) -> TaskResult:
+        """Poll on a worker thread with its own loop, cancelling it if the caller is interrupted."""
+        loop = asyncio.new_event_loop()
+        task = loop.create_task(self._wait_for_completion())
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        try:
+            return executor.submit(loop.run_until_complete, task).result()
+        except BaseException:
+            loop.call_soon_threadsafe(task.cancel)
+            raise
+        finally:
+            executor.shutdown(wait=True)
+            loop.close()
+
+    @staticmethod
+    def _in_running_loop() -> bool:
+        """Return True if an event loop is running in the current thread (e.g. Jupyter)."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return False
+        return True
 
     def _get_future(self) -> asyncio.Future:
         try:
@@ -472,7 +498,7 @@ class AwsQuantumTask(QuantumTask):
             # timed out and no result
             and self._update_status_if_nonterminal() not in self.NO_RESULT_TERMINAL_STATES
         ):
-            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+            self._future = asyncio.get_event_loop().create_task(self._wait_for_completion())
         return self._future
 
     def async_result(self) -> asyncio.Task:
@@ -480,16 +506,6 @@ class AwsQuantumTask(QuantumTask):
         the result cached from the most recent request.
         """
         return self._get_future()
-
-    async def _create_future(self) -> asyncio.Task:
-        """Wrap the `_wait_for_completion` coroutine inside a future-like object.
-        Invoking this method starts the coroutine and returns back the future-like object
-        that contains it. Note that this does not block on the coroutine to finish.
-
-        Returns:
-            asyncio.Task: An asyncio Task that contains the `_wait_for_completion()` coroutine.
-        """
-        return asyncio.create_task(self._wait_for_completion())
 
     async def _wait_for_completion(
         self,
