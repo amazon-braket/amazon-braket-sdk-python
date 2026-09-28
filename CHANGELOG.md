@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.3 (2026-09-28)
+
+### Bug Fixes and Other Changes
+
+ * fix Jupyter event loop conflict
+
 ## v1.127.2 (2026-09-23)
 
 ### Bug Fixes and Other Changes
