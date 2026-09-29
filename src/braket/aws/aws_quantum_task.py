@@ -162,8 +162,8 @@ class AwsQuantumTask(QuantumTask):
 
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
-                Note: If you are creating tasks in a job that itself was created reservation ARN,
-                those tasks do not need to be created with the reservation ARN.
+                Note: If you are creating tasks in a job that itself was created with a
+                reservation ARN, those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
             experimental_capabilities (str | None): Experimental capabilities

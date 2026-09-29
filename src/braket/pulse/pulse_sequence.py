@@ -110,7 +110,7 @@ class PulseSequence:
         """Adds an instruction to set the phase of the frame to the specified `phase` value.
 
         Args:
-            frame (Frame): Frame for which the frequency needs to be set.
+            frame (Frame): Frame for which the phase needs to be set.
             phase (float | FreeParameterExpression): phase value to set
                 for the specified frame.
 
@@ -211,8 +211,8 @@ class PulseSequence:
         frames.
 
         Args:
-            qubits_or_frames (list[Frame] | QubitSet): Qubits or frames which the delay
-                needs to be introduced.
+            qubits_or_frames (list[Frame] | QubitSet): Qubits or frames whose clocks
+                need to be aligned.
 
         Returns:
             PulseSequence: self, with the instruction added.

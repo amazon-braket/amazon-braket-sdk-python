@@ -84,7 +84,7 @@ def multi_stream_iter(
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
         log_group (str): The name of the log group.
-        streams (list[str]): A list of the log stream names. The the stream number is
+        streams (list[str]): A list of the log stream names. The stream number is
             the position of the stream in this list.
         positions (dict[str, Position]): A list of (timestamp, skip) pairs which represent
             the last record read from each stream.

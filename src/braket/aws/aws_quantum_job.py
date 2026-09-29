@@ -161,7 +161,7 @@ class AwsQuantumJob(QuantumJob):
 
             copy_checkpoints_from_job (str | None): A str that specifies the hybrid job ARN whose
                 checkpoint you want to use in the current hybrid job. Specifying this value will
-                copy over the checkpoint data from `use_checkpoints_from_job`'s checkpoint_config
+                copy over the checkpoint data from `copy_checkpoints_from_job`'s checkpoint_config
                 s3Uri to the current hybrid job's checkpoint_config s3Uri, making it available at
                 checkpoint_config.localPath during the hybrid job execution. Default: None
 

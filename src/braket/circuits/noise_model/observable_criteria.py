@@ -90,8 +90,7 @@ class ObservableCriteria(ResultTypeCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """Converts a dictionary representing an object of this class into an instance of
-        this class.
+        """Converts this Criteria object into a dictionary.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
@@ -116,7 +115,7 @@ class ObservableCriteria(ResultTypeCriteria):
 
         Returns:
             bool: Returns true if the result type is one of the Observables provided in the
-            constructor and the target is a qubit (or set of qubits)provided in the constructor.
+            constructor and the target is a qubit (or set of qubits) provided in the constructor.
             If observables were not provided in the constructor, then this method will accept any
             Observable.
             If qubits were not provided in the constructor, then this method will accept any
@@ -136,10 +135,10 @@ class ObservableCriteria(ResultTypeCriteria):
         """Deserializes a dictionary into a Criteria object.
 
         Args:
-            criteria (dict): A dictionary representation of a GateCriteria.
+            criteria (dict): A dictionary representation of an ObservableCriteria.
 
         Returns:
-            Criteria: A deserialized GateCriteria represented by the passed in
+            Criteria: A deserialized ObservableCriteria represented by the passed in
             serialized data.
         """
         observables = (

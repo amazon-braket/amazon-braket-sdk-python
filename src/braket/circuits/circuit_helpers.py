@@ -23,7 +23,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
 
     Raises:
         ValueError: If circuit has no instructions; if circuit has a non-gphase instruction; if no
-            result types specified for circuit and `shots=0`. See `braket.circuit.result_types`;
+            result types specified for circuit and `shots=0`. See `braket.circuits.result_types`;
             if circuit has observables that cannot be simultaneously measured and `shots>0`;
             or, if `StateVector` or `Amplitude` are specified as result types when `shots>0`.
     """

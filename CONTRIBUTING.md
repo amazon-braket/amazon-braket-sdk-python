@@ -54,7 +54,7 @@ Before sending us a pull request, please ensure that:
 
 1. If you do not already have one, create a GitHub account by following the prompts at [Join Github](https://github.com/join).
 1. Create a fork of this repository on GitHub. You should end up with a fork at `https://github.com/<username>/amazon-braket-sdk-python`.
-   1. Follow the instructions at [Fork a Repo](https://help.github.com/en/articles/fork-a-repo) to fork a GitHub repository.
+   1. Follow the instructions at [Fork a Repo](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) to fork a GitHub repository.
 1. Clone your fork of the repository: `git clone https://github.com/<username>/amazon-braket-sdk-python` where `<username>` is your github username.
 
 
@@ -72,7 +72,7 @@ You can also pass in various pytest arguments `tox -e unit-tests -- your-argumen
 
 Run the integration tests to make sure that the system as a whole still works.
 
-1. Follow the instructions at [Set Up the AWS Command Line Interface (AWS CLI)](https://docs.aws.amazon.com/polly/latest/dg/setup-aws-cli.html).
+1. Follow the instructions at [Set Up the AWS Command Line Interface (AWS CLI)](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 1. Set the `AWS_PROFILE` information
      ```bash
      export AWS_PROFILE=Your_Profile_Name
@@ -97,7 +97,7 @@ You can also pass in various pytest arguments `tox -e integ-tests -- your-argume
 
 ### Send a Pull Request
 
-GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
+GitHub provides additional documentation on [Creating a Pull Request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request).
 
 Please remember to:
 * Use PR titles that follow the guidelines under [PR Title Format](#pr-title-format).

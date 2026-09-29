@@ -30,7 +30,7 @@ class RemoveVerbatimTransformation(TransformationPass):
         - ProgramSet: Recursively applies to all contained circuits
 
     Examples:
-        >>> modifier = VerbatimModifier()
+        >>> modifier = RemoveVerbatimTransformation()
         >>> circuit = Circuit()
         >>> circuit.add_instruction(StartVerbatimBox())
         >>> circuit.h(0)

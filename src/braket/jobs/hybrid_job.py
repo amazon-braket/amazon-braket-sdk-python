@@ -139,7 +139,7 @@ def hybrid_job(
 
         copy_checkpoints_from_job (str | None): A str that specifies the job ARN whose
             checkpoint you want to use in the current job. Specifying this value will copy
-            over the checkpoint data from `use_checkpoints_from_job`'s checkpoint_config
+            over the checkpoint data from `copy_checkpoints_from_job`'s checkpoint_config
             s3Uri to the current job's checkpoint_config s3Uri, making it available at
             checkpoint_config.localPath during the job execution. Default: `None`
 

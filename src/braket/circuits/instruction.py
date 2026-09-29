@@ -70,7 +70,7 @@ class Instruction:
         Examples:
             >>> Instruction(Gate.CNot(), [0, 1])
             Instruction('operator': CNOT, 'target': QubitSet(Qubit(0), Qubit(1)))
-            >>> instr = Instruction(Gate.CNot()), QubitSet([0, 1])])
+            >>> instr = Instruction(Gate.CNot(), QubitSet([0, 1]))
             Instruction('operator': CNOT, 'target': QubitSet(Qubit(0), Qubit(1)))
             >>> instr = Instruction(Gate.H(), 0)
             Instruction('operator': H, 'target': QubitSet(Qubit(0),))

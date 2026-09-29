@@ -35,7 +35,7 @@ Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentat
 **Note:** Make sure that your AWS region is set to one supported by Amazon Braket. You can check this in your AWS configuration file, which is located by default at `~/.aws/config`.
 
 ### Configure your AWS account with the resources necessary for Amazon Braket
-If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
+If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home).
 
 ## Installing the Amazon Braket Python SDK
 
@@ -89,7 +89,7 @@ task = device.run(bell, shots=100)
 print(task.result().measurement_counts)
 ```
 
-The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the hybrid job. This example can be found in `../examples/bell.py`.
+The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the quantum task. This example can be found in `examples/bell.py`.
 
 ### Running multiple quantum tasks at once
 
@@ -125,13 +125,13 @@ The code sample imports the Amazon Braket framework, then creates a hybrid job w
 Amazon Braket provides access to two types of simulators: fully managed simulators, available through the Amazon Braket service, and the local simulators that are part of the Amazon Braket SDK.
 
 - Fully managed simulators offer high-performance circuit simulations. These simulators can handle circuits larger than circuits that run on quantum hardware. For example, the SV1 state vector simulator shown in the previous examples requires approximately 1 or 2 hours to complete a 34-qubit, dense, and square circuit (circuit depth = 34), depending on the type of gates used and other factors.
-- The Amazon Braket Python SDK includes an implementation of quantum simulators that can run circuits on your local, classic hardware. For example the braket_sv local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the quantum task locally is included in the repository  `../examples/local_bell.py`.
+- The Amazon Braket Python SDK includes an implementation of quantum simulators that can run circuits on your local, classic hardware. For example the braket_sv local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the quantum task locally is included in the repository `examples/local_bell.py`.
 
 For a list of available simulators and their features, consult the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 ### Debugging logs
 
-Quantum tasks sent to QPUs don't always run right away. To view quantum task status, you can enable debugging logs. An example of how to enable these logs is included in repo: `../examples/debug_bell.py`. This example enables quantum task logging so that status updates are continuously printed to the terminal after a quantum task is executed. The logs can also be configured to save to a file or output to another stream. You can use the debugging example to get information on the quantum tasks you submit, such as the current status, so that you know when your quantum task completes.
+Quantum tasks sent to QPUs don't always run right away. To view quantum task status, you can enable debugging logs. An example of how to enable these logs is included in repo: `examples/debug_bell.py`. This example enables quantum task logging so that status updates are continuously printed to the terminal after a quantum task is executed. The logs can also be configured to save to a file or output to another stream. You can use the debugging example to get information on the quantum tasks you submit, such as the current status, so that you know when your quantum task completes.
 
 ### Running a Quantum Algorithm on a Quantum Computer
 With Amazon Braket, you can run your quantum circuit on a physical quantum computer.
@@ -170,7 +170,7 @@ See [PUBLICATIONS.md](PUBLICATIONS.md) for a list of recent arXiv preprints that
 
 ## Braket Python SDK API Reference Documentation
 
-The API reference, can be found on [Read the Docs](https://amazon-braket-sdk-python.readthedocs.io/en/latest/).
+The API reference can be found on [Read the Docs](https://amazon-braket-sdk-python.readthedocs.io/en/latest/).
 
 **To generate the API Reference HTML in your local environment**
 
@@ -191,7 +191,7 @@ This repository has both unit and integration tests.
 To run the tests, make sure to install test dependencies first:
 
 ```bash
-pip install -e "amazon-braket-sdk-python[test]"
+pip install -e ".[test]"
 ```
 
 ### Unit Tests

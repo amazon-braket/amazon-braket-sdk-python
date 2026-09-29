@@ -46,7 +46,7 @@ class QuantumOperator(Operator):
         Raises:
             TypeError: `qubit_count` is not an int
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`,
-                ``fixed_qubit_count`` is implemented and and not equal to ``qubit_count``,
+                ``fixed_qubit_count`` is implemented and not equal to ``qubit_count``,
                 or ``len(ascii_symbols) != qubit_count``
         """
         fixed_qubit_count = self.fixed_qubit_count()
@@ -117,10 +117,10 @@ class QuantumOperator(Operator):
             **kwargs (Any): Not Implemented.
 
         Raises:
-            NotImplementError: Not Implemented.
+            NotImplementedError: Not Implemented.
 
         Returns:
-            Any: The the canonical intermediate representation of the operator.
+            Any: The canonical intermediate representation of the operator.
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
@@ -132,7 +132,7 @@ class QuantumOperator(Operator):
             **kwargs (Any): Not Implemented.
 
         Raises:
-            NotImplementError: Not Implemented.
+            NotImplementedError: Not Implemented.
 
         Returns:
             np.ndarray: A matrix representation of the quantum operator

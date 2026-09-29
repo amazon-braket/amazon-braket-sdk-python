@@ -86,11 +86,11 @@ class DrivingField(Hamiltonian):
     ) -> DrivingField:
         """Stitches two driving fields based on TimeSeries.stitch method.
         The time points of the second DrivingField are shifted such that the first time point of
-        the second DrifingField coincides with the last time point of the first DrivingField.
+        the second DrivingField coincides with the last time point of the first DrivingField.
         The boundary point value is handled according to StitchBoundaryCondition argument value.
 
         Args:
-            other (DrivingField): The second shifting field to be stitched with.
+            other (DrivingField): The second driving field to be stitched with.
             boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
 
                 Possible options are

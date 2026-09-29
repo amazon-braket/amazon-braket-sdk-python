@@ -30,10 +30,10 @@ class NoiseModelTransformation(TransformationPass):
 
     Examples:
         >>> noise_model = NoiseModel().add_noise(BitFlip(0.1), GateCriteria(Gate.H))
-        >>> modifier = NoiseModelModifier(noise_model)
+        >>> modifier = NoiseModelTransformation(noise_model)
         >>> circuit = Circuit().h(0)
         >>> noisy_circuit = modifier(circuit)
-        >>> noisy_circuit = modifier.modify(circuit)
+        >>> noisy_circuit = modifier.transform(circuit)
         >>> # Now has bit flip noise after H gate
     """
 
