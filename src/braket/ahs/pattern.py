@@ -22,7 +22,7 @@ class Pattern:
         """Represents the spatial dependence of a Field.
 
         Args:
-            series (list[Number]): A series of numbers representing the the local
+            series (list[Number]): A series of numbers representing the local
                 pattern of real numbers.
         """
         self._series = series

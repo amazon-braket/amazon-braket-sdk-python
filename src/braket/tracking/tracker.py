@@ -61,7 +61,7 @@ class Tracker:
         return self.__exit__()
 
     def receive_event(self, event: _TaskCreationEvent) -> None:
-        """Process a Tack Creation Event.
+        """Process a Task Creation Event.
 
         Args:
             event (_TaskCreationEvent): The event to process.

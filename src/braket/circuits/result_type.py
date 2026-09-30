@@ -140,15 +140,15 @@ class ResultType:
             TypeError: If both `target_mapping` and `target` are supplied.
 
         Examples:
-            >>> result_type = ResultType.Probabilities(targets=[0])
+            >>> result_type = ResultType.Probability(target=[0])
             >>> new_result_type = result_type.copy()
-            >>> new_result_type.targets
+            >>> new_result_type.target
             QubitSet(Qubit(0))
             >>> new_result = result_type.copy(target_mapping={0: 5})
-            >>> new_result_type.target
+            >>> new_result.target
             QubitSet(Qubit(5))
             >>> new_result = result_type.copy(target=[5])
-            >>> new_result_type.target
+            >>> new_result.target
             QubitSet(Qubit(5))
         """
         copy = self.__copy__()  # ruff:ignore[unnecessary-dunder-call]

@@ -1212,7 +1212,7 @@ class Ry(AngledGate):
                 Default 1.
 
         Returns:
-            Iterable[Instruction]: Rx instruction.
+            Iterable[Instruction]: Ry instruction.
 
 
         Examples:
@@ -1301,7 +1301,7 @@ class Rz(AngledGate):
                 Default 1.
 
         Returns:
-            Iterable[Instruction]: Rx instruction.
+            Iterable[Instruction]: Rz instruction.
 
         Examples:
             >>> circ = Circuit().rz(0, 0.15)
@@ -2579,7 +2579,7 @@ class ECR(Gate):
 
     Unitary matrix:
 
-        .. math:: \mathtt{ECR} = \begin{bmatrix}
+        .. math:: \mathtt{ECR} = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 0 & 0 & 1 & i \\
                 0 & 0 & i & 1 \\
                 1 & -i & 0 & 0 \\
@@ -2626,7 +2626,7 @@ class ECR(Gate):
     ) -> Instruction:
         r"""An echoed RZX(pi/2) gate (ECR gate).
 
-        .. math:: \mathtt{ECR} = \begin{bmatrix}
+        .. math:: \mathtt{ECR} = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 0 & 0 & 1 & i \\
                 0 & 0 & i & 1 \\
                 1 & -i & 0 & 0 \\

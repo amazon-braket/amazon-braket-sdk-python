@@ -140,7 +140,7 @@ class TimeSeries:
         return ts
 
     def concatenate(self, other: TimeSeries) -> TimeSeries:
-        """Concatenates two time series ino to a single time series.
+        """Concatenates two time series into a single time series.
         The time points in the final time series are obtained by concatenating
         two lists of time points from the first and the second time series.
         Similarly, the values in the final time series is a concatenated list

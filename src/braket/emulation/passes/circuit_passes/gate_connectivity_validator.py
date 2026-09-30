@@ -148,7 +148,7 @@ provided as edge attributes."
         self, gate_name: str, control_qubits: QubitSet, target_qubits: QubitSet
     ) -> None:
         """
-        Checks if a specific is able to be applied to the control and target qubits based
+        Checks if a specific gate is able to be applied to the control and target qubits based
         on this validator's gate connectivity graph.
 
         Args:

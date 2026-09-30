@@ -70,13 +70,13 @@ class Instruction:
         Examples:
             >>> Instruction(Gate.CNot(), [0, 1])
             Instruction('operator': CNOT, 'target': QubitSet(Qubit(0), Qubit(1)))
-            >>> instr = Instruction(Gate.CNot()), QubitSet([0, 1])])
+            >>> instr = Instruction(Gate.CNot(), QubitSet([0, 1]))
             Instruction('operator': CNOT, 'target': QubitSet(Qubit(0), Qubit(1)))
             >>> instr = Instruction(Gate.H(), 0)
             Instruction('operator': H, 'target': QubitSet(Qubit(0),))
             >>> instr = Instruction(Gate.Rx(0.12), 0)
             Instruction('operator': Rx, 'target': QubitSet(Qubit(0),))
-            >>> instr = Instruction(Gate.Rx(0.12, control=1), 0)
+            >>> instr = Instruction(Gate.Rx(0.12), 0, control=1)
             Instruction(
                 'operator': Rx,
                 'target': QubitSet(Qubit(0),),

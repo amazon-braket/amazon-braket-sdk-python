@@ -158,14 +158,14 @@ class AwsDevice(Device):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
             gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A
-                `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+                `dict[tuple[Gate, QubitSet], PulseSequence]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
-                Note: If you are creating tasks in a job that itself was created reservation ARN,
-                those tasks do not need to be created with the reservation ARN.
+                Note: If you are creating tasks in a job that itself was created with a
+                reservation ARN, those tasks do not need to be created with the reservation ARN.
                 Default: None.
             experimental_capabilities (str | None): Experimental capabilities
                 to enable for the quantum task. Supported values are "ALL" to enable all
@@ -273,13 +273,13 @@ class AwsDevice(Device):
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
             gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): A
-                `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+                `dict[tuple[Gate, QubitSet], PulseSequence]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`. Default: None.
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
-                Note: If you are creating tasks in a job that itself was created reservation ARN,
-                those tasks do not need to be created with the reservation ARN.
+                Note: If you are creating tasks in a job that itself was created with a
+                reservation ARN, those tasks do not need to be created with the reservation ARN.
                 Default: None.
             experimental_capabilities (str | None): Experimental capabilities
                 to enable for the quantum task. Supported values are "ALL" to enable all
@@ -419,7 +419,7 @@ class AwsDevice(Device):
 
     @property
     def gate_calibrations(self) -> GateCalibrations | None:
-        """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
+        """Calibration data for a QPU. Calibration data is shown for gates on particular qubits.
         If a QPU does not expose these calibrations, None is returned.
 
         Returns:
