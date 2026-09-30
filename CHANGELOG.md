@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.3.post0 (2026-09-30)
+
+### Documentation Changes
+
+ * fix typos, broken links and docstrings that don't match the code
+
 ## v1.127.3 (2026-09-28)
 
 ### Bug Fixes and Other Changes
