@@ -168,7 +168,7 @@ class PauliString:
         """Right multiplies this Pauli string with the argument.
 
         Returns the result of multiplying the current Pauli string by the argument on its right. For
-        example, if called on `-XYZ` with argument `ZYX`, then `YIY` is the result. In-place
+        example, if called on `-XYZ` with argument `ZYX`, then `-YIY` is the result. In-place
         computation is off by default.
 
         Args:

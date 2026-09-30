@@ -72,7 +72,7 @@ You can also pass in various pytest arguments `tox -e unit-tests -- your-argumen
 
 Run the integration tests to make sure that the system as a whole still works.
 
-1. Follow the instructions at [Set Up the AWS Command Line Interface (AWS CLI)](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+1. Follow the instructions at [Set Up the AWS Command Line Interface (AWS CLI)](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
 1. Set the `AWS_PROFILE` information
      ```bash
      export AWS_PROFILE=Your_Profile_Name

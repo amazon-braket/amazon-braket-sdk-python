@@ -76,7 +76,7 @@ class Instruction:
             Instruction('operator': H, 'target': QubitSet(Qubit(0),))
             >>> instr = Instruction(Gate.Rx(0.12), 0)
             Instruction('operator': Rx, 'target': QubitSet(Qubit(0),))
-            >>> instr = Instruction(Gate.Rx(0.12, control=1), 0)
+            >>> instr = Instruction(Gate.Rx(0.12), 0, control=1)
             Instruction(
                 'operator': Rx,
                 'target': QubitSet(Qubit(0),),

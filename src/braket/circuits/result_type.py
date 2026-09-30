@@ -145,10 +145,10 @@ class ResultType:
             >>> new_result_type.target
             QubitSet(Qubit(0))
             >>> new_result = result_type.copy(target_mapping={0: 5})
-            >>> new_result_type.target
+            >>> new_result.target
             QubitSet(Qubit(5))
             >>> new_result = result_type.copy(target=[5])
-            >>> new_result_type.target
+            >>> new_result.target
             QubitSet(Qubit(5))
         """
         copy = self.__copy__()  # ruff:ignore[unnecessary-dunder-call]
