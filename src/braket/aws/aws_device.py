@@ -503,6 +503,11 @@ class AwsDevice(Device):
     def topology_graph(self) -> DiGraph:
         """DiGraph: topology of device as a networkx `DiGraph` object.
 
+        Note:
+            For QPUs, `properties.paradigm.qubitCount` is the nominal qubit count and may be
+            larger than the number of qubits currently usable, since poorly calibrated qubits
+            can be disabled. `len(device.topology_graph)` gives the current count.
+
         Examples:
             >>> import networkx as nx
             >>> device = AwsDevice("arn1")
