@@ -37,6 +37,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
+from braket.jobs._entry_point_template import symlink_input_data
 from braket.jobs.hybrid_job import _resolve_data_format, _sanitize, _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
@@ -754,3 +755,49 @@ def test_python_validation(aws_session):
 )
 def test_sanitize_hyperparameters(hyperparameter, expected):
     assert _sanitize(hyperparameter) == expected
+
+
+def _clean_links():
+    namespace = {}
+    exec(
+        symlink_input_data.format(
+            prefix_matches={},
+            input_data_items=[],
+            prefix_channels=set(),
+            directory_channels=set(),
+        ),
+        namespace,
+    )
+    return namespace["clean_links"]
+
+
+@pytest.mark.parametrize("replace_with_file", (True, False))
+def test_clean_links_skips_non_symlinks(tmp_path, monkeypatch, replace_with_file):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.txt"
+    target.write_text("input")
+    link = Path("data", "input.txt")
+    link.parent.mkdir()
+    link.symlink_to(target)
+
+    link.unlink()
+    if replace_with_file:
+        link.write_text("overwritten by user")
+
+    _clean_links()({link: target})
+    assert link.exists() == replace_with_file
+
+
+def test_entry_point_link_failure_not_masked(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    def my_entry():
+        pass
+
+    def link_input():
+        raise FileExistsError("link exists")
+
+    namespace = {"link_input": link_input, "clean_links": MagicMock()}
+    exec(_serialize_entry_point(my_entry, (), {}), namespace)
+    with pytest.raises(FileExistsError, match="link exists"):
+        namespace["my_entry"]()
