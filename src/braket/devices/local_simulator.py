@@ -13,11 +13,13 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Sequence
 from functools import singledispatchmethod
 from importlib.metadata import entry_points
 from itertools import repeat
 from os import cpu_count
+from time import perf_counter
 from typing import Any
 
 from braket.device_schema import DeviceActionType, DeviceCapabilities
@@ -48,6 +50,12 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult
 from braket.tasks.quantum_task import TaskSpecification
+from braket.tracking.tracking_context import broadcast_event
+from braket.tracking.tracking_events import (
+    _LOCAL_SIMULATOR_DEVICE,
+    _TaskCompletionEvent,
+    _TaskCreationEvent,
+)
 
 _simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
 
@@ -123,10 +131,14 @@ class LocalSimulator(Device):
             task_specification = self._noise_model.apply(task_specification)
         payload = self._construct_payload(task_specification, inputs, shots)
         shots = shots if shots is not None else self._default_shots(task_specification)
+        start_time = perf_counter()
         result = self._delegate.run(payload, *args, shots=shots, **kwargs)
-        return LocalQuantumTask(
+        elapsed_ms = (perf_counter() - start_time) * 1000
+        task = LocalQuantumTask(
             self._to_result_object(result, task_specification=task_specification)
         )
+        self._track_task(task, shots, elapsed_ms)
+        return task
 
     def run_batch(
         self,
@@ -200,10 +212,38 @@ class LocalSimulator(Device):
                     )
             payloads.append(self._construct_payload(task_specification, input_map, shots))
 
+        start_time = perf_counter()
         results = self._delegate.run_multiple(
             payloads, *args, shots=shots, max_parallel=max_parallel or cpu_count(), **kwargs
         )
-        return LocalQuantumTaskBatch([self._to_result_object(result) for result in results])
+        elapsed_ms = (perf_counter() - start_time) * 1000
+        batch = LocalQuantumTaskBatch([self._to_result_object(result) for result in results])
+        # Batch backends may omit per-task timings, so split the elapsed time evenly.
+        per_task_elapsed_ms = elapsed_ms / len(results) if results else 0
+        for result in batch.results():
+            self._track_task(LocalQuantumTask(result), shots or 0, per_task_elapsed_ms)
+        return batch
+
+    @staticmethod
+    def _track_task(task: LocalQuantumTask, shots: int, elapsed_ms: float) -> None:
+        result = task.result()
+        metadata = result.task_metadata
+        task_shots = getattr(metadata, "requestedShots", getattr(metadata, "shots", shots))
+        broadcast_event(
+            _TaskCreationEvent(
+                arn=task.id, shots=task_shots, is_job_task=False, device=_LOCAL_SIMULATOR_DEVICE
+            )
+        )
+        execution_duration = elapsed_ms
+        with contextlib.suppress(AttributeError):
+            execution_duration = (
+                result.additional_metadata.simulatorMetadata.executionDuration or elapsed_ms
+            )
+        broadcast_event(
+            _TaskCompletionEvent(
+                arn=task.id, execution_duration=execution_duration, status=task.state()
+            )
+        )
 
     @property
     def properties(self) -> DeviceCapabilities:

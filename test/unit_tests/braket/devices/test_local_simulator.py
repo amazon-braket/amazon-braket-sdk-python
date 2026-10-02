@@ -16,6 +16,8 @@ import math
 import sys
 import textwrap
 import warnings
+from datetime import timedelta
+from decimal import Decimal
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -59,6 +61,7 @@ from braket.tasks import (
 from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
+from braket.tracking import Tracker
 
 GATE_MODEL_RESULT = GateModelTaskResult(**{
     "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
@@ -564,6 +567,45 @@ def test_run_gate_model():
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_tracker_records_local_task():
+    simulator = LocalSimulator(StateVectorSimulator())
+    with Tracker() as tracker:
+        task = simulator.run(Circuit().h(0), shots=10)
+
+    assert tracker.tracked_resources() == [task.id]
+    stats = tracker.quantum_tasks_statistics()["braket:local/simulator"]
+    assert stats["shots"] == 10
+    assert stats["tasks"] == {"COMPLETED": 1}
+    assert isinstance(stats["execution_duration"], timedelta)
+    assert stats["billed_execution_duration"] is None
+    assert tracker.simulator_tasks_cost() == Decimal(0)
+
+
+def test_tracker_records_local_batch():
+    simulator = LocalSimulator(StateVectorSimulator())
+    with Tracker() as tracker:
+        batch = simulator.run_batch([Circuit().h(0), Circuit().x(0)], shots=5, max_parallel=2)
+
+    assert len(batch.results()) == 2
+    assert len(tracker.tracked_resources()) == 2
+    stats = tracker.quantum_tasks_statistics()["braket:local/simulator"]
+    assert stats["shots"] == 10
+    assert stats["tasks"] == {"COMPLETED": 2}
+    assert stats["execution_duration"] > timedelta(0)
+    assert stats["billed_execution_duration"] is None
+    assert tracker.simulator_tasks_cost() == Decimal(0)
+
+
+@patch.object(StateVectorSimulator, "run", side_effect=RuntimeError("simulation failed"))
+def test_tracker_does_not_record_failed_local_run(_mock_run):
+    simulator = LocalSimulator(StateVectorSimulator())
+    with Tracker() as tracker:
+        with pytest.raises(RuntimeError, match="simulation failed"):
+            simulator.run(Circuit().h(0), shots=10)
+
+    assert tracker.tracked_resources() == []
 
 
 def test_batch_circuit():

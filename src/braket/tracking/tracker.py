@@ -20,6 +20,7 @@ from typing import Any
 from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import (
+    _LOCAL_SIMULATOR_DEVICE,
     _TaskCompletionEvent,
     _TaskCreationEvent,
     _TaskStatusEvent,
@@ -157,14 +158,15 @@ class Tracker:
                     device_stats.get("execution_duration", timedelta(0))
                     + details["execution_duration"]
                 )
-                billed_duration = (
-                    timedelta(0)
-                    if details.get("has_reservation_arn")
-                    else (
+                if details["device"] == _LOCAL_SIMULATOR_DEVICE:
+                    billed_duration = None
+                elif details.get("has_reservation_arn"):
+                    billed_duration = timedelta(0)
+                else:
+                    billed_duration = (
                         device_stats.get("billed_execution_duration", timedelta(0))
                         + details["billed_duration"]
                     )
-                )
 
                 device_stats["execution_duration"] = duration
                 device_stats["billed_execution_duration"] = billed_duration
@@ -196,11 +198,14 @@ class Tracker:
                     if execution_duration:
                         duration = timedelta(milliseconds=execution_duration)
                         resources[arn]["execution_duration"] = duration
-                        resources[arn]["billed_duration"] = (
-                            timedelta(milliseconds=0)
-                            if has_reservation_arn
-                            else max(duration, MIN_SIMULATOR_DURATION)
-                        )
+                        if resources[arn]["device"] == _LOCAL_SIMULATOR_DEVICE:
+                            resources[arn]["billed_duration"] = None
+                        else:
+                            resources[arn]["billed_duration"] = (
+                                timedelta(milliseconds=0)
+                                if has_reservation_arn
+                                else max(duration, MIN_SIMULATOR_DURATION)
+                            )
             case _:
                 raise ValueError(f"Event type {type(event)} is not supported")
 
@@ -254,6 +259,8 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
 
 
 def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
+    if details["device"] == _LOCAL_SIMULATOR_DEVICE:
+        return Decimal(0)
     if not details.get("billed_duration"):
         return Decimal(0)
     task_region = task_arn.split(":")[3]
