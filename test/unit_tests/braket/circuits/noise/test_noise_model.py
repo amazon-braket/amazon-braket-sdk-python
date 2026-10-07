@@ -275,6 +275,24 @@ def test_control_aware_noise_matches_named_gates(
     assert controlled_noisy.instructions[1:] == named_noisy.instructions[1:]
 
 
+@pytest.mark.parametrize(
+    ("circuit", "gate"),
+    [
+        (Circuit().h(3, control=2), Gate.H),
+        (Circuit().x(3, control=[0, 1, 2]), Gate.X),
+    ],
+)
+def test_control_aware_noise_keeps_matching_without_a_named_equivalent(
+    circuit: Circuit, gate: type[Gate]
+) -> None:
+    """Unmapped controlled gates retain their original gate and target matching."""
+    model = NoiseModel().add_noise(Depolarizing(0.02), GateCriteria(gate, 3))
+    expected = Circuit().add_circuit(circuit).depolarizing(3, 0.02)
+
+    assert model.apply(circuit, control_aware=True) == expected
+    assert model.apply(circuit) == expected
+
+
 def test_control_aware_noise_does_not_match_different_control_state_or_power() -> None:
     model = NoiseModel().add_noise(TwoQubitDepolarizing(0.02), GateCriteria(Gate.CZ))
     open_control = Circuit().z(2, control=1, control_state=0)
