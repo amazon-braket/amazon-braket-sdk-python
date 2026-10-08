@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import io
 import json
 import logging
 import os
@@ -25,6 +26,95 @@ from botocore.exceptions import ClientError
 
 from braket.aws import AwsQuantumJob, AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
+
+
+@pytest.mark.parametrize("use_fallback", [False, True])
+def test_extract_tar_file_rejects_path_traversal(tmp_path, monkeypatch, use_fallback):
+    if use_fallback:
+        monkeypatch.delattr(tarfile, "data_filter", raising=False)
+    elif not hasattr(tarfile, "data_filter"):
+        pytest.skip("Python does not provide tarfile.data_filter")
+
+    extract_path = tmp_path / "extract"
+    archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
+    with tarfile.open(archive_path, "w:gz") as tar:
+        member = tarfile.TarInfo("../outside.txt")
+        member.size = len(b"unsafe")
+        tar.addfile(member, fileobj=io.BytesIO(b"unsafe"))
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises((ValueError, tarfile.TarError), match="outside"):
+        AwsQuantumJob._extract_tar_file(str(extract_path))
+
+    assert not (tmp_path / "outside.txt").exists()
+
+
+@pytest.mark.parametrize("use_fallback", [False, True])
+def test_extract_tar_file_rejects_symbolic_links(tmp_path, monkeypatch, use_fallback):
+    if use_fallback:
+        monkeypatch.delattr(tarfile, "data_filter", raising=False)
+    elif not hasattr(tarfile, "data_filter"):
+        pytest.skip("Python does not provide tarfile.data_filter")
+
+    extract_path = tmp_path / "extract"
+    archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
+    with tarfile.open(archive_path, "w:gz") as tar:
+        member = tarfile.TarInfo("link")
+        member.type = tarfile.SYMTYPE
+        member.linkname = "../../outside.txt"
+        tar.addfile(member)
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises((ValueError, tarfile.TarError), match="outside"):
+        AwsQuantumJob._extract_tar_file(str(extract_path))
+
+    assert not (tmp_path / "outside.txt").exists()
+
+
+@pytest.mark.parametrize("use_fallback", [False, True])
+def test_extract_tar_file_extracts_directory_and_file(tmp_path, monkeypatch, use_fallback):
+    if use_fallback:
+        monkeypatch.delattr(tarfile, "data_filter", raising=False)
+    elif not hasattr(tarfile, "data_filter"):
+        pytest.skip("Python does not provide tarfile.data_filter")
+
+    extract_path = tmp_path / "extract"
+    archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
+    with tarfile.open(archive_path, "w:gz") as tar:
+        directory = tarfile.TarInfo("nested/")
+        directory.type = tarfile.DIRTYPE
+        tar.addfile(directory)
+
+        file_member = tarfile.TarInfo("nested/results.json")
+        file_member.size = len(b"{}")
+        tar.addfile(file_member, fileobj=io.BytesIO(b"{}"))
+
+    monkeypatch.chdir(tmp_path)
+    AwsQuantumJob._extract_tar_file(str(extract_path))
+
+    assert (extract_path / "nested" / "results.json").read_text() == "{}"
+
+
+@pytest.mark.parametrize("use_fallback", [False, True])
+def test_extract_tar_file_rejects_unsafe_hard_links(tmp_path, monkeypatch, use_fallback):
+    if use_fallback:
+        monkeypatch.delattr(tarfile, "data_filter", raising=False)
+    elif not hasattr(tarfile, "data_filter"):
+        pytest.skip("Python does not provide tarfile.data_filter")
+
+    extract_path = tmp_path / "extract"
+    archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
+    with tarfile.open(archive_path, "w:gz") as tar:
+        member = tarfile.TarInfo("link")
+        member.type = tarfile.LNKTYPE
+        member.linkname = "../../outside.txt"
+        tar.addfile(member)
+
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises((ValueError, tarfile.TarError), match="outside"):
+        AwsQuantumJob._extract_tar_file(str(extract_path))
+
+    assert not (tmp_path / "outside.txt").exists()
 
 
 @pytest.fixture
