@@ -13,6 +13,7 @@
 
 import pytest
 
+from braket.jobs.metrics import log_metric
 from braket.jobs.metrics_data import LogMetricsParser
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
@@ -202,3 +203,26 @@ def test_get_all_metrics_complete_results(log_events, metric_type, metric_stat, 
     for log_event in log_events:
         parser.parse_log_message(log_event.get("timestamp"), log_event.get("message"))
     assert parser.get_parsed_metrics(metric_type, metric_stat) == metrics_results
+
+
+@pytest.mark.parametrize("statistic", [MetricStatistic.MIN, MetricStatistic.MAX])
+def test_logged_metric_names_are_preserved(capsys, statistic):
+    values = {
+        "train/loss": 0.8,
+        "eval/loss": 0.2,
+        "energy-error": -0.5,
+        "energy.mean": 1.5,
+        "energy_mean": 2.5,
+    }
+    for name, value in values.items():
+        log_metric(name, value, timestamp=1.0, iteration_number=3)
+
+    parser = LogMetricsParser()
+    for line in capsys.readouterr().out.splitlines():
+        parser.parse_log_message("fallback timestamp", line)
+
+    assert parser.get_parsed_metrics(MetricType.ITERATION_NUMBER, statistic) == {
+        "timestamp": [1.0],
+        "iteration_number": [3.0],
+        **{name: [value] for name, value in values.items()},
+    }
