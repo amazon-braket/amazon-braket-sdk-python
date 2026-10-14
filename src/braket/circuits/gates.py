@@ -20,6 +20,7 @@ from typing import Any
 import braket.ir.jaqcd as ir
 import numpy as np
 from oqpy import Program
+from scipy.linalg import fractional_matrix_power
 
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
@@ -3679,11 +3680,34 @@ class Unitary(Gate):
         )
 
     def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+        self,
+        target: QubitSet,
+        serialization_properties: OpenQASMSerializationProperties,
+        *,
+        control: QubitSet | None = None,
+        control_state: BasisStateInput | None = None,
+        power: float = 1,
     ) -> str:
-        qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
+        # The unitary pragma takes no gate modifiers, so fold them into the matrix
+        matrix = self._matrix
+        if power != 1:
+            matrix = (
+                np.linalg.matrix_power(matrix, int(power))
+                if int(power) == power
+                else fractional_matrix_power(matrix, power)
+            )
+        operands = list(target)
+        if control:
+            control_state = (1,) * len(control) if control_state is None else control_state
+            size = len(matrix)
+            offset = BasisState(control_state, len(control)).as_int * size
+            controlled = np.eye(size * 2 ** len(control), dtype=complex)
+            controlled[offset : offset + size, offset : offset + size] = matrix
+            matrix = controlled
+            operands = [*control, *operands]
+        qubits = [serialization_properties.format_target(int(qubit)) for qubit in operands]
         formatted_matrix = np.array2string(
-            self._matrix,
+            matrix,
             separator=", ",
             formatter={"all": format_complex},
             threshold=float("inf"),
