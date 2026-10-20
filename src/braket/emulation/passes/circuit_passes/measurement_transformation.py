@@ -28,7 +28,7 @@ class MeasurementTransformation(TransformationPass):
         - ProgramSet: Recursively applies to all contained circuits
 
     Examples:
-        >>> modifier = MeasurementModifier()
+        >>> modifier = MeasurementTransformation()
         >>> circuit = Circuit().h(0).cnot(0, 1)  # No measurements
         >>> modified = modifier(circuit)
         >>> # Now has measurements on qubits 0 and 1

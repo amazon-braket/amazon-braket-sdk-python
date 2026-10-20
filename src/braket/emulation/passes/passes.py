@@ -52,7 +52,7 @@ class TransformationPass(_EmulatorPass):
                 criteria.
 
         Returns:
-            task_specificaiton (TaskSpecification): The (potentially) modified program
+            task_specification (TaskSpecification): The (potentially) modified program
         """
         raise NotImplementedError
 

@@ -92,7 +92,7 @@ class Device(ABC):
             **kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
-            QuantumTaskBatch: A batch containing all of the qauntum tasks run
+            QuantumTaskBatch: A batch containing all of the quantum tasks run
         """
 
     @property

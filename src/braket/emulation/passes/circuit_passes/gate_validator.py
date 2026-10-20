@@ -33,13 +33,13 @@ class GateValidator(ValidationPass):
 
         Args:
             supported_gates (Iterable[str] | None): A list of gates supported outside of
-                verbatim modeby the emulator. A gate is a Braket gate name.
+                verbatim mode by the emulator. A gate is a Braket gate name.
             native_gates (Iterable[str] | None): A list of gates supported inside of
                 verbatim mode by the emulator.
 
         Raises:
             ValueError: If supported_gates and native_gates are empty or any of the provided
-            gate are not supported by the Braket BDK.
+            gate are not supported by the Braket SDK.
         """
         supported_gates, native_gates = (supported_gates or []), (native_gates or [])
         if not supported_gates and not native_gates:

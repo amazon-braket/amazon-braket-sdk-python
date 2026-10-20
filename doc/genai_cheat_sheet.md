@@ -510,7 +510,7 @@ DragGaussianWaveform(length, width, amplitude, beta, zero_at_edges)
 
 ***Get the time series:***
 
-`pulse_sequence.to_time_traces()`
+`pulse_sequence.to_time_trace()`
 
 **Analog Hamiltonian Simulation**
 

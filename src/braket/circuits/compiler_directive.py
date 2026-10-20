@@ -31,7 +31,7 @@ class CompilerDirective(Operator):
         """Inits a `CompilerDirective`.
 
         Args:
-            ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directiver.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directive.
                 These are used when printing a diagram of circuits.
         """
         if ascii_symbols is None:

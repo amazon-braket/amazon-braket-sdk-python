@@ -141,7 +141,7 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs: str) -> di
 
 def _get_env_hyperparameters() -> dict[str, str]:
     """Gets the env variable for hyperparameters. This should only be added if the customer has
-    provided hyperpameters to the hybrid job.
+    provided hyperparameters to the hybrid job.
 
     Returns:
         dict[str, str]: The set of key/value pairs that should be added as environment variables
@@ -166,7 +166,7 @@ def _get_env_input_data() -> dict[str, str]:
 
 
 def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs: str) -> bool:
-    """If hyperpameters are present, this function will store them as a JSON object in the
+    """If hyperparameters are present, this function will store them as a JSON object in the
      container in the appropriate location on disk.
 
     Args:

@@ -42,15 +42,15 @@ class ConnectivityValidator(ValidationPass):
                 Either a sparse matrix or DiGraph representation of the device connectivity.
                 Can be None if fully_connected is true.
 
-            fully_connected (bool): If true, the all qubits in the device are connected.
+            fully_connected (bool): If true, all qubits in the device are connected.
 
             num_qubits (int | None): The number of qubits in the device; if fully_connected is
                 True, create a complete graph with num_qubits nodes; ignored if
-                connectivity_graph is provided and fully_connected if False.
+                connectivity_graph is provided and fully_connected is False.
 
             qubit_labels (Iterable[int], QubitSet | None): A set of qubit labels; if
                 fully_connected is True, the qubits_labels are used as nodes of a fully connected
-                topology; ignored if connectivity_graph is provided and fully_connected if False.
+                topology; ignored if connectivity_graph is provided and fully_connected is False.
 
             directed (bool): Denotes if the connectivity graph is directed or undirected. If
                 the connectivity graph is undirected, this constructor attempts to fill in any
@@ -102,7 +102,7 @@ class ConnectivityValidator(ValidationPass):
     def validate(self, circuit: Circuit | ProgramSet) -> None:
         """
         Verifies that any verbatim box in a circuit is runnable with respect to the
-        device connectivity definied by this validator. If any sub-circuit of the
+        device connectivity defined by this validator. If any sub-circuit of the
         input circuit is verbatim, we validate the connectivity of all gate operations
         in the circuit.
 

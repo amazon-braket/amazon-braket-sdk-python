@@ -478,7 +478,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
 
 class PauliNoise(Noise, Parameterizable):
-    """Class `PauliNoise` represents the a single-qubit Pauli noise channel
+    """Class `PauliNoise` represents a single-qubit Pauli noise channel
     acting on one qubit. It is parameterized by three probabilities.
     """
 

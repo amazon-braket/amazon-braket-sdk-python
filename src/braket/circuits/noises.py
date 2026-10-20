@@ -159,7 +159,7 @@ Noise.register_noise(BitFlip)
 class PhaseFlip(SingleProbabilisticNoise):
     r"""Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
-    .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
+    .. math:: \\rho \\Rightarrow (1-p) \\rho + p Z \\rho Z^{\\dagger}
 
     where
 
@@ -643,7 +643,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
             probability (float): Probability of two-qubit depolarizing.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of Depolarizing instructions.
+            Iterable[Instruction]: `Iterable` of TwoQubitDepolarizing instructions.
 
         Examples:
             >>> circ = Circuit().two_qubit_depolarizing(0, 1, probability=0.1)
@@ -763,7 +763,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
             probability (float): Probability of two-qubit dephasing.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of Dephasing instructions.
+            Iterable[Instruction]: `Iterable` of TwoQubitDephasing instructions.
 
         Examples:
             >>> circ = Circuit().two_qubit_dephasing(0, 1, probability=0.1)
@@ -852,7 +852,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
 
         p = \\text{sum of all probabilities}
 
-    This noise channel is shown as `PC_2({"pauli_string": probability})` in circuit diagrams.
+    This noise channel is shown as `PC2({"pauli_string": probability})` in circuit diagrams.
     """
 
     _paulis: ClassVar = {
@@ -918,7 +918,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
             probabilities (dict[str, float]): Probability of two-qubit Pauli channel.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of Depolarizing instructions.
+            Iterable[Instruction]: `Iterable` of TwoQubitPauliChannel instructions.
 
         Examples:
             >>> circ = Circuit().two_qubit_pauli_channel(0, 1, {"XX": 0.1})
@@ -1307,7 +1307,7 @@ Noise.register_noise(PhaseDamping)
 
 class Kraus(Noise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
-    This noise channel is shown as `NK` in circuit diagrams.
+    This noise channel is shown as `KR` in circuit diagrams.
     """
 
     def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):

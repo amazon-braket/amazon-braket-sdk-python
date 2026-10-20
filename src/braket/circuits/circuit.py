@@ -1287,13 +1287,13 @@ class Circuit:
 
             >>> noise = Noise.Depolarizing(probability=0.1)
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
-            >>> print(circ.apply_initialization_noise(noise))
+            >>> print(circ.apply_readout_noise(noise))
 
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0, 1)
-            >>> print(circ.apply_initialization_noise(noise, target_qubits=1))
+            >>> print(circ.apply_readout_noise(noise, target_qubits=1))
 
             >>> circ = Circuit()
-            >>> print(circ.apply_initialization_noise(noise, target_qubits=[0, 1]))
+            >>> print(circ.apply_readout_noise(noise, target_qubits=[0, 1]))
 
         """
         if (len(self.qubits) == 0) and (target_qubits is None):

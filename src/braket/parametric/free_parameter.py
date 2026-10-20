@@ -96,7 +96,7 @@ class FreeParameter(FreeParameterExpression):
         >>> circuit = Circuit().rx(target=0, angle=alpha).ry(target=1, angle=beta)
         >>> circuit = circuit(alpha=0.3)
         >>> device = LocalSimulator()
-        >>> device.run(circuit, inputs={'beta': 0.5} shots=10)
+        >>> device.run(circuit, inputs={"beta": 0.5}, shots=10)
     """
 
     def __init__(self, name: str):

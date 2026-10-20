@@ -210,9 +210,7 @@ class GateModelQuantumTaskResult:
             shots (int): number of iterations on device.
 
         Returns:
-            np.ndarray: A dictionary of probabilistic results.
-            Key is the measurements in a big endian binary string.
-            Value is the probability the measurement occurred.
+            np.ndarray: The measurements sampled from the given measurement probabilities.
         """
         return measurements_from_measurement_probabilities(measurement_probabilities, shots)
 
