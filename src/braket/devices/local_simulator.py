@@ -61,16 +61,8 @@ def _execution_duration_ms(task_metadata: Any) -> float | None:
     ended_at = getattr(task_metadata, "endedAt", None)
     if created_at and ended_at:
         try:
-            c = (
-                datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                if isinstance(created_at, str)
-                else created_at
-            )
-            e = (
-                datetime.fromisoformat(ended_at.replace("Z", "+00:00"))
-                if isinstance(ended_at, str)
-                else ended_at
-            )
+            c = datetime.fromisoformat(created_at) if isinstance(created_at, str) else created_at
+            e = datetime.fromisoformat(ended_at) if isinstance(ended_at, str) else ended_at
             return (e - c).total_seconds() * 1000
         except Exception:
             return None
@@ -100,6 +92,23 @@ def _broadcast_task_events(
             has_reservation_arn=False,
         )
     )
+
+
+def _broadcast_batch_task_events(
+    task_results: list[Any],
+    shots: int | Sequence[int] | None,
+    device_id: str,
+) -> None:
+    for task_res in task_results:
+        meta = getattr(task_res, "task_metadata", None)
+        task_id = str(meta.id) if meta and hasattr(meta, "id") else None
+        if task_id:
+            _broadcast_task_events(
+                task_id,
+                getattr(meta, "shots", shots),
+                meta,
+                device_id,
+            )
 
 
 class LocalSimulator(Device):
@@ -262,16 +271,7 @@ class LocalSimulator(Device):
             payloads, *args, shots=shots, max_parallel=max_parallel or cpu_count(), **kwargs
         )
         task_results = [self._to_result_object(result) for result in results]
-        for task_res in task_results:
-            meta = getattr(task_res, "task_metadata", None)
-            task_id = str(meta.id) if meta and hasattr(meta, "id") else None
-            if task_id:
-                _broadcast_task_events(
-                    task_id,
-                    getattr(meta, "shots", shots),
-                    meta,
-                    self.DEVICE_ID,
-                )
+        _broadcast_batch_task_events(task_results, shots, self.DEVICE_ID)
         return LocalQuantumTaskBatch(task_results)
 
     @property
