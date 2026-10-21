@@ -154,6 +154,27 @@ def test_pull_container(
 
 @patch("subprocess.check_output")
 @patch("subprocess.run")
+def test_login_removes_only_aws_prefix(
+    mock_run, mock_check_output, repo_uri, image_uri, aws_session
+):
+    mock_check_output.side_effect = [
+        str.encode(""),
+        str.encode("LocalImageName"),
+        str.encode("RunningContainer"),
+    ]
+    aws_session.ecr_client.get_authorization_token.return_value = {
+        "authorizationData": [{"authorizationToken": base64.b64encode(b"AWS:SAWS:token:WAS")}]
+    }
+    with _LocalJobContainer(image_uri=image_uri, aws_session=aws_session):
+        pass
+    mock_run.assert_any_call(
+        ["docker", "login", "-u", "AWS", "--password-stdin", repo_uri],
+        input=b"SAWS:token:WAS",
+    )
+
+
+@patch("subprocess.check_output")
+@patch("subprocess.run")
 def test_pull_container_forced_update_invalid_name(
     mock_run, mock_check_output, repo_uri, aws_session
 ):

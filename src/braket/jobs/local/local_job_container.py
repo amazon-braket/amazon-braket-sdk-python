@@ -118,7 +118,7 @@ class _LocalJobContainer:
             )
         authorization_data = authorization_data_result["authorizationData"][0]
         raw_token = base64.b64decode(authorization_data["authorizationToken"])
-        token = raw_token.decode("utf-8").strip("AWS:")
+        token = raw_token.decode("utf-8").removeprefix("AWS:")
         subprocess.run(
             ["docker", "login", "-u", "AWS", "--password-stdin", ecr_url],
             input=token.encode("utf-8"),
