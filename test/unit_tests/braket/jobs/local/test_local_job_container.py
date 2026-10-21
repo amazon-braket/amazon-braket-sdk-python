@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import base64
+import os
 import subprocess
 from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
@@ -142,7 +143,10 @@ def test_pull_container(
         "/dev/null",
     ])
     assert mock_check_output.call_count == len(check_output)
-    mock_run.assert_any_call(["docker", "login", "-u", "AWS", "-p", test_token, repo_uri])
+    mock_run.assert_any_call(
+        ["docker", "login", "-u", "AWS", "--password-stdin", repo_uri],
+        input=test_token.encode("utf-8"),
+    )
     mock_run.assert_any_call(["docker", "pull", image_uri])
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 3
@@ -229,15 +233,16 @@ def test_run_job_success(
             "-w",
             "/opt/ml/code/",
             "-e",
-            "ENV0=VALUE0",
+            "ENV0",
             "-e",
-            "ENV1=VALUE1",
+            "ENV1",
             running_container_name,
             "python",
             run_program_name,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        env={**os.environ, **env_variables},
     )
     mock_run.assert_called_with(["docker", "stop", running_container_name])
 
@@ -291,15 +296,16 @@ def test_run_customer_script_fails(
             "-w",
             "/opt/ml/code/",
             "-e",
-            "ENV0=VALUE0",
+            "ENV0",
             "-e",
-            "ENV1=VALUE1",
+            "ENV1",
             running_container_name,
             "python",
             run_program_name,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        env={**os.environ, **env_variables},
     )
     mock_run.assert_called_with(["docker", "stop", running_container_name])
 
