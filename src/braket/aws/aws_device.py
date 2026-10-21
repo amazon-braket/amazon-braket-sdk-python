@@ -499,7 +499,7 @@ class AwsDevice(Device):
         """
         if not self._properties:
             warnings.warn(
-                f"No device capabilities found;"
+                "No device capabilities found;"
                 " please make sure you are using the latest version of amazon-braket-schemas.",
                 stacklevel=1,
             )
