@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.4 (2026-10-22)
+
+### Bug Fixes and Other Changes
+
+ * Warn when calling nonexistent properties
+
 ## v1.127.3.post0 (2026-09-30)
 
 ### Documentation Changes
