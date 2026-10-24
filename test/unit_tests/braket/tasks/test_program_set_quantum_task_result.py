@@ -765,6 +765,29 @@ def test_from_multiple_mixed_bindings_and_failures(circuit_rx_parametrized_fixtu
             assert entry.observable is None
 
 
+def test_sum_hamiltonian_with_failed_executable(circuit_rx_parametrized_fixture):
+    """A failed executable only invalidates the Sum expectation of its own parameter set."""
+    h = 2 * Z(0) + 3 * Z(1)
+    ps = ProgramSet(CircuitBinding(circuit_rx_parametrized_fixture, {"theta": [0.1, 0.2]}, h))
+    failure = {
+        "braketSchemaHeader": {
+            "name": "braket.task_result.program_set_executable_failure",
+            "version": "1",
+        },
+        "inputsIndex": 3,
+        "failureMetadata": {
+            "failureReason": "test failure",
+            "retryable": False,
+            "category": "DEVICE",
+        },
+    }
+    execs = [_make_exec_result(0), _make_exec_result(1), _make_exec_result(2), failure]
+
+    composite = _build_sub_quantum_result(ps, [execs])[0]
+    assert np.isclose(composite.expectation(0), 2.0)
+    assert composite.expectation(1) is None
+
+
 def test_from_multiple_validates_index_map_size(circuit_rx_parametrized_fixture):
     binding = CircuitBinding(circuit_rx_parametrized_fixture, input_sets={"theta": [0.1, 0.2]})
     ps = ProgramSet(binding)
