@@ -693,7 +693,8 @@ def test_get_device_invalid_capabilities(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     assert device is not None
-    assert device.properties is None
+    with pytest.warns(UserWarning):
+        assert device.properties is None
 
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.127.5 (2026-10-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass docker env values outside process arguments
+
+## v1.127.4 (2026-10-22)
+
+### Bug Fixes and Other Changes
+
+ * Warn when calling nonexistent properties
+
 ## v1.127.3.post0 (2026-09-30)
 
 ### Documentation Changes
