@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import base64
+import os
 import re
 import subprocess
 from logging import Logger, getLogger
@@ -67,9 +68,9 @@ class _LocalJobContainer:
 
     @staticmethod
     def _envs_to_list(environment_variables: dict[str, str]) -> list[str]:
-        """Converts a dictionary environment variables to a list of parameters that can be
-        passed to the container exec/run commands to ensure those env variables are available
-        in the container.
+        """Converts a dictionary of environment variables to a list of `-e KEY` parameters for
+        the container exec/run commands. Values are omitted so the docker CLI reads them from
+        its own environment instead of exposing them in its command-line arguments.
 
         Args:
             environment_variables (dict[str, str]): A dictionary of environment variables and
@@ -80,8 +81,8 @@ class _LocalJobContainer:
             provided environment variables as part of the runtime.
         """
         env_list = []
-        for key, val in environment_variables.items():
-            env_list.extend(("-e", f"{key}={val}"))
+        for key in environment_variables:
+            env_list.extend(("-e", key))
         return env_list
 
     @staticmethod
@@ -117,8 +118,11 @@ class _LocalJobContainer:
             )
         authorization_data = authorization_data_result["authorizationData"][0]
         raw_token = base64.b64decode(authorization_data["authorizationToken"])
-        token = raw_token.decode("utf-8").strip("AWS:")
-        subprocess.run(["docker", "login", "-u", "AWS", "-p", token, ecr_url])
+        token = raw_token.decode("utf-8").removeprefix("AWS:")
+        subprocess.run(
+            ["docker", "login", "-u", "AWS", "--password-stdin", ecr_url],
+            input=token.encode("utf-8"),
+        )
 
     def _pull_image(self, image_uri: str) -> None:
         """Pulls an image from ECR.
@@ -293,7 +297,12 @@ class _LocalJobContainer:
         command.extend((self._container_name, "python", start_program_name))
 
         try:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                env={**os.environ, **environment_variables},
+            )
             self.run_log = _stream_output(process)
         except Exception as e:
             self.run_log = e
