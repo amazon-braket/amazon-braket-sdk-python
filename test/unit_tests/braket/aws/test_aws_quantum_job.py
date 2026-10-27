@@ -117,6 +117,62 @@ def test_extract_tar_file_rejects_unsafe_hard_links(tmp_path, monkeypatch, use_f
     assert not (tmp_path / "outside.txt").exists()
 
 
+def test_is_within_extract_path_rejects_incomparable_paths(monkeypatch):
+    monkeypatch.setattr(os.path, "commonpath", Mock(side_effect=ValueError))
+
+    assert not AwsQuantumJob._is_within_extract_path("member", "extract")
+
+
+def test_data_filter_rejects_absolute_path(tmp_path, monkeypatch):
+    member = tarfile.TarInfo("/absolute.txt")
+    monkeypatch.setattr(os.path, "isabs", lambda path: path == "absolute.txt")
+
+    with pytest.raises(ValueError, match="absolute path"):
+        AwsQuantumJob._data_filter(member, str(tmp_path))
+
+
+def test_data_filter_normalizes_member_path(tmp_path):
+    member = tarfile.TarInfo("nested/../results.json")
+
+    filtered_member = AwsQuantumJob._data_filter(member, str(tmp_path))
+
+    assert filtered_member.name == "results.json"
+
+
+@pytest.mark.parametrize(
+    "member_name, member_type, link_name, error",
+    [
+        (".", tarfile.SYMTYPE, "target.txt", "replaces the extraction directory"),
+        ("link", tarfile.SYMTYPE, os.path.abspath("outside.txt"), "absolute link"),
+        ("device", tarfile.CHRTYPE, "", "unsupported type"),
+    ],
+)
+def test_data_filter_rejects_invalid_members(tmp_path, member_name, member_type, link_name, error):
+    member = tarfile.TarInfo(member_name)
+    member.type = member_type
+    member.linkname = link_name
+
+    with pytest.raises(ValueError, match=error):
+        AwsQuantumJob._data_filter(member, str(tmp_path))
+
+
+@pytest.mark.parametrize(
+    "member_type, member_name, link_name",
+    [
+        (tarfile.SYMTYPE, "nested/link", "../target.txt"),
+        (tarfile.LNKTYPE, "link", "target.txt"),
+    ],
+)
+def test_data_filter_accepts_safe_links(tmp_path, member_type, member_name, link_name):
+    member = tarfile.TarInfo(member_name)
+    member.type = member_type
+    member.linkname = link_name
+
+    filtered_member = AwsQuantumJob._data_filter(member, str(tmp_path))
+
+    assert filtered_member.linkname == os.path.normpath(link_name)
+
+
 @pytest.fixture
 def aws_session(quantum_job_arn, job_region):
     _aws_session = Mock(spec=AwsSession)
