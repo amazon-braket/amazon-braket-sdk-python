@@ -1139,3 +1139,57 @@ def test_run_program_set_ir_with_inputs_invalid(program_set_ir):
     device = LocalSimulator(dummy_sim)
     with pytest.raises(ValueError):
         _ = device.run(program_set_ir, shots=10, inputs={"foo": "0.2"})
+
+
+def test_local_simulator_device_id():
+    device = LocalSimulator(StateVectorSimulator())
+    assert device.DEVICE_ID == "braket:local/simulator"
+    assert device.device_id == "braket:local/simulator"
+
+
+def test_local_simulator_tracker_run():
+    from datetime import timedelta
+    from decimal import Decimal
+    from braket.tracking import Tracker
+
+    circ = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(StateVectorSimulator())
+    with Tracker() as tracker:
+        task = device.run(circ, shots=100).result()
+
+    assert tracker.tracked_resources() == [task.task_metadata.id]
+    assert tracker.simulator_tasks_cost() == Decimal(0)
+    assert tracker.qpu_tasks_cost() == Decimal(0)
+
+    stats = tracker.quantum_tasks_statistics()
+    assert "braket:local/simulator" in stats
+    dev_stats = stats["braket:local/simulator"]
+    assert dev_stats["shots"] == 100
+    assert dev_stats["tasks"] == {"COMPLETED": 1}
+    assert isinstance(dev_stats["execution_duration"], timedelta)
+    assert dev_stats["execution_duration"] >= timedelta(0)
+    assert dev_stats["billed_execution_duration"] is None
+
+
+def test_local_simulator_tracker_run_batch():
+    from datetime import timedelta
+    from decimal import Decimal
+    from braket.tracking import Tracker
+
+    circ1 = Circuit().h(0).cnot(0, 1)
+    circ2 = Circuit().x(0).x(1)
+    device = LocalSimulator(StateVectorSimulator())
+    with Tracker() as tracker:
+        batch = device.run_batch([circ1, circ2], shots=50)
+        results = batch.results()
+
+    assert len(tracker.tracked_resources()) == 2
+    assert tracker.simulator_tasks_cost() == Decimal(0)
+
+    stats = tracker.quantum_tasks_statistics()
+    assert "braket:local/simulator" in stats
+    dev_stats = stats["braket:local/simulator"]
+    assert dev_stats["shots"] == 100
+    assert dev_stats["tasks"] == {"COMPLETED": 2}
+    assert isinstance(dev_stats["execution_duration"], timedelta)
+    assert dev_stats["billed_execution_duration"] is None
