@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.127.7 (2026-10-28)
+
+### Bug Fixes and Other Changes
+
+ * safely extract hybrid job results
+
 ## v1.127.6 (2026-10-27)
 
 ### Bug Fixes and Other Changes
