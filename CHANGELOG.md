@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.127.7 (2026-10-28)
+
+### Bug Fixes and Other Changes
+
+ * safely extract hybrid job results
+
+## v1.127.6 (2026-10-27)
+
+### Bug Fixes and Other Changes
+
+ * allow task results that report outputs instead of measurements
+
 ## v1.127.5 (2026-10-23)
 
 ### Bug Fixes and Other Changes
