@@ -35,7 +35,7 @@ else:
 project = "amazon-braket-sdk"
 version = version(project)
 release = version
-copyright = f"{datetime.datetime.now().year}, Amazon.com"
+copyright = f"{datetime.datetime.now(tz=datetime.UTC).year}, Amazon.com"
 
 extensions = [
     "sphinxcontrib.apidoc",
@@ -142,6 +142,28 @@ def _write_llms_txt(app: Sphinx, exception: Exception | None) -> None:
     print(f"--> Wrote {out.name}")
 
 
+def _document_private_bases(
+    app: Sphinx, what: str, name: str, obj: object, skip: bool, options: dict
+) -> bool | None:
+    """Document private classes that public classes in the same module inherit from.
+
+    Without this, a public class's "Bases" line links to an undocumented private class,
+    and the members it inherits from that class appear nowhere in the API reference.
+    """
+    if (
+        skip
+        and isinstance(obj, type)
+        and name.startswith("_")
+        and any(
+            sub.__module__ == obj.__module__ and not sub.__name__.startswith("_")
+            for sub in obj.__subclasses__()
+        )
+    ):
+        return False
+    return None
+
+
 def setup(app: Sphinx) -> None:
     """Register build hooks."""
+    app.connect("autodoc-skip-member", _document_private_bases)
     app.connect("build-finished", _write_llms_txt)
