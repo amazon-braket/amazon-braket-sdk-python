@@ -497,6 +497,12 @@ class AwsDevice(Device):
 
         .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python
         """
+        if not self._properties:
+            warnings.warn(
+                "No device capabilities found;"
+                " please make sure you are using the latest version of amazon-braket-schemas.",
+                stacklevel=1,
+            )
         return self._properties
 
     @property
