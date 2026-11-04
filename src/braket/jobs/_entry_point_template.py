@@ -8,6 +8,7 @@ from braket.jobs_data import PersistedJobDataFormat
 # load and run serialized entry point function
 recovered = cloudpickle.loads({serialized})
 def {function_name}():
+    links = {{}}
     try:
         # set working directory to results dir
         os.chdir(get_results_dir())
@@ -66,14 +67,14 @@ def link_input():
 
 def clean_links(links):
     for link, target in links.items():
-        if link.is_symlink and link.readlink() == target:
+        if link.is_symlink() and link.readlink() == target:
             link.unlink()
 
         if link.is_relative_to(Path()):
             for dir in link.parents[:-1]:
                 try:
                     dir.rmdir()
-                except:
+                except OSError:
                     # directory not empty
                     pass
 '''
