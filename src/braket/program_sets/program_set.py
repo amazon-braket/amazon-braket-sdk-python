@@ -31,17 +31,23 @@ from braket.registers import QubitSet
 class ProgramSet:
     def __init__(
         self,
-        programs: list[CircuitBinding | Circuit | Program | str] | CircuitBinding | Program,
+        programs: (
+            list[CircuitBinding | Circuit | Program | str]
+            | CircuitBinding
+            | Circuit
+            | Program
+            | str
+        ),
         shots_per_executable: int | None = None,
     ):
         """
         A set of programs to be run together on a device.
 
         Args:
-            programs (list[CircuitBinding | Circuit | Program | str] | CircuitBinding | Program):
-                A list of circuit bindings, circuits, OpenQASM programs, or OpenQASM strings to
-                execute. It is also possible to provide a single circuit binding or OpenQASM
-                program. OpenQASM program input values must be equal-length lists. Note: circuits
+            programs (list[CircuitBinding | Circuit | Program | str] | CircuitBinding | Circuit |
+                Program | str): A list of circuit bindings, circuits, OpenQASM programs, or
+                OpenQASM strings to execute. It is also possible to provide any one of these on
+                its own. OpenQASM program input values must be equal-length lists. Note: circuits
                 cannot have result types.
             shots_per_executable (int | None): The number of shots to run each executable;
                 this will be used to enforce the total shots on task creation. If not provided,
@@ -51,7 +57,11 @@ class ProgramSet:
             ValueError: If a circuit has result types, or if an OpenQASM program's inputs are not
                 equal-length lists.
         """
-        self._programs = [programs] if isinstance(programs, CircuitBinding | Program) else programs
+        self._programs = (
+            [programs]
+            if isinstance(programs, CircuitBinding | Circuit | Program | str)
+            else programs
+        )
         if any(isinstance(circuit, Circuit) and circuit.result_types for circuit in self._programs):
             raise ValueError("Circuit cannot have result types")
         for program in self._programs:

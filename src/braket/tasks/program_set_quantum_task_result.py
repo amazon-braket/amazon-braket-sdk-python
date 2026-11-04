@@ -138,13 +138,21 @@ class MeasuredEntry:
 
     @property
     def expectation(self) -> float | None:
-        """
-        float | None: The expectation value of this entry's observable if there is one.
-        """
-        # TODO: Use program set payload to calculate expectation
+        """float | None: The expectation value of this entry's observable, if there is one."""
         if self._expectation is None:
-            warnings.warn("No observable was measured", stacklevel=1)
+            warnings.warn(
+                "No observable was measured; the raw measurements are still available. "
+                "Use compute_expectation(observable) to compute an expectation value from "
+                "them.",
+                stacklevel=1,
+            )
         return self._expectation
+
+    def compute_expectation(self, observable: Observable) -> float:
+        """float: The expectation of ``observable`` computed from this entry's measurements."""
+        return expectation_from_measurements(
+            self.measurements, self.measured_qubits, observable, observable.targets
+        )
 
 
 class CompositeEntry:

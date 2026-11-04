@@ -167,8 +167,8 @@ class PauliString:
     def dot(self, other: PauliString, inplace: bool = False) -> PauliString:
         """Right multiplies this Pauli string with the argument.
 
-        Returns the result of multiplying the current circuit by the argument on its right. For
-        example, if called on `-XYZ` with argument `ZYX`, then `YIY` is the result. In-place
+        Returns the result of multiplying the current Pauli string by the argument on its right. For
+        example, if called on `-XYZ` with argument `ZYX`, then `-YIY` is the result. In-place
         computation is off by default.
 
         Args:
@@ -176,7 +176,7 @@ class PauliString:
             inplace (bool): If `True`, `self` is updated to hold the product.
 
         Returns:
-            PauliString: The resultant circuit from right multiplying `self` with `other`.
+            PauliString: The resultant Pauli string from right multiplying `self` with `other`.
 
         Raises:
             ValueError: If the lengths of the Pauli strings being multiplied differ.
@@ -220,13 +220,13 @@ class PauliString:
     def __mul__(self, other: PauliString) -> PauliString:
         """Right multiplication operator overload using `dot()`.
 
-        Returns the result of multiplying the current circuit by the argument on its right.
+        Returns the result of multiplying the current Pauli string by the argument on its right.
 
         Args:
             other (PauliString): The right multiplicand.
 
         Returns:
-            PauliString: The resultant circuit from right multiplying `self` with `other`.
+            PauliString: The resultant Pauli string from right multiplying `self` with `other`.
 
         Raises:
             ValueError: If the lengths of the Pauli strings being multiplied differ.
@@ -247,7 +247,7 @@ class PauliString:
             other (PauliString): The right multiplicand.
 
         Returns:
-            PauliString: The resultant circuit from right multiplying `self` with `other`.
+            PauliString: The resultant Pauli string from right multiplying `self` with `other`.
 
         Raises:
             ValueError: If the lengths of the Pauli strings being multiplied differ.
@@ -323,7 +323,7 @@ class PauliString:
             inverse (recall Pauli operators are involutory).
 
         Raises:
-            ValueError: If `n` isn't a plain Python `int`.
+            TypeError: If `n` isn't a plain Python `int`.
         """
         if not isinstance(n, int):
             raise TypeError("Must be raised to integer power")
@@ -361,7 +361,7 @@ class PauliString:
             inverse (recall Pauli operators are involutory).
 
         Raises:
-            ValueError: If `n` isn't a plain Python `int`.
+            TypeError: If `n` isn't a plain Python `int`.
 
         See Also:
             `braket.quantum_information.PauliString.power()`
@@ -382,7 +382,7 @@ class PauliString:
             inverse (recall Pauli operators are involutory).
 
         Raises:
-            ValueError: If `n` isn't a plain Python `int`.
+            TypeError: If `n` isn't a plain Python `int`.
 
         See Also:
             `braket.quantum_information.PauliString.power()`

@@ -77,7 +77,7 @@ def load_job_checkpoint(
     job's name.
 
     Note: This function for loading hybrid job checkpoints is only for use inside the job container
-          as it writes data to directories and references env variables set in the containers.
+          as it reads data from directories and references env variables set in the containers.
 
 
     Args:
