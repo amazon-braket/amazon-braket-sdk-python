@@ -59,10 +59,11 @@ def save_job_checkpoint(
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
+    serialized_data = serialize_values(checkpoint_data or {}, data_format)
+    persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
+    json_data = persisted_data.json()
     with open(checkpoint_file_path, "w", encoding="utf-8") as f:
-        serialized_data = serialize_values(checkpoint_data or {}, data_format)
-        persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
-        f.write(persisted_data.json())
+        f.write(json_data)
 
 
 def load_job_checkpoint(
@@ -203,7 +204,8 @@ def save_job_result(
     )
     updated_results = current_results | result_data
 
+    serialized_data = serialize_values(updated_results or {}, data_format)
+    persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
+    json_data = persisted_data.json()
     with open(Path(get_results_dir()) / "results.json", "w", encoding="utf-8") as f:
-        serialized_data = serialize_values(updated_results or {}, data_format)
-        persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
-        f.write(persisted_data.json())
+        f.write(json_data)
