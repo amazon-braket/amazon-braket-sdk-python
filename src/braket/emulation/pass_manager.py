@@ -62,7 +62,7 @@ class PassManager:
 
     def _raise_exception(self, exception: Exception) -> None:
         """
-        Wrapper for exceptions enable modifyint the exception message if needed.
+        Wrapper for exceptions enabling modification of the exception message if needed.
 
         Args:
             exception (Exception): The exception to modify and raise.

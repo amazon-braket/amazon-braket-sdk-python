@@ -509,9 +509,40 @@ def test_get_value_by_result_type_value_error(result_obj_4):
     result.get_value_by_result_type(ResultType.Probability(target=[0, 1]))
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_shots_no_measurements_no_measurement_probs(malformatted_results_1):
-    GateModelQuantumTaskResult.from_string(malformatted_results_1)
+    with pytest.raises(
+        ValueError,
+        match='One of "measurements", "measurementProbabilities" or "outputs" must be populated',
+    ):
+        GateModelQuantumTaskResult.from_string(malformatted_results_1)
+
+
+@pytest.fixture
+def outputs_only_result(task_metadata_shots, additional_metadata_openqasm):
+    return GateModelTaskResult(
+        outputs=[{"c": [0, 0]}, {"c": [1, 1]}],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata_openqasm,
+    )
+
+
+def test_from_object_outputs_only(outputs_only_result):
+    result = GateModelQuantumTaskResult.from_object(outputs_only_result)
+    assert result.outputs == [{"c": [0, 0]}, {"c": [1, 1]}]
+    assert result.measurements is None
+    assert result.measured_qubits is None
+    assert result.measurement_counts is None
+    assert result.measurement_probabilities is None
+    assert result.result_types == []
+    assert not result.measurements_copied_from_device
+    assert not result.measurement_counts_copied_from_device
+    assert not result.measurement_probabilities_copied_from_device
+
+
+def test_from_string_outputs_only(outputs_only_result):
+    result = GateModelQuantumTaskResult.from_string(outputs_only_result.json())
+    assert result.outputs == [{"c": [0, 0]}, {"c": [1, 1]}]
+    assert result.measurements is None
 
 
 @pytest.mark.parametrize("ir_result,expected_result", test_ir_results)

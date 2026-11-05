@@ -189,7 +189,7 @@ class LocalEmulator(Emulator):
             # qubit maximally mixed state. Then for a pure state rho = |0><0|, or
             # generally |ψ><ψ|, the input-output state fidelity reads 1-2p/3.
             # Hence, for a "target one qubit gate average gate fidelity" q,
-            # which is the spec in the device property, the corresponing
+            # which is the spec in the device property, the corresponding
             # "target one qubit gate average error rate" is (1-q) * 3/2, not (1-q).
             one_qubit_depolarizing_rate = (1 - one_qubit_fidelity) * 3 / 2
 
@@ -239,7 +239,7 @@ class LocalEmulator(Emulator):
                 # the two qubit maximally mixed state. Then for a pure state rho = |00><00|,
                 # or generally |ψ><ψ|, the input-output state fidelity reads 1-4p/5.
                 # Hence, for a "target two qubit gate average gate fidelity" q,
-                # which is the spec in the device property, the corresponing
+                # which is the spec in the device property, the corresponding
                 # "target two qubit gate average error rate" is (1-q) * 5/4, not (1-q).
                 two_qubit_depolarizing_rate = (1 - gate_fidelity.fidelity) * 5 / 4
 

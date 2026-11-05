@@ -107,8 +107,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 particular `QubitSet` and is represented by a `PulseSequence`. Default: None.
             reservation_arn (str | None): The reservation ARN provided by Braket Direct
                 to reserve exclusive usage for the device to run the quantum task on.
-                Note: If you are creating tasks in a job that itself was created reservation ARN,
-                those tasks do not need to be created with the reservation ARN.
+                Note: If you are creating tasks in a job that itself was created with a
+                reservation ARN, those tasks do not need to be created with the reservation ARN.
                 Default: None.
             experimental_capabilities (str | None): Experimental capabilities
                 to enable for the quantum task. Supported values are "ALL" to enable all
@@ -265,7 +265,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 for future in task_futures:
                     future.cancel()
 
-            # Signal to the workers that there is no mork work to do
+            # Signal to the workers that there is no more work to do
             remaining.clear()
 
             raise

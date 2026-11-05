@@ -117,7 +117,7 @@ def _get_observable(obs: str) -> Observable:
 
 
 def get_tensor_product(observable: list[str]) -> Observable:
-    """Generate an braket circuit observable
+    """Generate a Braket circuit observable
 
     Args:
         observable (list[str]): ir observable or a matrix

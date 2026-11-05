@@ -34,7 +34,7 @@ class Waveform(ABC):
     """A waveform is a time-dependent envelope that can be used to emit signals on an output port
     or receive signals from an input port. As such, when transmitting signals to the qubit, a
     frame determines time at which the waveform envelope is emitted, its carrier frequency, and
-    it's phase offset. When capturing signals from a qubit, at minimum a frame determines the
+    its phase offset. When capturing signals from a qubit, at minimum a frame determines the
     time at which the signal is captured. See https://openqasm.com/language/openpulse.html#waveforms
     for more details.
     """
