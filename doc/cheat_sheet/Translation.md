@@ -4,7 +4,7 @@ TL;DR:
 
 - See `_config.yml`, `index.fr.html` and `_includes/`
 
-The translation of this cheat-sheet requires the followings steps:
+The translation of this cheat-sheet requires the following steps:
 
 - Choose a tag for your language, such as `en` for English or `fr` for French;
 - On [`_config.yml`](_config.yml), add your tag and translate the given phrases;

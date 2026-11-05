@@ -10,4 +10,4 @@
 | Shift frequency | `pulse_sequence.shift_frequency(frame, detuning)` |
 | Set phase | `pulse_sequence.set_phase(frame, phase)` |
 | Shift phase | `pulse_sequence.shift_phase(frame, phi)` |
-| Get the time series | `pulse_sequence.to_time_traces()` |
+| Get the time series | `pulse_sequence.to_time_trace()` |

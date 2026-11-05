@@ -60,7 +60,7 @@ class AnalogHamiltonianSimulation:
         the Analog Hamiltonian Simulation.
 
         Args:
-            source (ir.Program): The IR representation of the circuit.
+            source (ir.Program): The IR representation of the AHS program.
 
         Returns:
             AnalogHamiltonianSimulation: The Analog Hamiltonian Simulation.
@@ -107,7 +107,7 @@ class AnalogHamiltonianSimulation:
         representation.
 
         Returns:
-            ir.Program: A representation of the circuit in the IR format.
+            ir.Program: A representation of the AHS program in the IR format.
         """
         return ir.Program(
             setup=ir.Setup(ahs_register=self._register_to_ir()),

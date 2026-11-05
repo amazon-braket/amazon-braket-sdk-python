@@ -274,9 +274,9 @@ class NoiseModel:
 
     def _apply_to_program_set(self, program_set: ProgramSet):
         """
-        Apply noise model to program set by casting observables to paramterized circuits
+        Apply noise model to program set by casting observables to parameterized circuits
 
-        Only init, gate and measurenment noises are supported -result types, as with ProgramSets,
+        Only init, gate and measurement noises are supported -result types, as with ProgramSets,
         are not supported.
 
         Also, observables **will** apply measurement noise - no observables will not!
