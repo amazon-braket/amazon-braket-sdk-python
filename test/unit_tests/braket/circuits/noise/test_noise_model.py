@@ -279,25 +279,39 @@ def test_control_aware_noise_matches_named_gates(
     [
         (Circuit().h(3, control=2), Gate.H),
         (Circuit().x(3, control=[0, 1, 2]), Gate.X),
+        (Circuit().z(3, control=2, control_state=0), Gate.Z),
+        (Circuit().x(3, control=[0, 1], control_state="01"), Gate.X),
+        (Circuit().z(3, control=2, power=0.5), Gate.Z),
     ],
 )
-def test_control_aware_noise_keeps_matching_without_a_named_equivalent(
-    circuit: Circuit, gate: type[Gate]
+@pytest.mark.parametrize("criteria", ["gate", "qubit", "all"])
+def test_control_aware_noise_skips_without_a_named_equivalent(
+    circuit: Circuit, gate: type[Gate], criteria: str
 ) -> None:
-    """Unmapped controlled gates retain their original gate and target matching."""
-    model = NoiseModel().add_noise(Depolarizing(0.02), GateCriteria(gate, 3))
-    expected = Circuit().add_circuit(circuit).depolarizing(3, 0.02)
+    """Unsupported controlled operations must not match the underlying gate or its targets."""
+    gate_criteria = {
+        "gate": GateCriteria(gate),
+        "qubit": GateCriteria(qubits=3),
+        "all": GateCriteria(),
+    }[criteria]
+    model = NoiseModel().add_noise(Depolarizing(0.02), gate_criteria)
+
+    assert model.apply(circuit) == circuit
+
+
+def test_control_aware_noise_keeps_initialization_and_readout_for_unsupported_gates() -> None:
+    circuit = Circuit().h(3, control=2).sample(Observable.Z(), 3)
+    model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.02), GateCriteria())
+        .add_noise(BitFlip(0.01), QubitInitializationCriteria([2, 3]))
+        .add_noise(BitFlip(0.03), ObservableCriteria(qubits=3))
+    )
+    expected = (
+        Circuit().bit_flip([2, 3], 0.01).h(3, control=2).bit_flip(3, 0.03).sample(Observable.Z(), 3)
+    )
 
     assert model.apply(circuit) == expected
-
-
-def test_control_aware_noise_does_not_match_different_control_state_or_power() -> None:
-    model = NoiseModel().add_noise(TwoQubitDepolarizing(0.02), GateCriteria(Gate.CZ))
-    open_control = Circuit().z(2, control=1, control_state=0)
-    powered = Circuit().z(2, control=1, power=0.5)
-
-    assert model.apply(open_control) == open_control
-    assert model.apply(powered) == powered
 
 
 def test_control_aware_noise_applies_to_program_sets() -> None:

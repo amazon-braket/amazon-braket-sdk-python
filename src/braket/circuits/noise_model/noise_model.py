@@ -253,7 +253,7 @@ class NoiseModel:
         they will be applied in the order they are added to the noise model.
 
         Controlled X, Y, Z, V, Swap, and CNot gates match their equivalent named gates
-        when selecting noise. Other controlled gates retain their original matching behavior.
+        when selecting noise. Controlled gates without a supported equivalent receive no gate noise.
         The original circuit instructions are preserved.
 
         Args:
@@ -346,11 +346,12 @@ class NoiseModel:
 
             if not isinstance(circuit_instruction.operator, Measure):
                 matching_instruction = _equivalent_controlled_gate(circuit_instruction)
-                _apply_noise_on_instruction(
-                    new_circuit,
-                    matching_instruction,
-                    gate_noise_instructions,
-                )
+                if matching_instruction is not None:
+                    _apply_noise_on_instruction(
+                        new_circuit,
+                        matching_instruction,
+                        gate_noise_instructions,
+                    )
 
         for result_type in circuit.result_types:
             new_circuit.add_result_type(result_type)
@@ -442,11 +443,13 @@ class NoiseModel:
         return model
 
 
-def _equivalent_controlled_gate(instruction: Instruction) -> Instruction:
+def _equivalent_controlled_gate(instruction: Instruction) -> Instruction | None:
     """Use a named gate for noise matching when it represents the same controlled operation."""
     control_count = len(instruction.control)
-    if not control_count or instruction.power != 1 or not all(instruction.control_state):
+    if not control_count:
         return instruction
+    if instruction.power != 1 or not all(instruction.control_state):
+        return None
 
     equivalents = {
         (Gate.X, 1): Gate.CNot,
@@ -459,7 +462,7 @@ def _equivalent_controlled_gate(instruction: Instruction) -> Instruction:
     }
     equivalent = equivalents.get((type(instruction.operator), control_count))
     if equivalent is None:
-        return instruction
+        return None
     return Instruction(equivalent(), [*instruction.control, *instruction.target])
 
 
