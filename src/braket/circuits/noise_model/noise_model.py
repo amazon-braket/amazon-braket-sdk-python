@@ -252,6 +252,10 @@ class NoiseModel:
         version of the given circuit. If multiple noise will act on the same instruction,
         they will be applied in the order they are added to the noise model.
 
+        Controlled X, Y, Z, V, Swap, and CNot gates match their equivalent named gates
+        when selecting noise. Controlled gates without a supported equivalent receive no gate noise.
+        The original circuit instructions are preserved.
+
         Args:
             task_specification (TaskSpecification): a (supported) task to apply noise to
                 see NoiseModel.supported_specifications for supported tasks.
@@ -340,10 +344,12 @@ class NoiseModel:
         for circuit_instruction in circuit.instructions:
             new_circuit.add_instruction(circuit_instruction)
 
-            if not isinstance(circuit_instruction.operator, Measure):
+            if not isinstance(circuit_instruction.operator, Measure) and (
+                matching_instruction := _equivalent_controlled_gate(circuit_instruction)
+            ):
                 _apply_noise_on_instruction(
                     new_circuit,
-                    circuit_instruction,
+                    matching_instruction,
                     gate_noise_instructions,
                 )
 
@@ -435,6 +441,31 @@ class NoiseModel:
             for item in noise_dict["instructions"]
         )
         return model
+
+
+def _equivalent_controlled_gate(instruction: Instruction) -> Instruction | None:
+    """Use a named gate for noise matching when it represents the same controlled operation."""
+    control_count = len(instruction.control)
+    if not control_count:
+        return instruction
+
+    # TODO: Account for gate power identities
+    if instruction.power != 1 or not all(instruction.control_state):
+        return None
+
+    equivalents = {
+        (Gate.X, 1): Gate.CNot,
+        (Gate.Y, 1): Gate.CY,
+        (Gate.Z, 1): Gate.CZ,
+        (Gate.V, 1): Gate.CV,
+        (Gate.Swap, 1): Gate.CSwap,
+        (Gate.X, 2): Gate.CCNot,
+        (Gate.CNot, 1): Gate.CCNot,
+    }
+    equivalent = equivalents.get((type(instruction.operator), control_count))
+    if equivalent is None:
+        return None
+    return Instruction(equivalent(), [*instruction.control, *instruction.target])
 
 
 def _apply_noise_on_instruction(
