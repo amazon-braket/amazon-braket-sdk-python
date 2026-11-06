@@ -344,14 +344,14 @@ class NoiseModel:
         for circuit_instruction in circuit.instructions:
             new_circuit.add_instruction(circuit_instruction)
 
-            if not isinstance(circuit_instruction.operator, Measure):
-                matching_instruction = _equivalent_controlled_gate(circuit_instruction)
-                if matching_instruction is not None:
-                    _apply_noise_on_instruction(
-                        new_circuit,
-                        matching_instruction,
-                        gate_noise_instructions,
-                    )
+            if not isinstance(circuit_instruction.operator, Measure) and (
+                matching_instruction := _equivalent_controlled_gate(circuit_instruction)
+            ):
+                _apply_noise_on_instruction(
+                    new_circuit,
+                    matching_instruction,
+                    gate_noise_instructions,
+                )
 
         for result_type in circuit.result_types:
             new_circuit.add_result_type(result_type)
@@ -448,6 +448,8 @@ def _equivalent_controlled_gate(instruction: Instruction) -> Instruction | None:
     control_count = len(instruction.control)
     if not control_count:
         return instruction
+
+    # TODO: Account for gate power identities
     if instruction.power != 1 or not all(instruction.control_state):
         return None
 
