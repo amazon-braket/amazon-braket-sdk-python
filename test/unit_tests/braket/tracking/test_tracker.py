@@ -216,3 +216,25 @@ def test_quantum_task_statistics(completed_tracker):
         "something_else": {"shots": 1000, "tasks": {"CREATED": 1}},
     }
     assert stats == expected
+
+
+def test_local_simulator_tracking(empty_tracker):
+    local_dev = "braket:local/simulator"
+    empty_tracker.receive_event(
+        _TaskCreationEvent(arn="task_local_1", shots=1000, is_job_task=False, device=local_dev)
+    )
+    empty_tracker.receive_event(
+        _TaskCompletionEvent(arn="task_local_1", execution_duration=25.0, status="COMPLETED")
+    )
+    assert empty_tracker.tracked_resources() == ["task_local_1"]
+    assert empty_tracker.qpu_tasks_cost() == Decimal(0)
+    assert empty_tracker.simulator_tasks_cost() == Decimal(0)
+    stats = empty_tracker.quantum_tasks_statistics()
+    assert stats == {
+        local_dev: {
+            "shots": 1000,
+            "tasks": {"COMPLETED": 1},
+            "execution_duration": timedelta(microseconds=25000),
+            "billed_execution_duration": None,
+        }
+    }

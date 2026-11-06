@@ -157,14 +157,15 @@ class Tracker:
                     device_stats.get("execution_duration", timedelta(0))
                     + details["execution_duration"]
                 )
-                billed_duration = (
-                    timedelta(0)
-                    if details.get("has_reservation_arn")
-                    else (
-                        device_stats.get("billed_execution_duration", timedelta(0))
-                        + details["billed_duration"]
+                if details.get("billed_duration") is None:
+                    billed_duration = None
+                else:
+                    current_billed = device_stats.get("billed_execution_duration") or timedelta(0)
+                    billed_duration = (
+                        timedelta(0)
+                        if details.get("has_reservation_arn")
+                        else current_billed + details["billed_duration"]
                     )
-                )
 
                 device_stats["execution_duration"] = duration
                 device_stats["billed_execution_duration"] = billed_duration
@@ -193,14 +194,17 @@ class Tracker:
                 if arn in resources:
                     resources[arn]["status"] = status
                     resources[arn]["has_reservation_arn"] = has_reservation_arn
-                    if execution_duration:
+                    if execution_duration is not None:
                         duration = timedelta(milliseconds=execution_duration)
                         resources[arn]["execution_duration"] = duration
-                        resources[arn]["billed_duration"] = (
-                            timedelta(milliseconds=0)
-                            if has_reservation_arn
-                            else max(duration, MIN_SIMULATOR_DURATION)
-                        )
+                        if resources[arn]["device"].startswith("braket:local"):
+                            resources[arn]["billed_duration"] = None
+                        else:
+                            resources[arn]["billed_duration"] = (
+                                timedelta(milliseconds=0)
+                                if has_reservation_arn
+                                else max(duration, MIN_SIMULATOR_DURATION)
+                            )
             case _:
                 raise ValueError(f"Event type {type(event)} is not supported")
 
@@ -254,7 +258,7 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
 
 
 def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
-    if not details.get("billed_duration"):
+    if not details.get("billed_duration") or details["device"].startswith("braket:local"):
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
