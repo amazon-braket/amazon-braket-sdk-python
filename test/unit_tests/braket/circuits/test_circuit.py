@@ -2517,6 +2517,14 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
     )
 
 
+def test_to_unitary_control_state_order():
+    circuit = Circuit().x(2, control=[0, 1], control_state=[1, 0])
+    expected = np.eye(8)
+    # qubit 0 must be |1> and qubit 1 must be |0>: |100> <-> |101>
+    expected[[4, 5]] = expected[[5, 4]]
+    assert np.allclose(circuit.to_unitary(), expected)
+
+
 def test_to_unitary_with_global_phase():
     circuit = Circuit().x(0)
     circuit_unitary = np.array([[0, 1], [1, 0]])
