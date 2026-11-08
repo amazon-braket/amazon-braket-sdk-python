@@ -260,6 +260,7 @@ def test_control_aware_noise_matches_equivalent_cz() -> None:
             Gate.CCNot,
             (0, 1, 2),
         ),
+        (Circuit().phaseshift(2, 0.5, control=1), Circuit().cphaseshift(1, 2, 0.5), Gate.CPhaseShift, (1, 2)),
     ],
 )
 def test_control_aware_noise_matches_named_gates(
