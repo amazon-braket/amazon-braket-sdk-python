@@ -20,6 +20,7 @@ import pytest
 from braket.tracking.tracker import Tracker
 from braket.tracking.tracking_context import active_trackers
 from braket.tracking.tracking_events import (
+    _LOCAL_SIMULATOR_DEVICE,
     _TaskCompletionEvent,
     _TaskCreationEvent,
     _TaskStatusEvent,
@@ -192,6 +193,21 @@ def test_simulator_task_cost(price_mock, completed_tracker):
     price_mock.return_value = [{"Currency": "BAD"}]
     with pytest.raises(ValueError, match="Expected USD"):
         completed_tracker.simulator_tasks_cost()
+
+
+@patch("braket.tracking.tracker.price_search")
+def test_local_task_has_no_billable_duration_or_price_lookup(price_mock, empty_tracker):
+    empty_tracker.receive_event(_TaskCreationEvent("local-id", 12, False, _LOCAL_SIMULATOR_DEVICE))
+    empty_tracker.receive_event(_TaskCompletionEvent("local-id", 25, "COMPLETED"))
+
+    assert empty_tracker.quantum_tasks_statistics()[_LOCAL_SIMULATOR_DEVICE] == {
+        "shots": 12,
+        "tasks": {"COMPLETED": 1},
+        "execution_duration": timedelta(milliseconds=25),
+        "billed_execution_duration": None,
+    }
+    assert empty_tracker.simulator_tasks_cost() == Decimal(0)
+    price_mock.assert_not_called()
 
 
 def test_quantum_task_statistics(completed_tracker):

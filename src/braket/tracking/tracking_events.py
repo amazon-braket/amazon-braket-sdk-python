@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+_LOCAL_SIMULATOR_DEVICE = "braket:local/simulator"
+
 
 @dataclass
 class _TrackingEvent:
