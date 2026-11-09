@@ -13,7 +13,9 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Sequence
+from datetime import datetime
 from functools import singledispatchmethod
 from importlib.metadata import entry_points
 from itertools import repeat
@@ -48,8 +50,65 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 from braket.tasks.program_set_quantum_task_result import ProgramSetQuantumTaskResult
 from braket.tasks.quantum_task import TaskSpecification
+from braket.tracking.tracking_context import broadcast_event
+from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent
 
 _simulator_devices = {entry.name: entry for entry in entry_points(group="braket.simulators")}
+
+
+def _execution_duration_ms(task_metadata: Any) -> float | None:
+    created_at = getattr(task_metadata, "createdAt", None)
+    ended_at = getattr(task_metadata, "endedAt", None)
+    if created_at and ended_at:
+        try:
+            c = datetime.fromisoformat(created_at) if isinstance(created_at, str) else created_at
+            e = datetime.fromisoformat(ended_at) if isinstance(ended_at, str) else ended_at
+            return (e - c).total_seconds() * 1000
+        except Exception:
+            return None
+    return None
+
+
+def _broadcast_task_events(
+    task_id: str,
+    shots: int,
+    task_metadata: Any,
+    device_id: str,
+) -> None:
+    is_job_task = os.getenv("AMZN_BRAKET_JOB_TOKEN") is not None
+    broadcast_event(
+        _TaskCreationEvent(
+            arn=task_id,
+            shots=shots,
+            is_job_task=is_job_task,
+            device=device_id,
+        )
+    )
+    broadcast_event(
+        _TaskCompletionEvent(
+            arn=task_id,
+            execution_duration=_execution_duration_ms(task_metadata),
+            status="COMPLETED",
+            has_reservation_arn=False,
+        )
+    )
+
+
+def _broadcast_batch_task_events(
+    task_results: list[Any],
+    shots: int | Sequence[int] | None,
+    device_id: str,
+) -> None:
+    for task_res in task_results:
+        meta = getattr(task_res, "task_metadata", None)
+        task_id = str(meta.id) if meta and hasattr(meta, "id") else None
+        if task_id:
+            _broadcast_task_events(
+                task_id,
+                getattr(meta, "shots", shots),
+                meta,
+                device_id,
+            )
 
 
 class LocalSimulator(Device):
@@ -58,6 +117,8 @@ class LocalSimulator(Device):
     This class wraps a BraketSimulator object so that it can be run and returns
     results using constructs from the SDK rather than Braket IR.
     """
+
+    DEVICE_ID = "braket:local/simulator"
 
     def __init__(
         self,
@@ -124,9 +185,15 @@ class LocalSimulator(Device):
         payload = self._construct_payload(task_specification, inputs, shots)
         shots = shots if shots is not None else self._default_shots(task_specification)
         result = self._delegate.run(payload, *args, shots=shots, **kwargs)
-        return LocalQuantumTask(
-            self._to_result_object(result, task_specification=task_specification)
+        task_result = self._to_result_object(result, task_specification=task_specification)
+        task = LocalQuantumTask(task_result)
+        _broadcast_task_events(
+            task.id,
+            getattr(task_result.task_metadata, "shots", shots),
+            task_result.task_metadata,
+            self.DEVICE_ID,
         )
+        return task
 
     def run_batch(
         self,
@@ -203,7 +270,18 @@ class LocalSimulator(Device):
         results = self._delegate.run_multiple(
             payloads, *args, shots=shots, max_parallel=max_parallel or cpu_count(), **kwargs
         )
-        return LocalQuantumTaskBatch([self._to_result_object(result) for result in results])
+        task_results = [self._to_result_object(result) for result in results]
+        _broadcast_batch_task_events(task_results, shots, self.DEVICE_ID)
+        return LocalQuantumTaskBatch(task_results)
+
+    @property
+    def device_id(self) -> str:
+        """Return the device ID.
+
+        Returns:
+            str: The device ID.
+        """
+        return self.DEVICE_ID
 
     @property
     def properties(self) -> DeviceCapabilities:
