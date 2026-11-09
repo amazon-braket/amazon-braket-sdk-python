@@ -15,6 +15,7 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass
+from threading import Lock
 from unittest.mock import patch
 
 import numpy as np
@@ -345,3 +346,39 @@ def test_load_job_checkpoint_raises_without_allow_pickle():
             save_job_checkpoint({"key": "value"}, data_format=PersistedJobDataFormat.PICKLED_V4)
             with pytest.raises(RuntimeError, match="pickle deserialization is disabled by default"):
                 load_job_checkpoint(job_name)
+
+
+@pytest.mark.parametrize(
+    "save, load, filename",
+    [
+        (save_job_result, load_job_result, "results.json"),
+        (save_job_checkpoint, load_job_checkpoint, "test_job.json"),
+    ],
+)
+@pytest.mark.parametrize(
+    "data_format", [PersistedJobDataFormat.PLAINTEXT, PersistedJobDataFormat.PICKLED_V4]
+)
+@pytest.mark.parametrize("existing_file", [False, True])
+def test_save_preserves_job_data_on_serialization_error(
+    tmp_path, monkeypatch, save, load, filename, data_format, existing_file
+):
+    monkeypatch.setenv("AMZN_BRAKET_JOB_RESULTS_DIR", str(tmp_path))
+    monkeypatch.setenv("AMZN_BRAKET_CHECKPOINT_DIR", str(tmp_path))
+    monkeypatch.setenv("AMZN_BRAKET_JOB_NAME", "test_job")
+    path = tmp_path / filename
+    allow_pickle = data_format == PersistedJobDataFormat.PICKLED_V4
+    if existing_file:
+        save({"step": 1}, data_format=data_format)
+        original = path.read_bytes()
+
+    with pytest.raises(TypeError):
+        save({"lock": Lock()}, data_format=data_format)
+
+    if existing_file:
+        assert path.read_bytes() == original
+        assert load(allow_pickle=allow_pickle) == {"step": 1}
+    else:
+        assert not path.exists()
+
+    save({"step": 2}, data_format=data_format)
+    assert load(allow_pickle=allow_pickle) == {"step": 2}
