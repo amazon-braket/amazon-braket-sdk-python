@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.127.8 (2026-11-09)
+
+### Bug Fixes and Other Changes
+
+ * Handle controlled gates in noise models
+ * validate each factor of a tensor product observable in the emulator
+
 ## v1.127.7 (2026-10-28)
 
 ### Bug Fixes and Other Changes
