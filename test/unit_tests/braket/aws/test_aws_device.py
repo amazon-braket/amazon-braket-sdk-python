@@ -15,7 +15,7 @@ import io
 import json
 import os
 import textwrap
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock, PropertyMock, patch
 from urllib.error import URLError
 
@@ -37,7 +37,13 @@ from common_test_utils import (
 )
 from jsonschema import validate
 
-from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
+from braket.aws import (
+    AwsDevice,
+    AwsDeviceType,
+    AwsQuantumTask,
+    DeviceStatusReason,
+    DeviceStatusReasonCode,
+)
 from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, FreeParameter, Gate, Noise, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
@@ -673,6 +679,54 @@ def test_regional_device_raises_error(
     with pytest.raises(expected_exception):
         AwsDevice(arn)
         aws_session.get_device.assert_called_once()
+
+
+def test_device_status_reason(arn):
+    mock_session = Mock()
+    mock_session.region = RIGETTI_REGION
+    started_at = datetime(2026, 11, 1, 18, 0, tzinfo=UTC)
+    estimated_end_at = datetime(2026, 11, 2, 2, 0, tzinfo=UTC)
+    updated_at = datetime(2026, 11, 1, 18, 5, tzinfo=UTC)
+    mock_session.get_device.return_value = {
+        **MOCK_GATE_MODEL_QPU_1,
+        "deviceStatus": "PAUSED",
+        "deviceStatusReason": {
+            "reason": "OUTSIDE_AVAILABILITY_WINDOW",
+            "startedAt": started_at,
+            "estimatedEndAt": estimated_end_at,
+            "updatedAt": updated_at,
+        },
+    }
+    device = AwsDevice(arn, mock_session)
+    assert device.status == "PAUSED"
+    assert device.status_reason == DeviceStatusReason(
+        reason=DeviceStatusReasonCode.OUTSIDE_AVAILABILITY_WINDOW,
+        updated_at=updated_at,
+        started_at=started_at,
+        estimated_end_at=estimated_end_at,
+    )
+    assert isinstance(device.status_reason.reason, DeviceStatusReasonCode)
+    assert not device.is_available
+
+    mock_session.get_device.return_value = {
+        **MOCK_GATE_MODEL_QPU_1,
+        "deviceStatusReason": {"reason": "MAINTENANCE", "updatedAt": updated_at},
+    }
+    device.refresh_metadata()
+    assert device.status_reason == DeviceStatusReason(reason="MAINTENANCE", updated_at=updated_at)
+    assert device.status_reason.reason is DeviceStatusReasonCode.MAINTENANCE
+
+    mock_session.get_device.return_value = {
+        **MOCK_GATE_MODEL_QPU_1,
+        "deviceStatusReason": {"reason": "SOME_FUTURE_REASON", "updatedAt": updated_at},
+    }
+    device.refresh_metadata()
+    assert device.status_reason.reason == "SOME_FUTURE_REASON"
+    assert not isinstance(device.status_reason.reason, DeviceStatusReasonCode)
+
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_2
+    device.refresh_metadata()
+    assert device.status_reason is None
 
 
 def test_device_refresh_metadata(arn):

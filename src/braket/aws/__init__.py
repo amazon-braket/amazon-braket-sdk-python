@@ -20,7 +20,12 @@ execution, AwsQuantumJob for hybrid job management, AwsSession for managing AWS
 connections, and DirectReservation for exclusive device access.
 """
 
-from braket.aws.aws_device import AwsDevice, AwsDeviceType  # ruff:ignore[unused-import]
+from braket.aws.aws_device import (  # ruff:ignore[unused-import]
+    AwsDevice,
+    AwsDeviceType,
+    DeviceStatusReason,
+    DeviceStatusReasonCode,
+)
 from braket.aws.aws_quantum_job import AwsQuantumJob  # ruff:ignore[unused-import]
 from braket.aws.aws_quantum_task import AwsQuantumTask  # ruff:ignore[unused-import]
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch  # ruff:ignore[unused-import]
