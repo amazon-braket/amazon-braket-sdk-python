@@ -212,3 +212,29 @@ def test_hash_triple_angle():
             angle_1=symbol1, angle_2=1, angle_3=3, qubit_count=1, ascii_symbols=["bar"]
         )
     )
+
+
+@pytest.mark.parametrize(
+    "gate",
+    [
+        DoubleAngledGate(angle_1=1, angle_2=2, qubit_count=1, ascii_symbols=["foo"]),
+        TripleAngledGate(angle_1=1, angle_2=2, angle_3=3, qubit_count=1, ascii_symbols=["foo"]),
+    ],
+)
+def test_multi_angle_adjoint_and_bind_values_not_implemented(gate):
+    with pytest.raises(NotImplementedError):
+        gate.adjoint()
+    with pytest.raises(NotImplementedError):
+        gate.bind_values(theta=1)
+
+
+def test_angled_gate_families_are_distinct():
+    families = (AngledGate, DoubleAngledGate, TripleAngledGate)
+    for cls in families:
+        assert not any(issubclass(cls, other) for other in families if other is not cls)
+    single = AngledGate(angle=1, qubit_count=1, ascii_symbols=["foo"])
+    double = DoubleAngledGate(angle_1=1, angle_2=1, qubit_count=1, ascii_symbols=["foo"])
+    triple = TripleAngledGate(angle_1=1, angle_2=1, angle_3=1, qubit_count=1, ascii_symbols=["foo"])
+    assert single != double
+    assert double != triple
+    assert single != triple

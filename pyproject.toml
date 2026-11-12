@@ -191,6 +191,7 @@ lint.ignore = [
     "TRY003",  # Longer messages are fine.
 ]
 lint.per-file-ignores."test/**/*.py" = [
+    "ANN",     # don't care about type annotations in tests
     "D",       # don't care about documentation in tests
     "FBT",     # don't care about booleans as positional arguments in tests
     "INP001",  # no implicit namespace
