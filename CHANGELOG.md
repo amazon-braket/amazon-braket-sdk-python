@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.128.1 (2026-11-19)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.14 and 3.15
+
 ## v1.128.0 (2026-11-19)
 
 ### Features
