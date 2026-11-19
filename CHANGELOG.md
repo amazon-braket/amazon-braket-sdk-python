@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.128.0 (2026-11-19)
+
+### Features
+
+ * Add `AwsDevice.status_reason`
+
 ## v1.127.8 (2026-11-09)
 
 ### Bug Fixes and Other Changes
