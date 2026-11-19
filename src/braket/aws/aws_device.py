@@ -19,6 +19,7 @@ import os
 import urllib.request
 import warnings
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, ClassVar
@@ -57,6 +58,56 @@ class AwsDeviceType(StrEnum):
 
     SIMULATOR = "SIMULATOR"
     QPU = "QPU"
+
+
+class DeviceStatusReasonCode(StrEnum):
+    """Reason codes for a device's current status, as listed in the API reference [1].
+
+    References:
+
+    [1] https://docs.aws.amazon.com/braket/latest/APIReference/API_DeviceStatusReason.html
+    """
+
+    OUTSIDE_AVAILABILITY_WINDOW = "OUTSIDE_AVAILABILITY_WINDOW"
+    MAINTENANCE = "MAINTENANCE"
+    RESERVATION = "RESERVATION"
+
+
+@dataclass(frozen=True)
+class DeviceStatusReason:
+    """Why a device is not ONLINE, when the service reports a specific reason [1], [2].
+
+    Attributes:
+        reason (str | DeviceStatusReasonCode): The reason code. Codes this version of the SDK
+            does not recognize are kept as plain strings, so newer service codes don't break it.
+        updated_at (datetime | None): When the reason was last updated.
+        started_at (datetime | None): When the reason took effect, if known.
+        estimated_end_at (datetime | None): When the reason is expected to end, if known.
+
+    References:
+
+    [1] https://docs.aws.amazon.com/braket/latest/APIReference/API_DeviceStatusReason.html
+
+    [2] https://docs.aws.amazon.com/braket/latest/developerguide/braket-task-when.html#braket-qpu-availability
+    """
+
+    reason: str | DeviceStatusReasonCode
+    updated_at: datetime | None = None
+    started_at: datetime | None = None
+    estimated_end_at: datetime | None = None
+
+    @classmethod
+    def _from_api(cls, status_reason: dict[str, Any]) -> DeviceStatusReason:
+        try:
+            reason = DeviceStatusReasonCode(status_reason["reason"])
+        except ValueError:
+            reason = status_reason["reason"]  # Codes newer than this SDK stay plain strings.
+        return cls(
+            reason=reason,
+            updated_at=status_reason.get("updatedAt"),
+            started_at=status_reason.get("startedAt"),
+            estimated_end_at=status_reason.get("estimatedEndAt"),
+        )
 
 
 class AwsDevice(Device):
@@ -115,6 +166,7 @@ class AwsDevice(Device):
         self._provider_name = None
         self._poll_interval_seconds = None
         self._type = None
+        self._status_reason = None
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
         self._ports = None
         self._frames = None
@@ -377,6 +429,8 @@ class AwsDevice(Device):
         metadata = session.get_device(self._arn)
         self._name = metadata.get("deviceName")
         self._status = metadata.get("deviceStatus")
+        status_reason = metadata.get("deviceStatusReason")
+        self._status_reason = DeviceStatusReason._from_api(status_reason) if status_reason else None
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
         try:
@@ -397,6 +451,13 @@ class AwsDevice(Device):
         self._topology_graph = None
         self._frames = None
         self._ports = None
+
+    @property
+    def status_reason(self) -> DeviceStatusReason | None:
+        """DeviceStatusReason | None: Why the device is not ONLINE, or `None` if the
+        service does not report a specific reason.
+        """
+        return self._status_reason
 
     @property
     def type(self) -> str:
