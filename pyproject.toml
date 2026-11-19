@@ -21,6 +21,8 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
     "amazon-braket-schemas>=1.30.0",
@@ -29,9 +31,7 @@ dependencies = [
     "backoff",
     "boltons",
     "boto3>=1.28.53",
-    # SageMaker pinned cloudpickle==2.2.1
-    # see https://github.com/aws/sagemaker-python-sdk/issues/4871
-    "cloudpickle==2.2.1",
+    "cloudpickle>=2.2.1",
     "nest-asyncio",
     "networkx",
     "numpy",
@@ -43,6 +43,9 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "botocore",
+    # Match the cloudpickle version in the Braket job containers;
+    # remove once the containers ship cloudpickle 3.x
+    "cloudpickle==2.2.1; python_version < '3.14'",
     "jsonschema==3.2.0",
     "pytest",
     "pytest-cov",
