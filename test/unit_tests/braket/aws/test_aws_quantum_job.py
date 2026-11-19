@@ -28,12 +28,25 @@ from braket.aws import AwsQuantumJob, AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
 
 
+def _configure_tar_filter_support(monkeypatch, use_fallback):
+    if not use_fallback:
+        if not hasattr(tarfile, "data_filter"):
+            pytest.skip("Python does not provide tarfile.data_filter")
+        return
+
+    # Simulate Python versions without extraction filters (3.11.0-3.11.3).
+    if hasattr(tarfile, "fully_trusted_filter"):
+        # Python 3.14+ defaults to the module-level data_filter when no filter is given,
+        # so set an explicit no-op default before removing data_filter.
+        monkeypatch.setattr(
+            tarfile.TarFile, "extraction_filter", staticmethod(tarfile.fully_trusted_filter)
+        )
+    monkeypatch.delattr(tarfile, "data_filter", raising=False)
+
+
 @pytest.mark.parametrize("use_fallback", [False, True])
 def test_extract_tar_file_rejects_path_traversal(tmp_path, monkeypatch, use_fallback):
-    if use_fallback:
-        monkeypatch.delattr(tarfile, "data_filter", raising=False)
-    elif not hasattr(tarfile, "data_filter"):
-        pytest.skip("Python does not provide tarfile.data_filter")
+    _configure_tar_filter_support(monkeypatch, use_fallback)
 
     extract_path = tmp_path / "extract"
     archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
@@ -51,10 +64,7 @@ def test_extract_tar_file_rejects_path_traversal(tmp_path, monkeypatch, use_fall
 
 @pytest.mark.parametrize("use_fallback", [False, True])
 def test_extract_tar_file_rejects_symbolic_links(tmp_path, monkeypatch, use_fallback):
-    if use_fallback:
-        monkeypatch.delattr(tarfile, "data_filter", raising=False)
-    elif not hasattr(tarfile, "data_filter"):
-        pytest.skip("Python does not provide tarfile.data_filter")
+    _configure_tar_filter_support(monkeypatch, use_fallback)
 
     extract_path = tmp_path / "extract"
     archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
@@ -73,10 +83,7 @@ def test_extract_tar_file_rejects_symbolic_links(tmp_path, monkeypatch, use_fall
 
 @pytest.mark.parametrize("use_fallback", [False, True])
 def test_extract_tar_file_extracts_directory_and_file(tmp_path, monkeypatch, use_fallback):
-    if use_fallback:
-        monkeypatch.delattr(tarfile, "data_filter", raising=False)
-    elif not hasattr(tarfile, "data_filter"):
-        pytest.skip("Python does not provide tarfile.data_filter")
+    _configure_tar_filter_support(monkeypatch, use_fallback)
 
     extract_path = tmp_path / "extract"
     archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
@@ -97,10 +104,7 @@ def test_extract_tar_file_extracts_directory_and_file(tmp_path, monkeypatch, use
 
 @pytest.mark.parametrize("use_fallback", [False, True])
 def test_extract_tar_file_rejects_unsafe_hard_links(tmp_path, monkeypatch, use_fallback):
-    if use_fallback:
-        monkeypatch.delattr(tarfile, "data_filter", raising=False)
-    elif not hasattr(tarfile, "data_filter"):
-        pytest.skip("Python does not provide tarfile.data_filter")
+    _configure_tar_filter_support(monkeypatch, use_fallback)
 
     extract_path = tmp_path / "extract"
     archive_path = tmp_path / AwsQuantumJob.RESULTS_TAR_FILENAME
