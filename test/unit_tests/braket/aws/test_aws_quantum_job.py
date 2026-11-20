@@ -36,8 +36,8 @@ def _configure_tar_filter_support(monkeypatch, use_fallback):
 
     # Simulate Python versions without extraction filters (3.11.0-3.11.3).
     if hasattr(tarfile, "fully_trusted_filter"):
-        # Python 3.14+ defaults to the module-level data_filter when no filter is given,
-        # so set an explicit no-op default before removing data_filter.
+        # Extract without filtering, as 3.11.0-3.11.3 do, instead of relying on the
+        # default filter, which may be the data_filter removed below.
         monkeypatch.setattr(
             tarfile.TarFile, "extraction_filter", staticmethod(tarfile.fully_trusted_filter)
         )

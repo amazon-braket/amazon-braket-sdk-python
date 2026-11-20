@@ -43,9 +43,6 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "botocore",
-    # Match the cloudpickle version in the Braket job containers;
-    # remove once the containers ship cloudpickle 3.x
-    "cloudpickle==2.2.1; python_version < '3.14'",
     "jsonschema==3.2.0",
     "pytest",
     "pytest-cov",
