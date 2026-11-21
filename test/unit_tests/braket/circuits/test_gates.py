@@ -1198,6 +1198,34 @@ def test_pulse_gate_to_matrix():
             "1",
             "ctrl @ gphase(0.3) q[1];",
         ),
+        (
+            Gate.Unitary(Gate.X().to_matrix()),
+            QubitSet([0]),
+            QubitSet([1]),
+            None,
+            "#pragma braket unitary(["
+            "[1.0, 0, 0, 0], "
+            "[0, 1.0, 0, 0], "
+            "[0, 0, 0, 1.0], "
+            "[0, 0, 1.0, 0]"
+            "]) q[1], q[0]",
+        ),
+        (
+            Gate.Unitary(Gate.X().to_matrix()),
+            QubitSet([0]),
+            QubitSet([1, 2]),
+            "01",
+            "#pragma braket unitary(["
+            "[1.0, 0, 0, 0, 0, 0, 0, 0], "
+            "[0, 1.0, 0, 0, 0, 0, 0, 0], "
+            "[0, 0, 0, 1.0, 0, 0, 0, 0], "
+            "[0, 0, 1.0, 0, 0, 0, 0, 0], "
+            "[0, 0, 0, 0, 1.0, 0, 0, 0], "
+            "[0, 0, 0, 0, 0, 1.0, 0, 0], "
+            "[0, 0, 0, 0, 0, 0, 1.0, 0], "
+            "[0, 0, 0, 0, 0, 0, 0, 1.0]"
+            "]) q[1], q[2], q[0]",
+        ),
     ),
 )
 def test_gate_control(gate, target, control, control_state, expected_ir):
@@ -1262,6 +1290,18 @@ def test_gate_control_invalid_state(control, control_state, error_string):
         (Gate.H(), QubitSet(0), -2, "inv @ pow(2) @ h q[0];"),
         (Gate.H(), QubitSet(0), -2.0, "inv @ pow(2.0) @ h q[0];"),
         (Gate.H(), QubitSet(0), -2.5, "inv @ pow(2.5) @ h q[0];"),
+        (
+            Gate.Unitary(Gate.S().to_matrix()),
+            QubitSet(0),
+            2,
+            "#pragma braket unitary([[1.0, 0], [0, -1.0]]) q[0]",
+        ),
+        (
+            Gate.Unitary(Gate.S().to_matrix()),
+            QubitSet(0),
+            -1,
+            "#pragma braket unitary([[1.0, 0], [0, -1.0im]]) q[0]",
+        ),
     ),
 )
 def test_gate_power(gate, target, power, expected_ir):
@@ -1277,6 +1317,12 @@ def test_gate_power(gate, target, power, expected_ir):
         )
         == expected_ir
     )
+
+
+def test_unitary_fractional_power():
+    instruction = Instruction(Gate.Unitary(Gate.Z().to_matrix()), 0, power=0.5)
+    circ = Circuit.from_ir(Circuit().add_instruction(instruction).to_ir(IRType.OPENQASM))
+    assert np.allclose(circ.to_unitary(), Gate.S().to_matrix())
 
 
 def test_hash():
