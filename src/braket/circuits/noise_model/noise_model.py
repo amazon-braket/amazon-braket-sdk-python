@@ -252,7 +252,7 @@ class NoiseModel:
         version of the given circuit. If multiple noise will act on the same instruction,
         they will be applied in the order they are added to the noise model.
 
-        Controlled X, Y, Z, V, Swap, and CNot gates match their equivalent named gates
+        Controlled X, Y, Z, V, Swap, PhaseShift, and CNot gates match their equivalent named gates
         when selecting noise. Controlled gates without a supported equivalent receive no gate noise.
         The original circuit instructions are preserved.
 
@@ -462,7 +462,10 @@ def _equivalent_controlled_gate(instruction: Instruction) -> Instruction | None:
         (Gate.X, 2): Gate.CCNot,
         (Gate.CNot, 1): Gate.CCNot,
     }
-    equivalent = equivalents.get((type(instruction.operator), control_count))
+    operator = instruction.operator
+    if isinstance(operator, Gate.PhaseShift) and control_count == 1:
+        return Instruction(Gate.CPhaseShift(operator.angle), [*instruction.control, *instruction.target])
+    equivalent = equivalents.get((type(operator), control_count))
     if equivalent is None:
         return None
     return Instruction(equivalent(), [*instruction.control, *instruction.target])
