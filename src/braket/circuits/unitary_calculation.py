@@ -72,9 +72,11 @@ def calculate_unitary_big_endian(
         target = tuple(index_substitutions[qubit] for qubit in instruction.target)
         control = tuple(index_substitutions[qubit] for qubit in instruction.control)
 
+        # controlled_matrix applies the first control state to the last control qubit
+        control_state = instruction.control_state.as_tuple[::-1]
         unitary = multiply_matrix(
             unitary,
-            controlled_matrix(np.asarray(gate_matrix, dtype=complex), instruction.control_state),
+            controlled_matrix(np.asarray(gate_matrix, dtype=complex), control_state),
             control + target,
         )
 
