@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.128.1 (2026-11-19)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.14 and 3.15
+
+## v1.128.0 (2026-11-19)
+
+### Features
+
+ * Add `AwsDevice.status_reason`
+
+## v1.127.8 (2026-11-09)
+
+### Bug Fixes and Other Changes
+
+ * Handle controlled gates in noise models
+ * validate each factor of a tensor product observable in the emulator
+
 ## v1.127.7 (2026-10-28)
 
 ### Bug Fixes and Other Changes

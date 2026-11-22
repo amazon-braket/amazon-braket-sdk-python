@@ -16,7 +16,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from braket.circuits import Circuit, Gate, Noise, Observable
+from braket.circuits import Circuit, Gate, Instruction, Noise, Observable
 from braket.circuits.gates import Unitary
 from braket.circuits.measure import Measure
 from braket.circuits.noise_model import (
@@ -228,6 +228,103 @@ def test_apply():
         .sample(Observable.Z(), 0)
     )
     assert noisy_circuit_from_circuit == expected_circuit
+
+
+def test_control_aware_noise_matches_equivalent_cz() -> None:
+    model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.001), GateCriteria(qubits=2))
+        .add_noise(TwoQubitDepolarizing(0.02), GateCriteria(Gate.CZ, [(1, 2)]))
+    )
+    controlled_z = Circuit().z(2, control=1)
+    named_cz = Circuit().cz(1, 2)
+
+    aware = model.apply(controlled_z)
+    named = model.apply(named_cz)
+    assert aware.instructions[0] == controlled_z.instructions[0]
+    assert aware.instructions[1:] == named.instructions[1:]
+    assert aware.instructions[1].target == [1, 2]
+
+
+@pytest.mark.parametrize(
+    ("controlled", "named", "gate", "qubits"),
+    [
+        (Circuit().x(2, control=1), Circuit().cnot(1, 2), Gate.CNot, (1, 2)),
+        (Circuit().y(2, control=1), Circuit().cy(1, 2), Gate.CY, (1, 2)),
+        (Circuit().v(2, control=1), Circuit().cv(1, 2), Gate.CV, (1, 2)),
+        (Circuit().swap(2, 3, control=1), Circuit().cswap(1, 2, 3), Gate.CSwap, (1, 2, 3)),
+        (Circuit().x(2, control=[0, 1]), Circuit().ccnot(0, 1, 2), Gate.CCNot, (0, 1, 2)),
+        (
+            Circuit().add_instruction(Instruction(Gate.CNot(), [1, 2], control=0)),
+            Circuit().ccnot(0, 1, 2),
+            Gate.CCNot,
+            (0, 1, 2),
+        ),
+    ],
+)
+def test_control_aware_noise_matches_named_gates(
+    controlled: Circuit, named: Circuit, gate: type[Gate], qubits: tuple[int, ...]
+) -> None:
+    noise = TwoQubitDepolarizing(0.02) if len(qubits) == 2 else Depolarizing(0.02)
+    model = NoiseModel().add_noise(noise, GateCriteria(gate, [qubits]))
+
+    np.testing.assert_allclose(controlled.to_unitary(), named.to_unitary())
+    controlled_noisy = model.apply(controlled)
+    named_noisy = model.apply(named)
+    assert controlled_noisy.instructions[1:] == named_noisy.instructions[1:]
+
+
+@pytest.mark.parametrize(
+    ("circuit", "gate"),
+    [
+        (Circuit().h(3, control=2), Gate.H),
+        (Circuit().x(3, control=[0, 1, 2]), Gate.X),
+        (Circuit().z(3, control=2, control_state=0), Gate.Z),
+        (Circuit().x(3, control=[0, 1], control_state="01"), Gate.X),
+        (Circuit().z(3, control=2, power=0.5), Gate.Z),
+    ],
+)
+@pytest.mark.parametrize("criteria", ["gate", "qubit", "all"])
+def test_control_aware_noise_skips_without_a_named_equivalent(
+    circuit: Circuit, gate: type[Gate], criteria: str
+) -> None:
+    """Unsupported controlled operations must not match the underlying gate or its targets."""
+    gate_criteria = {
+        "gate": GateCriteria(gate),
+        "qubit": GateCriteria(qubits=3),
+        "all": GateCriteria(),
+    }[criteria]
+    model = NoiseModel().add_noise(Depolarizing(0.02), gate_criteria)
+
+    assert model.apply(circuit) == circuit
+
+
+def test_control_aware_noise_keeps_initialization_and_readout_for_unsupported_gates() -> None:
+    circuit = Circuit().h(3, control=2).sample(Observable.Z(), 3)
+    model = (
+        NoiseModel()
+        .add_noise(Depolarizing(0.02), GateCriteria())
+        .add_noise(BitFlip(0.01), QubitInitializationCriteria([2, 3]))
+        .add_noise(BitFlip(0.03), ObservableCriteria(qubits=3))
+    )
+    expected = (
+        Circuit().bit_flip([2, 3], 0.01).h(3, control=2).bit_flip(3, 0.03).sample(Observable.Z(), 3)
+    )
+
+    assert model.apply(circuit) == expected
+
+
+def test_control_aware_noise_applies_to_program_sets() -> None:
+    model = NoiseModel().add_noise(TwoQubitDepolarizing(0.02), GateCriteria(Gate.CZ))
+    program_set = ProgramSet([Circuit().z(2, control=1)], shots_per_executable=100)
+
+    result = model.apply(program_set)
+    assert result.entries[0].instructions[1].target == [1, 2]
+
+    binding = CircuitBinding(Circuit().z(2, control=1), observables=Observable.Z(2))
+    bound_set = ProgramSet([binding], shots_per_executable=100)
+    bound_result = model.apply(bound_set)
+    assert bound_result.entries[0].circuit.instructions[1].target == [1, 2]
 
 
 def test_apply_in_order():
