@@ -64,20 +64,22 @@ class GateModelQuantumTaskResult:
             This is calculated from `measurements` and
             the IR of the circuit program when `shots>0`.
         measurements (numpy.ndarray | None): 2d array - row is shot and column is qubit.
-            Default is None. Only available when shots > 0. The qubits in `measurements`
-            are the ones in `GateModelQuantumTaskResult.measured_qubits`.
+            Default is None. Only available when shots > 0 and the result does not report
+            `outputs`. The qubits in `measurements` are the ones in
+            `GateModelQuantumTaskResult.measured_qubits`.
         measured_qubits (list[int] | None): The indices of the measured qubits. Default
-            is None. Only available when shots > 0. Indicates which qubits are in
-            `measurements`.
+            is None. Only available when shots > 0 and the result does not report `outputs`.
+            Indicates which qubits are in `measurements`.
         measurement_counts (Counter | None): A `Counter` of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
-            Default is None. Only available when shots > 0. Note that the keys in `Counter` are
-            unordered.
+            Default is None. Only available when shots > 0 and the result does not report
+            `outputs`. Note that the keys in `Counter` are unordered.
         measurement_probabilities (dict[str, float] | None):
             A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
-            Default is None. Only available when shots > 0.
+            Default is None. Only available when shots > 0 and the result does not report
+            `outputs`.
         measurements_copied_from_device (bool | None): flag whether `measurements`
             were copied from device. If false, `measurements` are calculated from device data.
             Default is None. Only available when shots > 0.
@@ -225,8 +227,8 @@ class GateModelQuantumTaskResult:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on the given dict
 
         Raises:
-            ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
-                in the result dict
+            ValueError: If none of "measurements", "measurementProbabilities" or "outputs"
+                is populated in the result
         """
         return GateModelQuantumTaskResult._from_object_internal(result)
 
@@ -241,8 +243,8 @@ class GateModelQuantumTaskResult:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on the given string
 
         Raises:
-            ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
-                in the result dict
+            ValueError: If none of "measurements", "measurementProbabilities" or "outputs"
+                is populated in the result
         """
         obj = GateModelTaskResult.parse_raw(result)
         GateModelQuantumTaskResult.cast_result_types(obj)
@@ -281,10 +283,15 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = False
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = True
+        elif result.outputs is not None:
+            measurements = m_counts = m_probs = None
+            measurements_copied_from_device = False
+            m_counts_copied_from_device = False
+            m_probabilities_copied_from_device = False
         else:
             raise ValueError(
-                'One of "measurements" or "measurementProbabilities" must be populated in',
-                " the result obj",
+                'One of "measurements", "measurementProbabilities" or "outputs" must be '
+                "populated in the result object"
             )
         measured_qubits = result.measuredQubits
         if result.resultTypes:

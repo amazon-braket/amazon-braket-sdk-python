@@ -13,7 +13,9 @@
 
 from __future__ import annotations
 
+import copy
 import math
+import os
 import tarfile
 import tempfile
 import time
@@ -636,9 +638,95 @@ class AwsQuantumJob(QuantumJob):
             raise ClientError(exception_response, "HeadObject") from e
 
     @staticmethod
+    def _is_within_extract_path(member_path: str, extract_path: str) -> bool:
+        try:
+            return os.path.commonpath([member_path, extract_path]) == extract_path
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _validate_tar_link(
+        member: tarfile.TarInfo,
+        member_name: str,
+        member_path: str,
+        extract_path: str,
+        filtered_member: tarfile.TarInfo,
+    ) -> None:
+        """Validate and normalize a symbolic or hard link target."""
+        if member_path == extract_path:
+            raise ValueError(f"Tar member '{member.name}' replaces the extraction directory")
+        link_name = filtered_member.linkname
+        if os.path.isabs(link_name):
+            raise ValueError(f"Tar member '{member.name}' has an absolute link")
+
+        normalized_link_name = os.path.normpath(link_name)
+        filtered_member.linkname = normalized_link_name
+        link_dir = os.path.dirname(member_name.rstrip("/" + os.sep))
+        link_path = os.path.realpath(
+            os.path.join(extract_path, link_dir, normalized_link_name)
+            if filtered_member.issym()
+            else os.path.join(extract_path, normalized_link_name)
+        )
+        if not AwsQuantumJob._is_within_extract_path(link_path, extract_path):
+            raise ValueError(f"Tar member '{member.name}' links outside the extraction directory")
+
+    @staticmethod
+    def _data_filter(member: tarfile.TarInfo, extract_path: str) -> tarfile.TarInfo:
+        """Validate and normalize a tar member before extraction.
+
+        Raise ValueError when the member escapes the extraction directory,
+        uses an unsupported file type, or links outside the extraction directory.
+        """
+        filtered_member = copy.copy(member)
+        extract_path = os.path.realpath(extract_path)
+        member_name = filtered_member.name
+
+        if member_name.startswith(("/", os.sep)):
+            member_name = member_name.lstrip("/" + os.sep)
+            filtered_member.name = member_name
+        if os.path.isabs(member_name):
+            raise ValueError(f"Tar member '{member.name}' has an absolute path")
+
+        # Normalize dot segments before checking the destination boundary.
+        if ".." in member_name.replace(os.sep, "/").split("/"):
+            normalized_member_name = os.path.normpath(member_name)
+            if normalized_member_name != member_name:
+                member_name = normalized_member_name
+                filtered_member.name = member_name
+
+        member_path = os.path.realpath(os.path.join(extract_path, member_name))
+        if not AwsQuantumJob._is_within_extract_path(member_path, extract_path):
+            raise ValueError(f"Tar member '{member.name}' is outside the extraction directory")
+
+        # Data archives may contain only files, directories, and links.
+        if not (
+            filtered_member.isreg()
+            or filtered_member.isdir()
+            or filtered_member.islnk()
+            or filtered_member.issym()
+        ):
+            raise ValueError(f"Tar member '{member.name}' has an unsupported type")
+
+        # Validate links against the current extraction state.
+        if filtered_member.islnk() or filtered_member.issym():
+            AwsQuantumJob._validate_tar_link(
+                member, member_name, member_path, extract_path, filtered_member
+            )
+
+        return filtered_member
+
+    @staticmethod
     def _extract_tar_file(extract_path: str) -> None:
         with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
-            tar.extractall(extract_path)  # ruff:ignore[tarfile-unsafe-members]
+            data_filter = getattr(tarfile, "data_filter", None)
+            if data_filter is not None:
+                tar.extractall(extract_path, filter=data_filter)  # noqa: S202
+                return
+
+            # Validate and extract each member because Python 3.11.0-3.11.3 lack data_filter.
+            for member in tar:
+                filtered_member = AwsQuantumJob._data_filter(member, extract_path)
+                tar.extract(filtered_member, extract_path, set_attrs=False)
 
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"

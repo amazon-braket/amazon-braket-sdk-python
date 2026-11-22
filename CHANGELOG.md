@@ -1,5 +1,48 @@
 # Changelog
 
+## v1.128.1 (2026-11-19)
+
+### Bug Fixes and Other Changes
+
+ * Python 3.14 and 3.15
+
+## v1.128.0 (2026-11-19)
+
+### Features
+
+ * Add `AwsDevice.status_reason`
+
+## v1.127.8 (2026-11-09)
+
+### Bug Fixes and Other Changes
+
+ * Handle controlled gates in noise models
+ * validate each factor of a tensor product observable in the emulator
+
+## v1.127.7 (2026-10-28)
+
+### Bug Fixes and Other Changes
+
+ * safely extract hybrid job results
+
+## v1.127.6 (2026-10-27)
+
+### Bug Fixes and Other Changes
+
+ * allow task results that report outputs instead of measurements
+
+## v1.127.5 (2026-10-23)
+
+### Bug Fixes and Other Changes
+
+ * Pass docker env values outside process arguments
+
+## v1.127.4 (2026-10-22)
+
+### Bug Fixes and Other Changes
+
+ * Warn when calling nonexistent properties
+
 ## v1.127.3.post0 (2026-09-30)
 
 ### Documentation Changes
