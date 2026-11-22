@@ -459,6 +459,7 @@ def _serialize_entry_point(
 
     return run_entry_point.format(
         serialized=serialized,
+        cloudpickle_version=cloudpickle.__version__,
         function_name=entry_point.__name__,
         data_format=data_format.name,
     )

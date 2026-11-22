@@ -150,7 +150,7 @@ def braket_simulators(aws_session):
 
 @pytest.fixture(scope="session")
 def braket_devices():
-    return AwsDevice.get_devices(statuses=["RETIRED", "ONLINE", "OFFLINE"])
+    return AwsDevice.get_devices(statuses=["RETIRED", "ONLINE", "OFFLINE", "PAUSED"])
 
 
 @pytest.fixture(scope="session", autouse=True)
