@@ -464,7 +464,9 @@ def _equivalent_controlled_gate(instruction: Instruction) -> Instruction | None:
     }
     operator = instruction.operator
     if isinstance(operator, Gate.PhaseShift) and control_count == 1:
-        return Instruction(Gate.CPhaseShift(operator.angle), [*instruction.control, *instruction.target])
+        return Instruction(
+            Gate.CPhaseShift(operator.angle), [*instruction.control, *instruction.target]
+        )
     equivalent = equivalents.get((type(operator), control_count))
     if equivalent is None:
         return None
