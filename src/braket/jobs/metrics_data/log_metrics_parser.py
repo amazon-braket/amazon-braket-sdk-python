@@ -25,7 +25,7 @@ class LogMetricsParser:
     convenient format.
     """
 
-    METRICS_DEFINITIONS = re.compile(r"(\w+)\s*=\s*([^;]+)\s*;")
+    METRICS_DEFINITIONS = re.compile(r"([^\s=;]+)\s*=\s*([^;]+)\s*;")
     TIMESTAMP = "timestamp"
     ITERATION_NUMBER = "iteration_number"
     NODE_ID = "node_id"
