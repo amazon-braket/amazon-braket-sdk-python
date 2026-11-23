@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.128.2 (2026-11-23)
+
+### Bug Fixes and Other Changes
+
+ * Match controlled `PhaseShift` with `CPhaseShift` in noise models
+ * Preserve job data when serialization fails
+ * Tolerate failed executables when computing `Sum` expectations
+
 ## v1.128.1 (2026-11-19)
 
 ### Bug Fixes and Other Changes
