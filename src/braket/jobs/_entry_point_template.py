@@ -5,9 +5,25 @@ from braket.jobs import get_results_dir, save_job_result
 from braket.jobs_data import PersistedJobDataFormat
 
 
-# load and run serialized entry point function
-recovered = cloudpickle.loads({serialized})
+def _load_entry_point():
+    try:
+        return cloudpickle.loads({serialized})
+    except Exception as e:
+        serialized_cloudpickle_version = {cloudpickle_version!r}
+        if cloudpickle.__version__ != serialized_cloudpickle_version:
+            raise RuntimeError(
+                "Failed to load the hybrid job entry point: it was serialized with "
+                f"cloudpickle {{serialized_cloudpickle_version}}, but the job container has "
+                f"cloudpickle {{cloudpickle.__version__}}. Use a container with a matching "
+                "cloudpickle version, or add "
+                f"'cloudpickle=={{serialized_cloudpickle_version}}' to the job dependencies."
+            ) from e
+        raise
+
+
 def {function_name}():
+    # load and run serialized entry point function
+    recovered = _load_entry_point()
     try:
         # set working directory to results dir
         os.chdir(get_results_dir())
